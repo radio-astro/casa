@@ -4,6 +4,8 @@ import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.pipelineqa as pqa
 import pipeline.infrastructure.utils as utils
 import pipeline.qa.scorecalculator as qacalc
+
+from ..exportdata import aqua
 from . import flagdeterbase
 
 LOG = logging.get_logger(__name__)
@@ -37,3 +39,7 @@ class FlagDeterBaseListQAHandler(pqa.QAResultHandler):
         # own QAscore list
         collated = utils.flatten([r.qa.pool for r in result]) 
         result.qa.pool[:] = collated
+
+
+aqua_exporter = aqua.xml_generator_for_metric('%OnlineShadowTemplateFlags', '{:0.3%}')
+aqua.register_aqua_metric(aqua_exporter)

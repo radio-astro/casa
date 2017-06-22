@@ -5,6 +5,7 @@ import pipeline.infrastructure.pipelineqa as pqa
 import pipeline.infrastructure.utils as utils
 import pipeline.qa.scorecalculator as qacalc
 
+import pipeline.h.tasks.exportdata.aqua as aqua
 from . import resultobjects
 
 LOG = logging.get_logger(__name__)
@@ -62,3 +63,7 @@ class RawflagchansListQAHandler(pqa.QAResultHandler):
                                                                     quotes=False, 
                                                                     conjunction='or')
         result.qa.all_unity_longmsg = longmsg
+
+
+aqua_exporter = aqua.xml_generator_for_metric('%RawBadchansFlags', '{:0.3%}')
+aqua.register_aqua_metric(aqua_exporter)

@@ -5,6 +5,7 @@ import pipeline.infrastructure.pipelineqa as pqa
 import pipeline.infrastructure.utils as utils
 import pipeline.qa.scorecalculator as qacalc
 
+import pipeline.h.tasks.exportdata.aqua as aqua
 from . import fluxcalflag
 
 LOG = logging.get_logger(__name__)
@@ -43,10 +44,9 @@ class FluxcalflagQAHandler(pqa.QAResultHandler):
         result.qa.all_unity_longmsg = 'No flux calibrator data was flagged in %s' % ms.basename
 
     def _refspw_mapping_fraction(self, ms, refspwmap):
-        '''
+        """
         Check whether or not there has been reference spw mapping .
-        '''
-
+        """
         return qacalc.score_refspw_mapping_fraction(ms, refspwmap)
 
 
@@ -64,7 +64,11 @@ class FluxcalflagListQAHandler(pqa.QAResultHandler):
         result.qa.pool[:] = collated
 
         mses = [r.inputs['vis'] for r in result]
-        longmsg = 'No flux calibrator data was flagged in %s' % utils.commafy(mses, 
-                                                                    quotes=False, 
-                                                                    conjunction='or')
+        longmsg = 'No flux calibrator data was flagged in %s' % utils.commafy(mses,
+                                                                              quotes=False,
+                                                                              conjunction='or')
         result.qa.all_unity_longmsg = longmsg
+
+
+aqua_exporter = aqua.xml_generator_for_metric('%FluxcalFlags', '{:0.3%}')
+aqua.register_aqua_metric(aqua_exporter)

@@ -4,6 +4,7 @@ import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.pipelineqa as pqa
 import pipeline.infrastructure.utils as utils
 
+import pipeline.h.tasks.exportdata.aqua as aqua
 from . import resultobjects
 
 LOG = logging.get_logger(__name__)
@@ -47,3 +48,7 @@ class LowgainflagListQAHandler(pqa.QAResultHandler):
         # own QAscore list
         collated = utils.flatten([r.qa.pool for r in result]) 
         result.qa.pool[:] = collated
+
+
+aqua_exporter = aqua.xml_generator_for_metric('%HighLowGainFlags', '{:0.3%}')
+aqua.register_aqua_metric(aqua_exporter)

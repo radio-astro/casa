@@ -7,7 +7,6 @@ import pipeline.infrastructure.renderer.basetemplates as basetemplates
 
 from . import exportdata
 from .exportdata import ExportData
-#from .exportdata import ExportDataResults
 from . import qa
 
 pipelineqa.registry.add_handler(qa.ExportDataQAHandler())

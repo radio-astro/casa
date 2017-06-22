@@ -6,6 +6,8 @@ import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.pipelineqa as pqa
 import pipeline.infrastructure.utils as utils
 import pipeline.qa.scorecalculator as qacalc
+
+from ..exportdata import aqua
 from . import resultobjects
 
 LOG = logging.get_logger(__name__)
@@ -71,3 +73,7 @@ class TsysflagListQAHandler(pqa.QAResultHandler):
         longmsg = 'No extra data was flagged in %s'.format(
             utils.commafy(caltables, quotes=False, conjunction='or'))
         result.qa.all_unity_longmsg = longmsg
+
+
+aqua_exporter = aqua.xml_generator_for_metric('%TsysCaltableFlags', '{:0.3%}')
+aqua.register_aqua_metric(aqua_exporter)

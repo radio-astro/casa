@@ -2,17 +2,18 @@ from __future__ import absolute_import
 import collections
 import datetime
 import os
-import numpy
 
 from pipeline.infrastructure import casa_tasks, casatools
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.utils as utils
 import pipeline.infrastructure.pipelineqa as pqa
 import pipeline.qa.scorecalculator as qacalc
-import pipeline.infrastructure.mpihelpers as mpihelpers
+
+from ..exportdata import aqua
+from . import importdata
 
 LOG = logging.get_logger(__name__)
-from . import importdata
+
 
 
 class ImportDataQAHandler(pqa.QAResultHandler):
@@ -34,7 +35,7 @@ class ImportDataQAHandler(pqa.QAResultHandler):
                  'contiguous?')
         score5 = self._check_contiguous(result.mses)
 
-	score6 = self._check_coordinates(result.mses)
+        score6 = self._check_coordinates(result.mses)
     
         LOG.todo('ImportData QA: missing source.xml and calibrator unknown to ' 
                  'CASA')
@@ -44,17 +45,17 @@ class ImportDataQAHandler(pqa.QAResultHandler):
         result.qa.pool.extend(scores)
     
     def _check_contiguous(self, mses):
-        '''
+        """
         Check whether observations are contiguous. 
-        '''
+        """
         tolerance = datetime.timedelta(hours=1)
         return qacalc.score_contiguous_session(mses, tolerance=tolerance)
     
     def _check_model_data_column(self, mses):
-        '''
+        """
         Check whether any of the measurement sets contain a MODEL_DATA column,
         complaining if present, and returning an appropriate QA score.
-        '''
+        """
         bad_mses = []
     
         for ms in mses:
@@ -65,10 +66,10 @@ class ImportDataQAHandler(pqa.QAResultHandler):
         return qacalc.score_ms_model_data_column_present(mses, bad_mses)
     
     def _check_history_column(self, mses, inputs):
-        '''
+        """
         Check whether any of the measurement sets has entries in the history
         column, potentially signifying a non-pristine data set.
-        '''
+        """
         bad_mses = []
         
         createmms = False if not inputs.has_key('createmms') else inputs['createmms']
@@ -95,16 +96,15 @@ class ImportDataQAHandler(pqa.QAResultHandler):
         return qacalc.score_ms_history_entries_present(mses, bad_mses)
     
     def _check_flagged_calibrator_data(self, mses):
-        '''
+        """
         Check how much calibrator data has been flagged in the given measurement
         sets, complaining if the fraction of flagged data exceeds a threshold. 
-        '''
-        LOG.todo('What fraction of flagged calibrator data should result in a '
-                 'warning?')
+        """
+        LOG.todo('What fraction of flagged calibrator data should result in a warning?')
         threshold = 0.10
     
         # which intents should be checked for flagged data
-        calibrator_intents = set(['AMPLITUDE', 'BANDPASS', 'PHASE'])
+        calibrator_intents = {'AMPLITUDE', 'BANDPASS', 'PHASE'}
         
         # flag for whether to print 'all scans ok' message at end
         all_ok = True
@@ -150,18 +150,18 @@ class ImportDataQAHandler(pqa.QAResultHandler):
                                threshold * 100.0))
     
     def _check_intents(self, mses):
-        '''
+        """
         Check each measurement set in the list for a set of required intents.
         
         TODO Should we terminate execution on missing intents?        
-        '''
+        """
         return qacalc.score_missing_intents(mses)
 
     def _check_coordinates(self, mses):
-        '''
+        """
         Check each measurement set in the list for zero valued coordinates.
         
-        '''
+        """
         return qacalc.score_ephemeris_coordinates(mses)
 
 
@@ -174,3 +174,7 @@ class ImportDataListQAHandler(pqa.QAResultHandler):
         # own QAscore list
         collated = utils.flatten([r.qa.pool[:] for r in result]) 
         result.qa.pool.extend(collated)
+
+
+aqua_exporter = aqua.xml_generator_for_metric('MissingIntentsMark', '{:0.3f}')
+aqua.register_aqua_metric(aqua_exporter)
