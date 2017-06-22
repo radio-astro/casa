@@ -45,7 +45,7 @@ class T2_4MDetailsSingleDishImagingRenderer(basetemplates.T2_4MDetailsDefaultRen
                                     rms_info['channel_width']*1.e-3, rms_info['rms'])
                     image_rms.append(tr)
    
-        rms_table = utils.merge_td_columns(image_rms, num_to_merge=1)
+        rms_table = utils.merge_td_columns(image_rms, num_to_merge=0)
 
                             
         map_types = {'sparsemap': {'type': 'sd_sparse_map',

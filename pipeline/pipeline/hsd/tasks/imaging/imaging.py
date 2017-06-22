@@ -602,7 +602,7 @@ class SDImaging(basetask.StandardTaskTemplate):
                     LOG.info("Estimate RMS in representative bandwidth: %fkHz (native: %fkHz)" % \
                              (cqa.getvalue(cqa.quantity(representative_bw, 'kHz')), chan_width*1.e-3))
                     LOG.todo("DO SOMETHING TO ESTIMATE RMS")
-                    chan_width = cqa.getvalue(cqa.quantity(representative_bw, 'Hz'))
+                    chan_width = cqa.getvalue(cqa.quantity(representative_bw, 'Hz'))[0]
 
                 # calculate channel and frequency ranges of line free channels
                 ref_pixel = cs.referencepixel()['numeric']
