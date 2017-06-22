@@ -197,7 +197,7 @@ class Editimlist(basetask.StandardTaskTemplate):
         target['gridder'] = th.gridder(None, None) if not inpdict['gridder'] else inpdict['gridder']
         buffer_arcsec = th.buffer_radius() if not inpdict['search_radius_arcsec'] else inpdict['search_radius_arcsec']
         result.capture_buffer_size(buffer_arcsec)
-        target['cell'] = th.cell(None, None, None) if not inpdict['cell'] else inpdict['cell']
+        target['cell'] = th.cell(None, None) if not inpdict['cell'] else inpdict['cell']
         target['imsize'] = th.imsize(None, None, None, None, None) if not inpdict['imsize'] else inpdict['imsize']
         target['intent'] = th.intent() if not inpdict['intent'] else inpdict['intent']
         target['nterms'] = th.nterms() if not inpdict['nterms'] else inpdict['nterms']
@@ -215,6 +215,14 @@ class Editimlist(basetask.StandardTaskTemplate):
         else:
             if type(target['phasecenter']) is not type(None):
                 # TODO: remove the dependency on cell size being in arcsec
+
+                # remove brackets and begin/end string characters
+                # if cell is a list, get the first string element
+                if type(target['cell']) == type([]):
+                    target['cell'] = target['cell'][0]
+                target['cell'] = target['cell'].strip('[').strip(']')
+                target['cell'] = target['cell'].replace("'",'')
+                target['cell'] = target['cell'].replace('"','')
                 cellsize_arcsec = float(target['cell'].strip('arcsec'))
                 mosaic_side_arcsec = 3600  # 1 degree
                 dist = ( mosaic_side_arcsec / 2.) + float(buffer_arcsec)
