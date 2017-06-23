@@ -317,8 +317,6 @@ class ExportData(basetask.StandardTaskTemplate):
             result.restorescript = os.path.basename(stdfproducts.casa_restore_script)
         result.commandslog = os.path.basename(stdfproducts.casa_commands_file)
 
-        auxfproducts = None
-
         # Make the standard ms dictionary and export per ms products
         #    Currently these are compressed tar files of per MS flagging tables and per MS text files of calibration apply instructions
         if inputs.exportmses:
@@ -347,7 +345,7 @@ class ExportData(basetask.StandardTaskTemplate):
 
         # Export the pipeline manifest file
         #    TBD Remove support for auxiliary data products to the individual pipelines
-        pipemanifest = self._make_pipe_manifest (inputs.context, oussid, stdfproducts, auxfproducts, sessiondict, visdict,
+        pipemanifest = self._make_pipe_manifest (inputs.context, oussid, stdfproducts, sessiondict, visdict,
             inputs.exportmses,
             [os.path.basename(image) for image in calimages_fitslist], 
             [os.path.basename(image) for image in targetimages_fitslist])
@@ -389,7 +387,7 @@ class ExportData(basetask.StandardTaskTemplate):
 
         return oussid
 
-    def _make_lists (self, context, session, vis):
+    def _make_lists (self, context, session, vis, imaging=False):
 
         '''
         Create the vis and sessions lists
@@ -399,7 +397,10 @@ class ExportData(basetask.StandardTaskTemplate):
         vislist = vis
         if type(vislist) is types.StringType:
             vislist = [vislist,]
-        vislist = [vis for vis in vislist if not context.observing_run.get_ms(name=vis).is_imaging_ms]
+        if imaging:
+            vislist = [vis for vis in vislist if context.observing_run.get_ms(name=vis).is_imaging_ms]
+        else:
+            vislist = [vis for vis in vislist if not context.observing_run.get_ms(name=vis).is_imaging_ms]
 
         # Get the session list and the visibility files associated with
         # each session.
@@ -512,7 +513,7 @@ class ExportData(basetask.StandardTaskTemplate):
 
         return visdict
 
-    def _do_standard_session_products (self, context, oussid, session_names, session_vislists, products_dir):
+    def _do_standard_session_products (self, context, oussid, session_names, session_vislists, products_dir, imaging=False):
 
         '''
         Generate the per ms standard products
@@ -522,7 +523,7 @@ class ExportData(basetask.StandardTaskTemplate):
         caltable_file_list = []
         for i in range(len(session_names)):
             caltable_file = self._export_final_calfiles (context, oussid,
-                session_names[i], session_vislists[i], products_dir)
+                session_names[i], session_vislists[i], products_dir, imaging=imaging)
             caltable_file_list.append (caltable_file)
 
         # Create the ordered session dictionary
@@ -536,7 +537,7 @@ class ExportData(basetask.StandardTaskTemplate):
 
         return sessiondict
 
-    def _make_pipe_manifest (self, context, oussid, stdfproducts, auxfproducts, sessiondict,
+    def _make_pipe_manifest (self, context, oussid, stdfproducts, sessiondict,
         visdict, exportmses, calimages, targetimages):
 
         '''
@@ -580,8 +581,6 @@ class ExportData(basetask.StandardTaskTemplate):
         else:
             pipemanifest.add_restorescript (ouss, os.path.basename(stdfproducts.casa_restore_script))
 
-        if auxfproducts:
-            pass
 
         # Add the calibrator images
         pipemanifest.add_images (ouss, calimages, 'calibrator')
@@ -725,13 +724,16 @@ class ExportData(basetask.StandardTaskTemplate):
 
         return tarfilename
 
-    def _export_final_applylist (self, context, vis, products_dir):
+    def _export_final_applylist (self, context, vis, products_dir, imaging=False):
         """
         Save the final calibration list to a file. For now this is
         a text file. Eventually it will be the CASA callibrary file.
         """
 
-        applyfile_name = os.path.basename(vis) + '.calapply.txt'
+        if imaging:
+            applyfile_name = os.path.basename(vis) + '.auxcalapply.txt'
+        else:
+            applyfile_name = os.path.basename(vis) + '.calapply.txt'
         LOG.info('Storing calibration apply list for %s in  %s',
                  os.path.basename(vis), applyfile_name)
 
@@ -815,7 +817,7 @@ class ExportData(basetask.StandardTaskTemplate):
 
         return wksessions, session_names, session_vis_list
 
-    def _export_final_calfiles(self, context, oussid, session, vislist, products_dir):
+    def _export_final_calfiles(self, context, oussid, session, vislist, products_dir, imaging=False):
         """
         Save the final calibration tables in a tarfile one file
         per session.
@@ -828,7 +830,10 @@ class ExportData(basetask.StandardTaskTemplate):
             os.chdir(context.output_dir)
 
             # Define the name of the output tarfile
-            tarfilename = '{}.{}.caltables.tgz'.format(oussid, session)
+            if imaging:
+                tarfilename = '{}.{}.auxcaltables.tgz'.format(oussid, session)
+            else:
+                tarfilename = '{}.{}.caltables.tgz'.format(oussid, session)
             LOG.info('Saving final caltables for %s in %s', session, tarfilename)
 
             # Create the tar file
