@@ -107,7 +107,7 @@ class SDMSSkyCal(basetask.StandardTaskTemplate):
             field_strategy = {}
             field_ids = casatools.ms.msseltoindex(vis=ms.name, field=args['field'])
             for field_id in field_ids:
-                for target_id, reference_id in default_field_strategy.items():
+                for target_id, reference_id in default_field_strategy.iteritems():
                     if field_id == target_id:
                         field_strategy[field_id] = default_field_strategy[field_id]
                         continue
@@ -120,7 +120,7 @@ class SDMSSkyCal(basetask.StandardTaskTemplate):
             args['scan'] = ''
             
         calapps = []
-        for (target_id, reference_id) in field_strategy.items():
+        for (target_id, reference_id) in field_strategy.iteritems():
             myargs = args.copy()
             
             # output file

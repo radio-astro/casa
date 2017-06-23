@@ -58,11 +58,11 @@ class T2_4MDetailsSingleDishImagingRenderer(basetemplates.T2_4MDetailsDefaultRen
                                 'plot_title': 'Baseline RMS Map'},
                      'integratedmap': {'type': 'sd_integrated_map',
                                        'plot_title': 'Integrated Intensity Map'}}
-        for (key, value) in map_types.items():
+        for (key, value) in map_types.iteritems():
             plot_list = self._plots_per_field_with_type(plots, value['type'])
             summary = self._summary_plots(plot_list)
             subpage = {}
-            for (name, _plots) in plot_list.items():
+            for (name, _plots) in plot_list.iteritems():
                 #renderer = value['renderer'](context, results, name, _plots)
                 renderer = sdsharedrenderer.SingleDishGenericPlotsRenderer(context, results, name, _plots, 
                                                           value['plot_title'])
@@ -73,7 +73,7 @@ class T2_4MDetailsSingleDishImagingRenderer(basetemplates.T2_4MDetailsDefaultRen
                         '%s_plots'%(key): summary})
             if key == 'sparsemap':
                 profilemap_entries = {}
-                for (field, _plots) in plot_list.items():
+                for (field, _plots) in plot_list.iteritems():
                     _ap = {}
                     for p in _plots:
                         ant = p.parameters['ant']
@@ -98,7 +98,7 @@ class T2_4MDetailsSingleDishImagingRenderer(basetemplates.T2_4MDetailsDefaultRen
         
     def _summary_plots(self, plot_group):
         summary_plots = {}
-        for (field_name, plots) in plot_group.items():
+        for (field_name, plots) in plot_group.iteritems():
             spw_list = []
             summary_plots[field_name]= []
             for plot in plots:

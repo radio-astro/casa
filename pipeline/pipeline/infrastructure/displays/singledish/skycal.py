@@ -70,7 +70,7 @@ class SingleDishSkyCalAmpVsFreqSummaryChart(common.PlotbandpassDetailBase, Singl
                     return None
 
         wrappers = []
-        for spw_id, figfile in self._figfile.items():
+        for spw_id, figfile in self._figfile.iteritems():
             print 'create plot for', spw_id
             if os.path.exists(figfile):
                 print figfile, 'exists'
@@ -90,7 +90,7 @@ class SingleDishSkyCalAmpVsFreqSummaryChart(common.PlotbandpassDetailBase, Singl
         return wrappers
 
     def _update_figfile(self, old_prefix, new_prefix):
-        for (spw_id, figfile) in self._figfile.items():
+        for (spw_id, figfile) in self._figfile.iteritems():
             self._figfile[spw_id] = figfile.replace(old_prefix, new_prefix)
             spw_indicator = 'spw{}'.format(spw_id)
             pieces = self._figfile[spw_id].split('.')
@@ -118,7 +118,7 @@ class SingleDishSkyCalAmpVsFreqDetailChart(bandpass.BandpassDetailChart, SingleD
     
     def _update_figfile(self, old_prefix, new_prefix):
         for spw_id in self._figfile.keys():
-            for antenna_id, figfile in self._figfile[spw_id].items():
+            for antenna_id, figfile in self._figfile[spw_id].iteritems():
                 new_figfile = figfile.replace(old_prefix, new_prefix)
                 self._figfile[spw_id][antenna_id] = new_figfile 
 

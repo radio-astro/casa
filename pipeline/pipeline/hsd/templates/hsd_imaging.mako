@@ -149,7 +149,7 @@ It generates an image combined spectral data from whole antenna as well as image
 	                    <h4>Detailed profile map</h4>
 	                    <table border width="100%">
 		                    <tr><th>ANTENNA</th><th colspan="${len(profilemap_entries[field].values()[0])}">POL</th></tr>
-		                    % for (ant, pols) in profilemap_entries[field].items():
+		                    % for (ant, pols) in profilemap_entries[field].iteritems():
 		                        <tr><td>${ant}</td>
 		                        <td align="center">
 		                        % for pol in pols:

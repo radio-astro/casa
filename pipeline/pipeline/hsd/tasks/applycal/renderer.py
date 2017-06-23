@@ -116,7 +116,7 @@ class T2_4MDetailsSDApplycalRenderer(T2_4MDetailsApplycalRenderer,
             # the brightest average amplitude over all spws
 
             brightest_fields = T2_4MDetailsApplycalRenderer.get_brightest_fields(ms)
-            for source_id, brightest_field in brightest_fields.items():
+            for source_id, brightest_field in brightest_fields.iteritems():
                 plots = self.science_plots_for_result(context,
                                                       result,
                                                       applycal.RealVsFrequencySummaryChart,

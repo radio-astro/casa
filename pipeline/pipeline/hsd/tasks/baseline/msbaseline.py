@@ -35,7 +35,7 @@ class SDMSBaselineInputs(basetask.StandardInputs):
         vis = infiles
         self._init_properties(vars())
         # LOG.debug('attributes summary:')
-        # for (k,v) in self.__dict__.items():
+        # for (k,v) in self.__dict__.iteritems():
         #    LOG.debug('\t{key}={value}'.format(key=k, value=v))
             
     def to_casa_args(self):
@@ -89,7 +89,7 @@ class SDMSBaselineResults(common.SingleDishResults):
                 
         # register working data that stores spectra after baseline subtraction
         if self.outcome.has_key('work_data'):
-            for (vis,work_data) in self.outcome['work_data'].items():
+            for (vis,work_data) in self.outcome['work_data'].iteritems():
                 ms = context.observing_run.get_ms(vis)
                 ms.work_data = work_data
                  
@@ -97,7 +97,7 @@ class SDMSBaselineResults(common.SingleDishResults):
         for ms in context.observing_run.measurement_sets:
             ms.deviation_mask = None
         if self.outcome.has_key('deviation_mask'):
-            for (basename, masks) in self.outcome['deviation_mask'].items():
+            for (basename, masks) in self.outcome['deviation_mask'].iteritems():
                 ms = context.observing_run.get_ms(basename)
                 ms.deviation_mask = {}
                 for field in ms.get_fields(intent='TARGET'):
@@ -235,7 +235,7 @@ class SDMSBaseline(basetask.StandardTaskTemplate):
         baselined = []
 
         LOG.debug('Starting per reduction group processing: number of groups is {ngroup}', ngroup=len(reduction_group))
-        for (group_id, group_desc) in reduction_group.items():
+        for (group_id, group_desc) in reduction_group.iteritems():
             LOG.info('Processing Reduction Group {}', group_id)
             LOG.info('Group Summary:')
             for m in group_desc:

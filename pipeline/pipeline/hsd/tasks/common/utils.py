@@ -596,7 +596,7 @@ def make_spwid_map(srcvis, dstvis):
                 map_byname[src_spw].append(dst_spw)
     
     spwid_map = {}
-    for (src,dst) in map_byname.items():
+    for (src,dst) in map_byname.iteritems():
         LOG.trace('map_byname src spw %s: dst spws %s'%(src.id, [spw.id for spw in dst]))    
         if len(dst) == 0:
             continue

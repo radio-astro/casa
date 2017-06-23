@@ -156,14 +156,14 @@ class BaselineSubtractionPlotManager(object):
                                                    deviation_mask, line_range,
                                                    atm_transmission, atm_freq)
         ret = []
-        for (plot_type, plots) in plot_list.items():
+        for (plot_type, plots) in plot_list.iteritems():
             if plot_type == 'pre_fit':
                 ptype = 'sd_sparse_map_before_subtraction'
                 data = self.prefit_data
             else:
                 ptype = 'sd_sparse_map_after_subtraction'
                 data = self.postfit_data
-            for (pol, figfile) in plots.items():
+            for (pol, figfile) in plots.iteritems():
                 if os.path.exists(figfile):
                     parameters = {'intent': 'TARGET',
                                   'spw': self.spw_id,

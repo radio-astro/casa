@@ -169,7 +169,7 @@ class SDImaging(basetask.StandardTaskTemplate):
             edge = [0, 0]
          
         # loop over reduction group (spw and source combination)
-        for (group_id, group_desc) in reduction_group.items():
+        for (group_id, group_desc) in reduction_group.iteritems():
             LOG.debug('Processing Reduction Group %s'%(group_id))
             LOG.debug('Group Summary:')
             for m in group_desc:
@@ -256,7 +256,7 @@ class SDImaging(basetask.StandardTaskTemplate):
             combined_rms_exclude = []
   
             coord_set = False
-            for (name, _members) in image_group.items():
+            for (name, _members) in image_group.iteritems():
                 msobjs =  map(lambda x: x[0], _members)
                 antids = map(lambda x: x[1], _members)
                 spwids = map(lambda x: x[2], _members)
@@ -395,7 +395,7 @@ class SDImaging(basetask.StandardTaskTemplate):
 
                     # Generate grid table for each POL in image (per ANT,
                     # FIELD, and SPW, over all MSes)
-                    for (pol,member) in grid_input_dict.items():
+                    for (pol,member) in grid_input_dict.iteritems():
                         _mses = member[0]
                         _antids = member[1]
                         _fieldids = member[2]
@@ -531,7 +531,7 @@ class SDImaging(basetask.StandardTaskTemplate):
                             grid_input_dict[p][2].append(fieldid)
                             grid_input_dict[p][3].append(spwid)
   
-                for (pol,member) in grid_input_dict.items():
+                for (pol,member) in grid_input_dict.iteritems():
                     _mses = member[0]
                     _antids = member[1]
                     _fieldids = member[2]

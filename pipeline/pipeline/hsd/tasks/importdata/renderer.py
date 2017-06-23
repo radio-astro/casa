@@ -19,7 +19,7 @@ class T2_4MDetailsSingleDishImportDataRenderer(super_renderer.T2_4MDetailsImport
 
         # collect antennas of each MS and SPW combination
         row_values = []
-        for (group_id, group_desc) in pipeline_context.observing_run.ms_reduction_group.items():
+        for (group_id, group_desc) in pipeline_context.observing_run.ms_reduction_group.iteritems():
             min_freq = '%7.1f'%(group_desc.min_frequency/1.e6)
             max_freq = '%7.1f'%(group_desc.max_frequency/1.e6)
 
@@ -29,8 +29,8 @@ class T2_4MDetailsSingleDishImportDataRenderer(super_renderer.T2_4MDetailsImport
                 ant_collector[m.ms.basename][m.ms.spectral_windows[m.spw_id].id].append(m.ms.antennas[m.antenna_id].name)
 
             # construct 
-            for msname, ant_spw in ant_collector.items():
-                for spwid, antlist in ant_spw.items():
+            for msname, ant_spw in ant_collector.iteritems():
+                for spwid, antlist in ant_spw.iteritems():
                     ants = str(', ').join(antlist)
                     num_chan = pipeline_context.observing_run.get_ms(name=msname).get_spectral_window(spwid).num_channels
                     tr = DeductionGroupTR(group_id, min_freq, max_freq, group_desc.field_name, msname, ants, spwid, num_chan)

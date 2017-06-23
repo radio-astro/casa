@@ -70,9 +70,9 @@ class SDK2JyCalWorker(basetask.StandardTaskTemplate):
         common_params = inputs.to_casa_args()
         factors_for_ms = factors[vis]
         factors_used = {}
-        for spw, spw_factor in factors_for_ms.items():
+        for spw, spw_factor in factors_for_ms.iteritems():
             factors_used[spw] = {}
-            for ant, ant_factor in spw_factor.items():
+            for ant, ant_factor in spw_factor.iteritems():
                 factors_used[spw][ant] = {}
                 # map polarization
                 pol_list = ant_factor.keys()
@@ -146,9 +146,9 @@ class SDK2JyCalWorker(basetask.StandardTaskTemplate):
         LOG.info(sep)
         LOG.info("Summary of Jy/K factors of %s" % name)
         LOG.info(sep)
-        for spw, facs in result.ms_factors.items():
-            for ant, faca in facs.items():
-                for pol, facp in faca.items():
+        for spw, facs in result.ms_factors.iteritems():
+            for ant, faca in facs.iteritems():
+                for pol, facp in faca.iteritems():
                     LOG.info("SPW %d, %s, %s: %f" % (spw, ant, pol, facp))
         return result
 

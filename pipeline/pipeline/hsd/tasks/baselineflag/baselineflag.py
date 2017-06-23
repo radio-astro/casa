@@ -168,7 +168,7 @@ class SDBLFlagInputs(basetask.StandardInputs):
               'RunMeanPreFitFlag': (self.flag_prfrm, [self.prfrm_thresh, self.prfrm_nmean]),
               'RunMeanPostFitFlag': (self.flag_pofrm, [self.pofrm_thresh, self.pofrm_nmean]) }
         keys = ['Threshold', 'Nmean']
-        for (k,v) in d.items():
+        for (k,v) in d.iteritems():
             (b,p) = v
             if b is None:
                 # Don't touch operation flag but need to update thresholds.
@@ -264,7 +264,7 @@ class SDBLFlag(basetask.StandardTaskTemplate):
 
         # loop over reduction group (spw and source combination)
         flagResult = []
-        for (group_id,group_desc) in reduction_group.items():
+        for (group_id,group_desc) in reduction_group.iteritems():
             LOG.debug('Processing Reduction Group %s'%(group_id))
             LOG.debug('Group Summary:')
             for m in group_desc:

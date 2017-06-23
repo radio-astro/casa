@@ -32,11 +32,11 @@ for ms in pcontext.observing_run.measurement_sets:
     
 fieldmap = {}
 for ms in pcontext.observing_run.measurement_sets:
-    map_as_name = dict([(ms.fields[i].name,ms.fields[j].name) for (i,j) in ms.calibration_strategy['field_strategy'].items()])
+    map_as_name = dict([(ms.fields[i].name,ms.fields[j].name) for (i,j) in ms.calibration_strategy['field_strategy'].iteritems()])
     fieldmap[ms.basename] = map_as_name
     
 contents = {}
-for vis, _spwmap in spwmap.items():
+for vis, _spwmap in spwmap.iteritems():
     _fieldmap = fieldmap[vis]
     _spwkeys = _spwmap.keys()
     _spwkeys.sort()

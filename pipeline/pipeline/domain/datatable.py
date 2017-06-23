@@ -116,7 +116,7 @@ TABLEDESC_RW = __tabledescrw()
 def create_table(table, name, desc, memtype='plain', nrow=0):
     ret = table.create(name, desc, memtype=memtype, nrow=nrow)
     assert ret == True
-    for (_colname, _coldesc) in desc.items():
+    for (_colname, _coldesc) in desc.iteritems():
         if _coldesc.has_key('keywords'):
             table.putcolkeywords(_colname, _coldesc['keywords'])
 
@@ -421,9 +421,9 @@ class DataTableImpl( object ):
                     'string': str}
         datatype = lambda desc: list if desc.has_key('ndim') and desc['ndim'] > 0 \
                                   else type_map[desc['valueType']]
-        for (k,v) in TABLEDESC_RO.items():
+        for (k,v) in TABLEDESC_RO.iteritems():
             self.cols[k] = RO_COLUMN(self.tb1,k,datatype(v))
-        for (k,v) in TABLEDESC_RW.items():
+        for (k,v) in TABLEDESC_RW.iteritems():
             if k == 'MASKLIST':
                 self.cols[k] = DataTableColumnMaskList(self.tb2)
             elif k == 'NOCHANGE':
@@ -480,7 +480,7 @@ class DataTableImpl( object ):
         rows = self.getcol('ROW')
         posgrp = self.getcol('POSGRP')
         posdict = {}
-        for (k,v) in posgrp_rep.items():
+        for (k,v) in posgrp_rep.iteritems():
             if int(k) not in mygrp:
                 continue
             key = rows[v]

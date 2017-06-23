@@ -14,7 +14,7 @@ class GroupByPosition2(api.Heuristic):
     @staticmethod
     def translate_pos_dict(pos_dict, rows, ids):
         translated = {}
-        for (pos,val) in pos_dict.items():
+        for (pos,val) in pos_dict.iteritems():
             key = rows[pos]
             if val[0] == -1:
                 translated[key] = [[-1,rows[val[1]]],[ids[val[1]]]]

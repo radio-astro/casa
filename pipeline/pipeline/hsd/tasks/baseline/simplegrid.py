@@ -259,7 +259,7 @@ class SDMSSimpleGridding(basetask.StandardTaskTemplate):
             elif x[1] > y[1]:
                 return 1
             return 0
-        for (k,v) in bind_to_grid.items():
+        for (k,v) in bind_to_grid.iteritems():
             v.sort(cmp=cmp)
         LOG.debug('sorted bind_to_grid={}', bind_to_grid)
         
@@ -288,7 +288,7 @@ class SDMSSimpleGridding(basetask.StandardTaskTemplate):
         #for i in xrange(len(antenna_list)):
         #query = lambda condition: 1 if condition else 0
         #vquery = numpy.vectorize(query)
-        for (ms, entries) in bind_to_grid.items():
+        for (ms, entries) in bind_to_grid.iteritems():
             #AntID = antenna_list[i]
             #with casatools.TableReader(infiles[i]) as tb:
             vis = ms.work_data

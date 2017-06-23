@@ -33,13 +33,13 @@ class T2_4MDetailsSingleDishBaselineRenderer(basetemplates.T2_4MDetailsDefaultRe
         plot_cover = {} # key is field name, subkeys are 'title', 'cover_plots'
         # Render stage details pages
         details_title = ["R.A. vs Dec."]
-        for (name, _plots) in plot_group.items():
+        for (name, _plots) in plot_group.iteritems():
             perfield_plots = self._plots_per_field(_plots)
             if name in details_title:
                 renderer = SingleDishClusterPlotsRenderer(context, results, name, _plots)
                 with renderer.get_file() as fileobj:
                     fileobj.write(renderer.render())
-                for (field, pfplots) in perfield_plots.items():
+                for (field, pfplots) in perfield_plots.iteritems():
                     group_desc = {'title': name}
                     group_desc['html'] = os.path.basename(renderer.path)
                     if not plot_detail.has_key(field):
@@ -47,7 +47,7 @@ class T2_4MDetailsSingleDishBaselineRenderer(basetemplates.T2_4MDetailsDefaultRe
                     group_desc['cover_plots'] = self._get_a_plot_per_spw(pfplots)
                     plot_detail[field].append(group_desc)
             else:
-                for (field, pfplots) in perfield_plots.items():
+                for (field, pfplots) in perfield_plots.iteritems():
                     group_desc = {'title': name}
                     group_desc['html'] = os.path.basename(renderer.path)
                     if not plot_cover.has_key(field):
@@ -76,7 +76,7 @@ class T2_4MDetailsSingleDishBaselineRenderer(basetemplates.T2_4MDetailsDefaultRe
             with renderer.get_file() as fileobj:
                     fileobj.write(renderer.render())
             
-            for (name, _plots) in plot_list.items():
+            for (name, _plots) in plot_list.iteritems():
                 subpage[name] = os.path.basename(renderer.path)
             ctx.update({'sparsemap_subpage_%s'%(maptype.lower()): subpage,
                         'sparsemap_%s'%(maptype.lower()): summary})
@@ -121,7 +121,7 @@ class T2_4MDetailsSingleDishBaselineRenderer(basetemplates.T2_4MDetailsDefaultRe
 
     def _summary_plots(self, plot_group):
         summary_plots = {}
-        for (field_name, plots) in plot_group.items():
+        for (field_name, plots) in plot_group.iteritems():
             spw_list = []
             summary_plots[field_name]= []
             for plot in plots:

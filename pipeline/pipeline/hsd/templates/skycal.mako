@@ -87,9 +87,9 @@ $(document).ready(function() {
 		    </tr>
         </thead>
 	    <tbody>
-	    % for vis, coords in reference_coords.items():
+	    % for vis, coords in reference_coords.iteritems():
 	        <% isfirst = True %>
-	        % for field, coord in coords.items():
+	        % for field, coord in coords.iteritems():
 	            <tr>
 	                % if isfirst:
 	                    <% isfirst = False %>

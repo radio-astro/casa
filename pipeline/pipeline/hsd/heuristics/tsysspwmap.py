@@ -38,10 +38,10 @@ class TsysSpwMapHeuristics(api.Heuristic):
         return tsysspwmap
     
 def best_spwmap(scores):
-    for (spw,score_list) in scores.items():
+    for (spw,score_list) in scores.iteritems():
         best_score = 0.0
         best_spw = -1
-        for (atmspw,score) in score_list.items():
+        for (atmspw,score) in score_list.iteritems():
             if score > best_score:
                 best_spw = atmspw
                 best_score = score
