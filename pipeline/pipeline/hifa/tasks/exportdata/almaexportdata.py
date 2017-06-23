@@ -136,7 +136,7 @@ class ALMAExportData(exportdata.ExportData):
 
                 # Save target flag files
                 for flags_file in targetflags_filelist:
-                    if os.path.exists(cont_file):
+                    if os.path.exists(flags_file):
                         tar.add(flags_file, arcname=os.path.basename(flags_file))
                         LOG.info('Saving auxiliary data product %s in %s', os.path.basename(flags_file), tarfilename)
                     else:
