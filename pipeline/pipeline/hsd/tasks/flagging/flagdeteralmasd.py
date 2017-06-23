@@ -136,7 +136,7 @@ class FlagDeterALMASingleDishResults(flagdeterbase.FlagDeterBaseResults):
         # regenerate pointing plots
         LOG.info('Regenerate pointing plots to update flag information')
         for antenna in msobj.antennas:
-            for (target, reference) in msobj.calibration_strategy['field_strategy'].items():
+            for (target, reference) in msobj.calibration_strategy['field_strategy'].iteritems():
                 LOG.debug('target field id %s / reference field id %s'%(target,reference))
                 task = drawpointing.SingleDishPointingChart(context, msobj, antenna, 
                                                             target_field_id=target,
