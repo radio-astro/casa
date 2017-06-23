@@ -55,8 +55,21 @@ class PipelineManifest(object):
 	"""
 	return eltree.SubElement (ous, "session", name=session_name)
 
+    def get_session (self, ous, session_name):
+	"""
+        Get a SESSION element in an OUS element and return it 
+	"""
+        for session in ous.iter('session'):
+            if session.attrib['name'] == session_name:
+                return session
+        return None
+
+
     def add_caltables (self, session, caltables_file):
         eltree.SubElement(session, "caltables", name=caltables_file)
+
+    def add_auxcaltables (self, session, caltables_file):
+        eltree.SubElement(session, "aux_caltables", name=caltables_file)
 
     def get_caltables (self, ous):
         caltables_dict = collections.OrderedDict()
@@ -78,6 +91,13 @@ class PipelineManifest(object):
 	"""
         asdm = eltree.SubElement (session, "asdm", name=asdm_name)
 	eltree.SubElement(asdm, "finalflags", name=flags_file)
+	eltree.SubElement(asdm, "applycmds", name=calapply_file)
+
+    def add_auxasdm (self, session, asdm_name, calapply_file):
+	"""
+        Add an ASDM element to a SESSION element
+	"""
+        asdm = eltree.SubElement (session, "aux_asdm", name=asdm_name)
 	eltree.SubElement(asdm, "applycmds", name=calapply_file)
 
     def get_final_flagversions (self, ous):
