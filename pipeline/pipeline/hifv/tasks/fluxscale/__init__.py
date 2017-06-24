@@ -5,9 +5,11 @@ import pipeline.infrastructure.renderer.weblog as weblog
 
 from .solint import Solint
 from .fluxboot import Fluxboot
+from .fluxboot2 import Fluxboot2
 from . import solint
 from . import fluxboot
 from . import renderer
+from . import fluxboot2
 
 from . import qa
 
@@ -22,3 +24,4 @@ from . import qa
 
 weblog.add_renderer(Solint, renderer.T2_4MDetailsSolintRenderer(), group_by=weblog.UNGROUPED)
 weblog.add_renderer(Fluxboot, renderer.T2_4MDetailsfluxbootRenderer(), group_by=weblog.UNGROUPED)
+weblog.add_renderer(Fluxboot2, renderer.T2_4MDetailsfluxbootRenderer(), group_by=weblog.UNGROUPED)

@@ -87,8 +87,7 @@ $(document).ready(function() {
 	    <tr>
 	        <th scope="col" rowspan="2">Source</th>
 	        <th scope="col" rowspan="2">Band</th>
-		<th scope="col" rowspan="2">Fitted Spectral Index</th>
-		<th scope="col" rowspan="2">SNR</th>
+		    <th scope="col" rowspan="2">Fitted Spectral Index</th>
 	    </tr>
 
 	</thead>
@@ -100,8 +99,8 @@ $(document).ready(function() {
 		<tr>
 		        <td>${row['source']}</td>
 			<td>${row['band']}</td>
-			<td>${row['spix']}</td>
-			<td>${row['SNR']}</td>
+			<td>${row['spix']}+/- ${row['spixerr']}</td>
+
 		</tr>
 
     % endfor

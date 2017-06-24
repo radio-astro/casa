@@ -683,6 +683,7 @@ class Finalcals(basetask.StandardTaskTemplate):
         sources = context.evla['msinfo'][m.name].fluxscale_sources
         flux_densities = context.evla['msinfo'][m.name].fluxscale_flux_densities
         spws = context.evla['msinfo'][m.name].fluxscale_spws
+        fluxscale_result = context.evla['msinfo'][m.name].fluxscale_result
         spw2band = m.get_vla_spw2band()
         bands = spw2band.values()
 
@@ -740,6 +741,10 @@ class Finalcals(basetask.StandardTaskTemplate):
                 bands = bands_from_spw
 
             unique_bands = list(np.unique(bands))
+
+            fieldobject = m.get_fields(source)
+            fieldid = str(fieldobject[0].id)
+
             for band in unique_bands:
                 lfreqs = []
                 lfds = []
@@ -767,25 +772,60 @@ class Finalcals(basetask.StandardTaskTemplate):
                 if len(lfds) < 2:
                     pfinal = [lfds[0], 0.0]
                     covar = [0.0,0.0]
+                    aa = lfds[0]
+                    bb = 0.0
+                    SNR = 0.0
+                    bberr = 0.0
                 else:
                     alfds = scp.array(lfds)
                     alerrs = scp.array(lerrs)
                     alfreqs = scp.array(lfreqs)
                     pinit = [0.0, 0.0]
-                    fit_out = scpo.leastsq(errfunc, pinit, args=(alfreqs, alfds, alerrs), full_output=1)
-                    pfinal = fit_out[0]
-                    covar = fit_out[1]
-                aa = pfinal[0]
-                bb = pfinal[1]
-                reffreq = 10.0**lfreqs[0]/1.0e9
-                fluxdensity = 10.0**(aa + bb*lfreqs[0])
+                    #fit_out = scpo.leastsq(errfunc, pinit, args=(alfreqs, alfds, alerrs), full_output=1)
+                    #pfinal = fit_out[0]
+                    #covar = fit_out[1]
+                #aa = pfinal[0]
+                #bb = pfinal[1]
+
+                aa = fluxscale_result[fieldid]['spidx'][0]
+                bb = fluxscale_result[fieldid]['spidx'][1]
+                bberr = fluxscale_result[fieldid]['spidxerr'][1]
+
+                #reffreq = 10.0**lfreqs[0]/1.0e9
+                #fluxdensity = 10.0**(aa + bb*lfreqs[0])
+                #spix = bb
+
+                freqs = fluxscale_result['freq']
+                fitflx = fluxscale_result[fieldid]['fitFluxd']
+                fitreff = fluxscale_result[fieldid]['fitRefFreq']
+                spidx = fluxscale_result[fieldid]['spidx']
+                # fittedfluxd = []
+
+                fittedfluxd = map(
+                    lambda x: 10.0 ** (
+                        spidx[0] + spidx[1] * math.log10(x / fitreff) + spidx[2] * (math.log10(x / fitreff)) ** 2),
+                    freqs)
+
+                reffreq = fitreff / 1.e9
+                fluxdensity = fitflx
                 spix = bb
+                spixerr = bberr
+
                 results.append([ source, uspws, fluxdensity, spix, reffreq ])
                 LOG.info(source + ' ' + band + ' fitted spectral index = ' + str(spix))
                 LOG.info("Frequency, data, and fitted data:")
-                for ii in range(len(lfreqs)):
-                    SS = fluxdensity * (10.0**lfreqs[ii]/reffreq/1.0e9)**spix
-                    LOG.info('    '+str(10.0**lfreqs[ii]/1.0e9)+'  '+ str(10.0**lfds[ii])+'  '+str(SS))
+
+                # Sort arrays based on frequency
+                lfreqs_orig = lfreqs
+                lfreqs, lfds = zip(*sorted(zip(lfreqs, lfds)))
+                lfreqs_orig, lerrs = zip(*sorted(zip(lfreqs_orig, lerrs)))
+
+                for ii in range(len(freqs)):
+                    #SS = fluxdensity * (10.0**lfreqs[ii]/reffreq/1.0e9)**spix
+                    SS = fittedfluxd[ii]
+                    freq = freqs[ii] / 1.e9
+                    #LOG.info('    '+str(10.0**lfreqs[ii]/1.0e9)+'  '+ str(10.0**lfds[ii])+'  '+str(SS))
+                    LOG.info('    ' + str(freq) + '  ' + str(10.0 ** lfds[ii]) + '  ' + str(SS))
         
         return results
 

@@ -18,6 +18,7 @@ from .hanning import Hanning
 from .plotsummary import PlotSummary
 from .finalcals import Finalcals
 from .fluxscale import Fluxboot
+from .fluxscale import Fluxboot2
 from .finalcals import Applycals
 from .flagging import Targetflag
 from .tecmaps import TecMaps
