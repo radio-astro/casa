@@ -125,13 +125,15 @@ class ALMAExportData(exportdata.ExportData):
         if os.path.exists(flux_file) or os.path.exists(antpos_file) or os.path_exists(cont_file):
             empty = False
 
-        # Export the target source template flagging files
-        #    Whether or not these should be exported to the archive depends on
-        #    the final place of the target flagging step in the work flow and
+        # Export the general and target source template flagging files
+        #    The general template flagging files are nnot required for the restore but are
+        #    informative to the user
+        #    Whether or not the target template files  should be exported to the archive depends
+        #    on the final place of the target flagging step in the work flow and
         #    how flags will or will not be stored back into the ASDM
 
         targetflags_filelist = []
-        for file_name in glob.glob('*_flagtargetstemplate.txt'):
+        for file_name in glob.glob('*_flag*template.txt'):
             flags_file = os.path.join (output_dir, file_name)
             if os.path.exists(flags_file):
                 empty = False
