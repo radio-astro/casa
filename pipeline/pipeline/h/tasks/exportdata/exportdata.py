@@ -87,8 +87,7 @@ class ExportDataInputs(basetask.StandardInputs):
 
     .. py:attribute:: pprfile
 
-    the pipeline processing request. Defaults to a file matching the
-    'PPR_*.xml' template
+    the pipeline processing request. 
 
     .. py:attribute:: calintents
 
@@ -418,7 +417,7 @@ class ExportData(basetask.StandardTaskTemplate):
         # Locate and copy the pipeline processing request.
         #     There should normally be at most one pipeline processing request.
         #     In interactive mode there is no PPR.
-        ppr_files = self._export_pprfile (context, output_dir, products_dir, pprfile)
+        ppr_files = self._export_pprfile (context, output_dir, products_dir, oussid, pprfile)
         if (ppr_files != []):
             ppr_file = os.path.basename(ppr_files[0])
         else:
@@ -598,14 +597,11 @@ class ExportData(basetask.StandardTaskTemplate):
         pipemanifest = manifest.PipelineManifest(oussid)
         return pipemanifest
 
-    def _export_pprfile (self, context, output_dir, products_dir, pprfile):
+    def _export_pprfile (self, context, output_dir, products_dir, oussid, pprfile):
 
-        """
-        Export the pipeline processing request to the output products
-        directory as is.
-        """
-        # Prepare the search template for the pipeline processing
-        # request file.
+        # Prepare the search template for the pipeline processing request file.
+        #    Was a template in the past
+        #    Forced to one file now but keep the template structure for the moment
         if pprfile == '':
             ps = context.project_structure
             if ps is None:
@@ -628,13 +624,19 @@ class ExportData(basetask.StandardTaskTemplate):
                     pprmatches.append (os.path.join(output_dir, file))
 
         # Copy the pipeline processing request files.
+        pprmatchesout = []
         for file in pprmatches:
+            if oussid:
+                outfile = os.path.join (products_dir, oussid + '.pprequest.xml')
+            else:
+                outfile = file
+            pprmatchesout.append(outfile)
             LOG.info('Copying pipeline processing file %s to %s' % \
-                     (os.path.basename(file), products_dir))
+                     (os.path.basename(file), os.path.basename(outfile)))
             if not self._executor._dry_run:
-                shutil.copy (file, products_dir)
+                shutil.copy (file, outfile)
 
-        return pprmatches
+        return pprmatchesout
 
     def _export_final_ms (self, context, vis, products_dir):
 
