@@ -25,51 +25,31 @@ class ImageParamsHeuristicsALMA(ImageParamsHeuristics):
         ImageParamsHeuristics.__init__(self, vislist, spw, observing_run, imagename_prefix, science_goals, contfile, linesfile)
         self.imaging_mode = 'ALMA'
 
-    def robust(self, spw):
+    def robust(self, spw, beam):
 
-        '''Adjustment of robust parameter based on desired resolutions.'''
+        '''Adjustment of robust parameter based on desired resolutions.
+           beam is the synthesized beam.'''
 
         return 0.5
 
         # Check if there is a non-zero min/max angular resolution
         cqa = casatools.quanta
-        minAcceptableAngResolution = cqa.convert(self.science_goals.min_angular_resolution, 'rad')['value']
-        maxAcceptableAngResolution = cqa.convert(self.science_goals.max_angular_resolution, 'rad')['value']
+        minAcceptableAngResolution = cqa.getvalue(cqa.convert(self.science_goals.min_angular_resolution, 'rad'))
+        maxAcceptableAngResolution = cqa.getvalue(cqa.convert(self.science_goals.max_angular_resolution, 'rad'))
         if (minAcceptableAngResolution == 0.0) or (maxAcceptableAngResolution == 0.0):
-            desired_angular_resolution = cqa.convert(self.science_goals.desired_angular_resolution, 'rad')['value']
+            desired_angular_resolution = cqa.getvalue(cqa.convert(self.science_goals.desired_angular_resolution, 'rad'))
             if (desired_angular_resolution != 0.0):
                 minAcceptableAngResolution = 0.8 * desired_angular_resolution
                 maxAcceptableAngResolution = 1.2 * desired_angular_resolution
             else:
                 science_goals = self.observing_run.get_measurement_sets()[0].science_goals
-                minAcceptableAngResolution = cqa.convert(science_goals['minAcceptableAngResolution'], 'rad')['value']
-                maxAcceptableAngResolution = cqa.convert(science_goals['maxAcceptableAngResolution'], 'rad')['value']
+                minAcceptableAngResolution = cqa.getvalue(cqa.convert(science_goals['minAcceptableAngResolution'], 'rad'))
+                maxAcceptableAngResolution = cqa.getvalue(cqa.convert(science_goals['maxAcceptableAngResolution'], 'rad'))
                 if (minAcceptableAngResolution == 0.0) or (maxAcceptableAngResolution == 0.0):
                     LOG.info('No value for desired angular resolution. Setting "robust" parameter to 0.5.')
                     return 0.5
 
-        # Get maximum baseline length in metres
-        bmax = 0.0
-        for ms in self.observing_run.get_measurement_sets():
-            if (ms.antenna_array.max_baseline.length.to_units(measures.DistanceUnits.METRE) > bmax):
-                bmax = float(ms.antenna_array.max_baseline.length.to_units(measures.DistanceUnits.METRE))
-
-        if (bmax == 0.0):
-            LOG.warning('Bmax is zero. Setting "robust" parameter to 0.5.')
-            return 0.5
-
-        # Get spw center wavelength
-
-        # get the spw from the first vis set, assume all others the same for now
-        ms = self.observing_run.get_ms(name=self.vislist[0])
-        spw = ms.get_spectral_window(spw)
-
-        centre_frequency = float(spw.centre_frequency.to_units(measures.FrequencyUnits.HERTZ))
-        centre_lambda = cqa.constants('c')['value'] / centre_frequency
-
-        # Smallest spatial scale
-        # TODO: Use actual beam sizes from CASA ?
-        native_resolution = 1.2 * centre_lambda / bmax
+        native_resolution = cqa.getvalue(cqa.convert(beam['bmin'], 'rad'))
 
         if (native_resolution > maxAcceptableAngResolution):
             robust = -0.5

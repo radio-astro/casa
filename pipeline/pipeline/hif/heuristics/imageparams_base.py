@@ -612,9 +612,12 @@ class ImageParamsHeuristics(object):
 
         return result
 
-    def imsize(self, fields, cell, primary_beam, sfpblimit=None, max_pixels=None):
+    def imsize(self, fields, cell, primary_beam, sfpblimit=None, max_pixels=None, centreonly=False):
         # get spread of beams
-        ignore, xspread, yspread = self.phasecenter(fields, centreonly=False)
+        if centreonly:
+            xspread = yspread = 0.0
+        else:
+            ignore, xspread, yspread = self.phasecenter(fields, centreonly=centreonly)
 
         cqa = casatools.quanta
 
@@ -780,7 +783,7 @@ class ImageParamsHeuristics(object):
         else:
             return 'hogbom'
 
-    def robust(self, spw):
+    def robust(self, spw, beam):
 
         '''Default robust value.'''
 

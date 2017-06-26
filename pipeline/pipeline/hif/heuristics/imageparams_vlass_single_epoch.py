@@ -21,7 +21,7 @@ class ImageParamsHeuristicsVlassSe(ImageParamsHeuristics):
     def deconvolver(self, specmode, spwspec):
         return 'mtmfs'
 
-    def robust(self, spw):
+    def robust(self, spw, beam):
         return 1.0
 
     def gridder(self, intent, field):
@@ -30,7 +30,7 @@ class ImageParamsHeuristicsVlassSe(ImageParamsHeuristics):
     def cell(self, beam, pixperbeam=None):
         return ['0.6arcsec']
 
-    def imsize(self, fields, cell, primary_beam, sfpblimit=None, max_pixels=None):
+    def imsize(self, fields, cell, primary_beam, sfpblimit=None, max_pixels=None, centreonly=None):
         return [11520, 11520]
 
     def threshold(self):

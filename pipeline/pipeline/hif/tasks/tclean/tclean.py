@@ -115,12 +115,14 @@ class TcleanInputs(cleanbase.CleanBaseInputs):
     def robust(self):
         if self._robust == -999.0:
             if (self.spw.find(',') == -1):
-                return self.image_heuristics.robust(self.spw)
+                # TODO: Use real synthesized beam size
+                return self.image_heuristics.robust(self.spw, '1.0arcsec')
             else:
                 robust = 0.0
                 spws = self.spw.split(',')
                 for spw in spws:
-                    robust += self.image_heuristics.robust(spw)
+                    # TODO: Use real synthesized beam size
+                    robust += self.image_heuristics.robust(spw, '1.0arcsec')
                 robust /= len(spws)
                 return robust
         else:
