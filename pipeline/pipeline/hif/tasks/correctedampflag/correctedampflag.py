@@ -803,26 +803,46 @@ class Correctedampflag(basetask.StandardTaskTemplate):
     @staticmethod
     def _propagate_phase_flags(flags, ms, antenna_id_to_name):
 
-        # Propagate any "bad baseline" flag commands for intent "PHASE"
-        # to TARGET.
+        # Intents to propagate to.
+        intents_propto = ["TARGET", "CHECK"]
+
+        # Check for presence of intents in current MS.
+        casa_intents_propto = [utils.to_CASA_intent(ms, intent)
+                               for intent in intents_propto]
+        valid_intents = [intent for intent in casa_intents_propto
+                         if intent]
+
+        # Proceed if there are valid intents to propagate to.
         propagated_flags = []
-        for flag in flags:
-            if (flag.reason == 'bad baseline'
-                    and flag.intent == utils.to_CASA_intent(ms, "PHASE")):
-                propagated_flags.append(
-                    FlagCmd(
-                        filename=flag.filename,
-                        spw=flag.spw,
-                        antenna=flag.antenna,
-                        intent=utils.to_CASA_intent(ms, "TARGET"),
-                        pol=flag.pol,
-                        field=flag.field,
-                        reason='bad baseline propagated from PHASE',
-                        antenna_id_to_name=antenna_id_to_name))
+        nr_propagated_flags = 0
+        if valid_intents:
+
+            # Go through each flag, looking for 'bad baseline' reason and
+            # "PHASE" intent...
+            for flag in flags:
+                if (flag.reason == 'bad baseline'
+                        and flag.intent == utils.to_CASA_intent(ms, "PHASE")):
+
+                    nr_propagated_flags += 1
+
+                    # If a match was found, propagate to each of the valid
+                    # intents.
+                    for intent in valid_intents:
+                        propagated_flags.append(
+                            FlagCmd(
+                                filename=flag.filename,
+                                spw=flag.spw,
+                                antenna=flag.antenna,
+                                intent=intent,
+                                pol=flag.pol,
+                                field=flag.field,
+                                reason='bad baseline propagated from PHASE',
+                                antenna_id_to_name=antenna_id_to_name))
+
         if propagated_flags:
-            LOG.info('Propagated {} flagging commands with reason '
+            LOG.info('Propagated {} flagging command(s) with reason '
                      '\"bad baseline\" from PHASE intent to TARGET '
-                     'intent.'.format(len(propagated_flags)))
+                     'and CHECK intent (where present).'.format(nr_propagated_flags))
             flags.extend(propagated_flags)
 
         return flags
