@@ -135,6 +135,8 @@ using the CASA task <b>gencal</b>.</p>
 	        <p><b>${single_result.tecmaps_result[0].tec_rms_image}</b></p>
         %endfor
 
+        <img src="${tec_plotfile}">
+
     %endif
 
     %if swpowspgain_subpages:
