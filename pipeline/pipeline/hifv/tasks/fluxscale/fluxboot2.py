@@ -366,8 +366,6 @@ class Fluxboot2(basetask.StandardTaskTemplate):
         # print 'fluxscale result: ', fluxscale_result
         # print 'unique_sources: ', unique_sources
 
-
-
         for source in unique_sources:
             indices = []
             for ii in range(len(sources)):
@@ -490,6 +488,8 @@ class Fluxboot2(basetask.StandardTaskTemplate):
                 fitreff = fluxscale_result[fieldid]['fitRefFreq']
                 spidx = fluxscale_result[fieldid]['spidx']
                 # fittedfluxd = []
+
+                freqs = [freq for freq in freqs if freq > 0.0]
 
                 fittedfluxd = map(
                     lambda x: 10.0 ** (
