@@ -224,7 +224,7 @@ class AquaXmlGenerator(object):
             generic_elements = self._get_xml_for_qa_scores(needs_generic, generic_registry)
 
             stage_element.extend(specific_elements)
-            stage_element.extend(generic_elements)
+            # stage_element.extend(generic_elements)
 
             xml_root.append(stage_element)
 
