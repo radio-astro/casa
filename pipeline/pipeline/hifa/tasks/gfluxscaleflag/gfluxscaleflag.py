@@ -16,7 +16,6 @@ from pipeline.h.tasks.flagging.flagdatasetter import FlagdataSetter
 from pipeline.hif.tasks import applycal
 from pipeline.hif.tasks import correctedampflag
 from pipeline.hif.tasks import gaincal
-from pipeline.hifa.tasks import fluxscale
 from pipeline.infrastructure import casa_tasks
 from .resultobjects import GfluxscaleflagResults
 
@@ -30,19 +29,20 @@ __all__ = [
 LOG = infrastructure.get_logger(__name__)
 
 
-class GfluxscaleflagInputs(fluxscale.GcorFluxscale.Inputs,
-                           correctedampflag.Correctedampflag.Inputs):
+class GfluxscaleflagInputs(basetask.StandardInputs):
 
     @basetask.log_equivalent_CASA_call
-    def __init__(self, context, output_dir=None, vis=None, **parameters):
-        # FIXME: should this inherit inputs from GcorFluxscale, or is it better
-        # FIXME: to set all these locally?
-        fluxscale.GcorFluxscale.Inputs.__init__(
-            self, context, output_dir=output_dir, vis=vis, **parameters)
-        correctedampflag.Correctedampflag.Inputs.__init__(
-            self, context, output_dir=output_dir, vis=vis, **parameters)
+    def __init__(self, context, output_dir=None, vis=None,
+                 intent=None, field=None, spw=None,
+                 solint=None, phaseupsolint=None, minsnr=None, refant=None,
+                 antnegsig=None, antpossig=None, tmantint=None, tmint=None,
+                 tmbl=None, antblnegsig=None, antblpossig=None,
+                 relaxed_factor=None):
+        self._init_properties(vars())
 
-    # Use local overrides for data selection input parameters.
+    #
+    # Parameters for data selection.
+    #
     @property
     def intent(self):
         if isinstance(self.vis, list):
@@ -91,6 +91,170 @@ class GfluxscaleflagInputs(fluxscale.GcorFluxscale.Inputs,
     @field.setter
     def field(self, value):
         self._field = value
+
+    @property
+    def spw(self):
+        if self._spw is not None:
+            return str(self._spw)
+
+        if isinstance(self.vis, list):
+            return self._handle_multiple_vis('spw')
+
+        science_spws = self.ms.get_spectral_windows(
+            science_windows_only=True)
+
+        self._spw = ','.join([str(spw.id) for spw in science_spws])
+
+        return self._spw
+
+    @spw.setter
+    def spw(self, value):
+        self._spw = value
+
+    #
+    # Parameters for gaincal.
+    #
+    @property
+    def solint(self):
+        if self._solint is None:
+            return 'inf'
+        return self._solint
+
+    @solint.setter
+    def solint(self, value):
+        self._solint = value
+
+    @property
+    def phaseupsolint(self):
+        if self._phaseupsolint is None:
+            return 'int'
+        return self._phaseupsolint
+
+    @phaseupsolint.setter
+    def phaseupsolint(self, value):
+        self._phaseupsolint = value
+
+    @property
+    def minsnr (self):
+        if self._minsnr is None:
+            return 2.0
+        return self._minsnr
+
+    @minsnr.setter
+    def minsnr(self, value):
+        self._minsnr = value
+
+    @property
+    def refant(self):
+        if self._refant is None:
+            return ''
+        return self._refant
+
+    @refant.setter
+    def refant(self, value):
+        self._refant = value
+
+    #
+    # Parameters for hif_correctedampflag.
+    #
+
+    # Lower sigma threshold for identifying outliers as a result of bad
+    # antennas within individual timestamps.
+    @property
+    def antnegsig(self):
+        return self._antnegsig
+
+    @antnegsig.setter
+    def antnegsig(self, value):
+        if value is None:
+            value = 6.5
+        self._antnegsig = value
+
+    # Upper sigma threshold for identifying outliers as a result of bad
+    # antennas within individual timestamps.
+    @property
+    def antpossig(self):
+        return self._antpossig
+
+    @antpossig.setter
+    def antpossig(self, value):
+        if value is None:
+            value = 5.8
+        self._antpossig = value
+
+    # Threshold for maximum fraction of timestamps that are allowed
+    # to contain outliers.
+    @property
+    def tmantint(self):
+        return self._tmantint
+
+    @tmantint.setter
+    def tmantint(self, value):
+        if value is None:
+            value = 0.06
+        self._tmantint = value
+
+    # Initial threshold for maximum fraction of "outlier timestamps" over
+    # "total timestamps" that a baseline may be a part of.
+    @property
+    def tmint(self):
+        return self._tmint
+
+    @tmint.setter
+    def tmint(self, value):
+        if value is None:
+            value = 0.09
+        self._tmint = value
+
+    # Initial threshold for maximum fraction of "bad baselines" over "all
+    # baselines" that an antenna may be a part of.
+    @property
+    def tmbl(self):
+        return self._tmbl
+
+    @tmbl.setter
+    def tmbl(self, value):
+        if value is None:
+            value = 0.175
+        self._tmbl = value
+
+    # Lower sigma threshold for identifying outliers as a result of "bad
+    # baselines" and/or "bad antennas" within baselines (across all
+    # timestamps).
+    @property
+    def antblnegsig(self):
+        return self._antblnegsig
+
+    @antblnegsig.setter
+    def antblnegsig(self, value):
+        if value is None:
+            value = 3.7
+        self._antblnegsig = value
+
+    # Upper sigma threshold for identifying outliers as a result of "bad
+    # baselines" and/or "bad antennas" within baselines (across all
+    # timestamps).
+    @property
+    def antblpossig(self):
+        return self._antblpossig
+
+    @antblpossig.setter
+    def antblpossig(self, value):
+        if value is None:
+            value = 3.0
+        self._antblpossig = value
+
+    # Relaxed value to set the threshold scaling factor to under certain
+    # conditions.
+    @property
+    def relaxed_factor(self):
+        return self._relaxed_factor
+
+    @relaxed_factor.setter
+    def relaxed_factor(self, value):
+        if value is None:
+            value = 2.0
+        self._relaxed_factor = value
 
 
 class Gfluxscaleflag(basetask.StandardTaskTemplate):
@@ -152,16 +316,17 @@ class Gfluxscaleflag(basetask.StandardTaskTemplate):
             LOG.info('Restoring back-up of calibration state.')
             inputs.context.callibrary.import_state(calstate_backup_name)
 
-            # FIXME: is fieldnamelist truly necessary? In gcorfluxscale, it's only used to set exptimes.
             # Determine the parameters to use for the gaincal to create the
             # phase-only caltable.
             if inputs.ms.combine_spwmap:
-                # fieldnamelist = [field.name for field in inputs.ms.get_fields(task_arg=inputs.transfer, intent='PHASE')]
                 phase_combine = 'spw'
                 phaseup_spwmap = inputs.ms.combine_spwmap
                 phase_interp = 'linearPD,linear'
+                # Note: at present, phaseupsolint is specified as a fixed
+                # value, defined in inputs. In the future, phaseupsolint may
+                # need to be set based on exposure times; if so, see discussion
+                # in CAS-10158 and logic in hifa.tasks.fluxscale.GcorFluxscale.
             else:
-                # fieldnamelist = None
                 phase_combine = ''
                 phaseup_spwmap = inputs.ms.phaseup_spwmap
                 phase_interp = None
@@ -171,15 +336,16 @@ class Gfluxscaleflag(basetask.StandardTaskTemplate):
             gpcalresult = self._do_gaincal(
                 intent=inputs.intent, gaintype='G', calmode='p',
                 combine=phase_combine, solint=inputs.phaseupsolint,
+                minsnr=inputs.minsnr, refant=inputs.refant,
                 spwmap=phaseup_spwmap, interp=phase_interp,
                 merge=True)
 
-            # FIXME: does this need a spwmap='' explicitly, or can it stay as spwmap=None?
             # Create amplitude caltable
             LOG.info('Compute amplitude gaincal table.')
             gacalresult = self._do_gaincal(
                 intent=inputs.intent, gaintype='T', calmode='a',
                 combine=phase_combine, solint=inputs.solint,
+                minsnr=inputs.minsnr, refant=inputs.refant,
                 interp='linear,linear', merge=True)
 
             # Apply the new caltables to the MS.
@@ -202,16 +368,14 @@ class Gfluxscaleflag(basetask.StandardTaskTemplate):
             result.plots['before'] = plot_fn('corrected', inputs.intent, suffix='before')
 
             # Run correctedampflag to identify outliers for intents specified in
-            # intents_for_flagging; let "field" be initialized automatically based
-            # on intents.
+            # intents_for_flagging; let "field" and "spw" be initialized
+            # automatically based on intents and context.
             LOG.info('Running correctedampflag to identify outliers to flag.')
             cafinputs = correctedampflag.Correctedampflag.Inputs(
                 context=inputs.context, vis=inputs.vis, intent=inputs.intent,
-                spw=inputs.spw, antnegsig=inputs.antnegsig,
-                antpossig=inputs.antpossig, tmantint=inputs.tmantint,
-                tmint=inputs.tmint, tmbl=inputs.tmbl,
-                antblnegsig=inputs.antblnegsig,
-                antblpossig=inputs.antblpossig,
+                antnegsig=inputs.antnegsig, antpossig=inputs.antpossig,
+                tmantint=inputs.tmantint, tmint=inputs.tmint, tmbl=inputs.tmbl,
+                antblnegsig=inputs.antblnegsig, antblpossig=inputs.antblpossig,
                 relaxed_factor=inputs.relaxed_factor)
             caftask = correctedampflag.Correctedampflag(cafinputs)
             cafresult = self._executor.execute(caftask)
@@ -251,7 +415,7 @@ class Gfluxscaleflag(basetask.StandardTaskTemplate):
 
     def _do_gaincal(self, caltable=None, field=None, intent=None, gaintype='G',
                     calmode=None, combine=None, solint=None, antenna=None,
-                    uvrange='', refant=None, minblperant=None,
+                    uvrange='', minsnr=None, refant=None, minblperant=None,
                     spwmap=None, interp=None, append=None,
                     merge=True):
 
@@ -281,7 +445,7 @@ class Gfluxscaleflag(basetask.StandardTaskTemplate):
             solint=solint,
             gaintype=gaintype,
             calmode=calmode,
-            minsnr=inputs.minsnr,
+            minsnr=minsnr,
             combine=combine,
             refant=refant,
             antenna=antenna,

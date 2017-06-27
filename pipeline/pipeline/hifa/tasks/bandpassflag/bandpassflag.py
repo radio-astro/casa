@@ -288,7 +288,9 @@ class Bandpassflag(basetask.StandardTaskTemplate):
                      '{0}'.format(fn_bp_final))
 
             # Update CalApplication in bandpass result with a new CalFrom
-            # that points to the final bp table.
+            # that points to the final bp table. It is assumed here that
+            # hifa_bandpass returns a single CalApplication containing a single
+            # CalFrom caltable.
             bpresult.final[0].calfrom[0] = self._copy_calfrom_with_gaintable(
                 bpresult.final[0].calfrom[0], fn_bp_final)
         else:

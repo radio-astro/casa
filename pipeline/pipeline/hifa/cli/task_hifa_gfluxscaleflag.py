@@ -5,7 +5,7 @@ import pipeline.h.cli.utils as utils
 
 def hifa_gfluxscaleflag(
         vis=None,
-        phaseupsolint=None, solint=None, minsnr=None,
+        phaseupsolint=None, solint=None, minsnr=None, refant=None,
         antnegsig=None, antpossig=None, tmantint=None, tmint=None, tmbl=None,
         antblnegsig=None, antblpossig=None, relaxed_factor=None,
         pipelinemode=None, dryrun=None, acceptresults=None):
