@@ -66,8 +66,8 @@ class ALMAExportData(exportdata.ExportData):
 
         # Export the AQUA report
         aquareport_name = 'pipeline_aquareport.xml'
-        pipe_aqua_reportfile = self._export_aqua_report (self.inputs.context, oussid, aquareport_name,
-            almaifaqua, self.inputs.products_dir)
+        pipe_aqua_reportfile = self._export_aqua_report(self.inputs.context, oussid, aquareport_name,
+                                                        self.inputs.products_dir)
 
         # Update the manifest
         manifest = os.path.join(self.inputs.context.products_dir, results.manifest)
@@ -196,34 +196,32 @@ class ALMAExportData(exportdata.ExportData):
 
         return tarfilename
 
-    def _export_aqua_report (self, context, oussid, aquareport_name, aqua, products_dir):
-
+    def _export_aqua_report(self, context, oussid, aquareport_name, products_dir):
         """
         Save the AQUA report.
         """
+        aqua_file = os.path.join(context.output_dir, aquareport_name)
 
-        LOG.info ('Generating pipeline AQUA report')
+        report_generator = almaifaqua.AlmaAquaXmlGenerator()
+        LOG.info('Generating pipeline AQUA report')
         try:
-            aqua.aquaReportFromContext (context, aquareport_name)
+            report_xml = report_generator.get_report_xml(context)
+            almaifaqua.export_to_disk(report_xml, aqua_file)
         except:
-            LOG.error ('Error generating the pipeline AQUA report')
-        finally:
-            ps = context.project_structure
-            if ps is None:
-                aqua_file = os.path.join (context.output_dir, aquareport_name)
-                out_aqua_file = os.path.join (products_dir, aquareport_name)
-            elif ps.ousstatus_entity_id == 'unknown':
-                aqua_file = os.path.join (context.output_dir, aquareport_name)
-                out_aqua_file = os.path.join (products_dir, aquareport_name)
-            else:
-                aqua_file = os.path.join (context.output_dir, aquareport_name)
-                out_aqua_file = os.path.join (products_dir, oussid + '.' + aquareport_name)
-            if os.path.exists(aqua_file):
-                LOG.info('Copying AQUA report %s to %s' % (aqua_file, out_aqua_file))
-                shutil.copy (aqua_file, out_aqua_file)
-                return os.path.basename(out_aqua_file)
-            else:
-                return 'Undefined'
+            LOG.error('Error generating the pipeline AQUA report')
+            return 'Undefined'
+
+        ps = context.project_structure
+        if ps is None:
+            out_aqua_file = os.path.join(products_dir, aquareport_name)
+        elif ps.ousstatus_entity_id == 'unknown':
+            out_aqua_file = os.path.join(products_dir, aquareport_name)
+        else:
+            out_aqua_file = os.path.join(products_dir, oussid + '.' + aquareport_name)
+
+        LOG.info('Copying AQUA report %s to %s' % (aqua_file, out_aqua_file))
+        shutil.copy(aqua_file, out_aqua_file)
+        return os.path.basename(out_aqua_file)
 
     def _add_to_manifest(self, manifest_file, aux_fproducts, aux_caltablesdict, aux_calapplysdict, aqua_report):
 
