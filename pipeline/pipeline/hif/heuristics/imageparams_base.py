@@ -1021,9 +1021,13 @@ class ImageParamsHeuristics(object):
                         else:
                             chansel = '%d~%d' % (int(spw_do.num_channels / 2.0), int(spw_do.num_channels / 2.0))
                     else:
-                        if (spw_topo_chan_param_dict[os.path.basename(msname)][str(intSpw)] != ''):
-                            # Use continuum frequency selection
-                            chansel = spw_topo_chan_param_dict[os.path.basename(msname)][str(intSpw)]
+                        if spw_topo_chan_param_dict.get(os.path.basename(msname), None):
+                            if (spw_topo_chan_param_dict[os.path.basename(msname)][str(intSpw)] != ''):
+                                # Use continuum frequency selection
+                                chansel = spw_topo_chan_param_dict[os.path.basename(msname)][str(intSpw)]
+                            else:
+                                # Use full spw
+                                chansel = '0~%d' % (spw_do.num_channels - 1)
                         else:
                             # Use full spw
                             chansel = '0~%d' % (spw_do.num_channels - 1)
