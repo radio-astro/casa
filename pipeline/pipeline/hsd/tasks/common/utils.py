@@ -634,8 +634,14 @@ def make_polid_map(srcvis, dstvis):
 
 #@profiler
 def make_ddid_map(vis):
-    table_rows = _read_table(casatools.MSMDReader, tablereader.DataDescriptionTable, vis)
-    return dict((((polid,spwid),ddid) for ddid,spwid,polid in table_rows))
+    with casatools.TableReader(os.path.join(vis, 'DATA_DESCRIPTION')) as tb:
+        pol_ids = tb.getcol('POLARIZATION_ID')
+        spw_ids = tb.getcol('SPECTRAL_WINDOW_ID')
+        num_ddids = tb.nrows()
+    ddid_map = {}
+    for ddid in xrange(num_ddids):
+        ddid_map[(pol_ids[ddid], spw_ids[ddid])] = ddid
+    return ddid_map
 
 def get_datacolumn_name(vis):
     colname_candidates = ['CORRECTED_DATA', 'FLOAT_DATA', 'DATA']
