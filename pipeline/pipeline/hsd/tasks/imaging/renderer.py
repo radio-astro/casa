@@ -25,7 +25,7 @@ class T2_4MDetailsSingleDishImagingRenderer(basetemplates.T2_4MDetailsDefaultRen
         plots = []
         image_rms = []
         for r in results:
-            if isinstance(r, imaging.SDImagingResults):
+            if isinstance(r, imaging.SDImagingResultItem):
                 image_item = r.outcome['image']
                 msid_list = r.outcome['file_index']
                 imagemode = r.outcome['imagemode']

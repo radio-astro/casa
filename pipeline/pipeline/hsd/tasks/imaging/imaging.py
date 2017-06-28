@@ -101,13 +101,16 @@ class SDImagingInputs(basetask.StandardInputs):
         self._spw = value
 
 
-class SDImagingResults(common.SingleDishResults):
+class SDImagingResultItem(common.SingleDishResults):
+    """
+    The class to store result of each image.
+    """
     def __init__(self, task=None, success=None, outcome=None):
-        super(SDImagingResults, self).__init__(task, success, outcome)
+        super(SDImagingResultItem, self).__init__(task, success, outcome)
 
     def merge_with_context(self, context):
-        super(SDImagingResults, self).merge_with_context(context)
-        LOG.todo('need to decide what is done in SDImagingResults.merge_with_context')
+        super(SDImagingResultItem, self).merge_with_context(context)
+        LOG.todo('need to decide what is done in SDImagingResultItem.merge_with_context')
         
         if self.outcome.has_key('export_results'):
             self.outcome['export_results'].merge_with_context(context)
@@ -123,6 +126,17 @@ class SDImagingResults(common.SingleDishResults):
         # return [image.imagename for image in self.outcome]
         return self.outcome['image'].imagename
 
+class SDImagingResults(basetask.ResultsList):
+    """
+    The class to store a list of per image results (SDImagingResultItem).
+    """
+    def merge_with_context(self, context):
+        ### Need to handle logrecords of top level task
+        if hasattr(self, 'logrecords') and len(self) > 0:
+            self[0].logrecords.extend(self.logrecords)
+        super(SDImagingResults, self).merge_with_context(context)
+
+        
 class SDImaging(basetask.StandardTaskTemplate):
     Inputs = SDImagingInputs
     # stokes to image and requred POLs for it
@@ -152,7 +166,7 @@ class SDImaging(basetask.StandardTaskTemplate):
         cqa = casatools.quanta
          
         # task returns ResultsList
-        results = basetask.ResultsList()
+        results = SDImagingResults()
         # search results and retrieve edge parameter from the most
         # recent SDBaselineResults if it exists
         getresult = lambda r : r.read() if hasattr(r, 'read') else r
@@ -448,7 +462,7 @@ class SDImaging(basetask.StandardTaskTemplate):
 #                         # to register exported_ms to each scantable instance
 #                         outcome['export_results'] = export_results
   
-                    result = SDImagingResults(task=self.__class__,
+                    result = SDImagingResultItem(task=self.__class__,
                                               success=True,
                                               outcome=outcome)
                     result.task = self.__class__
@@ -661,7 +675,7 @@ class SDImaging(basetask.StandardTaskTemplate):
 
 #                 # to register exported_ms to each scantable instance
 #                 outcome['export_results'] = export_results
-                result = SDImagingResults(task=self.__class__,
+                result = SDImagingResultItem(task=self.__class__,
                                           success=True,
                                           outcome=outcome)
                 result.stage_number = inputs.context.task_counter 
