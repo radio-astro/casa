@@ -35,7 +35,7 @@ class T2_4MDetailsMakermsimagesRenderer(basetemplates.T2_4MDetailsDefaultRendere
 
         qaTool = casatools.quanta
 
-        plots = []
+        rmsplots = {}
 
         for r in results:
             rmsimagenames = r.rmsimagenames
@@ -48,8 +48,8 @@ class T2_4MDetailsMakermsimagesRenderer(basetemplates.T2_4MDetailsDefaultRendere
                     info = image.miscinfo()
                     spw = info.get('spw', None)
                     field = ''
-                    if 'field' in info:
-                        field = '%s (%s)' % (info['field'], r.intent)
+                    #if 'field' in info:
+                    #    field = '%s (%s)' % (info['field'], r.intent)
 
                     coordsys = image.coordsys()
                     coord_names = numpy.array(coordsys.names())
@@ -63,7 +63,9 @@ class T2_4MDetailsMakermsimagesRenderer(basetemplates.T2_4MDetailsDefaultRendere
             # Make the plots of the rms images
             plotter = rmsimages.RmsimagesSummary(context, r)
             plots = plotter.plot()
+            ms = os.path.basename(r.inputs['vis'])
+            rmsplots[ms] = plots
 
-        ctx.update({'plots'     : plots,
+        ctx.update({'rmsplots'     : rmsplots,
                     'info_dict' : info_dict,
                     'dirname'   : weblog_dir})

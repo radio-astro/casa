@@ -47,3 +47,30 @@ $(document).ready(function() {
 
 <p>Makermsimages</p>
 
+<%self:plot_group plot_dict="${rmsplots}"
+                                  url_fn="${lambda ms:  'noop'}">
+
+        <%def name="title()">
+            RMS images
+        </%def>
+
+        <%def name="preamble()">
+
+
+        </%def>
+
+
+        <%def name="mouseover(plot)">RMS plot </%def>
+
+
+
+        <%def name="fancybox_caption(plot)">
+          RMS plot
+        </%def>
+
+
+        <%def name="caption_title(plot)">
+           RMS plot
+        </%def>
+</%self:plot_group>
+

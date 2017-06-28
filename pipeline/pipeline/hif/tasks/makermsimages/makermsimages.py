@@ -46,18 +46,17 @@ class MakermsimagesResults(basetask.Results):
 
         # rmsimagelist is a list of dictionaries
         # Use the same format and information from sciimlist, save for the image name and image plot
+
         for rmsitem in self.rmsimagelist:
             try:
                 imageitem = imagelibrary.ImageItem(
                   imagename=rmsitem['imagename'] + '.rms', sourcename=rmsitem['sourcename'],
-                  spwlist=rmsitem['spw'], specmode=rmsitem['specmode'],
-                  sourcetype=rmsitem['intent'],
+                  spwlist=rmsitem['spwlist'], specmode=rmsitem['specmode'],
+                  sourcetype=rmsitem['sourcetype'],
                   multiterm=rmsitem['multiterm'],
                   imageplot=rmsitem['imageplot'])
-                import pdb
-                pdb.set_trace()
                 context.rmsimlist.add_item(imageitem)
-                if 'TARGET' in rmsitem['intent']:
+                if 'TARGET' in rmsitem['sourcetype']:
                     print 'ADDED IMAGE ITEM'
                     context.rmsimlist.add_item(imageitem)
             except:
@@ -87,6 +86,9 @@ class Makermsimages(basetask.StandardTaskTemplate):
         for imageitem in imlist:
             imagenames.extend(glob.glob(imageitem['imagename'] + '*'))
 
+        # tt0 images only
+        imagenames = [im for im in imagenames if 'tt0' in im]
+
         imagenames = [im for im in imagenames if '.rms' not in im]
         rmsimagenames = []
 
@@ -109,10 +111,23 @@ class Makermsimages(basetask.StandardTaskTemplate):
         # Quicklook parameters
         imdevparams = {'imagename' : imagename,
                        'outfile'   : imagename + '.rms',
-                       'grid'      : [20, 20],
-                       'xlength'   : '60pix',
-                       'ylength'   : '60pix',
-                       'stattype'  : 'rms'}
+                       'region'    : "",
+                       'box'       : "",
+                       'chans'     : "",
+                       'stokes'    : "",
+                       'mask'      : "",
+                       'overwrite' : True,
+                       'stretch'   : False,
+                       'grid'      : [10, 10],
+                       'anchor'    : "ref",
+                       'xlength'   : "60arcsec",
+                       'ylength'   : "60arcsec",
+                       'interp'    : "cubic",
+                       'stattype'  : "xmadm",
+                       'statalg'   : "chauvenet",
+                       'zscore'    : -1,
+                       'maxiter'   : -1
+                       }
 
         task = casa_tasks.imdev(**imdevparams)
 
