@@ -1019,7 +1019,7 @@ class ImageParamsHeuristics(object):
                     if (specmode == 'cube'):
                         # Use the center channel selection
                         if nbin != -1:
-                            chansel = '%d~%d' % (int(spw_do.num_channels / 2.0), int(spw_do.num_channels / 2.0) + nbin - 1)
+                            chansel = '%d~%d' % (int((spw_do.num_channels - nbin) / 2.0), int((spw_do.num_channels + nbin) / 2.0) - 1)
                         else:
                             chansel = '%d~%d' % (int(spw_do.num_channels / 2.0), int(spw_do.num_channels / 2.0))
                     else:

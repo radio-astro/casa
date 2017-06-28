@@ -82,7 +82,7 @@ class ImagePreCheck(basetask.StandardTaskTemplate):
             # Use UV taper heuristic
 
             physicalBW_of_1chan = float(inputs.context.observing_run.measurement_sets[0].get_spectral_window(repr_spw).channels[0].getWidth().convert_to(measures.FrequencyUnits.HERTZ).value)
-            nbin = int(cqa.getvalue(cqa.convert(repr_target[2], 'Hz'))/physicalBW_of_1chan)
+            nbin = int(cqa.getvalue(cqa.convert(repr_target[2], 'Hz'))/physicalBW_of_1chan + 0.5)
             primary_beam_size = image_heuristics.largest_primary_beam_size(spwspec=str(repr_spw))
             field_ids = image_heuristics.field('TARGET', repr_source)
             cont_spw = ','.join([str(s.id) for s in inputs.context.observing_run.measurement_sets[0].get_spectral_windows()])
