@@ -107,6 +107,8 @@ class SDImagingResultItem(common.SingleDishResults):
     """
     def __init__(self, task=None, success=None, outcome=None):
         super(SDImagingResultItem, self).__init__(task, success, outcome)
+        # logrecords attribute is mandatory but not created unless Result is returned by execute.
+        self.logrecords = []
 
     def merge_with_context(self, context):
         super(SDImagingResultItem, self).merge_with_context(context)
@@ -131,7 +133,7 @@ class SDImagingResults(basetask.ResultsList):
     The class to store a list of per image results (SDImagingResultItem).
     """
     def merge_with_context(self, context):
-        ### Need to handle logrecords of top level task
+        ### assign logrecords of top level task to the first result item.
         if hasattr(self, 'logrecords') and len(self) > 0:
             self[0].logrecords.extend(self.logrecords)
         super(SDImagingResults, self).merge_with_context(context)
@@ -271,7 +273,6 @@ class SDImaging(basetask.StandardTaskTemplate):
   
             coord_set = False
             for (name, _members) in image_group.iteritems():
-                logrecords = []
                 msobjs =  map(lambda x: x[0], _members)
                 antids = map(lambda x: x[1], _members)
                 spwids = map(lambda x: x[2], _members)
@@ -334,7 +335,7 @@ class SDImaging(basetask.StandardTaskTemplate):
                                                                 spwtype=spwtype)
                     weighting_task = weighting.WeightMS(weighting_inputs)
                     weighting_result = self._executor.execute(weighting_task, merge=True)
-                    logrecords.extend(weighting_result.logrecords)
+                    del weighting_result #Not used
    
                 # Step 2.
                 # Imaging
@@ -369,7 +370,6 @@ class SDImaging(basetask.StandardTaskTemplate):
                                                               nx=nx, ny=ny)
                 imager_task = worker.SDImagingWorker(imager_inputs)
                 imager_result = self._executor.execute(imager_task, merge=True)
-                logrecords.extend(imager_result.logrecords)
                   
                 if imager_result.outcome is not None:
                     # Imaging was successful, proceed following steps
@@ -425,7 +425,6 @@ class SDImaging(basetask.StandardTaskTemplate):
                         gridding_task = grid_task_class(gridding_inputs)
                         gridding_result = self._executor.execute(gridding_task, merge=True)
                         grid_tables.append(gridding_result.outcome)
-                        logrecords.extend(gridding_result.logrecords)
                     # Extract RMS and number of spectra from grid_tables
                     for i in xrange(len(grid_input_dict)):
                         validsps.append([r[6] for r in grid_tables[i]])
@@ -469,8 +468,6 @@ class SDImaging(basetask.StandardTaskTemplate):
   
                     result.stage_number = inputs.context.task_counter 
                     
-                    result.logrecords = logrecords
-                    del logrecords
                                                   
                     results.append(result)
                       
@@ -478,7 +475,6 @@ class SDImaging(basetask.StandardTaskTemplate):
                 LOG.info("Skipping combined image for the amplitude calibrator.")
                 continue
   
-            logrecords = []
             # Make combined image
             if len(tocombine_images) == 0:
                 LOG.warn("No valid image to combine for Source %s, Spw %d" % (source_name, spwids[0]))
@@ -516,7 +512,6 @@ class SDImaging(basetask.StandardTaskTemplate):
                 combine_task = sdcombine.SDImageCombine(combine_inputs)
                 imager_result = self._executor.execute(combine_task, merge=True)
 
-            logrecords.extend(imager_result.logrecords)
             if imager_result.outcome is not None:
                 # Imaging was successful, proceed following steps
       
@@ -564,7 +559,6 @@ class SDImaging(basetask.StandardTaskTemplate):
                                                              nx=nx, ny=ny)
                     gridding_task = grid_task_class(gridding_inputs)
                     gridding_result = self._executor.execute(gridding_task, merge=True)
-                    logrecords.extend(gridding_result.logrecords)
                     grid_tables.append(gridding_result.outcome)
                 # Extract RMS and number of spectra from grid_tables
                 for i in xrange(len(grid_input_dict)):
@@ -679,16 +673,9 @@ class SDImaging(basetask.StandardTaskTemplate):
                                           success=True,
                                           outcome=outcome)
                 result.stage_number = inputs.context.task_counter 
-                result.logrecords = logrecords
-                del logrecords
-                      
+                
                 results.append(result)
         
-        LOG.todo('logrecords for TOP level task must be handled properly')
-        for r in results:
-            if not hasattr(r, 'logrecords'):
-                r.logrecords = []
-
         return results
     
     def analyse(self, result):
