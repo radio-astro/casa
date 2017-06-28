@@ -783,11 +783,11 @@ class ImageParamsHeuristics(object):
         else:
             return 'hogbom'
 
-    def robust(self, spw, beam):
+    def robust(self, beam):
 
-        '''Default robust value.'''
+        '''Default robust and min/max acceptable resolution values.'''
 
-        return 0.5
+        return 0.5, 0.0, 0.0
 
     def calc_topo_ranges(self, inputs):
 
@@ -1230,7 +1230,7 @@ class ImageParamsHeuristics(object):
         return None
 
 
-    def uvtaper(self):
+    def uvtaper(self, beam_natural=None, minAcceptableAngResolution=None, maxAcceptableAngResolution=None):
         return None
 
 

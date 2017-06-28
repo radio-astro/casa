@@ -21,16 +21,16 @@ class ImageParamsHeuristicsVlassSe(ImageParamsHeuristics):
     def deconvolver(self, specmode, spwspec):
         return 'mtmfs'
 
-    def robust(self, spw, beam):
-        return 1.0
+    def robust(self, beam=None):
+        return 1.0, 0.0, 0.0
 
     def gridder(self, intent, field):
         return 'mosaic'
 
-    def cell(self, beam, pixperbeam=None):
+    def cell(self, beam=None, pixperbeam=None):
         return ['0.6arcsec']
 
-    def imsize(self, fields, cell, primary_beam, sfpblimit=None, max_pixels=None, centreonly=None):
+    def imsize(self, fields=None, cell=None, primary_beam=None, sfpblimit=None, max_pixels=None, centreonly=None):
         return [11520, 11520]
 
     def threshold(self):
@@ -48,7 +48,7 @@ class ImageParamsHeuristicsVlassSe(ImageParamsHeuristics):
     def scales(self):
         return [0]
 
-    def uvtaper(self):
+    def uvtaper(self, beam_natural=None, minAcceptableAngResolution=None, maxAcceptableAngResolution=None):
         return []
 
     def uvrange(self):

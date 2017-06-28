@@ -15,11 +15,12 @@ LOG = infrastructure.get_logger(__name__)
 
 
 class ImagePreCheckResults(basetask.Results):
-    def __init__(self, robust=0.5, uvtaper='', beams=[], sensitivities=[]):
+    def __init__(self, minAcceptableAngResolution='0.0arcsec', maxAcceptableAngResolution='0.0arcsec', hm_robust=0.5, hm_uvtaper='', sensitivities=[]):
         super(ImagePreCheckResults, self).__init__()
-        self.robust = robust
-        self.uvtaper = uvtaper
-        self.beams = beams
+        self.minAcceptableAngResolution = minAcceptableAngResolution
+        self.maxAcceptableAngResolution = maxAcceptableAngResolution
+        self.hm_robust = hm_robust
+        self.hm_uvtaper = hm_uvtaper
         self.sensitivities = sensitivities
 
     def merge_with_context(self, context):
@@ -82,10 +83,6 @@ class ImagePreCheck(basetask.StandardTaskTemplate):
                 linesfile = inputs.context.linesfile, \
                 imaging_mode = 'ALMA')
 
-            # Use robust heuristic
-
-            # Use UV taper heuristic
-
             physicalBW_of_1chan = float(inputs.context.observing_run.measurement_sets[0].get_spectral_window(repr_spw).channels[0].getWidth().convert_to(measures.FrequencyUnits.HERTZ).value)
             nbin = int(cqa.getvalue(cqa.convert(repr_target[2], 'Hz'))/physicalBW_of_1chan + 0.5)
             primary_beam_size = image_heuristics.largest_primary_beam_size(spwspec=str(repr_spw))
@@ -129,8 +126,21 @@ class ImagePreCheck(basetask.StandardTaskTemplate):
                        'robust': robust, \
                        'sensitivity': cqa.quantity(sensitivity, 'Jy/beam')}))
 
-            return ImagePreCheckResults(beams=beams, sensitivities=sensitivities)
+            # Determine suggested robust value
+            hm_robust, minAcceptableAngResolution, maxAcceptableAngResolution = image_heuristics.robust(beams[0.5])
 
+            # Determine suggested UV taper value
+            if hm_robust == 2.0:
+                hm_uvtaper = image_heuristics.uvtaper(beams[2.0], cqa.quantity(minAcceptableAngResolution, 'arcsec'), cqa.quantity(maxAcceptableAngResolution, 'arcsec'))
+            else:
+                hm_uvtaper = []
+
+            return ImagePreCheckResults( \
+                       minAcceptableAngResolution=cqa.quantity(minAcceptableAngResolution, 'arcsec'), \
+                       maxAcceptableAngResolution=cqa.quantity(maxAcceptableAngResolution, 'arcsec'), \
+                       hm_robust=hm_robust, \
+                       hm_uvtaper=hm_uvtaper, \
+                       sensitivities=sensitivities)
 
     def analyse(self, results):
         return results

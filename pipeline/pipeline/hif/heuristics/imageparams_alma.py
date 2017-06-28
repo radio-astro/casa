@@ -25,40 +25,63 @@ class ImageParamsHeuristicsALMA(ImageParamsHeuristics):
         ImageParamsHeuristics.__init__(self, vislist, spw, observing_run, imagename_prefix, science_goals, contfile, linesfile)
         self.imaging_mode = 'ALMA'
 
-    def robust(self, spw, beam):
+    def robust(self, beam):
 
         '''Adjustment of robust parameter based on desired resolutions.
            beam is the synthesized beam.'''
 
-        return 0.5
+        # Only apply the robust heuristic if a representative source is defined
+        repr_ms = self.observing_run.get_ms(self.vislist[0])
+        repr_target = repr_ms.representative_target
+        if repr_target == (None, None, None):
+            LOG.info('ALMA robust heuristics: No representative target found. Using robust=0.5')
+            return 0.5
 
         # Check if there is a non-zero min/max angular resolution
         cqa = casatools.quanta
-        minAcceptableAngResolution = cqa.getvalue(cqa.convert(self.science_goals.min_angular_resolution, 'rad'))
-        maxAcceptableAngResolution = cqa.getvalue(cqa.convert(self.science_goals.max_angular_resolution, 'rad'))
+        minAcceptableAngResolution = cqa.getvalue(cqa.convert(self.science_goals.min_angular_resolution, 'arcsec'))
+        maxAcceptableAngResolution = cqa.getvalue(cqa.convert(self.science_goals.max_angular_resolution, 'arcsec'))
         if (minAcceptableAngResolution == 0.0) or (maxAcceptableAngResolution == 0.0):
-            desired_angular_resolution = cqa.getvalue(cqa.convert(self.science_goals.desired_angular_resolution, 'rad'))
+            desired_angular_resolution = cqa.getvalue(cqa.convert(self.science_goals.desired_angular_resolution, 'arcsec'))
             if (desired_angular_resolution != 0.0):
                 minAcceptableAngResolution = 0.8 * desired_angular_resolution
                 maxAcceptableAngResolution = 1.2 * desired_angular_resolution
             else:
                 science_goals = self.observing_run.get_measurement_sets()[0].science_goals
-                minAcceptableAngResolution = cqa.getvalue(cqa.convert(science_goals['minAcceptableAngResolution'], 'rad'))
-                maxAcceptableAngResolution = cqa.getvalue(cqa.convert(science_goals['maxAcceptableAngResolution'], 'rad'))
+                minAcceptableAngResolution = cqa.getvalue(cqa.convert(science_goals['minAcceptableAngResolution'], 'arcsec'))
+                maxAcceptableAngResolution = cqa.getvalue(cqa.convert(science_goals['maxAcceptableAngResolution'], 'arcsec'))
                 if (minAcceptableAngResolution == 0.0) or (maxAcceptableAngResolution == 0.0):
                     LOG.info('No value for desired angular resolution. Setting "robust" parameter to 0.5.')
-                    return 0.5
+                    return 0.5, 0.0, 0.0
 
-        native_resolution = cqa.getvalue(cqa.convert(beam['bmin'], 'rad'))
+        native_resolution = cqa.getvalue(cqa.convert(beam['bmin'], 'arcsec'))
 
         if (native_resolution > maxAcceptableAngResolution):
-            robust = -0.5
+            robust = -0.5, minAcceptableAngResolution, maxAcceptableAngResolution
         elif (native_resolution < minAcceptableAngResolution):
-            robust = 1.0
+            robust = 2.0, minAcceptableAngResolution, maxAcceptableAngResolution
         else:
-            robust = 0.5
+            robust = 0.5, minAcceptableAngResolution, maxAcceptableAngResolution
 
         return robust
+
+    def uvtaper(self, beam_natural, minAcceptableAngResolution, maxAcceptableAngResolution):
+
+        '''Adjustment of uvtaper parameter based on desired resolution.'''
+
+        cqa = casatools.quanta
+
+        beam_natural_v = cqa.getvalue(cqa.convert(beam_natural['bmin'], 'arcsec'))
+        minAR_v = cqa.getvalue(cqa.convert(minAcceptableAngResolution, 'arcsec'))
+        maxAR_v = cqa.getvalue(cqa.convert(maxAcceptableAngResolution, 'arcsec'))
+
+        if beam_natural_v < 1.2 * minAR_v:
+            beam_taper = math.sqrt(maxAR_v ** 2 - beam_natural_v ** 2)
+            uvtaper = ['%.3garcsec' % (beam_taper)]
+        else:
+            uvtaper = []
+
+        return uvtaper
 
     def dr_correction(self, threshold, dirty_dynamic_range, residual_max, intent, tlimit):
 
