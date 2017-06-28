@@ -318,6 +318,7 @@ class Tclean(cleanbase.CleanBase):
             min_field_id = 0
             max_field_id = 0
             eff_ch_bw = 1.0
+            sens_bw = 1.0
         else:
             # Get a noise estimate from the CASA sensitivity calculator
             sensitivity, \
@@ -325,7 +326,8 @@ class Tclean(cleanbase.CleanBase):
             max_sensitivity, \
             min_field_id, \
             max_field_id, \
-            eff_ch_bw = \
+            eff_ch_bw, \
+            sens_bw = \
                 self.image_heuristics.calc_sensitivities(inputs.vis, \
                                                          inputs.field, \
                                                          inputs.intent, \

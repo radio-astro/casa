@@ -8,6 +8,7 @@ import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 from pipeline.infrastructure import casa_tasks
 import pipeline.infrastructure.casatools as casatools
+import pipeline.domain.measures as measures
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -76,43 +77,42 @@ class ImagePreCheck(basetask.StandardTaskTemplate):
                 linesfile = inputs.context.linesfile, \
                 imaging_mode = 'ALMA')
 
-            # Robust heuristic
+            # Use robust heuristic
 
-            # UV taper heuristic
+            # Use UV taper heuristic
 
-            # Beams
-            beam_m0p5 = image_heuristics.synthesized_beam([(repr_source, 'TARGET')], str(repr_spw), robust=-0.5)
-            beam_0p5 = image_heuristics.synthesized_beam([(repr_source, 'TARGET')], str(repr_spw), robust=0.5)
-            beam_2p0 = image_heuristics.synthesized_beam([(repr_source, 'TARGET')], str(repr_spw), robust=2.0)
-
-            #print 'DEBUG_DM: beams:', beam_m0p5, beam_0p5, beam_2p0
-
-            # Sensitivities
+            physicalBW_of_1chan = float(inputs.context.observing_run.measurement_sets[0].get_spectral_window(repr_spw).channels[0].getWidth().convert_to(measures.FrequencyUnits.HERTZ).value)
+            nbin = int(cqa.getvalue(cqa.convert(repr_target[2], 'Hz'))/physicalBW_of_1chan)
             primary_beam_size = image_heuristics.largest_primary_beam_size(spwspec=str(repr_spw))
             field_ids = image_heuristics.field('TARGET', repr_source)
             cont_spw = ','.join([str(s.id) for s in inputs.context.observing_run.measurement_sets[0].get_spectral_windows()])
 
-            cell_m0p5 = image_heuristics.cell(beam_m0p5)
-            imsize_m0p5 = image_heuristics.imsize(field_ids, cell_m0p5, primary_beam_size, centreonly=True)
-            sens_m0p5 = image_heuristics.calc_sensitivities(inputs.vis, repr_source, 'TARGET', str(repr_spw), -1, {}, 'cube', 'standard', cell_m0p5, imsize_m0p5, 'briggs', -0.5)
-            sens_cont_m0p5 = image_heuristics.calc_sensitivities(inputs.vis, repr_source, 'TARGET', cont_spw, -1, {}, 'cont', 'standard', cell_m0p5, imsize_m0p5, 'briggs', -0.5)
-
-            cell_0p5 = image_heuristics.cell(beam_0p5)
-            imsize_0p5 = image_heuristics.imsize(field_ids, cell_0p5, primary_beam_size, centreonly=True)
-            sens_0p5 = image_heuristics.calc_sensitivities(inputs.vis, repr_source, 'TARGET', str(repr_spw), -1, {}, 'cube', 'standard', cell_0p5, imsize_0p5, 'briggs', 0.5)
-            sens_cont_0p5 = image_heuristics.calc_sensitivities(inputs.vis, repr_source, 'TARGET', cont_spw, -1, {}, 'cont', 'standard', cell_0p5, imsize_0p5, 'briggs', 0.5)
-
-            cell_2p0 = image_heuristics.cell(beam_2p0)
-            imsize_2p0 = image_heuristics.imsize(field_ids, cell_2p0, primary_beam_size, centreonly=True)
-            sens_2p0 = image_heuristics.calc_sensitivities(inputs.vis, repr_source, 'TARGET', str(repr_spw), -1, {}, 'cube', 'standard', cell_2p0, imsize_2p0, 'briggs', 2.0)
-            sens_cont_2p0 = image_heuristics.calc_sensitivities(inputs.vis, repr_source, 'TARGET', cont_spw, -1, {}, 'cont', 'standard', cell_2p0, imsize_2p0, 'briggs', 2.0)
-
-            #print 'DEBUG_DM: sensitivities:', sens_m0p5, sens_0p5, sens_2p0, sens_cont_m0p5, sens_cont_0p5, sens_cont_2p0
+            beams = {}
+            cells = {}
+            imsizes = {}
+            reprBW_sensitivities = {}
+            reprBW_sens_bws = {}
+            cont_sensitivities = {}
+            cont_sens_bws = {}
+            for robust in [-0.5, 0.5, 2.0]:
+                beams[robust] = image_heuristics.synthesized_beam([(repr_source, 'TARGET')], str(repr_spw), robust=robust)
+                cells[robust] = image_heuristics.cell(beams[robust])
+                imsizes[robust] = image_heuristics.imsize(field_ids, cells[robust], primary_beam_size, centreonly=True)
+                # reprBW sensitivity
+                sensitivity, min_sensitivity, max_sensitivity, min_field_id, max_field_id, eff_ch_bw, sens_bw = \
+                    image_heuristics.calc_sensitivities(inputs.vis, repr_source, 'TARGET', str(repr_spw), nbin, {}, 'cube', 'standard', cells[robust], imsizes[robust], 'briggs', robust)
+                reprBW_sensitivities[robust] = sensitivity
+                reprBW_sens_bws[robust] = sens_bw
+                # cont sensitivity
+                sensitivity, min_sensitivity, max_sensitivity, min_field_id, max_field_id, eff_ch_bw, sens_bw = \
+                    image_heuristics.calc_sensitivities(inputs.vis, repr_source, 'TARGET', cont_spw, nbin, {}, 'cont', 'standard', cells[robust], imsizes[robust], 'briggs', robust)
+                cont_sensitivities[robust] = sensitivity
+                cont_sens_bws[robust] = sens_bw
 
             return ImagePreCheckResults( \
-                       beams = {-0.5: beam_m0p5, 0.5: beam_0p5, 2.0: beam_2p0}, \
-                       sensitivities = {'reprBW': {-0.5: sens_m0p5, 0.5: sens_0p5, 2.0: sens_2p0}, \
-                                        'cont': {-0.5: sens_cont_m0p5, 0.5: sens_cont_0p5, 2.0: sens_cont_2p0}})
+                       beams = beams, \
+                       sensitivities = {'reprBW': reprBW_sensitivities, \
+                                        'cont': cont_sensitivities})
 
 
     def analyse(self, results):

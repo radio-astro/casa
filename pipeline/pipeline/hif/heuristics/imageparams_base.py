@@ -1007,12 +1007,14 @@ class ImageParamsHeuristics(object):
         min_field_ids = []
         max_field_ids = []
         eff_ch_bw = 0.0
+        sens_bws = {}
         for msname in vis:
             ms = self.observing_run.get_ms(name=msname)
             detailed_field_sensitivities[os.path.basename(msname)] = {}
             for intSpw in [int(s) for s in spw.split(',')]:
                 spw_do = ms.get_spectral_window(intSpw)
                 detailed_field_sensitivities[os.path.basename(msname)][intSpw] = {}
+                sens_bws[intSpw] = 0.0
                 try:
                     if (specmode == 'cube'):
                         # Use the center channel selection
@@ -1036,7 +1038,7 @@ class ImageParamsHeuristics(object):
                         field_sensitivities = []
                         for field_id in [f.id for f in ms.fields if (utils.dequote(f.name) == utils.dequote(field) and intent in f.intents)]:
                             try:
-                                field_sensitivity, eff_ch_bw = self.get_sensitivity(ms, field_id, intSpw, chansel, specmode, cell, imsize, weighting, robust)
+                                field_sensitivity, eff_ch_bw, sens_bws[intSpw] = self.get_sensitivity(ms, field_id, intSpw, chansel, specmode, cell, imsize, weighting, robust)
                                 if (field_sensitivity > 0.0):
                                     field_sensitivities.append(field_sensitivity)
                                     detailed_field_sensitivities[os.path.basename(msname)][intSpw][field_id] = field_sensitivity
@@ -1069,7 +1071,7 @@ class ImageParamsHeuristics(object):
                         # Still need to loop over field ID with proper intent for single field case
                         field_sensitivities = []
                         for field_id in [f.id for f in ms.fields if (utils.dequote(f.name) == utils.dequote(field) and intent in f.intents)]:
-                            field_sensitivity, eff_ch_bw = self.get_sensitivity(ms, field_id, intSpw, chansel, specmode, cell, imsize, weighting, robust)
+                            field_sensitivity, eff_ch_bw, sens_bws[intSpw] = self.get_sensitivity(ms, field_id, intSpw, chansel, specmode, cell, imsize, weighting, robust)
                             if (field_sensitivity > 0.0):
                                 field_sensitivities.append(field_sensitivity)
                         # Check if we have anything
@@ -1107,7 +1109,7 @@ class ImageParamsHeuristics(object):
             min_field_id = None
             max_field_id = None
 
-        return sensitivity, min_sensitivity, max_sensitivity, min_field_id, max_field_id, eff_ch_bw
+        return sensitivity, min_sensitivity, max_sensitivity, min_field_id, max_field_id, eff_ch_bw, sum(sens_bws.values())
 
     def get_sensitivity(self, ms_do, field, spw, chansel, specmode, cell, imsize, weighting, robust):
         """
@@ -1142,6 +1144,7 @@ class ImageParamsHeuristics(object):
             N_smooth = 0
 
         chansel_sensitivities = []
+        sens_bw = 0.0
         for chanrange in chansel.split(';'):
 
             try:
@@ -1158,10 +1161,14 @@ class ImageParamsHeuristics(object):
                     raise Exception('Empty selection')
 
                 apparentsens_value = result[1]
+
                 LOG.info('apparentsens result for MS %s Field %s SPW %s ChanRange %s: %s Jy/beam' % (os.path.basename(ms_do.name), field, spw, chanrange, apparentsens_value))
+
+                cstart, cstop = map(int, chanrange.split('~'))
+                nchan = cstop - cstart + 1
+                sens_bw += nchan * physicalBW_of_1chan
+
                 if (N_smooth > 0):
-                    cstart, cstop = map(int, chanrange.split('~'))
-                    nchan = cstop - cstart + 1
                     if (nchan > 1):
                         optimisticBW = nchan * float(effectiveBW_of_1chan)
                         approximateEffectiveBW = (nchan + 1.12 * (spwchan - nchan) / spwchan / N_smooth) * float(physicalBW_of_1chan)
@@ -1180,9 +1187,9 @@ class ImageParamsHeuristics(object):
                     LOG.info('Could not calculate sensitivity for MS %s Field %s SPW %s ChanRange %s: %s' % (os.path.basename(ms_do.name), field, spw, chanrange, e))
 
         if (len(chansel_sensitivities) > 0):
-            return 1.0 / np.sqrt(np.sum(1.0 / np.array(chansel_sensitivities)**2)), effectiveBW_of_1chan
+            return 1.0 / np.sqrt(np.sum(1.0 / np.array(chansel_sensitivities)**2)), effectiveBW_of_1chan, sens_bw
         else:
-            return 0.0, effectiveBW_of_1chan
+            return 0.0, effectiveBW_of_1chan, sens_bw
 
     def dr_correction(self, threshold, dirty_dynamic_range, residual_max, intent, tlimit):
 
