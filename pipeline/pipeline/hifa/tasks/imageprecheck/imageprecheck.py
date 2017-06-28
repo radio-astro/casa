@@ -4,6 +4,7 @@ import os
 
 from pipeline.hifa.heuristics import imageprecheck
 from pipeline.hif.heuristics import imageparams_factory
+from pipeline.h.tasks.common.sensitivity import Sensitivity
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 from pipeline.infrastructure import casa_tasks
@@ -14,7 +15,7 @@ LOG = infrastructure.get_logger(__name__)
 
 
 class ImagePreCheckResults(basetask.Results):
-    def __init__(self, robust=0.5, uvtaper='', beams={}, sensitivities={}):
+    def __init__(self, robust=0.5, uvtaper='', beams=[], sensitivities=[]):
         super(ImagePreCheckResults, self).__init__()
         self.robust = robust
         self.uvtaper = uvtaper
@@ -57,13 +58,17 @@ class ImagePreCheck(basetask.StandardTaskTemplate):
 
         if repr_target == (None, None, None):
             LOG.info('ImagePreCheck: No representative target found.')
-            return ImagePreCheckResults( \
-                       beams = {-0.5: None, 0.5: None, 2.0: None}, \
-                       sensitivities = {'reprBW': {-0.5: None, 0.5: None, 2.0: None}, \
-                                        'cont': {-0.5: None, 0.5: None, 2.0: None}})
+            return ImagePreCheckResults()
         else:
             # Get representative source and spw
             repr_source, repr_spw = repr_ms.get_representative_source_spw()
+
+            # Get the array
+            diameter = min([a.diameter for a in repr_ms.antennas])
+            if diameter == 7.0:
+                array = '7m'
+            else:
+                array = '12m'
 
             imageprecheck_heuristics = imageprecheck.ImagePreCheckHeuristics(self.inputs)
             image_heuristics_factory = imageparams_factory.ImageParamsHeuristicsFactory()
@@ -90,29 +95,41 @@ class ImagePreCheck(basetask.StandardTaskTemplate):
             beams = {}
             cells = {}
             imsizes = {}
-            reprBW_sensitivities = {}
-            reprBW_sens_bws = {}
-            cont_sensitivities = {}
-            cont_sens_bws = {}
+            sensitivities = []
             for robust in [-0.5, 0.5, 2.0]:
                 beams[robust] = image_heuristics.synthesized_beam([(repr_source, 'TARGET')], str(repr_spw), robust=robust)
                 cells[robust] = image_heuristics.cell(beams[robust])
                 imsizes[robust] = image_heuristics.imsize(field_ids, cells[robust], primary_beam_size, centreonly=True)
+
                 # reprBW sensitivity
                 sensitivity, min_sensitivity, max_sensitivity, min_field_id, max_field_id, eff_ch_bw, sens_bw = \
                     image_heuristics.calc_sensitivities(inputs.vis, repr_source, 'TARGET', str(repr_spw), nbin, {}, 'cube', 'standard', cells[robust], imsizes[robust], 'briggs', robust)
-                reprBW_sensitivities[robust] = sensitivity
-                reprBW_sens_bws[robust] = sens_bw
+                sensitivities.append(Sensitivity( \
+                    **{'array': array, \
+                       'field': repr_source, \
+                       'spw': str(repr_spw), \
+                       'bandwidth': cqa.quantity(sens_bw, 'Hz'), \
+                       'bwmode': 'reprBW', \
+                       'beam': beams[robust], \
+                       'cell': cells[robust], \
+                       'robust': robust, \
+                       'sensitivity': cqa.quantity(sensitivity, 'Jy/beam')}))
+
                 # cont sensitivity
                 sensitivity, min_sensitivity, max_sensitivity, min_field_id, max_field_id, eff_ch_bw, sens_bw = \
                     image_heuristics.calc_sensitivities(inputs.vis, repr_source, 'TARGET', cont_spw, nbin, {}, 'cont', 'standard', cells[robust], imsizes[robust], 'briggs', robust)
-                cont_sensitivities[robust] = sensitivity
-                cont_sens_bws[robust] = sens_bw
+                sensitivities.append(Sensitivity( \
+                    **{'array': array, \
+                       'field': repr_source, \
+                       'spw': str(repr_spw), \
+                       'bandwidth': cqa.quantity(sens_bw, 'Hz'), \
+                       'bwmode': 'cont', \
+                       'beam': beams[robust], \
+                       'cell': cells[robust], \
+                       'robust': robust, \
+                       'sensitivity': cqa.quantity(sensitivity, 'Jy/beam')}))
 
-            return ImagePreCheckResults( \
-                       beams = beams, \
-                       sensitivities = {'reprBW': reprBW_sensitivities, \
-                                        'cont': cont_sensitivities})
+            return ImagePreCheckResults(beams=beams, sensitivities=sensitivities)
 
 
     def analyse(self, results):
