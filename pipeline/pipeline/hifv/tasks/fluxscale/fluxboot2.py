@@ -489,7 +489,8 @@ class Fluxboot2(basetask.StandardTaskTemplate):
                 spidx = fluxscale_result[fieldid]['spidx']
                 # fittedfluxd = []
 
-                freqs = [freq for freq in freqs if freq > 0.0]
+                freqs = freqs[spws]
+                freqs.sort()
 
                 fittedfluxd = map(
                     lambda x: 10.0 ** (
@@ -517,7 +518,11 @@ class Fluxboot2(basetask.StandardTaskTemplate):
                     SS = fittedfluxd[ii]
                     freq = freqs[ii]/1.e9
                     data = 10.0 ** lfds[ii]
-                    fderr = lerrs[ii] * (10 ** lfds[ii]) / math.log10(math.e)
+
+                    # fderr = lerrs[ii] * (10 ** lfds[ii]) / math.log10(math.e)
+                    # fitFluxd = 10**a0  #(or 10**spidx[0] in my previous example)
+                    # fitFluxdErr = ln(10)*fitFluxd*err_a0
+                    fderr = math.log(10) * SS * fluxscale_result[fieldid]['spidxerr'][0]
 
                     LOG.info('    ' + str(freq) + '  ' + str(data) + '  ' + str(
                         fderr) + '  ' + str(SS))
