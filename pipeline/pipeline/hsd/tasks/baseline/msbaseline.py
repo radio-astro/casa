@@ -7,8 +7,6 @@ import numpy
 import collections
 import types
 
-import memory_profiler
-
 import pipeline.infrastructure.mpihelpers as mpihelpers
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
@@ -68,7 +66,6 @@ class SDMSBaselineResults(common.SingleDishResults):
         super(SDMSBaselineResults, self).__init__(task, success, outcome)
 
     #@utils.profiler
-    @memory_profiler.profile
     def merge_with_context(self, context):
         super(SDMSBaselineResults, self).merge_with_context(context)
 
@@ -166,7 +163,6 @@ class SDMSBaseline(basetask.StandardTaskTemplate):
     def is_multi_vis_task(self):
         return True
     
-    @memory_profiler.profile
     def prepare(self):
         LOG.debug('Starting SDMDBaseline.prepare')
         inputs = self.inputs
