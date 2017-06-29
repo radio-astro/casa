@@ -132,6 +132,7 @@ class Context(object):
         self.contfile = None
         self.linesfile = None
         self.size_mitigation_parameters = {}
+        self.imaging_parameters = {}
         self.clean_list_pending = []
         self.sensitivities = []
 

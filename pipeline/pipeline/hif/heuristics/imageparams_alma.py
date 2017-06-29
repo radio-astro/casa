@@ -35,7 +35,7 @@ class ImageParamsHeuristicsALMA(ImageParamsHeuristics):
         repr_target = repr_ms.representative_target
         if repr_target == (None, None, None):
             LOG.info('ALMA robust heuristics: No representative target found. Using robust=0.5')
-            return 0.5
+            return 0.5, 0.0, 0.0
 
         # Check if there is a non-zero min/max angular resolution
         cqa = casatools.quanta

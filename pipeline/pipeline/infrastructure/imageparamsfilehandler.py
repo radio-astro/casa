@@ -27,6 +27,6 @@ class ImageParamsFileHandler(object):
 
     def write(self, robust, uvtaper):
         fd = open(self.filename, 'w+')
-        fd.write('robust=%f\n' % (robust))
+        fd.write('robust=%.2f\n' % (robust))
         fd.write('uvtaper=%s\n' % (uvtaper))
         fd.close()
