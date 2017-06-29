@@ -68,7 +68,7 @@ uvtaper: ${uvtaper}
     <thead>
         <tr>
             <th>robust</th>
-            <th>bmin</th>
+            <th>beam</th>
             <th>bmin/maxAR</th>
             <th>cell</th>
             <th>bandwidth</th>

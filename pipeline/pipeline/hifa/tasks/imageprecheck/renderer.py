@@ -8,7 +8,7 @@ import pipeline.infrastructure.casatools as casatools
 
 LOG = logging.get_logger(__name__)
 
-TR = collections.namedtuple('TR', 'robust bmin bmin_maxAR cell bandwidth bwmode sensitivity')
+TR = collections.namedtuple('TR', 'robust beam bmin_maxAR cell bandwidth bwmode sensitivity')
 
 
 class T2_4MDetailsCheckProductSizeRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
@@ -39,7 +39,9 @@ class T2_4MDetailsCheckProductSizeRenderer(basetemplates.T2_4MDetailsDefaultRend
         for item in result.sensitivities:
             robust = item['robust']
             bmin_v = cqa.getvalue(cqa.convert(item['beam']['bmin'], 'arcsec'))
-            bmin = '%#.2g arcsec' % (bmin_v)
+            bmaj_v = cqa.getvalue(cqa.convert(item['beam']['bmaj'], 'arcsec'))
+            bpa_v = cqa.getvalue(cqa.convert(item['beam']['bpa'], 'deg'))
+            beam = '%#.2g x %#.2g arcsec @ %#.3g deg' % (bmin_v, bmaj_v, bpa_v)
             if maxAR_v != 0.0:
                 bmin_maxAR = '%.1f%%' % (100. * bmin_v / maxAR_v)
             else:
@@ -49,6 +51,6 @@ class T2_4MDetailsCheckProductSizeRenderer(basetemplates.T2_4MDetailsDefaultRend
             bwmode = item['bwmode']
             sensitivity = '%.3g Jy/beam' % (cqa.getvalue(cqa.convert(item['sensitivity'], 'Jy/beam')))
 
-            rows.append(TR(robust=robust, bmin=bmin, bmin_maxAR=bmin_maxAR, cell=cell, bandwidth=bandwidth, bwmode=bwmode, sensitivity=sensitivity))
+            rows.append(TR(robust=robust, beam=beam, bmin_maxAR=bmin_maxAR, cell=cell, bandwidth=bandwidth, bwmode=bwmode, sensitivity=sensitivity))
 
         return utils.merge_td_columns(rows)
