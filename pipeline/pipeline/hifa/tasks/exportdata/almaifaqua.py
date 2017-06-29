@@ -4,6 +4,7 @@ import os
 import xml.etree.cElementTree as ElementTree
 
 import pipeline.domain.measures as measures
+from pipeline.infrastructure import casatools
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.launcher as launcher
 
@@ -96,6 +97,18 @@ class AlmaAquaXmlGenerator(aqua.AquaXmlGenerator):
             xml_root.extend(flux_xml)
 
         return xml_root
+
+    # SJW - disabled until imageprecheck is mature and in default recipe
+    # def get_imaging_topic(self, context, topic_results):
+    #     # get base XML from base class
+    #     xml_root = super(AlmaAquaXmlGenerator, self).get_imaging_topic(context, topic_results)
+    #
+    #     sensitivity_xml = sensitivity_xml_for_stages(context, topic_results)
+    #     # omit containing flux measurement element if no measurements were found
+    #     if len(list(sensitivity_xml)) > 0:
+    #         xml_root.extend(sensitivity_xml)
+    #
+    #     return xml_root
 
 
 def flux_xml_for_stages(context, results, accessor_dict):
@@ -209,3 +222,66 @@ def xml_for_extracted_flux_measurements(all_measurements, ms):
                 result.append(xml)
 
     return result
+
+
+def sensitivity_xml_for_stages(context, results):
+    xml_root = ElementTree.Element('ImageSensitivity')
+
+    task_name = 'hifa_imageprecheck'
+
+    for result in results:
+        pipeline_casa_task = result.pipeline_casa_task
+        if pipeline_casa_task.startswith(task_name):
+            stage_xml = xml_for_sensitivity_stage(context, result, task_name)
+            xml_root.append(stage_xml)
+
+    return xml_root
+
+
+def xml_for_sensitivity_stage(context, stage_results, origin):
+    xml_root = ElementTree.Element('SensitivityEstimates', Origin=origin, Score=UNDEFINED)
+
+    for result in stage_results:
+        for d in result.sensitivities:
+            ms_xml = xml_for_sensitivity(d)
+            xml_root.append(ms_xml)
+
+    return xml_root
+
+
+def xml_for_sensitivity(d):
+    qa = casatools.quanta
+
+    def value(quanta):
+        return str(qa.getvalue(quanta)[0])
+
+    bandwidth = qa.quantity(d['bandwidth'])
+    bandwidth_hz = value(qa.convert(bandwidth, 'Hz'))
+
+    bmaj = qa.quantity(d['beam']['bmaj'])
+    bmaj_arcsec = value(qa.convert(bmaj, 'arcsec'))
+
+    bmin = qa.quantity(d['beam']['bmin'])
+    bmin_arcsec = value(qa.convert(bmin, 'arcsec'))
+
+    bpa = qa.quantity(d['beam']['bpa'])
+    bpa_deg = value(qa.convert(bpa, 'deg'))
+
+    sensitivity = qa.quantity(d['sensitivity'])
+    sensitivity_jy = value(qa.convert(sensitivity, 'Jy/beam'))
+
+    xml = ElementTree.Element('Sensitivity',
+        Array=d['array'],
+        BandwidthHz=bandwidth_hz,
+        BeamMajArcsec=bmaj_arcsec,
+        BeamMinArcsec=bmin_arcsec,
+        BeamPosAngDeg=bpa_deg,
+        BwMode=d['bwmode'],
+        Cell=d['cell'][0],
+        Field=d['field'],
+        Robust=str(d['robust']),
+        SensitivityJy=sensitivity_jy,
+        MsSpwId=d['spw'],
+      )
+
+    return xml
