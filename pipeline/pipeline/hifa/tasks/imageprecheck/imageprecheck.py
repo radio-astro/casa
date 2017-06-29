@@ -118,7 +118,7 @@ class ImagePreCheck(basetask.StandardTaskTemplate):
         for robust in [-0.5, 0.5, 2.0]:
             beams[robust] = image_heuristics.synthesized_beam([(repr_source, 'TARGET')], str(repr_spw), robust=robust)
             cells[robust] = image_heuristics.cell(beams[robust])
-            imsizes[robust] = image_heuristics.imsize(field_ids, cells[robust], primary_beam_size, centreonly=True)
+            imsizes[robust] = image_heuristics.imsize(field_ids, cells[robust], primary_beam_size, centreonly=False)
 
             # reprBW sensitivity
             sensitivity, min_sensitivity, max_sensitivity, min_field_id, max_field_id, eff_ch_bw, sens_bw = \
