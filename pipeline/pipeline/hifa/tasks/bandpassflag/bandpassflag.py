@@ -6,8 +6,6 @@ import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.callibrary as callibrary
 import pipeline.infrastructure.displays.applycal as applycal_displays
-import pipeline.infrastructure.utils as utils
-from pipeline.h.heuristics import fieldnames as fieldnames
 from pipeline.h.tasks.flagging.flagdatasetter import FlagdataSetter
 from pipeline.hif.tasks import applycal
 from pipeline.hif.tasks import correctedampflag
@@ -26,71 +24,71 @@ __all__ = [
 LOG = infrastructure.get_logger(__name__)
 
 
-class BandpassflagInputs(bandpass.ALMAPhcorBandpass.Inputs,
-                         correctedampflag.Correctedampflag.Inputs):
+class BandpassflagInputs(bandpass.ALMAPhcorBandpass.Inputs):
+    # Lower sigma threshold for identifying outliers as a result of bad
+    # antennas within individual timestamps; equivalent to:
+    # relaxationSigma
+    antnegsig = basetask.property_with_default('antnegsig', 6.5)
+
+    # Upper sigma threshold for identifying outliers as a result of bad
+    # antennas within individual timestamps; equivalent to:
+    # positiveSigmaAntennaBased
+    antpossig = basetask.property_with_default('antpossig', 5.8)
+
+    # Threshold for maximum fraction of timestamps that are allowed
+    # to contain outliers; equivalent to:
+    # checkForAntennaBasedBadIntegrations
+    tmantint = basetask.property_with_default('tmantint', 0.06)
+
+    # Initial threshold for maximum fraction of "outlier timestamps" over
+    # "total timestamps" that a baseline may be a part of; equivalent to:
+    # tooManyIntegrationsFraction
+    tmint = basetask.property_with_default('tmint', 0.09)
+
+    # Initial threshold for maximum fraction of "bad baselines" over "all
+    # baselines" that an antenna may be a part of; equivalent to:
+    # tooManyBaselinesFraction
+    tmbl = basetask.property_with_default('tmbl', 0.175)
+
+    # Lower sigma threshold for identifying outliers as a result of "bad
+    # baselines" and/or "bad antennas" within baselines (across all
+    # timestamps); equivalent to:
+    # catchNegativeOutliers['scalardiff']
+    antblnegsig = basetask.property_with_default('antblnegsig', 3.7)
+
+    # Upper sigma threshold for identifying outliers as a result of "bad
+    # baselines" and/or "bad antennas" within baselines (across all
+    # timestamps); equivalent to:
+    # flag_nsigma['scalardiff']
+    antblpossig = basetask.property_with_default('antblpossig', 3.0)
+
+    # Relaxed value to set the threshold scaling factor to under certain
+    # conditions; equivalent to:
+    # relaxationFactor
+    relaxed_factor = basetask.property_with_default('relaxed_factor', 2.0)
 
     @basetask.log_equivalent_CASA_call
-    def __init__(self, context, output_dir=None, vis=None,
-                 intent=None, field=None, spw=None, **parameters):
-        bandpass.ALMAPhcorBandpass.Inputs.__init__(
-            self, context, output_dir=output_dir, vis=vis, intent=intent,
-            field=field, spw=spw, **parameters)
-        correctedampflag.Correctedampflag.Inputs.__init__(
-            self, context, output_dir=output_dir, vis=vis, intent=intent,
-            field=field, spw=spw, **parameters)
+    def __init__(self, context, output_dir=None, vis=None, caltable=None, intent=None, field=None, spw=None,
+                 antenna=None, hm_phaseup=None, phaseupsolint=None, phaseupbw=None, phaseupsnr=None, phaseupnsols=None,
+                 hm_bandpass=None, solint=None, maxchannels=None, evenbpints=None, bpsnr=None, bpnsols=None,
+                 combine=None, refant=None, minblperant=None, minsnr=None, solnorm=None, antnegsig=None, antpossig=None,
+                 tmantint=None, tmint=None, tmbl=None, antblnegsig=None, antblpossig=None, relaxed_factor=None):
 
-    @property
-    def intent(self):
-        if isinstance(self.vis, list):
-            return self._handle_multiple_vis('intent')
-
-        if not self._intent:
-            self._intent = 'BANDPASS'
-
-        return self._intent
-
-    @intent.setter
-    def intent(self, value):
-        self._intent = value
-
-    @property
-    def field(self):
-        if not callable(self._field):
-            return self._field
-
-        if isinstance(self.vis, list):
-            return self._handle_multiple_vis('field')
-
-        # this will give something like '0542+3243,0343+242'
-        intent_fields = self._field(self.ms, self.intent)
-
-        # run the answer through a set, just in case there are duplicates
-        fields = set()
-        fields.update(utils.safe_split(intent_fields))
-
-        return ','.join(fields)
-
-    @field.setter
-    def field(self, value):
-        if value is None:
-            value = fieldnames.IntentFieldnames()
-        self._field = value
-
-    @property
-    def spw(self):
-        if self._spw is not None:
-            return str(self._spw)
-
-        if isinstance(self.vis, list):
-            return self._handle_multiple_vis('spw')
-
-        science_spws = self.ms.get_spectral_windows(
-            science_windows_only=True)
-        return ','.join([str(spw.id) for spw in science_spws])
-
-    @spw.setter
-    def spw(self, value):
-        self._spw = value
+        super(BandpassflagInputs, self).__init__(context, output_dir=output_dir, vis=vis, caltable=caltable,
+                                                 intent=intent, field=field, spw=spw, antenna=antenna,
+                                                 hm_phaseup=hm_phaseup, phaseupsolint=phaseupsolint,
+                                                 phaseupbw=phaseupbw, phaseupsnr=phaseupsnr, phaseupnsols=phaseupnsols,
+                                                 hm_bandpass=hm_bandpass, solint=solint, maxchannels=maxchannels,
+                                                 evenbpints=evenbpints, bpsnr=bpsnr, bpnsols=bpnsols, combine=combine,
+                                                 refant=refant, minblperant=minblperant, minsnr=minsnr, solnorm=solnorm)
+        self.antnegsig = antnegsig
+        self.antpossig = antpossig
+        self.tmantint = tmantint
+        self.tmint = tmint
+        self.tmbl = tmbl
+        self.antblnegsig = antblnegsig
+        self.antblpossig = antblpossig
+        self.relaxed_factor = relaxed_factor
 
 
 class Bandpassflag(basetask.StandardTaskTemplate):
