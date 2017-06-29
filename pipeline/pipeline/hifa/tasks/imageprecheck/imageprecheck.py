@@ -16,9 +16,12 @@ LOG = infrastructure.get_logger(__name__)
 
 
 class ImagePreCheckResults(basetask.Results):
-    def __init__(self, have_real_repr_target=False, minAcceptableAngResolution='0.0arcsec', maxAcceptableAngResolution='0.0arcsec', hm_robust=0.5, hm_uvtaper='', sensitivities=[]):
+    def __init__(self, have_real_repr_target=False, repr_target='', repr_source='', repr_spw=None, minAcceptableAngResolution='0.0arcsec', maxAcceptableAngResolution='0.0arcsec', hm_robust=0.5, hm_uvtaper='', sensitivities=[]):
         super(ImagePreCheckResults, self).__init__()
         self.have_real_repr_target = have_real_repr_target
+        self.repr_target = repr_target
+        self.repr_source = repr_source
+        self.repr_spw = repr_spw
         self.minAcceptableAngResolution = minAcceptableAngResolution
         self.maxAcceptableAngResolution = maxAcceptableAngResolution
         self.hm_robust = hm_robust
@@ -69,10 +72,17 @@ class ImagePreCheck(basetask.StandardTaskTemplate):
         repr_ms = self.inputs.context.observing_run.get_ms(inputs.vis[0])
         repr_target = repr_ms.representative_target
 
+        reprBW_mode = 'cube'
         if repr_target != (None, None, None):
             have_real_repr_target = True
             # Get representative source and spw
             repr_source, repr_spw = repr_ms.get_representative_source_spw()
+            # Check if representative bandwidth is larger than spw bandwidth. If so, switch to fullcont.
+            repr_spw_obj = repr_ms.get_spectral_window(repr_spw)
+            repr_spw_bw = cqa.quantity(float(repr_spw_obj.bandwidth.convert_to(measures.FrequencyUnits.HERTZ).value), 'Hz')
+            if cqa.gt(repr_target[2], repr_spw_bw):
+                repr_spw = ','.join([str(s.id) for s in repr_ms.get_spectral_windows()])
+                reprBW_mode = 'cont'
         else:
             have_real_repr_target = False
             # Pick arbitrary source for pre-Cycle 5 data
@@ -104,8 +114,11 @@ class ImagePreCheck(basetask.StandardTaskTemplate):
             linesfile = inputs.context.linesfile, \
             imaging_mode = 'ALMA')
 
-        physicalBW_of_1chan = float(inputs.context.observing_run.measurement_sets[0].get_spectral_window(repr_spw).channels[0].getWidth().convert_to(measures.FrequencyUnits.HERTZ).value)
-        nbin = int(cqa.getvalue(cqa.convert(repr_target[2], 'Hz'))/physicalBW_of_1chan + 0.5)
+        if reprBW_mode == 'cube':
+            physicalBW_of_1chan = float(inputs.context.observing_run.measurement_sets[0].get_spectral_window(repr_spw).channels[0].getWidth().convert_to(measures.FrequencyUnits.HERTZ).value)
+            nbin = int(cqa.getvalue(cqa.convert(repr_target[2], 'Hz'))/physicalBW_of_1chan + 0.5)
+        else:
+            nbin = -1
         primary_beam_size = image_heuristics.largest_primary_beam_size(spwspec=str(repr_spw))
         field_ids = image_heuristics.field('TARGET', repr_source)
         gridder = image_heuristics.gridder('TARGET', repr_source)
@@ -122,7 +135,7 @@ class ImagePreCheck(basetask.StandardTaskTemplate):
 
             # reprBW sensitivity
             sensitivity, min_sensitivity, max_sensitivity, min_field_id, max_field_id, eff_ch_bw, sens_bw = \
-                image_heuristics.calc_sensitivities(inputs.vis, repr_source, 'TARGET', str(repr_spw), nbin, {}, 'cube', gridder, cells[robust], imsizes[robust], 'briggs', robust)
+                image_heuristics.calc_sensitivities(inputs.vis, repr_source, 'TARGET', str(repr_spw), nbin, {}, reprBW_mode, gridder, cells[robust], imsizes[robust], 'briggs', robust)
             sensitivities.append(Sensitivity( \
                 **{'array': array, \
                    'field': repr_source, \
@@ -136,7 +149,7 @@ class ImagePreCheck(basetask.StandardTaskTemplate):
 
             # full cont sensitivity (no frequency ranges excluded)
             sensitivity, min_sensitivity, max_sensitivity, min_field_id, max_field_id, eff_ch_bw, sens_bw = \
-                image_heuristics.calc_sensitivities(inputs.vis, repr_source, 'TARGET', cont_spw, nbin, {}, 'cont', gridder, cells[robust], imsizes[robust], 'briggs', robust)
+                image_heuristics.calc_sensitivities(inputs.vis, repr_source, 'TARGET', cont_spw, -1, {}, 'cont', gridder, cells[robust], imsizes[robust], 'briggs', robust)
             sensitivities.append(Sensitivity( \
                 **{'array': array, \
                    'field': repr_source, \
@@ -165,6 +178,9 @@ class ImagePreCheck(basetask.StandardTaskTemplate):
 
         return ImagePreCheckResults( \
                    have_real_repr_target, \
+                   repr_target, \
+                   repr_source, \
+                   repr_spw, \
                    minAcceptableAngResolution=cqa.quantity(minAcceptableAngResolution, 'arcsec'), \
                    maxAcceptableAngResolution=cqa.quantity(maxAcceptableAngResolution, 'arcsec'), \
                    hm_robust=hm_robust, \
