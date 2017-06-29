@@ -70,17 +70,17 @@ def get_plot_dicts(pipeline_context, results, plot_type):
 
     for result in results:
         vis = os.path.basename(result.inputs['vis'])
-        # ordereddict as apriorical->before->after ordering is important
-        d[vis] = collections.OrderedDict()
+        d[vis] = []
 
-        for key in ['apriorical', 'before', 'after']:
+        for idx, key in enumerate(['apriorical', 'before', 'after']):
             if key in result.plots:
                 plots = result.plots[key][plot_type]
                 relocated = relocate_plots(plots, plot_dest_dir)
                 # the weblog needs to identify each plot's associated plot type
                 for p in relocated:
                     p.parameters['type'] = key
-                d[vis][key] = relocated
+                    p.parameters['type_idx'] = idx
+                d[vis].extend(relocated)
 
     return d
 

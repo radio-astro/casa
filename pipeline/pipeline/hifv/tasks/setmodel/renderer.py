@@ -17,35 +17,29 @@ LOG = logging.get_logger(__name__)
 
 
 class T2_4MDetailsVLASetjyRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
-    def __init__(self, uri='setjy.mako', 
+    def __init__(self, uri='vlasetjy.mako',
                  description='Set calibrator model visibilities',
                  always_rerender=False):
         super(T2_4MDetailsVLASetjyRenderer, self).__init__(uri=uri,
                 description=description, always_rerender=always_rerender)
 
     def update_mako_context(self, ctx, context, result):
-        amp_vs_uv_summary_plots = collections.defaultdict(dict)
+        amp_vs_uv_summary_plots = collections.defaultdict(list)
         for intents in ['AMPLITUDE']:
             plots = self.create_plots(context, 
                                       result, 
                                       setjy_display.AmpVsUVSummaryChart, 
                                       intents, correlation='LL,RR')
-            self.sort_plots_by_baseband(plots)
 
-            key = intents
             for vis, vis_plots in plots.items():
-                amp_vs_uv_summary_plots[vis][key] = vis_plots
+                amp_vs_uv_summary_plots[vis].extend(vis_plots)
 
         table_rows = make_flux_table(context, result)
 
-        ctx.update({'amp_vs_uv_plots' : amp_vs_uv_summary_plots,
-                    'table_rows'      : table_rows})
-
-    def sort_plots_by_baseband(self, d):
-        for vis, plots in d.items():
-            plots = sorted(plots, 
-                           key=lambda plot: plot.parameters['baseband'])
-            d[vis] = plots
+        ctx.update({
+            'amp_vs_uv_plots': amp_vs_uv_summary_plots,
+            'table_rows': table_rows
+        })
 
     def create_plots(self, context, results, plotter_cls, intents, renderer_cls=None, **kwargs):
         """

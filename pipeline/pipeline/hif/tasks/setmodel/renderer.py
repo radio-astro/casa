@@ -23,7 +23,8 @@ class T2_4MDetailsSetjyRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                 description=description, always_rerender=always_rerender)
 
     def update_mako_context(self, ctx, context, result):
-        amp_vs_uv_summary_plots = collections.defaultdict(dict)
+        amp_vs_uv_summary_plots = collections.defaultdict(list)
+
 
         for intents in ['AMPLITUDE']:
             plots = self.create_plots(context, 
@@ -32,9 +33,8 @@ class T2_4MDetailsSetjyRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                                       intents)
             self.sort_plots_by_baseband(plots)
 
-            key = intents
             for vis, vis_plots in plots.items():
-                amp_vs_uv_summary_plots[vis][key] = vis_plots
+                amp_vs_uv_summary_plots[vis].extend(vis_plots)
 
         table_rows = make_flux_table(context, result)
 

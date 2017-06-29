@@ -298,9 +298,10 @@ def format_spwmap(spwmap, scispws):
 				  data_field="${True}"
 				  data_spw="${True}"
                   data_vis="${True}"
-				  plot_accessor="${lambda ms_plots: ms_plots.items()}"
                   transmission="${transmission_plots}"
-				  title_id="calampvsfreq">
+				  title_id="calampvsfreq"
+                  break_rows_by="intent,field"
+                  sort_row_by="baseband,spw">
 
 	<%def name="title()">
 		Calibrated amplitude vs frequency
@@ -345,8 +346,9 @@ def format_spwmap(spwmap, scispws):
 				  data_field="${True}"
 				  data_spw="${True}"
 				  data_vis="${True}"
-				  plot_accessor="${lambda ms_plots: ms_plots.items()}"
-				  title_id="calphasevsfreq">
+				  title_id="calphasevsfreq"
+                  break_rows_by="intent,field"
+                  sort_row_by="baseband,spw">
 
 	<%def name="title()">
 		Calibrated phase vs frequency
@@ -388,8 +390,9 @@ def format_spwmap(spwmap, scispws):
                   data_field="${True}"
 				  data_spw="${True}"
 				  data_vis="${True}"
-				  plot_accessor="${lambda ms_plots: ms_plots.items()}"
-				  title_id="calampvsuvdist">
+				  title_id="calampvsuvdist"
+                  break_rows_by="intent,field"
+                  sort_row_by="baseband,spw">
 
 	<%def name="title()">
 		Calibrated amplitude vs UV distance
@@ -419,7 +422,7 @@ def format_spwmap(spwmap, scispws):
 	</%def>
 
 	<%def name="caption_text(plot, intent)">
-        ${utils.commafy(plot.parameters['intent'], False)} ${'source' if intent.upper() == 'CHECK' else 'calibrator'}:
+        ${utils.commafy(plot.parameters['intent'], False).capitalize()} ${'source' if intent.upper() == 'CHECK' else 'calibrator'}:
         ${plot.parameters['field']}
 	</%def>
 
@@ -430,7 +433,9 @@ def format_spwmap(spwmap, scispws):
 				  url_fn="${lambda x: amp_vs_time_subpages[x]}"
 				  data_vis="${True}"
 				  data_spw="${True}"
-				  title_id="calampvstime">
+				  title_id="calampvstime"
+                  break_rows_by="intent,field"
+                  sort_row_by="baseband,spw">
 
 	<%def name="title()">
 		Calibrated amplitude vs time
@@ -465,7 +470,9 @@ def format_spwmap(spwmap, scispws):
 				  url_fn="${lambda x: phase_vs_time_subpages[x]}"
 				  data_vis="${True}"
                   data_spw="${True}"
-                  title_id="calphasevstime">
+                  title_id="calphasevstime"
+                  break_rows_by="intent,field"
+                  sort_row_by="baseband,spw">
 
 	<%def name="title()">
 		Calibrated phase vs time
@@ -498,8 +505,9 @@ def format_spwmap(spwmap, scispws):
 
 <%self:plot_group plot_dict="${corrected_to_antenna1_plots}"
 				  url_fn="${lambda x: 'junk'}"
-				  plot_accessor="${lambda ms_plots: ms_plots.items()}"
-				  title_id="corrampvsant">
+				  title_id="corrampvsant"
+                  break_rows_by="intent,field"
+                  sort_row_by="baseband,spw">
 
 	<%def name="title()">
         (Corrected amplitude / model) vs antenna
@@ -543,7 +551,9 @@ def format_spwmap(spwmap, scispws):
 
 <%self:plot_group plot_dict="${corrected_to_model_vs_uvdist_plots}"
 				  url_fn="${lambda x: 'junk'}"
-				  title_id="corrampvsuvdist">
+				  title_id="corrampvsuvdist"
+                  break_rows_by="intent,field"
+                  sort_row_by="baseband,spw">
 
 	<%def name="title()">
 		(Corrected amplitude / model) vs UV distance
@@ -588,9 +598,10 @@ def format_spwmap(spwmap, scispws):
 				  data_spw="${True}"
 				  data_field="${True}"
                   data_vis="${True}"
-				  plot_accessor="${lambda ms_plots: ms_plots.items()}"
                   transmission="${transmission_plots}"
-				  title_id="scicalampvsfreq">
+				  title_id="scicalampvsfreq"
+                  break_rows_by="intent,field"
+                  sort_row_by="baseband,spw">
 
 	<%def name="title()">
 		Science target: calibrated amplitude vs frequency
@@ -650,8 +661,9 @@ def format_spwmap(spwmap, scispws):
 				  data_baseband="${True}"
 				  data_field="${True}"
                   data_vis="${True}"
-				  plot_accessor="${lambda ms_plots: ms_plots.items()}"
-				  title_id="scicalphasevsfreq">
+				  title_id="scicalphasevsfreq"
+                  break_rows_by="intent,field"
+                  sort_row_by="baseband,spw">
 
 	<%def name="title()">
 		Science target: calibrated phase vs frequency
@@ -699,8 +711,9 @@ def format_spwmap(spwmap, scispws):
 				  data_spw="${True}"
 				  data_field="${True}"
                   data_vis="${True}"
-				  plot_accessor="${lambda ms_plots: ms_plots.items()}"
-				  title_id="scicalampvsuvdist">
+				  title_id="scicalampvsuvdist"
+                  break_rows_by="intent,field"
+                  sort_row_by="baseband,spw">
 
 	<%def name="title()">
 		Science target: calibrated amplitude vs UV distance

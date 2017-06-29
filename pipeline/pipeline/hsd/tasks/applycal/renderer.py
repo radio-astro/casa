@@ -109,7 +109,7 @@ class T2_4MDetailsSDApplycalRenderer(T2_4MDetailsApplycalRenderer,
             ms = context.observing_run.get_ms(vis)
             max_uvs[vis] = measures.Distance(value=0.0, units=measures.DistanceUnits.METRE)
             
-            amp_vs_freq_summary_plots[vis]['TARGET'] = []
+            amp_vs_freq_summary_plots[vis] = []
 
             # Plot for 1 science field (either 1 science target or for a mosaic 1
             # pointing). The science field that should be chosen is the one with
@@ -121,7 +121,7 @@ class T2_4MDetailsSDApplycalRenderer(T2_4MDetailsApplycalRenderer,
                                                       result,
                                                       applycal.RealVsFrequencySummaryChart,
                                                       [brightest_field.id], None)
-                amp_vs_freq_summary_plots[vis]['TARGET'].extend(plots)
+                amp_vs_freq_summary_plots[vis].extend(plots)
     
             if pipeline.infrastructure.generate_detail_plots(result):
                 fields = set()
@@ -147,10 +147,5 @@ class T2_4MDetailsSDApplycalRenderer(T2_4MDetailsApplycalRenderer,
                 renderer = plotter_cls(context, results, all_plots)
                 with renderer.get_file() as fileobj:
                     fileobj.write(renderer.render())
-
-        # sort plots by baseband so that the summary plots appear in baseband order
-        for plot_dict in (amp_vs_freq_summary_plots,):
-            for source_plots in plot_dict.values():
-                self.sort_plots_by_baseband(source_plots)
 
         return (amp_vs_freq_summary_plots, max_uvs)

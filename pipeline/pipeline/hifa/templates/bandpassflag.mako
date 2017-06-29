@@ -385,8 +385,9 @@ $(document).ready(function(){
 <%self:plot_group plot_dict="${time_plots}"
 				  url_fn="${lambda x: 'junk'}"
                   rel_fn="${lambda plot: 'amp_vs_time_%s_%s' % (plot.parameters['vis'], plot.parameters['spw'])}"
-				  plot_accessor="${lambda ms_plots: ms_plots.items()}"
-				  title_id="amp_vs_time">
+				  title_id="amp_vs_time"
+                  break_rows_by="intent,field,type_idx"
+                  sort_row_by="spw">
 
 	<%def name="title()">
 		Amplitude vs time
@@ -428,8 +429,9 @@ $(document).ready(function(){
 <%self:plot_group plot_dict="${uvdist_plots}"
 				  url_fn="${lambda x: 'junk'}"
                   rel_fn="${lambda plot: 'amp_vs_uvdist_%s_%s' % (plot.parameters['vis'], plot.parameters['spw'])}"
-				  plot_accessor="${lambda ms_plots: ms_plots.items()}"
-				  title_id="amp_vs_uvdist">
+				  title_id="amp_vs_uvdist"
+                  break_rows_by="intent,field,type_idx"
+                  sort_row_by="spw">
 
 	<%def name="title()">
 		Amplitude vs UV distance

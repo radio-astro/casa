@@ -111,32 +111,28 @@ class T2_4MDetailsplotsummaryRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
         #         self.sort_plots_by_baseband(amp_vs_freq_bandpass_summary_plots)
         #         self.sort_plots_by_baseband(phase_vs_freq_bandpass_summary_plots)
 
-        amp_vs_freq_summary_plots = utils.OrderedDefaultdict(utils.OrderedDefaultdict)
+        amp_vs_freq_summary_plots = utils.OrderedDefaultdict(list)
         for intents in [['PHASE'], ['BANDPASS']]:
             plots = self.create_plots(context,
                                       result,
                                       applycal.VLAAmpVsFrequencySummaryChart,
                                       intents, correlation=corrstring)
-            self.sort_plots_by_baseband(plots)
 
-            key = utils.commafy(intents, quotes=False)
             for vis, vis_plots in plots.items():
-                amp_vs_freq_summary_plots[vis][key] = vis_plots
+                amp_vs_freq_summary_plots[vis].extend(vis_plots)
 
-        phase_vs_freq_summary_plots = utils.OrderedDefaultdict(utils.OrderedDefaultdict)
+        phase_vs_freq_summary_plots = utils.OrderedDefaultdict(list)
         for intents in [['PHASE'], ['BANDPASS']]:
             plots = self.create_plots(context,
                                       result,
                                       applycal.PhaseVsFrequencyPerBasebandSummaryChart,
                                       intents, correlation=corrstring)
-            self.sort_plots_by_baseband(plots)
 
-            key = utils.commafy(intents, quotes=False)
             for vis, vis_plots in plots.items():
-                phase_vs_freq_summary_plots[vis][key] = vis_plots
+                phase_vs_freq_summary_plots[vis].extend(vis_plots)
 
         # Polarization plots
-        phase_vs_freq_polarization_plots = utils.OrderedDefaultdict(utils.OrderedDefaultdict)
+        phase_vs_freq_polarization_plots = utils.OrderedDefaultdict(list)
         for intents, correlation in [(['POLANGLE'], 'RL,LR'), (['POLLEAKAGE'], 'RL,LR'),
                                      (['PHASE'], 'RL,LR'), (['BANDPASS'], 'RL,LR')]:
             plots = self.create_plots(context,
@@ -144,12 +140,10 @@ class T2_4MDetailsplotsummaryRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
                                       applycal.PhaseVsFrequencyPerBasebandSummaryChart,
                                       intents, correlation=correlation, coloraxis='corr', avgtime='60',
                                       avgbaseline=True, avgantenna=False, plotrange=[0, 0, -180, 180])
-            self.sort_plots_by_baseband(plots)
 
-            key = utils.commafy(intents, quotes=False)
             use_pol_plots = False
             for vis, vis_plots in plots.items():
-                phase_vs_freq_polarization_plots[vis][key] = vis_plots
+                phase_vs_freq_polarization_plots[vis].extend(vis_plots)
                 if vis_plots and (('POLANGLE' in m.intents) or ('POLLEAKAGE' in m.intents)):
                     use_pol_plots = True
 
@@ -233,10 +227,10 @@ class T2_4MDetailsplotsummaryRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
         Create plots for the science targets, returning two dictionaries of
         vis:[Plots].
         """
-        amp_vs_freq_summary_plots = collections.defaultdict(dict)
-        phase_vs_freq_summary_plots = collections.defaultdict(dict)
-        amp_vs_uv_summary_plots = collections.defaultdict(dict)
-        max_uvs = collections.defaultdict(dict)
+        amp_vs_freq_summary_plots = collections.defaultdict(list)
+        phase_vs_freq_summary_plots = collections.defaultdict(list)
+        amp_vs_uv_summary_plots = collections.defaultdict(list)
+        max_uvs = {}
 
         for result in results:
             # Plot for 1 science field (either 1 science target or for a mosaic 1
@@ -280,7 +274,7 @@ class T2_4MDetailsplotsummaryRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
                                                       applycal.VLAAmpVsFrequencySummaryChart,
                                                       [field.id],
                                                       uv_range, correlation=correlation)
-                amp_vs_freq_summary_plots[vis][field.id] = plots
+                amp_vs_freq_summary_plots[vis].extend(plots)
 
             '''
             for field in plotfields:
@@ -348,16 +342,6 @@ class T2_4MDetailsplotsummaryRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
                                               applycal.AmpVsUVBasebandSummaryChart,
                                               fields,
                                               renderer_cls=ApplycalAmpVsUVSciencePlotRenderer, correlation=correlation)
-
-        # sort plots by baseband so that the summary plots appear in baseband order
-        '''
-        for vis, source_plots in amp_vs_freq_summary_plots.items():
-            self.sort_plots_by_baseband(source_plots)
-        for vis, source_plots in phase_vs_freq_summary_plots.items():
-            self.sort_plots_by_baseband(source_plots)
-        for vis, source_plots in amp_vs_uv_summary_plots.items():
-            self.sort_plots_by_baseband(source_plots)
-        '''
 
         return (amp_vs_freq_summary_plots, max_uvs)
 
@@ -477,12 +461,6 @@ class T2_4MDetailsplotsummaryRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
             result[source_id] = brightest_id
 
         return result
-
-    def sort_plots_by_baseband(self, d):
-        for vis, plots in d.items():
-            plots = sorted(plots,
-                           key=lambda plot: plot.parameters['baseband'])
-            d[vis] = plots
 
     def create_plots(self, context, results, plotter_cls, intents, renderer_cls=None, **kwargs):
         """

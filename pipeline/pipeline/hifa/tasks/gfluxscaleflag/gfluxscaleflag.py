@@ -527,19 +527,23 @@ def create_plots(inputs, context, column, intents, suffix=''):
 
     # FIXME: is this correctly looping over each field in the current intent?
     amp_uvdist_plots, amp_time_plots = [], []
+
     for intent in intents.split(','):
         amp_uvdist_plots.extend(
             AmpVsXChart('uvdist', column, intent, context, output_dir, calto, suffix=suffix).plot())
         amp_time_plots.extend(
             AmpVsXChart('time', column, intent, context, output_dir, calto, suffix=suffix).plot())
 
-    return {'uvdist': amp_uvdist_plots, 'time': amp_time_plots}
+    return {
+        'uvdist': amp_uvdist_plots,
+        'time': amp_time_plots
+    }
 
 
-class AmpVsXChart(applycal_displays.FieldSpwSummaryChart):
+class AmpVsXChart(applycal_displays.PlotmsFieldSpwComposite):
     """
-    Plotting class that creates an amplitude vs X plot for each spw, where X
-    is given as a constructor argument.
+    Plotting class that creates an amplitude vs X plot for each field and spw,
+    where X is given as a constructor argument.
     """
     def __init__(self, xaxis, ydatacolumn, intent, context, output_dir, calto, **overrides):
         plot_args = {
@@ -557,3 +561,4 @@ class AmpVsXChart(applycal_displays.FieldSpwSummaryChart):
 
         super(AmpVsXChart, self).__init__(context, output_dir, calto, xaxis=xaxis, yaxis='amp', intent=intent,
                                           **plot_args)
+

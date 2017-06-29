@@ -154,11 +154,10 @@ def space_comma(s):
 %>
 
 
-
-
-
 <%self:plot_group plot_dict="${summary_plots}"
-                                  url_fn="${lambda ms:  'noop'}">
+                  url_fn="${lambda ms: 'noop'}"
+                  break_rows_by=''
+                  sort_row_by='baseband,spw'>
 
         <%def name="title()">
             VLA Pipeline Summary Plots
@@ -185,17 +184,14 @@ def space_comma(s):
 </%self:plot_group>
 
 
-
-
-
-
 % if amp_vs_freq_plots or phase_vs_freq_plots or  amp_vs_time_plots or amp_vs_uv_plots or phase_vs_uv_plots or phase_vs_time_plots:
 
 <%self:plot_group plot_dict="${amp_vs_freq_plots}"
 				  url_fn="${lambda x: 'amp_vs_freq_%s.html' % sanitise(x)}"
 				  data_field="${True}"
 				  data_spw="${True}"
-				  plot_accessor="${lambda ms_plots: ms_plots.items()}">
+                  break_rows_by=""
+                  sort_row_by="intent,field,baseband,spw">
 
 	<%def name="title()">
 		Calibrated amplitude vs frequency
@@ -234,7 +230,8 @@ def space_comma(s):
 				  url_fn="${lambda x: 'phase_vs_freq_%s.html' % sanitise(x)}"
 				  data_field="${True}"
 				  data_spw="${True}"
-				  plot_accessor="${lambda ms_plots: ms_plots.items()}">
+                  break_rows_by=""
+                  sort_row_by="intent,field,baseband,spw">
 
 	<%def name="title()">
 		Calibrated phase vs frequency
@@ -272,7 +269,9 @@ def space_comma(s):
 
 <%self:plot_group plot_dict="${amp_vs_uv_plots}"
 				  url_fn="${lambda x: 'amp_vs_uv_%s.html' % sanitise(x)}"
-				  data_spw="${True}">
+				  data_spw="${True}"
+                  break_rows_by=""
+                  sort_row_by="intent,field,baseband,spw">
 
 	<%def name="title()">
 		Calibrated amplitude vs UV distance
@@ -305,7 +304,9 @@ def space_comma(s):
 
 <%self:plot_group plot_dict="${amp_vs_time_plots}"
 				  url_fn="${lambda x: 'amp_vs_time_%s.html' % sanitise(x)}"
-				  data_spw="${True}">
+				  data_spw="${True}"
+                  break_rows_by=""
+                  sort_row_by="baseband,spw">
 
 	<%def name="title()">
 		Calibrated amplitude vs time
@@ -333,7 +334,9 @@ def space_comma(s):
 
 <%self:plot_group plot_dict="${phase_vs_time_plots}"
 				  url_fn="${lambda x: 'phase_vs_time_%s.html' % sanitise(x)}"
-				  data_spw="${True}">
+				  data_spw="${True}"
+                  break_rows_by=""
+                  sort_row_by="baseband,spw">
 
 	<%def name="title()">
 		Calibrated phase vs time
@@ -362,7 +365,8 @@ def space_comma(s):
 				  url_fn="${lambda x: 'science_amp_vs_freq_%s.html' % sanitise(x)}"
 				  data_spw="${True}"
 				  data_field="${True}"
-				  plot_accessor="${lambda ms_plots: ms_plots.items()}">
+                  break_rows_by=""
+                  sort_row_by="baseband,spw">
 
 	<%def name="title()">
 		Science target: calibrated amplitude vs frequency
@@ -414,7 +418,8 @@ def space_comma(s):
 				  url_fn="${lambda x: 'science_phase_vs_freq_%s.html' % sanitise(x)}"
 				  data_baseband="${True}"
 				  data_field="${True}"
-				  plot_accessor="${lambda ms_plots: ms_plots.items()}">
+                  break_rows_by=""
+                  sort_row_by="intent,field,baseband,spw">
 
 	<%def name="title()">
 		Science target: calibrated phase vs frequency
@@ -465,7 +470,8 @@ def space_comma(s):
 				  url_fn="${lambda x: 'science_amp_vs_uv_%s.html' % sanitise(x)}"
 				  data_baseband="${True}"
 				  data_field="${True}"
-				  plot_accessor="${lambda ms_plots: ms_plots.items()}">
+                  break_rows_by=""
+                  sort_row_by="intent,field,baseband,spw">
 
 	<%def name="title()">
 		Science targets: calibrated amplitude vs UV distance
@@ -517,7 +523,8 @@ def space_comma(s):
 				  url_fn="${lambda x: 'phase_vs_freq_polarization_%s.html' % sanitise(x)}"
 				  data_field="${True}"
 				  data_spw="${True}"
-				  plot_accessor="${lambda ms_plots: ms_plots.items()}">
+                  break_rows_by=""
+                  sort_row_by="intent,field,baseband,spw">
 
 	<%def name="title()">
 		Calibrated phase vs frequency, intent='POLANGLE, POLLEAKAGE, BANDPASS, PHASE'

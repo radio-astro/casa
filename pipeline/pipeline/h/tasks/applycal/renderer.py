@@ -89,7 +89,7 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
             ['PHASE', 'BANDPASS', 'AMPLITUDE', 'CHECK', 'TARGET']
         )
 
-        amp_vs_freq_summary_plots = utils.OrderedDefaultdict(utils.OrderedDefaultdict)
+        amp_vs_freq_summary_plots = utils.OrderedDefaultdict(list)
         for intents in [['PHASE'], ['BANDPASS'], ['CHECK'], ['AMPLITUDE']]:
             # it doesn't matter that the subpages dict is repeatedly redefined.
             # The only purpose of the returned dict is to map the vis to a
@@ -101,11 +101,10 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                 intents
             )
 
-            key = utils.commafy(intents, quotes=False)
             for vis, vis_plots in plots.items():
-                amp_vs_freq_summary_plots[vis][key] = vis_plots
+                amp_vs_freq_summary_plots[vis].extend(vis_plots)
 
-        phase_vs_freq_summary_plots = utils.OrderedDefaultdict(utils.OrderedDefaultdict)
+        phase_vs_freq_summary_plots = utils.OrderedDefaultdict(list)
         for intents in [['PHASE'], ['BANDPASS'], ['CHECK']]:
             plots, phase_vs_freq_subpages = self.create_plots(
                 context,
@@ -114,13 +113,12 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                 intents
             )
 
-            key = utils.commafy(intents, quotes=False)
             for vis, vis_plots in plots.items():
-                phase_vs_freq_summary_plots[vis][key] = vis_plots
+                phase_vs_freq_summary_plots[vis].extend(vis_plots)
 
         # CAS-7659: Add plots of all calibrator calibrated amp vs uvdist to
         # the WebLog applycal page
-        amp_vs_uv_summary_plots = utils.OrderedDefaultdict(utils.OrderedDefaultdict)
+        amp_vs_uv_summary_plots = utils.OrderedDefaultdict(list)
         for intents in [['AMPLITUDE'], ['PHASE'], ['BANDPASS'], ['CHECK']]:
             plots, amp_vs_uv_subpages = self.create_plots(
                 context,
@@ -129,9 +127,8 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                 intents
             )
 
-            key = utils.commafy(intents, quotes=False)
             for vis, vis_plots in plots.items():
-                amp_vs_uv_summary_plots[vis][key] = vis_plots
+                amp_vs_uv_summary_plots[vis].extend(vis_plots)
 
         # Phase vs UV distance plots are not required
         # phase_vs_uv_summary_plots, _ = self.create_plots(
@@ -147,7 +144,7 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
          science_amp_vs_uv_summary_plots,
          uv_max) = self.create_science_plots(context, result)
 
-        corrected_ratio_to_antenna1_plots = utils.OrderedDefaultdict(utils.OrderedDefaultdict)
+        corrected_ratio_to_antenna1_plots = utils.OrderedDefaultdict(list)
         corrected_ratio_to_uv_dist_plots = {}
         for r in result:
             vis = os.path.basename(r.inputs['vis'])
@@ -168,9 +165,8 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                     uvrange=uv_cutoff
                 )
 
-                key = utils.commafy(intents, quotes=False)
                 for vis, vis_plots in p.items():
-                    corrected_ratio_to_antenna1_plots[vis][key] = vis_plots
+                    corrected_ratio_to_antenna1_plots[vis].extend(vis_plots)
 
             p, _ = self.create_plots(
                 context,
@@ -332,9 +328,9 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
             vis = os.path.basename(result.inputs['vis'])
             ms = context.observing_run.get_ms(vis)
 
-            amp_vs_freq_summary_plots[vis]['TARGET'] = []
-            phase_vs_freq_summary_plots[vis]['TARGET'] = []
-            amp_vs_uv_summary_plots[vis]['TARGET'] = []
+            amp_vs_freq_summary_plots[vis] = []
+            phase_vs_freq_summary_plots[vis] = []
+            amp_vs_uv_summary_plots[vis] = []
 
             # Plot for 1 science field (either 1 science target or for a mosaic 1
             # pointing). The science field that should be chosen is the one with
@@ -362,20 +358,20 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                                                       applycal.AmpVsFrequencySummaryChart,
                                                       [brightest_field.id],
                                                       uv_range)
-                amp_vs_freq_summary_plots[vis]['TARGET'].extend(plots)
+                amp_vs_freq_summary_plots[vis].extend(plots)
     
                 plots = self.science_plots_for_result(context, 
                                                       result,
                                                       applycal.PhaseVsFrequencyPerSpwSummaryChart,
                                                       [brightest_field.id],
                                                       uv_range)
-                phase_vs_freq_summary_plots[vis]['TARGET'].extend(plots)
+                phase_vs_freq_summary_plots[vis].extend(plots)
     
                 plots = self.science_plots_for_result(context, 
                                                       result, 
                                                       applycal.AmpVsUVSummaryChart,
                                                       [brightest_field.id])
-                amp_vs_uv_summary_plots[vis]['TARGET'].extend(plots)
+                amp_vs_uv_summary_plots[vis].extend(plots)
 
             if pipeline.infrastructure.generate_detail_plots(result):
                 scans = ms.get_scans(scan_intent='TARGET')
@@ -418,14 +414,7 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                 with renderer.get_file() as fileobj:
                     fileobj.write(renderer.render())
 
-        # sort plots by baseband so that the summary plots appear in baseband order
-        for plot_dict in (amp_vs_freq_summary_plots,
-                          phase_vs_freq_summary_plots,
-                          amp_vs_uv_summary_plots):
-            for source_plots in plot_dict.values():
-                self.sort_plots_by_baseband(source_plots)
-
-        return (amp_vs_freq_summary_plots, phase_vs_freq_summary_plots, 
+        return (amp_vs_freq_summary_plots, phase_vs_freq_summary_plots,
                 amp_vs_uv_summary_plots, max_uvs)
 
     def science_plots_for_result(self, context, result, plotter_cls, fields, uvrange=None, renderer_cls=None):
@@ -455,7 +444,7 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
             plots.extend(plotter.plot())
 
         for plot in plots:
-            plot.parameters['intent'] = ['TARGET']
+            plot.parameters['intent'] = 'TARGET'
 
         if renderer_cls is not None:
             renderer = renderer_cls(context, result, plots)
@@ -547,17 +536,6 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
             result[source_id] = brightest_id
 
         return result
-    
-    def sort_plots_by_baseband(self, d):
-        for vis, plots in d.items():
-            if all(['baseband' in plot.parameters for plot in plots]):
-                # secondary sort by baseband
-                plots = sorted(plots,
-                               key=lambda plot: plot.parameters['baseband'])
-                # primary sort by receiver band
-                plots = sorted(plots,
-                               key=lambda plot: plot.parameters['receiver'])
-                d[vis] = plots
 
     def create_plots(self, context, results, plotter_cls, intents, renderer_cls=None, **kwargs):
         """
@@ -585,11 +563,9 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
         for plot in plots:
             plot.parameters['intent'] = intents
 
-        d = collections.defaultdict(dict)
-        d[vis] = plots
+        d = {vis: plots}
 
         path = None
-
         if renderer_cls is not None:
             renderer = renderer_cls(context, result, plots)
             with renderer.get_file() as fileobj:
@@ -864,7 +840,7 @@ def _get_data_selection_for_plot(context, result, intent):
     spw = _get_calapp_arg(result, 'spw')
     field = _get_calapp_arg(result, 'field')
     antenna = _get_calapp_arg(result, 'antenna')
-    intent = ','.join(intent)
+    intent = ','.join(intent).upper()
 
     vis = {calapp.vis for calapp in result.applied}
     assert (len(vis) is 1)

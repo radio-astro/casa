@@ -460,19 +460,6 @@ class SpwSummaryChart(PlotmsSpwComposite):
                                               **kwargs)
 
 
-class FieldSpwSummaryChart(PlotmsFieldSpwComposite):
-    """
-    Base class for executing plotms per calibrator field and spw
-    """
-
-    def __init__(self, context, output_dir, calto, xaxis, yaxis, intent, **kwargs):
-        LOG.info('%s vs %s plot: %s' % (yaxis, xaxis, calto))
-
-        # request plots per field and spw, overlaying all antennas
-        super(FieldSpwSummaryChart, self).__init__(context, output_dir, calto, xaxis, yaxis, intent=intent,
-                                                   **kwargs)
-
-
 class BasebandSummaryChart(PlotmsBasebandComposite):
     """
     Base class for executing plotms per baseband
