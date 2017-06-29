@@ -71,9 +71,9 @@ uvtaper: ${uvtaper}
             <th>bmin</th>
             <th>bmin/maxAR</th>
             <th>cell</th>
-            <th>bandwidth [MHz]</th>
+            <th>bandwidth</th>
             <th>bwmode</th>
-            <th>sensitivity [Jy/beam]</th>
+            <th>sensitivity</th>
         </tr>
     </thead>
     <tbody>
