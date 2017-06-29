@@ -61,7 +61,7 @@ class SDMSExportData(almaexportdata.ALMAExportData):
     """
     Inputs = SDMSExportDataInputs
     
-    def _export_final_calfiles(self, context, oussid, session, vislist, products_dir):
+    def _export_final_calfiles(self, context, oussid, session, vislist, products_dir, imaging=None):
         """
         Save the final calibration tables in a tarfile one file
         per session.
