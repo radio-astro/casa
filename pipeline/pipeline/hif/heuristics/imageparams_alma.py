@@ -69,6 +69,9 @@ class ImageParamsHeuristicsALMA(ImageParamsHeuristics):
 
         '''Adjustment of uvtaper parameter based on desired resolution.'''
 
+        if (beam_natural is None) or (minAcceptableAngResolution is None) or (maxAcceptableAngResolution is None):
+            return []
+
         cqa = casatools.quanta
 
         beam_natural_v = cqa.getvalue(cqa.convert(beam_natural['bmin'], 'arcsec'))
