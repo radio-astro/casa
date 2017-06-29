@@ -108,6 +108,7 @@ class ImagePreCheck(basetask.StandardTaskTemplate):
         nbin = int(cqa.getvalue(cqa.convert(repr_target[2], 'Hz'))/physicalBW_of_1chan + 0.5)
         primary_beam_size = image_heuristics.largest_primary_beam_size(spwspec=str(repr_spw))
         field_ids = image_heuristics.field('TARGET', repr_source)
+        gridder = image_heuristics.gridder('TARGET', repr_source)
         cont_spw = ','.join([str(s.id) for s in inputs.context.observing_run.measurement_sets[0].get_spectral_windows()])
 
         beams = {}
@@ -121,7 +122,7 @@ class ImagePreCheck(basetask.StandardTaskTemplate):
 
             # reprBW sensitivity
             sensitivity, min_sensitivity, max_sensitivity, min_field_id, max_field_id, eff_ch_bw, sens_bw = \
-                image_heuristics.calc_sensitivities(inputs.vis, repr_source, 'TARGET', str(repr_spw), nbin, {}, 'cube', 'standard', cells[robust], imsizes[robust], 'briggs', robust)
+                image_heuristics.calc_sensitivities(inputs.vis, repr_source, 'TARGET', str(repr_spw), nbin, {}, 'cube', gridder, cells[robust], imsizes[robust], 'briggs', robust)
             sensitivities.append(Sensitivity( \
                 **{'array': array, \
                    'field': repr_source, \
@@ -135,7 +136,7 @@ class ImagePreCheck(basetask.StandardTaskTemplate):
 
             # full cont sensitivity (no frequency ranges excluded)
             sensitivity, min_sensitivity, max_sensitivity, min_field_id, max_field_id, eff_ch_bw, sens_bw = \
-                image_heuristics.calc_sensitivities(inputs.vis, repr_source, 'TARGET', cont_spw, nbin, {}, 'cont', 'standard', cells[robust], imsizes[robust], 'briggs', robust)
+                image_heuristics.calc_sensitivities(inputs.vis, repr_source, 'TARGET', cont_spw, nbin, {}, 'cont', gridder, cells[robust], imsizes[robust], 'briggs', robust)
             sensitivities.append(Sensitivity( \
                 **{'array': array, \
                    'field': repr_source, \
