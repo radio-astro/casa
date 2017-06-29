@@ -28,13 +28,13 @@ class CorrectedampflagInputs(basetask.StandardInputs):
 
     @property
     def intent(self):
+        if self._intent is not None:
+            return self._intent
+
         if isinstance(self.vis, list):
             return self._handle_multiple_vis('intent')
 
-        if not self._intent:
-            self._intent = 'BANDPASS'
-
-        return self._intent
+        return 'BANDPASS'
 
     @intent.setter
     def intent(self, value):
@@ -53,9 +53,7 @@ class CorrectedampflagInputs(basetask.StandardInputs):
         fieldids = [field.name
                     for field in self.ms.get_fields(intent=self.intent)]
 
-        self._field = ','.join(fieldids)
-
-        return self._field
+        return ','.join(fieldids)
 
     @field.setter
     def field(self, value):
@@ -72,9 +70,7 @@ class CorrectedampflagInputs(basetask.StandardInputs):
         science_spws = self.ms.get_spectral_windows(
             science_windows_only=True)
 
-        self._spw = ','.join([str(spw.id) for spw in science_spws])
-
-        return self._spw
+        return ','.join([str(spw.id) for spw in science_spws])
 
     @spw.setter
     def spw(self, value):
