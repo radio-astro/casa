@@ -46,8 +46,10 @@ class BaseCleanSequence:
 
         #if cleanmask is not None and os.path.exists(cleanmask):
         model_sum, residual_cleanmask_rms, residual_non_cleanmask_rms, residual_max, \
-            residual_min, nonpbcor_image_non_cleanmask_rms, pbcor_image_min, pbcor_image_max = cbheuristic.analyse_clean_result(
-            multiterm, model, restored, residual, flux, cleanmask, pblimit_image, pblimit_cleanmask)
+        residual_min, nonpbcor_image_non_cleanmask_rms, pbcor_image_min, pbcor_image_max, \
+        residual_robust_rms = cbheuristic.analyse_clean_result(multiterm, model, restored,
+                                                                 residual, flux, cleanmask,
+                                                                 pblimit_image, pblimit_cleanmask)
 
         # Append the statistics.
         self.iters.append(iter)

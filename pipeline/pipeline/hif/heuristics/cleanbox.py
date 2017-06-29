@@ -782,6 +782,10 @@ def analyse_clean_result(multiterm, model, restored, residual, flux, cleanmask, 
 
         LOG.info('Residual max: %s min: %s' % (residual_max, residual_min))
 
+        residual_stats = image.statistics(robust=True)
+        residual_robust_rms = residual_stats['medabsdevmed'][0] * 1.4826  # see CAS-9631xs
+        LOG.debug('residual robust rms: %s' % residual_robust_rms)
+
     pbcor_image_min = None
     pbcor_image_max = None
     nonpbcor_image_non_cleanmask_rms = None
@@ -846,4 +850,5 @@ def analyse_clean_result(multiterm, model, restored, residual, flux, cleanmask, 
                 pass
 
     return model_sum, residual_cleanmask_rms, residual_non_cleanmask_rms, residual_max,\
-      residual_min, nonpbcor_image_non_cleanmask_rms, pbcor_image_min, pbcor_image_max
+      residual_min, nonpbcor_image_non_cleanmask_rms, pbcor_image_min, pbcor_image_max, \
+      residual_robust_rms
