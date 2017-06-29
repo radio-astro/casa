@@ -45,27 +45,27 @@ class GfluxscaleflagInputs(basetask.StandardInputs):
     #
     @property
     def intent(self):
+        if self._intent is not None:
+            return self._intent
+
         if isinstance(self.vis, list):
             return self._handle_multiple_vis('intent')
 
-        if not self._intent:
-            # By default, this task will run for both FLUX and PHASE intent.
-            intents_to_flag = 'AMPLITUDE,PHASE'
+        # By default, this task will run for both FLUX and PHASE intent.
+        intents_to_flag = 'AMPLITUDE,PHASE'
 
-            # Check if any of the AMPLITUDE intent fields were also used for
-            # BANDPASS, in which case it has already been flagged by
-            # hifa_bandpassflag, and this task will just do PHASE fields.
-            # This assumes that there will only be 1 field for BANDPASS and
-            # 1 field for AMPLITUDE (which can be the same), which is valid as
-            # of Cycle 5.
-            for field in self.ms.get_fields(intent='AMPLITUDE'):
-                for fieldintent in field.intents:
-                    if 'BANDPASS' in fieldintent:
-                        intents_to_flag = 'PHASE'
+        # Check if any of the AMPLITUDE intent fields were also used for
+        # BANDPASS, in which case it has already been flagged by
+        # hifa_bandpassflag, and this task will just do PHASE fields.
+        # This assumes that there will only be 1 field for BANDPASS and
+        # 1 field for AMPLITUDE (which can be the same), which is valid as
+        # of Cycle 5.
+        for field in self.ms.get_fields(intent='AMPLITUDE'):
+            for fieldintent in field.intents:
+                if 'BANDPASS' in fieldintent:
+                    intents_to_flag = 'PHASE'
 
-            self._intent = intents_to_flag
-
-        return self._intent
+        return intents_to_flag
 
     @intent.setter
     def intent(self, value):
@@ -84,9 +84,7 @@ class GfluxscaleflagInputs(basetask.StandardInputs):
         fieldids = [field.name
                     for field in self.ms.get_fields(intent=self.intent)]
 
-        self._field = ','.join(fieldids)
-
-        return self._field
+        return ','.join(fieldids)
 
     @field.setter
     def field(self, value):
@@ -103,9 +101,7 @@ class GfluxscaleflagInputs(basetask.StandardInputs):
         science_spws = self.ms.get_spectral_windows(
             science_windows_only=True)
 
-        self._spw = ','.join([str(spw.id) for spw in science_spws])
-
-        return self._spw
+        return ','.join([str(spw.id) for spw in science_spws])
 
     @spw.setter
     def spw(self, value):
