@@ -7,6 +7,7 @@ import pipeline.infrastructure.renderer.weblog as weblog
 
 from .imageprecheck import ImagePreCheck
 from . import imageprecheck
+from . import renderer
 
 #from . import qa
 
@@ -15,5 +16,5 @@ from . import imageprecheck
 #qaadapter.registry.register_to_dataset_topic(imageprecheck.ImagePreCheckResults)
 
 
-weblog.add_renderer(ImagePreCheck, basetemplates.T2_4MDetailsDefaultRenderer(uri='imageprecheck.mako',
+weblog.add_renderer(ImagePreCheck, renderer.T2_4MDetailsCheckProductSizeRenderer(uri='imageprecheck.mako',
                          description='ImagePreCheck'), group_by=weblog.UNGROUPED)
