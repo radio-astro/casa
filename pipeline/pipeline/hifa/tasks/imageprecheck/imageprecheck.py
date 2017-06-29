@@ -27,8 +27,12 @@ class ImagePreCheckResults(basetask.Results):
         """
         See :method:`~pipeline.infrastructure.api.Results.merge_with_context`
         """
-
         # writing imageprecheck.out
+
+        # Add sensitivities to be reported to AQUA
+        # Note: for Cycle 5 we stay with robust=0.5. This will change for
+        # Cycle 6 when we switch to the robust heuristic (self.hm_robust value).
+        context.sensitivities.extend([s for s in self.sensitivities if s['robust']==0.5])
 
     def __repr__(self):
         #return 'ImagePreCheckResults:\n\t{0}'.format(
@@ -112,7 +116,7 @@ class ImagePreCheck(basetask.StandardTaskTemplate):
                        'robust': robust, \
                        'sensitivity': cqa.quantity(sensitivity, 'Jy/beam')}))
 
-                # cont sensitivity
+                # full cont sensitivity (no frequency ranges excluded)
                 sensitivity, min_sensitivity, max_sensitivity, min_field_id, max_field_id, eff_ch_bw, sens_bw = \
                     image_heuristics.calc_sensitivities(inputs.vis, repr_source, 'TARGET', cont_spw, nbin, {}, 'cont', 'standard', cells[robust], imsizes[robust], 'briggs', robust)
                 sensitivities.append(Sensitivity( \
@@ -120,7 +124,7 @@ class ImagePreCheck(basetask.StandardTaskTemplate):
                        'field': repr_source, \
                        'spw': str(repr_spw), \
                        'bandwidth': cqa.quantity(sens_bw, 'Hz'), \
-                       'bwmode': 'cont', \
+                       'bwmode': 'fullcont', \
                        'beam': beams[robust], \
                        'cell': cells[robust], \
                        'robust': robust, \

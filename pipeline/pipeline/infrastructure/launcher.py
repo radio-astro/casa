@@ -132,6 +132,8 @@ class Context(object):
         self.contfile = None
         self.linesfile = None
         self.size_mitigation_parameters = {}
+        self.clean_list_pending = []
+        self.sensitivities = []
 
         LOG.trace('Creating report directory \'%s\'' % self.report_dir)
         utils.mkdir_p(self.report_dir)
