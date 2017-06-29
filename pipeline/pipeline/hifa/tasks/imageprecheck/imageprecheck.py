@@ -10,6 +10,7 @@ import pipeline.infrastructure.basetask as basetask
 from pipeline.infrastructure import casa_tasks
 import pipeline.infrastructure.casatools as casatools
 import pipeline.domain.measures as measures
+import pipeline.infrastructure.imageparamsfilehandler as imageparamsfilehandler
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -27,7 +28,9 @@ class ImagePreCheckResults(basetask.Results):
         """
         See :method:`~pipeline.infrastructure.api.Results.merge_with_context`
         """
-        # writing imageprecheck.out
+        # Write imageparams.dat file
+        imageparams_filehandler = imageparamsfilehandler.ImageParamsFileHandler()
+        imageparams_filehandler.write(self.hm_robust, self.hm_uvtaper)
 
         # Add sensitivities to be reported to AQUA
         # Note: for Cycle 5 we stay with robust=0.5. This will change for
