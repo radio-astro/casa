@@ -8,6 +8,7 @@ import re
 import time
 import collections
 import functools
+import itertools
 
 import pipeline.infrastructure.mpihelpers as mpihelpers
 import pipeline.infrastructure as infrastructure
@@ -260,7 +261,7 @@ def _get_index_list_for_ms(datatable, vis_list, antennaid_list, fieldid_list,
     # use time_table instead of data selection
     #online_flag = datatable.getcolslice('FLAG_PERMANENT', [0, OnlineFlagIndex], [-1, OnlineFlagIndex], 1)[0]
     #LOG.info('online_flag=%s'%(online_flag))
-    for (_vis, _field, _ant, _spw) in zip(vis_list, fieldid_list, antennaid_list, spwid_list):
+    for (_vis, _field, _ant, _spw) in itertools.izip(vis_list, fieldid_list, antennaid_list, spwid_list):
         time_table = datatable.get_timetable(_ant, _spw, None, os.path.basename(_vis), _field)
         # time table separated by large time gap
         the_table = time_table[1]
@@ -516,7 +517,7 @@ def make_row_map(src_ms, derived_vis):
                             #assert set(tstate0) == set(states[scan_number])
                             assert set(tstate0).issubset(set(states[scan_number]))
                             
-                            for (i0, i1) in zip(sort_index0, sort_index1):
+                            for (i0, i1) in itertools.izip(sort_index0, sort_index1):
                                 r0 = trow0[i0]
                                 r1 = trow1[i1]
                                 rowmap[r0] = r1
