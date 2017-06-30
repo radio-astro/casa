@@ -29,6 +29,7 @@ from .linfeedpolcal import Linfeedpolcal
 from .editimlist import Editimlist
 from .transformimagedata import Transformimagedata
 from .makermsimages import Makermsimages
+from .makecutoutimages import Makecutoutimages
 
 # set default tasks for tasks with several implementations to our desired
 # specific implementation

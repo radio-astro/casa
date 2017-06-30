@@ -21,6 +21,7 @@ import gaincal_cli
 import gencal_cli
 import hanningsmooth_cli
 import imdev_cli
+import imhead_cli
 import immath_cli
 import immoments_cli
 import imregrid_pg
@@ -28,6 +29,7 @@ import impbcor_pg
 import importasdm_cli
 import importevla_cli
 import imstat_cli
+import imsubimage_cli
 import listobs_cli
 import mstransform_cli
 import partition_cli
@@ -333,6 +335,9 @@ class CASATaskJobGenerator(object):
     def imdev(self, *v, **k):
         return self._get_job(imdev_cli.imdev_cli, *v, **k)
 
+    def imhead(self, *v, **k):
+        return self._get_job(imhead_cli.imhead_cli, *v, **k)
+
     def immath(self, *v, **k):
         return self._get_job(immath_cli.immath_cli, *v, **k)
 
@@ -353,6 +358,9 @@ class CASATaskJobGenerator(object):
 
     def imstat(self, *v, **k):
         return self._get_job(imstat_cli.imstat_cli, *v, **k)
+
+    def imsubimage(self, *v, **k):
+        return self._get_job(imsubimage_cli.imsubimage_cli, *v, **k)
 
     def listobs(self, *v, **k):
         return self._get_job(listobs_cli.listobs_cli, *v, **k)

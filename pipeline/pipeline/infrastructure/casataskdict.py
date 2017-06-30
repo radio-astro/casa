@@ -15,6 +15,7 @@ CasaTaskDict = {
     'h_restoredata': 'RestoreData',
     'h_tsyscal': 'Tsyscal',
     # Interferometry tasks ---------------------------------------------------
+    'hif_makecutoutimages': 'Makecutoutimages',
     'hif_makermsimages': 'Makermsimages',
     'hif_transformimagedata': 'Transformimagedata',
     'hif_editimlist': 'Editimlist',
@@ -137,6 +138,7 @@ classToCASATask = {
     hif_tasks.FindCont                : 'hif_findcont',
     hif_tasks.Flagcorrected           : 'hif_flagcorrected',
     hif_tasks.Linfeedpolcal           : 'hif_linfeedpolcal',
+    hif_tasks.Makecutoutimages        : 'hif_makecutoutimages',
     hif_tasks.Makermsimages           : 'hif_makermsimages',
     hif_tasks.Rawflagchans            : 'hif_rawflagchans',
     hif_tasks.Fluxcal                 : 'hif_fluxcal',
