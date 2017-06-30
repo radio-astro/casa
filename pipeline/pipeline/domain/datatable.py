@@ -29,6 +29,7 @@ import math
 import re
 import collections
 import shutil
+import itertools
 
 #import memory_profiler
 
@@ -90,7 +91,7 @@ def __tabledescro():
         'AZ', 'EL', 'NCHAN', 'TSYS', 'TARGET', 'ANTENNA',
         'SRCTYPE', 'MS', 'FIELD_ID'
         ]
-    return dict( zip(name,TD_DESC_RO) )
+    return dict( itertools.izip(name,TD_DESC_RO) )
 
 def __tabledescrw():
     TD_DESC_RW = [
@@ -108,7 +109,7 @@ def __tabledescrw():
         'STATISTICS', 'FLAG', 'FLAG_PERMANENT',
         'FLAG_SUMMARY', 'NMASK', 'MASKLIST', 'NOCHANGE',
         'POSGRP']
-    return dict( zip(name,TD_DESC_RW) )
+    return dict( itertools.izip(name,TD_DESC_RW) )
 
 TABLEDESC_RO = __tabledescro()
 TABLEDESC_RW = __tabledescrw()
@@ -703,7 +704,7 @@ class DataTableImpl( object ):
         ms_rows = rows[dt_rows] 
         with casatools.TableReader(infile) as tb:
             #for dt_row in index[0]:
-            for dt_row, ms_row in zip(dt_rows, ms_rows):
+            for dt_row, ms_row in itertools.izip(dt_rows, ms_rows):
                 #ms_row = rows[dt_row]
                 flag = tb.getcell('FLAG', ms_row)
                 rowflag = tb.getcell('FLAG_ROW', ms_row)
