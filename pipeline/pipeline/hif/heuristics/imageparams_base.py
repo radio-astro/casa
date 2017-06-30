@@ -1152,7 +1152,7 @@ class ImageParamsHeuristics(object):
                                        cellx=cell[0], celly=cell[0],
                                        nx=imsize[0], ny=imsize[1])
                     imTool.weight(type=weighting, rmode='norm', robust=robust)
-                    if uvtaper != []:
+                    if uvtaper not in (None, []):
                         imTool.filter(type='gaussian', bmaj=uvtaper[0])
                     result = imTool.apparentsens()
 

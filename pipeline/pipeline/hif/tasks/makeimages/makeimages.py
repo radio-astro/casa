@@ -32,7 +32,7 @@ class MakeImagesInputs(basetask.StandardInputs):
         self._target_list = value
 
     hm_cleaning = basetask.property_with_default('hm_cleaning', 'rms')
-    hm_masking = basetask.property_with_default('hm_masking', 'centralregion')
+    hm_masking = basetask.property_with_default('hm_masking', 'auto')
     hm_autotest = basetask.property_with_default('hm_autotest', '')
     masklimit = basetask.property_with_default('masklimit', 2.0)
     maxncleans = basetask.property_with_default('maxncleans', 10)
@@ -42,7 +42,7 @@ class MakeImagesInputs(basetask.StandardInputs):
     robust = basetask.property_with_default('robust', -999.0)
     cleancontranges = basetask.property_with_default('cleancontranges', False)
     subcontms = basetask.property_with_default('subcontms', False)
-    tlimit = basetask.property_with_default('tlimit', 4.0)
+    tlimit = basetask.property_with_default('tlimit', 2.0)
     weighting = basetask.property_with_default('weighting', 'briggs')
 
 
@@ -196,9 +196,9 @@ class CleanTaskFactory(object):
                 # inner quarter. Other methods will be made available
                 # later.
                 #datatask_args['hm_masking'] = 'psfiter'
-                task_args['hm_masking'] = 'centralregion'
+                task_args['hm_masking'] = 'auto'
             else:
-                task_args['hm_masking'] = 'centralregion'
+                task_args['hm_masking'] = 'auto'
         else:
             task_args['hm_masking'] = inputs.hm_masking
 

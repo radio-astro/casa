@@ -52,12 +52,12 @@ Compute clean results from a list of specified targets.
 
   <param type="string" name="hm_masking">
      <description>Pipeline heuristics masking option</description>
-       <value>centralregion</value>
+       <value>auto</value>
        <allowed kind="enum">
+         <value>auto</value>
          <value>centralregion</value>
          <value>psf</value>
          <value>psfiter</value>
-         <value>auto</value>
          <value>none</value>
          <value></value>
        </allowed>
@@ -82,7 +82,7 @@ Compute clean results from a list of specified targets.
 
   <param type="double" name="tlimit" subparam="true">
        <description>Times the sensitivity limit for cleaning</description>
-       <value>4.0</value>
+       <value>2.0</value>
   </param>
 
   <param type="int" name="masklimit" subparam="true">
@@ -153,15 +153,15 @@ Compute clean results from a list of specified targets.
     </when>
 
     <when param="hm_masking">
+      <equals value="auto">
+        <default param="hm_autotest"><value type="string"></value></default>
+      </equals>
       <equals value="centralregion">
       </equals>
       <equals value="psf">
       </equals>
       <equals value="psfiter">
         <default param="maxncleans"><value type="int">10</value></default>
-      </equals>
-      <equals value="auto">
-        <default param="hm_autotest"><value type="string"></value></default>
       </equals>
       <equals value="none">
       </equals>
@@ -173,10 +173,10 @@ Compute clean results from a list of specified targets.
       <equals value="">
       </equals>
       <equals value="rms">
-        <default param="tlimit"><value type="double">4.0</value></default>
+        <default param="tlimit"><value type="double">2.0</value></default>
       </equals>
       <equals value="sensitivity">
-        <default param="tlimit"><value type="double">4.0</value></default>
+        <default param="tlimit"><value type="double">2.0</value></default>
       </equals>
       <equals value="timesmask">
         <default param="masklimit"><value type="int">4</value></default>
@@ -254,9 +254,9 @@ weighting_noise -- For weighting='briggsabs'
                        noise parameter to use for Briggs "abs" weighting
                        example noise='1.0mJy'
 
-hm_masking -- Clean masking mode. Options are 'centralregion'
+hm_masking -- Clean masking mode. Options are 'centralregion',
     'psf', 'psfiter', 'auto', 'manual' and 'none'
-    default: 'centralregion'
+    default: 'auto'
     example: 'manual'
 
 hm_autotest -- Auto-boxing test parameters.

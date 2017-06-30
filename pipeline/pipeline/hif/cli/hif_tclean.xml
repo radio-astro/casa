@@ -184,12 +184,12 @@ Compute a clean map.
 
   <param type="string" name="hm_masking">
      <description>Pipeline heuristics masking option</description>
-       <value>centralregion</value>
+       <value>auto</value>
        <allowed kind="enum">
+         <value>auto</value>
          <value>centralregion</value>
          <value>psf</value>
          <value>psfiter</value>
-         <value>auto</value>
          <value>manual</value>
          <value>none</value>
          <value></value>
@@ -230,7 +230,7 @@ Compute a clean map.
 
   <param type="double" name="tlimit" subparam="true">
        <description>Times the sensitivity limit for cleaning</description>
-       <value>4.0</value>
+       <value>2.0</value>
   </param>
 
   <param type="int" name="masklimit" subparam="true">
@@ -333,15 +333,15 @@ Compute a clean map.
     </when>
 
     <when param="hm_masking">
+      <equals value="auto">
+        <default param="hm_autotest"><value type="string"></value></default>
+      </equals>
       <equals value="centralregion">
       </equals>
       <equals value="psf">
       </equals>
       <equals value="psfiter">
         <default param="maxncleans"><value type="int">10</value></default>
-      </equals>
-      <equals value="auto">
-        <default param="hm_autotest"><value type="string"></value></default>
       </equals>
       <equals value="manual">
         <default param="mask"><value type="string"></value></default>
@@ -358,11 +358,11 @@ Compute a clean map.
         <default param="threshold"><value type="double" units="mJy">0.0</value></default>
       </equals>
       <equals value="sensitivity">
-        <default param="tlimit"><value type="double">4.0</value></default>
+        <default param="tlimit"><value type="double">2.0</value></default>
         <default param="niter"><value type="int">5000</value></default>
       </equals>
       <equals value="rms">
-        <default param="tlimit"><value type="double">4.0</value></default>
+        <default param="tlimit"><value type="double">2.0</value></default>
         <default param="niter"><value type="int">5000</value></default>
       </equals>
       <equals value="mask">
@@ -562,9 +562,9 @@ restoringbeam -- Gaussina sestoring beam for clean, \'\' for default
     default: \'\'
     example:
 
-hm_masking -- Clean masking mode. Options are 'centralregion'
+hm_masking -- Clean masking mode. Options are 'centralregion',
     'psf', 'psfiter', 'auto', 'manual' and 'none'
-    default: 'centralregion'
+    default: 'auto'
     example: 'manual'
 
 hm_autotest -- Auto-boxing test parameters.

@@ -69,7 +69,7 @@ class TcleanInputs(cleanbase.CleanBaseInputs):
     hm_masking = basetask.property_with_default('hm_masking', 'centralregion')
     hm_autotest = basetask.property_with_default('hm_autotest', '')
     masklimit = basetask.property_with_default('masklimit', 4.0)
-    tlimit = basetask.property_with_default('tlimit', 4.0)
+    tlimit = basetask.property_with_default('tlimit', 2.0)
     cleancontranges = basetask.property_with_default('cleancontranges', False)
     subcontms = basetask.property_with_default('subcontms', False)
 
@@ -114,16 +114,18 @@ class TcleanInputs(cleanbase.CleanBaseInputs):
     @property
     def robust(self):
         if self._robust == -999.0:
+            # For Cycle 5 we disable the robust heuristic
+            return 0.5
             if (self.spw.find(',') == -1):
                 # TODO: Use real synthesized beam size
-                hm_robust, minAcceptableAngResolution, maxAcceptableAngResolution = self.image_heuristics.robust('1.0arcsec')
+                hm_robust, minAcceptableAngResolution, maxAcceptableAngResolution = self.image_heuristics.robust({'major': '1.0arcsec', 'minor': '1.0arcsec', 'positionangle': '0.0deg'})
                 return hm_robust
             else:
                 robust = 0.0
                 spws = self.spw.split(',')
                 for spw in spws:
                     # TODO: Use real synthesized beam size
-                    hm_robust, minAcceptableAngResolution, maxAcceptableAngResolution = self.image_heuristics.robust('1.0arcsec')
+                    hm_robust, minAcceptableAngResolution, maxAcceptableAngResolution = self.image_heuristics.robust({'major': '1.0arcsec', 'minor': '1.0arcsec', 'positionangle': '0.0deg'})
                     robust += hm_robust
                 robust /= len(spws)
                 return robust
@@ -137,6 +139,7 @@ class TcleanInputs(cleanbase.CleanBaseInputs):
     @property
     def uvtaper(self):
         if self._uvtaper is None:
+            # TODO: Use heuristic
             self._uvtaper = []
 
         return self._uvtaper
@@ -229,7 +232,8 @@ class Tclean(cleanbase.CleanBase):
             synthesized_beam = self.image_heuristics.synthesized_beam( \
                                field_intent_list=[(inputs.field, inputs.intent)], \
                                spwspec=inputs.spw, \
-                               robust=inputs.robust)
+                               robust=inputs.robust, \
+                               uvtapre=inputs.uvtaper)
             cell = self.image_heuristics.cell(beam=synthesized_beam)
 
             if inputs.cell == []:
