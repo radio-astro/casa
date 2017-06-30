@@ -70,7 +70,7 @@ $(document).ready(function() {
 
 
         <%def name="caption_title(plot)">
-           RMS plot
+           ${plot.basename}
         </%def>
 </%self:plot_group>
 
