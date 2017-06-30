@@ -7,6 +7,7 @@ import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.sdfilenamer as filenamer
+from pipeline.h.tasks.common.sensitivity import Sensitivity
 import pipeline.infrastructure.imagelibrary as imagelibrary
 import pipeline.infrastructure.utils as utils
 from pipeline.infrastructure import casa_tasks
@@ -105,8 +106,9 @@ class SDImagingResultItem(common.SingleDishResults):
     """
     The class to store result of each image.
     """
-    def __init__(self, task=None, success=None, outcome=None):
+    def __init__(self, task=None, success=None, outcome=None, sensitivity=None):
         super(SDImagingResultItem, self).__init__(task, success, outcome)
+        self.sensitivity = sensitivity
         # logrecords attribute is mandatory but not created unless Result is returned by execute.
         self.logrecords = []
 
@@ -116,7 +118,10 @@ class SDImagingResultItem(common.SingleDishResults):
         
         if self.outcome.has_key('export_results'):
             self.outcome['export_results'].merge_with_context(context)
-            
+
+        # Add sensitivities to context
+        if self.sensitivity is not None:
+            context.sensitivities.append(self.sensitivity)
         # register ImageItem object to context.sciimlist if antenna is COMBINED
         if self.outcome.has_key('image'):
             image_item = self.outcome['image']
@@ -133,9 +138,10 @@ class SDImagingResults(basetask.ResultsList):
     The class to store a list of per image results (SDImagingResultItem).
     """
     def merge_with_context(self, context):
-        ### assign logrecords of top level task to the first result item.
+        # Assign logrecords of top level task to the first result item.
         if hasattr(self, 'logrecords') and len(self) > 0:
             self[0].logrecords.extend(self.logrecords)
+        # merge per item
         super(SDImagingResults, self).merge_with_context(context)
 
         
@@ -577,7 +583,9 @@ class SDImaging(basetask.StandardTaskTemplate):
                     num_chan = ia.shape()[faxis]
                     chan_width = cs.increment()['numeric'][faxis]
                     brightnessunit = ia.brightnessunit()
+                    beam = ia.restoringbeam()
                 ref_world = cs.referencevalue()['numeric']
+                qcell = cs.increment(format='s', type='direction')['string']
 #                 rms_exclude_freq = self._merge_ranges(combined_rms_exclude)
                 LOG.info("Aggregated spectral line frequency ranges of combined image = %s" % str(combined_rms_exclude))
                 combined_rms_exclude_chan = [] # should be list for sort
@@ -644,6 +652,7 @@ class SDImaging(basetask.StandardTaskTemplate):
                 for ichan in include_channel_range:
                     ref_pixel[faxis] = ichan
                     freqs.append(cs.toworld(ref_pixel)['numeric'][faxis])
+                cs.done()
                 if len(freqs) > 1 and freqs[0] > freqs[1]: #LSB
                     freqs.reverse()
                 stat_freqs = str(', ').join([ '%f~%fGHz' % (freqs[iseg]*1.e-9, freqs[iseg+1]*1.e-9) for iseg in range(0, len(freqs), 2) ])
@@ -668,12 +677,21 @@ class SDImaging(basetask.StandardTaskTemplate):
                 outcome['image_sensitivity'] = {'frequency_range': stat_freqs, 'rms': image_rms,
                                                 'channel_width': chan_width, 'representative': is_representative_spw}
 #                 outcome['assoc_pols'] = pols
-
+                sensitivity=None
+                if is_representative_spw:
+                    sensitivity = Sensitivity(array='TP',
+                                              field=source_name,
+                                              spw=str(combined_spws[0]),
+                                              bandwidth=cqa.quantity(chan_width, 'Hz'),
+                                              bwmode='reprBW',
+                                              beam=beam, cell=qcell,
+                                              sensitivity=cqa.quantity(image_rms))
 #                 # to register exported_ms to each scantable instance
 #                 outcome['export_results'] = export_results
                 result = SDImagingResultItem(task=self.__class__,
                                           success=True,
-                                          outcome=outcome)
+                                          outcome=outcome,
+                                          sensitivity=sensitivity)
                 result.stage_number = inputs.context.task_counter 
                 
                 results.append(result)
@@ -728,7 +746,7 @@ class SDImaging(basetask.StandardTaskTemplate):
             if len(channelmap_range) >0:
                 exclude_range.extend(channelmap_range)
             exclude_channel_range = self._merge_ranges(exclude_range)
-            LOG.info("%s : channel map and deviation mask channel ranges in MS frame = %s" % str(exclude_channel_range))
+            LOG.info("%s : channel map and deviation mask channel ranges in MS frame = %s" % (msobj.basename, str(exclude_channel_range)))
             # define frequency ranges of RMS
             exclude_freq_range = numpy.zeros(2*len(exclude_channel_range))
             for jseg in range(len(exclude_channel_range)):
