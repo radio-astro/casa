@@ -11,6 +11,7 @@ class Sensitivity(dict):
          self['beam'] = None            # string
          self['cell'] = None            # string
          self['robust'] = None          # string
+         self['uvtaper'] = None         # list
          self['sensitivity'] = None     # string
 
          dict.__init__(self, *args, **kwargs)

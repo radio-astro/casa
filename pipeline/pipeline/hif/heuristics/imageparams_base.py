@@ -267,7 +267,7 @@ class ImageParamsHeuristics(object):
 
         return largest_primary_beam_size
 
-    def synthesized_beam(self, field_intent_list, spwspec, robust=0.5):
+    def synthesized_beam(self, field_intent_list, spwspec, robust=0.5, uvtaper=[]):
 
         '''Calculate synthesized beam for a given field / spw selection.'''
 
@@ -349,6 +349,7 @@ class ImageParamsHeuristics(object):
                                                      gridder='standard',
                                                      weighting='briggs',
                                                      robust=robust,
+                                                     uvtaper=uvtaper,
                                                      specmode='cube',
                                                      start=center_chan,
                                                      nchan=1)
@@ -991,7 +992,7 @@ class ImageParamsHeuristics(object):
         else:
             return -1, -1, 0
 
-    def calc_sensitivities(self, vis, field, intent, spw, nbin, spw_topo_chan_param_dict, specmode, gridder, cell, imsize, weighting, robust):
+    def calc_sensitivities(self, vis, field, intent, spw, nbin, spw_topo_chan_param_dict, specmode, gridder, cell, imsize, weighting, robust, uvtaper):
         """Compute sensitivity estimate using CASA."""
 
         # Calculate sensitivities
@@ -1034,7 +1035,7 @@ class ImageParamsHeuristics(object):
                         field_sensitivities = []
                         for field_id in [f.id for f in ms.fields if (utils.dequote(f.name) == utils.dequote(field) and intent in f.intents)]:
                             try:
-                                field_sensitivity, eff_ch_bw, sens_bws[intSpw] = self.get_sensitivity(ms, field_id, intSpw, chansel, specmode, cell, imsize, weighting, robust)
+                                field_sensitivity, eff_ch_bw, sens_bws[intSpw] = self.get_sensitivity(ms, field_id, intSpw, chansel, specmode, cell, imsize, weighting, robust, uvtaper)
                                 if (field_sensitivity > 0.0):
                                     field_sensitivities.append(field_sensitivity)
                                     detailed_field_sensitivities[os.path.basename(msname)][intSpw][field_id] = field_sensitivity
@@ -1067,7 +1068,7 @@ class ImageParamsHeuristics(object):
                         # Still need to loop over field ID with proper intent for single field case
                         field_sensitivities = []
                         for field_id in [f.id for f in ms.fields if (utils.dequote(f.name) == utils.dequote(field) and intent in f.intents)]:
-                            field_sensitivity, eff_ch_bw, sens_bws[intSpw] = self.get_sensitivity(ms, field_id, intSpw, chansel, specmode, cell, imsize, weighting, robust)
+                            field_sensitivity, eff_ch_bw, sens_bws[intSpw] = self.get_sensitivity(ms, field_id, intSpw, chansel, specmode, cell, imsize, weighting, robust, uvtaper)
                             if (field_sensitivity > 0.0):
                                 field_sensitivities.append(field_sensitivity)
                         # Check if we have anything
@@ -1107,7 +1108,7 @@ class ImageParamsHeuristics(object):
 
         return sensitivity, min_sensitivity, max_sensitivity, min_field_id, max_field_id, eff_ch_bw, sum(sens_bws.values())
 
-    def get_sensitivity(self, ms_do, field, spw, chansel, specmode, cell, imsize, weighting, robust):
+    def get_sensitivity(self, ms_do, field, spw, chansel, specmode, cell, imsize, weighting, robust, uvtaper):
         """
         Get sensitivity for a field / spw / chansel combination from CASA's
         apparentsens method and a correction for effective channel widths
@@ -1150,7 +1151,9 @@ class ImageParamsHeuristics(object):
                     imTool.defineimage(mode=specmode if specmode=='cube' else 'mfs', spw=spw,
                                        cellx=cell[0], celly=cell[0],
                                        nx=imsize[0], ny=imsize[1])
-                    imTool.weight(type=weighting, robust=robust)
+                    imTool.weight(type=weighting, rmode='norm', robust=robust)
+                    if uvtaper != []:
+                        imTool.filter(type='gaussian', bmaj=uvtaper[0])
                     result = imTool.apparentsens()
 
                 if (result[1] == 0.0):

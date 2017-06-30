@@ -40,7 +40,7 @@ if not result[0].have_real_repr_target:
 else:
     real_repr_target = ''
 repr_source = result[0].repr_source
-repr_spw = '%d' % (result[0].repr_spw)
+repr_spw = '%s' % (result[0].repr_spw)
 repr_freq = '%.4f GHz' % (cqa.getvalue(cqa.convert(result[0].repr_target[1], 'GHz')))
 repr_bw = '%.4g MHz' % (cqa.getvalue(cqa.convert(result[0].repr_target[2], 'MHz')))
 minAR = '%#.2g arcsec' % (cqa.getvalue(cqa.convert(result[0].minAcceptableAngResolution, 'arcsec')))
@@ -63,11 +63,12 @@ robust: ${robust}
 <br>
 uvtaper: ${uvtaper}
 <p>
-<h4>Beam and sensitivity results for different robust parameters:</h4>
+<h4>Beam and sensitivity results for different robust and uvtaper parameters:</h4>
 <table class="table">
     <thead>
         <tr>
             <th>robust</th>
+            <th>uvtaper</th>
             <th>beam</th>
             <th>bmin/maxAR</th>
             <th>cell</th>

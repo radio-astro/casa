@@ -8,7 +8,7 @@ import pipeline.infrastructure.casatools as casatools
 
 LOG = logging.get_logger(__name__)
 
-TR = collections.namedtuple('TR', 'robust beam bmin_maxAR cell bandwidth bwmode sensitivity')
+TR = collections.namedtuple('TR', 'robust uvtaper beam bmin_maxAR cell bandwidth bwmode sensitivity')
 
 
 class T2_4MDetailsCheckProductSizeRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
@@ -38,6 +38,7 @@ class T2_4MDetailsCheckProductSizeRenderer(basetemplates.T2_4MDetailsDefaultRend
 
         for item in result.sensitivities:
             robust = item['robust']
+            uvtaper = item['uvtaper']
             bmin_v = cqa.getvalue(cqa.convert(item['beam']['minor'], 'arcsec'))
             bmaj_v = cqa.getvalue(cqa.convert(item['beam']['major'], 'arcsec'))
             bpa_v = cqa.getvalue(cqa.convert(item['beam']['positionangle'], 'deg'))
@@ -51,6 +52,6 @@ class T2_4MDetailsCheckProductSizeRenderer(basetemplates.T2_4MDetailsDefaultRend
             bwmode = item['bwmode']
             sensitivity = '%.3g Jy/beam' % (cqa.getvalue(cqa.convert(item['sensitivity'], 'Jy/beam')))
 
-            rows.append(TR(robust=robust, beam=beam, bmin_maxAR=bmin_maxAR, cell=cell, bandwidth=bandwidth, bwmode=bwmode, sensitivity=sensitivity))
+            rows.append(TR(robust=robust, uvtaper=uvtaper, beam=beam, bmin_maxAR=bmin_maxAR, cell=cell, bandwidth=bandwidth, bwmode=bwmode, sensitivity=sensitivity))
 
         return utils.merge_td_columns(rows)

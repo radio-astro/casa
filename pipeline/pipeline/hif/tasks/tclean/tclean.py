@@ -134,6 +134,17 @@ class TcleanInputs(cleanbase.CleanBaseInputs):
     def robust(self, value):
         self._robust = value
 
+    @property
+    def uvtaper(self):
+        if self._uvtaper is None:
+            self._uvtaper = []
+
+        return self._uvtaper
+
+    @uvtaper.setter
+    def uvtaper(self, value):
+        self._uvtaper = value
+
 # tell the infrastructure to give us mstransformed data when possible by
 # registering our preference for imaging measurement sets
 basetask.ImagingMeasurementSetsPreferred.register(TcleanInputs)
@@ -341,7 +352,8 @@ class Tclean(cleanbase.CleanBase):
                                                          inputs.cell, \
                                                          inputs.imsize, \
                                                          inputs.weighting, \
-                                                         inputs.robust)
+                                                         inputs.robust, \
+                                                         inputs.uvtaper)
         LOG.info('Sensitivity estimate: %s Jy', sensitivity)
 
         # Choose TOPO frequency selections

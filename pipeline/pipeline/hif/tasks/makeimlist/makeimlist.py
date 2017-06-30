@@ -355,7 +355,7 @@ class MakeImList(basetask.StandardTaskTemplate):
         synthesized_beams = {}
         for spwspec in spwlist:
             largest_primary_beams[spwspec] = self.heuristics.largest_primary_beam_size(spwspec=spwspec)
-            synthesized_beams[spwspec] = self.heuristics.synthesized_beam(field_intent_list=field_intent_list, spwspec=spwspec, robust=0.5)
+            synthesized_beams[spwspec] = self.heuristics.synthesized_beam(field_intent_list=field_intent_list, spwspec=spwspec, robust=0.5, uvtaper=[])
 
         # cell is a list of form [cellx, celly]. If the list has form [cell]
         # then that means the cell is the same size in x and y. If cell is
