@@ -133,7 +133,7 @@ class ALMAExportData(exportdata.ExportData):
         #    how flags will or will not be stored back into the ASDM
 
         targetflags_filelist = []
-        for file_name in glob.glob('*_flag*template.txt'):
+        for file_name in glob.glob('*.flag*template.txt'):
             flags_file = os.path.join (output_dir, file_name)
             if os.path.exists(flags_file):
                 empty = False
