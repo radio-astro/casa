@@ -321,17 +321,17 @@ class ImportData(basetask.StandardTaskTemplate):
         inputs = self.inputs
         vis = self._asdm_to_vis_filename(asdm)
         outfile = os.path.join(inputs.output_dir,
-                               os.path.basename(asdm) + '_flagonline.txt')
+                               os.path.basename(asdm) + '.flagonline.txt')
 
         if inputs.save_flagonline:
             # Create the standard calibration flagging template file
             template_flagsfile = os.path.join(inputs.output_dir,
-                                              os.path.basename(asdm) + '_flagtemplate.txt')
+                                              os.path.basename(asdm) + '.flagtemplate.txt')
             self._make_template_flagfile(asdm, template_flagsfile,
                                          'User flagging commands file for the calibration pipeline')
             # Create the imaging targets file
             template_flagsfile = os.path.join(inputs.output_dir,
-                                              os.path.basename(asdm) + '_flagtargetstemplate.txt')
+                                              os.path.basename(asdm) + '.flagtargetstemplate.txt')
             self._make_template_flagfile(asdm, template_flagsfile,
                                          'User flagging commands file for the imaging pipeline')
 
