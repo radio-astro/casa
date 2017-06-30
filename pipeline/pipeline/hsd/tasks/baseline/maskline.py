@@ -3,6 +3,7 @@ from __future__ import absolute_import
 import os
 import time
 import numpy
+import itertools
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
@@ -112,7 +113,7 @@ class MaskLine(basetask.StandardTaskTemplate):
         observing_pattern = reference_data.observing_pattern[antenna_list[0]][spwid_list[0]][field_list[0]]
          
         LOG.debug('Members to be processed:')
-        for (v, f, a, s) in zip(vis_list, field_list, antenna_list, spwid_list):
+        for (v, f, a, s) in itertools.izip(vis_list, field_list, antenna_list, spwid_list):
             LOG.debug('MS "{}" Field {} Antenna {} Spw {}', os.path.basename(v), f, a, s)
              
         # filename for input/output

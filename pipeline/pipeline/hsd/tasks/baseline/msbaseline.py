@@ -6,6 +6,9 @@ import glob
 import numpy
 import collections
 import types
+import itertools
+
+#import memory_profiler
 
 import pipeline.infrastructure.mpihelpers as mpihelpers
 import pipeline.infrastructure as infrastructure
@@ -81,7 +84,7 @@ class SDMSBaselineResults(common.SingleDishResults):
             lines = b['lines']
             channelmap_range = b['channelmap_range']
             group_desc = reduction_group[group_id]
-            for (vis,field,ant,spw) in zip(vislist,fieldlist,antennalist,spwlist):
+            for (vis,field,ant,spw) in itertools.izip(vislist,fieldlist,antennalist,spwlist):
                 ms = context.observing_run.get_ms(vis)
                 group_desc.iter_countup(ms, ant, spw, field)
                 group_desc.add_linelist(lines, ms, ant, spw, field,
@@ -110,7 +113,7 @@ class SDMSBaselineResults(common.SingleDishResults):
     def _outcome_name(self):
         return ['%s: %s (spw=%s, pol=%s)' % (idx, name, b['spw'], b['pols'])
                 for b in self.outcome['baselined']
-                for (idx, name) in zip(b['antenna'], b['name'])]
+                for (idx, name) in itertools.izip(b['antenna'], b['name'])]
 
 class SDMSBaseline(basetask.StandardTaskTemplate):
     Inputs = SDMSBaselineInputs
@@ -163,6 +166,7 @@ class SDMSBaseline(basetask.StandardTaskTemplate):
     def is_multi_vis_task(self):
         return True
     
+#    @memory_profiler.profile
     def prepare(self):
         LOG.debug('Starting SDMDBaseline.prepare')
         inputs = self.inputs
@@ -278,7 +282,7 @@ class SDMSBaseline(basetask.StandardTaskTemplate):
             # LOG.debug('pols_list=%s'%(pols_list))
             
             LOG.debug('Members to be processed:')
-            for (gms, gfield, gant, gspw) in zip(group_ms_list, group_fieldid_list, group_antennaid_list, group_spwid_list):
+            for (gms, gfield, gant, gspw) in itertools.izip(group_ms_list, group_fieldid_list, group_antennaid_list, group_spwid_list):
                 LOG.debug('\tMS "{}" Field ID {} Antenna ID {} Spw ID {}', 
                           gms.basename, gfield, gant, gspw)
                  
@@ -287,7 +291,7 @@ class SDMSBaseline(basetask.StandardTaskTemplate):
             if deviationmask:
                 LOG.info('Apply deviation mask to baseline fitting')
                 for (ms, fieldid, antennaid, spwid) in \
-                    zip(group_ms_list, group_fieldid_list, group_antennaid_list, group_spwid_list):
+                    itertools.izip(group_ms_list, group_fieldid_list, group_antennaid_list, group_spwid_list):
                     # st = self.context.observing_run.get_scantable(ant)
                     if (not hasattr(ms, 'deviation_mask')) or ms.deviation_mask is None:
                         ms.deviation_mask = {}
@@ -357,7 +361,7 @@ class SDMSBaseline(basetask.StandardTaskTemplate):
                       spw=spw_id_list)
             
             devmask_list = []
-            for key in zip(field_id_list, antenna_id_list, spw_id_list):
+            for key in itertools.izip(field_id_list, antenna_id_list, spw_id_list):
                 devmask = None
                 if deviation_mask[vis].has_key(key):
                     devmask = deviation_mask[vis][key]
@@ -390,7 +394,7 @@ class SDMSBaseline(basetask.StandardTaskTemplate):
             # initialize plot manager
             status = plot_manager.initialize(ms, outfile)
             for (field_id, antenna_id, spw_id, grid_table, deviationmask, channelmap_range) in \
-                    zip(field_id_list, antenna_id_list, spw_id_list, grid_table_list, deviationmask_list, channelmap_range_list):
+                    itertools.izip(field_id_list, antenna_id_list, spw_id_list, grid_table_list, deviationmask_list, channelmap_range_list):
                 
                 if status:
                     plot_list.extend(plot_manager.plot_spectra_with_fit(field_id, antenna_id, spw_id, 
