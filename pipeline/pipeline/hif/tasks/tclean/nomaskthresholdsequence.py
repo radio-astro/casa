@@ -44,9 +44,9 @@ class NoMaskThresholdSequence(BaseCleanSequence):
 
         LOG.info('Residual robust rms: %s', residual_robust_rms)
         peak_over_rms = residual_max/residual_robust_rms
-        LOG.info('Residual max/robust_rms: %s', peak_over_rms)
+        LOG.info('Residual peak/rms: %s', peak_over_rms)
         # TODO make threshold_nsigma a parameter that we can pass in via hif_editimlist()
-        threshold_nsigma = 3.5
+        threshold_nsigma = 4.0
         self.threshold = residual_robust_rms * threshold_nsigma
 
         # Append the statistics.

@@ -140,8 +140,11 @@ class T2_4MDetailsTcleanRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                     info_dict[(field, spw, pol, 'nterms')] = r.multiterm if r.multiterm else 1
 
                 with casatools.ImageReader(r.iterations[maxiter]['residual']+extension) as residual:
-                    stats = residual.statistics(robust=False)
+                    stats = residual.statistics(robust=True)
                     info_dict[(field, spw, pol, 'residual rms')] = stats.get('rms')[0]
+                    residual_robust_rms = stats.get('medabsdevmed')[0] * 1.4826  # see CAS-9631
+                    residual_max = stats.get('max')[0]
+                    info_dict[(field, spw, pol, 'residual peak/rms')] = residual_max / residual_robust_rms
 
                 # The min, max and RMS values need to be taken with proper masking.
                 # Store the one used for QA scoring.

@@ -167,6 +167,14 @@ except:
                                 %endif
                             </tr>
                             <tr>
+                                            <th>residual peak/rms</th>
+                                %if info_dict.get((field,str(spw),pol,'residual peak/rms')) is not None:
+                                            <td>${info_dict.get((field,str(spw),pol,'residual peak/rms'))}</td>
+                                %else:
+                                            <td>-</td>
+                                %endif
+                            </tr>
+                            <tr>
                                 <th>final theoretical sensitivity</th>
                                 %if info_dict.get((field,str(spw),pol,'sensitivity')) is not None:
                                             <td>${'%.2g %s' % (info_dict[(field,str(spw),pol,'sensitivity')],
