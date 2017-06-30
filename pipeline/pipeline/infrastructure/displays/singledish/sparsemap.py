@@ -7,6 +7,9 @@ import numpy
 import math
 import pylab as pl
 import matplotlib.gridspec as gridspec
+import itertools
+
+#import memory_profiler
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.renderer.logger as logger
@@ -229,6 +232,7 @@ class SDSparseMapPlotter(object):
         self.atm_transmission = None
         self.atm_frequency = None
         
+#    @memory_profiler.profile
     def plot(self, map_data, averaged_data, frequency, fit_result=None, figfile=None):
         plot_helper = PlotObjectHandler()
         
@@ -308,7 +312,7 @@ class SDSparseMapPlotter(object):
             pl.gcf().sca(self.axes.axes_atm)
             amin = 1.0
             amax = 0.0
-            for (t, f) in zip(self.atm_transmission, self.atm_frequency):
+            for (t, f) in itertools.izip(self.atm_transmission, self.atm_frequency):
                 plot_helper.plot(f, t, color='m', linestyle='-', linewidth=0.4)           
                 amin = min(amin, t.min())
                 amax = max(amax, t.max())

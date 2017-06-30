@@ -4,6 +4,7 @@ import os
 import time
 import numpy
 import pylab as pl
+import itertools
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.renderer.logger as logger
@@ -148,7 +149,7 @@ class SDChannelMapDisplay(SDImageDisplay):
 #         for group_desc in reduction_group.values():
         for g in group_desc:
             found = False
-            for (msid, ant, fid, spw) in zip(msid_list, ant_index,
+            for (msid, ant, fid, spw) in itertools.izip(msid_list, ant_index,
                                              fieldid_list, spwid_list):
                 msobj_list = self.inputs.context.observing_run.measurement_sets
                 msname_list = [os.path.abspath(msobj_list[idx].name) \
