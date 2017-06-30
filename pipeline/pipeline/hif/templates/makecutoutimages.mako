@@ -70,7 +70,7 @@ $(document).ready(function() {
 
 
         <%def name="caption_title(plot)">
-           Cutout plot
+           ${plot.basename}
         </%def>
 </%self:plot_group>
 

@@ -66,6 +66,9 @@ class T2_4MDetailsMakecutoutimagesRenderer(basetemplates.T2_4MDetailsDefaultRend
             ms = os.path.basename(r.inputs['vis'])
             subplots[ms] = plots
 
+            import pdb
+            pdb.set_trace()
+
 
         ctx.update({'subplots'     : subplots,
                     'info_dict' : info_dict,

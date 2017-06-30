@@ -94,8 +94,6 @@ class Makecutoutimages(basetask.StandardTaskTemplate):
                 taskresult = self._do_subim(imagename)
                 subimagenames.append(subimagename)
 
-        LOG.info("SUB IMAGE NAMES:" + ','.join(subimagenames))
-
         imlist.sort()
         subimagenames.sort()
 
