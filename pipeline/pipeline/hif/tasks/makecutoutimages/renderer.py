@@ -61,12 +61,11 @@ class T2_4MDetailsMakecutoutimagesRenderer(basetemplates.T2_4MDetailsDefaultRend
                     beam = image.restoringbeam()
 
             # Make the plots of the rms images
-            LOG.info("CUTOUTS 1")
             plotter = cutoutimages.CutoutimagesSummary(context, r)
             plots = plotter.plot()
             ms = os.path.basename(r.inputs['vis'])
             subplots[ms] = plots
-            LOG.info("CUTOUTS 2")
+
 
         ctx.update({'subplots'     : subplots,
                     'info_dict' : info_dict,

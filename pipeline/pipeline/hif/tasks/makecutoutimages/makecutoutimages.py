@@ -96,6 +96,9 @@ class Makecutoutimages(basetask.StandardTaskTemplate):
 
         LOG.info("SUB IMAGE NAMES:" + ','.join(subimagenames))
 
+        imlist.sort()
+        subimagenames.sort()
+
         return MakecutoutimagesResults(subimagelist=imlist, subimagenames=subimagenames)
 
     def analyse(self, results):
@@ -120,9 +123,6 @@ class Makecutoutimages(basetask.StandardTaskTemplate):
 
         # Get image header
         imhead_dict = self._do_imhead(imagename)
-
-        import pdb
-        pdb.set_trace()
 
         imsizex = math.fabs(imhead_dict['refpix'][0]*imhead_dict['incr'][0]*(180.0/math.pi)*2)
         imsizey = math.fabs(imhead_dict['refpix'][1]*imhead_dict['incr'][1]*(180.0/math.pi)*2)
