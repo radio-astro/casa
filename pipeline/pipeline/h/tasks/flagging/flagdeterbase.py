@@ -141,7 +141,7 @@ class FlagDeterBaseInputs(basetask.StandardInputs):
         
         if self._fileonline is None:
             vis_root = os.path.splitext(self.vis)[0]
-            return vis_root + '_flagonline.txt'
+            return vis_root + '.flagonline.txt'
         return self._fileonline
     
     @fileonline.setter
@@ -155,7 +155,7 @@ class FlagDeterBaseInputs(basetask.StandardInputs):
 
         if not self._filetemplate:
             vis_root = os.path.splitext(self.vis)[0]
-            return vis_root + '_flagtemplate.txt'
+            return vis_root + '.flagtemplate.txt'
 
         if type(self._filetemplate) is types.ListType:
             idx = self._my_vislist.index(self.vis)
@@ -191,7 +191,7 @@ class FlagDeterBaseInputs(basetask.StandardInputs):
             return self._handle_multiple_vis('inpfile')
 
         vis_root = os.path.splitext(self.vis)[0]
-        return os.path.join(self.output_dir, vis_root + '_flagcmds.txt')
+        return os.path.join(self.output_dir, vis_root + '.flagcmds.txt')
 
     @property
     def intents(self):
