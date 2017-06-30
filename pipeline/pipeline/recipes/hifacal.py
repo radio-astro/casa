@@ -36,6 +36,7 @@ from hifa_spwphaseup_cli import hifa_spwphaseup_cli as hifa_spwphaseup
 from hifa_gfluxscale_cli import hifa_gfluxscale_cli as hifa_gfluxscale
 from hifa_timegaincal_cli import hifa_timegaincal_cli as hifa_timegaincal
 from hif_applycal_cli import hif_applycal_cli as hif_applycal
+from hifa_imageprecheck_cli import hifa_imageprecheck_cli as hifa_imageprecheck
 from hif_checkproductsize_cli import hif_checkproductsize_cli as hif_checkproductsize
 # from hif_makecleanlist_cli import hif_makecleanlist_cli as hif_makecleanlist
 from hif_makeimlist_cli import hif_makeimlist_cli as hif_makeimlist
@@ -112,6 +113,9 @@ def hifacal(vislist, importonly=True, pipelinemode='automatic',
     
         # Apply the calibrations
         hif_applycal(pipelinemode=pipelinemode)
+    
+        # Check imaging parameters against PI specified values
+        hifa_imageprecheck(pipelinemode=pipelinemode)
     
         # Make a list of expected point source calibrators to be cleaned
         hif_makeimlist(intent='PHASE,BANDPASS,CHECK', pipelinemode=pipelinemode)
