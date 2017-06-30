@@ -45,7 +45,7 @@ repr_freq = '%.4f GHz' % (cqa.getvalue(cqa.convert(result[0].repr_target[1], 'GH
 repr_bw = '%.4g MHz' % (cqa.getvalue(cqa.convert(result[0].repr_target[2], 'MHz')))
 minAR = '%#.2g arcsec' % (cqa.getvalue(cqa.convert(result[0].minAcceptableAngResolution, 'arcsec')))
 maxAR = '%#.2g arcsec' % (cqa.getvalue(cqa.convert(result[0].maxAcceptableAngResolution, 'arcsec')))
-robust = '%.2f' % (result[0].hm_robust)
+robust = '%.1f' % (result[0].hm_robust)
 uvtaper = '%s' % (result[0].hm_uvtaper)
 %>
 <p>
