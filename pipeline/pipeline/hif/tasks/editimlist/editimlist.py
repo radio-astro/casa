@@ -227,7 +227,9 @@ class Editimlist(basetask.StandardTaskTemplate):
                 mosaic_side_arcsec = 3600  # 1 degree
                 dist = ( mosaic_side_arcsec / 2.) + float(buffer_arcsec)
                 dist_arcsec = str(dist) + 'arcsec'
-                found_fields = target['heuristics'].find_fields(distance=dist_arcsec, phase_center=target['phasecenter'])
+                found_fields = target['heuristics'].find_fields(distance=dist_arcsec,
+                                                                phase_center=target['phasecenter'],
+                                                                matchregex=['^0', '^1', '^2'])
                 if found_fields:
                     target['field'] = ','.join(str(x) for x in found_fields)
 
