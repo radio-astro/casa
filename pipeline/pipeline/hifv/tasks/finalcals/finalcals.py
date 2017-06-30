@@ -798,7 +798,8 @@ class Finalcals(basetask.StandardTaskTemplate):
                 spidx = fluxscale_result[fieldid]['spidx']
                 # fittedfluxd = []
 
-                freqs = [freq for freq in freqs if freq > 0.0]
+                freqs = freqs[spws]
+                freqs.sort()
 
                 fittedfluxd = map(
                     lambda x: 10.0 ** (
