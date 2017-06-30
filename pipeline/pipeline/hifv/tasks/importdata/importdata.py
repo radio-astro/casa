@@ -1,11 +1,14 @@
 from __future__ import absolute_import
 import collections
-
+import os
+import shutil
 import numpy
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.casatools as casatools
+from pipeline.infrastructure import casa_tasks
+import pipeline.infrastructure.mpihelpers as mpihelpers
 
 import pipeline.h.tasks.importdata.importdata as importdata
 from pipeline.hifv.heuristics.vlascanheuristics import VLAScanHeuristics
@@ -109,3 +112,49 @@ class VLAImportData(importdata.ImportData):
         myresults.origin = results.origin
 
         return myresults
+
+    def _do_importasdm(self, asdm):
+        inputs = self.inputs
+        vis = self._asdm_to_vis_filename(asdm)
+        outfile = os.path.join(inputs.output_dir,
+                               os.path.basename(asdm) + '_flagonline.txt')
+
+        if inputs.save_flagonline:
+            # Create the standard calibration flagging template file
+            template_flagsfile = os.path.join(inputs.output_dir,
+                                              os.path.basename(asdm) + '_flagtemplate.txt')
+            self._make_template_flagfile(asdm, template_flagsfile,
+                                         'User flagging commands file for the calibration pipeline')
+            # Create the imaging targets file
+            template_flagsfile = os.path.join(inputs.output_dir,
+                                              os.path.basename(asdm) + '_flagtargetstemplate.txt')
+            self._make_template_flagfile(asdm, template_flagsfile,
+                                         'User flagging commands file for the imaging pipeline')
+
+        createmms = mpihelpers.parse_mpi_input_parameter(inputs.createmms)
+
+        with_pointing_correction = getattr(inputs, 'with_pointing_correction', True)
+
+        task = casa_tasks.importasdm(asdm=asdm,
+                                     vis=vis,
+                                     savecmds=inputs.save_flagonline,
+                                     outfile=outfile,
+                                     process_caldevice=inputs.process_caldevice,
+                                     asis=inputs.asis,
+                                     overwrite=inputs.overwrite,
+                                     bdfflags=inputs.bdfflags,
+                                     lazy=inputs.lazy,
+                                     with_pointing_correction=with_pointing_correction,
+                                     ocorr_mode=inputs.ocorr_mode,
+                                     process_pointing=True,
+                                     createmms=createmms)
+
+        self._executor.execute(task)
+
+        for xml_filename in ['Source.xml', 'SpectralWindow.xml', 'DataDescription.xml']:
+            asdm_source = os.path.join(asdm, xml_filename)
+            if os.path.exists(asdm_source):
+                vis_source = os.path.join(vis, xml_filename)
+                LOG.info('Copying %s from ASDM to measurement set', xml_filename)
+                LOG.trace('Copying %s: %s to %s', xml_filename, asdm_source, vis_source)
+                shutil.copyfile(asdm_source, vis_source)
