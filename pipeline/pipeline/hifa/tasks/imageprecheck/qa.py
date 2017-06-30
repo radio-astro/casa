@@ -19,8 +19,8 @@ class ImagePreCheckQAHandler(pqa.QAResultHandler):
             shortmsg = 'robust and uvtaper computed.'
         else:
             score = 0.5
-            longmsg = 'No representative target found.'
-            shortmsg = 'No repr. target'
+            longmsg = 'No representative target found. Picking first in list.'
+            shortmsg = 'No representative target'
         result.qa.pool[:] = [pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg)]
 
 
