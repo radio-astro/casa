@@ -54,7 +54,7 @@ class ImageParamsHeuristicsALMA(ImageParamsHeuristics):
                     LOG.info('No value for desired angular resolution. Setting "robust" parameter to 0.5.')
                     return 0.5, 0.0, 0.0
 
-        native_resolution = cqa.getvalue(cqa.convert(beam['bmin'], 'arcsec'))
+        native_resolution = cqa.getvalue(cqa.convert(beam['minor'], 'arcsec'))
 
         if (native_resolution > maxAcceptableAngResolution):
             robust = -0.5, minAcceptableAngResolution, maxAcceptableAngResolution
@@ -74,7 +74,7 @@ class ImageParamsHeuristicsALMA(ImageParamsHeuristics):
 
         cqa = casatools.quanta
 
-        beam_natural_v = cqa.getvalue(cqa.convert(beam_natural['bmin'], 'arcsec'))
+        beam_natural_v = cqa.getvalue(cqa.convert(beam_natural['minor'], 'arcsec'))
         minAR_v = cqa.getvalue(cqa.convert(minAcceptableAngResolution, 'arcsec'))
         maxAR_v = cqa.getvalue(cqa.convert(maxAcceptableAngResolution, 'arcsec'))
 

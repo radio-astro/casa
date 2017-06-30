@@ -38,15 +38,15 @@ class T2_4MDetailsCheckProductSizeRenderer(basetemplates.T2_4MDetailsDefaultRend
 
         for item in result.sensitivities:
             robust = item['robust']
-            bmin_v = cqa.getvalue(cqa.convert(item['beam']['bmin'], 'arcsec'))
-            bmaj_v = cqa.getvalue(cqa.convert(item['beam']['bmaj'], 'arcsec'))
-            bpa_v = cqa.getvalue(cqa.convert(item['beam']['bpa'], 'deg'))
+            bmin_v = cqa.getvalue(cqa.convert(item['beam']['minor'], 'arcsec'))
+            bmaj_v = cqa.getvalue(cqa.convert(item['beam']['major'], 'arcsec'))
+            bpa_v = cqa.getvalue(cqa.convert(item['beam']['positionangle'], 'deg'))
             beam = '%#.2g x %#.2g arcsec @ %#.3g deg' % (bmin_v, bmaj_v, bpa_v)
             if maxAR_v != 0.0:
-                bmin_maxAR = '%.1f%%' % (100. * bmin_v / maxAR_v)
+                bmin_maxAR = '%.1f%%' % (100. * (bmin_v / maxAR_v - 1.0))
             else:
                 bmin_maxAR = 'N/A'
-            cell = '%.2g arcsec' % (cqa.getvalue(cqa.convert(item['cell'][0], 'arcsec')))
+            cell = '%.2g x %.2g arcsec' % (cqa.getvalue(cqa.convert(item['cell'][0], 'arcsec')), cqa.getvalue(cqa.convert(item['cell'][1], 'arcsec')))
             bandwidth = '%.4g MHz' % (cqa.getvalue(cqa.convert(item['bandwidth'], 'MHz')))
             bwmode = item['bwmode']
             sensitivity = '%.3g Jy/beam' % (cqa.getvalue(cqa.convert(item['sensitivity'], 'Jy/beam')))

@@ -143,7 +143,7 @@ class ImagePreCheck(basetask.StandardTaskTemplate):
                    'bandwidth': cqa.quantity(sens_bw, 'Hz'), \
                    'bwmode': 'reprBW', \
                    'beam': beams[robust], \
-                   'cell': cells[robust], \
+                   'cell': [cqa.convert(cells[robust][0], 'arcsec'), cqa.convert(cells[robust][0], 'arcsec')], \
                    'robust': robust, \
                    'sensitivity': cqa.quantity(sensitivity, 'Jy/beam')}))
 
@@ -157,7 +157,7 @@ class ImagePreCheck(basetask.StandardTaskTemplate):
                    'bandwidth': cqa.quantity(sens_bw, 'Hz'), \
                    'bwmode': 'fullcont', \
                    'beam': beams[robust], \
-                   'cell': cells[robust], \
+                   'cell': [cqa.convert(cells[robust][0], 'arcsec'), cqa.convert(cells[robust][0], 'arcsec')], \
                    'robust': robust, \
                    'sensitivity': cqa.quantity(sensitivity, 'Jy/beam')}))
 

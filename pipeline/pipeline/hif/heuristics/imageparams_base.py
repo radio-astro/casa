@@ -360,11 +360,7 @@ class ImageParamsHeuristics(object):
                         makepsf_imager.deleteTools()
 
                         with casatools.ImageReader('%s.psf' % (tmp_psf_filename)) as image:
-                            restoringbeam = image.restoringbeam()
-                            bmin = restoringbeam['minor']
-                            bmaj = restoringbeam['major']
-                            bpa = restoringbeam['positionangle']
-                            makepsf_beams.append({'bmin': bmin, 'bmaj': bmaj, 'bpa': bpa})
+                            makepsf_beams.append(image.restoringbeam())
 
                         tmp_psf_images = glob.glob('%s.*' % (tmp_psf_filename))
                         for tmp_psf_image in tmp_psf_images:
@@ -375,10 +371,10 @@ class ImageParamsHeuristics(object):
 
         if makepsf_beams:
             # beam that's good for all field/intents
-            smallest_beam = {'bmin': '1e9arcsec', 'bmaj': '1e9arcsec', 'bpa': '0.0deg'}
+            smallest_beam = {'minor': '1e9arcsec', 'major': '1e9arcsec', 'positionangle': '0.0deg'}
             for beam in makepsf_beams:
-                bmin_v = qaTool.getvalue(qaTool.convert(beam['bmin'], 'arcsec'))
-                if bmin_v < qaTool.getvalue(qaTool.convert(smallest_beam['bmin'], 'arcsec')):
+                bmin_v = qaTool.getvalue(qaTool.convert(beam['minor'], 'arcsec'))
+                if bmin_v < qaTool.getvalue(qaTool.convert(smallest_beam['minor'], 'arcsec')):
                     smallest_beam = beam
         else:
             smallest_beam = 'invalid'
@@ -396,7 +392,7 @@ class ImageParamsHeuristics(object):
         '''Calculate cell size.'''
 
         cqa = casatools.quanta
-        cell_size = cqa.getvalue(cqa.convert(beam['bmin'], 'arcsec')) / pixperbeam
+        cell_size = cqa.getvalue(cqa.convert(beam['minor'], 'arcsec')) / pixperbeam
 
         return ['%.2garcsec' % (cell_size)]
 

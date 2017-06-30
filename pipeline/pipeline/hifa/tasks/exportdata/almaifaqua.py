@@ -258,14 +258,14 @@ def xml_for_sensitivity(d):
     bandwidth = qa.quantity(d['bandwidth'])
     bandwidth_hz = value(qa.convert(bandwidth, 'Hz'))
 
-    bmaj = qa.quantity(d['beam']['bmaj'])
-    bmaj_arcsec = value(qa.convert(bmaj, 'arcsec'))
+    major = qa.quantity(d['beam']['major'])
+    major_arcsec = value(qa.convert(major, 'arcsec'))
 
-    bmin = qa.quantity(d['beam']['bmin'])
-    bmin_arcsec = value(qa.convert(bmin, 'arcsec'))
+    minor = qa.quantity(d['beam']['minor'])
+    minor_arcsec = value(qa.convert(minor, 'arcsec'))
 
-    bpa = qa.quantity(d['beam']['bpa'])
-    bpa_deg = value(qa.convert(bpa, 'deg'))
+    positionangle = qa.quantity(d['beam']['positionangle'])
+    positionangle_deg = value(qa.convert(positionangle, 'deg'))
 
     sensitivity = qa.quantity(d['sensitivity'])
     sensitivity_jy = value(qa.convert(sensitivity, 'Jy/beam'))
@@ -273,9 +273,9 @@ def xml_for_sensitivity(d):
     xml = ElementTree.Element('Sensitivity',
         Array=d['array'],
         BandwidthHz=bandwidth_hz,
-        BeamMajArcsec=bmaj_arcsec,
-        BeamMinArcsec=bmin_arcsec,
-        BeamPosAngDeg=bpa_deg,
+        BeamMajArcsec=major_arcsec,
+        BeamMinArcsec=minor_arcsec,
+        BeamPosAngDeg=positionangle_deg,
         BwMode=d['bwmode'],
         Cell=d['cell'][0],
         Field=d['field'],
