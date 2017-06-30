@@ -185,9 +185,9 @@ class ImageParamsHeuristicsALMA(ImageParamsHeuristics):
             min_diameter = min(min_diameter, min([antenna.diameter for antenna in self.observing_run.get_ms(msname).antennas]))
         if min_diameter == 7.0:
             sidelobethreshold = 2.0
-            noisethreshold = 3.0
-            lownoisethreshold = 2.5
-            minbeamfrac = 0.2
+            noisethreshold = 5.0
+            lownoisethreshold = 2.0
+            minbeamfrac = 0.0
         elif min_diameter == 12.0:
             sidelobethreshold = 3.0
             noisethreshold = 5.0
