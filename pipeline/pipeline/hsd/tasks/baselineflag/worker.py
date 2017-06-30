@@ -5,6 +5,7 @@ import math
 import numpy
 import time
 import copy
+import itertools
 
 from taskinit import gentools
 
@@ -93,7 +94,7 @@ class SDBLFlagWorker(basetask.StandardTaskTemplate): #object):
         rowmap = self.inputs.rowmap
         
         LOG.debug('Members to be processed in worker class:')
-        for (m,a,f,s,p) in zip(ms_list, antid_list, fieldid_list, spwid_list, pols_list):
+        for (m,a,f,s,p) in itertools.izip(ms_list, antid_list, fieldid_list, spwid_list, pols_list):
             LOG.debug('\t%s: Antenna %s Field %d Spw %d Pol %s'%(m.basename,a,f,s,p))
 
         # TODO: make sure baseline subtraction is already done
@@ -114,7 +115,7 @@ class SDBLFlagWorker(basetask.StandardTaskTemplate): #object):
 
         flagSummary = []
         # loop over members (practically, per antenna loop in an MS)
-        for (msobj,antid,fieldid,spwid,pollist) in zip(ms_list, antid_list, fieldid_list, spwid_list, pols_list):
+        for (msobj,antid,fieldid,spwid,pollist) in itertools.izip(ms_list, antid_list, fieldid_list, spwid_list, pols_list):
             LOG.debug('Performing flag for %s Antenna %d Field %d Spw %d'%(msobj.basename,antid,fieldid,spwid))
             filename_in = msobj.name
             filename_out = msobj.work_data
