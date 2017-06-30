@@ -685,7 +685,7 @@ class SDImaging(basetask.StandardTaskTemplate):
                                               bandwidth=cqa.quantity(chan_width, 'Hz'),
                                               bwmode='reprBW',
                                               beam=beam, cell=qcell,
-                                              sensitivity=cqa.quantity(image_rms))
+                                              sensitivity=cqa.quantity(image_rms, 'Jy/beam'))
 #                 # to register exported_ms to each scantable instance
 #                 outcome['export_results'] = export_results
                 result = SDImagingResultItem(task=self.__class__,
