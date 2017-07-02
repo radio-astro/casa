@@ -74,7 +74,7 @@ class FlagTargetsALMAInputs(basetask.StandardInputs):
 
         if not self._filetemplate:
             vis_root = os.path.splitext(self.vis)[0].split('_target')[0]
-            return vis_root + '_flagtargetstemplate.txt'
+            return vis_root + '.flagtargetstemplate.txt'
 
         if type(self._filetemplate) is types.ListType:
             idx = self._my_vislist.index(self.vis)
