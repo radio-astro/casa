@@ -16,7 +16,10 @@ class ImageParamsHeuristicsVlassQl(ImageParamsHeuristics):
 
     # niter
     def niter_correction(self, niter, cell, imsize, residual_max, threshold):
-        return 20000
+        if niter:
+            return int(niter)
+        else:
+            return 20000
 
     def deconvolver(self, specmode, spwspec):
         return 'mtmfs'
@@ -35,6 +38,9 @@ class ImageParamsHeuristicsVlassQl(ImageParamsHeuristics):
 
     def threshold(self):
         return '0.000360Jy/beam'
+
+    def threshold_nsigma(self):
+        return 4.0
 
     def reffreq(self):
         return '3.0GHz'

@@ -40,7 +40,7 @@ class TcleanInputs(cleanbase.CleanBaseInputs):
                  maxncleans=None, cleancontranges=None, subcontms=None,
                  parallel=None,
                  # Extra parameters not in the CLI task interface
-                 uvtaper=None, scales=None,
+                 uvtaper=None, scales=None, nsigma=None,
                  cycleniter=None, cyclefactor=None, sensitivity=None,
                  reffreq=None,
                  # End of extra parameters
@@ -148,6 +148,14 @@ class TcleanInputs(cleanbase.CleanBaseInputs):
     def uvtaper(self, value):
         self._uvtaper = value
 
+    @property
+    def sigma(self):
+        return self._sigma
+
+    @sigma.setter
+    def sigma(self, value):
+        self._sigma = value
+        
 # tell the infrastructure to give us mstransformed data when possible by
 # registering our preference for imaging measurement sets
 basetask.ImagingMeasurementSetsPreferred.register(TcleanInputs)
@@ -400,7 +408,8 @@ class Tclean(cleanbase.CleanBase):
             elif inputs.hm_masking == 'none':
                 sequence_manager = NoMaskThresholdSequence(
                     gridder=inputs.gridder, threshold=threshold,
-                    sensitivity=sensitivity, niter=inputs.niter)
+                    sensitivity=sensitivity, niter=inputs.niter,
+                    nsigma=inputs.nsigma)
 
         elif inputs.hm_masking == 'psfiter':
             sequence_manager = IterativeSequence(

@@ -10,7 +10,7 @@ LOG = infrastructure.get_logger(__name__)
 
 class NoMaskThresholdSequence(BaseCleanSequence):
 
-    def __init__(self, gridder, threshold='0.0mJy', sensitivity=0.0, niter=0):
+    def __init__(self, gridder, threshold='0.0mJy', sensitivity=0.0, niter=0, nsigma=None):
         """Constructor.
         """
         BaseCleanSequence.__init__(self)
@@ -18,6 +18,7 @@ class NoMaskThresholdSequence(BaseCleanSequence):
         self.threshold = threshold
         self.sensitivity = sensitivity
         self.niter = niter
+        self.threshold_nsigma = nsigma
         self.iter = None
         self.result = BoxResult()
         self.sidelobe_ratio = -1
@@ -42,12 +43,14 @@ class NoMaskThresholdSequence(BaseCleanSequence):
                                                                  residual, flux, cleanmask,
                                                                  pblimit_image, pblimit_cleanmask)
 
-        LOG.info('Residual robust rms: %s', residual_robust_rms)
         peak_over_rms = residual_max/residual_robust_rms
+        LOG.info('Residual peak: %s', residual_max)
+        LOG.info('Residual robust rms: %s', residual_robust_rms)
         LOG.info('Residual peak/rms: %s', peak_over_rms)
+        LOG.info('Threshold nsigma multiplier: %s', self.threshold_nsigma)
         # TODO make threshold_nsigma a parameter that we can pass in via hif_editimlist()
-        threshold_nsigma = 4.0
-        self.threshold = residual_robust_rms * threshold_nsigma
+        self.threshold = residual_robust_rms * float(self.threshold_nsigma)
+        LOG.info('Setting new threshold to [robust rms * nsigma]: %s' % self.threshold)
 
         # Append the statistics.
         self.iters.append(iter)

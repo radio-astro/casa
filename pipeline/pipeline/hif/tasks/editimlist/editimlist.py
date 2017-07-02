@@ -74,6 +74,7 @@ class EditimlistInputs(basetask.StandardInputs):
                  start=None,
                  stokes=None,
                  threshold=None,
+                 threshold_nsigma=None,
                  uvtaper=None,
                  uvrange=None,
                  width=None,
@@ -86,7 +87,7 @@ class EditimlistInputs(basetask.StandardInputs):
                             'start', 'width', 'nbin', 'nchan', 'uvrange', 'stokes', 'nterms',
                             'robust', 'uvtaper', 'niter', 'cyclefactor', 'cycleniter', 'mask',
                             'search_radius_arcsec', 'threshold', 'imaging_mode', 'reffreq',
-                            'editmode')
+                            'editmode', 'threshold_nsigma')
         self.keys_to_change = []
         for key in keys_to_consider:
             # print key, eval(key)
@@ -183,8 +184,9 @@ class Editimlist(basetask.StandardTaskTemplate):
                                                       imaging_mode=img_mode)
 
         target['threshold'] = th.threshold() if not inpdict['threshold'] else inpdict['threshold']
+        target['nsigma'] = th.threshold_nsigma() if not inpdict['threshold_nsigma'] else inpdict['threshold_nsigma']
         target['reffreq'] = th.reffreq() if not inpdict['reffreq'] else inpdict['reffreq']
-        #target['niter'] = th.niter_correction(None, None, None, None, None) if not inpdict['niter'] else inpdict['niter']
+        target['niter'] = th.niter_correction(None, None, None, None, None) if not inpdict['niter'] else inpdict['niter']
         target['cyclefactor'] = th.cyclefactor() if not inpdict['cyclefactor'] else inpdict['cyclefactor']
         target['cycleniter'] = th.cycleniter() if not inpdict['cycleniter'] else inpdict['cycleniter']
         target['scales'] = th.scales() if not inpdict['scales'] else inpdict['scales']
