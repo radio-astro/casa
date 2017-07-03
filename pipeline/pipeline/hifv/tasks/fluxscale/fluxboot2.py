@@ -489,7 +489,7 @@ class Fluxboot2(basetask.StandardTaskTemplate):
                 spidx = fluxscale_result[fieldid]['spidx']
                 # fittedfluxd = []
 
-                freqs = freqs[spws]
+                freqs = freqs[uspws]
                 freqs.sort()
 
                 fittedfluxd = map(
