@@ -281,6 +281,8 @@ class MakeImList(basetask.StandardTaskTemplate):
 
         qaTool = casatools.quanta
 
+        result = MakeImListResult()
+
         # make sure inputs.vis is a list, even it is one that contains a
         # single measurement set
         if type(inputs.vis) is not types.ListType:
@@ -332,11 +334,16 @@ class MakeImList(basetask.StandardTaskTemplate):
         else:
             pixperbeam = 5.0
 
-        # Remove bad spws
+        # Expand cont spws
         if inputs.specmode == 'cont':
             spwids = spwlist[0].split(',')
         else:
             spwids = spwlist
+
+        # Record number of expected clean targets
+        result.set_max_num_targets(len(field_intent_list)*len(spwlist))
+
+        # Remove bad spws
         valid_data = {}
         filtered_spwlist = []
         for spw in spwids:
@@ -345,6 +352,8 @@ class MakeImList(basetask.StandardTaskTemplate):
             # May need to handle this individually.
             if (valid_data[str(spw)][list(field_intent_list)[0]]):
                 filtered_spwlist.append(spw)
+
+        # Collapse cont spws
         if inputs.specmode == 'cont':
             spwlist = [reduce(lambda x,y: x+','+y, filtered_spwlist)]
         else:
@@ -478,8 +487,7 @@ class MakeImList(basetask.StandardTaskTemplate):
 
         # now construct the list of imaging command parameter lists that must
         # be run to obtain the required images
-        result = MakeImListResult()
-        result.set_max_num_targets(len(field_intent_list)*len(spwlist))
+
         # describe the function of this task by interpreting the inputs
         # parameters to give an execution context
         long_description = _DESCRIPTIONS.get((inputs.intent, inputs.specmode),
