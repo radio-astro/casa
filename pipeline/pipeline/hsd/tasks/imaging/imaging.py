@@ -585,7 +585,7 @@ class SDImaging(basetask.StandardTaskTemplate):
                     brightnessunit = ia.brightnessunit()
                     beam = ia.restoringbeam()
                 ref_world = cs.referencevalue()['numeric']
-                qcell = cs.increment(format='s', type='direction')['string']
+                qcell = cs.increment(format='q', type='direction')['quantity'].values() #cs.increment(format='s', type='direction')['string']
 #                 rms_exclude_freq = self._merge_ranges(combined_rms_exclude)
                 LOG.info("Aggregated spectral line frequency ranges of combined image = %s" % str(combined_rms_exclude))
                 combined_rms_exclude_chan = [] # should be list for sort
@@ -633,7 +633,7 @@ class SDImaging(basetask.StandardTaskTemplate):
                     if cqa.time(ref_ms.start_time['m0'], 0, ['ymd', 'no_time'])[0] < '2015/10/01' and \
                             spwobj.channels.chan_effbws[0] == numpy.abs(spwobj.channels.chan_widths[0]):
                         is_representative_spw = False
-                        LOG.warn("Cycle 2 and earlier project with nominal effective band width. Skipping estimate of representative band width.")
+                        LOG.warn("Cycle 2 and earlier project with nominal effective band width. Reporting RMS at native resolution.")
                     else:
                         LOG.info("Estimate RMS in representative bandwidth: %fkHz (native: %fkHz)" % \
                                  (cqa.getvalue(cqa.quantity(rep_bw, 'kHz')), chan_width*1.e-3))
