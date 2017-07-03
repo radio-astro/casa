@@ -95,6 +95,10 @@ class Swpowcal(basetask.StandardTaskTemplate):
         callist = []
         if startdate >= 55616.6:
             gencal_args = inputs.to_casa_args()
+
+            # CAS-10216
+            # spw argument in gencal should be spw='', inputs specified and passed to priorcals is for plotting only
+            gencal_args['spw'] = ''
             gencal_job = casa_tasks.gencal(**gencal_args)
             self._executor.execute(gencal_job)
 
