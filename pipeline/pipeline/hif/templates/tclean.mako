@@ -93,9 +93,9 @@ except:
                         % for pol in pols:
                             %if info_dict.get((field,str(spw),pol,'frequency')) is not None:
                             <tr>
-                                <td rowspan="11">${field}</td>
-                                <td rowspan="11">${spw}</td>
-                                <td rowspan="11">${pol}</td>
+                                <td rowspan="12">${field}</td>
+                                <td rowspan="12">${spw}</td>
+                                <td rowspan="12">${pol}</td>
                                 %if info_dict.get((field,str(spw),pol,'nchan')) is not None:
                                     %if info_dict[(field,str(spw),pol,'nchan')] == 1:
 								<th>center frequency of image</th>
