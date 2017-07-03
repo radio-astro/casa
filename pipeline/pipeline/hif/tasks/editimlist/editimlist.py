@@ -188,7 +188,7 @@ class Editimlist(basetask.StandardTaskTemplate):
         target['reffreq'] = th.reffreq() if not inpdict['reffreq'] else inpdict['reffreq']
         target['niter'] = th.niter_correction(None, None, None, None, None) if not inpdict['niter'] else inpdict['niter']
         target['cyclefactor'] = th.cyclefactor() if not inpdict['cyclefactor'] else inpdict['cyclefactor']
-        target['cycleniter'] = th.cycleniter() if not inpdict['cycleniter'] else inpdict['cycleniter']
+        target['cycleniter'] = th.cycleniter() if not inpdict['cycleniter'] else int(inpdict['cycleniter'])
         target['scales'] = th.scales() if not inpdict['scales'] else inpdict['scales']
         target['uvtaper'] = th.uvtaper(None, None, None) if not inpdict['uvtaper'] else inpdict['uvtaper']
         target['uvrange'] = th.uvrange() if not inpdict['uvrange'] else inpdict['uvrange']
