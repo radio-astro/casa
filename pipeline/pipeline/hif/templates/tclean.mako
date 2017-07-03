@@ -93,9 +93,9 @@ except:
                         % for pol in pols:
                             %if info_dict.get((field,str(spw),pol,'frequency')) is not None:
                             <tr>
-                                <td rowspan="12">${field}</td>
-                                <td rowspan="12">${spw}</td>
-                                <td rowspan="12">${pol}</td>
+                                <td rowspan="11">${field}</td>
+                                <td rowspan="11">${spw}</td>
+                                <td rowspan="11">${pol}</td>
                                 %if info_dict.get((field,str(spw),pol,'nchan')) is not None:
                                     %if info_dict[(field,str(spw),pol,'nchan')] == 1:
 								<th>center frequency of image</th>
@@ -162,14 +162,6 @@ except:
                                             <th>beam p.a.</th> 
                                 %if info_dict.get((field,str(spw),pol,'beam pa')) is not None:
                                             <td>${casatools.quanta.tos(info_dict[(field,str(spw),pol,'beam pa')],1)}</td>
-                                %else:
-                                            <td>-</td>
-                                %endif
-                            </tr>
-                            <tr>
-                                            <th>residual peak/rms</th>
-                                %if info_dict.get((field,str(spw),pol,'residual peak/rms')) is not None:
-                                            <td>${info_dict.get((field,str(spw),pol,'residual peak/rms'))}</td>
                                 %else:
                                             <td>-</td>
                                 %endif
