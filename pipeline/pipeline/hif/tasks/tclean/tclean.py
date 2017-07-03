@@ -35,7 +35,9 @@ class TcleanInputs(cleanbase.CleanBaseInputs):
                  width=None, nbin=None, weighting=None,
                  robust=None, noise=None, npixels=None,
                  restoringbeam=None, hm_masking=None,
-                 hm_autotest=None, hm_cleaning=None, mask=None,
+                 hm_sidelobethreshold=None, hm_noisethreshold=None,
+                 hm_lownoisethreshold=None, hm_minbeamfrac=None,
+                 hm_cleaning=None, mask=None,
                  niter=None, threshold=None, tlimit=None, masklimit=None,
                  maxncleans=None, cleancontranges=None, subcontms=None,
                  parallel=None,
@@ -67,7 +69,10 @@ class TcleanInputs(cleanbase.CleanBaseInputs):
     spwsel_topo = basetask.property_with_default('spwsel_topo', [])
     hm_cleaning = basetask.property_with_default('hm_cleaning', 'rms')
     hm_masking = basetask.property_with_default('hm_masking', 'centralregion')
-    hm_autotest = basetask.property_with_default('hm_autotest', '')
+    hm_sidelobethreshold = basetask.property_with_default('hm_sidelobethreshold', -999.0)
+    hm_noisethreshold = basetask.property_with_default('hm_noisethreshold', -999.0)
+    hm_lownoisethreshold = basetask.property_with_default('hm_lownoisethreshold', -999.0)
+    hm_minbeamfrac = basetask.property_with_default('hm_minbeamfrac', -999.0)
     masklimit = basetask.property_with_default('masklimit', 4.0)
     tlimit = basetask.property_with_default('tlimit', 2.0)
     cleancontranges = basetask.property_with_default('cleancontranges', False)
@@ -745,7 +750,10 @@ class Tclean(cleanbase.CleanBase):
                                                   iter=iter,
                                                   mask=cleanmask,
                                                   hm_masking=inputs.hm_masking,
-                                                  hm_autotest=inputs.hm_autotest,
+                                                  hm_sidelobethreshold=inputs.hm_sidelobethreshold,
+                                                  hm_noisethreshold=inputs.hm_noisethreshold,
+                                                  hm_lownoisethreshold=inputs.hm_lownoisethreshold,
+                                                  hm_minbeamfrac=inputs.hm_minbeamfrac,
                                                   niter=niter,
                                                   threshold=threshold,
                                                   sensitivity=sensitivity,

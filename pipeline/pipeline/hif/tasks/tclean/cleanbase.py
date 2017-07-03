@@ -35,7 +35,10 @@ class CleanBaseInputs(basetask.StandardInputs):
                  phasecenter=None, nchan=None, start=None, width=None, stokes=None,
                  weighting=None,
                  robust=None, noise=None, npixels=None,
-                 restoringbeam=None, iter=None, mask=None, hm_masking=None, hm_autotest=None, pblimit=None, niter=None,
+                 restoringbeam=None, iter=None, mask=None, hm_masking=None,
+                 hm_sidelobethreshold=None, hm_noisethreshold=None,
+                 hm_lownoisethreshold=None, hm_minbeamfrac=None,
+                 pblimit=None, niter=None,
                  threshold=None, sensitivity=None, reffreq=None, result=None, parallel=None,
                  heuristics=None):
         self._init_properties(vars())
@@ -53,8 +56,11 @@ class CleanBaseInputs(basetask.StandardInputs):
     intent = basetask.property_with_default('intent', '')
     iter = basetask.property_with_default('iter', 0)
     mask = basetask.property_with_default('mask', '')
-    hm_masking = basetask.property_with_default('hm_masking', 'centralregion')
-    hm_autotest = basetask.property_with_default('hm_autotest', '')
+    hm_masking = basetask.property_with_default('hm_masking', 'auto')
+    hm_sidelobethreshold = basetask.property_with_default('hm_sidelobethreshold', -999.0)
+    hm_noisethreshold = basetask.property_with_default('hm_noisethreshold', -999.0)
+    hm_lownoisethreshold = basetask.property_with_default('hm_lownoisethreshold', -999.0)
+    hm_minbeamfrac = basetask.property_with_default('hm_minbeamfrac', -999.0)
     niter = basetask.property_with_default('niter', 5000)
     noise = basetask.property_with_default('noise', '1.0Jy')
     nchan = basetask.property_with_default('nchan', -1)
@@ -288,22 +294,30 @@ class CleanBase(basetask.StandardTaskTemplate):
         # Set up masking parameters
         if inputs.hm_masking == 'auto':
             tclean_job_parameters['usemask'] = 'auto-multithresh'
-            sidelobethreshold, noisethreshold, lownoisethreshold, minbeamfrac = inputs.heuristics.get_autobox_params()
-            if sidelobethreshold is not None:
-                tclean_job_parameters['sidelobethreshold'] = sidelobethreshold
-            if noisethreshold is not None:
-                tclean_job_parameters['noisethreshold'] = noisethreshold
-            if lownoisethreshold is not None:
-                tclean_job_parameters['lownoisethreshold'] = lownoisethreshold
-            if minbeamfrac is not None:
-                tclean_job_parameters['minbeamfrac'] = minbeamfrac
 
-            # Override with any manual test parameters
-            if inputs.hm_autotest != '':
-                hm_autotest_params = dict((key.strip(), float(value)) for key, value in [kvpair.split(':') for kvpair in inputs.hm_autotest.split(',')])
-                for key in hm_autotest_params.iterkeys():
-                    if key in ['sidelobethreshold', 'noisethreshold', 'lownoisethreshold', 'minbeamfrac']:
-                        tclean_job_parameters[key] = hm_autotest_params[key]
+            # get heuristics parameters 
+            sidelobethreshold, noisethreshold, lownoisethreshold, minbeamfrac = inputs.heuristics.get_autobox_params()
+
+            # Override individually with manual settings
+            if inputs.hm_sidelobethreshold != -999.0:
+                tclean_job_parameters['sidelobethreshold'] = inputs.hm_sidelobethreshold
+            elif sidelobethreshold is not None:
+                tclean_job_parameters['sidelobethreshold'] = sidelobethreshold
+
+            if inputs.hm_noisethreshold != -999.0:
+                tclean_job_parameters['noisethreshold'] = inputs.hm_noisethreshold
+            elif noisethreshold is not None:
+                tclean_job_parameters['noisethreshold'] = noisethreshold
+
+            if inputs.hm_lownoisethreshold != -999.0:
+                tclean_job_parameters['lownoisethreshold'] = inputs.hm_lownoisethreshold
+            elif lownoisethreshold is not None:
+                tclean_job_parameters['lownoisethreshold'] = lownoisethreshold
+
+            if inputs.hm_minbeamfrac != -999.0:
+                tclean_job_parameters['minbeamfrac'] = inputs.hm_minbeamfrac
+            elif minbeamfrac is not None:
+                tclean_job_parameters['minbeamfrac'] = minbeamfrac
         else:
             if (inputs.hm_masking != 'none') and (inputs.mask != ''):
                 tclean_job_parameters['usemask'] = 'user'

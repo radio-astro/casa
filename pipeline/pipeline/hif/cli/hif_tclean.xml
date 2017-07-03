@@ -196,9 +196,24 @@ Compute a clean map.
        </allowed>
   </param>
 
-  <param type="string" name="hm_autotest" subparam="true">
-     <description>Auto-boxing test parameters</description>
-       <value></value>
+  <param type="double" name="hm_sidelobethreshold" subparam="true">
+     <description>sidelobethreshold * the max sidelobe level</description>
+       <value>-999.0</value>
+  </param>
+
+  <param type="double" name="hm_noisethreshold" subparam="true">
+     <description>noisethreshold * rms in residual image</description>
+       <value>-999.0</value>
+  </param>
+
+  <param type="double" name="hm_lownoisethreshold" subparam="true">
+     <description>lownoisethreshold * rms in residual image</description>
+       <value>-999.0</value>
+  </param>
+
+  <param type="double" name="hm_minbeamfrac" subparam="true">
+     <description>minimum beam fraction for pruning</description>
+       <value>-999.0</value>
   </param>
 
   <param type="string" name="hm_cleaning">
@@ -334,7 +349,10 @@ Compute a clean map.
 
     <when param="hm_masking">
       <equals value="auto">
-        <default param="hm_autotest"><value type="string"></value></default>
+        <default param="hm_sidelobethreshold"><value type="double">-999.0</value></default>
+        <default param="hm_noisethreshold"><value type="double">-999.0</value></default>
+        <default param="hm_lownoisethreshold"><value type="double">-999.0</value></default>
+        <default param="hm_minbeamfrac"><value type="double">-999.0</value></default>
       </equals>
       <equals value="centralregion">
       </equals>
@@ -567,7 +585,13 @@ hm_masking -- Clean masking mode. Options are 'centralregion',
     default: 'auto'
     example: 'manual'
 
-hm_autotest -- Auto-boxing test parameters.
+hm_sidelobethreshold -- Auto-boxing sidelobetheshold.
+
+hm_noisethreshold -- Auto-boxing noisethreshold.
+
+hm_lownoisethreshold -- Auto-boxing lownoisethreshold.
+
+hm_minbeamfrac -- Auto-boxing minbeamfrac.
 
 mask -- Image mask for hm_masking manual mode. User responsible for
     matching image sizes, coordinates, etc.

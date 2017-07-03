@@ -17,7 +17,8 @@ class MakeImagesInputs(basetask.StandardInputs):
     @basetask.log_equivalent_CASA_call
     def __init__(self, context, output_dir=None, vis=None, target_list=None,
                  weighting=None, robust=None, noise=None, npixels=None,
-                 hm_masking=None, hm_autotest=None, hm_cleaning=None, tlimit=None,
+                 hm_masking=None, hm_sidelobethreshold=None, hm_noisethreshold=None,
+                 hm_lownoisethreshold=None, hm_minbeamfrac=None, hm_cleaning=None, tlimit=None,
                  masklimit=None, maxncleans=None, cleancontranges=None, subcontms=None, parallel=None):
         self._init_properties(vars())
 
@@ -33,7 +34,10 @@ class MakeImagesInputs(basetask.StandardInputs):
 
     hm_cleaning = basetask.property_with_default('hm_cleaning', 'rms')
     hm_masking = basetask.property_with_default('hm_masking', 'auto')
-    hm_autotest = basetask.property_with_default('hm_autotest', '')
+    hm_sidelobethreshold = basetask.property_with_default('hm_sidelobethreshold', -999.0)
+    hm_noisethreshold = basetask.property_with_default('hm_noisethreshold', -999.0)
+    hm_lownoisethreshold = basetask.property_with_default('hm_lownoisethreshold', -999.0)
+    hm_minbeamfrac = basetask.property_with_default('hm_minbeamfrac', -999.0)
     masklimit = basetask.property_with_default('masklimit', 2.0)
     maxncleans = basetask.property_with_default('maxncleans', 10)
     noise = basetask.property_with_default('noise', '1.0Jy')
@@ -203,7 +207,10 @@ class CleanTaskFactory(object):
             task_args['hm_masking'] = inputs.hm_masking
 
         if inputs.hm_masking == 'auto':
-            task_args['hm_autotest'] = inputs.hm_autotest
+            task_args['hm_sidelobethreshold'] = inputs.hm_sidelobethreshold
+            task_args['hm_noisethreshold'] = inputs.hm_noisethreshold
+            task_args['hm_lownoisethreshold'] = inputs.hm_lownoisethreshold
+            task_args['hm_minbeamfrac'] = inputs.hm_minbeamfrac
 
         if inputs.hm_cleaning == '':
             task_args['hm_cleaning'] = 'rms'
