@@ -820,9 +820,6 @@ class Finalcals(basetask.StandardTaskTemplate):
                 lfreqs, lfds = zip(*sorted(zip(lfreqs, lfds)))
                 lfreqs_orig, lerrs = zip(*sorted(zip(lfreqs_orig, lerrs)))
 
-                import pdb
-                pdb.set_trace()
-
                 for ii in range(len(freqs)):
                     # SS = fluxdensity * (10.0**lfreqs[ii]/reffreq/1.0e9)**spix
                     SS = fittedfluxd[ii]
