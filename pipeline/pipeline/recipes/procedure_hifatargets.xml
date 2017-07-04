@@ -1,5 +1,7 @@
 <ProcessingProcedure>
 
+    <ProcedureTitle>hifatargets</ProcedureTitle>
+
     <ProcessingCommand>
         <Command xmlns="">hifa_restoredata</Command>
         <ParameterSet>
