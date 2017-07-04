@@ -62,7 +62,12 @@ class ALMAExportData(exportdata.ExportData):
         #    The antenna positions file
         #    The continuum regions file
         #    The target flagging file
-        auxfproducts =  self._do_auxiliary_products(self.inputs.context, oussid, self.inputs.output_dir, self.inputs.products_dir)
+        recipe_name = self.get_recipename(self.inputs.context)
+        if not recipe_name:
+            prefix = oussid
+        else:
+            prefix = oussid + '." + recipe_name
+        auxfproducts =  self._do_auxiliary_products(self.inputs.context, prefix, self.inputs.output_dir, self.inputs.products_dir)
 
         # Export the AQUA report
         aquareport_name = 'pipeline_aquareport.xml'
