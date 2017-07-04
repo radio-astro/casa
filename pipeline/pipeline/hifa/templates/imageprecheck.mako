@@ -43,8 +43,10 @@ repr_source = result[0].repr_source
 repr_spw = '%s' % (result[0].repr_spw)
 repr_freq = '%.4f GHz' % (cqa.getvalue(cqa.convert(result[0].repr_target[1], 'GHz')))
 repr_bw = '%.4g MHz' % (cqa.getvalue(cqa.convert(result[0].repr_target[2], 'MHz')))
-minAR = '%#.2g arcsec' % (cqa.getvalue(cqa.convert(result[0].minAcceptableAngResolution, 'arcsec')))
-maxAR = '%#.2g arcsec' % (cqa.getvalue(cqa.convert(result[0].maxAcceptableAngResolution, 'arcsec')))
+minAR_v = cqa.getvalue(cqa.convert(result[0].minAcceptableAngResolution, 'arcsec'))
+maxAR_v = cqa.getvalue(cqa.convert(result[0].maxAcceptableAngResolution, 'arcsec'))
+minAR = '%#.2g arcsec' % (minAR_v)
+maxAR = '%#.2g arcsec' % (maxAR_v)
 robust = '%.1f' % (result[0].hm_robust)
 uvtaper = '%s' % (result[0].hm_uvtaper)
 %>
@@ -56,7 +58,12 @@ PI Frequency: ${repr_freq}
 <br>
 PI Bandwidth: ${repr_bw}
 <br>
-PI min/max resolutions: ${minAR} / ${maxAR}
+PI min/max resolutions:
+%if minAR_v==0.0 and maxAR_v==0.0:
+    Not available
+%else:
+    ${minAR} / ${maxAR}
+%endif
 <p>
 <h4>Heuristics results:</h4>
 robust: ${robust}
@@ -78,12 +85,16 @@ uvtaper: ${uvtaper}
         </tr>
     </thead>
     <tbody>
-        % for tr in table_rows:
-        <tr>
-        % for td in tr:
-            ${td}
-        % endfor
-        </tr>
+        %for tr in table_rows:
+            %if tr.robust==result[0].hm_robust and tr.uvtaper==result[0].hm_uvtaper:
+            <tr bgcolor="lightgreen">
+            %else:
+            <tr>
+            %endif
+            %for td in tr:
+                <td>${td}</td>
+            %endfor
+            </tr>
         %endfor
     </tbody>
 </table>

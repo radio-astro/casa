@@ -42,7 +42,7 @@ class T2_4MDetailsCheckProductSizeRenderer(basetemplates.T2_4MDetailsDefaultRend
             bmin_v = cqa.getvalue(cqa.convert(item['beam']['minor'], 'arcsec'))
             bmaj_v = cqa.getvalue(cqa.convert(item['beam']['major'], 'arcsec'))
             bpa_v = cqa.getvalue(cqa.convert(item['beam']['positionangle'], 'deg'))
-            beam = '%#.2g x %#.2g arcsec @ %#.3g deg' % (bmin_v, bmaj_v, bpa_v)
+            beam = '%#.2g x %#.2g arcsec @ %#.3g deg' % (bmaj_v, bmin_v, bpa_v)
             if maxAR_v != 0.0:
                 bmin_maxAR = '%.1f%%' % (100. * (bmin_v / maxAR_v - 1.0))
             else:
@@ -54,4 +54,4 @@ class T2_4MDetailsCheckProductSizeRenderer(basetemplates.T2_4MDetailsDefaultRend
 
             rows.append(TR(robust=robust, uvtaper=uvtaper, beam=beam, bmin_maxAR=bmin_maxAR, cell=cell, bandwidth=bandwidth, bwmode=bwmode, sensitivity=sensitivity))
 
-        return utils.merge_td_columns(rows)
+        return rows
