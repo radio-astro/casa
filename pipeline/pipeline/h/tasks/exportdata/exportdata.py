@@ -304,8 +304,13 @@ class ExportData(basetask.StandardTaskTemplate):
         #    The pipeline processing script
         #    The pipeline restore script (if exportmses = False)
         #    The CASA commands log
+        recipe_name = self.get_recipename(inputs.context)
+        if not recipe_name:
+            prefix = oussid
+        else:
+            prefix = oussid + '.' + recipe_name
         stdfproducts = self._do_standard_ous_products(inputs.context, inputs.exportmses,
-            oussid, inputs.pprfile, session_list, vislist, inputs.output_dir, inputs.products_dir)
+            prefix, inputs.pprfile, session_list, vislist, inputs.output_dir, inputs.products_dir)
         if stdfproducts.ppr_file:
             result.pprequest = os.path.basename(stdfproducts.ppr_file) 
         result.weblog = os.path.basename(stdfproducts.weblog_file)
@@ -385,6 +390,25 @@ class ExportData(basetask.StandardTaskTemplate):
             oussid = ps.ousstatus_entity_id.translate(string.maketrans(':/', '__'))
 
         return oussid
+
+    def get_recipename (self, context):
+
+        """
+        Get the recipe name
+        """
+
+        # Get the parent ous ousstatus name. This is the sanitized ous
+        # status uid
+        ps = context.project_structure
+        if ps is None:
+            recipe_name = ''
+        elif ps.recipe_name == 'Undefined':
+            recipe_name  = ''
+        else:
+            recipe_name = ps.recipe_name
+
+        return recipe_name
+
 
     def _make_lists (self, context, session, vis, imaging=False):
 
