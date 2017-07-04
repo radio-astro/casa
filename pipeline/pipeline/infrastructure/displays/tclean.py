@@ -111,9 +111,31 @@ class CleanSummary(object):
 
                 # MOM8_FC for this iteration (currently only last but allow for others in future).
                 if 'mom8_fc' in iteration and os.path.exists(iteration['mom8_fc'] + extension):
+                    # CAS-8847: For MOM8_FC image displayed in the weblog set the color range to: +1
+                    # sigmaCube to max([peakCube,+8sigmaCube]).
+                    image_path = iteration['image'].replace('.image', '.image%s' % (extension))
+                    image_path = image_path.replace('.pbcor', '')
+                    extra_args = {}
+                    if image_path not in self.image_stats:
+                        LOG.trace('No cached image statistics found for {!s}'.format(image_path))
+                        with casatools.ImageReader(image_path) as image:
+                            stats = image.statistics(robust=False)
+                            image_rms = stats.get('rms')[0]
+                            image_max = stats.get('max')[0]
+                            self.image_stats[image_path] = ImageStats(rms=image_rms, max=image_max)
+
+                    image_stats = self.image_stats[image_path]
+                    image_rms = image_stats.rms
+                    image_max = image_stats.max
+
+                    extra_args = {
+                        'vmin': image_rms,
+                        'vmax': max([image_max, 8*image_rms])
+                    }
+
                     plot_wrappers.append(
                         displays.SkyDisplay().plot(self.context, iteration['mom8_fc'] + extension, reportdir=stage_dir,
-                                                   intent=r.intent))
+                                                   intent=r.intent, **extra_args))
 
                 # cleanmask for this iteration - not for iter 0
                 if i > 0:
