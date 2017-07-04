@@ -33,6 +33,7 @@ from hif_lowgainflag_cli import hif_lowgainflag_cli as hif_lowgainflag
 from hif_setmodels_cli import hif_setmodels_cli as hif_setmodels
 from hifa_bandpassflag_cli import hifa_bandpassflag_cli as hifa_bandpassflag
 from hifa_spwphaseup_cli import hifa_spwphaseup_cli as hifa_spwphaseup
+from hifa_gfluxscaleflag_cli import hifa_gfluxscaleflag_cli as hifa_gfluxscaleflag
 from hifa_gfluxscale_cli import hifa_gfluxscale_cli as hifa_gfluxscale
 from hifa_timegaincal_cli import hifa_timegaincal_cli as hifa_timegaincal
 from hif_applycal_cli import hif_applycal_cli as hif_applycal
@@ -103,6 +104,11 @@ def hifacal(vislist, importonly=True, pipelinemode='automatic',
 
         # Compute the bandpass calibration
         hifa_spwphaseup(pipelinemode=pipelinemode)
+
+        # Derive the flux density scale from standard calibrators, and flag
+        # outliers in corrected - model amplitudes for flux and phase
+        # calibrators.
+        hifa_gfluxscaleflag(pipelinemode=pipelinemode)
 
         # Determine flux values for the bandpass and gain calibrators
         # assuming point sources and set their model fluxes
