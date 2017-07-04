@@ -139,7 +139,8 @@ def executeppr (pprXmlFile, importonly=True, breakpoint='breakpoint',
 	ous_type = ds['ous_type'][1],
 	ps_entity_id = ds['ps_entity_id'][1],
 	ousstatus_entity_id = ds['ousstatus_entity_id'][1],
-	ppr_file=pprXmlFile)
+	ppr_file=pprXmlFile,
+        recipe_name=procedureName)
 
     # Create performance parameters object
     context.project_performance_parameters = _getPerformanceParameters(intentsDict)

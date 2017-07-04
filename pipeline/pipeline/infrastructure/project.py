@@ -46,7 +46,7 @@ class ProjectStructure(object):
         ppr_type = 'SciPipeRequest',
         ppr_entity_id = 'unknown',
         ppr_file = '',
-        recipe_name = 'undefined'):
+        recipe_name = 'Undefined'):
 
         self.ous_entity_type = ous_entity_type
         self.ous_entity_id = ous_entity_id
