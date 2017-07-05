@@ -147,7 +147,10 @@ class AquaXmlGenerator(object):
 
         ElementTree.SubElement(root, 'ProposalCode').text = context.project_summary.proposal_code
         ElementTree.SubElement(root, 'ProcessingRequestEntityId').text = UNDEFINED
-        ElementTree.SubElement(root, 'ProcessingProcedure').text = UNDEFINED
+        if context.project_structure.recipe_name == 'Undefined':
+            ElementTree.SubElement(root, 'ProcessingProcedure').text = UNDEFINED
+        else:
+            ElementTree.SubElement(root, 'ProcessingProcedure').text = context.project_structure.recipe_name
 
         return root
 
