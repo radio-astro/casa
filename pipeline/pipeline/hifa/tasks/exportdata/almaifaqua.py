@@ -96,19 +96,12 @@ class AlmaAquaXmlGenerator(aqua.AquaXmlGenerator):
         if len(list(flux_xml)) > 0:
             xml_root.extend(flux_xml)
 
-        return xml_root
+        sensitivity_xml = sensitivity_xml_for_stages(context, topic_results)
+        # omit containing flux measurement element if no measurements were found
+        if len(list(sensitivity_xml)) > 0:
+            xml_root.extend(sensitivity_xml)
 
-    # SJW - disabled until imageprecheck is mature and in default recipe
-    # def get_imaging_topic(self, context, topic_results):
-    #     # get base XML from base class
-    #     xml_root = super(AlmaAquaXmlGenerator, self).get_imaging_topic(context, topic_results)
-    #
-    #     sensitivity_xml = sensitivity_xml_for_stages(context, topic_results)
-    #     # omit containing flux measurement element if no measurements were found
-    #     if len(list(sensitivity_xml)) > 0:
-    #         xml_root.extend(sensitivity_xml)
-    #
-    #     return xml_root
+        return xml_root
 
 
 def flux_xml_for_stages(context, results, accessor_dict):
@@ -138,7 +131,9 @@ def flux_xml_for_stages(context, results, accessor_dict):
     for result in results:
         pipeline_casa_task = result.pipeline_casa_task
         for task_name, (flux_accessor, score_accessor) in accessor_dict.iteritems():
-            if pipeline_casa_task.startswith(task_name):
+            # need parenthesis to distinguish between cases such as
+            # hifa_gfluxscale and hifa_gfluxscaleflag
+            if pipeline_casa_task.startswith(task_name + '('):
                 flux_xml = xml_for_flux_stage(context, result, task_name, flux_accessor, score_accessor)
                 xml_root.append(flux_xml)
 
@@ -231,7 +226,7 @@ def sensitivity_xml_for_stages(context, results):
 
     for result in results:
         pipeline_casa_task = result.pipeline_casa_task
-        if pipeline_casa_task.startswith(task_name):
+        if pipeline_casa_task.startswith(task_name + '('):
             stage_xml = xml_for_sensitivity_stage(context, result, task_name)
             xml_root.append(stage_xml)
 
@@ -264,6 +259,12 @@ def xml_for_sensitivity(d):
     minor = qa.quantity(d['beam']['minor'])
     minor_arcsec = value(qa.convert(minor, 'arcsec'))
 
+    cell_major = qa.quantity(d['cell'][0])
+    cell_major_arcsec = value(qa.convert(cell_major, 'arcsec'))
+
+    cell_minor = qa.quantity(d['cell'][1])
+    cell_minor_arcsec = value(qa.convert(cell_minor, 'arcsec'))
+
     positionangle = qa.quantity(d['beam']['positionangle'])
     positionangle_deg = value(qa.convert(positionangle, 'deg'))
 
@@ -277,7 +278,8 @@ def xml_for_sensitivity(d):
         BeamMinArcsec=minor_arcsec,
         BeamPosAngDeg=positionangle_deg,
         BwMode=d['bwmode'],
-        Cell=d['cell'][0],
+        CellMajArcsec=cell_major_arcsec,
+        CellMinArcsec=cell_minor_arcsec,
         Field=d['field'],
         Robust=str(d['robust']),
         SensitivityJy=sensitivity_jy,
