@@ -66,7 +66,7 @@ class ALMAExportData(exportdata.ExportData):
         if not recipe_name:
             prefix = oussid
         else:
-            prefix = oussid + '." + recipe_name
+            prefix = oussid + '.' + recipe_name
         auxfproducts =  self._do_auxiliary_products(self.inputs.context, prefix, self.inputs.output_dir, self.inputs.products_dir)
 
         # Export the AQUA report
