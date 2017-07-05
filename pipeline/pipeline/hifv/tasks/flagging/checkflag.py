@@ -52,6 +52,8 @@ class Checkflag(basetask.StandardTaskTemplate):
         m = self.inputs.context.observing_run.measurement_sets[0]
         tint = m.get_vla_max_integration_time()
         pols = m.polarizations[0]
+        timedevscale = 4.0
+        freqdevscale = 4.0
 
         if (self.inputs.checkflagmode == 'bpd'):
             fieldselect = self.inputs.context.evla['msinfo'][m.name].checkflagfields
@@ -81,6 +83,7 @@ class Checkflag(basetask.StandardTaskTemplate):
             fieldids = [field.id for field in fieldsobj]
             fieldselect = ','.join([str(fieldid) for fieldid in fieldids])
             scanselect = ''
+            timedevscale = 7.0
 
         if (self.inputs.checkflagmode == 'bpd' or
             self.inputs.checkflagmode == 'allcals' or
@@ -109,7 +112,9 @@ class Checkflag(basetask.StandardTaskTemplate):
                                'scan': scanselect,
                                'ntime': 'scan',
                                'datacolumn': 'residual',
-                               'flagbackup': True}
+                               'flagbackup': True,
+                               'timedevscale' : timedevscale,
+                               'freqdevscale' : freqdevscale}
 
                 checkflag_result = self._do_checkflag(**method_args)
 
@@ -194,7 +199,8 @@ class Checkflag(basetask.StandardTaskTemplate):
         return checkflag_result
     
     def _do_checkflag(self, mode='rflag', field=None, correlation=None, scan=None,
-                      ntime='scan', datacolumn='corrected', flagbackup=False):
+                      ntime='scan', datacolumn='corrected', flagbackup=False, timedevscale=4.0,
+                      freqdevscale=4.0):
         
         task_args = {'vis'          : self.inputs.vis,
                      'mode'         : mode,
@@ -205,8 +211,8 @@ class Checkflag(basetask.StandardTaskTemplate):
                      'combinescans' : False,
                      'datacolumn'   : datacolumn,
                      'winsize'      : 3,
-                     'timedevscale' : 4.0,
-                     'freqdevscale' : 4.0,
+                     'timedevscale' : timedevscale,
+                     'freqdevscale' : freqdevscale,
                      'action'       : 'apply',
                      'display'      : '',
                      'extendflags'  : False,
