@@ -269,7 +269,7 @@ def xml_for_sensitivity(d):
     positionangle_deg = value(qa.convert(positionangle, 'deg'))
 
     sensitivity = qa.quantity(d['sensitivity'])
-    sensitivity_jy = value(qa.convert(sensitivity, 'Jy/beam'))
+    sensitivity_jy_per_beam = value(qa.convert(sensitivity, 'Jy/beam'))
 
     xml = ElementTree.Element('Sensitivity',
         Array=d['array'],
@@ -278,11 +278,12 @@ def xml_for_sensitivity(d):
         BeamMinArcsec=minor_arcsec,
         BeamPosAngDeg=positionangle_deg,
         BwMode=d['bwmode'],
-        CellMajArcsec=cell_major_arcsec,
-        CellMinArcsec=cell_minor_arcsec,
+        CellXArcsec=cell_major_arcsec,
+        CellYArcsec=cell_minor_arcsec,
         Field=d['field'],
-        Robust=str(d['robust']),
-        SensitivityJy=sensitivity_jy,
+        Robust=str(d.get('robust', '')),
+        UVTaper=str(d.get('uvtaper', '')),
+        SensitivityJyPerBeam=sensitivity_jy_per_beam,
         MsSpwId=d['spw'],
       )
 
