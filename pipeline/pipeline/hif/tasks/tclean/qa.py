@@ -44,7 +44,7 @@ class TcleanQAHandler(pqa.QAResultHandler):
             if (numpy.isnan(rms_score)):
                 result.qa.pool[:] = [pqa.QAScore(0.0, longmsg='Cleaning diverged, RMS is NaN. Field: %s Intent: %s SPW: %s' % (result.inputs['field'], result.intent, resultspw), shortmsg='RMS is NaN')]
             else:
-                result.qa.pool[:] = [pqa.QAScore(rms_score, longmsg='RMS outside mask vs. threshold. Field: %s Intent: %s SPW: %s' % (result.inputs['field'], result.intent, result.spw), shortmsg='RMS vs. threshold')]
+                result.qa.pool[:] = [pqa.QAScore(rms_score, longmsg='RMS outside mask vs. DR corrected sensitivity. Field: %s Intent: %s SPW: %s' % (result.inputs['field'], result.intent, result.spw), shortmsg='RMS vs. sensitivity')]
 
             # Check source score
             #    Be careful about the source name vs field name issue
