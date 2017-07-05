@@ -1,5 +1,7 @@
 <ProcessingProcedure>
 
+    <ProcedureTitle>hsd</ProcedureTitle>
+
     <ProcessingCommand>
         <Command xmlns="">hsd_importdata</Command>
         <ParameterSet>
