@@ -126,6 +126,11 @@ class Makecutoutimages(basetask.StandardTaskTemplate):
         imsizey = math.fabs(imhead_dict['refpix'][1]*imhead_dict['incr'][1]*(180.0/math.pi)*2)
         imageSizeX = 1.0  # degrees
         imageSizeY = 1.0  # degrees
+
+        if (imsizex < 2.0):
+            imageSizeX = 0.5 * imsizex
+            imageSizeY = 0.5 * imsizey
+
         imsize = [3600.0*imsizex, 3600.0*imsizey]
 
         xcellsize = 3600.0 * (180.0 / math.pi) * math.fabs(imhead_dict['incr'][0])
@@ -133,6 +138,10 @@ class Makecutoutimages(basetask.StandardTaskTemplate):
 
         fld_subim_sizeX = int(3600.0 * (imageSizeX + 2.0 / 60.0) / xcellsize)
         fld_subim_sizeY = int(3600.0 * (imageSizeY + 2.0 / 60.0) / ycellsize)
+
+        if (imsizex < 2.0):
+            fld_subim_sizeX = int(3600.0 * (imageSizeX + 10.0 / 3600.0) / xcellsize)
+            fld_subim_sizeY = int(3600.0 * (imageSizeY + 10.0 / 3600.0) / ycellsize)
 
         # equivalent blc,trc for extracting requested field, in pixels:
         blcx = imsize[0] / 2 - (fld_subim_sizeX / 2)
