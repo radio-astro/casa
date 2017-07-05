@@ -46,6 +46,7 @@ class TcleanResult(basetask.Results):
         self._max_sensitivity = None
         self._min_field_id = None
         self._max_field_id = None
+        self._dr_corrected_sensitivity = 0.0
         self._threshold = 0.0
         self._dirty_dynamic_range = 0.0
         self._DR_correction_factor = 1.0
@@ -205,6 +206,13 @@ class TcleanResult(basetask.Results):
 
     def set_max_field_id(self, max_field_id):
         self._max_field_id = max_field_id
+
+    @property
+    def dr_corrected_sensitivity(self):
+        return self._dr_corrected_sensitivity
+
+    def set_dr_corrected_sensitivity(self, dr_corrected_sensitivity):
+        self._dr_corrected_sensitivity = dr_corrected_sensitivity
 
     @property
     def threshold(self):

@@ -35,10 +35,9 @@ class TcleanQAHandler(pqa.QAResultHandler):
         else:
             qaTool = casac.quanta()
             try:
-                # The threshold applies to peaks in the residual. To compare to the
-                # measured RMS, one needs to translate peak to RMS by about a
-                # factor 4.0.
-                rms_score = imageScorer(result.image_rms / qaTool.convert(result.threshold, 'Jy')['value'] * 4.0)
+                # For the score we compare the image RMS with the DR corrected
+                # sensitivity as an estimate of the expected RMS.
+                rms_score = imageScorer(result.image_rms / result.dr_corrected_sensitivity)
             except Exception as e:
                 LOG.warning('Exception scoring imaging result by RMS: %s. Setting score to -0.1.' % (e))
                 rms_score = -0.1

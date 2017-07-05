@@ -523,6 +523,7 @@ class Tclean(cleanbase.CleanBase):
                                                 inputs.intent, \
                                                 inputs.tlimit)
         sequence_manager.threshold = new_threshold
+        sequence_manager.dr_corrected_sensitivity = sequence_manager.sensitivity * DR_correction_factor
 
         # Adjust niter based on the dirty image statistics
         new_niter = self.image_heuristics.niter_correction(sequence_manager.niter, inputs.cell, inputs.imsize, residual_max, new_threshold)
@@ -592,6 +593,7 @@ class Tclean(cleanbase.CleanBase):
             result.set_dirty_dynamic_range(dirty_dynamic_range)
             result.set_DR_correction_factor(DR_correction_factor)
             result.set_maxEDR_used(maxEDR_used)
+            result.set_dr_corrected_sensitivity(sequence_manager.dr_corrected_sensitivity)
 
             LOG.info('Clean image iter %s stats' % iter)
             LOG.info('    Clean image non-cleanmask area rms: %s', nonpbcor_image_non_cleanmask_rms)

@@ -20,6 +20,7 @@ class ManualMaskThresholdSequence(BaseCleanSequence):
         self.gridder = gridder
         self.threshold = threshold
         self.sensitivity = sensitivity
+        self.dr_corrected_sensitivity = sensitivity
         self.channel_rms_factor = channel_rms_factor
         self.niter = niter
         self.iter = None

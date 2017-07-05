@@ -17,6 +17,7 @@ class NoMaskThresholdSequence(BaseCleanSequence):
         self.gridder = gridder
         self.threshold = threshold
         self.sensitivity = sensitivity
+        self.dr_corrected_sensitivity = sensitivity
         self.niter = niter
         self.threshold_nsigma = nsigma
         self.iter = None
