@@ -50,22 +50,6 @@ def format_notification(tr_class, alert, msg, icon_class=None):
     else:
         icon = ''
     return '<tr class="%s"><td>%s<strong>%s</strong> %s</td></tr>' % (tr_class, icon, alert, msg)
-
-
-def group_plots(data, axes):
-    # build primary, secondary, tertiary, etc. sort for axes
-    keyfunc_args = ['parameters.{!s}'.format(axis) for axis in axes.split(',')]
-
-    for args in keyfunc_args:
-        keyfunc = operator.attrgetter(*args)
-        data = sorted(data, key=keyfunc)
-        for k, g in groupby(data, keyfunc):
-            axis_data = list(g)      # Store group iterator as a list
-            if len(keyfunc_args) > 1:
-                yield group_plots(data, remaining_axes)
-            else:
-                yield axis_data
-
 %>
 
 <%def name="plot_group(plot_dict, url_fn, data_spw=False, data_field=False, data_baseband=False, data_tsysspw=False,
