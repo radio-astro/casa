@@ -23,6 +23,8 @@ import tarfile
 import types
 import string
 import collections
+import itertools
+
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.sdfilenamer as filenamer
@@ -310,7 +312,7 @@ class SDMSExportData(almaexportdata.ALMAExportData):
 
         try:
             # Log the list in human readable form. Better way to do this ?
-            cmd = string.Template("sdbaseline(infile='${infile}', datacolumn='corrected', blmode='apply', bltable='${bltable}', blfunc='poly', outfile='${outfile}', overwrite=True)")
+            cmd = string.Template("sdbaseline(infile='${infile}', datacolumn='corrected', spw='${spw}', blmode='apply', bltable='${bltable}', blfunc='poly', outfile='${outfile}', overwrite=True)")
 
             # Create the list of baseline caltable for that vis
             namer = filenamer.CalibrationTable()
@@ -318,9 +320,13 @@ class SDMSExportData(almaexportdata.ALMAExportData):
             namer.bl_cal()
             name = namer.get_filename()
             LOG.debug('bl cal table for %s is %s'%(vis, name))
+            ms = context.observing_run.get_ms(vis)
+            science_spws = ms.get_spectral_windows(science_windows_only=True)
+            spw = ','.join(itertools.imap(lambda s: str(s.id), science_spws))
             if os.path.exists(name):
                 applied_calstate = cmd.safe_substitute(infile=vis,
                                                        bltable=name,
+                                                       spw=spw,
                                                        outfile=vis.rstrip('/') + '_bl')
 
                 # Open the file.
