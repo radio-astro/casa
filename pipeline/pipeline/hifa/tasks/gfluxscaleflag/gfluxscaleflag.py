@@ -271,9 +271,6 @@ class Gfluxscaleflag(basetask.StandardTaskTemplate):
         calstate_backup_name = 'before_gfsflag.calstate'
         inputs.context.callibrary.export(calstate_backup_name)
 
-        # Get the MS object.
-        ms = inputs.context.observing_run.get_ms(name=inputs.vis)
-
         # create a shortcut to the plotting function that pre-supplies the inputs and context
         plot_fn = functools.partial(create_plots, inputs, inputs.context)
 
@@ -290,11 +287,7 @@ class Gfluxscaleflag(basetask.StandardTaskTemplate):
             # Run applycal to apply pre-existing caltables and propagate their
             # corresponding flags (should typically include Tsys, WVR, antpos).
             LOG.info('Applying pre-existing cal tables.')
-            acinputs = applycal.IFApplycalInputs(
-                context=inputs.context, vis=inputs.vis, intent=inputs.intent,
-                flagsum=False, flagbackup=False)
-            actask = applycal.IFApplycal(acinputs)
-            acresult = self._executor.execute(actask, merge=True)
+            self._do_applycal(merge=True)
 
             # Create back-up of "after pre-calibration" state of flags.
             LOG.info('Creating back-up of "pre-calibrated" flagging state')
@@ -329,7 +322,7 @@ class Gfluxscaleflag(basetask.StandardTaskTemplate):
 
             # Create phase caltable.
             LOG.info('Compute phase gaincal table.')
-            gpcalresult = self._do_gaincal(
+            self._do_gaincal(
                 intent=inputs.intent, gaintype='G', calmode='p',
                 combine=phase_combine, solint=inputs.phaseupsolint,
                 minsnr=inputs.minsnr, refant=inputs.refant,
@@ -338,7 +331,7 @@ class Gfluxscaleflag(basetask.StandardTaskTemplate):
 
             # Create amplitude caltable
             LOG.info('Compute amplitude gaincal table.')
-            gacalresult = self._do_gaincal(
+            self._do_gaincal(
                 intent=inputs.intent, gaintype='T', calmode='a',
                 combine=phase_combine, solint=inputs.solint,
                 minsnr=inputs.minsnr, refant=inputs.refant,
@@ -347,11 +340,7 @@ class Gfluxscaleflag(basetask.StandardTaskTemplate):
             # Apply the new caltables to the MS.
             LOG.info('Applying phase-up, bandpass, and amplitude cal tables.')
             # Apply the calibrations.
-            acinputs = applycal.IFApplycalInputs(
-                context=inputs.context, vis=inputs.vis, intent=inputs.intent,
-                flagsum=False, flagbackup=False)
-            actask = applycal.IFApplycal(acinputs)
-            acresult = self._executor.execute(actask)
+            self._do_applycal(merge=False)
 
             # Restore flags that may have come from the latest applycal.
             LOG.info('Restoring back-up of "pre-calibrated" flagging state.')
@@ -409,73 +398,136 @@ class Gfluxscaleflag(basetask.StandardTaskTemplate):
     def analyse(self, result):
         return result
 
-    def _do_gaincal(self, caltable=None, field=None, intent=None, gaintype='G',
-                    calmode=None, combine=None, solint=None, antenna=None,
-                    uvrange='', minsnr=None, refant=None, minblperant=None,
-                    spwmap=None, interp=None, append=None,
-                    merge=True):
+    def _do_applycal(self, merge):
+        inputs = self.inputs
+
+        # Change hifa_gfluxscaleflag so that the applycals are done per intent
+        # to prevent unintended cross intent interpolation
+        #
+        # See https://open-jira.nrao.edu/browse/CAS-10158?focusedCommentId=93725
+
+        # does any field have multiple intents?
+        mixed_intents = False
+        singular_intents = frozenset(inputs.intent.split(','))
+        if len(singular_intents) > 1:
+            for field in inputs.ms.get_fields(intent=inputs.intent):
+                intent_intersection = field.intents.intersection(singular_intents)
+                if len(intent_intersection) > 1:
+                    mixed_intents = True
+                    break
+
+        if mixed_intents:
+            # multiple items, one for each intent. Each intent will result
+            # in a separate job
+            ac_intents = singular_intents
+        else:
+            # one item, and hence one job, with 'PHASE,BANDPASS,...'
+            ac_intents = [','.join(singular_intents)]
+
+        # SJW - always just one job
+        ac_intents = [','.join(singular_intents)]
+
+        applycal_tasks = []
+        for intent in ac_intents:
+            task_inputs = applycal.IFApplycalInputs(inputs.context, vis=inputs.vis, intent=intent, flagsum=False,
+                                                    flagbackup=False)
+            task = applycal.IFApplycal(task_inputs)
+            applycal_tasks.append(task)
+
+        for task in applycal_tasks:
+            self._executor.execute(task, merge=merge)
+
+    def _do_gaincal(self, caltable=None, intent=None, gaintype='G', calmode=None, combine=None, solint=None,
+                    antenna=None, uvrange='', minsnr=None, refant=None, minblperant=None, spwmap=None, interp=None,
+                    append=None, merge=True):
 
         inputs = self.inputs
 
         # Get the science spws
         sci_spwids = [spw.id for spw in inputs.ms.get_spectral_windows(science_windows_only=True)]
 
-        # Use only valid spws
-        spw_ids = []
-        fieldlist = inputs.ms.get_fields(task_arg=field)
-        for fld in fieldlist:
-            for spw in fld.valid_spws:
-                if spw.id not in sci_spwids:
-                    continue
-                spw_ids.append(str(spw.id))
-        spw_ids = ','.join(list(set(spw_ids)))
+        fields_with_intent = inputs.ms.get_fields(intent=intent)
 
-        # Initialize gaincal inputs.
-        task_inputs = gaincal.GTypeGaincal.Inputs(
-            context=inputs.context,
-            vis=inputs.vis,
-            caltable=caltable,
-            field=field,
-            intent=intent,
-            spw=spw_ids,
-            solint=solint,
-            gaintype=gaintype,
-            calmode=calmode,
-            minsnr=minsnr,
-            combine=combine,
-            refant=refant,
-            antenna=antenna,
-            uvrange=uvrange,
-            minblperant=minblperant,
-            solnorm=False,
-            append=append)
+        # boil it down to just the valid spws for these fields
+        field_spw_ids = {spw.id for fld in fields_with_intent for spw in fld.valid_spws}
+        spw_ids = ','.join([str(spw_id) for spw_id in sorted(field_spw_ids) if spw_id in sci_spwids])
 
-        # Modify output table filename to append "prelim".
-        if task_inputs.caltable.endswith('.tbl'):
-            task_inputs.caltable = task_inputs.caltable[:-4] + '.prelim.tbl'
+        # of the fields that we are about to process, does any field have
+        # multiple intents?
+        mixed_intents = False
+        singular_intents = frozenset(intent.split(','))
+        if len(singular_intents) > 1:
+            for field in fields_with_intent:
+                intent_intersection = field.intents.intersection(singular_intents)
+                if len(intent_intersection) > 1:
+                    mixed_intents = True
+                    break
+
+        if mixed_intents and solint == 'inf':
+            # multiple items, one for each intent. Each intent will result
+            # in a separate job
+            task_intents = singular_intents
         else:
-            task_inputs.caltable += '.prelim'
+            # one item, and hence one job, with 'PHASE,BANDPASS,...'
+            task_intents = [','.join(singular_intents)]
 
-        # Initialize and execute gaincal task.
-        task = gaincal.GTypeGaincal(task_inputs)
-        result = self._executor.execute(task)
+        for idx, intent in enumerate(task_intents):
+            # Initialize gaincal inputs.
+            task_inputs = gaincal.GTypeGaincal.Inputs(
+                inputs.context,
+                vis=inputs.vis,
+                caltable=caltable,
+                intent=intent,
+                spw=spw_ids,
+                solint=solint,
+                gaintype=gaintype,
+                calmode=calmode,
+                minsnr=minsnr,
+                combine=combine,
+                refant=refant,
+                antenna=antenna,
+                uvrange=uvrange,
+                minblperant=minblperant,
+                solnorm=False,
+                append=append)
 
-        # If requested to merge the result...
-        if merge:
-            # Adjust the interp if provided.
-            if interp:
-                self._mod_last_interp(result.pool[0], interp)
-                self._mod_last_interp(result.final[0], interp)
+            # if we need to generate multiple caltables, make the caltable
+            # names unique by inserting the intent to prevent them overwriting
+            # each other
+            if len(task_intents) > 1:
+                import os
+                root, ext = os.path.splitext(task_inputs.caltable)
+                task_inputs.caltable = '{!s}.{!s}{!s}'.format(root, intent, ext)
 
-            # Adjust the spw map if provided.
-            if spwmap:
-                self._mod_last_spwmap(result.pool[0], spwmap)
-                self._mod_last_spwmap(result.final[0], spwmap)
+            # Modify output table filename to append "prelim".
+            if task_inputs.caltable.endswith('.tbl'):
+                task_inputs.caltable = task_inputs.caltable[:-4] + '.prelim.tbl'
+            else:
+                task_inputs.caltable += '.prelim'
 
-            # Merge result to the local context
-            result.accept(inputs.context)
+            # Initialize and execute gaincal task.
+            task = gaincal.GTypeGaincal(task_inputs)
+            result = self._executor.execute(task)
 
-        return result
+            # If requested to merge the result...
+            if merge:
+                # Adjust the interp if provided.
+                if interp:
+                    self._mod_last_interp(result.pool[0], interp)
+                    self._mod_last_interp(result.final[0], interp)
+
+                # Adjust the spw map if provided.
+                if spwmap:
+                    self._mod_last_spwmap(result.pool[0], spwmap)
+                    self._mod_last_spwmap(result.final[0], spwmap)
+
+                # modify the result so that this caltable is only applied to
+                # the intent from which the calibration was derived
+                result.pool[0].calto.intent = intent
+                result.final[0].calto.intent = intent
+
+                # Merge result to the local context
+                result.accept(inputs.context)
 
     def _mod_last_interp(self, l, interp):
         l.calfrom[-1] = self._copy_with_interp(l.calfrom[-1], interp)
