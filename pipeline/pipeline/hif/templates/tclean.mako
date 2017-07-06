@@ -93,9 +93,9 @@ except:
                         % for pol in pols:
                             %if info_dict.get((field,str(spw),pol,'frequency')) is not None:
                             <tr>
-                                <td rowspan="11">${field}</td>
-                                <td rowspan="11">${spw}</td>
-                                <td rowspan="11">${pol}</td>
+                                <td rowspan="12">${field}</td>
+                                <td rowspan="12">${spw}</td>
+                                <td rowspan="12">${pol}</td>
                                 %if info_dict.get((field,str(spw),pol,'nchan')) is not None:
                                     %if info_dict[(field,str(spw),pol,'nchan')] == 1:
 								<th>center frequency of image</th>
@@ -201,6 +201,13 @@ except:
                                 %endif
                             </tr>
                             <tr>
+                                <th>clean residual peak / scaled MAD</th>
+                                %if info_dict.get((field,str(spw),pol,'residual peak/rms')) is not None:
+                                            <td>${info_dict.get((field,str(spw),pol,'residual peak/rms'))}</td>
+                                %else:
+                                            <td>-</td>
+                                %endif
+                            </tr>                            <tr>
                                 <th>non-pbcor image rms</th>
                                 %if info_dict.get((field,str(spw),pol,'masked rms')) is not None:
                                             <td>${'%#.2g %s' % (info_dict[(field,str(spw),pol,'masked rms')],
