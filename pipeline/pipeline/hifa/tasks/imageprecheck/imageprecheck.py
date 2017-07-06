@@ -95,7 +95,7 @@ class ImagePreCheck(basetask.StandardTaskTemplate):
             repr_freq = cqa.quantity(float(repr_chan_obj.getCentreFrequency().convert_to(measures.FrequencyUnits.HERTZ).value), 'Hz')
             repr_bw = cqa.quantity(float(repr_chan_obj.getWidth().convert_to(measures.FrequencyUnits.HERTZ).value), 'Hz')
             repr_target = (repr_source, repr_freq, repr_bw)
-            LOG.info('ImagePreCheck: No representative target found. Chosing %s SPW %d.' % (repr_source, repr_spw))
+            LOG.info('ImagePreCheck: No representative target found. Choosing %s SPW %d.' % (repr_source, repr_spw))
 
         # Get the array
         diameter = min([a.diameter for a in repr_ms.antennas])
@@ -116,6 +116,8 @@ class ImagePreCheck(basetask.StandardTaskTemplate):
             linesfile = inputs.context.linesfile, \
             imaging_mode = 'ALMA')
 
+        repr_field = list(image_heuristics.field_intent_list('TARGET', repr_source))[0][0]
+
         if reprBW_mode == 'cube':
             physicalBW_of_1chan = float(inputs.context.observing_run.measurement_sets[0].get_spectral_window(repr_spw).channels[0].getWidth().convert_to(measures.FrequencyUnits.HERTZ).value)
             nbin = int(cqa.getvalue(cqa.convert(repr_target[2], 'Hz'))/physicalBW_of_1chan + 0.5)
@@ -124,8 +126,8 @@ class ImagePreCheck(basetask.StandardTaskTemplate):
             nbin = -1
             cont_sens_bw_modes = ['reprBW', 'fullcont']
         primary_beam_size = image_heuristics.largest_primary_beam_size(spwspec=str(repr_spw))
-        field_ids = image_heuristics.field('TARGET', repr_source)
-        gridder = image_heuristics.gridder('TARGET', repr_source)
+        field_ids = image_heuristics.field('TARGET', repr_field)
+        gridder = image_heuristics.gridder('TARGET', repr_field)
         cont_spw = ','.join([str(s.id) for s in inputs.context.observing_run.measurement_sets[0].get_spectral_windows()])
 
         beams = {}
@@ -133,17 +135,17 @@ class ImagePreCheck(basetask.StandardTaskTemplate):
         imsizes = {}
         sensitivities = []
         for robust in [-0.5, 0.5, 2.0]:
-            beams[(robust, '[]')] = image_heuristics.synthesized_beam([(repr_source, 'TARGET')], str(repr_spw), robust=robust, uvtaper=[])
+            beams[(robust, '[]')] = image_heuristics.synthesized_beam([(repr_field, 'TARGET')], str(repr_spw), robust=robust, uvtaper=[])
             cells[(robust, '[]')] = image_heuristics.cell(beams[(robust, '[]')])
             imsizes[(robust, '[]')] = image_heuristics.imsize(field_ids, cells[(robust, '[]')], primary_beam_size, centreonly=False)
 
             # reprBW sensitivity
             if reprBW_mode == 'cube':
                 sensitivity, min_sensitivity, max_sensitivity, min_field_id, max_field_id, eff_ch_bw, sens_bw = \
-                    image_heuristics.calc_sensitivities(inputs.vis, repr_source, 'TARGET', str(repr_spw), nbin, {}, 'cube', gridder, cells[(robust, '[]')], imsizes[(robust, '[]')], 'briggs', robust, [])
+                    image_heuristics.calc_sensitivities(inputs.vis, repr_field, 'TARGET', str(repr_spw), nbin, {}, 'cube', gridder, cells[(robust, '[]')], imsizes[(robust, '[]')], 'briggs', robust, [])
                 sensitivities.append(Sensitivity( \
                     **{'array': array, \
-                       'field': repr_source, \
+                       'field': repr_field, \
                        'spw': str(repr_spw), \
                        'bandwidth': cqa.quantity(sens_bw, 'Hz'), \
                        'bwmode': 'reprBW', \
@@ -155,11 +157,11 @@ class ImagePreCheck(basetask.StandardTaskTemplate):
 
             # full cont sensitivity (no frequency ranges excluded)
             sensitivity, min_sensitivity, max_sensitivity, min_field_id, max_field_id, eff_ch_bw, sens_bw = \
-                image_heuristics.calc_sensitivities(inputs.vis, repr_source, 'TARGET', cont_spw, -1, {}, 'cont', gridder, cells[(robust, '[]')], imsizes[(robust, '[]')], 'briggs', robust, [])
+                image_heuristics.calc_sensitivities(inputs.vis, repr_field, 'TARGET', cont_spw, -1, {}, 'cont', gridder, cells[(robust, '[]')], imsizes[(robust, '[]')], 'briggs', robust, [])
             for cont_sens_bw_mode in cont_sens_bw_modes:
                 sensitivities.append(Sensitivity( \
                     **{'array': array, \
-                       'field': repr_source, \
+                       'field': repr_field, \
                        'spw': str(repr_spw), \
                        'bandwidth': cqa.quantity(sens_bw, 'Hz'), \
                        'bwmode': cont_sens_bw_mode, \
@@ -178,15 +180,15 @@ class ImagePreCheck(basetask.StandardTaskTemplate):
                 hm_uvtaper = image_heuristics.uvtaper(beams[(2.0, '[]')], cqa.quantity(minAcceptableAngResolution, 'arcsec'), cqa.quantity(maxAcceptableAngResolution, 'arcsec'))
                 if hm_uvtaper != []:
                     # Add sensitivity entries with actual tapering
-                    beams[(hm_robust, str(hm_uvtaper))] = image_heuristics.synthesized_beam([(repr_source, 'TARGET')], str(repr_spw), robust=hm_robust, uvtaper=hm_uvtaper)
+                    beams[(hm_robust, str(hm_uvtaper))] = image_heuristics.synthesized_beam([(repr_field, 'TARGET')], str(repr_spw), robust=hm_robust, uvtaper=hm_uvtaper)
                     cells[(hm_robust, str(hm_uvtaper))] = image_heuristics.cell(beams[(hm_robust, str(hm_uvtaper))])
                     imsizes[(hm_robust, str(hm_uvtaper))] = image_heuristics.imsize(field_ids, cells[(hm_robust, str(hm_uvtaper))], primary_beam_size, centreonly=False)
                     if reprBW_mode == 'cube':
                         sensitivity, min_sensitivity, max_sensitivity, min_field_id, max_field_id, eff_ch_bw, sens_bw = \
-                            image_heuristics.calc_sensitivities(inputs.vis, repr_source, 'TARGET', str(repr_spw), nbin, {}, 'cube', gridder, cells[(hm_robust, str(hm_uvtaper))], imsizes[(hm_robust, str(hm_uvtaper))], 'briggs', hm_robust, hm_uvtaper)
+                            image_heuristics.calc_sensitivities(inputs.vis, repr_field, 'TARGET', str(repr_spw), nbin, {}, 'cube', gridder, cells[(hm_robust, str(hm_uvtaper))], imsizes[(hm_robust, str(hm_uvtaper))], 'briggs', hm_robust, hm_uvtaper)
                         sensitivities.append(Sensitivity( \
                             **{'array': array, \
-                               'field': repr_source, \
+                               'field': repr_field, \
                                'spw': str(repr_spw), \
                                'bandwidth': cqa.quantity(sens_bw, 'Hz'), \
                                'bwmode': 'reprBW', \
@@ -197,11 +199,11 @@ class ImagePreCheck(basetask.StandardTaskTemplate):
                                'sensitivity': cqa.quantity(sensitivity, 'Jy/beam')}))
 
                     sensitivity, min_sensitivity, max_sensitivity, min_field_id, max_field_id, eff_ch_bw, sens_bw = \
-                        image_heuristics.calc_sensitivities(inputs.vis, repr_source, 'TARGET', cont_spw, -1, {}, 'cont', gridder, cells[(hm_robust, str(hm_uvtaper))], imsizes[(hm_robust, str(hm_uvtaper))], 'briggs', hm_robust, hm_uvtaper)
+                        image_heuristics.calc_sensitivities(inputs.vis, repr_field, 'TARGET', cont_spw, -1, {}, 'cont', gridder, cells[(hm_robust, str(hm_uvtaper))], imsizes[(hm_robust, str(hm_uvtaper))], 'briggs', hm_robust, hm_uvtaper)
                     for cont_sens_bw_mode in cont_sens_bw_modes:
                         sensitivities.append(Sensitivity( \
                             **{'array': array, \
-                               'field': repr_source, \
+                               'field': repr_field, \
                                'spw': str(repr_spw), \
                                'bandwidth': cqa.quantity(sens_bw, 'Hz'), \
                                'bwmode': cont_sens_bw_mode, \
