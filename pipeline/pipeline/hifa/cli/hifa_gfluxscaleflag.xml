@@ -10,8 +10,18 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 <shortdescription>Derive the flux density scale with flagging</shortdescription>
 
 <description>
-Derive the flux density scale from standard calibrators, and flag outliers in corrected - model
-amplitudes for flux and phase calibrators.
+This task computes the flagging heuristics on the phase calibrator and flux calibrator by calling
+hif_correctedampflag which looks for outlier visibility points by statistically examining the scalar difference of
+corrected amplitudes minus model amplitudes, and flags those outliers. The philosophy is that only outlier data
+points that have remained outliers after calibration will be flagged. The heuristic works equally well on resolved
+calibrators and point sources because it is not performing a vector difference, and thus is not sensitive to nulls
+in the flux density vs. uvdistance domain. Note that the phase of the data is not assessed. In further detail, the
+workflow is as follows: an a priori calibration is applied using pre-existing caltables in the calibration state, a
+preliminary phase and amplitude gaincal solution is solved and applied, the flagging heuristics are run, and any
+outliers are flagged. Plots are generated at three points in this workflow: after a priori calibration, after
+preliminary phase and amplitude calibration but before flagging heuristics are run, and after flagging heuristics
+have been run and applied. If no points were flagged, the "after" plots are not generated or displayed. The score
+for this stage is a the standard data flagging score, which depends on the fraction of data flagged.
 </description>
 
 <input>
