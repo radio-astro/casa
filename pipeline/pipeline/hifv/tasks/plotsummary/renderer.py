@@ -111,6 +111,11 @@ class T2_4MDetailsplotsummaryRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
         #         self.sort_plots_by_baseband(amp_vs_freq_bandpass_summary_plots)
         #         self.sort_plots_by_baseband(phase_vs_freq_bandpass_summary_plots)
 
+        intent_sort_order = {
+            'PHASE': 1,
+            'BANDPASS': 2
+        }
+
         amp_vs_freq_summary_plots = utils.OrderedDefaultdict(list)
         for intents in [['PHASE'], ['BANDPASS']]:
             plots = self.create_plots(context,
@@ -119,7 +124,13 @@ class T2_4MDetailsplotsummaryRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
                                       intents, correlation=corrstring)
 
             for vis, vis_plots in plots.items():
-                amp_vs_freq_summary_plots[vis].extend(vis_plots)
+                vis_plots_mod = []
+                for p in vis_plots:
+                    p.parameters['intent_idx'] = intent_sort_order[','.join(p.parameters['intent'])]
+                    field = m.get_fields(p.parameters['field'])[0]
+                    p.parameters['fieldid'] = field.id
+                    vis_plots_mod.append(p)
+                amp_vs_freq_summary_plots[vis].extend(vis_plots_mod)
 
         phase_vs_freq_summary_plots = utils.OrderedDefaultdict(list)
         for intents in [['PHASE'], ['BANDPASS']]:
@@ -129,9 +140,22 @@ class T2_4MDetailsplotsummaryRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
                                       intents, correlation=corrstring)
 
             for vis, vis_plots in plots.items():
-                phase_vs_freq_summary_plots[vis].extend(vis_plots)
+                vis_plots_mod = []
+                for p in vis_plots:
+                    p.parameters['intent_idx'] = intent_sort_order[','.join(p.parameters['intent'])]
+                    field = m.get_fields(p.parameters['field'])[0]
+                    p.parameters['fieldid'] = field.id
+                    vis_plots_mod.append(p)
+                phase_vs_freq_summary_plots[vis].extend(vis_plots_mod)
 
         # Polarization plots
+        pol_intent_sort_order = {
+            'POLANGLE': 1,
+            'POLLEAKAGE' :2,
+            'PHASE': 3,
+            'BANDPASS': 4
+        }
+
         phase_vs_freq_polarization_plots = utils.OrderedDefaultdict(list)
         for intents, correlation in [(['POLANGLE'], 'RL,LR'), (['POLLEAKAGE'], 'RL,LR'),
                                      (['PHASE'], 'RL,LR'), (['BANDPASS'], 'RL,LR')]:
@@ -143,7 +167,14 @@ class T2_4MDetailsplotsummaryRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
 
             use_pol_plots = False
             for vis, vis_plots in plots.items():
-                phase_vs_freq_polarization_plots[vis].extend(vis_plots)
+                vis_plots_mod = []
+                for p in vis_plots:
+                    p.parameters['intent_idx'] = pol_intent_sort_order[','.join(p.parameters['intent'])]
+                    field = m.get_fields(p.parameters['field'])[0]
+                    p.parameters['fieldid'] = field.id
+                    vis_plots_mod.append(p)
+
+                phase_vs_freq_polarization_plots[vis].extend(vis_plots_mod)
                 if vis_plots and (('POLANGLE' in m.intents) or ('POLLEAKAGE' in m.intents)):
                     use_pol_plots = True
 
@@ -274,7 +305,15 @@ class T2_4MDetailsplotsummaryRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
                                                       applycal.VLAAmpVsFrequencySummaryChart,
                                                       [field.id],
                                                       uv_range, correlation=correlation)
-                amp_vs_freq_summary_plots[vis].extend(plots)
+
+                plots_mod = []
+                for p in plots:
+                    # p.parameters['intent_idx'] = intent_sort_order[','.join(p.parameters['intent'])]
+                    field = m.get_fields(p.parameters['field'])[0]
+                    p.parameters['fieldid'] = field.id
+                    plots_mod.append(p)
+
+                amp_vs_freq_summary_plots[vis].extend(plots_mod)
 
             '''
             for field in plotfields:

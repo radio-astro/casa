@@ -187,11 +187,11 @@ def space_comma(s):
 % if amp_vs_freq_plots or phase_vs_freq_plots or  amp_vs_time_plots or amp_vs_uv_plots or phase_vs_uv_plots or phase_vs_time_plots:
 
 <%self:plot_group plot_dict="${amp_vs_freq_plots}"
-				  url_fn="${lambda x: 'amp_vs_freq_%s.html' % sanitise(x)}"
-				  data_field="${True}"
-				  data_spw="${True}"
+              url_fn="${lambda x: 'amp_vs_freq_%s.html' % sanitise(x)}"
+              data_field="${True}"
+              data_spw="${True}"
                   break_rows_by=""
-                  sort_row_by="intent,field,baseband,spw">
+                  sort_row_by="intent_idx,field,baseband,spw">
 
 	<%def name="title()">
 		Calibrated amplitude vs frequency
@@ -231,7 +231,7 @@ def space_comma(s):
 				  data_field="${True}"
 				  data_spw="${True}"
                   break_rows_by=""
-                  sort_row_by="intent,field,baseband,spw">
+                  sort_row_by="intent_idx,field,baseband,spw">
 
 	<%def name="title()">
 		Calibrated phase vs frequency
@@ -408,7 +408,7 @@ def space_comma(s):
 	</%def>
 
 	<%def name="caption_text(plot, source_id)">
-		Source #${source_id}
+		Source #${plot.parameters['fieldid']}
 		(${utils.commafy(utils.safe_split(plot.parameters['field']), quotes=False)})
 	</%def>
 
@@ -460,7 +460,7 @@ def space_comma(s):
 	</%def>
 
 	<%def name="caption_text(plot, source_id)">
-		Source #${source_id}
+		Source #${plot.parameters['fieldid']}
 		(${utils.commafy(utils.safe_split(plot.parameters['field']), quotes=False)}).
 	</%def>
 
@@ -508,7 +508,7 @@ def space_comma(s):
 	</%def>
 
 	<%def name="caption_text(plot, source_id)">
-		Source #${source_id}
+		Source #${plot.parameters['fieldid']}
 		(${utils.commafy(utils.safe_split(plot.parameters['field']), quotes=False)}).
 	</%def>
 
@@ -524,7 +524,7 @@ def space_comma(s):
 				  data_field="${True}"
 				  data_spw="${True}"
                   break_rows_by=""
-                  sort_row_by="intent,field,baseband,spw">
+                  sort_row_by="intent_idx,field,baseband,spw">
 
 	<%def name="title()">
 		Calibrated phase vs frequency, intent='POLANGLE, POLLEAKAGE, BANDPASS, PHASE'
