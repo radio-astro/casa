@@ -312,7 +312,7 @@ class RestoreData(basetask.StandardTaskTemplate):
             pipemanifest = self._do_get_manifest ('*pipeline_manifest.xml') 
             self._do_copytoraw(pipemanifest)
         else:
-            pipemanifest = self.get_manifest ('*pipeline_manifest.xml') 
+            pipemanifest = self._do_get_manifest ('*pipeline_manifest.xml') 
 
         # Convert ASDMS assumed to be on disk in rawdata_dir. After this step
         # has been completed the MS and MS.flagversions directories will exist
