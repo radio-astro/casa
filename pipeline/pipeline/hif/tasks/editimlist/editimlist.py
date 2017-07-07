@@ -13,14 +13,14 @@ Example:
     The ``vlass_QLIP_parameters.list`` file might contain something like the
     following::
 
-        phasecenter='J2000 12:16:04.600 +059.24.50.300' 
+        phasecenter='J2000 12:16:04.600 +059.24.50.300'
         imagename='QLIP_image'
-        
+
     An equivalent way to invoke the above example would be::
-    
+
         CASA <2>: hif_editimlist(phasecenter='J2000 12:16:04.600 +059.24.50.300',
                                  imagename='QLIP_image')
-        
+
 Any imaging parameters that are not specified when hif_editimlist() is called,
 either as a task parameter or via a parameter file, will have a default value
 or heuristic applied.
@@ -147,7 +147,7 @@ class Editimlist(basetask.StandardTaskTemplate):
         # we use the ms to change field ids to fieldnames, if needed
         ms = inp.context.observing_run.get_ms(inp.vis[0])
         fieldnames = []
-        if type(inpdict['field']) is not type(None):
+        if not isinstance(inpdict['field'], type(None)):
             for fid in inpdict['field']:
                 if isinstance(fid, int):
                     fieldobj = ms.get_fields(field_id=fid)
@@ -204,7 +204,7 @@ class Editimlist(basetask.StandardTaskTemplate):
         target['intent'] = th.intent() if not inpdict['intent'] else inpdict['intent']
         target['nterms'] = th.nterms() if not inpdict['nterms'] else inpdict['nterms']
         target['stokes'] = th.stokes() if not inpdict['stokes'] else inpdict['stokes']
-        #------------------------------
+        # ------------------------------
         target['nchan'] = inpdict['nchan']
         target['nbin'] = inpdict['nbin']
         target['start'] = inpdict['start']
@@ -215,19 +215,19 @@ class Editimlist(basetask.StandardTaskTemplate):
         if fieldnames:
             target['field'] = fieldnames[0]
         else:
-            if type(target['phasecenter']) is not type(None):
+            if not isinstance(target['phasecenter'], type(None)):
                 # TODO: remove the dependency on cell size being in arcsec
 
                 # remove brackets and begin/end string characters
                 # if cell is a list, get the first string element
-                if type(target['cell']) == type([]):
+                if isinstance(target['cell'], type([])):
                     target['cell'] = target['cell'][0]
                 target['cell'] = target['cell'].strip('[').strip(']')
-                target['cell'] = target['cell'].replace("'",'')
-                target['cell'] = target['cell'].replace('"','')
-                cellsize_arcsec = float(target['cell'].strip('arcsec'))
+                target['cell'] = target['cell'].replace("'", '')
+                target['cell'] = target['cell'].replace('"', '')
+                # We always search for fields in 1sq degree with a surrounding buffer
                 mosaic_side_arcsec = 3600  # 1 degree
-                dist = ( mosaic_side_arcsec / 2.) + float(buffer_arcsec)
+                dist = (mosaic_side_arcsec / 2.) + float(buffer_arcsec)
                 dist_arcsec = str(dist) + 'arcsec'
                 found_fields = target['heuristics'].find_fields(distance=dist_arcsec,
                                                                 phase_center=target['phasecenter'],
@@ -253,4 +253,3 @@ class Editimlist(basetask.StandardTaskTemplate):
 
     def analyse(self, result):
         return result
-

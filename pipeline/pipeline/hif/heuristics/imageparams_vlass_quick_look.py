@@ -44,7 +44,7 @@ class ImageParamsHeuristicsVlassQl(ImageParamsHeuristics):
 
     def reffreq(self):
         return '3.0GHz'
-    
+
     def cyclefactor(self):
         return 2.0
 
