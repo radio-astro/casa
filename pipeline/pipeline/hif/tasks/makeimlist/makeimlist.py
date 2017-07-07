@@ -317,7 +317,7 @@ class MakeImList(basetask.StandardTaskTemplate):
             spw = spw, \
             observing_run = inputs.context.observing_run, \
             imagename_prefix = inputs.context.project_structure.ousstatus_entity_id, \
-            science_goals = inputs.context.project_performance_parameters, \
+            proj_params = inputs.context.project_performance_parameters, \
             contfile = inputs.contfile, \
             linesfile = inputs.linesfile, \
             imaging_mode = 'ALMA')

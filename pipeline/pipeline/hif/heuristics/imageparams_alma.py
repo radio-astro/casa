@@ -21,8 +21,8 @@ LOG = infrastructure.get_logger(__name__)
 
 class ImageParamsHeuristicsALMA(ImageParamsHeuristics):
 
-    def __init__(self, vislist, spw, observing_run, imagename_prefix='', science_goals=None, contfile=None, linesfile=None):
-        ImageParamsHeuristics.__init__(self, vislist, spw, observing_run, imagename_prefix, science_goals, contfile, linesfile)
+    def __init__(self, vislist, spw, observing_run, imagename_prefix='', proj_params=None, contfile=None, linesfile=None):
+        ImageParamsHeuristics.__init__(self, vislist, spw, observing_run, imagename_prefix, proj_params, contfile, linesfile)
         self.imaging_mode = 'ALMA'
 
     def robust(self, beam):
@@ -39,10 +39,10 @@ class ImageParamsHeuristicsALMA(ImageParamsHeuristics):
 
         # Check if there is a non-zero min/max angular resolution
         cqa = casatools.quanta
-        minAcceptableAngResolution = cqa.getvalue(cqa.convert(self.science_goals.min_angular_resolution, 'arcsec'))
-        maxAcceptableAngResolution = cqa.getvalue(cqa.convert(self.science_goals.max_angular_resolution, 'arcsec'))
+        minAcceptableAngResolution = cqa.getvalue(cqa.convert(self.proj_params.min_angular_resolution, 'arcsec'))
+        maxAcceptableAngResolution = cqa.getvalue(cqa.convert(self.proj_params.max_angular_resolution, 'arcsec'))
         if (minAcceptableAngResolution == 0.0) or (maxAcceptableAngResolution == 0.0):
-            desired_angular_resolution = cqa.getvalue(cqa.convert(self.science_goals.desired_angular_resolution, 'arcsec'))
+            desired_angular_resolution = cqa.getvalue(cqa.convert(self.proj_params.desired_angular_resolution, 'arcsec'))
             if (desired_angular_resolution != 0.0):
                 minAcceptableAngResolution = 0.8 * desired_angular_resolution
                 maxAcceptableAngResolution = 1.2 * desired_angular_resolution

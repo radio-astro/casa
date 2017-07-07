@@ -7,12 +7,12 @@ class ImageParamsHeuristicsFactory(object):
     '''Imaging heuristics factory class.'''
 
     @staticmethod
-    def getHeuristics(vislist, spw, observing_run, imagename_prefix='', science_goals=None, contfile=None, linesfile=None, imaging_mode='ALMA'):
+    def getHeuristics(vislist, spw, observing_run, imagename_prefix='', proj_params=None, contfile=None, linesfile=None, imaging_mode='ALMA'):
         if imaging_mode == 'ALMA':
-            return ImageParamsHeuristicsALMA(vislist, spw, observing_run, imagename_prefix, science_goals, contfile, linesfile)
+            return ImageParamsHeuristicsALMA(vislist, spw, observing_run, imagename_prefix, proj_params, contfile, linesfile)
         elif imaging_mode == 'VLASS-QL':  # quick look
-            return ImageParamsHeuristicsVlassQl(vislist, spw, observing_run, imagename_prefix, science_goals, contfile, linesfile)
+            return ImageParamsHeuristicsVlassQl(vislist, spw, observing_run, imagename_prefix, proj_params, contfile, linesfile)
         elif imaging_mode == 'VLASS-SE':  # single epoch
-            return ImageParamsHeuristicsVlassSe(vislist, spw, observing_run, imagename_prefix, science_goals, contfile, linesfile)
+            return ImageParamsHeuristicsVlassSe(vislist, spw, observing_run, imagename_prefix, proj_params, contfile, linesfile)
         else:
             raise Exception('Unknown imaging mode: %s' % (imaging_mode))

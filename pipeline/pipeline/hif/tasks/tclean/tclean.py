@@ -59,7 +59,7 @@ class TcleanInputs(cleanbase.CleanBaseInputs):
                 spw = spw, \
                 observing_run = self.context.observing_run, \
                 imagename_prefix = self.context.project_structure.ousstatus_entity_id, \
-                science_goals = self.context.project_performance_parameters, \
+                proj_params = self.context.project_performance_parameters, \
                 contfile = self.context.contfile, \
                 linesfile = self.context.linesfile, \
                 imaging_mode = 'ALMA')

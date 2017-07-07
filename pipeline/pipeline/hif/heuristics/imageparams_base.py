@@ -31,12 +31,12 @@ class ImageParamsHeuristics(object):
        call. There are subclasses for different imaging modes such as ALMA
        or VLASS.'''
 
-    def __init__(self, vislist, spw, observing_run, imagename_prefix='', science_goals=None, contfile=None, linesfile=None):
+    def __init__(self, vislist, spw, observing_run, imagename_prefix='', proj_params=None, contfile=None, linesfile=None):
         self.imaging_mode = 'BASE'
 
         self.observing_run = observing_run
         self.imagename_prefix = imagename_prefix
-        self.science_goals = science_goals
+        self.proj_params = proj_params
 
         if type(vislist) is types.ListType:
             self.vislist = vislist
@@ -608,6 +608,52 @@ class ImageParamsHeuristics(object):
             result.append(field_string)
 
         return result
+
+    def representative_target(self):
+
+        cqa = casatools.quanta
+
+        repr_ms = self.observing_run.get_ms(self.vislist[0])
+        repr_target = repr_ms.representative_target
+
+        reprBW_mode = 'cube'
+        if repr_target != (None, None, None):
+            is_real_repr_target = True
+            # Get representative source and spw
+            repr_source, repr_spw = repr_ms.get_representative_source_spw()
+            # Check if representative bandwidth is larger than spw bandwidth. If so, switch to fullcont.
+            repr_spw_obj = repr_ms.get_spectral_window(repr_spw)
+            repr_spw_bw = cqa.quantity(float(repr_spw_obj.bandwidth.convert_to(measures.FrequencyUnits.HERTZ).value), 'Hz')
+            if cqa.gt(repr_target[2], repr_spw_bw):
+                repr_spw = ','.join([str(s.id) for s in repr_ms.get_spectral_windows()])
+                reprBW_mode = 'cont'
+        else:
+            is_real_repr_target = False
+            # Pick arbitrary source for pre-Cycle 5 data
+            repr_source = [s.name for s in repr_ms.sources if 'TARGET' in s.intents][0]
+            repr_spw_obj = repr_ms.get_spectral_windows()[0]
+            repr_spw = repr_spw_obj.id
+            repr_chan_obj = repr_spw_obj.channels[int(repr_spw_obj.num_channels/2)]
+            repr_freq = cqa.quantity(float(repr_chan_obj.getCentreFrequency().convert_to(measures.FrequencyUnits.HERTZ).value), 'Hz')
+            repr_bw = cqa.quantity(float(repr_chan_obj.getWidth().convert_to(measures.FrequencyUnits.HERTZ).value), 'Hz')
+            repr_target = (repr_source, repr_freq, repr_bw)
+            LOG.info('ImagePreCheck: No representative target found. Choosing %s SPW %d.' % (repr_source, repr_spw))
+
+        # Check if there is a non-zero min/max angular resolution
+        print 'DEBUG_DM:', self.proj_params, self.observing_run.get_measurement_sets()[0].science_goals
+        minAcceptableAngResolution = cqa.convert(self.proj_params.min_angular_resolution, 'arcsec')
+        maxAcceptableAngResolution = cqa.convert(self.proj_params.max_angular_resolution, 'arcsec')
+        if (cqa.getvalue(minAcceptableAngResolution) == 0.0) or (cqa.getvalue(maxAcceptableAngResolution) == 0.0):
+            desired_angular_resolution = cqa.convert(self.proj_params.desired_angular_resolution, 'arcsec')
+            if (cqa.getvalue(desired_angular_resolution) != 0.0):
+                minAcceptableAngResolution = cqa.mul(desired_angular_resolution, 0.8)
+                maxAcceptableAngResolution = cqa.mul(desired_angular_resolution, 1.2)
+            else:
+                science_goals = self.observing_run.get_measurement_sets()[0].science_goals
+                minAcceptableAngResolution = cqa.convert(science_goals['minAcceptableAngResolution'], 'arcsec')
+                maxAcceptableAngResolution = cqa.convert(science_goals['maxAcceptableAngResolution'], 'arcsec')
+
+        return repr_target, repr_source, repr_spw, reprBW_mode, is_real_repr_target, minAcceptableAngResolution, maxAcceptableAngResolution
 
     def imsize(self, fields, cell, primary_beam, sfpblimit=None, max_pixels=None, centreonly=False):
         # get spread of beams

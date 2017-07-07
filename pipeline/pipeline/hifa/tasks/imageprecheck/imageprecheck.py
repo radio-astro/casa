@@ -111,7 +111,7 @@ class ImagePreCheck(basetask.StandardTaskTemplate):
             spw = str(repr_spw), \
             observing_run = inputs.context.observing_run, \
             imagename_prefix = inputs.context.project_structure.ousstatus_entity_id, \
-            science_goals = inputs.context.project_performance_parameters, \
+            proj_params = inputs.context.project_performance_parameters, \
             contfile = inputs.context.contfile, \
             linesfile = inputs.context.linesfile, \
             imaging_mode = 'ALMA')
