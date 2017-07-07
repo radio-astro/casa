@@ -1274,7 +1274,7 @@ class ImageParamsHeuristics(object):
         return None
 
 
-    def uvtaper(self, beam_natural=None, minAcceptableAngResolution=None, maxAcceptableAngResolution=None):
+    def uvtaper(self, beam_natural=None):
         return None
 
 

@@ -48,7 +48,7 @@ class ImageParamsHeuristicsVlassSe(ImageParamsHeuristics):
     def scales(self):
         return [0]
 
-    def uvtaper(self, beam_natural=None, minAcceptableAngResolution=None, maxAcceptableAngResolution=None):
+    def uvtaper(self, beam_natural=None):
         return []
 
     def uvrange(self):
