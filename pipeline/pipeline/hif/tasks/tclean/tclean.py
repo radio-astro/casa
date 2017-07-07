@@ -123,14 +123,14 @@ class TcleanInputs(cleanbase.CleanBaseInputs):
             return 0.5
             if (self.spw.find(',') == -1):
                 # TODO: Use real synthesized beam size
-                hm_robust, minAcceptableAngResolution, maxAcceptableAngResolution = self.image_heuristics.robust({'major': '1.0arcsec', 'minor': '1.0arcsec', 'positionangle': '0.0deg'})
+                hm_robust = self.image_heuristics.robust({'major': '1.0arcsec', 'minor': '1.0arcsec', 'positionangle': '0.0deg'})
                 return hm_robust
             else:
                 robust = 0.0
                 spws = self.spw.split(',')
                 for spw in spws:
                     # TODO: Use real synthesized beam size
-                    hm_robust, minAcceptableAngResolution, maxAcceptableAngResolution = self.image_heuristics.robust({'major': '1.0arcsec', 'minor': '1.0arcsec', 'positionangle': '0.0deg'})
+                    hm_robust = self.image_heuristics.robust({'major': '1.0arcsec', 'minor': '1.0arcsec', 'positionangle': '0.0deg'})
                     robust += hm_robust
                 robust /= len(spws)
                 return robust
@@ -246,7 +246,7 @@ class Tclean(cleanbase.CleanBase):
                                field_intent_list=[(inputs.field, inputs.intent)], \
                                spwspec=inputs.spw, \
                                robust=inputs.robust, \
-                               uvtapre=inputs.uvtaper)
+                               uvtaper=inputs.uvtaper)
             cell = self.image_heuristics.cell(beam=synthesized_beam)
 
             if inputs.cell == []:

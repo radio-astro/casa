@@ -16,9 +16,9 @@ LOG = infrastructure.get_logger(__name__)
 
 
 class ImagePreCheckResults(basetask.Results):
-    def __init__(self, have_real_repr_target=False, repr_target='', repr_source='', repr_spw=None, minAcceptableAngResolution='0.0arcsec', maxAcceptableAngResolution='0.0arcsec', hm_robust=0.5, hm_uvtaper='', sensitivities=[]):
+    def __init__(self, real_repr_target=False, repr_target='', repr_source='', repr_spw=None, minAcceptableAngResolution='0.0arcsec', maxAcceptableAngResolution='0.0arcsec', hm_robust=0.5, hm_uvtaper='', sensitivities=[]):
         super(ImagePreCheckResults, self).__init__()
-        self.have_real_repr_target = have_real_repr_target
+        self.real_repr_target = real_repr_target
         self.repr_target = repr_target
         self.repr_source = repr_source
         self.repr_spw = repr_spw
@@ -71,31 +71,23 @@ class ImagePreCheck(basetask.StandardTaskTemplate):
         inputs = self.inputs
         cqa = casatools.quanta
 
-        repr_ms = self.inputs.context.observing_run.get_ms(inputs.vis[0])
-        repr_target = repr_ms.representative_target
+        imageprecheck_heuristics = imageprecheck.ImagePreCheckHeuristics(self.inputs)
+        image_heuristics_factory = imageparams_factory.ImageParamsHeuristicsFactory()
+        image_heuristics = image_heuristics_factory.getHeuristics( \
+            vislist = inputs.vis, \
+            spw = '', \
+            observing_run = inputs.context.observing_run, \
+            imagename_prefix = inputs.context.project_structure.ousstatus_entity_id, \
+            proj_params = inputs.context.project_performance_parameters, \
+            contfile = inputs.context.contfile, \
+            linesfile = inputs.context.linesfile, \
+            imaging_mode = 'ALMA')
 
-        reprBW_mode = 'cube'
-        if repr_target != (None, None, None):
-            have_real_repr_target = True
-            # Get representative source and spw
-            repr_source, repr_spw = repr_ms.get_representative_source_spw()
-            # Check if representative bandwidth is larger than spw bandwidth. If so, switch to fullcont.
-            repr_spw_obj = repr_ms.get_spectral_window(repr_spw)
-            repr_spw_bw = cqa.quantity(float(repr_spw_obj.bandwidth.convert_to(measures.FrequencyUnits.HERTZ).value), 'Hz')
-            if cqa.gt(repr_target[2], repr_spw_bw):
-                repr_spw = ','.join([str(s.id) for s in repr_ms.get_spectral_windows()])
-                reprBW_mode = 'cont'
-        else:
-            have_real_repr_target = False
-            # Pick arbitrary source for pre-Cycle 5 data
-            repr_source = [s.name for s in repr_ms.sources if 'TARGET' in s.intents][0]
-            repr_spw_obj = repr_ms.get_spectral_windows()[0]
-            repr_spw = repr_spw_obj.id
-            repr_chan_obj = repr_spw_obj.channels[int(repr_spw_obj.num_channels/2)]
-            repr_freq = cqa.quantity(float(repr_chan_obj.getCentreFrequency().convert_to(measures.FrequencyUnits.HERTZ).value), 'Hz')
-            repr_bw = cqa.quantity(float(repr_chan_obj.getWidth().convert_to(measures.FrequencyUnits.HERTZ).value), 'Hz')
-            repr_target = (repr_source, repr_freq, repr_bw)
-            LOG.info('ImagePreCheck: No representative target found. Choosing %s SPW %d.' % (repr_source, repr_spw))
+        repr_target, repr_source, repr_spw, reprBW_mode, real_repr_target, minAcceptableAngResolution, maxAcceptableAngResolution = image_heuristics.representative_target()
+
+        repr_field = list(image_heuristics.field_intent_list('TARGET', repr_source))[0][0]
+
+        repr_ms = self.inputs.context.observing_run.get_ms(inputs.vis[0])
 
         # Get the array
         diameter = min([a.diameter for a in repr_ms.antennas])
@@ -104,20 +96,7 @@ class ImagePreCheck(basetask.StandardTaskTemplate):
         else:
             array = '12m'
 
-        imageprecheck_heuristics = imageprecheck.ImagePreCheckHeuristics(self.inputs)
-        image_heuristics_factory = imageparams_factory.ImageParamsHeuristicsFactory()
-        image_heuristics = image_heuristics_factory.getHeuristics( \
-            vislist = inputs.vis, \
-            spw = str(repr_spw), \
-            observing_run = inputs.context.observing_run, \
-            imagename_prefix = inputs.context.project_structure.ousstatus_entity_id, \
-            proj_params = inputs.context.project_performance_parameters, \
-            contfile = inputs.context.contfile, \
-            linesfile = inputs.context.linesfile, \
-            imaging_mode = 'ALMA')
-
-        repr_field = list(image_heuristics.field_intent_list('TARGET', repr_source))[0][0]
-
+        # Approximate reprBW with nbin
         if reprBW_mode == 'cube':
             physicalBW_of_1chan = float(inputs.context.observing_run.measurement_sets[0].get_spectral_window(repr_spw).channels[0].getWidth().convert_to(measures.FrequencyUnits.HERTZ).value)
             nbin = int(cqa.getvalue(cqa.convert(repr_target[2], 'Hz'))/physicalBW_of_1chan + 0.5)
@@ -125,6 +104,7 @@ class ImagePreCheck(basetask.StandardTaskTemplate):
         else:
             nbin = -1
             cont_sens_bw_modes = ['reprBW', 'fullcont']
+
         primary_beam_size = image_heuristics.largest_primary_beam_size(spwspec=str(repr_spw))
         field_ids = image_heuristics.field('TARGET', repr_field)
         gridder = image_heuristics.gridder('TARGET', repr_field)
@@ -171,13 +151,13 @@ class ImagePreCheck(basetask.StandardTaskTemplate):
                        'uvtaper': [], \
                        'sensitivity': cqa.quantity(sensitivity, 'Jy/beam')}))
 
-        if have_real_repr_target:
+        if real_repr_target:
             # Determine heuristic robust value
-            hm_robust, minAcceptableAngResolution, maxAcceptableAngResolution = image_heuristics.robust(beams[(0.5, '[]')])
+            hm_robust = image_heuristics.robust(beams[(0.5, '[]')])
 
             # Determine heuristic UV taper value
             if hm_robust == 2.0:
-                hm_uvtaper = image_heuristics.uvtaper(beams[(2.0, '[]')], cqa.quantity(minAcceptableAngResolution, 'arcsec'), cqa.quantity(maxAcceptableAngResolution, 'arcsec'))
+                hm_uvtaper = image_heuristics.uvtaper(beams[(2.0, '[]')])
                 if hm_uvtaper != []:
                     # Add sensitivity entries with actual tapering
                     beams[(hm_robust, str(hm_uvtaper))] = image_heuristics.synthesized_beam([(repr_field, 'TARGET')], str(repr_spw), robust=hm_robust, uvtaper=hm_uvtaper)
@@ -217,16 +197,16 @@ class ImagePreCheck(basetask.StandardTaskTemplate):
         else:
             hm_robust = 0.5
             hm_uvtaper = []
-            minAcceptableAngResolution = 0.0
-            maxAcceptableAngResolution = 0.0
+            minAcceptableAngResolution = cqa.quantity(0.0, 'arcsec')
+            maxAcceptableAngResolution = cqa.quantity(0.0, 'arcsec')
 
         return ImagePreCheckResults( \
-                   have_real_repr_target, \
+                   real_repr_target, \
                    repr_target, \
                    repr_source, \
                    repr_spw, \
-                   minAcceptableAngResolution=cqa.quantity(minAcceptableAngResolution, 'arcsec'), \
-                   maxAcceptableAngResolution=cqa.quantity(maxAcceptableAngResolution, 'arcsec'), \
+                   minAcceptableAngResolution=minAcceptableAngResolution, \
+                   maxAcceptableAngResolution=maxAcceptableAngResolution, \
                    hm_robust=hm_robust, \
                    hm_uvtaper=hm_uvtaper, \
                    sensitivities=sensitivities)

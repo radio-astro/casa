@@ -35,7 +35,7 @@ $(document).ready(function() {
 
 <%
 cqa = casatools.quanta
-if not result[0].have_real_repr_target:
+if not result[0].real_repr_target:
     real_repr_target = ' (assumed)'
 else:
     real_repr_target = ''

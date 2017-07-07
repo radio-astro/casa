@@ -13,7 +13,7 @@ class ImagePreCheckQAHandler(pqa.QAResultHandler):
     child_cls = None
 
     def handle(self, context, result):
-        if result.have_real_repr_target:
+        if result.real_repr_target:
             score = 1.0
             longmsg = 'Representative target found. Applied robust and uvtaper heuristics.'
             shortmsg = 'robust and uvtaper computed.'

@@ -374,7 +374,7 @@ class CleanBase(basetask.StandardTaskTemplate):
         if inputs.uvtaper:
             tclean_job_parameters['uvtaper'] = inputs.uvtaper
         else:
-            uvtaper = inputs.heuristics.uvtaper(None, None, None)
+            uvtaper = inputs.heuristics.uvtaper(None)
             if uvtaper:
                 tclean_job_parameters['uvtaper'] = uvtaper
 

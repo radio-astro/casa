@@ -618,7 +618,7 @@ class ImageParamsHeuristics(object):
 
         reprBW_mode = 'cube'
         if repr_target != (None, None, None):
-            is_real_repr_target = True
+            real_repr_target = True
             # Get representative source and spw
             repr_source, repr_spw = repr_ms.get_representative_source_spw()
             # Check if representative bandwidth is larger than spw bandwidth. If so, switch to fullcont.
@@ -628,7 +628,7 @@ class ImageParamsHeuristics(object):
                 repr_spw = ','.join([str(s.id) for s in repr_ms.get_spectral_windows()])
                 reprBW_mode = 'cont'
         else:
-            is_real_repr_target = False
+            real_repr_target = False
             # Pick arbitrary source for pre-Cycle 5 data
             repr_source = [s.name for s in repr_ms.sources if 'TARGET' in s.intents][0]
             repr_spw_obj = repr_ms.get_spectral_windows()[0]
@@ -640,7 +640,6 @@ class ImageParamsHeuristics(object):
             LOG.info('ImagePreCheck: No representative target found. Choosing %s SPW %d.' % (repr_source, repr_spw))
 
         # Check if there is a non-zero min/max angular resolution
-        print 'DEBUG_DM:', self.proj_params, self.observing_run.get_measurement_sets()[0].science_goals
         minAcceptableAngResolution = cqa.convert(self.proj_params.min_angular_resolution, 'arcsec')
         maxAcceptableAngResolution = cqa.convert(self.proj_params.max_angular_resolution, 'arcsec')
         if (cqa.getvalue(minAcceptableAngResolution) == 0.0) or (cqa.getvalue(maxAcceptableAngResolution) == 0.0):
@@ -653,7 +652,7 @@ class ImageParamsHeuristics(object):
                 minAcceptableAngResolution = cqa.convert(science_goals['minAcceptableAngResolution'], 'arcsec')
                 maxAcceptableAngResolution = cqa.convert(science_goals['maxAcceptableAngResolution'], 'arcsec')
 
-        return repr_target, repr_source, repr_spw, reprBW_mode, is_real_repr_target, minAcceptableAngResolution, maxAcceptableAngResolution
+        return repr_target, repr_source, repr_spw, reprBW_mode, real_repr_target, minAcceptableAngResolution, maxAcceptableAngResolution
 
     def imsize(self, fields, cell, primary_beam, sfpblimit=None, max_pixels=None, centreonly=False):
         # get spread of beams
@@ -830,7 +829,7 @@ class ImageParamsHeuristics(object):
 
         '''Default robust and min/max acceptable resolution values.'''
 
-        return 0.5, 0.0, 0.0
+        return 0.5
 
     def calc_topo_ranges(self, inputs):
 

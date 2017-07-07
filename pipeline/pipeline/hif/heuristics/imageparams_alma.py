@@ -30,49 +30,40 @@ class ImageParamsHeuristicsALMA(ImageParamsHeuristics):
         '''Adjustment of robust parameter based on desired resolutions.
            beam is the synthesized beam.'''
 
-        # Only apply the robust heuristic if a representative source is defined
-        repr_ms = self.observing_run.get_ms(self.vislist[0])
-        repr_target = repr_ms.representative_target
-        if repr_target == (None, None, None):
-            LOG.info('ALMA robust heuristics: No representative target found. Using robust=0.5')
-            return 0.5, 0.0, 0.0
-
-        # Check if there is a non-zero min/max angular resolution
         cqa = casatools.quanta
-        minAcceptableAngResolution = cqa.getvalue(cqa.convert(self.proj_params.min_angular_resolution, 'arcsec'))
-        maxAcceptableAngResolution = cqa.getvalue(cqa.convert(self.proj_params.max_angular_resolution, 'arcsec'))
-        if (minAcceptableAngResolution == 0.0) or (maxAcceptableAngResolution == 0.0):
-            desired_angular_resolution = cqa.getvalue(cqa.convert(self.proj_params.desired_angular_resolution, 'arcsec'))
-            if (desired_angular_resolution != 0.0):
-                minAcceptableAngResolution = 0.8 * desired_angular_resolution
-                maxAcceptableAngResolution = 1.2 * desired_angular_resolution
-            else:
-                science_goals = self.observing_run.get_measurement_sets()[0].science_goals
-                minAcceptableAngResolution = cqa.getvalue(cqa.convert(science_goals['minAcceptableAngResolution'], 'arcsec'))
-                maxAcceptableAngResolution = cqa.getvalue(cqa.convert(science_goals['maxAcceptableAngResolution'], 'arcsec'))
-                if (minAcceptableAngResolution == 0.0) or (maxAcceptableAngResolution == 0.0):
-                    LOG.info('No value for desired angular resolution. Setting "robust" parameter to 0.5.')
-                    return 0.5, 0.0, 0.0
+
+        repr_target, repr_source, repr_spw, reprBW_mode, real_repr_target, minAcceptableAngResolution, maxAcceptableAngResolution = self.representative_target()
+
+        # Only apply the robust heuristic if a representative source is defined
+        if not real_repr_target:
+            LOG.info('ALMA robust heuristics: No representative target found. Using robust=0.5')
+            return 0.5
 
         native_resolution = cqa.getvalue(cqa.convert(beam['minor'], 'arcsec'))
 
-        if (native_resolution > maxAcceptableAngResolution):
-            robust = -0.5, minAcceptableAngResolution, maxAcceptableAngResolution
-        elif (native_resolution < minAcceptableAngResolution):
-            robust = 2.0, minAcceptableAngResolution, maxAcceptableAngResolution
+        if native_resolution > cqa.getvalue(cqa.convert(maxAcceptableAngResolution, 'arcsec')):
+            robust = -0.5
+        elif native_resolution < cqa.getvalue(cqa.convert(minAcceptableAngResolution, 'arcsec')):
+            robust = 2.0
         else:
-            robust = 0.5, minAcceptableAngResolution, maxAcceptableAngResolution
+            robust = 0.5
 
         return robust
 
-    def uvtaper(self, beam_natural, minAcceptableAngResolution, maxAcceptableAngResolution):
+    def uvtaper(self, beam_natural):
 
         '''Adjustment of uvtaper parameter based on desired resolution.'''
 
-        if (beam_natural is None) or (minAcceptableAngResolution is None) or (maxAcceptableAngResolution is None):
+        if (beam_natural is None):
             return []
 
         cqa = casatools.quanta
+
+        repr_target, repr_source, repr_spw, reprBW_mode, real_repr_target, minAcceptableAngResolution, maxAcceptableAngResolution = self.representative_target()
+
+        if not real_repr_target:
+            LOG.info('ALMA uvtaper heuristics: No representative target found. Using uvtaper=[]')
+            return []
 
         beam_natural_v = cqa.getvalue(cqa.convert(beam_natural['minor'], 'arcsec'))
         minAR_v = cqa.getvalue(cqa.convert(minAcceptableAngResolution, 'arcsec'))
