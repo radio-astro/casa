@@ -735,8 +735,8 @@ class SDImaging(basetask.StandardTaskTemplate):
             antid = antid_list[i]
             spwid = spwid_list[i]
             spwobj = msobj.get_spectral_window(spwid)
-            exclude_range = msobj.deviation_mask[(fieldid, antid, spwid)]
-            LOG.debug("#####%s : DEVIATION MASK = %s" % (msobj.basename, str(msobj.deviation_mask[(fieldid, antid, spwid)])))
+            exclude_range = msobj.deviation_mask[(fieldid, antid, spwid)] if hasattr(msobj, 'deviation_mask') else []
+            LOG.debug("#####%s : DEVIATION MASK = %s" % (msobj.basename, str(exclude_range)))
             if len(exclude_range)==1 and exclude_range[0] == [0, spwobj.num_channels-1]:
                 # deviation mask is full channel range when all data are flagged
                 LOG.warn("Ignoring DEVIATION MASK of %s (SPW %d, FIELD %d, ANT %d). Possibly all data flagged" % (msobj.basename, spwid, antid, fieldid))
