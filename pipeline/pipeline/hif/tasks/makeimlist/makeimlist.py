@@ -511,11 +511,12 @@ class MakeImList(basetask.StandardTaskTemplate):
                     spwsel_spwid = self.heuristics.cont_ranges_spwsel()[utils.dequote(field_intent[0])][spwid]
                     if (field_intent[1] == 'TARGET'):
                         if (spwsel_spwid == 'NONE'):
-                            LOG.warn('No continuum frequency range information detected for %s, spw %s.' % (field_intent[0], spwid))
+                            LOG.warn('No continuum frequency range information detected for %s, spw %s. Will not image spw %s.' % (field_intent[0], spwid, spwspec))
+                            spwspec_ok = False
                         #elif (spwsel_spwid == ''):
                         #    LOG.warn('Empty continuum frequency range for %s, spw %s. Run hif_findcont ?' % (field_intent[0], spwid))
 
-                    if (spwsel_spwid in ('', 'NONE')):
+                    if spwsel_spwid in ('ALL', '', 'NONE'):
                         spwsel_spwid_freqs = ''
                         spwsel_spwid_refer = 'LSRK'
                     else:
@@ -529,9 +530,6 @@ class MakeImList(basetask.StandardTaskTemplate):
                     spwsel['spw%s' % (spwid)] = spwsel_spwid
 
                 new_spwspec = ','.join(new_spwspec)
-                if ((new_spwspec == '') and (field_intent[1] == 'TARGET')):
-                    LOG.warn('No continuum selection for target %s, spw %s. Will not image this selection.' % (field_intent[1], spwspec))
-                    spwspec_ok = False
 
                 if inputs.nbins != '' and inputs.specmode != 'cont':
                     nbin_items = inputs.nbins.split(',')

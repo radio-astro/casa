@@ -42,7 +42,8 @@ class ContFileHandler(object):
                 if ((item.find('SpectralWindow:') == -1) and \
                     (item.find('SPW') == -1) and \
                     (item.find('~') == -1) and \
-                    (item != 'NONE')):
+                    (item != 'NONE') and \
+                    (item != 'ALL')):
                     if (item.find('Field:') == 0):
                         field_name = item.split('Field:')[1].strip()
                     else:
@@ -58,6 +59,8 @@ class ContFileHandler(object):
                     cont_ranges['version'] = 2
                     spw_id = item.split('SpectralWindow:')[1].strip()
                     cont_ranges['fields'][field_name][spw_id] = []
+                elif (item == 'ALL'):
+                    cont_ranges['fields'][field_name][spw_id].append('ALL')
                 elif ((item == 'NONE') and not skip_none):
                     cont_ranges['fields'][field_name][spw_id].append('NONE')
                 else:
@@ -99,10 +102,14 @@ class ContFileHandler(object):
                     fd.write('SpectralWindow: %s\n' % (spw_id))
                 if (cont_ranges['fields'][field_name][spw_id] in ([], ['NONE'])):
                     fd.write('NONE\n')
+                elif (cont_ranges['fields'][field_name][spw_id] == ['ALL']):
+                    fd.write('ALL\n')
                 else:
                     for freq_range in cont_ranges['fields'][field_name][spw_id]:
                         if (freq_range['range'] == 'NONE'):
                             fd.write('NONE\n')
+                        elif (freq_range['range'] == 'ALL'):
+                            fd.write('ALL\n')
                         else:
                             if (cont_ranges['version'] == 1):
                                 fd.write('%s~%sGHz\n' % (freq_range['range'][0], freq_range['range'][1]))
@@ -121,7 +128,7 @@ class ContFileHandler(object):
 
         if (cont_ranges['fields'].has_key(field_name)):
             if (cont_ranges['fields'][field_name].has_key(spw_id)):
-                if (cont_ranges['fields'][field_name][spw_id] not in ([], ['NONE'])):
+                if (cont_ranges['fields'][field_name][spw_id] not in (['ALL'], [], ['NONE'])):
                     merged_cont_ranges = utils.merge_ranges([cont_range['range'] for cont_range in cont_ranges['fields'][field_name][spw_id]])
                     cont_ranges_spwsel = ';'.join(['%s~%sGHz' % (spw_sel_interval[0], spw_sel_interval[1]) for spw_sel_interval in merged_cont_ranges])
                     refers = np.array([spw_sel_interval['refer'] for spw_sel_interval in cont_ranges['fields'][field_name][spw_id]])
@@ -132,6 +139,8 @@ class ContFileHandler(object):
                     else:
                         refer = 'UNDEFINED'
                     cont_ranges_spwsel = '%s %s' % (cont_ranges_spwsel, refer)
+                elif cont_ranges['fields'][field_name][spw_id] == ['ALL']:
+                    cont_ranges_spwsel = 'ALL'
                 else:
                     cont_ranges_spwsel = 'NONE'
             else:

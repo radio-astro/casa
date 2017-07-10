@@ -882,7 +882,7 @@ class ImageParamsHeuristics(object):
             total_topo_freq_ranges.append((min_frequency, max_frequency))
 
             if (inputs.spwsel_lsrk.has_key('spw%s' % (spwid))):
-                if (inputs.spwsel_lsrk['spw%s' % (spwid)] not in ['', 'NONE']):
+                if (inputs.spwsel_lsrk['spw%s' % (spwid)] not in ['ALL', '', 'NONE']):
                     freq_selection, refer = inputs.spwsel_lsrk['spw%s' % (spwid)].split()
                     if (refer == 'LSRK'):
                         # Convert to TOPO
@@ -920,7 +920,7 @@ class ImageParamsHeuristics(object):
                         spw_topo_chan_param_dict[os.path.basename(msname)][spwid] = ''
                     topo_freq_ranges.append((min_frequency, max_frequency))
                     aggregate_spw_lsrk_bw = '%sGHz' % (max_frequency - min_frequency)
-                    if (inputs.intent == 'TARGET') and (inputs.specmode in ('mfs', 'cont')):
+                    if (inputs.spwsel_lsrk['spw%s' % (spwid)] != 'ALL') and (inputs.intent == 'TARGET') and (inputs.specmode in ('mfs', 'cont')):
                         LOG.warning('No continuum frequency selection for Target Field %s SPW %s' % (inputs.field, spwid))
             else:
                 spw_topo_freq_param_lists.append([spwid] * len(inputs.vis))
