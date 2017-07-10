@@ -93,9 +93,21 @@ except:
                         % for pol in pols:
                             %if info_dict.get((field,str(spw),pol,'frequency')) is not None:
                             <tr>
-                                <td rowspan="12">${field}</td>
-                                <td rowspan="12">${spw}</td>
-                                <td rowspan="12">${pol}</td>
+                                %if info_dict.get((field,str(spw),pol,'nchan')) is not None:
+                                    %if info_dict[(field,str(spw),pol,'nchan')] == 1:
+                                        <td rowspan="12">${field}</td>
+                                        <td rowspan="12">${spw}</td>
+                                        <td rowspan="12">${pol}</td>
+                                    %else:
+                                        <td rowspan="11">${field}</td>
+                                        <td rowspan="11">${spw}</td>
+                                        <td rowspan="11">${pol}</td>
+                                    %endif
+                                %else:
+                                    <td rowspan="11">${field}</td>
+                                    <td rowspan="11">${spw}</td>
+                                    <td rowspan="11">${pol}</td>
+                                %endif
                                 %if info_dict.get((field,str(spw),pol,'nchan')) is not None:
                                     %if info_dict[(field,str(spw),pol,'nchan')] == 1:
 								<th>center frequency of image</th>
@@ -122,7 +134,15 @@ except:
                                     fullsize_relpath = os.path.relpath(plot.abspath, pcontext.report_dir)
                                     thumbnail_relpath = os.path.relpath(plot.thumbnail, pcontext.report_dir)
                                     %>
-                                <td rowspan="10">
+                                    %if info_dict.get((field,str(spw),pol,'nchan')) is not None:
+                                        %if info_dict[(field,str(spw),pol,'nchan')] == 1:
+                                            <td rowspan="11">
+                                        %else:
+                                            <td rowspan="10">
+                                        %endif
+                                    %else:
+                                        <td rowspan="10">
+                                    %endif
 										<a class="fancybox"
                                            href="${fullsize_relpath}"
                                            rel="clean-summary-images"
@@ -241,24 +261,24 @@ except:
                                             <td>-</td>
                                 %endif
                             </tr>
-                            <tr>
                                 %if info_dict.get((field,str(spw),pol,'nchan')) is not None:
                                     %if info_dict[(field,str(spw),pol,'nchan')] == 1:
+                                        <tr>
                                         <th>aggregate bandwidth</th>
                                         %if info_dict.get((field,str(spw),pol,'aggregate bandwidth')) is not None:
                                             <td>${info_dict[(field,str(spw),pol,'aggregate bandwidth')]}</td>
+                                            </tr>
                                         %else:
                                             <td>-</td>
+                                            </tr>
                                         %endif
-                                    %else:
-                                        <th></th>
-                                            <td></td>
                                     %endif
                                 %else:
+                                        <tr>
                                         <th>No bandwidth information</th>
-                                            <td>-</td>
+                                        <td>-</td>
+                                        </tr>
                                 %endif
-                            </tr>
                             <tr>
                                         <th>score</th>
                                 %if info_dict.get((field,str(spw),pol,'score')) is not None:
