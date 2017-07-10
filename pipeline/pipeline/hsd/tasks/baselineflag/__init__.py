@@ -9,6 +9,7 @@ from .baselineflag import SDBLFlag as SDMSBLFlag
 from . import renderer
 from . import qa
 
+pipelineqa.registry.add_handler(qa.SDBLFlagQAHandler())
 pipelineqa.registry.add_handler(qa.SDBLFlagListQAHandler())
 qaadapter.registry.register_to_flagging_topic(baselineflag.SDBLFlagResults)
 
