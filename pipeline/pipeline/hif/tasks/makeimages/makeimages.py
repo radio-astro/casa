@@ -234,7 +234,8 @@ def _get_description_map(intent):
         return {
             'mfs': 'Make target per-spw continuum images',
             'cont': 'Make target aggregate continuum images',
-            'cube': 'Make target cubes'
+            'cube': 'Make target cubes',
+            'pi_cube': 'Make target PI cubes'
 
         }
     else:

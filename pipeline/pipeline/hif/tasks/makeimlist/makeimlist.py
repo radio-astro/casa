@@ -9,6 +9,7 @@ from .resultobjects import MakeImListResult
 from .cleantarget import CleanTarget
 from pipeline.hif.heuristics import imageparams_factory
 import pipeline.infrastructure.casatools as casatools
+import pipeline.domain.measures as measures
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -288,30 +289,78 @@ class MakeImList(basetask.StandardTaskTemplate):
         if type(inputs.vis) is not types.ListType:
             inputs.vis = [inputs.vis]
 
-        # read the spw, if none then set default 
-        spw = inputs.spw
-   
-        if spw == '':
-            ms = inputs.context.observing_run.get_ms(name=inputs.vis[0])
-            spws = ms.get_spectral_windows(science_windows_only=True)
-            spwids = [spw.id for spw in spws]
-            spw = ','.join("'%s'" % (spwid) for spwid in spwids)
-            spw = '[%s]' % spw
-        else:
-            spwids = spw.split(',')
-            spw = ','.join("'%s'" % (spwid) for spwid in spwids)
-            spw = '[%s]' % spw
-
-        spwlist = spw.replace('[','').replace(']','')
-        spwlist = spwlist[1:-1].split("','")
-
-        if inputs.specmode == 'cont':
-            # Make sure the spw list is sorted numerically
-            spwlist = [','.join(map(str, sorted(map(int, spwlist))))]
-
-        # instantiate the heuristics classes needed, some sorting out needed
-        # here to remove duplicated code
         image_heuristics_factory = imageparams_factory.ImageParamsHeuristicsFactory()
+
+        # representative target case
+        if inputs.specmode == 'pi_cube':
+            repr_target_mode = True
+            image_repr_target = False
+
+            # Initial heuristics instance without spw information.
+            self.heuristics = image_heuristics_factory.getHeuristics( \
+                vislist = inputs.vis, \
+                spw = '', \
+                observing_run = inputs.context.observing_run, \
+                imagename_prefix = inputs.context.project_structure.ousstatus_entity_id, \
+                proj_params = inputs.context.project_performance_parameters, \
+                contfile = inputs.contfile, \
+                linesfile = inputs.linesfile, \
+                imaging_mode = 'ALMA')
+
+            repr_target, repr_source, repr_spw, reprBW_mode, real_repr_target, minAcceptableAngResolution, maxAcceptableAngResolution = self.heuristics.representative_target()
+            if not real_repr_target:
+                LOG.info('No representative target found. No PI cube will be made.')
+            elif reprBW_mode != 'cube':
+                LOG.info('Representative target bandwidth specifies aggregate continuum. No PI cube will be made.')
+            else:
+                repr_spw_nbin = 1
+                if inputs.context.size_mitigation_parameters.get('nbins', '') != '':
+                    nbin_items = inputs.nbins.split(',')
+                    for nbin_item in nbin_items:
+                        key, value = nbin_item.split(':')
+                        if key == str(repr_spw):
+                            repr_spw_nbin = int(value)
+
+                # The PI cube shall only be created if the PI bandwidth is greater
+                # than 4 times the nbin averaged bandwidth used in the default cube.
+                physicalBW_of_1chan_Hz = float(inputs.context.observing_run.get_ms(inputs.vis[0]).get_spectral_window(repr_spw).channels[0].getWidth().convert_to(measures.FrequencyUnits.HERTZ).value)
+                repr_spw_nbin_bw_Hz = repr_spw_nbin * physicalBW_of_1chan_Hz
+                reprBW_Hz = qaTool.getvalue(qaTool.convert(repr_target[2], 'Hz'))
+
+                if reprBW_Hz > 4.0 * repr_spw_nbin_bw_Hz:
+                    repr_spw_nbin = int(reprBW_Hz / physicalBW_of_1chan_Hz + 0.5)
+                    inputs.nbins = '%d:%d' % (repr_spw, repr_spw_nbin)
+                    LOG.info('Making PI cube at %.3g MHz channel width.' % (physicalBW_of_1chan_Hz * repr_spw_nbin / 1e6))
+                    image_repr_target = True
+                    inputs.field = repr_source
+                    inputs.spw = str(repr_spw)
+                else:
+                    LOG.info('Representative target bandwidth is less or equal than 4 times the nbin averaged default cube channel width. No PI cube will be made.')
+        else:
+            repr_target_mode = False
+            image_repr_target = False
+
+        if (not repr_target_mode) or (repr_target_mode and image_repr_target):
+            # read the spw, if none then set default 
+            spw = inputs.spw
+   
+            if spw == '':
+                ms = inputs.context.observing_run.get_ms(name=inputs.vis[0])
+                spws = ms.get_spectral_windows(science_windows_only=True)
+                spwids = [spw.id for spw in spws]
+                spw = ','.join("'%s'" % (spwid) for spwid in spwids)
+                spw = '[%s]' % spw
+            else:
+                spwids = spw.split(',')
+                spw = ','.join("'%s'" % (spwid) for spwid in spwids)
+                spw = '[%s]' % spw
+
+            spwlist = spw.replace('[','').replace(']','')
+            spwlist = spwlist[1:-1].split("','")
+        else:
+            spw = '[]'
+            spwlist = []
+
         self.heuristics = image_heuristics_factory.getHeuristics( \
             vislist = inputs.vis, \
             spw = spw, \
@@ -322,9 +371,16 @@ class MakeImList(basetask.StandardTaskTemplate):
             linesfile = inputs.linesfile, \
             imaging_mode = 'ALMA')
 
+        if inputs.specmode == 'cont':
+            # Make sure the spw list is sorted numerically
+            spwlist = [','.join(map(str, sorted(map(int, spwlist))))]
+
         # get list of field_ids/intents to be cleaned
-        field_intent_list = self.heuristics.field_intent_list(
-          intent=inputs.intent, field=inputs.field)
+        if (not repr_target_mode) or (repr_target_mode and image_repr_target):
+            field_intent_list = self.heuristics.field_intent_list(
+              intent=inputs.intent, field=inputs.field)
+        else:
+            field_intent_list = []
 
         # Parse hm_cell to get optional pixperbeam setting
         cell = inputs.hm_cell
@@ -508,7 +564,7 @@ class MakeImList(basetask.StandardTaskTemplate):
                 new_spwspec = []
                 spwsel = {}
                 for spwid in spwspec.split(','):
-                    spwsel_spwid = self.heuristics.cont_ranges_spwsel()[utils.dequote(field_intent[0])][spwid]
+                    spwsel_spwid = self.heuristics.cont_ranges_spwsel().get(utils.dequote(field_intent[0]), {}).get(spwid, 'NONE')
                     if (field_intent[1] == 'TARGET'):
                         if (spwsel_spwid == 'NONE'):
                             LOG.warn('No continuum frequency range information detected for %s, spw %s. Will not image spw %s.' % (field_intent[0], spwid, spwspec))
@@ -592,4 +648,5 @@ _DESCRIPTIONS = {
     ('TARGET', 'mfs'): 'Set-up image parameters for target per-spw continuum imaging',
     ('TARGET', 'cont'): 'Set-up image parameters for target aggregate continuum imaging',
     ('TARGET', 'cube'): 'Set-up image parameters for target cube imaging',
+    ('TARGET', 'pi_cube'): 'Set-up image parameters for PI channel width target cube imaging',
 }

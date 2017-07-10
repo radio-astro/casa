@@ -90,6 +90,17 @@ class TcleanInputs(cleanbase.CleanBaseInputs):
             self._imagename = value.replace('STAGENUMBER', str(self.context.stage))
 
     @property
+    def specmode(self):
+        return self._specmode
+
+    @specmode.setter
+    def specmode(self, value):
+        if value == 'pi_cube':
+            self._specmode = 'cube'
+        else:
+            self._specmode = value
+
+    @property
     def maxncleans(self):
         if self._maxncleans is None:
             return 10
