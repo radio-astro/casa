@@ -567,8 +567,5 @@ def _get_pipeline_stage_and_score(result):
     as  <task_name> (<arg1> = <value1>, ...)
     """
     stage_name = result.pipeline_casa_task.split('(')[0]
-    if isinstance(result, collections.Iterable):
-        score = min([r.qa.representative.score for r in utils.flatten(result)])
-    else:
-        score = result.qa.representative.score
+    score = result.qa.representative.score
     return stage_name, score
