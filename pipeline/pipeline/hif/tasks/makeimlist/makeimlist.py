@@ -310,8 +310,10 @@ class MakeImList(basetask.StandardTaskTemplate):
             repr_target, repr_source, repr_spw, reprBW_mode, real_repr_target, minAcceptableAngResolution, maxAcceptableAngResolution = self.heuristics.representative_target()
             if not real_repr_target:
                 LOG.info('No representative target found. No PI cube will be made.')
+                result.set_info({'msg': 'No representative target found. No PI cube will be made.', 'intent': 'TARGET', 'specmode': 'pi_cube'})
             elif reprBW_mode != 'cube':
                 LOG.info('Representative target bandwidth specifies aggregate continuum. No PI cube will be made.')
+                result.set_info({'msg': 'Representative target bandwidth specifies aggregate continuum. No PI cube will be made.', 'intent': 'TARGET', 'specmode': 'pi_cube'})
             else:
                 repr_spw_nbin = 1
                 if inputs.context.size_mitigation_parameters.get('nbins', '') != '':
@@ -336,6 +338,7 @@ class MakeImList(basetask.StandardTaskTemplate):
                     inputs.spw = str(repr_spw)
                 else:
                     LOG.info('Representative target bandwidth is less or equal than 4 times the nbin averaged default cube channel width. No PI cube will be made.')
+                    result.set_info({'msg': 'Representative target bandwidth is less or equal than 4 times the nbin averaged default cube channel width. No PI cube will be made.', 'intent': 'TARGET', 'specmode': 'pi_cube'})
         else:
             repr_target_mode = False
             image_repr_target = False

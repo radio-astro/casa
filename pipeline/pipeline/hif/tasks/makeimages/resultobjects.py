@@ -18,6 +18,9 @@ class MakeImagesResult(basetask.Results):
         self.targets.append(target)
         self.results.append(result)
 
+    def set_info(self, info):
+        self.clean_list_info = info
+
     def merge_with_context(self, context):
         # add the cleaned targets to the context
         for result in self.results:
@@ -49,8 +52,9 @@ class MakeImagesResult(basetask.Results):
 #            print item['sourcename'], item['spwlist'], item['sourcetype']
 #            print item['imageplot']
 
-        # empty the pending list
+        # empty the pending list and message
         context.clean_list_pending = []
+        context.clean_list_info = {}
         
     def __repr__(self):
         repr = 'MakeImages:'

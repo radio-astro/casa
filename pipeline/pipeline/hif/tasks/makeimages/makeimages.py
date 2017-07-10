@@ -71,6 +71,9 @@ class MakeImages(basetask.StandardTaskTemplate):
 
         result = MakeImagesResult()
 
+        # Carry any message from hif_makeimlist (e.g. for missing PI cube target)
+        result.set_info(inputs.context.clean_list_info)
+
         with CleanTaskFactory(inputs, self._executor) as factory:
             task_queue = [(target, factory.get_task(target))
                           for target in inputs.target_list]
@@ -84,10 +87,15 @@ class MakeImages(basetask.StandardTaskTemplate):
                     result.add_result(worker_result, target, outcome='success')
 
         # set of descriptions
-        description = {
-            _get_description_map(target['intent']).get(target['specmode'], 'Calculate clean products')  # map specmode to description..
-            for target in inputs.target_list                       # .. for every clean target..
-        }
+        if inputs.context.clean_list_info.get('msg', '') != '':
+            description = {
+                _get_description_map(inputs.context.clean_list_info.get('intent', '')).get(inputs.context.clean_list_info.get('specmode', ''), 'Calculate clean products')  # map specmode to description..
+            }
+        else:
+            description = {
+                _get_description_map(target['intent']).get(target['specmode'], 'Calculate clean products')  # map specmode to description..
+                for target in inputs.target_list                       # .. for every clean target..
+            }
 
         result.metadata['long description'] = ' / '.join(description)
 

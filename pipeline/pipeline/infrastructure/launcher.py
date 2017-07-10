@@ -134,6 +134,7 @@ class Context(object):
         self.size_mitigation_parameters = {}
         self.imaging_parameters = {}
         self.clean_list_pending = []
+        self.clean_list_info = {}
         self.sensitivities = []
 
         LOG.trace('Creating report directory \'%s\'' % self.report_dir)

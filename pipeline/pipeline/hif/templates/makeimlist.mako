@@ -12,7 +12,11 @@ import pipeline.infrastructure.renderer.htmlrenderer as hr
 <h2>List of Clean Targets</h2>
 
 %if not len(result[0].targets):
-    <p>There are no clean targets.
+    %if result[0].clean_list_info == {}:
+        <p>There are no clean targets.
+    %else:
+        <p>${result[0].clean_list_info.get('msg', '')}
+    %endif
 %else:
     <%
     target = result[0].targets[0]

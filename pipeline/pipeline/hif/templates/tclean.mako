@@ -62,7 +62,11 @@ except:
 <h2>Image Details</h2>
 
 %if not len(result[0].targets):
-    <p>There are no clean results.
+    %if result[0].clean_list_info == {}:
+        <p>There are no clean targets.
+    %else:
+        <p>${result[0].clean_list_info.get('msg', '')}
+    %endif
 %else:
     <table class="table table-striped">
                 <thead>
