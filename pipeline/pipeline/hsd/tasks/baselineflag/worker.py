@@ -312,7 +312,7 @@ class SDBLFlagWorker(basetask.StandardTaskTemplate): #object):
                 # Calculate Standard Deviation (NOT RMS)
                 ### 2011/05/26 shrink the size of data on memory
                 mask_in = self._get_mask_array(masklist, (edgeL, edgeR), FlIn[index], deviation_mask=deviation_mask)
-                mask_out = numpy.zeros(NCHAN)
+                mask_out = numpy.zeros(NCHAN, dtype=numpy.int64)
                 if isvalid:
                     #mask_in = self._get_mask_array(masklist, (edgeL, edgeR), FlIn[index])
                     OldRMS, Nmask = self._calculate_masked_stddev(SpIn[index], mask_in)
@@ -360,7 +360,7 @@ class SDBLFlagWorker(basetask.StandardTaskTemplate): #object):
                             mask0 = self._get_mask_array(masklist, (edgeL, edgeR), FlIn[x], deviation_mask=deviation_mask)
                             RmaskOld += mask0
                             RdataNew0 += SpOut[x]
-                            mask0 = self._get_mask_array(masklist, (edgeL, edgeR), FlOut[x], deviation_mask=deviation_mask) if is_baselined else numpy.zeros(NCHAN)
+                            mask0 = self._get_mask_array(masklist, (edgeL, edgeR), FlOut[x], deviation_mask=deviation_mask) if is_baselined else numpy.zeros(NCHAN, dtype=numpy.int64)
                             RmaskNew += mask0
                     elif START > (valid_nrow - Nmean):
                         NR -= 1
@@ -375,7 +375,7 @@ class SDBLFlagWorker(basetask.StandardTaskTemplate): #object):
                         mask0 = self._get_mask_array(masklist, (edgeL, edgeR), FlIn[box_edge], deviation_mask=deviation_mask)
                         RmaskOld += (mask0 - mask_in)
                         RdataNew0 -= (SpOut[index] - SpOut[box_edge])
-                        mask0 = self._get_mask_array(masklist, (edgeL, edgeR), FlOut[box_edge], deviation_mask=deviation_mask) if is_baselined else numpy.zeros(NCHAN)
+                        mask0 = self._get_mask_array(masklist, (edgeL, edgeR), FlOut[box_edge], deviation_mask=deviation_mask) if is_baselined else numpy.zeros(NCHAN, dtype=numpy.int64)
                         RmaskNew += (mask0 - mask_out)
                     # Mean spectra of row = row-Nmean ~ row-1
                     if START == 1:
@@ -392,7 +392,7 @@ class SDBLFlagWorker(basetask.StandardTaskTemplate): #object):
                         mask0 = self._get_mask_array(masklist, (edgeL, edgeR), FlIn[box_edge], deviation_mask=deviation_mask)
                         LmaskOld += mask0
                         LdataNew0 += SpOut[box_edge]
-                        mask0 = self._get_mask_array(masklist, (edgeL, edgeR), FlOut[box_edge], deviation_mask=deviation_mask) if is_baselined else numpy.zeros(NCHAN)
+                        mask0 = self._get_mask_array(masklist, (edgeL, edgeR), FlOut[box_edge], deviation_mask=deviation_mask) if is_baselined else numpy.zeros(NCHAN, dtype=numpy.int64)
                         LmaskNew += mask0
                     else:
                         box_edge_right = valid_indices[START - 2]
@@ -402,12 +402,12 @@ class SDBLFlagWorker(basetask.StandardTaskTemplate): #object):
                         mask0 = self._get_mask_array(masklist, (edgeL, edgeR), FlIn[box_edge_right], deviation_mask=deviation_mask)
                         LmaskOld += mask0
                         LdataNew0 += (SpOut[box_edge_right] - SpOut[box_edge_left])
-                        mask0 = self._get_mask_array(masklist, (edgeL, edgeR), FlOut[box_edge_right], deviation_mask=deviation_mask) if is_baselined else numpy.zeros(NCHAN)
+                        mask0 = self._get_mask_array(masklist, (edgeL, edgeR), FlOut[box_edge_right], deviation_mask=deviation_mask) if is_baselined else numpy.zeros(NCHAN, dtype=numpy.int64)
                         LmaskNew += mask0
                         masklist = DataTable.getcell('MASKLIST',chunks[1][box_edge_left])
                         mask0 = self._get_mask_array(masklist, (edgeL, edgeR), FlIn[box_edge_left], deviation_mask=deviation_mask)
                         LmaskOld -= mask0
-                        mask0 = self._get_mask_array(masklist, (edgeL, edgeR), FlOut[box_edge_left], deviation_mask=deviation_mask) if is_baselined else numpy.zeros(NCHAN)
+                        mask0 = self._get_mask_array(masklist, (edgeL, edgeR), FlOut[box_edge_left], deviation_mask=deviation_mask) if is_baselined else numpy.zeros(NCHAN, dtype=numpy.int64)
                         LmaskNew -= mask0
 
                     diffOld0 = (LdataOld0 + RdataOld0) / float(NL + NR) - SpIn[index]
