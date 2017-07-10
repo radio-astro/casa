@@ -78,10 +78,16 @@ def hifatargets (vislist, importonly=False, pipelinemode='automatic', interactiv
         hif_makeimages (pipelinemode=pipelinemode)
 
         # Make a list of expected targets to be cleaned in continuum subtracted cube mode
-        hif_makeimlist (width='', pipelinemode=pipelinemode)
+        hif_makeimlist (pipelinemode=pipelinemode)
 
         # Make clean continuum subtracted cube images for the selected targets
         hif_makeimages (subcontms=False, pipelinemode=pipelinemode)
+
+        # Make a list of expected targets to be cleaned in continuum subtracted PI cube mode
+        hif_makeimlist (specmode='pi_cube', pipelinemode=pipelinemode)
+
+        # Make clean continuum subtracted PI cube
+        hif_makeimages (pipelinemode=pipelinemode)
 
     except Exception, e:
         if str(e) == IMPORT_ONLY:
