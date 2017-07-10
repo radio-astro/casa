@@ -79,8 +79,6 @@
     <ProcessingCommand>
         <Command xmlns="">hif_makeimages</Command>
         <ParameterSet>
-            <Parameter>
-            </Parameter>
         </ParameterSet>
     </ProcessingCommand>
 
@@ -97,8 +95,12 @@
     <ProcessingCommand>
         <Command xmlns="">hif_makeimages</Command>
         <ParameterSet>
-            <Parameter>
-            </Parameter>
+        </ParameterSet>
+    </ProcessingCommand>
+
+    <ProcessingCommand>
+        <Command xmlns="">hifa_exportdata</Command>
+        <ParameterSet>
         </ParameterSet>
     </ProcessingCommand>
 
