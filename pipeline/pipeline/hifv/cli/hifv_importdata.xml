@@ -59,6 +59,21 @@
 	<value>co</value>
     </param>
 
+    <param type="bool" name="clear_pointing">
+        <description>Clear the pointing table</description>
+        <value>True</value>
+    </param>
+    
+    <param type="bool" name="modify_weights">
+        <description>Re-initialize the weights</description>
+        <value>False</value>
+    </param>
+
+    <param type="string" name="wtmode" subparam="true">
+        <description>Weight initialization mode</description>
+        <value></value>
+    </param>
+
     <param type="bool" name="dryrun" subparam="true">
 	<description>Run the task (False) or display task command (True)</description>
 	<value>False</value>
@@ -87,6 +102,12 @@
 		<default param="overwrite"><value type="bool">False</value></default>
 	    </equals>
 	</when>
+    <when param="modify_weights">
+	    <equals type="bool" value="False"></equals>
+        <equals type="bool" value="True">
+            <default param="wtmode"><value type="string"></value></default>
+        </equals>
+    </when>
     </constraints>
 
 </input>
@@ -130,6 +151,12 @@ pipelinemode -- The pipeline operating mode. In 'automatic' mode the pipeline
    default: 'automatic'.
 
 ocorr_mode -- Default set to CROSS_ONLY (co)
+    
+clear_pointing -- Clear the pointing table
+    
+modify_weights -- Re-initialize the weights
+    
+wtmode -- optional weight initialization mode when modify_weights=True
 
 ---- pipeline context defined parameter argument which can be set only in
 'interactive mode'

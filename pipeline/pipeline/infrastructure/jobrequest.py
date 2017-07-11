@@ -30,6 +30,7 @@ import importasdm_cli
 import importevla_cli
 import imstat_cli
 import imsubimage_cli
+import initweights_cli
 import listobs_cli
 import mstransform_cli
 import partition_cli
@@ -41,13 +42,13 @@ import plotweather_cli
 import polcal_cli
 import setjy_cli
 import split_cli
-#import split2_cli
+# import split2_cli
 import statwt_cli
 import tclean_pg
 import wvrgcal_cli
 import visstat_cli
 import sdbaseline_cli
-#import sdbaseline_pg
+# import sdbaseline_pg
 import sdcal_cli
 import sdimaging_cli
 
@@ -362,6 +363,9 @@ class CASATaskJobGenerator(object):
     def imsubimage(self, *v, **k):
         return self._get_job(imsubimage_cli.imsubimage_cli, *v, **k)
 
+    def initweights(self, *v, **k):
+        return self._get_job(initweights_cli.initweights_cli, *v, **k)
+
     def listobs(self, *v, **k):
         return self._get_job(listobs_cli.listobs_cli, *v, **k)
 
@@ -395,7 +399,7 @@ class CASATaskJobGenerator(object):
     def split(self, *v, **k):
         return self._get_job(split_cli.split_cli, *v, **k)
 
-    #def split2(self, *v, **k):
+    # def split2(self, *v, **k):
     #    return self._get_job(split2_cli.split2_cli, *v, **k)
 
     def statwt(self, *v, **k):
@@ -417,13 +421,13 @@ class CASATaskJobGenerator(object):
 
     def sdimaging(self, *v, **k):
         return self._get_job(sdimaging_cli.sdimaging_cli, *v, **k)
-    
+
     def sdcal(self, *v, **k):
         return self._get_job(sdcal_cli.sdcal_cli, *v, **k)
-    
+
     def sdbaseline(self, *v, **k):
         return self._get_job(sdbaseline_cli.sdbaseline_cli, *v, **k)
-        #return self._get_job(sdbaseline_pg.sdbaseline_pg, *v, **k)
+        # return self._get_job(sdbaseline_pg.sdbaseline_pg, *v, **k)
 
     def _get_job(self, task, *v, **k):
         job = JobRequest(task, *v, **k)

@@ -190,7 +190,7 @@ class Editimlist(basetask.StandardTaskTemplate):
         target['cyclefactor'] = th.cyclefactor() if not inpdict['cyclefactor'] else inpdict['cyclefactor']
         target['cycleniter'] = th.cycleniter() if not inpdict['cycleniter'] else int(inpdict['cycleniter'])
         target['scales'] = th.scales() if not inpdict['scales'] else inpdict['scales']
-        target['uvtaper'] = th.uvtaper(None, None, None) if not inpdict['uvtaper'] else inpdict['uvtaper']
+        target['uvtaper'] = th.uvtaper(None) if not inpdict['uvtaper'] else inpdict['uvtaper']
         target['uvrange'] = th.uvrange() if not inpdict['uvrange'] else inpdict['uvrange']
         target['deconvolver'] = th.deconvolver(None, None) if not inpdict['deconvolver'] else inpdict['deconvolver']
         target['robust'] = th.robust(None)[0] if not inpdict['robust'] else inpdict['robust']
