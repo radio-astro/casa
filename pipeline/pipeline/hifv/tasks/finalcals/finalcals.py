@@ -221,8 +221,14 @@ class Finalcals(basetask.StandardTaskTemplate):
         finalampgaincal_results = self._do_calibratorgaincal(calMs, basevis + '.finalampgaincal.g', gain_solint2, 5.0,
                                                              'ap', [basevis + '.phaseshortgaincal.g'], refAnt)
 
+        refantmode = 'flex'
+        intents = list(m.intents)
+        if [intent for intent in intents if 'POL' in intent]:
+            refantmode = 'strict'
+
         finalphasegaincal_results = self._do_calibratorgaincal(calMs, basevis + '.finalphasegaincal.g', gain_solint2,
-                                                               3.0, 'p', [basevis + '.finalampgaincal.g'], refAnt)
+                                                               3.0, 'p', [basevis + '.finalampgaincal.g'], refAnt,
+                                                               refantmode=refantmode)
 
         basevis = os.path.basename(self.inputs.vis)
         tablesToAdd = [('finaldelay.k', '', ''), ('finalBPcal.b', 'linear,freqflag', ''),
@@ -867,7 +873,7 @@ class Finalcals(basetask.StandardTaskTemplate):
 
         return True
 
-    def _do_calibratorgaincal(self, calMs, caltable, solint, minsnr, calmode, gaintablelist, refAnt):
+    def _do_calibratorgaincal(self, calMs, caltable, solint, minsnr, calmode, gaintablelist, refAnt, refantmode='flex'):
 
         context = self.inputs.context
 
@@ -898,7 +904,8 @@ class Finalcals(basetask.StandardTaskTemplate):
                      'gainfield': [''],
                      'interp': [''],
                      'spwmap': [],
-                     'parang': self.parang}
+                     'parang': self.parang,
+                     'refantmode' : refantmode}
 
         job = casa_tasks.gaincal(**task_args)
 
