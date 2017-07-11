@@ -424,8 +424,7 @@ class Tclean(cleanbase.CleanBase):
             elif inputs.hm_masking == 'none':
                 sequence_manager = NoMaskThresholdSequence(
                     gridder=inputs.gridder, threshold=threshold,
-                    sensitivity=sensitivity, niter=inputs.niter,
-                    nsigma=inputs.nsigma)
+                    sensitivity=sensitivity, niter=inputs.niter)
 
         elif inputs.hm_masking == 'psfiter':
             sequence_manager = IterativeSequence(
@@ -513,7 +512,8 @@ class Tclean(cleanbase.CleanBase):
 
         # Give the result to the sequence_manager for analysis
         model_sum, residual_cleanmask_rms, residual_non_cleanmask_rms, residual_max, residual_min,\
-            nonpbcor_image_non_cleanmask_rms, pbcor_image_min, pbcor_image_max = sequence_manager.iteration_result(iter=0,
+            nonpbcor_image_non_cleanmask_rms, pbcor_image_min, pbcor_image_max,\
+            residual_robust_rms = sequence_manager.iteration_result(iter=0,
                     multiterm = result.multiterm, psf = result.psf, model = result.model,
                     restored = result.image, residual = result.residual,
                     flux = result.flux, cleanmask=None, threshold = None,
@@ -524,6 +524,7 @@ class Tclean(cleanbase.CleanBase):
         LOG.info('    Residual rms: %s', residual_non_cleanmask_rms)
         LOG.info('    Residual max: %s', residual_max)
         LOG.info('    Residual min: %s', residual_min)
+        LOG.info('    Residual scaled MAD: %s', residual_robust_rms)
 
         # Adjust threshold based on the dirty image statistics
         dirty_dynamic_range = residual_max / sequence_manager.sensitivity
@@ -560,6 +561,10 @@ class Tclean(cleanbase.CleanBase):
                 new_cleanmask = '%s.iter%s.mask' % (rootname, iter)
             else:
                 new_cleanmask = '%s.iter%s.cleanmask' % (rootname, iter)
+
+            rms_threshold = self.image_heuristics.rms_threshold(residual_robust_rms, inputs.nsigma)
+            if rms_threshold:
+                sequence_manager.threshold = rms_threshold
 
             # perform an iteration.
             if (inputs.specmode == 'cube') and (not inputs.cleancontranges):

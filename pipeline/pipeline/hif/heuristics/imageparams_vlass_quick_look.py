@@ -21,6 +21,15 @@ class ImageParamsHeuristicsVlassQl(ImageParamsHeuristics):
         else:
             return 20000
 
+    def rms_threshold(self, rms, nsigma):
+        try:
+            LOG.info('Threshold nsigma multiplier: %s', nsigma)
+            threshold = rms * float(nsigma)
+            LOG.info('Setting new threshold to [robust rms * nsigma]: {th}'.format(th=threshold))
+        except TypeError:
+            threshold = None
+        return threshold
+
     def deconvolver(self, specmode, spwspec):
         return 'mtmfs'
 

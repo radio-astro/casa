@@ -32,5 +32,6 @@ class CleanTarget(dict):
          self['threshold'] = None       # string
          self['reffreq'] = None         # string
          self['heuristics'] = None      # object
+         self['nsigma'] = None          # float
 
          dict.__init__(self, *args, **kwargs)

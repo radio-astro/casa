@@ -3,14 +3,13 @@ from __future__ import absolute_import
 import pipeline.infrastructure as infrastructure
 from .basecleansequence import BaseCleanSequence
 from .resultobjects import BoxResult
-from pipeline.hif.heuristics import cleanbox as cleanbox
 
 LOG = infrastructure.get_logger(__name__)
 
 
 class NoMaskThresholdSequence(BaseCleanSequence):
 
-    def __init__(self, gridder, threshold='0.0mJy', sensitivity=0.0, niter=0, nsigma=None):
+    def __init__(self, gridder, threshold='0.0mJy', sensitivity=0.0, niter=0):
         """Constructor.
         """
         BaseCleanSequence.__init__(self)
@@ -19,53 +18,9 @@ class NoMaskThresholdSequence(BaseCleanSequence):
         self.sensitivity = sensitivity
         self.dr_corrected_sensitivity = sensitivity
         self.niter = niter
-        self.threshold_nsigma = nsigma
         self.iter = None
         self.result = BoxResult()
         self.sidelobe_ratio = -1
-
-    def iteration_result(self, iter, multiterm, psf, model, restored, residual,
-                         flux, cleanmask, threshold=None, pblimit_image=0.2, pblimit_cleanmask=0.3):
-        """This method sets the iteration counter and returns statistics for
-        that iteration.
-        """
-        self.iter = iter
-        self.multiterm = multiterm
-
-        if self.sidelobe_ratio is None:
-            self.sidelobe_ratio = cleanbox.psf_sidelobe_ratio(psf=psf, multiterm=multiterm)
-        self.psf = psf
-        self.flux = flux
-
-        #if cleanmask is not None and os.path.exists(cleanmask):
-        model_sum, residual_cleanmask_rms, residual_non_cleanmask_rms, residual_max, \
-        residual_min, nonpbcor_image_non_cleanmask_rms, pbcor_image_min, pbcor_image_max, \
-        residual_robust_rms = cleanbox.analyse_clean_result(multiterm, model, restored,
-                                                                 residual, flux, cleanmask,
-                                                                 pblimit_image, pblimit_cleanmask)
-
-        peak_over_rms = residual_max/residual_robust_rms
-        LOG.info('Residual peak: %s', residual_max)
-        LOG.info('Residual robust rms: %s', residual_robust_rms)
-        LOG.info('Residual peak/rms: %s', peak_over_rms)
-        LOG.info('Threshold nsigma multiplier: %s', self.threshold_nsigma)
-        # TODO make threshold_nsigma a parameter that we can pass in via hif_editimlist()
-        self.threshold = residual_robust_rms * float(self.threshold_nsigma)
-        LOG.info('Setting new threshold to [robust rms * nsigma]: %s' % self.threshold)
-
-        # Append the statistics.
-        self.iters.append(iter)
-        self.residuals.append(residual)
-        self.cleanmasks.append(cleanmask)
-        self.thresholds.append(threshold)
-        self.model_sums.append(model_sum)
-        self.residual_maxs.append(residual_max)
-        self.residual_mins.append(residual_min)
-        self.residual_non_cleanmask_rms_list.append(residual_non_cleanmask_rms)
-        self.image_non_cleanmask_rms_list.append(nonpbcor_image_non_cleanmask_rms)
-
-        return model_sum, residual_cleanmask_rms, residual_non_cleanmask_rms, residual_max, \
-               residual_min, nonpbcor_image_non_cleanmask_rms, pbcor_image_min, pbcor_image_max
 
     def iteration(self, new_cleanmask='', pblimit_image=0.2, pblimit_cleanmask=0.3, spw=None, frequency_selection=None):
 
