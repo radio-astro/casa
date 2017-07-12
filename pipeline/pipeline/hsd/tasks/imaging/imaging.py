@@ -614,7 +614,10 @@ class SDImaging(basetask.StandardTaskTemplate):
                     if rms_exclude_chan[0][0] > edge[0]:
                         include_channel_range.extend([edge[0], rms_exclude_chan[0][0]-1])
                     for j in range(len(rms_exclude_chan)-1):
-                        include_channel_range.extend([rms_exclude_chan[j][1]+1, rms_exclude_chan[j+1][0]-1])
+                        start_include = rms_exclude_chan[j][1]+1
+                        end_include = rms_exclude_chan[j+1][0]-1
+                        if start_include <= end_include:
+                            include_channel_range.extend([start_include, end_include])
                     if rms_exclude_chan[-1][1] + 1 < num_chan-1-edge[1]:
                         include_channel_range.extend([rms_exclude_chan[-1][1] + 1, num_chan-1-edge[1]])
                 LOG.info("Line free channel ranges of image to calculate RMS = %s" % str(include_channel_range))
