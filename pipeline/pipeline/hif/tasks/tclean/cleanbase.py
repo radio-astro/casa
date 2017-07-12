@@ -494,6 +494,8 @@ def set_miscinfo(name, spw=None, field=None, type=None, iter=None, multiterm=Non
                 info['type'] = type
             if iter is not None:
                 info['iter'] = iter
+            if imagename is not None:
+                info['filename'] = os.path.basename(imagename)
             image.setmiscinfo(info)
 
 
