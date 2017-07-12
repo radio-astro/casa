@@ -29,7 +29,6 @@ def ALMAImageCoordinateUtil(context, datatable, ms_names, ant_list, spw_list, fi
         ref_msobj = context.observing_run.measurement_sets[idx]
     else:
         raise ValueError, "The reference ms, %s, not registered to context" % ms_names[0]
-    ref_ms_name = ref_msobj.name
     ref_fieldid = fieldid_list[0]
     ref_spw = spw_list[0]
     source_name = ref_msobj.fields[ref_fieldid].name
@@ -47,13 +46,15 @@ def ALMAImageCoordinateUtil(context, datatable, ms_names, ant_list, spw_list, fi
     diameter_m = 12.0 
     obscure_alma = 0.75
     ### END OF ALMA part ###
-    with casatools.MSMDReader(ref_ms_name) as msmd:
-        freq_hz = msmd.meanfreq(ref_spw)
-        
-        fnames = [name for name in msmd.fieldnames() if name.find(trimmed_name) > -1 ]
-        if USE_FIELD_DIR:
-            me_center = msmd.phasecenter(msmd.fieldsforname(fnames[0])[0])
-
+    
+    # msmd-less implementation
+    spw = ref_msobj.get_spectral_window(ref_spw)
+    freq_hz = numpy.float64(spw.mean_frequency.value)
+    fields = ref_msobj.get_fields(name=trimmed_name)
+    fnames = [f.name for f in fields]
+    if USE_FIELD_DIR:
+        me_center = fields[0].mdirection
+    
     # cellx and celly
     import sdbeamutil
     theory_beam_arcsec = sdbeamutil.primaryBeamArcsec(freq_hz, diameter_m, obscure_alma, 10.0, fwhmfactor=fwhmfactor)
