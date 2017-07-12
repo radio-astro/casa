@@ -150,7 +150,7 @@ def mjd_seconds_to_datetime(mjd_secs):
     unix_offset = 40587 * 86400
     return unix_seconds_to_datetime(mjd_secs - unix_offset)
 
-def total_time_on_target_on_source(ms):
+def total_time_on_target_on_source(ms, autocorr_only=False):
     '''
     Return the nominal total time on target source for the given MeasurementSet
     excluding OFF-source integrations (REFERENCE). The flag is not taken into account.
@@ -165,20 +165,17 @@ def total_time_on_target_on_source(ms):
     science_spws = ms.get_spectral_windows(science_windows_only=True)
     state_ids = [s.id for s in ms.states if 'TARGET' in s.intents]
     max_time = 0.0
-    ddids = []
-    with casatools.MSMDReader(ms.name) as msmd:
-        ant_ids = msmd.antennaids()
-        baseline_mask = msmd.baselines()
-        for spw in science_spws:
-            ddids.extend(msmd.datadescids(spw=spw.id))
-        science_dds = np.unique(ddids)
+    ant_ids = [a.id for a in ms.antennas]
+    dds = [ms.get_data_description(spw=spw) for spw in science_spws]
+    science_dds = np.unique([dd.id for dd in dds])
     with casatools.TableReader(ms.name) as tb:
         for dd in science_dds:
             for a1 in ant_ids:
                 for a2 in ant_ids:
-                    if not baseline_mask[a1, a2]: continue
+                    if autocorr_only and a1 != a2: continue
                     seltb = tb.query('DATA_DESC_ID == %d AND ANTENNA1 == %d AND ANTENNA2 == %d AND STATE_ID IN %s' % (dd, a1, a2, state_ids))
                     try:
+                        if seltb.nrows() == 0: continue
                         target_exposures = seltb.getcol('EXPOSURE').sum()
                         LOG.debug("Selected %d ON-source rows for DD=%d, Ant1=%d, Ant2=%d: total exposure time = %f sec" % (seltb.nrows(), dd, a1, a2, target_exposures))
                         max_time = max(max_time, target_exposures)
