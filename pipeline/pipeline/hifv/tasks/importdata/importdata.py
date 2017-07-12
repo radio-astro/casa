@@ -17,29 +17,15 @@ LOG = infrastructure.get_logger(__name__)
 
 
 class VLAImportDataInputs(importdata.ImportDataInputs):
-
-    clear_pointing = basetask.property_with_default('clear_pointing', True)
-    modify_weights = basetask.property_with_default('modify_weights', False)
-    wtmode = basetask.property_with_default('wtmode', '')
-
     @basetask.log_equivalent_CASA_call
     def __init__(self, context, vis=None, output_dir=None, asis=None, process_caldevice=None, session=None,
                  overwrite=None, nocopy=None, bdfflags=None, lazy=None, save_flagonline=None, createmms=None,
-                 ocorr_mode=None, clear_pointing=None, modify_weights=None, wtmode=None):
+                 ocorr_mode=None):
         super(VLAImportDataInputs, self).__init__(context=context, vis=vis, output_dir=output_dir, asis=asis,
                                                   process_caldevice=process_caldevice, session=session,
                                                   overwrite=overwrite, nocopy=nocopy, bdfflags=bdfflags, lazy=lazy,
                                                   save_flagonline=save_flagonline, createmms=createmms,
                                                   ocorr_mode=ocorr_mode)
-        if clear_pointing is not False:
-            clear_pointing = True
-        self.clear_pointing = clear_pointing
-
-        if modify_weights is not True:
-            modify_weights = False
-        self.modify_weights = modify_weights
-
-        self.wtmode = wtmode
 
     # Override defaults in ImportDataInputs
     asis = basetask.property_with_default('asis', 'Receiver CalAtmosphere')
@@ -117,7 +103,6 @@ class VLAImportData(importdata.ImportData):
     Inputs = VLAImportDataInputs
 
     def prepare(self, **parameters):
-        inputs = self.inputs
         # get results object by running super.prepare()
         results = super(VLAImportData, self).prepare()
 
@@ -125,22 +110,6 @@ class VLAImportData(importdata.ImportData):
         myresults = VLAImportDataResults(mses=results.mses, setjy_results=results.setjy_results)
 
         myresults.origin = results.origin
-
-        if inputs.clear_pointing:
-            for ms in myresults.mses:
-                # LOG.info('Removing POINTING table from', ms.name)
-                with casatools.TableReader(ms.name + '/POINTING', nomodify=False) as table:
-                    rows = table.rownumbers()
-                    table.removerows(rows)
-
-        if inputs.modify_weights:
-            for ms in myresults.mses:
-                # LOG.info('Re-initializing the weights in', ms.name)
-                if inputs.wtmode:
-                    task = casa_tasks.initweights(ms.name, wtmode=inputs.wtmode)
-                else:
-                    task = casa_tasks.initweights(ms.name)
-                self._executor.execute(task)
 
         return myresults
 

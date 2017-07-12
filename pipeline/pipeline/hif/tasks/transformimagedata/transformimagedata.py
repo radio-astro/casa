@@ -5,6 +5,7 @@ import shutil
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 from pipeline.infrastructure import casa_tasks
+import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.tablereader as tablereader
 from pipeline.h.tasks.mstransform import mssplit
 
@@ -65,12 +66,28 @@ class TransformimagedataResults(basetask.Results):
 
 
 class TransformimagedataInputs(mssplit.MsSplitInputs):
+    
+    clear_pointing = basetask.property_with_default('clear_pointing', True)
+    modify_weights = basetask.property_with_default('modify_weights', False)
+    wtmode = basetask.property_with_default('wtmode', '')
+    
     @basetask.log_equivalent_CASA_call
     def __init__(self, context, output_dir=None, vis=None,
                  outputvis=None, field=None, intent=None, spw=None,
-                 datacolumn=None, chanbin=None, timebin=None, replace=None):
+                 datacolumn=None, chanbin=None, timebin=None, replace=None,
+                 clear_pointing=None, modify_weights=None, wtmode=None):
         # set the properties to the values given as input arguments
         self._init_properties(vars())
+        
+        if clear_pointing is not False:
+            clear_pointing = True
+        self.clear_pointing = clear_pointing
+
+        if modify_weights is not True:
+            modify_weights = False
+        self.modify_weights = modify_weights
+
+        self.wtmode = wtmode
 
     replace = basetask.property_with_default('replace', False)
     datacolumn = basetask.property_with_default('datacolumn', 'corrected')
@@ -149,6 +166,20 @@ class Transformimagedata(mssplit.MsSplit):
 
         # Note there will be only 1 MS in the temporary observing run structure
         result.ms = observing_run.measurement_sets[0]
+        
+        if inputs.clear_pointing:
+            LOG.info('Removing POINTING table from ' + ms.name)
+            with casatools.TableReader(ms.name + '/POINTING', nomodify=False) as table:
+                rows = table.rownumbers()
+                table.removerows(rows)
+
+        if inputs.modify_weights:
+            LOG.info('Re-initializing the weights in ' + ms.name)
+            if inputs.wtmode:
+                task = casa_tasks.initweights(ms.name, wtmode=inputs.wtmode)
+            else:
+                task = casa_tasks.initweights(ms.name)
+            self._executor.execute(task)
 
         return result
 
