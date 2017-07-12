@@ -5,6 +5,7 @@ Created on 11 Sep 2014
 """
 import collections
 import os
+import shutil
 
 import pipeline.infrastructure.callibrary as callibrary
 import pipeline.infrastructure.logging as logging
@@ -26,6 +27,7 @@ class T2_4MDetailsSetjyRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
         amp_vs_uv_summary_plots = collections.defaultdict(list)
 
 
+
         for intents in ['AMPLITUDE']:
             plots = self.create_plots(context, 
                                       result, 
@@ -37,6 +39,8 @@ class T2_4MDetailsSetjyRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                 amp_vs_uv_summary_plots[vis].extend(vis_plots)
 
         table_rows = make_flux_table(context, result)
+
+
 
         ctx.update({'amp_vs_uv_plots': amp_vs_uv_summary_plots,
                     'table_rows': table_rows})
@@ -77,20 +81,36 @@ class T2_4MDetailsSetjyRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
 
         return d
     
-FluxTR = collections.namedtuple('FluxTR', 'vis field spw freq band i q u v spix')
+FluxTR = collections.namedtuple('FluxTR', 'vis field spw freq band i q u v spix fluxcsv')
 
 
 def make_flux_table(context, results):
     # will hold all the flux stat table rows for the results
     rows = []
 
+
+
     for single_result in results:
         ms_for_result = context.observing_run.get_ms(single_result.vis)
         vis_cell = os.path.basename(single_result.vis)
 
+        weblog_dir = os.path.join(context.report_dir,
+                                  'stage%s' % single_result.stage_number)
+
         # measurements will be empty if fluxscale derivation failed
         if len(single_result.measurements) is 0:
             continue
+
+        # copy flux.csv file across to weblog directory
+        fluxcsv_filename = 'flux.csv'
+        fluxcsv_path = os.path.join(weblog_dir, fluxcsv_filename)
+        fluxcsv_weblink = os.path.join('stage%s' % single_result.stage_number, fluxcsv_filename)
+        fluxcsv_path_link = '<a href="{!s}" class="replace-pre" data-title="flux.csv">View</a> or <a href="{!s}" download="{!s}">download</a>'.format(fluxcsv_weblink,fluxcsv_weblink,fluxcsv_weblink)
+        if os.path.exists(fluxcsv_filename):
+            LOG.trace('Copying %s to %s' % (fluxcsv_filename, weblog_dir))
+            shutil.copy(fluxcsv_filename, weblog_dir)
+
+
             
         for field_arg, measurements in single_result.measurements.items():
             field = ms_for_result.get_fields(field_arg)[0]
@@ -110,7 +130,7 @@ def make_flux_table(context, results):
                                                    
                 tr = FluxTR(vis_cell, field_cell, str(spw.id),
                             str(spw.centre_frequency), spw.band, fluxes['I'],
-                            fluxes['Q'], fluxes['U'], fluxes['V'], fluxes['spix'])
+                            fluxes['Q'], fluxes['U'], fluxes['V'], fluxes['spix'], fluxcsv_path_link)
                 rows.append(tr)
     
     return utils.merge_td_columns(rows)

@@ -6,6 +6,7 @@ Created on 5 Sep 2014
 import collections
 import operator
 import os
+import shutil
 
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.casatools as casatools
@@ -24,6 +25,9 @@ class T2_4MDetailsImportDataRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                 description=description, always_rerender=always_rerender)
 
     def update_mako_context(self, mako_context, pipeline_context, result):
+        weblog_dir = os.path.join(pipeline_context.report_dir,
+                                  'stage%s' % result.stage_number)
+
         setjy_results = []
         for r in result:
             setjy_results.extend(r.setjy_results)
@@ -39,14 +43,30 @@ class T2_4MDetailsImportDataRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
 
         repsource_table_rows = make_repsource_table(pipeline_context, result)
 
+        fluxcsv_files = {}
+        for r in result:
+
+            # copy flux.csv file across to weblog directory
+            fluxcsv_filename = 'flux.csv'
+            ms = pipeline_context.observing_run.get_ms(os.path.basename(r.inputs['vis']))
+            fluxcsv_path = os.path.join(weblog_dir, fluxcsv_filename)
+            if os.path.exists(fluxcsv_filename):
+                LOG.trace('Copying %s to %s' % (fluxcsv_filename, weblog_dir))
+                shutil.copy(fluxcsv_filename, weblog_dir)
+
+            fluxcsv_files[ms.basename] = os.path.join('stage%s' % result.stage_number, fluxcsv_filename)
+
         mako_context.update({'flux_imported' : True if measurements else False,
                            'flux_table_rows' : flux_table_rows,
                          'repsource_defined' : True if repsource_table_rows else False,
                       'repsource_table_rows' : repsource_table_rows,
-                             'num_mses'      : num_mses})
+                             'num_mses'      : num_mses,
+                             'fluxcsv_files' : fluxcsv_files,
+                             'weblog_dir'    : weblog_dir})
 
 
 FluxTR = collections.namedtuple('FluxTR', 'vis field spw i q u v spix')
+
 
 def make_flux_table(context, results):
     # will hold all the flux stat table rows for the results
@@ -81,6 +101,7 @@ def make_flux_table(context, results):
     return utils.merge_td_columns(rows)
 
 RepsourceTR = collections.namedtuple('RepsourceTR', 'vis source rfreq rbwidth spwid freq bwidth')
+
 
 def make_repsource_table (context, results):
     # will hold all the representative source table rows for the results

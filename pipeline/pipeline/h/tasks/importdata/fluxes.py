@@ -162,7 +162,7 @@ def get_measurement (ms, spw_id, frequency_text, flux_text):
         LOG.info('Closest flux measurement for {!s} spw {!s} falls outside'
                  'spw, {!s} distant from spectral window centre'.format(ms.basename, spw_id, min_delta))
 
-    m = domain.FluxMeasurement(spw_id, *mean_iquv)
+    m = domain.FluxMeasurement(spw_id, *mean_iquv, origin='Source.xml')
 
     return m
 
@@ -250,7 +250,7 @@ def export_flux_from_context(context, filename=None):
                     (I, Q, U, V) = flux.casa_flux_density
                     comment = 'intent=' + ','.join(sorted(field.intents))
                     writer.writerow((ms.basename, field.id, flux.spw_id,
-                                     I, Q, U, V, float(flux.spix), comment))
+                                     I, Q, U, V, float(flux.spix), comment + ' #' + flux.origin))
                     counter += 1
 
         LOG.info('Exported %s flux measurements to %s' % (counter, filename))
@@ -305,7 +305,7 @@ def export_flux_from_result(results, context, filename='flux.csv'):
                         comment = field.name + ' ' + 'intent=' + ','.join(sorted(field.intents))
 
                         writer.writerow((ms_basename, field_id, m.spw_id,
-                                         I, Q, U, V, float(m.spix), comment))
+                                         I, Q, U, V, float(m.spix), comment+' #'+m.origin))
                         counter += 1
 
         LOG.info('Exported %s flux measurements to %s' % (counter, abspath))

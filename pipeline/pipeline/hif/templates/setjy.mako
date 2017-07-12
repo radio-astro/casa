@@ -97,6 +97,7 @@ $(document).ready(function(){
 	        <th scope="col" rowspan="2">Band</th>
 	        <th scope="col" colspan="4">Flux Density</th>
 	        <th scope="col" rowspan="2">Spix</th>
+	        <th scope="col" rowspan="2">flux.csv</th>
 		</tr>
 		<tr>
 	        <th scope="col">I</th>
