@@ -339,6 +339,27 @@ class Tclean(cleanbase.CleanBase):
             if inputs.nchan in (None, -1):
                inputs.nchan = int(round((if1 - if0) / channel_width - 2))
 
+        # Make sure there are LSRK selections if cont.dat/lines.dat exist.
+        # For ALMA this is already done at the hif_makeimlist step. For VLASS
+        # this does not (yet) happen in hif_editimlist.
+        if inputs.spwsel_lsrk == {}:
+            for spwid in inputs.spw.split(','):
+                spwsel_spwid = self.image_heuristics.cont_ranges_spwsel().get(utils.dequote(inputs.field), {}).get(spwid, 'NONE')
+                if (inputs.intent == 'TARGET'):
+                    if (spwsel_spwid == 'NONE'):
+                        LOG.warn('No continuum frequency range information detected for %s, spw %s.' % (inputs.field, spwid))
+
+                if spwsel_spwid in ('ALL', '', 'NONE'):
+                    spwsel_spwid_freqs = ''
+                    spwsel_spwid_refer = 'LSRK'
+                else:
+                    spwsel_spwid_freqs, spwsel_spwid_refer = spwsel_spwid.split()
+
+                if (spwsel_spwid_refer != 'LSRK'):
+                    LOG.warn('Frequency selection is specified in %s but must be in LSRK' % (spwsel_spwid_refer))
+
+                inputs.spwsel_lsrk['spw%s' % (spwid)] = spwsel_spwid
+
         # Get TOPO frequency ranges for all MSs
         spw_topo_freq_param, \
         spw_topo_chan_param, \
