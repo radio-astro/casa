@@ -391,14 +391,17 @@ def plotAtmosphere(vis=None, spw=-1, scan=0, intent='OBSERVE_TARGET',
 
     # Apply default weather conditions, if not specified
     if (telescope == 'ALMA'):
-        if (temperature is None):
+        if (temperature is None or temperature < 200):
             temperature = 270
+            print 'Temperature value from getWeather is odd using ALMA default of %0.fK' % (temperature)
         if (altitude is None):
             altitude = 5059
-        if (pressure is None):
+        if (pressure is None or pressure < 400):
             pressure = 563
-        if (humidity is None):
+            print 'Pressure value from getWeather is odd using ALMA default of %0.fmb' % (pressure)
+        if (humidity is None or humidity < 0):
             humidity = 20
+            print 'Humidity value from getWeather is odd (negative) using ALMA default of %0.f percent' % (humidity)
         if (pwv is None):
             pwv = 1.0
         if (h0 is None):
