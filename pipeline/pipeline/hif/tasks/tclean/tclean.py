@@ -64,6 +64,10 @@ class TcleanInputs(cleanbase.CleanBaseInputs):
                 linesfile = self.context.linesfile, \
                 imaging_mode = 'ALMA')
 
+        # For MOM0/8_FC and cube RMS we need the LSRK frequency ranges in
+        # various places
+        self.cont_freq_ranges = ''
+
     # Add extra getters and setters here
     spwsel_lsrk = basetask.property_with_default('spwsel_lsrk', {})
     spwsel_topo = basetask.property_with_default('spwsel_topo', [])
@@ -370,6 +374,12 @@ class Tclean(cleanbase.CleanBase):
         aggregate_lsrk_bw = \
             self.image_heuristics.calc_topo_ranges(inputs)
 
+        # Save continuum frequency ranges for later.
+        if (inputs.specmode == 'cube') and (inputs.spwsel_lsrk.get('spw%s' % (inputs.spw), None) not in (None, 'NONE', '')):
+            self.cont_freq_ranges = inputs.spwsel_lsrk['spw%s' % (inputs.spw)].split()[0]
+        else:
+            self.cont_freq_ranges = ''
+
         # Get sensitivity
         if inputs.sensitivity is not None:
             # Override with manually set value
@@ -616,7 +626,7 @@ class Tclean(cleanbase.CleanBase):
                     sensitivity=sequence_manager.sensitivity, result=result)
 
             # Give the result to the clean 'sequencer'
-            model_sum, residual_cleanmask_rms, residual_non_cleanmask_rms, residual_max, residual_min, nonpbcor_image_non_cleanmask_rms, pbcor_image_min, pbcor_image_max = sequence_manager.iteration_result(
+            model_sum, residual_cleanmask_rms, residual_non_cleanmask_rms, residual_max, residual_min, nonpbcor_image_non_cleanmask_rms, pbcor_image_min, pbcor_image_max, residual_robust_rms = sequence_manager.iteration_result(
                 iter=iter, multiterm=result.multiterm, psf=result.psf, model=result.model, restored=result.image, residual=result.residual,
                 flux=result.flux, cleanmask=new_cleanmask, threshold=seq_result.threshold, pblimit_image = self.pblimit_image,
                 pblimit_cleanmask = self.pblimit_cleanmask)
@@ -851,14 +861,8 @@ class Tclean(cleanbase.CleanBase):
         # Set output filename for MOM8_FC image.
         mom8_name = '%s.mom8_fc' % (imagename)
 
-        # Get continuum frequency ranges.
-        if self.inputs.spwsel_lsrk.get('spw%s' % (self.inputs.spw), None) not in (None, 'NONE', ''):
-            cont_freq_ranges = self.inputs.spwsel_lsrk['spw%s' % (self.inputs.spw)].split()[0]
-        else:
-            cont_freq_ranges = ''
-
         # Convert frequency ranges to channel ranges.
-        cont_chan_ranges = utils.freq_selection_to_channels(imagename, cont_freq_ranges)
+        cont_chan_ranges = utils.freq_selection_to_channels(imagename, self.cont_freq_ranges)
 
         # Only continue if there were continuum channel ranges for this spw.
         if cont_chan_ranges[0] != 'NONE':
