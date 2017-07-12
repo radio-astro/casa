@@ -556,28 +556,28 @@ class SBSummaryTable(object):
                 repSources.append(repSource)
 
                 # Create frequency
-                repFrequency = qa.quantity(_get_science_goal_value (scienceGoals[0:numScienceGoals[i]-1,i],
+                repFrequency = qa.quantity(_get_science_goal_value (scienceGoals[0:numScienceGoals[i],i],
                     'representativeFrequency'))
                 if repFrequency['value'] <= 0.0 or repFrequency['unit'] == '':
                     repFrequency = None
                 repFrequencies.append(repFrequency)
 
                 # Create representative bandwidth
-                repBandWidth = qa.quantity(_get_science_goal_value (scienceGoals[0:numScienceGoals[i]-1,i],
+                repBandWidth = qa.quantity(_get_science_goal_value (scienceGoals[0:numScienceGoals[i],i],
                     'representativeBandwidth'))
                 if repBandWidth['value'] <= 0.0 or repBandWidth['unit'] == '':
                     repBandWidth = None
                 repBandWidths.append(repBandWidth)
 
                 # Create minimum angular resolution
-                minAngResolution = qa.quantity(_get_science_goal_value (scienceGoals[0:numScienceGoals[i]-1,i],
+                minAngResolution = qa.quantity(_get_science_goal_value (scienceGoals[0:numScienceGoals[i],i],
                     'minAcceptableAngResolution'))
                 if minAngResolution['value'] <= 0.0 or minAngResolution['unit'] == '':
                     minAngResolution = None
                 minAngResolutions.append(minAngResolution)
 
                 # Create maximum angular resolution
-                maxAngResolution = qa.quantity(_get_science_goal_value (scienceGoals[0:numScienceGoals[i]-1,i],
+                maxAngResolution = qa.quantity(_get_science_goal_value (scienceGoals[0:numScienceGoals[i],i],
                     'maxAcceptableAngResolution'))
                 if maxAngResolution['value'] <= 0.0 or maxAngResolution['unit'] == '':
                     maxAngResolution = None
