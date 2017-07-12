@@ -414,45 +414,53 @@ class CleanBase(basetask.StandardTaskTemplate):
         if (iter > 0):
             # Store the model.
             set_miscinfo(name=model_name, spw=inputs.spw, field=inputs.field,
-                         type='model', iter=iter, multiterm=result.multiterm)
+                         type='model', iter=iter, multiterm=result.multiterm,
+                         intent=inputs.intent, specmode=inputs.specmode)
             result.set_model(iter=iter, image=model_name)
 
             # Always set info on the uncorrected image for plotting
             set_miscinfo(name=image_name, spw=inputs.spw, field=inputs.field,
-                         type='image', iter=iter, multiterm=result.multiterm)
+                         type='image', iter=iter, multiterm=result.multiterm,
+                         intent=inputs.intent, specmode=inputs.specmode)
 
             # Store the PB corrected image.
             if os.path.exists('%s' % (pbcor_image_name.replace('.image.pbcor', '.image.tt0.pbcor' if result.multiterm else '.image.pbcor'))):
                 set_miscinfo(name=pbcor_image_name, spw=inputs.spw, field=inputs.field,
-                             type='pbcorimage', iter=iter, multiterm=result.multiterm)
+                             type='pbcorimage', iter=iter, multiterm=result.multiterm,
+                             intent=inputs.intent, specmode=inputs.specmode)
                 result.set_image(iter=iter, image=pbcor_image_name)
             else:
                 result.set_image(iter=iter, image=image_name)
 
         # Store the residual.
         set_miscinfo(name=residual_name, spw=inputs.spw, field=inputs.field,
-                     type='residual', iter=iter, multiterm=result.multiterm)
+                     type='residual', iter=iter, multiterm=result.multiterm,
+                     intent=inputs.intent, specmode=inputs.specmode)
         result.set_residual(iter=iter, image=residual_name)
 
         # Store the PSF.
         set_miscinfo(name=psf_name, spw=inputs.spw, field=inputs.field,
-                     type='psf', iter=iter, multiterm=result.multiterm)
+                     type='psf', iter=iter, multiterm=result.multiterm,
+                     intent=inputs.intent, specmode=inputs.specmode)
         result.set_psf(image=psf_name)
 
         # Store the flux image.
         set_miscinfo(name=flux_name, spw=inputs.spw, field=inputs.field,
-                     type='flux', iter=iter, multiterm=result.multiterm)
+                     type='flux', iter=iter, multiterm=result.multiterm,
+                     intent=inputs.intent, specmode=inputs.specmode)
         result.set_flux(image=flux_name)
 
         # Make sure mask has path name
         if os.path.exists(inputs.mask):
             set_miscinfo(name=inputs.mask, spw=inputs.spw, field=inputs.field,
-                         type='cleanmask', iter=iter)
+                         type='cleanmask', iter=iter,
+                         intent=inputs.intent, specmode=inputs.specmode)
             result.set_cleanmask(iter=iter, image=inputs.mask)
         elif os.path.exists(mask_name):
             # Use mask made by tclean
             set_miscinfo(name=mask_name, spw=inputs.spw, field=inputs.field,
-                         type='cleanmask', iter=iter)
+                         type='cleanmask', iter=iter,
+                         intent=inputs.intent, specmode=inputs.specmode)
             result.set_cleanmask(iter=iter, image=mask_name)
 
         # Keep threshold and sensitivity for QA and weblog
@@ -470,7 +478,7 @@ def rename_image(old_name, new_name, extensions=['']):
             with casatools.ImageReader('%s%s' % (old_name, extension)) as image:
                 image.rename(name=new_name, overwrite=True)
 
-def set_miscinfo(name, spw=None, field=None, type=None, iter=None, multiterm=None):
+def set_miscinfo(name, spw=None, field=None, type=None, iter=None, multiterm=None, intent=None, specmode=None):
     """
     Define miscellaneous image information
     """
@@ -484,6 +492,8 @@ def set_miscinfo(name, spw=None, field=None, type=None, iter=None, multiterm=Non
             imagename = name
         with casatools.ImageReader(imagename) as image:
             info = image.miscinfo()
+            if imagename is not None:
+                info['filename'] = os.path.basename(imagename)
             if spw:
                 info['spw'] = spw
             if field:
@@ -494,8 +504,10 @@ def set_miscinfo(name, spw=None, field=None, type=None, iter=None, multiterm=Non
                 info['type'] = type
             if iter is not None:
                 info['iter'] = iter
-            if imagename is not None:
-                info['filename'] = os.path.basename(imagename)
+            if intent is not None:
+                info['intent'] = intent
+            if specmode is not None:
+                info['specmode'] = specmode
             image.setmiscinfo(info)
 
 

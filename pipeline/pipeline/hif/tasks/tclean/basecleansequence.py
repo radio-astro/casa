@@ -32,7 +32,8 @@ class BaseCleanSequence:
         self.multiterm = multiterm
 
     def iteration_result(self, iter, multiterm, psf, model, restored, residual,
-                         flux, cleanmask, threshold=None, pblimit_image=0.2, pblimit_cleanmask=0.3):
+                         flux, cleanmask, threshold=None, pblimit_image=0.2, pblimit_cleanmask=0.3,
+                         cont_freq_ranges=None):
         """This method sets the iteration counter and returns statistics for
         that iteration.
         """
@@ -48,8 +49,9 @@ class BaseCleanSequence:
         model_sum, residual_cleanmask_rms, residual_non_cleanmask_rms, residual_max, \
         residual_min, nonpbcor_image_non_cleanmask_rms, pbcor_image_min, pbcor_image_max, \
         residual_robust_rms = cbheuristic.analyse_clean_result(multiterm, model, restored,
-                                                                 residual, flux, cleanmask,
-                                                                 pblimit_image, pblimit_cleanmask)
+                                                               residual, flux, cleanmask,
+                                                               pblimit_image, pblimit_cleanmask,
+                                                               cont_freq_ranges)
 
         peak_over_rms = residual_max/residual_robust_rms
         LOG.info('Residual peak: %s', residual_max)
