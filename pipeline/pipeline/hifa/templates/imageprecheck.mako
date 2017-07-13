@@ -78,13 +78,18 @@ Min / Max Acceptable Resolution:
     ${minAR} / ${maxAR}
 %endif
 
-<h4>Estimated synthesized beam and sensitivities from data</h4>
-Robust=0.5 is always used for subsequent imaging stages (values highlighted in
-green), estimates for robust=-0.5 and +2.0 are informative only. These
-estimates account for Tsys, the observed uv-coverage, and prior flagging.
-In addition to an estimate for the repBW, an estimate for the aggregate
-continuum bandwidth (aggBW) is also given assuming NO line contamination
-and NO spectral overlap between spws.
+<h4>Estimated Synthesized Beam and Sensitivities for the Representative
+Target/Frequency</h4>
+Estimates are given for three values of the tclean robust weighting
+parameter, note that robust=+0.5 is always used for subsequent imaging
+stages (values highlighted in green), estimates for robust=-0.5 and +2.0
+are informative only. The percent difference between Min/Max acceptable
+resolution and the geometric mean of the estimated beams are shown in the
+%Diff minAR / maxAR column. In addition to an estimate for the repBW, an
+estimate for the aggregate continuum bandwidth (aggBW) is also given
+assuming NO line contamination and NO spectral overlap between spws.
+These estimates account for Tsys, the observed uv-coverage, and prior
+flagging.
 <p>
 <b>These estimates should always be considered as the BEST CASE SCENARIO.</b>
 The estimates DO NOT account for (1) subsequent science target flagging;
@@ -92,16 +97,8 @@ The estimates DO NOT account for (1) subsequent science target flagging;
 of lines and other spectral features from the data used to image the
 continuum); (3) Issues that affect the image quality like (a) poor match of
 uv-coverage to image complexity; (b) dynamic range effects; (c) calibration
-deficiencies (poor phase transfer, residual basline based effects, residual
+deficiencies (poor phase transfer, residual baseline based effects, residual
 antenna position errors etc.).
-
-<h4>Comparison of Goals with Data (Robust=0.5):</h4>
-Percent Difference Between Min/Max Acceptable Resolution and Estimated Beam:
-%if minAR_v==0.0 and maxAR_v==0.0:
-    Not available
-%else:
-    ${[r for r in table_rows if r.robust==result[0].hm_robust and r.uvtaper==result[0].hm_uvtaper][0].beam_vs_minAR_maxAR}
-%endif
 
 <table class="table">
     <thead>
