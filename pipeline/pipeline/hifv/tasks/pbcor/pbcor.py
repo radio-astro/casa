@@ -5,27 +5,48 @@ import os
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 from pipeline.infrastructure import casa_tasks
+import pipeline.infrastructure.imagelibrary as imagelibrary
 from recipes import tec_maps
 
 LOG = infrastructure.get_logger(__name__)
 
 
 class PbcorResults(basetask.Results):
-    def __init__(self, final=[], pool=[], preceding=[], pbcornames=[]):
+    def __init__(self, final=[], pool=[], preceding=[], pbcorimagelist=[], pbcorimagenames=[]):
         super(PbcorResults, self).__init__()
         self.pool = pool[:]
         self.final = final[:]
         self.preceding = preceding[:]
-        self.pbcornames = pbcornames[:]
+        self.pbcorimagelist = pbcorimagelist[:]
+        self.pbcorimagenames = pbcorimagenames[:]
         self.error = set()
 
     def merge_with_context(self, context):
         """
         See :method:`~pipeline.infrastructure.api.Results.merge_with_context`
         """
-        if not self.final:
-            LOG.warn('No pbcor results')
-            return
+        # if not self.pbcorimagenames:
+        #     LOG.warn('No makepbcorimages results')
+        #     return
+
+        # pbcorimagelist is a list of dictionaries
+        # Use the same format and information from sciimlist, save for the image name and image plot
+
+        for pbcoritem in self.pbcorimagelist:
+            try:
+                imgname = pbcoritem['imagename']
+                imageitem = imagelibrary.ImageItem(
+                  imagename=imgname[:imgname.rfind('.image')]+'.pb.tt0', sourcename=pbcoritem['sourcename'],
+                  spwlist=pbcoritem['spwlist'], specmode=pbcoritem['specmode'],
+                  sourcetype=pbcoritem['sourcetype'],
+                  multiterm=pbcoritem['multiterm'],
+                  imageplot=pbcoritem['imageplot'])
+                context.pbcorimlist.add_item(imageitem)
+                if 'TARGET' in pbcoritem['sourcetype']:
+                    print 'ADDED IMAGE ITEM'
+                    context.pbcorimlist.add_item(imageitem)
+            except:
+                pass
 
     def __repr__(self):
         #return 'PbcorResults:\n\t{0}'.format(
@@ -56,7 +77,7 @@ class Pbcor(basetask.StandardTaskTemplate):
             pbcor_list.append(pbcorname)
             LOG.info("PBCOR image names: " + ','.join(pbcor_list))
 
-        return PbcorResults(pbcornames=pbcor_list)
+        return PbcorResults(pbcorimagenames=pbcor_list)
 
     def analyse(self, results):
         return results

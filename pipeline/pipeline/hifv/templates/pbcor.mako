@@ -5,7 +5,7 @@ import pipeline.infrastructure.renderer.htmlrenderer as hr
 %>
 <%inherit file="t2-4m_details-base.mako"/>
 
-<%block name="title">Pbcor</%block>
+<%block name="title">Primary beam corrected tt0 images</%block>
 
 <script src="${self.attr.rsc_path}resources/js/pipeline.js"></script>
 
@@ -45,5 +45,31 @@ $(document).ready(function() {
 });
 </script>
 
-<p>Pbcor</p>
+<p>hifv_pbcor</p>
 
+<%self:plot_group plot_dict="${pbcorplots}"
+                                  url_fn="${lambda ms:  'noop'}">
+
+        <%def name="title()">
+            Primary Beam Corrected TT0 images
+        </%def>
+
+        <%def name="preamble()">
+
+
+        </%def>
+
+
+        <%def name="mouseover(plot)">primary beam corrected tt0 plot </%def>
+
+
+
+        <%def name="fancybox_caption(plot)">
+          primary beam corrected tt0 plot
+        </%def>
+
+
+        <%def name="caption_title(plot)">
+           ${plot.basename}
+        </%def>
+</%self:plot_group>
