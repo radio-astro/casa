@@ -35,14 +35,12 @@ $(document).ready(function() {
 
 <%
 cqa = casatools.quanta
-if not result[0].real_repr_target:
-    real_repr_target = ' (assumed)'
-else:
-    real_repr_target = ''
+real_repr_target = result[0].real_repr_target
 repr_source = result[0].repr_source
 repr_spw = '%s' % (result[0].repr_spw)
 repr_freq = '%.4f GHz' % (cqa.getvalue(cqa.convert(result[0].repr_target[1], 'GHz')))
 repr_bw = '%.4g MHz' % (cqa.getvalue(cqa.convert(result[0].repr_target[2], 'MHz')))
+sens_bw = '%.4g MHz' % (cqa.getvalue(cqa.convert(result[0].sensitivity_bandwidth, 'MHz')))
 minAR_v = cqa.getvalue(cqa.convert(result[0].minAcceptableAngResolution, 'arcsec'))
 maxAR_v = cqa.getvalue(cqa.convert(result[0].maxAcceptableAngResolution, 'arcsec'))
 minAR = '%#.2g arcsec' % (minAR_v)
@@ -51,37 +49,71 @@ robust = '%.1f' % (result[0].hm_robust)
 uvtaper = '%s' % (result[0].hm_uvtaper)
 %>
 <p>
-<h4>Representative target${real_repr_target}:</h4>
-${repr_source}, SPW ${repr_spw}
+%if real_repr_target:
+<h4>Goals From OT:</h4>
+%else:
+<h4>Assumed Values (Goal information not available):</h4>
+%endif
+Representative Target: ${repr_source}
+%if not real_repr_target:
+(First science target)
+%endif
 <br>
-PI Frequency: ${repr_freq}
+Representative Frequency: ${repr_freq} (SPW ${repr_spw})
+%if not real_repr_target:
+(Center of first science spw)
+%endif
 <br>
-PI Bandwidth: ${repr_bw}
+Bandwidth for Sensitivity: ${repr_bw}
+%if real_repr_target:
+(rounded to nearest integer #channels, repBW = ${sens_bw})
+%else:
+(repBW=${repr_bw}, channel width of first science spw)
+%endif
 <br>
-PI min/max resolutions:
+Min / Max Acceptable Resolution:
 %if minAR_v==0.0 and maxAR_v==0.0:
     Not available
 %else:
     ${minAR} / ${maxAR}
 %endif
+
+<h4>Estimated synthesized beam and sensitivities from data</h4>
+Robust=0.5 is always used for subsequent imaging stages (values highlighted in
+green), estimates for robust=-0.5 and +2.0 are informative only. These
+estimates account for Tsys, the observed uv-coverage, and prior flagging.
+In addition to an estimate for the repBW, an estimate for the aggregate
+continuum bandwidth (aggBW) is also given assuming NO line contamination
+and NO spectral overlap between spws.
 <p>
-<h4>Heuristics results:</h4>
-robust: ${robust}
-<br>
-uvtaper: ${uvtaper}
-<p>
-<h4>Beam and sensitivity results for different robust and uvtaper parameters:</h4>
+<b>These estimates should always be considered as the BEST CASE SCENARIO.</b>
+The estimates DO NOT account for (1) subsequent science target flagging;
+(2) loss of continuum bandwidth due to the hif_findcont process (i.e. removal
+of lines and other spectral features from the data used to image the
+continuum); (3) Issues that affect the image quality like (a) poor match of
+uv-coverage to image complexity; (b) dynamic range effects; (c) calibration
+deficiencies (poor phase transfer, residual basline based effects, residual
+antenna position errors etc.).
+
+<h4>Comparison of Goals with Data (Robust=0.5):</h4>
+Percent Difference Between Min/Max Acceptable Resolution and Estimated Beam:
+%if minAR_v==0.0 and maxAR_v==0.0:
+    Not available
+%else:
+    ${[r for r in table_rows if r.robust==result[0].hm_robust and r.uvtaper==result[0].hm_uvtaper][0].beam_vs_minAR_maxAR}
+%endif
+
 <table class="table">
     <thead>
         <tr>
             <th>robust</th>
             <th>uvtaper</th>
-            <th>beam</th>
-            <th>bmin/maxAR</th>
+            <th>Synthesized Beam</th>
+            <th>%Diff minAR / maxAR</th>
             <th>cell</th>
             <th>bandwidth</th>
             <th>bwmode</th>
-            <th>sensitivity</th>
+            <th>Effective Sensitivity</th>
         </tr>
     </thead>
     <tbody>

@@ -16,7 +16,7 @@ LOG = infrastructure.get_logger(__name__)
 
 
 class ImagePreCheckResults(basetask.Results):
-    def __init__(self, real_repr_target=False, repr_target='', repr_source='', repr_spw=None, minAcceptableAngResolution='0.0arcsec', maxAcceptableAngResolution='0.0arcsec', hm_robust=0.5, hm_uvtaper='', sensitivities=[]):
+    def __init__(self, real_repr_target=False, repr_target='', repr_source='', repr_spw=None, minAcceptableAngResolution='0.0arcsec', maxAcceptableAngResolution='0.0arcsec', hm_robust=0.5, hm_uvtaper='', sensitivities=[], sensitivity_bandwidth=None):
         super(ImagePreCheckResults, self).__init__()
         self.real_repr_target = real_repr_target
         self.repr_target = repr_target
@@ -27,6 +27,7 @@ class ImagePreCheckResults(basetask.Results):
         self.hm_robust = hm_robust
         self.hm_uvtaper = hm_uvtaper
         self.sensitivities = sensitivities
+        self.sensitivity_bandwidth = sensitivity_bandwidth
 
     def merge_with_context(self, context):
         """
@@ -115,6 +116,7 @@ class ImagePreCheck(basetask.StandardTaskTemplate):
         cells = {}
         imsizes = {}
         sensitivities = []
+        sensitivity_bandwidth = None
         for robust in [-0.5, 0.5, 2.0]:
             beams[(robust, '[]')] = image_heuristics.synthesized_beam([(repr_field, 'TARGET')], str(repr_spw), robust=robust, uvtaper=[])
             cells[(robust, '[]')] = image_heuristics.cell(beams[(robust, '[]')])
@@ -135,6 +137,7 @@ class ImagePreCheck(basetask.StandardTaskTemplate):
                        'robust': robust, \
                        'uvtaper': [], \
                        'sensitivity': cqa.quantity(sensitivity, 'Jy/beam')}))
+                sensitivity_bandwidth = cqa.quantity(sens_bw, 'Hz')
 
             # full cont sensitivity (no frequency ranges excluded)
             sensitivity, min_sensitivity, max_sensitivity, min_field_id, max_field_id, eff_ch_bw, sens_bw = \
@@ -151,6 +154,9 @@ class ImagePreCheck(basetask.StandardTaskTemplate):
                        'robust': robust, \
                        'uvtaper': [], \
                        'sensitivity': cqa.quantity(sensitivity, 'Jy/beam')}))
+
+            if sensitivity_bandwidth is None:
+                sensitivity_bandwidth = cqa.quantity(sens_bw, 'Hz')
 
         if real_repr_target:
             # Determine heuristic robust value
@@ -217,7 +223,8 @@ class ImagePreCheck(basetask.StandardTaskTemplate):
                    maxAcceptableAngResolution=maxAcceptableAngResolution, \
                    hm_robust=hm_robust, \
                    hm_uvtaper=hm_uvtaper, \
-                   sensitivities=sensitivities)
+                   sensitivities=sensitivities, \
+                   sensitivity_bandwidth=sensitivity_bandwidth)
 
     def analyse(self, results):
         return results
