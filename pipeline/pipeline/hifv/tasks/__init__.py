@@ -26,3 +26,4 @@ from .statwt import Statwt
 from .restoredata import VLARestoreData
 from .circfeedpolcal import Circfeedpolcal
 from .flagging import Flagcal
+from .pbcor import Pbcor
