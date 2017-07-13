@@ -178,12 +178,12 @@ class ImageParamsHeuristicsALMA(ImageParamsHeuristics):
             sidelobethreshold = 2.0
             noisethreshold = 5.0
             lownoisethreshold = 2.0
-            minbeamfrac = 0.0
+            minbeamfrac = 0.1
         elif min_diameter == 12.0:
             sidelobethreshold = 3.0
             noisethreshold = 5.0
             lownoisethreshold = 1.5
-            minbeamfrac = 0.3
+            minbeamfrac = 0.2
         else:
             sidelobethreshold = None
             noisethreshold = None
