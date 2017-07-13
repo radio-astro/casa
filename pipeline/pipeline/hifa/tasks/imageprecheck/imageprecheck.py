@@ -100,15 +100,16 @@ class ImagePreCheck(basetask.StandardTaskTemplate):
         if reprBW_mode == 'cube':
             physicalBW_of_1chan = float(inputs.context.observing_run.measurement_sets[0].get_spectral_window(repr_spw).channels[0].getWidth().convert_to(measures.FrequencyUnits.HERTZ).value)
             nbin = int(cqa.getvalue(cqa.convert(repr_target[2], 'Hz'))/physicalBW_of_1chan + 0.5)
-            cont_sens_bw_modes = ['fullcont']
+            cont_sens_bw_modes = ['aggBW']
         else:
             nbin = -1
-            cont_sens_bw_modes = ['reprBW', 'fullcont']
+            cont_sens_bw_modes = ['repBW', 'aggBW']
 
         primary_beam_size = image_heuristics.largest_primary_beam_size(spwspec=str(repr_spw))
         field_ids = image_heuristics.field('TARGET', repr_field)
         gridder = image_heuristics.gridder('TARGET', repr_field)
         cont_spw = ','.join([str(s.id) for s in inputs.context.observing_run.measurement_sets[0].get_spectral_windows()])
+        num_cont_spw = len(cont_spw.split(','))
 
         beams = {}
         cells = {}
@@ -128,7 +129,7 @@ class ImagePreCheck(basetask.StandardTaskTemplate):
                        'field': repr_field, \
                        'spw': str(repr_spw), \
                        'bandwidth': cqa.quantity(sens_bw, 'Hz'), \
-                       'bwmode': 'reprBW', \
+                       'bwmode': 'repBW', \
                        'beam': beams[(robust, '[]')], \
                        'cell': [cqa.convert(cells[(robust, '[]')][0], 'arcsec'), cqa.convert(cells[(robust, '[]')][0], 'arcsec')], \
                        'robust': robust, \
@@ -143,7 +144,7 @@ class ImagePreCheck(basetask.StandardTaskTemplate):
                     **{'array': array, \
                        'field': repr_field, \
                        'spw': str(repr_spw), \
-                       'bandwidth': cqa.quantity(sens_bw, 'Hz'), \
+                       'bandwidth': cqa.quantity(min(sens_bw, num_cont_spw * 1.875e9), 'Hz'), \
                        'bwmode': cont_sens_bw_mode, \
                        'beam': beams[(robust, '[]')], \
                        'cell': [cqa.convert(cells[(robust, '[]')][0], 'arcsec'), cqa.convert(cells[(robust, '[]')][0], 'arcsec')], \
@@ -173,7 +174,7 @@ class ImagePreCheck(basetask.StandardTaskTemplate):
                                'field': repr_field, \
                                'spw': str(repr_spw), \
                                'bandwidth': cqa.quantity(sens_bw, 'Hz'), \
-                               'bwmode': 'reprBW', \
+                               'bwmode': 'repBW', \
                                'beam': beams[(hm_robust, str(hm_uvtaper))], \
                                'cell': [cqa.convert(cells[(hm_robust, str(hm_uvtaper))][0], 'arcsec'), cqa.convert(cells[(hm_robust, str(hm_uvtaper))][0], 'arcsec')], \
                                'robust': hm_robust, \
@@ -187,7 +188,7 @@ class ImagePreCheck(basetask.StandardTaskTemplate):
                             **{'array': array, \
                                'field': repr_field, \
                                'spw': str(repr_spw), \
-                               'bandwidth': cqa.quantity(sens_bw, 'Hz'), \
+                               'bandwidth': cqa.quantity(min(sens_bw, num_cont_spw * 1.875e9), 'Hz'), \
                                'bwmode': cont_sens_bw_mode, \
                                'beam': beams[(hm_robust, str(hm_uvtaper))], \
                                'cell': [cqa.convert(cells[(hm_robust, str(hm_uvtaper))][0], 'arcsec'), cqa.convert(cells[(hm_robust, str(hm_uvtaper))][0], 'arcsec')], \
