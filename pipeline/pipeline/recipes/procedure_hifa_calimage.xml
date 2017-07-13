@@ -231,7 +231,7 @@
         <ParameterSet>
             <Parameter>
                 <Keyword xmlns="">specmode</Keyword>
-                <Value xmlns="">pi_cube</Value>
+                <Value xmlns="">repBW</Value>
             </Parameter>
         </ParameterSet>
     </ProcessingCommand>
