@@ -87,7 +87,7 @@ class Makermsimages(basetask.StandardTaskTemplate):
             imagenames.extend(glob.glob(imageitem['imagename'] + '*'))
 
         # tt0 images only
-        imagenames = [im for im in imagenames if 'tt0' in im]
+        imagenames = [im for im in imagenames if 'pbcor.tt0' in im]
 
         imagenames = [im for im in imagenames if '.rms' not in im]
         rmsimagenames = []

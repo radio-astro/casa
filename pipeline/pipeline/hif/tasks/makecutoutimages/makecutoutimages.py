@@ -78,8 +78,12 @@ class Makecutoutimages(basetask.StandardTaskTemplate):
         imlist = self.inputs.context.sciimlist.get_imlist()
 
         imagenames = []
+        # Per VLASS Tech Specs page 22
         for imageitem in imlist:
-            imagenames.extend(glob.glob(imageitem['imagename'] + '*'))
+            imagenames.extend(glob.glob(imageitem['imagename'].replace('.image', '.image.pbcor') + '*'))
+            imagenames.extend(glob.glob(imageitem['imagename'].replace('.image','.psf') + '*'))
+            imagenames.extend(glob.glob(imageitem['imagename'].replace('.image','.residual') + '*'))
+            imagenames.extend(glob.glob(imageitem['imagename'].replace('.image', '.pb') + '*'))
 
         # tt0 images only
         imagenames = [im for im in imagenames if 'tt0' in im]
