@@ -11,11 +11,12 @@ LOG = infrastructure.get_logger(__name__)
 
 
 class PbcorResults(basetask.Results):
-    def __init__(self, final=[], pool=[], preceding=[]):
+    def __init__(self, final=[], pool=[], preceding=[], pbcornames=[]):
         super(PbcorResults, self).__init__()
         self.pool = pool[:]
         self.final = final[:]
         self.preceding = preceding[:]
+        self.pbcornames = pbcornames[:]
         self.error = set()
 
     def merge_with_context(self, context):
@@ -44,9 +45,18 @@ class Pbcor(basetask.StandardTaskTemplate):
 
     def prepare(self):
 
-        LOG.info("This Pbcor class is running.")
+        imlist = self.inputs.context.sciimlist.get_imlist()
+        pbcor_list = []
+        for image in imlist:
+            imgname = image['imagename']
+            pbcorname = imgname+'.pbcor.tt0'
+            task = casa_tasks.impbcor(imagename=imgname+'.tt0', pbimage=imgname[:imgname.rfind('.image')]+'.pb.tt0',
+                                      outfile=pbcorname, mode='divide', cutoff=-1.0, stretch=False)
+            self._executor.execute(task)
+            pbcor_list.append(pbcorname)
+            LOG.info("PBCOR image names: " + ','.join(pbcor_list))
 
-        return PbcorResults()
+        return PbcorResults(pbcornames=pbcor_list)
 
     def analyse(self, results):
         return results
