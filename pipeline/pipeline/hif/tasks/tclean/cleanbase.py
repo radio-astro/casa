@@ -493,7 +493,9 @@ def set_miscinfo(name, spw=None, field=None, type=None, iter=None, multiterm=Non
         with casatools.ImageReader(imagename) as image:
             info = image.miscinfo()
             if imagename is not None:
-                info['filename'] = os.path.basename(imagename)
+                filename_components = os.path.basename(imagename).split('.')
+                for i in xrange(len(filename_components)):
+                    info['filnam%02d' % (i+1)] = filename_components[i]
             if spw:
                 info['spw'] = spw
             if field:
