@@ -158,7 +158,9 @@ class ImagePreCheck(basetask.StandardTaskTemplate):
             # Determine heuristic UV taper value
             if hm_robust == 2.0:
                 hm_uvtaper = image_heuristics.uvtaper(beams[(2.0, '[]')])
-                if hm_uvtaper != []:
+                # For ALMA Cycle 5 the additional beam, cell and sensitivity values for a different
+                # uvtaper are not to be calculated or shown.
+                if False and (hm_uvtaper != []):
                     # Add sensitivity entries with actual tapering
                     beams[(hm_robust, str(hm_uvtaper))] = image_heuristics.synthesized_beam([(repr_field, 'TARGET')], str(repr_spw), robust=hm_robust, uvtaper=hm_uvtaper)
                     cells[(hm_robust, str(hm_uvtaper))] = image_heuristics.cell(beams[(hm_robust, str(hm_uvtaper))])
@@ -199,6 +201,11 @@ class ImagePreCheck(basetask.StandardTaskTemplate):
             hm_uvtaper = []
             minAcceptableAngResolution = cqa.quantity(0.0, 'arcsec')
             maxAcceptableAngResolution = cqa.quantity(0.0, 'arcsec')
+
+        # For ALMA Cycle 5 the heuristics results should just be logged, but not carried along.
+        LOG.info('Heuristics would have chosen robust=%.1f, uvtaper=%s. Overriding to 0.5 / [] for Cycle 5.' % (hm_robust, hm_uvtaper))
+        hm_robust = 0.5
+        hm_uvtaper = []
 
         return ImagePreCheckResults( \
                    real_repr_target, \
