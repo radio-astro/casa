@@ -53,14 +53,14 @@ Create a a list of images to be cleaned.
   </param>
 
   <param type="string" name="specmode">
-     <description>Spectral gridding type (mfs, cont, cube, pi_cube, \'\' for default)</description>
+     <description>Spectral gridding type (mfs, cont, cube, repBW, \'\' for default)</description>
      <value></value>
        <allowed kind="enum">
          <value></value>
          <value>mfs</value>
          <value>cont</value>
          <value>cube</value>
-         <value>pi_cube</value>
+         <value>repBW</value>
        </allowed>
   </param>
 
@@ -217,17 +217,17 @@ pipelinemode -- The pipeline operating mode. In 'automatic' mode the pipeline
 
 --- pipeline parameter arguments which can be set in any pipeline mode
 
-specmode -- Frequency imaging mode, 'mfs', 'cont', 'cube', 'pi_cube'. \'\' defaults to
+specmode -- Frequency imaging mode, 'mfs', 'cont', 'cube', 'repBW'. \'\' defaults to
     'cube' if intent parameter includes 'TARGET' otherwise 'mfs'.
     default: ''
-    example: 'mfs', 'cont', 'cube', 'pi_cube'
+    example: 'mfs', 'cont', 'cube', 'repBW'
     example:
         specmode='mfs' produce one image per source and spw
         specmode='cont' produce one image per source and aggregate over all
              specified spws
         specmode='cube' produce an LSRK frequency cube, channels are specified
              in frequency
-        specmode='pi_cube' produce an LSRK frequency cube at PI channel width
+        specmode='repBW' produce an LSRK frequency cube at representative channel width
 
 hm_cell -- Cell size (x, y)
     default '' Compute cell size based on the UV coverage of all the fields

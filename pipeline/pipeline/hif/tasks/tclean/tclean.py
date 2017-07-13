@@ -99,7 +99,7 @@ class TcleanInputs(cleanbase.CleanBaseInputs):
 
     @specmode.setter
     def specmode(self, value):
-        if value == 'pi_cube':
+        if value == 'repBW':
             self._specmode = 'cube'
         else:
             self._specmode = value

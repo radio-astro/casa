@@ -292,7 +292,7 @@ class MakeImList(basetask.StandardTaskTemplate):
         image_heuristics_factory = imageparams_factory.ImageParamsHeuristicsFactory()
 
         # representative target case
-        if inputs.specmode == 'pi_cube':
+        if inputs.specmode == 'repBW':
             repr_target_mode = True
             image_repr_target = False
 
@@ -308,12 +308,14 @@ class MakeImList(basetask.StandardTaskTemplate):
                 imaging_mode = 'ALMA')
 
             repr_target, repr_source, repr_spw, reprBW_mode, real_repr_target, minAcceptableAngResolution, maxAcceptableAngResolution = self.heuristics.representative_target()
+            # The PI cube shall only be created for real representative targets
             if not real_repr_target:
                 LOG.info('No representative target found. No PI cube will be made.')
-                result.set_info({'msg': 'No representative target found. No PI cube will be made.', 'intent': 'TARGET', 'specmode': 'pi_cube'})
+                result.set_info({'msg': 'No representative target found. No PI cube will be made.', 'intent': 'TARGET', 'specmode': 'repBW'})
+            # The PI cube shall only be created for representative bandwidth smaller than the full spw bandwidth
             elif reprBW_mode != 'cube':
-                LOG.info('Representative target bandwidth specifies aggregate continuum. No PI cube will be made.')
-                result.set_info({'msg': 'Representative target bandwidth specifies aggregate continuum. No PI cube will be made.', 'intent': 'TARGET', 'specmode': 'pi_cube'})
+                LOG.info("Representative target bandwidth specifies aggregate continuum. No PI cube will be made since specmode='cont' already covers this case.")
+                result.set_info({'msg': "Representative target bandwidth specifies aggregate continuum. No PI cube will be made since specmode='cont' already covers this case.", 'intent': 'TARGET', 'specmode': 'repBW'})
             else:
                 repr_spw_nbin = 1
                 if inputs.context.size_mitigation_parameters.get('nbins', '') != '':
@@ -324,7 +326,7 @@ class MakeImList(basetask.StandardTaskTemplate):
                             repr_spw_nbin = int(value)
 
                 # The PI cube shall only be created if the PI bandwidth is greater
-                # than 4 times the nbin averaged bandwidth used in the default cube.
+                # than 4 times the nbin averaged bandwidth used in the default cube
                 physicalBW_of_1chan_Hz = float(inputs.context.observing_run.get_ms(inputs.vis[0]).get_spectral_window(repr_spw).channels[0].getWidth().convert_to(measures.FrequencyUnits.HERTZ).value)
                 repr_spw_nbin_bw_Hz = repr_spw_nbin * physicalBW_of_1chan_Hz
                 reprBW_Hz = qaTool.getvalue(qaTool.convert(repr_target[2], 'Hz'))
@@ -337,8 +339,8 @@ class MakeImList(basetask.StandardTaskTemplate):
                     inputs.field = repr_source
                     inputs.spw = str(repr_spw)
                 else:
-                    LOG.info('Representative target bandwidth is less or equal than 4 times the nbin averaged default cube channel width. No PI cube will be made.')
-                    result.set_info({'msg': 'Representative target bandwidth is less or equal than 4 times the nbin averaged default cube channel width. No PI cube will be made.', 'intent': 'TARGET', 'specmode': 'pi_cube'})
+                    LOG.info('Representative target bandwidth is less or equal than 4 times the nbin averaged default cube channel width. No PI cube will be made since the default cube already covers this case.')
+                    result.set_info({'msg': 'Representative target bandwidth is less or equal than 4 times the nbin averaged default cube channel width. No PI cube will be made since the default cube already covers this case.', 'intent': 'TARGET', 'specmode': 'repBW'})
         else:
             repr_target_mode = False
             image_repr_target = False
@@ -651,5 +653,5 @@ _DESCRIPTIONS = {
     ('TARGET', 'mfs'): 'Set-up image parameters for target per-spw continuum imaging',
     ('TARGET', 'cont'): 'Set-up image parameters for target aggregate continuum imaging',
     ('TARGET', 'cube'): 'Set-up image parameters for target cube imaging',
-    ('TARGET', 'pi_cube'): 'Set-up image parameters for PI channel width target cube imaging',
+    ('TARGET', 'repBW'): 'Set-up image parameters for PI channel width target cube imaging',
 }
