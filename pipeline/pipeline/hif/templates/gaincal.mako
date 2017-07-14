@@ -99,6 +99,7 @@ $(document).ready(function() {
 				  url_fn="${lambda x: phase_vs_time_subpages[x]}"
 				  data_spw="${True}"
                   data_vis="${True}"
+                  sort_row_by="spw"
                   title_id="phase_vs_time_plots">
 
 	<%def name="title()">
@@ -132,6 +133,7 @@ $(document).ready(function() {
 
 <%self:plot_group plot_dict="${structure_plots}"
 				  url_fn="${lambda x: 'baseline-%s.html' % filenamer.sanitize(x)}"
+                  sort_row_by="spw"
                   title_id="structure_plots">
 
 	<%def name="title()">
@@ -166,6 +168,7 @@ $(document).ready(function() {
 				  url_fn="${lambda x: amp_vs_time_subpages[x]}"
 				  data_spw="${True}"
                   data_vis="${True}"
+                  sort_row_by="spw"
                   title_id="amp_vs_time_plots">
 
 	<%def name="title()">
@@ -205,6 +208,7 @@ $(document).ready(function() {
 				  url_fn="${lambda x: diagnostic_phase_vs_time_subpages[x]}"
 				  data_spw="${True}"
                   data_vis="${True}"
+                  sort_row_by="spw"
                   title_id="diagnostic_phase_vs_time_plots">
 
 	<%def name="title()">
@@ -247,6 +251,7 @@ $(document).ready(function() {
 				  url_fn="${lambda x: diagnostic_amp_vs_time_subpages[x]}"
 				  data_spw="${True}"
                   data_vis="${True}"
+                  sort_row_by="spw"
                   title_id="diagnostic_amp_vs_time_plots">
 
 	<%def name="title()">
