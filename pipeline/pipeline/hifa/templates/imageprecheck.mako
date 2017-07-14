@@ -85,7 +85,7 @@ parameter, note that robust=+0.5 is always used for subsequent imaging
 stages (values highlighted in green), estimates for robust=-0.5 and +2.0
 are informative only. The percent difference between Min/Max acceptable
 resolution and the geometric mean of the estimated beams are shown in the
-%Diff minAR / maxAR column. In addition to an estimate for the repBW, an
+%%Diff minAR / maxAR column. In addition to an estimate for the repBW, an
 estimate for the aggregate continuum bandwidth (aggBW) is also given
 assuming NO line contamination and NO spectral overlap between spws.
 These estimates account for Tsys, the observed uv-coverage, and prior
