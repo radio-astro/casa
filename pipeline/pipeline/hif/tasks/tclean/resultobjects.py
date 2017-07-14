@@ -54,6 +54,8 @@ class TcleanResult(basetask.Results):
         self._image_min = 0.0
         self._image_max = 0.0
         self._image_rms = 0.0
+        self._image_rms_min = 0.0
+        self._image_rms_max = 0.0
         # Temporarily needed until CAS-8576 is fixed
         self._residual_max = 0.0
         # This should be automatic, but it does not yet work
@@ -262,6 +264,20 @@ class TcleanResult(basetask.Results):
 
     def set_image_rms(self, image_rms):
         self._image_rms = image_rms
+
+    @property
+    def image_rms_min(self):
+        return self._image_rms_min
+
+    def set_image_rms_min(self, image_rms_min):
+        self._image_rms_min = image_rms_min
+
+    @property
+    def image_rms_max(self):
+        return self._image_rms_max
+
+    def set_image_rms_max(self, image_rms_max):
+        self._image_rms_max = image_rms_max
 
     def __repr__(self):
         repr = 'Tclean:\n'

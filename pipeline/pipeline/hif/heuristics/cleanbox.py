@@ -790,6 +790,8 @@ def analyse_clean_result(multiterm, model, restored, residual, flux, cleanmask, 
     pbcor_image_min = None
     pbcor_image_max = None
     nonpbcor_image_non_cleanmask_rms = None
+    nonpbcor_image_non_cleanmask_rms_min = None
+    nonpbcor_image_non_cleanmask_rms_max = None
     if restored not in [None, '']:
         # get min and max of the pb-corrected cleaned result
         with casatools.ImageReader(restored.replace('.image','.image%s' % (extension))) as image:
@@ -839,39 +841,50 @@ def analyse_clean_result(multiterm, model, restored, residual, flux, cleanmask, 
                 have_mask= False
                 statsmask = ''
 
-            if cont_freq_ranges not in (None, ''):
+            try:
+                # Get image RMS for all channels (this is for the weblog)
                 image_stats = image.statistics(mask=statsmask, robust=False, axes=[0,1,2])
-                cont_chan_ranges = utils.freq_selection_to_channels(nonpbcor_imagename, cont_freq_ranges)
-                cont_chan_indices = np.hstack([np.arange(start, stop+1) for start, stop in cont_chan_ranges])
-                nonpbcor_image_non_cleanmask_rms_vs_chan = image_stats['rms'][cont_chan_indices]
-                nonpbcor_image_non_cleanmask_rms_mean = np.mean(nonpbcor_image_non_cleanmask_rms_vs_chan)
+
+                # Filter continuum frequency ranges if given
+                if cont_freq_ranges not in (None, ''):
+                    cont_chan_ranges = utils.freq_selection_to_channels(nonpbcor_imagename, cont_freq_ranges)
+                    cont_chan_indices = np.hstack([np.arange(start, stop+1) for start, stop in cont_chan_ranges])
+                    nonpbcor_image_non_cleanmask_rms_vs_chan = image_stats['rms'][cont_chan_indices]
+                else:
+                    nonpbcor_image_non_cleanmask_rms_vs_chan = image_stats['rms']
+
                 nonpbcor_image_non_cleanmask_rms_median = np.median(nonpbcor_image_non_cleanmask_rms_vs_chan)
+                nonpbcor_image_non_cleanmask_rms_mean = np.mean(nonpbcor_image_non_cleanmask_rms_vs_chan)
                 nonpbcor_image_non_cleanmask_rms_min = np.min(nonpbcor_image_non_cleanmask_rms_vs_chan)
                 nonpbcor_image_non_cleanmask_rms_max = np.max(nonpbcor_image_non_cleanmask_rms_vs_chan)
                 nonpbcor_image_non_cleanmask_rms = nonpbcor_image_non_cleanmask_rms_median
-            else:
-                image_stats = image.statistics(mask=statsmask, robust=False)
-                try:
-                    nonpbcor_image_non_cleanmask_rms = \
-                    nonpbcor_image_non_cleanmask_rms_mean = \
-                    nonpbcor_image_non_cleanmask_rms_median = \
-                    nonpbcor_image_non_cleanmask_rms_min = \
-                    nonpbcor_image_non_cleanmask_rms_max = \
-                        image_stats['rms'][0]
-                except:
-                    nonpbcor_image_non_cleanmask_rms = \
-                    nonpbcor_image_non_cleanmask_rms_mean = \
-                    nonpbcor_image_non_cleanmask_rms_median = \
-                    nonpbcor_image_non_cleanmask_rms_min = \
-                    nonpbcor_image_non_cleanmask_rms_max = \
-                    nonpbcor_image_non_cleanmask_rms = \
-                        -999.0
+                if have_mask:
+                    area_text = 'annulus'
+                else:
+                    area_text = 'full image'
+                LOG.info('Clean image statistics (%s) for %s: rmsmedian: %s Jy/bm rmsmean: %s Jy/bm rmsmin: %s Jy/bm rmsmax: %s Jy/bm' % \
+                    (area_text, os.path.basename(nonpbcor_imagename), \
+                     nonpbcor_image_non_cleanmask_rms_median, \
+                     nonpbcor_image_non_cleanmask_rms_mean, \
+                     nonpbcor_image_non_cleanmask_rms_min, \
+                     nonpbcor_image_non_cleanmask_rms_max))
+            except Exception as e:
+                nonpbcor_image_non_cleanmask_rms_median = \
+                nonpbcor_image_non_cleanmask_rms_mean = \
+                nonpbcor_image_non_cleanmask_rms_min = \
+                nonpbcor_image_non_cleanmask_rms_max = \
+                nonpbcor_image_non_cleanmask_rms = \
+                    -999.0
+                LOG.warn('Exception while determining image RMS for %s: %s' % (nonpbcor_imagename, e))
 
-            if have_mask:
-                LOG.info('Clean image rms at the edge of the cleaned area: %s' % nonpbcor_image_non_cleanmask_rms)
-            else:
-                LOG.info('Clean image rms across full area: %s' % nonpbcor_image_non_cleanmask_rms)
-
-    return model_sum, residual_cleanmask_rms, residual_non_cleanmask_rms, residual_max,\
-      residual_min, nonpbcor_image_non_cleanmask_rms, pbcor_image_min, pbcor_image_max, \
-      residual_robust_rms
+    return model_sum, \
+           residual_cleanmask_rms, \
+           residual_non_cleanmask_rms, \
+           residual_min, \
+           residual_max, \
+           nonpbcor_image_non_cleanmask_rms_min, \
+           nonpbcor_image_non_cleanmask_rms_max, \
+           nonpbcor_image_non_cleanmask_rms, \
+           pbcor_image_min, \
+           pbcor_image_max, \
+           residual_robust_rms

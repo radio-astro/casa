@@ -27,6 +27,8 @@ class BaseCleanSequence:
         self.residual_mins = []
         self.residual_non_cleanmask_rms_list = []
         self.image_non_cleanmask_rms_list = []
+        self.image_non_cleanmask_rms_min_list = []
+        self.image_non_cleanmask_rms_max_list = []
         self.island_peaks_list = []
         self.thresholds = []
         self.multiterm = multiterm
@@ -46,8 +48,15 @@ class BaseCleanSequence:
         self.flux = flux
 
         #if cleanmask is not None and os.path.exists(cleanmask):
-        model_sum, residual_cleanmask_rms, residual_non_cleanmask_rms, residual_max, \
-        residual_min, nonpbcor_image_non_cleanmask_rms, pbcor_image_min, pbcor_image_max, \
+        model_sum, \
+        residual_cleanmask_rms, \
+        residual_non_cleanmask_rms, \
+        residual_min, \
+        residual_max, \
+        nonpbcor_image_non_cleanmask_rms_min, \
+        nonpbcor_image_non_cleanmask_rms_max, \
+        nonpbcor_image_non_cleanmask_rms, \
+        pbcor_image_min, pbcor_image_max, \
         residual_robust_rms = cbheuristic.analyse_clean_result(multiterm, model, restored,
                                                                residual, flux, cleanmask,
                                                                pblimit_image, pblimit_cleanmask,
@@ -68,9 +77,19 @@ class BaseCleanSequence:
         self.residual_mins.append(residual_min)
         self.residual_non_cleanmask_rms_list.append(residual_non_cleanmask_rms)
         self.image_non_cleanmask_rms_list.append(nonpbcor_image_non_cleanmask_rms)
+        self.image_non_cleanmask_rms_min_list.append(nonpbcor_image_non_cleanmask_rms_min)
+        self.image_non_cleanmask_rms_max_list.append(nonpbcor_image_non_cleanmask_rms_max)
 
-        return model_sum, residual_cleanmask_rms, residual_non_cleanmask_rms, residual_max, \
-               residual_min, nonpbcor_image_non_cleanmask_rms, pbcor_image_min, pbcor_image_max, residual_robust_rms
+        return model_sum, \
+               residual_cleanmask_rms, \
+               residual_non_cleanmask_rms, \
+               residual_min, \
+               residual_max, \
+               nonpbcor_image_non_cleanmask_rms_min, \
+               nonpbcor_image_non_cleanmask_rms_max, \
+               nonpbcor_image_non_cleanmask_rms, \
+               pbcor_image_min, pbcor_image_max, \
+               residual_robust_rms
 
     def iteration(self, new_cleanmask):
         """The base boxworker allows only one iteration.

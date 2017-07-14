@@ -542,15 +542,24 @@ class Tclean(cleanbase.CleanBase):
         inputs.pblimit = self.pblimit_image
 
         # Give the result to the sequence_manager for analysis
-        model_sum, residual_cleanmask_rms, residual_non_cleanmask_rms, residual_max, residual_min,\
-            nonpbcor_image_non_cleanmask_rms, pbcor_image_min, pbcor_image_max,\
-            residual_robust_rms = sequence_manager.iteration_result(iter=0,
-                    multiterm=result.multiterm, psf=result.psf, model=result.model,
-                    restored=result.image, residual=result.residual,
-                    flux=result.flux, cleanmask=None, threshold=None,
-                    pblimit_image=self.pblimit_image,
-                    pblimit_cleanmask=self.pblimit_cleanmask,
-                    cont_freq_ranges=self.cont_freq_ranges)
+        model_sum, \
+        residual_cleanmask_rms, \
+        residual_non_cleanmask_rms, \
+        residual_min, \
+        residual_max, \
+        nonpbcor_image_non_cleanmask_rms_min, \
+        nonpbcor_image_non_cleanmask_rms_max, \
+        nonpbcor_image_non_cleanmask_rms, \
+        pbcor_image_min, \
+        pbcor_image_max,\
+        residual_robust_rms = \
+            sequence_manager.iteration_result(iter=0, \
+                multiterm=result.multiterm, psf=result.psf, model=result.model, \
+                restored=result.image, residual=result.residual, \
+                flux=result.flux, cleanmask=None, threshold=None, \
+                pblimit_image=self.pblimit_image, \
+                pblimit_cleanmask=self.pblimit_cleanmask, \
+                cont_freq_ranges=self.cont_freq_ranges)
 
         LOG.info('Dirty image stats')
         LOG.info('    Residual rms: %s', residual_non_cleanmask_rms)
@@ -627,15 +636,31 @@ class Tclean(cleanbase.CleanBase):
                     sensitivity=sequence_manager.sensitivity, result=result)
 
             # Give the result to the clean 'sequencer'
-            model_sum, residual_cleanmask_rms, residual_non_cleanmask_rms, residual_max, residual_min, nonpbcor_image_non_cleanmask_rms, pbcor_image_min, pbcor_image_max, residual_robust_rms = sequence_manager.iteration_result(
-                iter=iter, multiterm=result.multiterm, psf=result.psf, model=result.model, restored=result.image, residual=result.residual,
-                flux=result.flux, cleanmask=new_cleanmask, threshold=seq_result.threshold, pblimit_image=self.pblimit_image,
-                pblimit_cleanmask=self.pblimit_cleanmask, cont_freq_ranges=self.cont_freq_ranges)
+            model_sum, \
+            residual_cleanmask_rms, \
+            residual_non_cleanmask_rms, \
+            residual_min, \
+            residual_max, \
+            nonpbcor_image_non_cleanmask_rms_min, \
+            nonpbcor_image_non_cleanmask_rms_max, \
+            nonpbcor_image_non_cleanmask_rms, \
+            pbcor_image_min, \
+            pbcor_image_max, \
+            residual_robust_rms = \
+                sequence_manager.iteration_result(iter=iter, \
+                    multiterm=result.multiterm, psf=result.psf, model=result.model, \
+                    restored=result.image, residual=result.residual, \
+                    flux=result.flux, cleanmask=new_cleanmask, threshold=seq_result.threshold, \
+                    pblimit_image=self.pblimit_image, \
+                    pblimit_cleanmask=self.pblimit_cleanmask, \
+                    cont_freq_ranges=self.cont_freq_ranges)
 
             # Keep image cleanmask area min and max and non-cleanmask area RMS for weblog and QA
             result.set_image_min(pbcor_image_min)
             result.set_image_max(pbcor_image_max)
             result.set_image_rms(nonpbcor_image_non_cleanmask_rms)
+            result.set_image_rms_min(nonpbcor_image_non_cleanmask_rms_min)
+            result.set_image_rms_max(nonpbcor_image_non_cleanmask_rms_max)
 
             # Keep dirty DR, correction factor and information about maxEDR heuristic for weblog
             result.set_dirty_dynamic_range(dirty_dynamic_range)

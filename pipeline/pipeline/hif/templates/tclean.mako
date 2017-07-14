@@ -231,12 +231,30 @@ except:
                                 %else:
                                             <td>-</td>
                                 %endif
-                            </tr>                            <tr>
-                                <th>non-pbcor image rms</th>
-                                %if info_dict.get((field,str(spw),pol,'masked rms')) is not None:
-                                            <td>${'%#.2g %s' % (info_dict[(field,str(spw),pol,'masked rms')],
-                                                info_dict[(field,str(spw),pol,'brightness unit')])}</td>
+                            </tr>
+                            <tr>
+                                %if info_dict.get((field,str(spw),pol,'nchan')) is not None:
+                                    %if info_dict[(field,str(spw),pol,'nchan')] > 1:
+                                        <th>non-pbcor image rms / rmsmin / rmsmax</th>
+                                        %if info_dict.get((field,str(spw),pol,'masked rms')) is not None:
+                                                    <td>${'%#.2g / %#.2g / %#.2g %s' % (info_dict[(field,str(spw),pol,'masked rms')],
+                                                        info_dict[(field,str(spw),pol,'masked rms min')],
+                                                        info_dict[(field,str(spw),pol,'masked rms max')],
+                                                        info_dict[(field,str(spw),pol,'brightness unit')])}</td>
+                                        %else:
+                                                    <td>-</td>
+                                        %endif
+                                    %else:
+                                        <th>non-pbcor image rms</th>
+                                        %if info_dict.get((field,str(spw),pol,'masked rms')) is not None:
+                                                    <td>${'%#.2g %s' % (info_dict[(field,str(spw),pol,'masked rms')],
+                                                        info_dict[(field,str(spw),pol,'brightness unit')])}</td>
+                                        %else:
+                                                    <td>-</td>
+                                        %endif
+                                    %endif
                                 %else:
+                                        <th>No rms information</th>
                                             <td>-</td>
                                 %endif
                             </tr>

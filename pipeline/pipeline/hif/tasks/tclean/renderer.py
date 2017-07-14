@@ -151,6 +151,8 @@ class T2_4MDetailsTcleanRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                 info_dict[(field, spw, pol, 'non-masked min')] = r.image_min
                 info_dict[(field, spw, pol, 'non-masked max')] = r.image_max
                 info_dict[(field, spw, pol, 'masked rms')] = r.image_rms
+                info_dict[(field, spw, pol, 'masked rms min')] = r.image_rms_min
+                info_dict[(field, spw, pol, 'masked rms max')] = r.image_rms_max
                 info_dict[(field, spw, pol, 'sensitivity')] = r.sensitivity
                 info_dict[(field, spw, pol, 'min sensitivity')] = r.min_sensitivity
                 info_dict[(field, spw, pol, 'max sensitivity')] = r.max_sensitivity
