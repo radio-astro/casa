@@ -388,8 +388,6 @@ class SDImaging(basetask.StandardTaskTemplate):
                     # Make grid_table and put rms and valid spectral number array 
                     # to the outcome.
                     # The rms and number of valid spectra is used to create RMS maps.
-                    validsps = []
-                    rmss = []
 #                     if imagemode != 'AMPCAL':
                     LOG.info('Additional Step. Make grid_table')
                     with casatools.ImageReader(imager_result.outcome) as ia:
@@ -432,9 +430,12 @@ class SDImaging(basetask.StandardTaskTemplate):
                         gridding_result = self._executor.execute(gridding_task, merge=True)
                         grid_tables.append(gridding_result.outcome)
                     # Extract RMS and number of spectra from grid_tables
+                    validsps = []
+                    rmss = []
                     for i in xrange(len(grid_input_dict)):
                         validsps.append([r[6] for r in grid_tables[i]])
                         rmss.append([r[8] for r in grid_tables[i]])
+                    del grid_tables
                     
                     # define RMS ranges in image
                     LOG.info("Calculate spectral line and deviation mask frequency ranges in image.")
@@ -533,16 +534,14 @@ class SDImaging(basetask.StandardTaskTemplate):
                                  if cs.axiscoordinatetypes()[i] == 'Direction']
                     nx = ia.shape()[dircoords[0]]
                     ny = ia.shape()[dircoords[1]]
-                validsps = []
-                rmss = []
                 observing_pattern =  ref_ms.observing_pattern[combined_antids[0]][combined_spws[0]][combined_fieldids[0]]
                 grid_task_class = gridding.gridding_factory(observing_pattern)
                 grid_tables = []
                 grid_input_dict = {}
                 for (msname, antid, spwid, fieldid, poltypes) in \
                 zip(combined_infiles,combined_antids,combined_spws,combined_fieldids,combined_pols):
-                    msobj = context.observing_run.get_ms(name=common.get_parent_ms_name(context,msname)) # Use parent ms
-                    ddobj = msobj.get_data_description(spw=spwid)
+#                     msobj = context.observing_run.get_ms(name=common.get_parent_ms_name(context,msname)) # Use parent ms
+#                     ddobj = msobj.get_data_description(spw=spwid)
                     for p in poltypes:
                         if not grid_input_dict.has_key(p):
                             grid_input_dict[p] = [[msname], [antid], [fieldid], [spwid]]
@@ -568,9 +567,12 @@ class SDImaging(basetask.StandardTaskTemplate):
                     gridding_result = self._executor.execute(gridding_task, merge=True)
                     grid_tables.append(gridding_result.outcome)
                 # Extract RMS and number of spectra from grid_tables
+                validsps = []
+                rmss = []
                 for i in xrange(len(grid_input_dict)):
                     validsps.append([r[6] for r in grid_tables[i]])
                     rmss.append([r[8] for r in grid_tables[i]])
+                del grid_tables
 
                 # calculate RMS of line free frequencies in a combined image
                 LOG.info('Calculate sensitivity of combined image')
@@ -686,7 +688,7 @@ class SDImaging(basetask.StandardTaskTemplate):
                                               field=source_name,
                                               spw=str(combined_spws[0]),
                                               bandwidth=cqa.quantity(chan_width, 'Hz'),
-                                              bwmode='reprBW',
+                                              bwmode='repBW',
                                               beam=beam, cell=qcell,
                                               sensitivity=cqa.quantity(image_rms, 'Jy/beam'))
 #                 # to register exported_ms to each scantable instance
