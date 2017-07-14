@@ -290,7 +290,8 @@ def score_bands(mses):
     # measurement sets containing the following bands.
     score = 1.0
     score_map = {'8': -1.0,
-                 '9': -1.0}
+                 '9': -1.0,
+                '10': -1.0}
 
     unsupported = set(score_map.keys())
 
@@ -328,7 +329,8 @@ def score_bands(mses):
                           metric_units='MS score based on presence of high-frequency data')
 
     # Make score linear
-    return pqa.QAScore(max(0.0, score), longmsg=longmsg, shortmsg=shortmsg, origin=origin)
+    #return pqa.QAScore(max(0.0, score), longmsg=longmsg, shortmsg=shortmsg, origin=origin)
+    return pqa.QAScore(max(rutils.SCORE_THRESHOLD_SUBOPTIMAL, score), longmsg=longmsg, shortmsg=shortmsg, origin=origin)
 
 
 @log_qa
