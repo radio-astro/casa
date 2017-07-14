@@ -728,10 +728,42 @@ def getMedianPWV(vis='.', myTimes=[0,999999999999], asdm='', verbose=False):
     return(pwvmean,pwvstd)
 
 
-def getWeather(vis, scan='', antenna='0', verbose=False, vm=0, mymsmd='', debug=False, obsid=0):
+def getWeatherStationNames(vis, prefix=['WSTB','Meteo','OSF']):
+    """
+    Returns a dictionary keyed by ALMA weather station ID, with the value
+    equal to the station name (e.g. 'WSTBn').
+    -Todd Hunter
+    """
+    if (not os.path.exists(vis)):
+        print "Could not find measurement set"
+        return
+    if (type(prefix) != list):
+        prefix = [prefix]
+    asdmStation = vis + '/ASDM_STATION'
+    if (not os.path.exists(asdmStation)):
+        print "This measurement set does not have an ASDM_STATION table."
+        return
+    #mytb = createCasaTool(tbtool)
+    mytb = casatools.table
+    mytb.open(asdmStation)
+    names = mytb.getcol('name')
+    mydict = {}
+    for i,name in enumerate(names):
+        for p in prefix:
+            if (name.lower().find(p.lower()) >= 0):
+                mydict[i] = name
+    mytb.close()
+    return(mydict)
+        
+def getWeather(vis, scan='', antenna='0',verbose=False, vm=0, mymsmd='',debug=False, obsid=0,
+               preferredStation='TB2'):
     """
     Queries the WEATHER and ANTENNA tables of an .ms by scan number or
-    list of scan numbers in order to return:
+    list of scan numbers in order to return a dictionary.
+    Inputs:
+    * antenna: name string, ID string or integer ID
+    * preferredStation: minimum match, i.e. 'TB2' or 'MeteoTB2'
+    Returns:
     * a dictionary of mean values of: angleToSun,
       pressure, temperature, humidity, dew point, wind speed, wind direction,
       azimuth, elevation, solarangle, solarelev, solarazim.
@@ -751,7 +783,7 @@ def getWeather(vis, scan='', antenna='0', verbose=False, vm=0, mymsmd='', debug=
     if (os.path.exists(vis) == False):
         print "au.getWeather(): Measurement set not found"
         return
-    if (os.path.exists(vis + '/table.dat') == False):
+    if (os.path.exists(vis+'/table.dat') == False):
         print "No table.dat.  This does not appear to be an ms."
         return
     try:
@@ -761,24 +793,29 @@ def getWeather(vis, scan='', antenna='0', verbose=False, vm=0, mymsmd='', debug=
         else:
             antennaName = antenna
             try:
-                antenna = getAntennaIndex(vis, antennaName)
+                antenna = getAntennaIndex(vis,antennaName)
             except:
                 antennaName = string.upper(antenna)
-                antenna = getAntennaIndex(vis, antennaName)
+                antenna = getAntennaIndex(vis,antennaName)
     except:
         print "Either the ANTENNA table does not exist or antenna %s does not exist" % (antenna)
-        return ([0, [], vm])
+        return([0,[],vm])
+    #mytb = createCasaTool(tbtool)
     mytb = casatools.table
     try:
         mytb.open("%s/POINTING" % vis)
     except:
         print "POINTING table does not exist"
-        return ([0, 0, vm])
+        return([0,0,vm])
     subtable = mytb.query("ANTENNA_ID == %s" % antenna)
     mytb.close()
     needToClose_mymsmd = False
-    if (vm == 0 or vm == ''):
-        if (mymsmd == ''):
+    if (vm == 0 or vm==''):
+        if (casadef.casa_version < casaVersionWithMSMD):
+            print "getWeather: Running ValueMapping... (this may take a minute)"
+            vm = ValueMapping(vis)
+        elif (mymsmd == ''):
+            #mymsmd = createCasaTool(msmdtool)
             mymsmd = casatools.msmd
             mymsmd.open(vis)
             needToClose_mymsmd = True
@@ -787,7 +824,7 @@ def getWeather(vis, scan='', antenna='0', verbose=False, vm=0, mymsmd='', debug=
             print "getWeather: Using current ValueMapping result"
     try:
         mytb.open("%s/OBSERVATION" % vis)
-        observatory = mytb.getcell("TELESCOPE_NAME", 0)
+        observatory = mytb.getcell("TELESCOPE_NAME",0)
         mytb.close()
     except:
         print "OBSERVATION table does not exist, assuming observatory == ALMA"
@@ -798,13 +835,12 @@ def getWeather(vis, scan='', antenna='0', verbose=False, vm=0, mymsmd='', debug=
         else:
             scan = vm.uniqueScans
     conditions = {}
-    conditions['pressure'] = conditions['temperature'] = conditions['humidity'] = conditions['dewpoint'] = conditions[
-        'windspeed'] = conditions['winddirection'] = 0
+    conditions['pressure']=conditions['temperature']=conditions['humidity']=conditions['dewpoint']=conditions['windspeed']=conditions['winddirection'] = 0
     conditions['scan'] = scan
     if (type(scan) == str):
-        if (scan.find('~') > 0):
+        if (scan.find('~')>0):
             tokens = scan.split('~')
-            scan = [int(k) for k in range(int(tokens[0]), int(tokens[1]) + 1)]
+            scan = [int(k) for k in range(int(tokens[0]),int(tokens[1])+1)]
         else:
             scan = [int(k) for k in scan.split(',')]
     if (type(scan) == np.ndarray):
@@ -825,8 +861,8 @@ def getWeather(vis, scan='', antenna='0', verbose=False, vm=0, mymsmd='', debug=
             except:
                 print "1) Error reading scan %d, is it in the data?" % (sc)
                 if (needToClose_mymsmd): mymsmd.close()
-                return ([conditions, [], vm])
-            myTimes = np.concatenate((myTimes, newTimes))
+                return([conditions,[],vm])
+            myTimes = np.concatenate((myTimes,newTimes))
     elif (scan is not None):
         try:
             if (mymsmd != '' and casadef.casa_version >= casaVersionWithMSMD):
@@ -841,11 +877,11 @@ def getWeather(vis, scan='', antenna='0', verbose=False, vm=0, mymsmd='', debug=
         except:
             print "2) Error reading scan %d, is it in the data?" % (scan)
             if (needToClose_mymsmd): mymsmd.close()
-            return ([conditions, [], vm])
+            return([conditions,[],vm])
     else:
         print "scan = ", scan
         if (needToClose_mymsmd): mymsmd.close()
-        return ([conditions, [], vm])
+        return([conditions,[],vm])
     if (type(scan) == str):
         scan = [int(k) for k in scan.split(',')]
     if (type(scan) == list):
@@ -855,7 +891,7 @@ def getWeather(vis, scan='', antenna='0', verbose=False, vm=0, mymsmd='', debug=
             if debug: print "Processing scan ", sc
             if (mymsmd != '' and casadef.casa_version >= casaVersionWithMSMD):
                 if (casadef.casa_version >= '4.4' and casadef.casa_version < '4.6'):
-                    listfield.append(mymsmd.fieldsforscan(sc, obsid=obsid))
+                    listfield.append(mymsmd.fieldsforscan(sc,obsid=obsid))
                 else:
                     listfield.append(mymsmd.fieldsforscan(sc))
             else:
@@ -879,32 +915,32 @@ def getWeather(vis, scan='', antenna='0', verbose=False, vm=0, mymsmd='', debug=
                 listfield = mymsmd.fieldsforscan(scan)
         else:
             listfield = vm.getFieldsForScan(scan)
-    [az, el] = ComputeSolarAzEl(myTimes[0], observatory)
-    [az2, el2] = ComputeSolarAzEl(myTimes[-1], observatory)
-    azsun = np.mean([az, az2])
-    elsun = np.mean([el, el2])
+    [az,el] = ComputeSolarAzEl(myTimes[0], observatory)
+    [az2,el2] = ComputeSolarAzEl(myTimes[-1], observatory)
+    azsun = np.mean([az,az2])
+    elsun = np.mean([el,el2])
     direction = subtable.getcol("DIRECTION")
     azeltime = subtable.getcol("TIME")
     subtable.close()
     telescopeName = getObservatoryName(vis)
     if (len(direction) > 0 and telescopeName.find('VLA') < 0):
-        azimuth = direction[0][0] * 180.0 / math.pi
-        elevation = direction[1][0] * 180.0 / math.pi
+        azimuth = direction[0][0]*180.0/math.pi
+        elevation = direction[1][0]*180.0/math.pi
         if debug:
             print "len(azimuth) = %d, len(myTimes)=%d" % (len(azimuth), len(myTimes))
             print "elevation = ", elevation
         npat = np.array(azeltime)
-        matches = np.where(npat >= myTimes[0])[0]
-        matches2 = np.where(npat <= myTimes[-1])[0]
+        matches = np.where(npat>=myTimes[0])[0]
+        matches2 = np.where(npat<=myTimes[-1])[0]
         if (len(matches2) > 0 and len(matches) > 0):
-            if debug: print "matches[0]=%d, matches2[-1]=%d" % (matches[0], matches[-1])
-            matchingIndices = range(matches[0], matches2[-1] + 1)
+            if debug: print "azel time matches[0]=%d, matches2[-1]=%d" % (matches[0],matches[-1])
+            matchingIndices = range(matches[0],matches2[-1]+1)
         else:
             matchingIndices = []
         if (len(matchingIndices) > 0):
-            if debug: print "matches[0]=%d, matches2[-1]=%d" % (matches[0], matches[-1])
-            conditions['azimuth'] = np.mean(azimuth[matches[0]:matches2[-1] + 1])
-            conditions['elevation'] = np.mean(elevation[matches[0]:matches2[-1] + 1])
+            if debug: print "azel time matches[0]=%d, matches2[-1]=%d" % (matches[0],matches[-1])
+            conditions['azimuth'] = np.mean(azimuth[matches[0]:matches2[-1]+1])
+            conditions['elevation'] = np.mean(elevation[matches[0]:matches2[-1]+1])
             if debug: print "elevation = ", conditions['elevation']
         elif (len(matches) > 0):
             conditions['azimuth'] = np.mean(azimuth[matches[0]])
@@ -912,39 +948,37 @@ def getWeather(vis, scan='', antenna='0', verbose=False, vm=0, mymsmd='', debug=
         else:
             conditions['azimuth'] = np.mean(azimuth)
             conditions['elevation'] = np.mean(elevation)
-        while (antennaName != antennaNames[-1] and (
-                np.abs(conditions['elevation']) < 0.001 or conditions['elevation'] != conditions['elevation'])):
+        while (antennaName != antennaNames[-1] and (np.abs(conditions['elevation']) < 0.001 or conditions['elevation'] != conditions['elevation'])):
             # Try the next antenna (needed for uid___A002_Xad565b_X20c4)
-            nextAntenna = int(antenna) + 1
+            nextAntenna = int(antenna)+1
             nextAntennaName = antennaNames[nextAntenna]
-            print "Requested antenna = %s shows elevation at/near zero (%f). Trying next antenna = %s." % (
-            antennaName, conditions['elevation'], nextAntennaName)
+            print "Requested antenna = %s shows elevation at/near zero (%f). Trying next antenna = %s." % (antennaName,conditions['elevation'],nextAntennaName)
             antenna = str(nextAntenna)
             antennaName = nextAntennaName
-            mytb.open(vis + '/POINTING')
+            mytb.open(vis+'/POINTING')
             subtable = mytb.query("ANTENNA_ID == %s" % antenna)
             direction = subtable.getcol("DIRECTION")
             azeltime = subtable.getcol("TIME")
             subtable.close()
-            azimuth = direction[0][0] * 180.0 / math.pi
-            elevation = direction[1][0] * 180.0 / math.pi
+            azimuth = direction[0][0]*180.0/math.pi
+            elevation = direction[1][0]*180.0/math.pi
             npat = np.array(azeltime)
             matches = np.where(npat >= myTimes[0])[0]
             matches2 = np.where(npat <= myTimes[-1])[0]
-            if debug: print "matches[0]=%d, matches2[-1]=%d" % (matches[0], matches[-1])
-            conditions['azimuth'] = np.mean(azimuth[matches[0]:matches2[-1] + 1])
-            conditions['elevation'] = np.mean(elevation[matches[0]:matches2[-1] + 1])
+            if debug: print "matches[0]=%d, matches2[-1]=%d" % (matches[0],matches[-1])
+            conditions['azimuth'] = np.mean(azimuth[matches[0]:matches2[-1]+1])
+            conditions['elevation'] = np.mean(elevation[matches[0]:matches2[-1]+1])
             mytb.close()
         if debug:
             print "%d matches after %f, %d matches before %f" % (len(matches), myTimes[0], len(matches2), myTimes[-1])
             print "%d matchingIndices" % (len(matchingIndices))
-        conditions['solarangle'] = angularSeparation(azsun, elsun, conditions['azimuth'], conditions['elevation'])
+        conditions['solarangle'] = angularSeparation(azsun,elsun,conditions['azimuth'],conditions['elevation'])
         conditions['solarelev'] = elsun
         conditions['solarazim'] = azsun
         if (verbose):
             print "Used antenna = %s to retrieve mean azimuth and elevation" % (antennaName)
             print "Separation from sun = %f deg" % (abs(conditions['solarangle']))
-        if (elsun < 0):
+        if (elsun<0):
             conditions['solarangle'] = -conditions['solarangle']
             if (verbose):
                 print "Sun is below horizon (elev=%.1f deg)" % (elsun)
@@ -952,150 +986,149 @@ def getWeather(vis, scan='', antenna='0', verbose=False, vm=0, mymsmd='', debug=
             if (verbose):
                 print "Sun is above horizon (elev=%.1f deg)" % (elsun)
         if (verbose):
-            print "Average azimuth = %.2f, elevation = %.2f degrees" % (conditions['azimuth'], conditions['elevation'])
+            print "Average azimuth = %.2f, elevation = %.2f degrees" % (conditions['azimuth'],conditions['elevation'])
     else:
-        if (verbose):
-            print "The POINTING table is blank."
-        if (type(scan) == int or type(scan) == np.int32):
-            # compute Az/El for this scan
-            if (mymsmd != '' and casadef.casa_version >= casaVersionWithMSMD):
-                if (casadef.casa_version >= '4.4' and casadef.casa_version < '4.6'):
-                    myfieldId = mymsmd.fieldsforscan(scan, obsid=obsid)
-                else:
-                    myfieldId = mymsmd.fieldsforscan(scan)
-                if (type(myfieldId) == list or type(myfieldId) == type(np.ndarray(0))):
-                    myfieldId = myfieldId[0]
-                fieldName = mymsmd.namesforfields(myfieldId)
-                if (type(fieldName) == list):
-                    fieldName = fieldName[0]
-            else:
-                fieldName = vm.getFieldsForScan(scan)
-                if (type(fieldName) == list):
-                    fieldName = fieldName[0]
-                myfieldId = vm.getFieldIdsForFieldName(fieldName)
-                if (type(myfieldId) == list or type(myfieldId) == type(np.ndarray(0))):
-                    # If the same field name has two IDs (this happens in EVLA data)
-                    myfieldId = myfieldId[0]
-                    #            print "type(myfieldId) = ", type(myfieldId)
-            if (mymsmd != '' and casadef.casa_version >= casaVersionWithMSMD):
-                if (casadef.casa_version >= '4.4' and casadef.casa_version < '4.6'):
-                    myscantime = np.mean(mymsmd.timesforscan(scan, obsid=obsid))
-                else:
-                    myscantime = np.mean(mymsmd.timesforscan(scan))
-            else:
-                myscantime = np.mean(vm.getTimesForScans(scan))
-            mydirection = getRADecForField(vis, myfieldId, usemstool=True)
-            if (len(telescopeName) < 1):
-                telescopeName = 'ALMA'
-            if debug:
-                print "Running computeAzElFromRADecMJD(%s, %f, %s)" % (
-                str(mydirection), myscantime / 86400., telescopeName)
-            myazel = computeAzElFromRADecMJD(mydirection, myscantime / 86400., telescopeName, verbose=False)
-            if (debug): print "myazel = ", myazel
-            conditions['elevation'] = myazel[1] * 180 / math.pi
-            conditions['azimuth'] = myazel[0] * 180 / math.pi
-            conditions['solarangle'] = angularSeparation(azsun, elsun, conditions['azimuth'], conditions['elevation'])
-            conditions['solarelev'] = elsun
-            conditions['solarazim'] = azsun
-            if (verbose):
-                print "Separation from sun = %f deg" % (abs(conditions['solarangle']))
-            if (elsun < 0):
-                conditions['solarangle'] = -conditions['solarangle']
-                if (verbose):
-                    print "Sun is below horizon (elev=%.1f deg)" % (elsun)
-            else:
-                if (verbose):
-                    print "Sun is above horizon (elev=%.1f deg)" % (elsun)
-            if (verbose):
-                print "Average azimuth = %.2f, elevation = %.2f degrees" % (
-                conditions['azimuth'], conditions['elevation'])
-        elif (type(scan) == list):
-            myaz = []
-            myel = []
-            if (verbose):
-                print "Scans to loop over = ", scan
-            for s in scan:
-                if (mymsmd != '' and casadef.casa_version >= casaVersionWithMSMD):
-                    if (casadef.casa_version >= '4.4' and casadef.casa_version < '4.6'):
-                        fieldName = mymsmd.fieldsforscan(s, obsid=obsid)
-                    else:
-                        fieldName = mymsmd.fieldsforscan(s)
-                else:
-                    fieldName = vm.getFieldsForScan(s)
-                if (type(fieldName) == list or type(fieldName) == np.ndarray):
-                    # take only the first pointing in the mosaic
-                    fieldName = fieldName[0]
-                if (mymsmd != '' and casadef.casa_version >= casaVersionWithMSMD):
-                    if (type(fieldName) == int or type(fieldName) == np.int32):
-                        myfieldId = fieldName
-                    else:
-                        myfieldId = mymsmd.fieldsforname(fieldName)
-                else:
-                    myfieldId = vm.getFieldIdsForFieldName(fieldName)
-                if (type(myfieldId) == list or type(myfieldId) == np.ndarray):
-                    # If the same field name has two IDs (this happens in EVLA data)
-                    myfieldId = myfieldId[0]
-                if (mymsmd != '' and casadef.casa_version >= casaVersionWithMSMD):
-                    if (casadef.casa_version >= '4.4' and casadef.casa_version < '4.6'):
-                        myscantime = np.mean(mymsmd.timesforscan(s, obsid=obsid))
-                    else:
-                        myscantime = np.mean(mymsmd.timesforscan(s))
-                else:
-                    myscantime = np.mean(vm.getTimesForScans(s))
-                mydirection = getRADecForField(vis, myfieldId, usemstool=True)
-                telescopeName = getObservatoryName(vis)
-                if (len(telescopeName) < 1):
-                    telescopeName = 'ALMA'
-                myazel = computeAzElFromRADecMJD(mydirection, myscantime / 86400., telescopeName, verbose=False)
-                myaz.append(myazel[0] * 180 / math.pi)
-                myel.append(myazel[1] * 180 / math.pi)
-            if debug: print "myel = ", myel
-            conditions['azimuth'] = np.mean(myaz)
-            conditions['elevation'] = np.mean(myel)
-            conditions['solarangle'] = angularSeparation(azsun, elsun, conditions['azimuth'], conditions['elevation'])
-            conditions['solarelev'] = elsun
-            conditions['solarazim'] = azsun
-            if (verbose):
-                print "*Using antenna = %s to retrieve mean azimuth and elevation" % (antennaName)
-                print "Separation from sun = %f deg" % (abs(conditions['solarangle']))
-            if (elsun < 0):
-                conditions['solarangle'] = -conditions['solarangle']
-                if (verbose):
-                    print "Sun is below horizon (elev=%.1f deg)" % (elsun)
-            else:
-                if (verbose):
-                    print "Sun is above horizon (elev=%.1f deg)" % (elsun)
-            if (verbose):
-                print "Average azimuth = %.2f, elevation = %.2f degrees" % (
-                conditions['azimuth'], conditions['elevation'])
-
+      if (verbose):
+          print "The POINTING table is blank."
+      if (type(scan) == int or type(scan)==np.int32):
+          # compute Az/El for this scan
+          if (mymsmd != '' and casadef.casa_version >= casaVersionWithMSMD):
+              if (casadef.casa_version >= '4.4' and casadef.casa_version < '4.6'):
+                  myfieldId = mymsmd.fieldsforscan(scan,obsid=obsid)
+              else:
+                  myfieldId = mymsmd.fieldsforscan(scan)
+              if (type(myfieldId) == list or type(myfieldId) == type(np.ndarray(0))):
+                  myfieldId = myfieldId[0]
+              fieldName = mymsmd.namesforfields(myfieldId)
+              if (type(fieldName) == list):
+                  fieldName = fieldName[0]
+          else:
+              fieldName = vm.getFieldsForScan(scan)
+              if (type(fieldName) == list):
+                  fieldName = fieldName[0]
+              myfieldId = vm.getFieldIdsForFieldName(fieldName)
+              if (type(myfieldId) == list or type(myfieldId) == type(np.ndarray(0))):
+                  # If the same field name has two IDs (this happens in EVLA data)
+                  myfieldId = myfieldId[0]
+  #            print "type(myfieldId) = ", type(myfieldId)
+          if (mymsmd != '' and casadef.casa_version >= casaVersionWithMSMD):
+              if (casadef.casa_version >= '4.4' and casadef.casa_version < '4.6'):
+                  myscantime = np.mean(mymsmd.timesforscan(scan,obsid=obsid))
+              else:
+                  myscantime = np.mean(mymsmd.timesforscan(scan))
+          else:
+              myscantime = np.mean(vm.getTimesForScans(scan))
+          mydirection = getRADecForField(vis, myfieldId, usemstool=True)
+          if (len(telescopeName) < 1):
+              telescopeName = 'ALMA'
+          if debug:
+              print "Running computeAzElFromRADecMJD(%s, %f, %s)" % (str(mydirection),myscantime/86400.,telescopeName)
+          myazel = computeAzElFromRADecMJD(mydirection, myscantime/86400., telescopeName, verbose=False)
+          if (debug): print "myazel = ", myazel
+          conditions['elevation'] = myazel[1] * 180/math.pi
+          conditions['azimuth'] = myazel[0] * 180/math.pi
+          conditions['solarangle'] = angularSeparation(azsun,elsun,conditions['azimuth'],conditions['elevation'])
+          conditions['solarelev'] = elsun
+          conditions['solarazim'] = azsun
+          if (verbose):
+              print "Separation from sun = %f deg" % (abs(conditions['solarangle']))
+          if (elsun<0):
+              conditions['solarangle'] = -conditions['solarangle']
+              if (verbose):
+                  print "Sun is below horizon (elev=%.1f deg)" % (elsun)
+          else:
+              if (verbose):
+                  print "Sun is above horizon (elev=%.1f deg)" % (elsun)
+          if (verbose):
+              print "Average azimuth = %.2f, elevation = %.2f degrees" % (conditions['azimuth'],conditions['elevation'])
+      elif (type(scan) == list):
+          myaz = []
+          myel = []
+          if (verbose):
+              print "Scans to loop over = ", scan
+          for s in scan:
+              if (mymsmd != '' and casadef.casa_version >= casaVersionWithMSMD):
+                  if (casadef.casa_version >= '4.4' and casadef.casa_version < '4.6'):
+                      fieldName = mymsmd.fieldsforscan(s,obsid=obsid)
+                  else:
+                      fieldName = mymsmd.fieldsforscan(s)
+              else:
+                  fieldName = vm.getFieldsForScan(s)
+              if (type(fieldName) == list or type(fieldName)==np.ndarray):
+                  # take only the first pointing in the mosaic
+                  fieldName = fieldName[0]
+              if (mymsmd != '' and casadef.casa_version >= casaVersionWithMSMD):
+                  if (type(fieldName) == int or type(fieldName)==np.int32):
+                      myfieldId = fieldName
+                  else:
+                      myfieldId = mymsmd.fieldsforname(fieldName)
+              else:
+                  myfieldId = vm.getFieldIdsForFieldName(fieldName)
+              if (type(myfieldId) == list or type(myfieldId)==np.ndarray):
+                  # If the same field name has two IDs (this happens in EVLA data)
+                  myfieldId = myfieldId[0]
+              if (mymsmd != '' and casadef.casa_version >= casaVersionWithMSMD):
+                  if (casadef.casa_version >= '4.4' and casadef.casa_version < '4.6'):
+                      myscantime = np.mean(mymsmd.timesforscan(s,obsid=obsid))
+                  else:
+                      myscantime = np.mean(mymsmd.timesforscan(s))
+              else:
+                  myscantime = np.mean(vm.getTimesForScans(s))
+              mydirection = getRADecForField(vis, myfieldId, usemstool=True)
+              telescopeName = getObservatoryName(vis)
+              if (len(telescopeName) < 1):
+                  telescopeName = 'ALMA'
+              myazel = computeAzElFromRADecMJD(mydirection, myscantime/86400., telescopeName, verbose=False)
+              myaz.append(myazel[0]*180/math.pi)
+              myel.append(myazel[1]*180/math.pi)
+          if debug: print "myel = ", myel
+          conditions['azimuth'] = np.mean(myaz)
+          conditions['elevation'] = np.mean(myel)
+          conditions['solarangle'] = angularSeparation(azsun,elsun,conditions['azimuth'],conditions['elevation'])
+          conditions['solarelev'] = elsun
+          conditions['solarazim'] = azsun
+          if (verbose):
+              print "*Using antenna = %s to retrieve mean azimuth and elevation" % (antennaName)
+              print "Separation from sun = %f deg" % (abs(conditions['solarangle']))
+          if (elsun<0):
+              conditions['solarangle'] = -conditions['solarangle']
+              if (verbose):
+                  print "Sun is below horizon (elev=%.1f deg)" % (elsun)
+          else:
+              if (verbose):
+                  print "Sun is above horizon (elev=%.1f deg)" % (elsun)
+          if (verbose):
+              print "Average azimuth = %.2f, elevation = %.2f degrees" % (conditions['azimuth'],conditions['elevation'])
+          
+              
     # now, get the weather
     try:
         mytb.open("%s/WEATHER" % vis)
     except:
         print "Could not open the WEATHER table for this ms."
         if (needToClose_mymsmd): mymsmd.close()
-        return ([conditions, myTimes, vm])
+        return([conditions,myTimes,vm])
     if (True):
         mjdsec = mytb.getcol('TIME')
         indices = np.argsort(mjdsec)
-        mjd = mjdsec / 86400.
+        mjd = mjdsec/86400.
         pressure = mytb.getcol('PRESSURE')
         relativeHumidity = mytb.getcol('REL_HUMIDITY')
         temperature = mytb.getcol('TEMPERATURE')
         if (np.mean(temperature) > 100):
             # must be in units of Kelvin, so convert to C
-            temperature -= 273.15
+            temperature -= 273.15        
         dewPoint = mytb.getcol('DEW_POINT')
         if (np.mean(dewPoint) > 100):
             # must be in units of Kelvin, so convert to C
-            dewPoint -= 273.15
+            dewPoint -= 273.15        
         if (np.mean(dewPoint) == 0):
             # assume it is not measured and use NOAA formula to compute from humidity:
             dewPoint = ComputeDewPointCFromRHAndTempC(relativeHumidity, temperature)
         sinWindDirection = np.sin(mytb.getcol('WIND_DIRECTION'))
         cosWindDirection = np.cos(mytb.getcol('WIND_DIRECTION'))
         windSpeed = mytb.getcol('WIND_SPEED')
+        stations = mytb.getcol('NS_WX_STATION_ID')
         mytb.close()
 
         # put values into time order (they mostly are, but there can be small differences)
@@ -1107,27 +1140,58 @@ def getWeather(vis, scan='', antenna='0', verbose=False, vm=0, mymsmd='', debug=
         windSpeed = np.array(windSpeed)[indices]
         sinWindDirection = np.array(sinWindDirection)[indices]
         cosWindDirection = np.array(cosWindDirection)[indices]
+        stations = np.array(stations)[indices]
+
+        if preferredStation != '':
+            wsdict = getWeatherStationNames(vis)
+            if wsdict is not None:
+                preferredStationID = None
+                for w in wsdict.keys():
+                    if wsdict[w].find(preferredStation) >= 0:
+                        preferredStationID = w
+                if preferredStationID is None:
+                    print "Preferred station not found in this dataset. Using all."
+                else:
+                    indices = np.where(stations == preferredStationID)
+                    mjdsec = np.array(mjdsec)[indices]
+                    pressure = np.array(pressure)[indices]
+                    relativeHumidity = np.array(relativeHumidity)[indices]
+                    temperature = np.array(temperature)[indices]
+                    dewPoint = np.array(dewPoint)[indices]
+                    windSpeed = np.array(windSpeed)[indices]
+                    sinWindDirection = np.array(sinWindDirection)[indices]
+                    cosWindDirection = np.array(cosWindDirection)[indices]
+                    stations = np.array(stations)[indices]
 
         # find the overlap of weather measurement times and scan times
-        matches = np.where(mjdsec >= np.min(myTimes))[0]
-        matches2 = np.where(mjdsec <= np.max(myTimes))[0]
+        matches = np.where(mjdsec>=np.min(myTimes))[0]
+        matches2 = np.where(mjdsec<=np.max(myTimes))[0]
         if debug:
-            print "len(matches)=%d, len(matches2)=%d, len(myTimes)=%d, len(mjdsec)=%d" % (
-            len(matches), len(matches2), len(myTimes), len(mjdsec))
+            print "len(matches)=%d, len(matches2)=%d, len(myTimes)=%d, len(mjdsec)=%d" % (len(matches), len(matches2), len(myTimes), len(mjdsec))
+            print "min-max time: %s - %s" % (mjdsecToUTHMS(np.min(myTimes)), mjdsecToUTHMS(np.max(myTimes)))
         noWeatherData = False
-        if (len(matches) > 0 and len(matches2) > 0):
+        if (len(matches)>0 and len(matches2) > 0):
             # average the weather points enclosed by the scan time range
-            selectedValues = range(matches[0], matches2[-1] + 1)
-            if (selectedValues == []):
+            selectedValues = range(matches[0], matches2[-1]+1)
+            if debug:
+                print "--- matches = ", matches
+                print "--- matches2 = ", matches2
+                print "--- selectedValues = ", selectedValues
+            if (len(selectedValues) == 0):
                 # there was a either gap in the weather data, or an incredibly short scan duration
-                if (verbose):
+                if debug:
                     print "----  Finding the nearest weather value --------------------------- "
                 selectedValues = findClosestTime(mjdsec, myTimes[0])
-        elif (len(matches) > 0):
+            else:
+                if debug: 
+                    print "--- Taking the %d values within the scan time range of %.1f seconds -----" % (len(selectedValues),np.max(myTimes)-np.min(myTimes))
+        elif (len(matches)>0):
             # all points are greater than myTime, so take the first one
+            if debug: print "--- Taking the closest value to the scan time range (after it) -----"
             selectedValues = matches[0]
-        elif (len(matches2) > 0):
+        elif (len(matches2)>0):
             # all points are less than myTime, so take the last one
+            if debug: print "--- Taking the closest value to the scan time range (before it) -----"
             selectedValues = matches2[-1]
         else:
             # table has no weather data!
@@ -1141,14 +1205,12 @@ def getWeather(vis, scan='', antenna='0', verbose=False, vm=0, mymsmd='', debug=
             conditions['winddirection'] = 0
             print "WARNING: No weather data found in the WEATHER table!"
         else:
-            if (type(selectedValues) == np.int64 or type(selectedValues) == np.int32 or
-                        type(selectedValues) == np.int):
+            if (type(selectedValues) == np.int64 or type(selectedValues) == np.int32 or  
+                type(selectedValues) == np.int):
                 conditions['readings'] = 1
                 if (verbose):
                     print "selectedValues=%d, myTimes[0]=%.0f, len(matches)=%d, len(matches2)=%d" % (selectedValues,
-                                                                                                     myTimes[0],
-                                                                                                     len(matches),
-                                                                                                     len(matches2))
+                                                 myTimes[0], len(matches), len(matches2))
                     if (len(matches) > 0):
                         print "matches[0]=%f, matches[-1]=%f" % (matches[0], matches[-1])
                     if (len(matches2) > 0):
@@ -1161,18 +1223,16 @@ def getWeather(vis, scan='', antenna='0', verbose=False, vm=0, mymsmd='', debug=
                 if (verbose):
                     print ">>>>>>>>>>>>>>>>>>>>>>>>  selectedValues = ", selectedValues
                     print "len(matches)=%d, len(matches2)=%d" % (len(matches), len(matches2))
-                    print "matches[0]=%f, matches[-1]=%f, matches2[0]=%f, matches2[-1]=%d" % (
-                    matches[0], matches[-1], matches2[0], matches2[-1])
+                    print "matches[0]=%f, matches[-1]=%f, matches2[0]=%f, matches2[-1]=%d" % (matches[0], matches[-1], matches2[0], matches2[-1])
             conditions['temperature'] = np.mean(temperature[selectedValues])
             conditions['humidity'] = np.mean(relativeHumidity[selectedValues])
             conditions['dewpoint'] = np.mean(dewPoint[selectedValues])
             conditions['windspeed'] = np.mean(windSpeed[selectedValues])
-            conditions['winddirection'] = (180. / math.pi) * np.arctan2(np.mean(sinWindDirection[selectedValues]),
-                                                                        np.mean(cosWindDirection[selectedValues]))
+            conditions['winddirection'] = (180./math.pi)*np.arctan2(np.mean(sinWindDirection[selectedValues]),np.mean(cosWindDirection[selectedValues]))
             if (conditions['winddirection'] < 0):
                 conditions['winddirection'] += 360
-            if (verbose and noWeatherData == False):
-                print "Mean weather values for scan %s (field %s)" % (listscan, listfield)
+            if (verbose and noWeatherData==False):
+                print "Mean weather values for scan %s (field %s)" % (listscan,listfield)
                 print "  Pressure = %.2f mb" % (conditions['pressure'])
                 print "  Temperature = %.2f C" % (conditions['temperature'])
                 print "  Dew point = %.2f C" % (conditions['dewpoint'])
@@ -1181,9 +1241,465 @@ def getWeather(vis, scan='', antenna='0', verbose=False, vm=0, mymsmd='', debug=
                 print "  Wind direction = %.2f deg" % (conditions['winddirection'])
 
     if (needToClose_mymsmd): mymsmd.close()
-    return ([conditions, myTimes, vm])
+    return([conditions,myTimes,vm])
     # end of getWeather   forscan
 
+#def getWeather(vis, scan='', antenna='0', verbose=False, vm=0, mymsmd='', debug=False, obsid=0):
+#    """
+#    Queries the WEATHER and ANTENNA tables of an .ms by scan number or
+#    list of scan numbers in order to return:
+#    * a dictionary of mean values of: angleToSun,
+#      pressure, temperature, humidity, dew point, wind speed, wind direction,
+#      azimuth, elevation, solarangle, solarelev, solarazim.
+#    * a list of science data timestamps in MJD seconds (not weather data times!)
+#    * zero, or the ValueMapping object
+#    If the sun is below the horizon, the solarangle returns is negated.
+#    If run in casa 4.4 or 4.5, and a concatenated measurement set is used, then the
+#       obsid must be specified for the desired scan, due to a change in msmd.  This
+#       behavior is fixed in casa 4.6.
+#    If run in casa < 4.1.0, this function needs to run ValueMapping, unless
+#    a ValueMapping object is passed via the vm argument. Otherwise it will
+#    run msmd.open, unless an msmd tool is passed via the mymsmd argument.
+#    -- Todd Hunter
+#    """
+#    if (debug):
+#        print "Entered getWeather with vis,scan,antenna = ", vis, ",", scan, ",", antenna
+#    if (os.path.exists(vis) == False):
+#        print "au.getWeather(): Measurement set not found"
+#        return
+#    if (os.path.exists(vis + '/table.dat') == False):
+#        print "No table.dat.  This does not appear to be an ms."
+#        return
+#    try:
+#        antennaNames = getAntennaNames(vis)
+#        if str(antenna).isdigit():
+#            antennaName = antennaNames[int(str(antenna))]
+#        else:
+#            antennaName = antenna
+#            try:
+#                antenna = getAntennaIndex(vis, antennaName)
+#            except:
+#                antennaName = string.upper(antenna)
+#                antenna = getAntennaIndex(vis, antennaName)
+#    except:
+#        print "Either the ANTENNA table does not exist or antenna %s does not exist" % (antenna)
+#        return ([0, [], vm])
+#    mytb = casatools.table
+#    try:
+#        mytb.open("%s/POINTING" % vis)
+#    except:
+#        print "POINTING table does not exist"
+#        return ([0, 0, vm])
+#    subtable = mytb.query("ANTENNA_ID == %s" % antenna)
+#    mytb.close()
+#    needToClose_mymsmd = False
+#    if (vm == 0 or vm == ''):
+#        if (mymsmd == ''):
+#            mymsmd = casatools.msmd
+#            mymsmd.open(vis)
+#            needToClose_mymsmd = True
+#    else:
+#        if (verbose):
+#            print "getWeather: Using current ValueMapping result"
+#    try:
+#        mytb.open("%s/OBSERVATION" % vis)
+#        observatory = mytb.getcell("TELESCOPE_NAME", 0)
+#        mytb.close()
+#    except:
+#        print "OBSERVATION table does not exist, assuming observatory == ALMA"
+#        observatory = "ALMA"
+#    if (scan == ''):
+#        if (mymsmd != '' and casadef.casa_version >= casaVersionWithMSMD):
+#            scan = mymsmd.scannumbers()
+#        else:
+#            scan = vm.uniqueScans
+#    conditions = {}
+#    conditions['pressure'] = conditions['temperature'] = conditions['humidity'] = conditions['dewpoint'] = conditions[
+#        'windspeed'] = conditions['winddirection'] = 0
+#    conditions['scan'] = scan
+#    if (type(scan) == str):
+#        if (scan.find('~') > 0):
+#            tokens = scan.split('~')
+#            scan = [int(k) for k in range(int(tokens[0]), int(tokens[1]) + 1)]
+#        else:
+#            scan = [int(k) for k in scan.split(',')]
+#    if (type(scan) == np.ndarray):
+#        scan = list(scan)
+#    if (type(scan) == list):
+#        myTimes = np.array([])
+#        for sc in scan:
+#            try:
+#                if (mymsmd != '' and casadef.casa_version >= casaVersionWithMSMD):
+#                    if debug: print "1) Calling mymsmd.timesforscan(%d)" % (sc)
+#                    if (casadef.casa_version >= '4.4' and casadef.casa_version < '4.6'):
+#                        newTimes = mymsmd.timesforscan(sc, obsid=obsid)
+#                    else:
+#                        newTimes = mymsmd.timesforscan(sc)
+#                else:
+#                    if debug: print "1) Calling vm.getTimesForScan(%d)" % (sc)
+#                    newTimes = vm.getTimesForScan(sc)
+#            except:
+#                print "1) Error reading scan %d, is it in the data?" % (sc)
+#                if (needToClose_mymsmd): mymsmd.close()
+#                return ([conditions, [], vm])
+#            myTimes = np.concatenate((myTimes, newTimes))
+#    elif (scan is not None):
+#        try:
+#            if (mymsmd != '' and casadef.casa_version >= casaVersionWithMSMD):
+#                if debug: print "2) Calling mymsmd.timesforscan(%d)" % (scan)
+#                if (casadef.casa_version >= '4.4' and casadef.casa_version < '4.6'):
+#                    myTimes = mymsmd.timesforscan(scan, obsid=obsid)
+#                else:
+#                    myTimes = mymsmd.timesforscan(scan)
+#            else:
+#                if debug: print "2) Calling vm.getTimesForScan(%d)" % (scan)
+#                myTimes = vm.getTimesForScan(scan)
+#        except:
+#            print "2) Error reading scan %d, is it in the data?" % (scan)
+#            if (needToClose_mymsmd): mymsmd.close()
+#            return ([conditions, [], vm])
+#    else:
+#        print "scan = ", scan
+#        if (needToClose_mymsmd): mymsmd.close()
+#        return ([conditions, [], vm])
+#    if (type(scan) == str):
+#        scan = [int(k) for k in scan.split(',')]
+#    if (type(scan) == list):
+#        listscan = ""
+#        listfield = []
+#        for sc in scan:
+#            if debug: print "Processing scan ", sc
+#            if (mymsmd != '' and casadef.casa_version >= casaVersionWithMSMD):
+#                if (casadef.casa_version >= '4.4' and casadef.casa_version < '4.6'):
+#                    listfield.append(mymsmd.fieldsforscan(sc, obsid=obsid))
+#                else:
+#                    listfield.append(mymsmd.fieldsforscan(sc))
+#            else:
+#                listfield.append(vm.getFieldsForScan(sc))
+#            listscan += "%d" % sc
+#            if (sc != scan[-1]):
+#                listscan += ","
+#        if debug: print "listfield = ", listfield
+#        listfields = np.unique(listfield[0])
+#        listfield = ""
+#        for field in listfields:
+#            listfield += "%s" % field
+#            if (field != listfields[-1]):
+#                listfield += ","
+#    else:
+#        listscan = str(scan)
+#        if (mymsmd != '' and casadef.casa_version >= casaVersionWithMSMD):
+#            if (casadef.casa_version >= '4.4' and casadef.casa_version < '4.6'):
+#                listfield = mymsmd.fieldsforscan(scan, obsid=obsid)
+#            else:
+#                listfield = mymsmd.fieldsforscan(scan)
+#        else:
+#            listfield = vm.getFieldsForScan(scan)
+#    [az, el] = ComputeSolarAzEl(myTimes[0], observatory)
+#    [az2, el2] = ComputeSolarAzEl(myTimes[-1], observatory)
+#    azsun = np.mean([az, az2])
+#    elsun = np.mean([el, el2])
+#    direction = subtable.getcol("DIRECTION")
+#    azeltime = subtable.getcol("TIME")
+#    subtable.close()
+#    telescopeName = getObservatoryName(vis)
+#    if (len(direction) > 0 and telescopeName.find('VLA') < 0):
+#        azimuth = direction[0][0] * 180.0 / math.pi
+#        elevation = direction[1][0] * 180.0 / math.pi
+#        if debug:
+#            print "len(azimuth) = %d, len(myTimes)=%d" % (len(azimuth), len(myTimes))
+#            print "elevation = ", elevation
+#        npat = np.array(azeltime)
+#        matches = np.where(npat >= myTimes[0])[0]
+#        matches2 = np.where(npat <= myTimes[-1])[0]
+#        if (len(matches2) > 0 and len(matches) > 0):
+#            if debug: print "matches[0]=%d, matches2[-1]=%d" % (matches[0], matches[-1])
+#            matchingIndices = range(matches[0], matches2[-1] + 1)
+#        else:
+#            matchingIndices = []
+#        if (len(matchingIndices) > 0):
+#            if debug: print "matches[0]=%d, matches2[-1]=%d" % (matches[0], matches[-1])
+#            conditions['azimuth'] = np.mean(azimuth[matches[0]:matches2[-1] + 1])
+#            conditions['elevation'] = np.mean(elevation[matches[0]:matches2[-1] + 1])
+#            if debug: print "elevation = ", conditions['elevation']
+#        elif (len(matches) > 0):
+#            conditions['azimuth'] = np.mean(azimuth[matches[0]])
+#            conditions['elevation'] = np.mean(elevation[matches[0]])
+#        else:
+#            conditions['azimuth'] = np.mean(azimuth)
+#            conditions['elevation'] = np.mean(elevation)
+#        while (antennaName != antennaNames[-1] and (
+#                np.abs(conditions['elevation']) < 0.001 or conditions['elevation'] != conditions['elevation'])):
+#            # Try the next antenna (needed for uid___A002_Xad565b_X20c4)
+#            nextAntenna = int(antenna) + 1
+#            nextAntennaName = antennaNames[nextAntenna]
+#            print "Requested antenna = %s shows elevation at/near zero (%f). Trying next antenna = %s." % (
+#            antennaName, conditions['elevation'], nextAntennaName)
+#            antenna = str(nextAntenna)
+#            antennaName = nextAntennaName
+#            mytb.open(vis + '/POINTING')
+#            subtable = mytb.query("ANTENNA_ID == %s" % antenna)
+#            direction = subtable.getcol("DIRECTION")
+#            azeltime = subtable.getcol("TIME")
+#            subtable.close()
+#            azimuth = direction[0][0] * 180.0 / math.pi
+#            elevation = direction[1][0] * 180.0 / math.pi
+#            npat = np.array(azeltime)
+#            matches = np.where(npat >= myTimes[0])[0]
+#            matches2 = np.where(npat <= myTimes[-1])[0]
+#            if debug: print "matches[0]=%d, matches2[-1]=%d" % (matches[0], matches[-1])
+#            conditions['azimuth'] = np.mean(azimuth[matches[0]:matches2[-1] + 1])
+#            conditions['elevation'] = np.mean(elevation[matches[0]:matches2[-1] + 1])
+#            mytb.close()
+#        if debug:
+#            print "%d matches after %f, %d matches before %f" % (len(matches), myTimes[0], len(matches2), myTimes[-1])
+#            print "%d matchingIndices" % (len(matchingIndices))
+#        conditions['solarangle'] = angularSeparation(azsun, elsun, conditions['azimuth'], conditions['elevation'])
+#        conditions['solarelev'] = elsun
+#        conditions['solarazim'] = azsun
+#        if (verbose):
+#            print "Used antenna = %s to retrieve mean azimuth and elevation" % (antennaName)
+#            print "Separation from sun = %f deg" % (abs(conditions['solarangle']))
+#        if (elsun < 0):
+#            conditions['solarangle'] = -conditions['solarangle']
+#            if (verbose):
+#                print "Sun is below horizon (elev=%.1f deg)" % (elsun)
+#        else:
+#            if (verbose):
+#                print "Sun is above horizon (elev=%.1f deg)" % (elsun)
+#        if (verbose):
+#            print "Average azimuth = %.2f, elevation = %.2f degrees" % (conditions['azimuth'], conditions['elevation'])
+#    else:
+#        if (verbose):
+#            print "The POINTING table is blank."
+#        if (type(scan) == int or type(scan) == np.int32):
+#            # compute Az/El for this scan
+#            if (mymsmd != '' and casadef.casa_version >= casaVersionWithMSMD):
+#                if (casadef.casa_version >= '4.4' and casadef.casa_version < '4.6'):
+#                    myfieldId = mymsmd.fieldsforscan(scan, obsid=obsid)
+#                else:
+#                    myfieldId = mymsmd.fieldsforscan(scan)
+#                if (type(myfieldId) == list or type(myfieldId) == type(np.ndarray(0))):
+#                    myfieldId = myfieldId[0]
+#                fieldName = mymsmd.namesforfields(myfieldId)
+#                if (type(fieldName) == list):
+#                    fieldName = fieldName[0]
+#            else:
+#                fieldName = vm.getFieldsForScan(scan)
+#                if (type(fieldName) == list):
+#                    fieldName = fieldName[0]
+#                myfieldId = vm.getFieldIdsForFieldName(fieldName)
+#                if (type(myfieldId) == list or type(myfieldId) == type(np.ndarray(0))):
+#                    # If the same field name has two IDs (this happens in EVLA data)
+#                    myfieldId = myfieldId[0]
+#                    #            print "type(myfieldId) = ", type(myfieldId)
+#            if (mymsmd != '' and casadef.casa_version >= casaVersionWithMSMD):
+#                if (casadef.casa_version >= '4.4' and casadef.casa_version < '4.6'):
+#                    myscantime = np.mean(mymsmd.timesforscan(scan, obsid=obsid))
+#                else:
+#                    myscantime = np.mean(mymsmd.timesforscan(scan))
+#            else:
+#                myscantime = np.mean(vm.getTimesForScans(scan))
+#            mydirection = getRADecForField(vis, myfieldId, usemstool=True)
+#            if (len(telescopeName) < 1):
+#                telescopeName = 'ALMA'
+#            if debug:
+#                print "Running computeAzElFromRADecMJD(%s, %f, %s)" % (
+#                str(mydirection), myscantime / 86400., telescopeName)
+#            myazel = computeAzElFromRADecMJD(mydirection, myscantime / 86400., telescopeName, verbose=False)
+#            if (debug): print "myazel = ", myazel
+#            conditions['elevation'] = myazel[1] * 180 / math.pi
+#            conditions['azimuth'] = myazel[0] * 180 / math.pi
+#            conditions['solarangle'] = angularSeparation(azsun, elsun, conditions['azimuth'], conditions['elevation'])
+#            conditions['solarelev'] = elsun
+#            conditions['solarazim'] = azsun
+#            if (verbose):
+#                print "Separation from sun = %f deg" % (abs(conditions['solarangle']))
+#            if (elsun < 0):
+#                conditions['solarangle'] = -conditions['solarangle']
+#                if (verbose):
+#                    print "Sun is below horizon (elev=%.1f deg)" % (elsun)
+#            else:
+#                if (verbose):
+#                    print "Sun is above horizon (elev=%.1f deg)" % (elsun)
+#            if (verbose):
+#                print "Average azimuth = %.2f, elevation = %.2f degrees" % (
+#                conditions['azimuth'], conditions['elevation'])
+#        elif (type(scan) == list):
+#            myaz = []
+#            myel = []
+#            if (verbose):
+#                print "Scans to loop over = ", scan
+#            for s in scan:
+#                if (mymsmd != '' and casadef.casa_version >= casaVersionWithMSMD):
+#                    if (casadef.casa_version >= '4.4' and casadef.casa_version < '4.6'):
+#                        fieldName = mymsmd.fieldsforscan(s, obsid=obsid)
+#                    else:
+#                        fieldName = mymsmd.fieldsforscan(s)
+#                else:
+#                    fieldName = vm.getFieldsForScan(s)
+#                if (type(fieldName) == list or type(fieldName) == np.ndarray):
+#                    # take only the first pointing in the mosaic
+#                    fieldName = fieldName[0]
+#                if (mymsmd != '' and casadef.casa_version >= casaVersionWithMSMD):
+#                    if (type(fieldName) == int or type(fieldName) == np.int32):
+#                        myfieldId = fieldName
+#                    else:
+#                        myfieldId = mymsmd.fieldsforname(fieldName)
+#                else:
+#                    myfieldId = vm.getFieldIdsForFieldName(fieldName)
+#                if (type(myfieldId) == list or type(myfieldId) == np.ndarray):
+#                    # If the same field name has two IDs (this happens in EVLA data)
+#                    myfieldId = myfieldId[0]
+#                if (mymsmd != '' and casadef.casa_version >= casaVersionWithMSMD):
+#                    if (casadef.casa_version >= '4.4' and casadef.casa_version < '4.6'):
+#                        myscantime = np.mean(mymsmd.timesforscan(s, obsid=obsid))
+#                    else:
+#                        myscantime = np.mean(mymsmd.timesforscan(s))
+#                else:
+#                    myscantime = np.mean(vm.getTimesForScans(s))
+#                mydirection = getRADecForField(vis, myfieldId, usemstool=True)
+#                telescopeName = getObservatoryName(vis)
+#                if (len(telescopeName) < 1):
+#                    telescopeName = 'ALMA'
+#                myazel = computeAzElFromRADecMJD(mydirection, myscantime / 86400., telescopeName, verbose=False)
+#                myaz.append(myazel[0] * 180 / math.pi)
+#                myel.append(myazel[1] * 180 / math.pi)
+#            if debug: print "myel = ", myel
+#            conditions['azimuth'] = np.mean(myaz)
+#            conditions['elevation'] = np.mean(myel)
+#            conditions['solarangle'] = angularSeparation(azsun, elsun, conditions['azimuth'], conditions['elevation'])
+#            conditions['solarelev'] = elsun
+#            conditions['solarazim'] = azsun
+#            if (verbose):
+#                print "*Using antenna = %s to retrieve mean azimuth and elevation" % (antennaName)
+#                print "Separation from sun = %f deg" % (abs(conditions['solarangle']))
+#            if (elsun < 0):
+#                conditions['solarangle'] = -conditions['solarangle']
+#                if (verbose):
+#                    print "Sun is below horizon (elev=%.1f deg)" % (elsun)
+#            else:
+#                if (verbose):
+#                    print "Sun is above horizon (elev=%.1f deg)" % (elsun)
+#            if (verbose):
+#                print "Average azimuth = %.2f, elevation = %.2f degrees" % (
+#                conditions['azimuth'], conditions['elevation'])
+#
+#    # now, get the weather
+#    try:
+#        mytb.open("%s/WEATHER" % vis)
+#    except:
+#        print "Could not open the WEATHER table for this ms."
+#        if (needToClose_mymsmd): mymsmd.close()
+#        return ([conditions, myTimes, vm])
+#    if (True):
+#        mjdsec = mytb.getcol('TIME')
+#        indices = np.argsort(mjdsec)
+#        mjd = mjdsec / 86400.
+#        pressure = mytb.getcol('PRESSURE')
+#        relativeHumidity = mytb.getcol('REL_HUMIDITY')
+#        temperature = mytb.getcol('TEMPERATURE')
+#        if (np.mean(temperature) > 100):
+#            # must be in units of Kelvin, so convert to C
+#            temperature -= 273.15
+#        dewPoint = mytb.getcol('DEW_POINT')
+#        if (np.mean(dewPoint) > 100):
+#            # must be in units of Kelvin, so convert to C
+#            dewPoint -= 273.15
+#        if (np.mean(dewPoint) == 0):
+#            # assume it is not measured and use NOAA formula to compute from humidity:
+#            dewPoint = ComputeDewPointCFromRHAndTempC(relativeHumidity, temperature)
+#        sinWindDirection = np.sin(mytb.getcol('WIND_DIRECTION'))
+#        cosWindDirection = np.cos(mytb.getcol('WIND_DIRECTION'))
+#        windSpeed = mytb.getcol('WIND_SPEED')
+#        mytb.close()
+#
+#        # put values into time order (they mostly are, but there can be small differences)
+#        mjdsec = np.array(mjdsec)[indices]
+#        pressure = np.array(pressure)[indices]
+#        relativeHumidity = np.array(relativeHumidity)[indices]
+#        temperature = np.array(temperature)[indices]
+#        dewPoint = np.array(dewPoint)[indices]
+#        windSpeed = np.array(windSpeed)[indices]
+#        sinWindDirection = np.array(sinWindDirection)[indices]
+#        cosWindDirection = np.array(cosWindDirection)[indices]
+#
+#        # find the overlap of weather measurement times and scan times
+#        matches = np.where(mjdsec >= np.min(myTimes))[0]
+#        matches2 = np.where(mjdsec <= np.max(myTimes))[0]
+#        if debug:
+#            print "len(matches)=%d, len(matches2)=%d, len(myTimes)=%d, len(mjdsec)=%d" % (
+#            len(matches), len(matches2), len(myTimes), len(mjdsec))
+#        noWeatherData = False
+#        if (len(matches) > 0 and len(matches2) > 0):
+#            # average the weather points enclosed by the scan time range
+#            selectedValues = range(matches[0], matches2[-1] + 1)
+#            if (selectedValues == []):
+#                # there was a either gap in the weather data, or an incredibly short scan duration
+#                if (verbose):
+#                    print "----  Finding the nearest weather value --------------------------- "
+#                selectedValues = findClosestTime(mjdsec, myTimes[0])
+#        elif (len(matches) > 0):
+#            # all points are greater than myTime, so take the first one
+#            selectedValues = matches[0]
+#        elif (len(matches2) > 0):
+#            # all points are less than myTime, so take the last one
+#            selectedValues = matches2[-1]
+#        else:
+#            # table has no weather data!
+#            noWeatherData = True
+#        if (noWeatherData):
+#            conditions['pressure'] = 563.0
+#            conditions['temperature'] = 0  # Celsius is expected
+#            conditions['humidity'] = 20.0
+#            conditions['dewpoint'] = -20.0
+#            conditions['windspeed'] = 0
+#            conditions['winddirection'] = 0
+#            print "WARNING: No weather data found in the WEATHER table!"
+#        else:
+#            if (type(selectedValues) == np.int64 or type(selectedValues) == np.int32 or
+#                        type(selectedValues) == np.int):
+#                conditions['readings'] = 1
+#                if (verbose):
+#                    print "selectedValues=%d, myTimes[0]=%.0f, len(matches)=%d, len(matches2)=%d" % (selectedValues,
+#                                                                                                     myTimes[0],
+#                                                                                                     len(matches),
+#                                                                                                     len(matches2))
+#                    if (len(matches) > 0):
+#                        print "matches[0]=%f, matches[-1]=%f" % (matches[0], matches[-1])
+#                    if (len(matches2) > 0):
+#                        print "matches2[0]=%f, matches2[-1]=%d" % (matches2[0], matches2[-1])
+#            else:
+#                conditions['readings'] = len(selectedValues)
+#            conditions['pressure'] = np.mean(pressure[selectedValues])
+#            if (conditions['pressure'] != conditions['pressure']):
+#                # A nan value got through, due to no selected values (should be impossible)"
+#                if (verbose):
+#                    print ">>>>>>>>>>>>>>>>>>>>>>>>  selectedValues = ", selectedValues
+#                    print "len(matches)=%d, len(matches2)=%d" % (len(matches), len(matches2))
+#                    print "matches[0]=%f, matches[-1]=%f, matches2[0]=%f, matches2[-1]=%d" % (
+#                    matches[0], matches[-1], matches2[0], matches2[-1])
+#            conditions['temperature'] = np.mean(temperature[selectedValues])
+#            conditions['humidity'] = np.mean(relativeHumidity[selectedValues])
+#            conditions['dewpoint'] = np.mean(dewPoint[selectedValues])
+#            conditions['windspeed'] = np.mean(windSpeed[selectedValues])
+#            conditions['winddirection'] = (180. / math.pi) * np.arctan2(np.mean(sinWindDirection[selectedValues]),
+#                                                                        np.mean(cosWindDirection[selectedValues]))
+#            if (conditions['winddirection'] < 0):
+#                conditions['winddirection'] += 360
+#            if (verbose and noWeatherData == False):
+#                print "Mean weather values for scan %s (field %s)" % (listscan, listfield)
+#                print "  Pressure = %.2f mb" % (conditions['pressure'])
+#                print "  Temperature = %.2f C" % (conditions['temperature'])
+#                print "  Dew point = %.2f C" % (conditions['dewpoint'])
+#                print "  Relative Humidity = %.2f %%" % (conditions['humidity'])
+#                print "  Wind speed = %.2f m/s" % (conditions['windspeed'])
+#                print "  Wind direction = %.2f deg" % (conditions['winddirection'])
+#
+#    if (needToClose_mymsmd): mymsmd.close()
+#    return ([conditions, myTimes, vm])
+#    # end of getWeather   forscan
+#
 
 def getAtmDetails(at):
     """
