@@ -243,7 +243,7 @@ def _get_description_map(intent):
             'mfs': 'Make target per-spw continuum images',
             'cont': 'Make target aggregate continuum images',
             'cube': 'Make target cubes',
-            'repBW': 'Make target PI cubes'
+            'repBW': 'Make representative bandwidth target cube'
 
         }
     else:

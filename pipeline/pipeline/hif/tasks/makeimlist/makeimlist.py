@@ -653,5 +653,5 @@ _DESCRIPTIONS = {
     ('TARGET', 'mfs'): 'Set-up image parameters for target per-spw continuum imaging',
     ('TARGET', 'cont'): 'Set-up image parameters for target aggregate continuum imaging',
     ('TARGET', 'cube'): 'Set-up image parameters for target cube imaging',
-    ('TARGET', 'repBW'): 'Set-up image parameters for PI channel width target cube imaging',
+    ('TARGET', 'repBW'): 'Set-up image parameters for representative bandwidth target cube imaging',
 }
