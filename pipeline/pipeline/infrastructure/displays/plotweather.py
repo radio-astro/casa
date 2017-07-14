@@ -110,11 +110,15 @@ def plotWeather(vis='', figfile='', station=[], help=False):
         # assume it is not measured and use NOAA formula to compute from humidity:
         dewPoint = ComputeDewPointCFromRHAndTempC(relativeHumidity, temperature)
     if (np.mean(relativeHumidity) < 0.001):
-        print "Replacing zeros in relative humidity with value computed from dew point and temperature."
-        dewPointWVP = computeWVP(dewPoint)
-        ambientWVP = computeWVP(temperature)
-        print "dWVP=%f, aWVP=%f" % (dewPointWVP[0],ambientWVP[0])
-        relativeHumidity = 100*(dewPointWVP/ambientWVP)
+        if np.count_nonzero(dewPoint) == 0:
+            # dew point is all zero so it was not measured, so cap the rH at small non-zero value
+            relativeHumidity = 0.001 * np.ones(len(dewPoint))
+        else:
+            print "Replacing zeros in relative humidity with value computed from dew point and temperature."
+            dewPointWVP = computeWVP(dewPoint)
+            ambientWVP = computeWVP(temperature)
+            print "dWVP=%f, aWVP=%f" % (dewPointWVP[0],ambientWVP[0])
+            relativeHumidity = 100*(dewPointWVP/ambientWVP)
 
     mytb.close()
 
