@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 import os
 import shutil
+import types
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
@@ -49,8 +50,13 @@ class TransformimagedataResults(basetask.Results):
         # Remove original measurement set from context
         context.observing_run.measurement_sets.pop(0)
 
+        import pdb
+        pdb.set_trace()
+
         for i in range(0,len(context.clean_list_pending)):
             context.clean_list_pending[i]['heuristics'].observing_run.measurement_sets[0].name = self.outputvis
+            newvislist = [self.outputvis]
+            context.clean_list_pending[i]['heuristics'].vislist = newvislist
 
     def __str__(self):
         # Format the MsSplit results.
@@ -88,9 +94,38 @@ class TransformimagedataInputs(mssplit.MsSplitInputs):
         self.modify_weights = modify_weights
 
         self.wtmode = wtmode
+        self.context = context
 
     replace = basetask.property_with_default('replace', False)
     datacolumn = basetask.property_with_default('datacolumn', 'corrected')
+
+    @property
+    def outputvis(self):
+
+        output_dir = self.context.output_dir
+
+        if type(self.vis) is types.ListType:
+            return self._handle_multiple_vis('outputvis')
+
+        if not self._outputvis:
+            # Need this to be in the working directory
+            # vis_root = os.path.splitext(self.vis)[0]
+            vis_root = os.path.splitext(os.path.basename(self.vis))[0]
+            return output_dir + '/' + vis_root + '_split.ms'
+
+        if type(self._outputvis) is types.ListType:
+            idx = self._my_vislist.index(self.vis)
+            return output_dir + '/' + os.path.basename(self._outputvis[idx])
+
+        return output_dir + '/' + os.path.basename(self._outputvis)
+
+    @outputvis.setter
+    def outputvis(self, value):
+        if value in (None, ''):
+            value = []
+        elif type(value) is types.StringType:
+            value = list(value.replace('[', '').replace(']', '').replace("'", "").split(','))
+        self._outputvis = value
 
 
 class Transformimagedata(mssplit.MsSplit):
@@ -134,6 +169,13 @@ class Transformimagedata(mssplit.MsSplit):
         mstransform_args['field'] = visfields
         mstransform_args['reindex'] = False
         mstransform_args['spw'] = visspws
+
+        for dictkey in ('clear_pointing', 'modify_weights', 'wtmode'):
+            try:
+                del mstransform_args[dictkey]
+            except KeyError:
+                pass
+
         mstransform_job = casa_tasks.mstransform(**mstransform_args)
 
         self._executor.execute(mstransform_job)
@@ -168,6 +210,7 @@ class Transformimagedata(mssplit.MsSplit):
         result.ms = observing_run.measurement_sets[0]
         
         if inputs.clear_pointing:
+            print "MS NAME:: ", ms.name
             LOG.info('Removing POINTING table from ' + ms.name)
             with casatools.TableReader(ms.name + '/POINTING', nomodify=False) as table:
                 rows = table.rownumbers()
