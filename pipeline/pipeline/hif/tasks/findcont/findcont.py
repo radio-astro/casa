@@ -105,7 +105,7 @@ class FindCont(basetask.StandardTaskTemplate):
                     # To avoid noisy edge channels, use only the LSRK frequency
                     # intersection and skip one channel on either end.
                     # Use only the current spw ID here !
-                    if0, if1, channel_width = image_heuristics.lsrk_freq_intersection(inputs.vis, target['field'], spwid)
+                    if0, if1, channel_width = image_heuristics.lsrk_freq_intersection(vislist, target['field'], spwid)
                     if (if0 == -1) or (if1 == -1):
                         LOG.error('No LSRK frequency intersect among selected MSs for Field %s SPW %s' % (target['field'], spwid))
                         cont_ranges['fields'][source_name][spwid] = ['NONE']
