@@ -50,9 +50,6 @@ class TransformimagedataResults(basetask.Results):
         # Remove original measurement set from context
         context.observing_run.measurement_sets.pop(0)
 
-        import pdb
-        pdb.set_trace()
-
         for i in range(0,len(context.clean_list_pending)):
             context.clean_list_pending[i]['heuristics'].observing_run.measurement_sets[0].name = self.outputvis
             newvislist = [self.outputvis]
@@ -210,7 +207,6 @@ class Transformimagedata(mssplit.MsSplit):
         result.ms = observing_run.measurement_sets[0]
         
         if inputs.clear_pointing:
-            print "MS NAME:: ", ms.name
             LOG.info('Removing POINTING table from ' + ms.name)
             with casatools.TableReader(ms.name + '/POINTING', nomodify=False) as table:
                 rows = table.rownumbers()
