@@ -551,7 +551,7 @@ class SBSummaryTable(object):
             for i in range(table.nrows()):
 
                 # Create source
-                repSource = _get_science_goal_value (scienceGoals[0:numScienceGoals[i]-1,i],
+                repSource = _get_science_goal_value (scienceGoals[0:numScienceGoals[i],i],
                     'representativeSource')
                 repSources.append(repSource)
 
