@@ -299,6 +299,9 @@ class T2_4MDetailsplotsummaryRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
 
             plotfields = targetfields
 
+            import pdb
+            pdb.set_trace()
+
             for field in plotfields:
                 plots = self.science_plots_for_result(context,
                                                       result,
@@ -309,7 +312,7 @@ class T2_4MDetailsplotsummaryRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
                 plots_mod = []
                 for p in plots:
                     # p.parameters['intent_idx'] = intent_sort_order[','.join(p.parameters['intent'])]
-                    field = m.get_fields(p.parameters['field'])[0]
+                    #fieldobj = m.get_fields(p.parameters['field'])[0]
                     p.parameters['fieldid'] = field.id
                     plots_mod.append(p)
 
