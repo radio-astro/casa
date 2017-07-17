@@ -296,7 +296,7 @@ class CleanBase(basetask.StandardTaskTemplate):
             tclean_job_parameters['usemask'] = 'auto-multithresh'
 
             # get heuristics parameters 
-            sidelobethreshold, noisethreshold, lownoisethreshold, minbeamfrac = inputs.heuristics.get_autobox_params()
+            sidelobethreshold, noisethreshold, lownoisethreshold, minbeamfrac = inputs.heuristics.get_autobox_params(inputs.intent)
 
             # Override individually with manual settings
             if inputs.hm_sidelobethreshold != -999.0:

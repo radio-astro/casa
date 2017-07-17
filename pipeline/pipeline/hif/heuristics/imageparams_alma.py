@@ -167,28 +167,42 @@ class ImageParamsHeuristicsALMA(ImageParamsHeuristics):
 
         return new_niter
 
-    def get_autobox_params(self):
+    def get_autobox_params(self, intent):
 
         '''Default auto-boxing parameters for ALMA main array and ACA.'''
+
+        # Start with generic defaults
+        sidelobethreshold = None
+        noisethreshold = None
+        lownoisethreshold = None
+        minbeamfrac = None
 
         min_diameter = 1.e9
         for msname in self.vislist:
             min_diameter = min(min_diameter, min([antenna.diameter for antenna in self.observing_run.get_ms(msname).antennas]))
-        if min_diameter == 7.0:
-            sidelobethreshold = 2.0
-            noisethreshold = 5.0
-            lownoisethreshold = 2.0
-            minbeamfrac = 0.1
-        elif min_diameter == 12.0:
-            sidelobethreshold = 3.0
-            noisethreshold = 5.0
-            lownoisethreshold = 1.5
-            minbeamfrac = 0.2
+
+        if 'TARGET' in intent:
+            if min_diameter == 12.0:
+                sidelobethreshold = 3.0
+                noisethreshold = 5.0
+                lownoisethreshold = 1.5
+                minbeamfrac = 0.2
+            elif min_diameter == 7.0:
+                sidelobethreshold = 1.25
+                noisethreshold = 5.0
+                lownoisethreshold = 2.0
+                minbeamfrac = 0.1
         else:
-            sidelobethreshold = None
-            noisethreshold = None
-            lownoisethreshold = None
-            minbeamfrac = None
+            if min_diameter == 12.0:
+                sidelobethreshold = 3.0
+                noisethreshold = 5.0
+                lownoisethreshold = 1.5
+                minbeamfrac = 0.1
+            elif min_diameter == 7.0:
+                sidelobethreshold = 1.25
+                noisethreshold = 5.0
+                lownoisethreshold = 2.0
+                minbeamfrac = 0.1
 
         return sidelobethreshold, noisethreshold, lownoisethreshold, minbeamfrac
 

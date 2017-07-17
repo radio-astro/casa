@@ -1258,7 +1258,7 @@ class ImageParamsHeuristics(object):
 
         return niter
 
-    def get_autobox_params(self):
+    def get_autobox_params(self, intent):
 
         '''Default auto-boxing parameters.'''
 
