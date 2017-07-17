@@ -350,7 +350,7 @@ class Tclean(cleanbase.CleanBase):
             for spwid in inputs.spw.split(','):
                 spwsel_spwid = self.image_heuristics.cont_ranges_spwsel().get(utils.dequote(inputs.field), {}).get(spwid, 'NONE')
                 if (inputs.intent == 'TARGET'):
-                    if (spwsel_spwid == 'NONE'):
+                    if (spwsel_spwid == 'NONE') and self.image_heuristics.warn_missing_cont_ranges():
                         LOG.warn('No continuum frequency range information detected for %s, spw %s.' % (inputs.field, spwid))
 
                 if spwsel_spwid in ('ALL', '', 'NONE'):

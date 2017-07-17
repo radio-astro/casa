@@ -920,7 +920,7 @@ class ImageParamsHeuristics(object):
                         spw_topo_chan_param_dict[os.path.basename(msname)][spwid] = ''
                     topo_freq_ranges.append((min_frequency, max_frequency))
                     aggregate_spw_lsrk_bw = '%sGHz' % (max_frequency - min_frequency)
-                    if (inputs.spwsel_lsrk['spw%s' % (spwid)] != 'ALL') and (inputs.intent == 'TARGET') and (inputs.specmode in ('mfs', 'cont')):
+                    if (inputs.spwsel_lsrk['spw%s' % (spwid)] != 'ALL') and (inputs.intent == 'TARGET') and (inputs.specmode in ('mfs', 'cont') and self.warn_missing_cont_ranges()):
                         LOG.warning('No continuum frequency selection for Target Field %s SPW %s' % (inputs.field, spwid))
             else:
                 spw_topo_freq_param_lists.append([spwid] * len(inputs.vis))
@@ -930,7 +930,7 @@ class ImageParamsHeuristics(object):
                     spw_topo_chan_param_dict[os.path.basename(msname)][spwid] = ''
                 topo_freq_ranges.append((min_frequency, max_frequency))
                 aggregate_spw_lsrk_bw = '%sGHz' % (max_frequency - min_frequency)
-                if (inputs.intent == 'TARGET') and (inputs.specmode in ('mfs', 'cont')):
+                if (inputs.intent == 'TARGET') and (inputs.specmode in ('mfs', 'cont') and self.warn_missing_cont_ranges()):
                     LOG.warning('No continuum frequency selection for Target Field %s SPW %s' % (inputs.field, spwid))
 
             aggregate_lsrk_bw = qaTool.add(aggregate_lsrk_bw, aggregate_spw_lsrk_bw)
@@ -1036,6 +1036,10 @@ class ImageParamsHeuristics(object):
             return if0, if1, max(lsrk_channel_widths)
         else:
             return -1, -1, 0
+
+    def warn_missing_cont_ranges(self):
+
+        return False
 
     def calc_sensitivities(self, vis, field, intent, spw, nbin, spw_topo_chan_param_dict, specmode, gridder, cell, imsize, weighting, robust, uvtaper):
         """Compute sensitivity estimate using CASA."""

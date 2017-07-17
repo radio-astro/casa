@@ -191,3 +191,7 @@ class ImageParamsHeuristicsALMA(ImageParamsHeuristics):
             minbeamfrac = None
 
         return sidelobethreshold, noisethreshold, lownoisethreshold, minbeamfrac
+
+    def warn_missing_cont_ranges(self):
+
+        return True
