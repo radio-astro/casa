@@ -227,7 +227,7 @@ except:
                             <tr>
                                 <th>clean residual peak / scaled MAD</th>
                                 %if info_dict.get((field,str(spw),pol,'residual peak/rms')) is not None:
-                                            <td>${info_dict.get((field,str(spw),pol,'residual peak/rms'))}</td>
+                                            <td>${'%.2f' % info_dict.get((field,str(spw),pol,'residual peak/rms'))}</td>
                                 %else:
                                             <td>-</td>
                                 %endif
