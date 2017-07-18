@@ -176,6 +176,7 @@ class SDChannelMapDisplay(SDImageDisplay):
         # if all pixels are masked, return fully masked array
         unweight_mask = unweight_ia.getchunk(getmask=True)
         if numpy.all(unweight_mask == False):
+            unweight_ia.close()
             sp_ave = numpy.ma.masked_array(numpy.zeros((self.npol, self.nchan), dtype=numpy.float32), 
                                            mask=numpy.ones((self.npol, self.nchan), dtype=numpy.bool))
             return sp_ave
@@ -225,7 +226,7 @@ class SDChannelMapDisplay(SDImageDisplay):
         plot_list = []
         
         # nrow is number of grid points for image
-        nrow = self.nx * self.ny
+#         nrow = self.nx * self.ny
 
         # retrieve line list from reduction group
         # key is antenna and spw id
@@ -237,13 +238,7 @@ class SDChannelMapDisplay(SDImageDisplay):
             
         # Set data
         Map = numpy.zeros((self.NumChannelMap, (self.y_max - self.y_min + 1), (self.x_max - self.x_min + 1)), dtype=numpy.float32)
-        RMSMap = numpy.zeros(((self.y_max - self.y_min + 1), (self.x_max - self.x_min + 1)), dtype=numpy.float32)
-        #Total = numpy.zeros(((self.y_max - self.y_min + 1), (self.x_max - self.x_min + 1)), dtype=numpy.float32)
-        # ValidSp: SQRT of Number of combined spectra for the weight
-        #ValidSp = numpy.ones(nrow, dtype=numpy.float32)
-#         ValidSp = self.num_valid_spectrum.reshape((nrow,self.npol))
-        #ValidSp = numpy.zeros(nrow, dtype=numpy.float32)
-        #for row in range(nrow): ValidSp[row] = math.sqrt(Table[row][6])
+#         RMSMap = numpy.zeros(((self.y_max - self.y_min + 1), (self.x_max - self.x_min + 1)), dtype=numpy.float32)
 
         # Swap (x,y) to match the clustering result
         grid_size_arcsec = self.grid_size * 3600.0
