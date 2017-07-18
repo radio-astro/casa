@@ -98,6 +98,7 @@ class SDChannelAveragedImageDisplay(SDImageDisplay):
             # 2008/9/20 DEC Effect
             im = pl.imshow(Total, interpolation='nearest', aspect=self.aspect, extent=Extent)
             #im = pl.imshow(Total, interpolation='nearest', aspect='equal', extent=Extent)
+            del Total
 
             xlim = axes_tpmap.get_xlim()
             ylim = axes_tpmap.get_ylim()
@@ -229,6 +230,7 @@ class SDIntegratedImageDisplay(SDImageDisplay):
             # 2008/9/20 DEC Effect
             im = pl.imshow(Total, interpolation='nearest', aspect=self.aspect, extent=Extent)
             #im = pl.imshow(Total, interpolation='nearest', aspect='equal', extent=Extent)
+            del Total
 
             xlim = axes_tpmap.get_xlim()
             ylim = axes_tpmap.get_ylim()

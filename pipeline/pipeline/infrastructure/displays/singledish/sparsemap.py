@@ -232,7 +232,7 @@ class SDSparseMapPlotter(object):
         self.atm_transmission = None
         self.atm_frequency = None
         
-#    @memory_profiler.profile
+    #@memory_profiler.profile
     def plot(self, map_data, averaged_data, frequency, fit_result=None, figfile=None):
         plot_helper = PlotObjectHandler()
         
@@ -258,6 +258,7 @@ class SDSparseMapPlotter(object):
         valid_index = numpy.where(map_data.min(axis=2) > NoDataThreshold)
         valid_data = map_data[valid_index[0],valid_index[1],:]
         LOG.debug('valid_data.shape={shape}'.format(shape=valid_data.shape))
+        del valid_index
         if isinstance(map_data, numpy.ma.masked_array):
             def stat_per_spectra(spectra, oper):
                 for v in spectra:
@@ -275,6 +276,7 @@ class SDSparseMapPlotter(object):
         else:
             ListMax = valid_data.max(axis=1)
             ListMin = valid_data.min(axis=1)
+        del valid_data
         if len(ListMax) == 0 or len(ListMin) == 0: 
             return False
         #if isinstance(ListMin, numpy.ma.masked_array):
@@ -402,6 +404,7 @@ class SDSparseMapDisplay(SDImageDisplay):
         
         return self.__plot_sparse_map()
 
+    #@memory_profiler.profile
     def __plot_sparse_map(self):
 
         # Plotting routine
@@ -485,6 +488,7 @@ class SDSparseMapDisplay(SDImageDisplay):
             mask_p = self.mask.take([pol], axis=self.id_stokes).squeeze()
             #isvalid = mask_p.prod(axis=2)
             isvalid = numpy.any(mask_p, axis=2)
+            del mask_p
             Nsp = sum(isvalid.flatten())
             LOG.info('Nsp=%s'%(Nsp))
             TotalSP /= Nsp
@@ -499,12 +503,14 @@ class SDSparseMapDisplay(SDImageDisplay):
                     chunk = masked_data_p[x0:x1,y0:y1]
                     valid_sp = chunk[valid_index[0],valid_index[1],:]
                     Plot[x][y] = valid_sp.mean(axis=0)
+            del masked_data_p, isvalid
  
             FigFileRoot = self.inputs.imagename+'.pol%s_Sparse'%(pol)
             plotfile = os.path.join(self.stage_dir, FigFileRoot+'_0.png')
 
             status = plotter.plot(Plot, TotalSP, self.frequency[chan0:chan1], 
                                   figfile=plotfile)
+            del Plot, TotalSP
             
             if status:
                 parameters = {}
@@ -522,7 +528,7 @@ class SDSparseMapDisplay(SDImageDisplay):
                                    parameters=parameters)
                 plot_list.append(plot)
             
-
+        del masked_data
         return plot_list
 
 def ch_to_freq(ch, frequency):

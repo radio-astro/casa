@@ -109,6 +109,7 @@ class SDRmsMapDisplay(SDImageDisplay):
                     else:
                         rms_colorbar.set_clim((rmsmin,rmsmax))
                         rms_colorbar.draw_all()
+            del rms_map
 
             # draw beam pattern
             if beam_circle is None:

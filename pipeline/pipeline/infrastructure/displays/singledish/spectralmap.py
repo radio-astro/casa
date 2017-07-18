@@ -12,6 +12,8 @@ from .utils import DDMMSSs, HHMMSSss
 from .common import DPIDetail, SDImageDisplay, ShowPlot
 import pipeline.infrastructure.casatools as casatools
 
+#import memory_profiler
+
 LOG = infrastructure.get_logger(__name__)
 
 class SpectralMapAxesManager(object):
@@ -76,6 +78,7 @@ class SDSpectralMapDisplay(SDImageDisplay):
             factors.append( int( numpy.round( abs(self.grid_size / cell) ) ) )
         return factors
 
+    #@memory_profiler.profile
     def __plot_spectral_map(self):
         pl.clf()
 
@@ -169,6 +172,7 @@ class SDSpectralMapDisplay(SDImageDisplay):
             valid_data = data[valid_index[0],valid_index[1],chan0:chan1]
             ListMax = valid_data.max(axis=1)
             ListMin = valid_data.min(axis=1)
+            del valid_index, valid_data
             if len(ListMax) == 0: continue 
             if is_baselined:
                 ymax = numpy.sort(ListMax)[len(ListMax) - len(ListMax)/10 - 1]
@@ -249,6 +253,7 @@ class SDSpectralMapDisplay(SDImageDisplay):
             
 
                     Npanel += 1
-        del ROWS, data
+            del data, mask2d
+        del ROWS, masked_data
         print("Returning %d plots from spectralmap" % len(plot_list))
         return plot_list
