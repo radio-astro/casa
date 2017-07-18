@@ -64,9 +64,28 @@ $(document).ready(function(){
 <%block name="title">Bandpass Calibration and Flagging</%block>
 
 <p>
-    This task creates bandpass solutions for each measurement set, and
-    flags outliers based on a comparison of the calibrated (corrected)
-    amplitudes with the model amplitudes for the bandpass calibrator source.
+    This task performs a preliminary bandpass solution and applies it, then
+    computes the flagging heuristics by calling hif_correctedampflag which
+    looks for outlier visibility points by statistically examining the scalar
+    difference of the corrected amplitude minus model amplitudes, flags those
+    outliers, then derives a final bandpass solution (if any flags were
+    generated). The philosophy is that only outlier data points that have
+    remained outliers after calibration will be flagged. Note that the phase of
+    the data is not assessed.
+</p>
+<p>
+    In further detail, the workflow is as follows: an a priori calibration is
+    applied using pre-existing caltables in the calibration state, a
+    preliminary bandpass solution and amplitude gaincal solution is solved and
+    applied, the flagging heuristics are run and any outliers are flagged, a
+    final bandpass solution is solved (if necessary) and the name "final" is
+    appended to this caltable. Plots are generated at three points in this
+    workflow: after a priori calibration, after bandpass calibration but before
+    flagging heuristics are run, and after flagging heuristics have been run
+    and applied. If no points were flagged, the "after" plots are not
+    generated or displayed. The score for this stage is a simple combination
+    (multiplication) of the standard data flagging score (depending on the
+    fraction of data flagged) and the score for the bandpass solution.
 </p>
 
 % if htmlreports:

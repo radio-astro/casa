@@ -130,13 +130,11 @@ Flag corrected - model amplitudes based on calibrators.
 
 <example>
 
-TBD
-
 Keyword arguments:
 
 --- pipeline parameter arguments which can be set in any pipeline mode
 
-    pipelinemode -- The pipeline operating mode. In 'automatic' mode the pipeline
+pipelinemode -- The pipeline operating mode. In 'automatic' mode the pipeline
    determines the values of all context defined pipeline inputs automatically.
    In interactive mode the user can set the pipeline context defined parameters
    manually.  In 'getinputs' mode the user can check the settings of all
@@ -146,24 +144,25 @@ Keyword arguments:
 ---- pipeline context defined parameter arguments which can be set only in
 'interactive mode'
 
-vis -- The list of input measurement sets. Defaults to the list of measurment
+vis -- The list of input measurement sets. Defaults to the list of measurement
     sets specified in the pipeline context.
     default: ''
     example: ['M51.ms']
 
 field -- The list of field names or field ids for which bandpasses are
-    computed. Defaults to all fields.
+    computed. If undefined (default), it will select all fields.
     default: ''
     example: '3C279', '3C279, M82'
 
 intent -- A string containing a comma delimited list of intents against
-    which the the selected fields are matched.  Defaults to all data
-    with bandpass intent.
+    which the selected fields are matched. If undefined (default), it
+    will select all data with the BANDPASS intent.
     default: ''
     example: '*PHASE*'
 
 spw -- The list of spectral windows and channels for which bandpasses are
-    computed. Defaults to all science spectral windows.
+    computed. If undefined (default), it will select all science spectral
+    windows.
     default: ''
     example: '11,13,15,17'
 
@@ -210,16 +209,18 @@ acceptresults -- Add the results of the task to the pipeline context (True) or
    reject them (False).
    default: True
 
+
 Output:
 
 results -- If pipeline mode is 'getinputs' then None is returned. Otherwise
     the results object for the pipeline task is returned.
 
-Description:
 
-TBD
+Examples:
 
+1. run default flagging on bandpass calibrator with recommended settings:
 
+    hif_correctedampflag()
 
 </example>
 

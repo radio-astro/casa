@@ -7,12 +7,30 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <task type="function" name="hifa_bandpassflag" category="pipeline">
 
-<shortdescription>Compute bandpass calibration solutions with flagging</shortdescription>
+<shortdescription>Compute bandpass calibration with flagging</shortdescription>
 
 <description>
-Compute amplitude and phase as a function of frequency for each spectral
-window in each measurement set, and flag outliers in corrected - model
-amplitudes for bandpass calibrator.
+    This task performs a preliminary bandpass solution and applies it, then
+    computes the flagging heuristics by calling hif_correctedampflag which
+    looks for outlier visibility points by statistically examining the scalar
+    difference of the corrected amplitude minus model amplitudes, flags those
+    outliers, then derives a final bandpass solution (if any flags were
+    generated). The philosophy is that only outlier data points that have
+    remained outliers after calibration will be flagged. Note that the phase of
+    the data is not assessed.
+
+    In further detail, the workflow is as follows: an a priori calibration is
+    applied using pre-existing caltables in the calibration state, a
+    preliminary bandpass solution and amplitude gaincal solution is solved and
+    applied, the flagging heuristics are run and any outliers are flagged, a
+    final bandpass solution is solved (if necessary) and the name "final" is
+    appended to this caltable. Plots are generated at three points in this
+    workflow: after a priori calibration, after bandpass calibration but before
+    flagging heuristics are run, and after flagging heuristics have been run
+    and applied. If no points were flagged, the "after" plots are not
+    generated or displayed. The score for this stage is a simple combination
+    (multiplication) of the standard data flagging score (depending on the
+    fraction of data flagged) and the score for the bandpass solution.
 </description>
 
 <input>
@@ -270,8 +288,6 @@ amplitudes for bandpass calibrator.
 
 <example>
 
-TBD
-
 Keyword arguments:
 
 --- pipeline parameter arguments which can be set in any pipeline mode
@@ -368,18 +384,19 @@ caltable -- The list of output calibration tables. Defaults to the standard
     example: ['M51.bcal']
 
 field -- The list of field names or field ids for which bandpasses are
-    computed. Defaults to all fields.
+    computed. If undefined (default), it will select all fields.
     default: ''
     example: '3C279', '3C279, M82'
 
 intent -- A string containing a comma delimited list of intents against
-    which the the selected fields are matched.  Defaults to all data
-    with bandpass intent.
+    which the selected fields are matched. If undefined (default), it
+    will select all data with the BANDPASS intent.
     default: ''
     example: '*PHASE*'
 
 spw -- The list of spectral windows and channels for which bandpasses are
-    computed. Defaults to all science spectral windows.
+    computed. If undefined (default), it will select all science spectral
+    windows.
     default: ''
     example: '11,13,15,17'
 
@@ -435,14 +452,20 @@ acceptresults -- Add the results of the task to the pipeline context (True) or
    reject them (False).
    default: True
 
+
 Output:
 
 results -- If pipeline mode is 'getinputs' then None is returned. Otherwise
     the results object for the pipeline task is returned.
 
-Description:
 
-TBD
+Examples:
+
+1. run with recommended settings to create bandpass solution with flagging
+    using recommended thresholds:
+
+    hifa_bandpassflag()
+
 
 </example>
 
