@@ -802,11 +802,17 @@ class Correctedampflag(basetask.StandardTaskTemplate):
         # Intents to propagate to.
         intents_propto = ["TARGET", "CHECK"]
 
-        # Check for presence of intents in current MS.
-        casa_intents_propto = [utils.to_CASA_intent(ms, intent)
-                               for intent in intents_propto]
-        valid_intents = [intent for intent in casa_intents_propto
-                         if intent]
+        # Check for presence of intents in current MS, and if valid intent,
+        # retrieve corresponding fields from MS.
+        valid_intents = []
+        valid_intents_fields = {}
+        for intent in intents_propto:
+            casa_intent = utils.to_CASA_intent(ms, intent)
+            if casa_intent:
+                valid_intents.append(casa_intent)
+                fields = [field.name
+                          for field in ms.get_fields(intent=intent)]
+                valid_intents_fields[casa_intent] = ','.join(fields)
 
         # Proceed if there are valid intents to propagate to.
         propagated_flags = []
@@ -831,7 +837,7 @@ class Correctedampflag(basetask.StandardTaskTemplate):
                                 antenna=flag.antenna,
                                 intent=intent,
                                 pol=flag.pol,
-                                field=flag.field,
+                                field=valid_intents_fields[intent],
                                 reason='bad baseline propagated from PHASE',
                                 antenna_id_to_name=antenna_id_to_name))
 
