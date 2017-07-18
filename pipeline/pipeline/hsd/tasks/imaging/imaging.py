@@ -13,7 +13,6 @@ import pipeline.infrastructure.utils as utils
 from pipeline.infrastructure import casa_tasks
 #from pipeline.hif.heuristics import fieldnames
 from pipeline.h.heuristics import fieldnames
-from pipeline.domain import DataTable
 from . import gridding
 from . import weighting
 from . import worker
@@ -170,7 +169,6 @@ class SDImaging(basetask.StandardTaskTemplate):
         in_field = inputs.field
 #         antennalist = inputs.antennalist
         imagemode = inputs.mode.upper()
-        datatable = DataTable(name=context.observing_run.ms_datatable_name, readonly=True)
         cqa = casatools.quanta
          
         # task returns ResultsList
@@ -349,7 +347,7 @@ class SDImaging(basetask.StandardTaskTemplate):
                 LOG.info('Imaging Source %s, Ant %s Spw %d' % (source_name, ant_name, spwids[0]))
                 # map coordinate (use identical map coordinate per spw)
                 if not coord_set:
-                    image_coord = worker.ALMAImageCoordinateUtil(context, datatable, infiles, antids, spwids, fieldids)
+                    image_coord = worker.ALMAImageCoordinateUtil(context, infiles, antids, spwids, fieldids)
                     if not image_coord: #No valid data is found
                         continue
                     coord_set = True

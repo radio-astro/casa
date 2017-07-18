@@ -17,7 +17,7 @@ from ..common import utils
 LOG = infrastructure.get_logger(__name__)
 
 
-def ALMAImageCoordinateUtil(context, datatable, ms_names, ant_list, spw_list, fieldid_list):
+def ALMAImageCoordinateUtil(context, ms_names, ant_list, spw_list, fieldid_list):
     """
     An utility function to calculate spatial coordinate of image for ALMA
     """
@@ -65,6 +65,7 @@ def ALMAImageCoordinateUtil(context, datatable, ms_names, ant_list, spw_list, fi
     LOG.info('Calculating image coordinate of field \'%s\', reference frequency %fGHz' % (fnames[0], freq_hz*1.e-9))
     LOG.info('cell=%s' % (qa.tos(cellx)))
     
+    datatable = DataTable(name=context.observing_run.ms_datatable_name, readonly=True)
     # nx, ny and center
     parent_mses = [utils.get_parent_ms_name(context, name) for name in ms_names]
     index_list = common.get_index_list_for_ms(datatable, parent_mses, ant_list, fieldid_list, spw_list)
@@ -82,6 +83,7 @@ def ALMAImageCoordinateUtil(context, datatable, ms_names, ant_list, spw_list, fi
     if (datatable.getcolkeyword('RA', 'UNIT') != 'deg') or \
         (datatable.getcolkeyword('DEC', 'UNIT') != 'deg'):
         raise RuntimeError, "Found unexpected unit of RA/DEC in DataTable. It should be in 'deg'"
+    del datatable
     
     ra_min = min(ra)
     ra_max = max(ra)
@@ -204,8 +206,7 @@ class SDImagingWorker(basetask.StandardTaskTemplate):
         if coord_set:
             return params
         else:
-            datatable = DataTable(name=context.observing_run.ms_datatable_name, readonly=True)
-            return ALMAImageCoordinateUtil(context, datatable, infiles, ant_list, spw_list, field_list)
+            return ALMAImageCoordinateUtil(context, infiles, ant_list, spw_list, field_list)
 
     def _do_imaging(self, infiles, antid_list, spwid_list, fieldid_list, imagename, imagemode, edge, phasecenter, cellx, celly, nx, ny):
         context = self.inputs.context
