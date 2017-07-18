@@ -605,21 +605,6 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
         return d
                 
     def get_gain_solution_type(self, gaintable):
-        # CAS-9835: hif_applycal() "type" descriptions are misleading /
-        # incomplete in weblog table
-        #
-        # quick hack: match filenamer-generated file names
-        #
-        # TODO find a way to attach the originating task to the callibrary entries
-        if gaintable.endswith('.gacal.tbl'):
-            return ' (amplitude only)'
-        if gaintable.endswith('.gpcal.tbl'):
-            return ' (phase only)'
-        if gaintable.endswith('.gcal.tbl'):
-            return ''
-
-        # resort to inspecting caltable values to infer what its type is
-
         # solve circular import problem by importing at run-time
         from pipeline.infrastructure import casa_tasks
 
