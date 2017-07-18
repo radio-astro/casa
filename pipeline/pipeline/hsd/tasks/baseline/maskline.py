@@ -3,7 +3,6 @@ from __future__ import absolute_import
 import os
 import time
 import numpy
-import itertools
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
@@ -21,7 +20,7 @@ LOG = utils.OnDemandStringParseLogger(_LOG)
 NoData = common.NoData
 
 class MaskLineInputs(common.SingleDishInputs):
-    def __init__(self, context, iteration, vis_list, field_list, antenna_list, spwid_list,
+    def __init__(self, context, iteration, group_id, member_list, #vis_list, field_list, antenna_list, spwid_list,
                  window=None, edge=None, broadline=None, clusteringalgorithm=None):
         self._init_properties(vars())
         
@@ -49,6 +48,14 @@ class MaskLineInputs(common.SingleDishInputs):
     def broadline(self, value):
         self._broadline = value
         
+    @property
+    def group_desc(self):
+        return self.context.observing_run.ms_reduction_group[self.group_id]
+    
+    @property
+    def reference_member(self):
+        return self.group_desc[self.member_list[0]]
+        
 class MaskLineResults(common.SingleDishResults):
     def __init__(self, task=None, success=None, outcome=None):
         super(MaskLineResults, self).__init__(task, success, outcome)
@@ -69,11 +76,14 @@ class MaskLine(basetask.StandardTaskTemplate):
         start_time = time.time()
 
         iteration = self.inputs.iteration
-        vis_list = self.inputs.vis_list
-        field_list = self.inputs.field_list
-        spwid_list = self.inputs.spwid_list
-        antenna_list = self.inputs.antenna_list
-        reference_data = context.observing_run.get_ms(vis_list[0])
+        group_id = self.inputs.group_id
+        member_list = self.inputs.member_list
+        group_desc = self.inputs.group_desc 
+        reference_member = self.inputs.reference_member
+        reference_data = reference_member.ms
+        reference_antenna = reference_member.antenna_id
+        reference_field = reference_member.field_id
+        reference_spw = reference_member.spw_id
         if datatable is None:
             LOG.info('instantiate local datatable')
             dt = DataTable(context.observing_run.ms_datatable_name, readonly=False)
@@ -81,9 +91,8 @@ class MaskLine(basetask.StandardTaskTemplate):
             LOG.info('datatable is propagated from parent task')
             dt = datatable
         srctype = 0  # reference_data.calibration_strategy['srctype']
-        index_list = numpy.array(utils.get_index_list_for_ms(dt, vis_list,
-                                                             antenna_list, field_list,
-                                                             spwid_list, srctype))
+        index_list = numpy.fromiter(utils.get_index_list_for_ms2(dt, group_desc, member_list, srctype),
+                                    dtype=numpy.int64)
 
         LOG.debug('index_list={}', index_list)
         #LOG.trace('all(spwid == {}) ? {}', spwid_list[0], numpy.all(dt.getcol('IF').take(index_list) == spwid_list[0]))
@@ -109,11 +118,12 @@ class MaskLine(basetask.StandardTaskTemplate):
         edge = self.inputs.edge
         broadline = self.inputs.broadline
         clusteringalgorithm = self.inputs.clusteringalgorithm
-        beam_size = casatools.quanta.convert(reference_data.beam_sizes[antenna_list[0]][spwid_list[0]], 'deg')['value']
-        observing_pattern = reference_data.observing_pattern[antenna_list[0]][spwid_list[0]][field_list[0]]
+        beam_size = casatools.quanta.convert(reference_data.beam_sizes[reference_antenna][reference_spw], 'deg')['value']
+        observing_pattern = reference_data.observing_pattern[reference_antenna][reference_spw][reference_field]
          
         LOG.debug('Members to be processed:')
-        for (v, f, a, s) in itertools.izip(vis_list, field_list, antenna_list, spwid_list):
+        for (m, f, a, s) in utils.iterate_group_member(group_desc, member_list):#itertools.izip(vis_list, field_list, antenna_list, spwid_list):
+            v = m.name
             LOG.debug('MS "{}" Field {} Antenna {} Spw {}', os.path.basename(v), f, a, s)
              
         # filename for input/output
@@ -128,8 +138,7 @@ class MaskLine(basetask.StandardTaskTemplate):
  
         # simple gridding
         t0 = time.time()
-        gridding_inputs = simplegrid.SDMSSimpleGridding.Inputs(context, vis_list, field_list, 
-                                                               antenna_list, spwid_list)
+        gridding_inputs = simplegrid.SDMSSimpleGridding.Inputs(context, group_id, member_list)
         gridding_task = simplegrid.SDMSSimpleGridding(gridding_inputs)
         job = common.ParameterContainerJob(gridding_task, datatable=dt, index_list=index_list)
         gridding_result = self._executor.execute(job, merge=False)
@@ -180,7 +189,8 @@ class MaskLine(basetask.StandardTaskTemplate):
         # line validation
         t0 = time.time()
         validator_cls = validation.ValidationFactory(observing_pattern)
-        validation_inputs = validator_cls.Inputs(context, vis_list, spwid_list, iteration, grid_size, 
+        validation_inputs = validator_cls.Inputs(context, group_id, member_list, 
+                                                 iteration, grid_size, 
                                                  grid_size, window, edge, 
                                                  clusteringalgorithm=clusteringalgorithm)
         line_validator = validator_cls(validation_inputs)

@@ -21,7 +21,7 @@ NoData = common.NoData
 DO_TEST = False
 
 class SDMSSimpleGriddingInputs(common.SingleDishInputs):
-    def __init__(self, context, vis_list, field_list, antenna_list, spwid_list, 
+    def __init__(self, context, group_id, member_list, 
                  nplane=None):
         self._init_properties(vars())
         
@@ -32,6 +32,14 @@ class SDMSSimpleGriddingInputs(common.SingleDishInputs):
     @nplane.setter
     def nplane(self, value):
         self._nplane = value
+        
+    @property
+    def group_desc(self):
+        return self.context.observing_run.ms_reduction_group[self.group_id]
+    
+    @property
+    def reference_member(self):
+        return self.group_desc[self.member_list[0]]
         
 class SDMSSimpleGriddingResults(common.SingleDishResults):
     def __init__(self, task=None, success=None, outcome=None):
@@ -80,13 +88,9 @@ class SDMSSimpleGridding(basetask.StandardTaskTemplate):
         """
         Calculate Parameters for grid by RA/DEC positions
         """
-        vis_list = self.inputs.vis_list
-        spwid_list = self.inputs.spwid_list
-        antenna_list = self.inputs.antenna_list
-        assert len(antenna_list) == len(spwid_list)
-        reference_data = self.inputs.context.observing_run.get_ms(vis_list[0])
-        reference_antenna = antenna_list[0]
-        reference_spw = spwid_list[0]
+        reference_data = self.inputs.reference_member.ms
+        reference_antenna = self.inputs.reference_member.antenna_id
+        reference_spw = self.inputs.reference_member.spw_id
         beam_size = reference_data.beam_sizes[reference_antenna][reference_spw]
         grid_size = casatools.quanta.convert(beam_size, 'deg')['value']
         
@@ -144,7 +148,7 @@ class SDMSSimpleGridding(basetask.StandardTaskTemplate):
         # Create grid_table for output
         grid_table = []
         # vIF, vPOL: dummy (not necessary)
-        vIF = spwid_list[0]
+        vIF = reference_spw
         vPOL = 0
 
         for y in range(ngrid_dec):
@@ -201,10 +205,8 @@ class SDMSSimpleGridding(basetask.StandardTaskTemplate):
         nrow = len(grid_table)
         LOG.info('SimpleGrid: Processing {} spectra...', nrow)
 
-        spwid_list = self.inputs.spwid_list
-        vis_list = self.inputs.vis_list
-        reference_data = self.inputs.context.observing_run.get_ms(vis_list[0])
-        reference_spw = spwid_list[0]
+        reference_data = self.inputs.reference_member.ms
+        reference_spw = self.inputs.reference_member.spw_id 
         nchan = reference_data.spectral_windows[reference_spw].num_channels
         npol = reference_data.get_data_description(spw=reference_spw).num_polarizations
         LOG.debug('nrow={} nchan={} npol={}', nrow,nchan,npol)

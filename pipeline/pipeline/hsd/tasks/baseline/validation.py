@@ -27,7 +27,7 @@ def ValidationFactory(pattern):
         raise ValueError, 'Invalid observing pattern'
 
 class ValidateLineInputs(common.SingleDishInputs):
-    def __init__(self, context, vislist, spwidlist, iteration, grid_ra, grid_dec,
+    def __init__(self, context, group_id, member_list, iteration, grid_ra, grid_dec,
                  window=None, edge=None, nsigma=None, xorder=None, yorder=None, 
                  broad_component=None, clusteringalgorithm=None):
         self._init_properties(vars())
@@ -91,6 +91,14 @@ class ValidateLineInputs(common.SingleDishInputs):
     def clusteringalgorithm(self, value):
         self._clusteringalgorithm = value
 
+    @property
+    def group_desc(self):
+        return self.context.observing_run.ms_reduction_group[self.group_id]
+    
+    @property
+    def reference_member(self):
+        return self.group_desc[self.member_list[0]]
+        
 class ValidateLineResults(common.SingleDishResults):
     def __init__(self, task=None, success=None, outcome=None):
         super(ValidateLineResults, self).__init__(task, success, outcome)
@@ -224,12 +232,8 @@ class ValidateLineRaster(basetask.StandardTaskTemplate):
     
     @property
     def MaxFWHM(self):
-        context = self.inputs.context
         num_edge = sum(self.inputs.edge)
-        vis = self.inputs.vislist[0]
-        spwid = self.inputs.spwidlist[0]
-        ms = context.observing_run.get_ms(name=vis)
-        spw = ms.get_spectral_window(spwid)
+        spw = self.inputs.reference_member.spw
         nchan = spw.num_channels
         return int(max(0, nchan - num_edge) / 3)
 

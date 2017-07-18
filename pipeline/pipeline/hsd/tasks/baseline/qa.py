@@ -1,4 +1,7 @@
 from __future__ import absolute_import
+
+import numpy
+
 import pipeline.qa.scorecalculator as qacalc
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.pipelineqa as pqa
@@ -19,11 +22,14 @@ class SDBaselineQAHandler(pqa.QAResultHandler):
         group_id_list = []
         spw_id_list = []
         field_id_list = []
+        reduction_group = context.observing_run.ms_reduction_group
         baselined = result.outcome['baselined']
         for b in baselined:
             reduction_group_id = b['group_id']
-            spw_id = b['spw']
-            field_id = b['field']
+            members = b['members']
+            group_desc = reduction_group[reduction_group_id]
+            spw_id = numpy.fromiter((group_desc[m].spw_id for m in members), dtype=numpy.int32)#b['spw']
+            field_id = numpy.fromiter((group_desc[m].field_id for m in members), dtype=numpy.int32)#b['field']
             lines = b['lines']
             lines_list.append(lines)
             group_id_list.append(reduction_group_id)

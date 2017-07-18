@@ -111,10 +111,14 @@ class ClusterDisplay(object):
         stage_dir = os.path.join(self.context.report_dir,
                                  'stage%d'%(self.inputs.result.stage_number))
         start_time = time.time()
+        reduction_group = self.context.observing_run.ms_reduction_group
         for group in self.__baselined():
+            group_id = group['group_id']
             cluster = group['clusters']
             lines = group['lines']
             is_all_invalid_lines = all([l[2] == False for l in lines])
+            rep_member_id = group['members'][0]
+            rep_member = reduction_group[group_id][rep_member_id]
             if (not cluster.has_key('cluster_score')) or (is_all_invalid_lines):
                 # it should be empty cluster (no detection) or false clusters (detected but 
                 # judged as an invalid clusters) so skip this cycle
@@ -127,13 +131,12 @@ class ClusterDisplay(object):
             else:
                 # having key 'antenna' instead of 'index' indicates the result comes from 
                 # new (MS-based) procedure
-                antenna = group['antenna'][0]
-                vis = group['name'][0]
-            spw = group['spw'][0]
-            field = group['field'][0]
+                antenna = rep_member.antenna_id
+                vis = rep_member.ms.name
+            spw = rep_member.spw_id
+            field = rep_member.field_id
             ms = self.context.observing_run.get_ms(vis)
             source_name = ms.fields[field].source.name.replace(' ', '_').replace('/','_')
-            group_id = group['group_id']
             iteration = group['iteration']
             t0 = time.time()
             plot_score = ClusterScoreDisplay(group_id, iteration, cluster, spw, source_name, stage_dir)

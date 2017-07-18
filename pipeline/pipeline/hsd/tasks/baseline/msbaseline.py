@@ -77,15 +77,11 @@ class SDMSBaselineResults(common.SingleDishResults):
         reduction_group = context.observing_run.ms_reduction_group
         for b in self.outcome['baselined']:
             group_id = b['group_id']
-            vislist = b['name']
-            spwlist = b['spw']
-            antennalist = b['antenna']
-            fieldlist = b['field']
+            member_list = b['members']
             lines = b['lines']
             channelmap_range = b['channelmap_range']
             group_desc = reduction_group[group_id]
-            for (vis,field,ant,spw) in itertools.izip(vislist,fieldlist,antennalist,spwlist):
-                ms = context.observing_run.get_ms(vis)
+            for (ms,field,ant,spw) in utils.iterate_group_member(reduction_group[group_id], member_list):#itertools.izip(vislist,fieldlist,antennalist,spwlist):
                 group_desc.iter_countup(ms, ant, spw, field)
                 group_desc.add_linelist(lines, ms, ant, spw, field,
                                         channelmap_range=channelmap_range)
@@ -170,51 +166,27 @@ class SDMSBaseline(basetask.StandardTaskTemplate):
     def prepare(self):
         LOG.debug('Starting SDMDBaseline.prepare')
         inputs = self.inputs
-        print inputs
         context = inputs.context
-        print context
         datatable_name = context.observing_run.ms_datatable_name
-        print datatable_name
         datatable = DataTable(datatable_name)
         reduction_group = context.observing_run.ms_reduction_group
-        print reduction_group
         vis_list = inputs.vis
         ms_list = inputs.ms
-        ms_name_list = [x.name for x in ms_list]
-        print vis_list
         args = inputs.to_casa_args()
-        print args
-        # st_names = context.observing_run.st_names
-        # file_index = [st_names.index(infile) for infile in infiles]
 
         # window = [] if inputs.linewindow is None else inputs.linewindow
         window = inputs.linewindow
-        print window
-        # edge = (0,0) if inputs.edge is None else inputs.edge
         edge = inputs.edge
-        print edge
-        # broadline = False if inputs.broadline is None else inputs.broadline
         broadline = inputs.broadline
-        print broadline
         fitorder = 'automatic' if inputs.fitorder is None or inputs.fitorder < 0 else inputs.fitorder
-        # fitorder = inputs.fitorder
-        print fitorder
-        # fitfunc = 'spline' if inputs.fitfunc is None else inputs.fitfunc
         fitfunc = inputs.fitfunc
-        print fitfunc
-        # clusteringalgorithm = inputs.clusteringalgorithm
         clusteringalgorithm = inputs.clusteringalgorithm
-        print clusteringalgorithm
-        # deviationmask = True if inputs.deviationmask is None else inputs.deviationmask
         deviationmask = inputs.deviationmask
-        print deviationmask
         
         dummy_suffix = "_temp"
         # Clear-up old temporary scantables (but they really shouldn't exist)
         self._clearup_dummy()
         
-        baselined = []
-
         # generate storage for baselined data
         #self._generate_storage_for_baselined(context, reduction_group)
 
@@ -225,10 +197,7 @@ class SDMSBaseline(basetask.StandardTaskTemplate):
             os.makedirs(stage_dir)
 
         # loop over reduction group
-        # files = set()
-        files_temp = {}
-        plot_list = []
-        
+
         # This is a dictionary for deviation mask that will be merged with top-level context
         deviation_mask = collections.defaultdict(dict)
         
@@ -264,7 +233,8 @@ class SDMSBaseline(basetask.StandardTaskTemplate):
  
             LOG.debug('spw=\'{}\'', args['spw'])
             LOG.debug('vis_list={}', vis_list)
-            member_list = list(common.get_valid_ms_members(group_desc, ms_name_list, args['antenna'], args['field'], args['spw']))
+            member_list = numpy.fromiter(utils.get_valid_ms_members2(group_desc, ms_list, args['antenna'], args['field'], args['spw']),
+                                         dtype=numpy.int32)
             # skip this group if valid member list is empty
             LOG.debug('member_list={}', member_list)
             if len(member_list) == 0:
@@ -272,17 +242,9 @@ class SDMSBaseline(basetask.StandardTaskTemplate):
                 continue
  
             member_list.sort()
-            group_ms_list = [group_desc[i].ms for i in member_list]
-            group_msid_list = [context.observing_run.measurement_sets.index(ms) for ms in group_ms_list]
-            group_vis_list = [ms.name for ms in group_ms_list]
-            group_antennaid_list = [group_desc[i].antenna_id for i in member_list]
-            group_spwid_list = [group_desc[i].spw_id for i in member_list]
-            group_fieldid_list = [group_desc[i].field_id for i in member_list]
-            # pols_list = [pols_list[i] for i in member_list]
-            # LOG.debug('pols_list=%s'%(pols_list))
             
             LOG.debug('Members to be processed:')
-            for (gms, gfield, gant, gspw) in itertools.izip(group_ms_list, group_fieldid_list, group_antennaid_list, group_spwid_list):
+            for (gms, gfield, gant, gspw) in utils.iterate_group_member(group_desc, member_list):
                 LOG.debug('\tMS "{}" Field ID {} Antenna ID {} Spw ID {}', 
                           gms.basename, gfield, gant, gspw)
                  
@@ -291,8 +253,7 @@ class SDMSBaseline(basetask.StandardTaskTemplate):
             if deviationmask:
                 LOG.info('Apply deviation mask to baseline fitting')
                 for (ms, fieldid, antennaid, spwid) in \
-                    itertools.izip(group_ms_list, group_fieldid_list, group_antennaid_list, group_spwid_list):
-                    # st = self.context.observing_run.get_scantable(ant)
+                    utils.iterate_group_member(group_desc, member_list):
                     if (not hasattr(ms, 'deviation_mask')) or ms.deviation_mask is None:
                         ms.deviation_mask = {}
                     if not ms.deviation_mask.has_key((fieldid,antennaid,spwid)):
@@ -311,8 +272,7 @@ class SDMSBaseline(basetask.StandardTaskTemplate):
 
             # Spectral Line Detection and Validation
             # MaskLine will update DataTable.MASKLIST column
-            maskline_inputs = maskline.MaskLine.Inputs(context, iteration, group_vis_list, 
-                                                       group_fieldid_list, group_antennaid_list, group_spwid_list, 
+            maskline_inputs = maskline.MaskLine.Inputs(context, iteration, group_id, member_list, 
                                                        window, edge, broadline, clusteringalgorithm)
             maskline_task = maskline.MaskLine(maskline_inputs)
             job = common.ParameterContainerJob(maskline_task, datatable=datatable)
@@ -333,9 +293,7 @@ class SDMSBaseline(basetask.StandardTaskTemplate):
              
             # add entry to outcome
             baselined.append({'group_id': group_id, 'iteration': iteration,
-                              'name': group_vis_list, 'antenna': group_antennaid_list,
-                              'spw': group_spwid_list, 'pols': None,
-                              'field': group_fieldid_list, 
+                              'members': member_list,
                               'lines': detected_lines,
                               'channelmap_range': channelmap_range,
                               'clusters': cluster_info})
@@ -359,15 +317,15 @@ class SDMSBaseline(basetask.StandardTaskTemplate):
                       field=field_id_list,
                       antenna=antenna_id_list,
                       spw=spw_id_list)
-            
+             
             devmask_list = []
             for key in itertools.izip(field_id_list, antenna_id_list, spw_id_list):
                 devmask = None
                 if deviation_mask[vis].has_key(key):
                     devmask = deviation_mask[vis][key]
                 devmask_list.append(devmask)
-                
-
+                 
+ 
             # fit order determination
             fitter_inputs = worker.BaselineSubtractionTask.Inputs(context,
                                                                   fitfunc=fitfunc,
@@ -381,21 +339,21 @@ class SDMSBaseline(basetask.StandardTaskTemplate):
                                                deviationmask_list=devmask_list)
             fitter_results = self._executor.execute(job, merge=False)
             LOG.debug('fitter_results: {}', fitter_results)
-
+ 
             outfile = fitter_results.outcome['outfile']
             work_data[ms.name] = outfile
-            
+             
             # plot
             field_id_list, antenna_id_list, spw_id_list = accum.get_process_list()
             grid_table_list = accum.get_grid_table_list()
             channelmap_range_list = accum.get_channelmap_range_list()
             deviationmask_list = devmask_list
-            
+             
             # initialize plot manager
             status = plot_manager.initialize(ms, outfile)
             for (field_id, antenna_id, spw_id, grid_table, deviationmask, channelmap_range) in \
                     itertools.izip(field_id_list, antenna_id_list, spw_id_list, grid_table_list, deviationmask_list, channelmap_range_list):
-                
+                 
                 if status:
                     plot_list.extend(plot_manager.plot_spectra_with_fit(field_id, antenna_id, spw_id, 
                                                                         grid_table, 
@@ -415,7 +373,7 @@ class SDMSBaseline(basetask.StandardTaskTemplate):
 
     def analyse(self, result):
         return result
-
+    
     def evaluate_deviation_mask(self, vis, field_id, antenna_id, spw_id, consider_flag=False):
         """
         Create deviation mask using MaskDeviation heuristic
