@@ -192,7 +192,9 @@ $(document).ready(function() {
 	<caption>Summary of flagged data. Each cell states the amount of data 
 		flagged as a fraction of the specified data selection, with the 
 		<em>Flagging Step</em> columns giving this information per flagging
-		 step.
+		step. Note: for each data selection intent, the flagging statistics
+        are calculated for the Tsys scans (with intent=ATMOSPHERE) that cover
+        those fields that also match the data selection intent.
 	</caption>
 	<thead>
 		<tr>
