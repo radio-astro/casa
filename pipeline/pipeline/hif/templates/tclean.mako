@@ -177,7 +177,7 @@ except:
                             <tr>
 				<th>beam</th>
                                 %if info_dict.get((field,str(spw),pol,'beam major')) is not None:
-                                    <td>${'%#.2g x %#.2g %s' % (info_dict[(field,str(spw),pol,'beam major')]['value'], info_dict[(field,str(spw),pol,'beam minor')]['value'], info_dict[(field,str(spw),pol,'beam major')]['unit'])}</td>
+                                    <td>${'%#.3g x %#.3g %s' % (info_dict[(field,str(spw),pol,'beam major')]['value'], info_dict[(field,str(spw),pol,'beam minor')]['value'], info_dict[(field,str(spw),pol,'beam major')]['unit'])}</td>
                                 %else:
                                     <td>-</td>
                                 %endif

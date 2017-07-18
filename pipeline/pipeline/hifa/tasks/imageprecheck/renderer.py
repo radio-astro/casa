@@ -44,7 +44,7 @@ class T2_4MDetailsCheckProductSizeRenderer(basetemplates.T2_4MDetailsDefaultRend
             bmin_v = cqa.getvalue(cqa.convert(item['beam']['minor'], 'arcsec'))
             bmaj_v = cqa.getvalue(cqa.convert(item['beam']['major'], 'arcsec'))
             bpa_v = cqa.getvalue(cqa.convert(item['beam']['positionangle'], 'deg'))
-            beam = '%#.2g x %#.2g arcsec @ %#.3g deg' % (bmaj_v, bmin_v, bpa_v)
+            beam = '%#.3g x %#.3g arcsec @ %#.3g deg' % (bmaj_v, bmin_v, bpa_v)
             beamsize = sqrt(bmaj_v * bmin_v)
             if (minAR_v != 0.0) and (maxAR_v != 0.0):
                 beam_vs_minAR_maxAR = '%.1f%% / %.1f%%' % (100. * (beamsize / minAR_v - 1.0), 100. * (beamsize / maxAR_v - 1.0))
