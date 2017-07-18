@@ -203,7 +203,7 @@ peak_fraction -- The limiting UV distance from the reference antenna forantennas
 ---- pipeline context defined parameter arguments which can be set only in
 'interactive mode'
 
-vis -- The list of input measurement sets. Defaults to the list of measurment
+vis -- The list of input measurement sets. Defaults to the list of measurement
     sets specified in the pipeline context
     default: ''
     example: ['M32A.ms', 'M32B.ms']

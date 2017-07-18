@@ -113,7 +113,7 @@ pipelinemode -- The pipeline operating mode. In 'automatic' mode the pipeline
 ---- pipeline context defined parameter arguments which can be set only in
 'interactive mode'
 
-vis -- The list of input measurement sets. Defaults to the list of measurment
+vis -- The list of input measurement sets. Defaults to the list of measurement
     sets specified in the h_init or hif_importdata sets.
     example: vis='ngc5921.ms'
              vis=['ngc5921a.ms', ngc5921b.ms', 'ngc5921c.ms']
