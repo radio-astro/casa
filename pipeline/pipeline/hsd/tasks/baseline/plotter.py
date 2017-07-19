@@ -9,6 +9,7 @@ import pipeline.infrastructure.displays.singledish.sparsemap as sparsemap
 from pipeline.infrastructure.displays.singledish.utils import sd_polmap
 from pipeline.domain import DataTable
 from ..common import utils 
+from ..common import compress
 from pipeline.infrastructure.displays.singledish import atmutil
 
 _LOG = infrastructure.get_logger(__name__)
@@ -76,7 +77,7 @@ class BaselineSubtractionPlotManager(object):
         def _filter(msid, ant, spw, pols, table):
             for row in table:
                 if row[0] == spw and row[1] in pols:
-                    new_row_entry = row[2:6] + [numpy.array([r[3] for r in row[6] if r[-1] == msid and r[-2] == ant], dtype=int)]
+                    new_row_entry = row[2:6] + [numpy.fromiter((r[3] for r in row[6] if r[-1] == msid and r[-2] == ant), dtype=int)]
                     yield new_row_entry
         new_table = list(_filter(ms_id, antenna_id, spw_id, polarization_ids, grid_table))
         return new_table
@@ -177,7 +178,8 @@ class BaselineSubtractionPlotManager(object):
                                        y_axis='Intensity',
                                        field=source_name,
                                        parameters=parameters)
-                    ret.append(plot)
+                    ret.append(compress.CompressedObj(plot))
+                    del plot
         return ret
     
     def plot_profile_map_with_fit(self, prefit_figfile_prefix, postfit_figfile_prefix, 
@@ -202,7 +204,7 @@ class BaselineSubtractionPlotManager(object):
             
         plotter = self.pool.create_plotter(num_ra, num_dec, num_plane, refpix, refval, increment)
         LOG.info('vis {} ant {} spw {} plotter figure id {} has {} axes', ms.basename, antid, spwid, plotter.axes.figure_id, len(plotter.axes.figure.axes))
-        LOG.info('axes list: {}', [x.__hash__()  for x in plotter.axes.figure.axes])
+#         LOG.info('axes list: {}', [x.__hash__()  for x in plotter.axes.figure.axes])
         spw = ms.spectral_windows[spwid]
         nchan = spw.num_channels
         data_desc = ms.get_data_description(spw=spw)

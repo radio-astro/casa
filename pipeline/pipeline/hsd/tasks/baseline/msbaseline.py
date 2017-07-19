@@ -23,6 +23,7 @@ from . import maskline
 from . import worker
 from . import plotter
 # from . import fitting
+from ..common import compress
 
 _LOG = infrastructure.get_logger(__name__)
 LOG = utils.OnDemandStringParseLogger(_LOG)
@@ -107,10 +108,9 @@ class SDMSBaselineResults(common.SingleDishResults):
                                 ms.deviation_mask[key] = masks[key]
 
     def _outcome_name(self):
-        return ['%s: %s (spw=%s, pol=%s)' % (idx, name, b['spw'], b['pols'])
-                for b in self.outcome['baselined']
-                for (idx, name) in itertools.izip(b['antenna'], b['name'])]
-
+        return '\n'.join(['Reduction Group {0}: member {1}'.format(b['group_id'], b['members'])
+                for b in self.outcome['baselined']])
+        
 class SDMSBaseline(basetask.StandardTaskTemplate):
     Inputs = SDMSBaselineInputs
     
@@ -126,8 +126,8 @@ class SDMSBaseline(basetask.StandardTaskTemplate):
             self.field.append(field_id)
             self.antenna.append(antenna_id)
             self.spw.append(spw_id)
-            self.grid_table.append(grid_table)
-            self.channelmap_range.append(channelmap_range)
+            self.grid_table.append(compress.CompressedObj(grid_table))
+            self.channelmap_range.append(compress.CompressedObj(channelmap_range))
             
 #         def extend(self, field_id_list, antenna_id_list, spw_id_list):
 #             self.field.extend(field_id_list)
@@ -148,6 +148,26 @@ class SDMSBaseline(basetask.StandardTaskTemplate):
         
         def get_channelmap_range_list(self):
             return self.channelmap_range
+        
+        def iterate_id(self):
+            assert len(self.field) == len(self.antenna)
+            assert len(self.field) == len(self.spw)
+            for v in itertools.izip(self.field, self.antenna, self.spw):
+                yield v
+                
+        def iterate_all(self):
+            assert len(self.field) == len(self.antenna)
+            assert len(self.field) == len(self.spw)
+            assert len(self.field) == len(self.grid_table)
+            assert len(self.field) == len(self.channelmap_range)
+            for f, a, s, g, c in itertools.izip(self.field, self.antenna, self.spw, 
+                                                self.grid_table, self.channelmap_range):
+                _g = g.decompress()
+                _c = c.decompress()
+                yield f, a, s, _g, _c
+                del _g
+                del _c
+            
         
         def get_process_list(self):
             field_id_list = self.get_field_id_list()
@@ -174,7 +194,6 @@ class SDMSBaseline(basetask.StandardTaskTemplate):
         ms_list = inputs.ms
         args = inputs.to_casa_args()
 
-        # window = [] if inputs.linewindow is None else inputs.linewindow
         window = inputs.linewindow
         edge = inputs.edge
         broadline = inputs.broadline
@@ -183,13 +202,6 @@ class SDMSBaseline(basetask.StandardTaskTemplate):
         clusteringalgorithm = inputs.clusteringalgorithm
         deviationmask = inputs.deviationmask
         
-        dummy_suffix = "_temp"
-        # Clear-up old temporary scantables (but they really shouldn't exist)
-        self._clearup_dummy()
-        
-        # generate storage for baselined data
-        #self._generate_storage_for_baselined(context, reduction_group)
-
         # mkdir stage_dir if it doesn't exist
         stage_number = context.task_counter
         stage_dir = os.path.join(context.report_dir, "stage%d" % stage_number)
@@ -219,11 +231,11 @@ class SDMSBaseline(basetask.StandardTaskTemplate):
                           antenna_id=m.antenna_id, spw=m.spw_id,
                           field=m.field_name,
                           field_id=m.field_id)
-#             # assume all members have same spw and pollist
+            # assume all members have same spw and pollist
             first_member = group_desc[0]
             iteration = first_member.iteration
             LOG.debug('iteration for group {group_id} is {iter}', group_id=group_id, iter=iteration)
-# 
+ 
             # skip channel averaged spw
             nchan = group_desc.nchan
             LOG.debug('nchan for group {group_id} is {nchan}', group_id=group_id, nchan=nchan)
@@ -318,15 +330,7 @@ class SDMSBaseline(basetask.StandardTaskTemplate):
                       antenna=antenna_id_list,
                       spw=spw_id_list)
              
-            devmask_list = []
-            for key in itertools.izip(field_id_list, antenna_id_list, spw_id_list):
-                devmask = None
-                if deviation_mask[vis].has_key(key):
-                    devmask = deviation_mask[vis][key]
-                devmask_list.append(devmask)
-                 
- 
-            # fit order determination
+            # fit order determination and subtraction
             fitter_inputs = worker.BaselineSubtractionTask.Inputs(context,
                                                                   fitfunc=fitfunc,
                                                                   vis=ms.name,
@@ -336,23 +340,23 @@ class SDMSBaseline(basetask.StandardTaskTemplate):
             fitter_task = worker.BaselineSubtractionTask(fitter_inputs)
             job = common.ParameterContainerJob(fitter_task, datatable=datatable, 
                                                process_list=accum, 
-                                               deviationmask_list=devmask_list)
+                                               deviationmask_list=deviation_mask[vis])
             fitter_results = self._executor.execute(job, merge=False)
             LOG.debug('fitter_results: {}', fitter_results)
  
             outfile = fitter_results.outcome['outfile']
             work_data[ms.name] = outfile
              
-            # plot
-            field_id_list, antenna_id_list, spw_id_list = accum.get_process_list()
-            grid_table_list = accum.get_grid_table_list()
-            channelmap_range_list = accum.get_channelmap_range_list()
-            deviationmask_list = devmask_list
-             
+            # plot             
             # initialize plot manager
             status = plot_manager.initialize(ms, outfile)
-            for (field_id, antenna_id, spw_id, grid_table, deviationmask, channelmap_range) in \
-                    itertools.izip(field_id_list, antenna_id_list, spw_id_list, grid_table_list, deviationmask_list, channelmap_range_list):
+            for (field_id, antenna_id, spw_id, grid_table, channelmap_range) in accum.iterate_all():
+                 
+                if (field_id, antenna_id, spw_id) in deviation_mask[vis]:
+                    deviationmask = deviation_mask[vis][(field_id, antenna_id, spw_id)]
+                else:
+                    deviationmask = None
+                    
                  
                 if status:
                     plot_list.extend(plot_manager.plot_spectra_with_fit(field_id, antenna_id, spw_id, 
@@ -383,36 +387,4 @@ class SDMSBaseline(basetask.StandardTaskTemplate):
                                 consider_flag=consider_flag)
         return mask_list
 
-    def _generate_storage_from_reference(self, storage, reference):
-        LOG.debug('generating {} from {}', os.path.basename(storage), os.path.basename(reference))
-        with casatools.TableReader(reference) as tb:
-            copied = tb.copy(storage, deep=True, returnobject=True)
-            copied.close()
 
-    @property
-    def _dummy_suffix(self):
-        return "_temp"
-    
-    def _clearup_dummy(self):
-        remove_list = glob.glob("*" + self._dummy_suffix)
-        for dummy in remove_list:
-            LOG.debug("Removing old temprary file '{}'", dummy)
-            shutil.rmtree(dummy)
-        del remove_list
-
-def per_antenna_grid_table(antenna_id, grid_table):
-    def filter(ant, table):
-        for row in table:
-            new_row_entry = row[:6] + [numpy.array([r for r in row[6] if r[-1] == antenna_id])]
-            yield new_row_entry
-    new_table = list(filter(antenna_id, grid_table))
-    return new_table
-
-def generate_plot_table(antenna_id, spw_id, polarization_ids, grid_table):
-    def filter(ant, spw, pols, table):
-        for row in table:
-            if row[0] == spw and row[1] in pols:
-                new_row_entry = row[2:6] + [numpy.array([r[3] for r in row[6] if r[-1] == ant], dtype=int)]
-                yield new_row_entry
-    new_table = list(filter(antenna_id, spw_id, polarization_ids, grid_table))
-    return new_table

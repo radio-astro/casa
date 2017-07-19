@@ -422,8 +422,6 @@ class BaselineSubtractionWorker(basetask.StandardTaskTemplate):
         
         assert process_list is not None
         assert deviationmask_list is not None
-        field_id_list, antenna_id_list, spw_id_list = process_list.get_process_list()
-        assert len(field_id_list) == len(deviationmask_list)
         
         # initialization of blparam file
         # blparam file needs to be removed before starting iteration through 
@@ -432,8 +430,11 @@ class BaselineSubtractionWorker(basetask.StandardTaskTemplate):
             LOG.debug('Cleaning up blparam file for {vis}', vis=vis)
             os.remove(blparam)        
         
-        for (field_id, antenna_id, spw_id, deviationmask) in \
-            zip(field_id_list, antenna_id_list, spw_id_list, deviationmask_list):
+        for (field_id, antenna_id, spw_id) in process_list.iterate_id():
+            if (field_id, antenna_id, spw_id) in deviationmask_list:
+                deviationmask = deviationmask_list[(field_id, antenna_id, spw_id)]
+            else:
+                deviationmask = None
             inputs = self.SubTask.Inputs(context, vis=vis, field_id=field_id,
                                          antenna_id=antenna_id, spw_id=spw_id,
                                          fit_order=fit_order, edge=edge, 
