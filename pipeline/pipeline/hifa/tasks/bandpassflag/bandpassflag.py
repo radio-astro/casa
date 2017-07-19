@@ -28,17 +28,17 @@ class BandpassflagInputs(bandpass.ALMAPhcorBandpass.Inputs):
     # Lower sigma threshold for identifying outliers as a result of bad
     # antennas within individual timestamps; equivalent to:
     # relaxationSigma
-    antnegsig = basetask.property_with_default('antnegsig', 6.5)
+    antnegsig = basetask.property_with_default('antnegsig', 4.0)
 
     # Upper sigma threshold for identifying outliers as a result of bad
     # antennas within individual timestamps; equivalent to:
     # positiveSigmaAntennaBased
-    antpossig = basetask.property_with_default('antpossig', 5.8)
+    antpossig = basetask.property_with_default('antpossig', 4.6)
 
     # Threshold for maximum fraction of timestamps that are allowed
     # to contain outliers; equivalent to:
     # checkForAntennaBasedBadIntegrations
-    tmantint = basetask.property_with_default('tmantint', 0.06)
+    tmantint = basetask.property_with_default('tmantint', 0.063)
 
     # Initial threshold for maximum fraction of "outlier timestamps" over
     # "total timestamps" that a baseline may be a part of; equivalent to:
@@ -60,7 +60,7 @@ class BandpassflagInputs(bandpass.ALMAPhcorBandpass.Inputs):
     # baselines" and/or "bad antennas" within baselines (across all
     # timestamps); equivalent to:
     # flag_nsigma['scalardiff']
-    antblpossig = basetask.property_with_default('antblpossig', 3.0)
+    antblpossig = basetask.property_with_default('antblpossig', 3.2)
 
     # Relaxed value to set the threshold scaling factor to under certain
     # conditions; equivalent to:

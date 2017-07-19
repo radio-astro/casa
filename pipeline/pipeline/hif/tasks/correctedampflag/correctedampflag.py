@@ -86,7 +86,7 @@ class CorrectedampflagInputs(basetask.StandardInputs):
     @antnegsig.setter
     def antnegsig(self, value):
         if value is None:
-            value = 6.5
+            value = 4.0
         self._antnegsig = value
 
     # Upper sigma threshold for identifying outliers as a result of bad
@@ -99,7 +99,7 @@ class CorrectedampflagInputs(basetask.StandardInputs):
     @antpossig.setter
     def antpossig(self, value):
         if value is None:
-            value = 5.8
+            value = 4.6
         self._antpossig = value
 
     # Threshold for maximum fraction of timestamps that are allowed
@@ -112,7 +112,7 @@ class CorrectedampflagInputs(basetask.StandardInputs):
     @tmantint.setter
     def tmantint(self, value):
         if value is None:
-            value = 0.06
+            value = 0.063
         self._tmantint = value
 
     # Initial threshold for maximum fraction of "outlier timestamps" over
@@ -166,7 +166,7 @@ class CorrectedampflagInputs(basetask.StandardInputs):
     @antblpossig.setter
     def antblpossig(self, value):
         if value is None:
-            value = 3.0
+            value = 3.2
         self._antblpossig = value
 
     # Relaxed value to set the threshold scaling factor to under certain
