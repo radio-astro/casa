@@ -265,19 +265,20 @@ class GriddingBase(basetask.StandardTaskTemplate):
         # Create progress timer
         Timer = common.ProgressTimer(80, num_grid, loglevel)
         ID = 0
-        for [IFS, POL, X, Y, RAcent, DECcent, RowDelta] in GridTable:
+        for (IFS, POL, X, Y, RAcent, DECcent, RowDelta) in GridTable:
             IF = IFS[0]
             # RowDelta is numpy array
             if len(RowDelta) == 0:
-                indexlist = []
-                deltalist = []
-                rmslist = []
+                indexlist = ()
+                deltalist = ()
+                rmslist = ()
             else:
                 indexlist = numpy.array([IDX2StorageID[int(idx)] for idx in RowDelta[:,3]])
                 valid_index = numpy.where(net_flag[indexlist] == 1)[0]
                 indexlist = indexlist.take(valid_index)
                 deltalist = RowDelta[:,1].take(valid_index)
                 rmslist = RowDelta[:,2].take(valid_index)
+                del valid_index
             num_valid = len(indexlist)
             num_flagged = len(RowDelta) - num_valid
             if num_valid == 0:
@@ -294,7 +295,7 @@ class GriddingBase(basetask.StandardTaskTemplate):
                 
                 RMS = accum.rms
 
-            OutputTable.append([IF, POL, X, Y, RAcent, DECcent, num_valid, num_flagged, RMS])
+            OutputTable.append((IF, POL, X, Y, RAcent, DECcent, num_valid, num_flagged, RMS))
             ID += 1
             del indexlist, deltalist, rmslist
 
@@ -374,11 +375,14 @@ class RasterGridding(GriddingBase):
                     ssIDX = numpy.take(sIDX, SelectR)
                     ssMS = numpy.take(sMS, SelectR)
                     ssDelta = numpy.sqrt(numpy.take(Delta, SelectR))
-                    line = [map(lambda x: self.spwmap[x], ssMS), self.poltype[0], x, y, RA, DEC, numpy.transpose([ssROW, ssDelta, ssRMS, ssIDX, ssMS])]
+                    line = (map(lambda x: self.spwmap[x], ssMS), self.poltype[0], x, y, RA, DEC, numpy.transpose([ssROW, ssDelta, ssRMS, ssIDX, ssMS]))
+                    del ssROW, ssRMS, ssIDX, ssMS, ssDelta
                 else:
-                    line = [self.spw, self.poltype[0], x, y, RA, DEC, []]
+                    line = (self.spw, self.poltype[0], x, y, RA, DEC, ())
                 GridTable.append(line)
+                del SelectR
                 #LOG.debug("GridTable: %s" % line)
+            del SelectD, sDeltaDEC, sRA, sROW, sIDX, sRMS, sMS
 
         LOG.info('NGridRA = %s  NGridDEC = %s' % (NGridRA, NGridDEC))
 
