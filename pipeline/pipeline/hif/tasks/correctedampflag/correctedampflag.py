@@ -526,7 +526,7 @@ class Correctedampflag(basetask.StandardTaskTemplate):
                 # If all very high outliers were concentrated within a small
                 # number of timestamps set by a threshold, then evaluate the
                 # antenna based heuristics for those timestamps.
-                if 0 < len(time_sel_veryhighsig_uniq) <= n_time_with_veryhighsig_max:
+                elif 0 < len(time_sel_veryhighsig_uniq) <= n_time_with_veryhighsig_max:
                     newflags = self.evaluate_antbased_heuristics(
                         ms, spwid, intent, icorr, field, newflags,
                         ants_in_outlier_baseline_scans_thresh,
