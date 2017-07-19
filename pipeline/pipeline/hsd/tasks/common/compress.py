@@ -25,8 +25,8 @@ def compress_object(obj, protocol=pickle.HIGHEST_PROTOCOL, compresslevel=9):
         compressed = obj
     end = time.time()
     size_comp = asizeof.asizeof(compressed)
-    LOG.info('compress: size before {0} after {1} ({2} %)'.format(size_org, size_comp, float(size_comp)/float(size_org) * 100))
-    LOG.info('elapsed {0} sec'.format(end - start))
+    LOG.debug('compress: size before {0} after {1} ({2} %)'.format(size_org, size_comp, float(size_comp)/float(size_org) * 100))
+    LOG.debug('elapsed {0} sec'.format(end - start))
     return compressed
 
 def decompress_object(obj):
@@ -35,8 +35,8 @@ def decompress_object(obj):
     decompressed = pickle.loads(bz2.decompress(obj))
     end = time.time()
     size_org = asizeof.asizeof(decompressed)
-    LOG.info('decompress: size before {0} after {1} ({2} %)'.format(size_org, size_comp, size_comp/size_org))
-    LOG.info('elapsed {0} sec'.format(end - start))
+    LOG.debug('decompress: size before {0} after {1} ({2} %)'.format(size_org, size_comp, size_comp/size_org))
+    LOG.debug('elapsed {0} sec'.format(end - start))
     return decompressed
 
 class CompressedIter(object):
