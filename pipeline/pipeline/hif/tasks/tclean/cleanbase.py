@@ -494,6 +494,7 @@ def set_miscinfo(name, spw=None, field=None, type=None, iter=None, multiterm=Non
             info = image.miscinfo()
             if imagename is not None:
                 filename_components = os.path.basename(imagename).split('.')
+                info['nfilnam'] = len(filename_components)
                 for i in xrange(len(filename_components)):
                     info['filnam%02d' % (i+1)] = filename_components[i]
             if spw:
