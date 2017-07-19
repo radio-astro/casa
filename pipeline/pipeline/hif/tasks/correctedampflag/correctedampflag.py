@@ -300,16 +300,23 @@ class Correctedampflag(basetask.StandardTaskTemplate):
         # may be a part of without getting flagged.
         tmbl_minbadnr = 4.0
 
+        # Set sigma threshold for identifying very high outliers.
+        antveryhighsig = 10.0
+
+        # Set sigma outlier threshold for purpose of evaluating
+        # whether to relax the threshold scaling factor.
+        relaxsig = 6.5
+
         # Initialize flags.
         newflags = []
 
         # Get number of scans in MS for this intent.
         nscans = len(ms.get_scans(scan_intent=intent))
 
-        # If there are multiple scans for this intent, then double the
+        # If there are multiple scans for this intent, then scale up the
         # threshold for timestamps with outliers.
         if nscans > 1:
-            tmantint = inputs.tmantint * 2
+            tmantint = inputs.tmantint * 2 * (1 + np.log10(nscans))
         else:
             tmantint = inputs.tmantint
 
@@ -414,14 +421,60 @@ class Correctedampflag(basetask.StandardTaskTemplate):
             med = np.median(cmetric_sel)
             mad = np.median(np.abs(cmetric_sel - np.median(cmetric_sel))) * 1.4826
 
-            # The following part checks for each timestamp whether the
-            # outliers are either
-            #  a.) mostly due to a single antenna => flag this ant for this timestamp, or
-            #  b.) due to a significant fraction of antennas => flag entire timestamp
+            #
+            # Evaluate whether the threshold scaling factor should be
+            # set to the relaxed value.
+            #
 
-            # If an antenna based bad integrations fraction was
-            # provided, then identify both negative and positive
-            # outliers; otherwise just identify negative outliers.
+            # Based on the "relaxation" sigma outlier threshold, identify
+            # outliers. If an antenna-based bad integrations fraction was
+            # provided, then identify both negative and positive outliers,
+            # otherwise just identify negative outliers.
+            if tmantint > 0:
+                id_relaxsig = np.where(
+                    np.logical_or(
+                        cmetric_sel < (med - mad * relaxsig),
+                        cmetric_sel > (med + mad * relaxsig)))[0]
+            else:
+                id_relaxsig = np.where(
+                    cmetric_sel < (med - mad * inputs.relaxsig))[0]
+
+            # If any outliers were found...
+            if len(id_relaxsig) > 0:
+                # Relax threshold scale factor if not testing for positive
+                # outliers.
+                if tmantint <= 0:
+                    thresh_scale_factor = inputs.relaxed_factor
+                else:
+                    # Identify number of unique outlier timestamps.
+                    time_sel_relaxsig = time_sel[id_relaxsig]
+                    time_sel_relaxsig_uniq = np.unique(time_sel_relaxsig)
+
+                    # Set maximum threshold for outlier timestamps.
+                    # Currently set equal to the threshold for high sigma
+                    # outlier timestamps used in flagging heuristic.
+                    n_time_with_relaxsig_max = n_time_with_highsig_max
+
+                    # If the number of unique outlier timestamps exceeds the
+                    # threshold, then relax the threshold scale factor.
+                    if len(time_sel_relaxsig_uniq) > n_time_with_relaxsig_max:
+                        thresh_scale_factor = inputs.relaxed_factor
+
+            #
+            # Start with evaluation of flagging heuristics.
+            #
+
+            #
+            # The following part considers timestamps separately, evaluating a
+            # series of antenna-based heuristics to flag one or more antennas
+            # within a timestamp or to flag an entire timestamp if necessary.
+            #
+
+            # Based on the input antenna based negative and positive sigma
+            # outlier thresholds, identify outliers. If an antenna-based
+            # bad integrations fraction was provided, then identify both
+            # negative and positive outliers, otherwise just identify
+            # negative outliers.
             if tmantint > 0:
                 id_highsig = np.where(
                     np.logical_or(
@@ -431,130 +484,58 @@ class Correctedampflag(basetask.StandardTaskTemplate):
                 id_highsig = np.where(
                     cmetric_sel < (med - mad * inputs.antnegsig))[0]
 
+            # Based on the "very high" sigma outlier threshold, identify
+            # both negative and positive outliers.
+            id_veryhighsig = np.where(
+                np.logical_or(
+                    cmetric_sel < (med - mad * antveryhighsig),
+                    cmetric_sel > (med + mad * antveryhighsig)))[0]
+
             # TODO: equivalent to line 467  (remove before final commit)
-            # If outliers were found...
-            if len(id_highsig) > 0:
+            # If outliers were found and checking for positive outliers...
+            if len(id_highsig) > 0 and tmantint > 0:
+                # Check whether the outliers were concentrated in only one or a small
+                # fraction (set by bad_int_frac) of timestamps.
 
-                # If not testing for positive outliers...
-                if tmantint <= 0:
-                    # Set the scale factor for the maximum threshold
-                    # for outlier timestamps per baseline to a
-                    # relaxed value.
-                    thresh_scale_factor = inputs.relaxed_factor
+                # Identify timestamps with outliers
+                time_sel_highsig = time_sel[id_highsig]
+                time_sel_highsig_uniq = np.unique(time_sel_highsig)
 
-                else:
-                    # Check whether the outliers were concentrated in only one or a small
-                    # fraction (set by bad_int_frac) of timestamps.
+                # Identify timestamps with very high outliers.
+                time_sel_veryhighsig = time_sel[id_veryhighsig]
+                time_sel_veryhighsig_uniq = np.unique(time_sel_veryhighsig)
 
-                    # Identify timestamps with outliers
-                    time_sel_highsig = time_sel[id_highsig]
-                    time_sel_highsig_uniq = np.unique(time_sel_highsig)
+                # Set maximum threshold for "very high" outlier timestamps.
+                # Currently set equal to the threshold for high sigma
+                # outlier timestamps used in flagging heuristic.
+                n_time_with_veryhighsig_max = n_time_with_highsig_max
 
-                    # If all outliers were concentrated within small number of timestamps
-                    # set by n_max_highsig, then check for each of those timestamps whether either
-                    # a.) most outliers involved just one antenna, in which case flag this
-                    # ant for that timestamp, or
-                    # b.) a significant fraction of antennas were involved in outlier
-                    # baselines, in which case flag the timestamp.
-                    # TODO: equivalent to line 485  (remove before final commit)
-                    if len(time_sel_highsig_uniq) <= n_time_with_highsig_max:
+                # If all outliers were concentrated within a small number of
+                # timestamps set by a threshold, then evaluate the antenna
+                # based heuristics for those timestamps.
+                # TODO: equivalent to line 485  (remove before final commit)
+                if 0 < len(time_sel_highsig_uniq) <= n_time_with_highsig_max:
+                    newflags = self.evaluate_antbased_heuristics(
+                        ms, spwid, intent, icorr, field, newflags,
+                        ants_in_outlier_baseline_scans_thresh,
+                        ants_in_outlier_baseline_scans_partial_thresh,
+                        max_frac_outlier_scans,
+                        antenna_id_to_name, ant1_sel, ant2_sel, nants,
+                        id_highsig, time_sel_highsig, time_sel_highsig_uniq)
 
-                        # For each of the few bad timestamps, determine if
-                        # one antenna dominates among the outlier scans
-                        # within the timestamp, or if a majority are
-                        # affected, and set flags accordingly.
-                        for timestamp in time_sel_highsig_uniq:
+                # If all very high outliers were concentrated within a small
+                # number of timestamps set by a threshold, then evaluate the
+                # antenna based heuristics for those timestamps.
+                if 0 < len(time_sel_veryhighsig_uniq) <= n_time_with_veryhighsig_max:
+                    newflags = self.evaluate_antbased_heuristics(
+                        ms, spwid, intent, icorr, field, newflags,
+                        ants_in_outlier_baseline_scans_thresh,
+                        ants_in_outlier_baseline_scans_partial_thresh,
+                        max_frac_outlier_scans,
+                        antenna_id_to_name, ant1_sel, ant2_sel, nants,
+                        id_veryhighsig, time_sel_veryhighsig, time_sel_veryhighsig_uniq)
 
-                            # Identify baseline scans within this timestamp.
-                            id_outlier_scans_in_timestamp = np.where(
-                                time_sel_highsig == timestamp)[0]
-                            n_outlier_scans_in_timestamp = len(id_outlier_scans_in_timestamp)
-
-                            # Get a list of antennas involved in outlier scans
-                            # matching the timestamp.
-                            ants_in_olscans_in_tstamp = list(np.concatenate(
-                                [ant1_sel[id_highsig][id_outlier_scans_in_timestamp],
-                                 ant2_sel[id_highsig][id_outlier_scans_in_timestamp]]))
-
-                            # Identify number of outlier scans within current
-                            # timestamp that each antenna is involved in.
-                            antcnts = np.bincount(ants_in_olscans_in_tstamp, minlength=nants)
-
-                            # Identify the ants involved in the largest number
-                            # of outliers as well as 1 count less (while ignoring
-                            # ants involved in 0 outliers).
-                            id_affected_ants = np.where(antcnts >= max([1, antcnts.max() - 1]))[0]
-
-                            # Identify the ants that are at least partially affected,
-                            # by being involved in at least one outlier, but excluding
-                            # antennas already identified as "affected".
-                            id_partly_affected_ants = np.setdiff1d(
-                                np.where(antcnts >= 1)[0],
-                                id_affected_ants)
-
-                            # If the number of affected antennas is a significant fraction of
-                            # all antennas, then flag the entire timestamp.
-                            if len(id_affected_ants) > ants_in_outlier_baseline_scans_thresh * nants:
-                                # Create a flagging command for all antennas
-                                # in this timestamp (for given spw, intent, pol).
-                                newflags.append(
-                                    FlagCmd(
-                                        filename=ms.name,
-                                        spw=spwid,
-                                        intent=utils.to_CASA_intent(ms, intent),
-                                        pol=icorr,
-                                        time=timestamp,
-                                        field=field,
-                                        reason='bad timestamp'))
-                            # Evaluate a slightly more restrictive threshold, this time
-                            # on the total number of affected and partly affected antennas,
-                            # while still requiring half the original threshold.
-                            elif (len(id_affected_ants) > 0.5 * ants_in_outlier_baseline_scans_thresh * nants
-                                    and len(id_affected_ants) + len(id_partly_affected_ants) >
-                                    ants_in_outlier_baseline_scans_partial_thresh * nants):
-                                # Create a flagging command for all antennas
-                                # in this timestamp (for given spw, intent, pol).
-                                    newflags.append(
-                                        FlagCmd(
-                                            filename=ms.name,
-                                            spw=spwid,
-                                            intent=utils.to_CASA_intent(ms, intent),
-                                            pol=icorr,
-                                            time=timestamp,
-                                            field=field,
-                                            reason='bad timestamp'))
-                            # If there was no significant fraction of affected antennas,
-                            # the proceed check if the antenna(s) with the highest number of
-                            # outlier scans (within this timestamp) equals-or-exceeds the threshold
-                            # and flag the corresponding antenna(s).
-                            elif antcnts.max() >= max_frac_outlier_scans * n_outlier_scans_in_timestamp:
-
-                                # Identify which antennas matched the highest counts,
-                                # and create a flagging command for each.
-                                id_ants_highest_cnts = np.where(antcnts == antcnts.max())[0]
-                                for ant in id_ants_highest_cnts:
-                                    # Create a flagging command for this antenna
-                                    newflags.append(
-                                        FlagCmd(
-                                            filename=ms.name,
-                                            spw=spwid,
-                                            antenna=ant,
-                                            intent=utils.to_CASA_intent(ms, intent),
-                                            pol=icorr,
-                                            time=timestamp,
-                                            field=field,
-                                            reason='bad antenna',
-                                            antenna_id_to_name=antenna_id_to_name))
-                            else:
-                                pass
-                    # If all outliers were not concentrated within a small number
-                    # of timestamps...
-                    else:
-                        # Set the scale factor for the maximum threshold
-                        # for outlier timestamps per baseline to a
-                        # relaxed value.
-                        thresh_scale_factor = inputs.relaxed_factor
-
+            #
             # The following part considers all timestamps at once, and
             # identifies "bad baselines" as the baselines that contain
             # contain outliers in a number of timestamps that exceeds
@@ -571,6 +552,7 @@ class Correctedampflag(basetask.StandardTaskTemplate):
             #  contain outliers in a number of timestamps that exceeds
             #  the maximum threshold set by the relaxed scale factor.
             #  Each of these baselines are flagged for all timestamps.
+            #
 
             # TODO: equivalent to line 531  (remove before final commit)
             # If requested, identify both positive and negative
@@ -691,6 +673,127 @@ class Correctedampflag(basetask.StandardTaskTemplate):
                                 field=field,
                                 reason='bad baseline',
                                 antenna_id_to_name=antenna_id_to_name))
+
+        return newflags
+
+    @staticmethod
+    def evaluate_antbased_heuristics(
+            ms, spwid, intent, icorr, field, newflags,
+            ants_in_outlier_baseline_scans_thresh,
+            ants_in_outlier_baseline_scans_partial_thresh,
+            max_frac_outlier_scans,
+            antenna_id_to_name, ant1_sel, ant2_sel, nants,
+            id_highsig, time_sel_highsig, time_sel_highsig_uniq):
+
+        # For each of the few bad timestamps...
+        for timestamp in time_sel_highsig_uniq:
+
+            # Identify baseline scans within this timestamp.
+            id_outlier_scans_in_timestamp = np.where(
+                time_sel_highsig == timestamp)[0]
+            n_outlier_scans_in_timestamp = len(id_outlier_scans_in_timestamp)
+
+            # Get a list of antennas involved in outlier scans
+            # matching the timestamp.
+            ants_in_olscans_in_tstamp = list(np.concatenate(
+                [ant1_sel[id_highsig][id_outlier_scans_in_timestamp],
+                 ant2_sel[id_highsig][id_outlier_scans_in_timestamp]]))
+
+            # Identify number of outlier scans within current
+            # timestamp that each antenna is involved in.
+            antcnts = np.bincount(ants_in_olscans_in_tstamp, minlength=nants)
+
+            # Identify the ants involved in the largest number
+            # of outliers as well as 1 count less (while ignoring
+            # ants involved in 0 outliers).
+            id_affected_ants = np.where(antcnts >= max([1, antcnts.max() - 1]))[0]
+
+            # Identify the ants that are at least partially affected,
+            # by being involved in at least one outlier, but excluding
+            # antennas already identified as "affected".
+            id_partly_affected_ants = np.setdiff1d(
+                np.where(antcnts >= 1)[0],
+                id_affected_ants)
+
+            # If the number of affected antennas is a significant fraction of
+            # all antennas, then flag the entire timestamp.
+            if len(id_affected_ants) > ants_in_outlier_baseline_scans_thresh * nants \
+                    and n_outlier_scans_in_timestamp > 5:
+                # Create a flagging command for all antennas
+                # in this timestamp (for given spw, intent, pol).
+                newflags.append(
+                    FlagCmd(
+                        filename=ms.name,
+                        spw=spwid,
+                        intent=utils.to_CASA_intent(ms, intent),
+                        pol=icorr,
+                        time=timestamp,
+                        field=field,
+                        reason='bad timestamp'))
+            # Evaluate a slightly more restrictive threshold, this time
+            # on the total number of affected and partly affected antennas,
+            # while still requiring half the original threshold.
+            elif (len(id_affected_ants) > 0.5 * ants_in_outlier_baseline_scans_thresh * nants
+                  and len(id_affected_ants) + len(id_partly_affected_ants) >
+                        ants_in_outlier_baseline_scans_partial_thresh * nants):
+                # Create a flagging command for all antennas
+                # in this timestamp (for given spw, intent, pol).
+                newflags.append(
+                    FlagCmd(
+                        filename=ms.name,
+                        spw=spwid,
+                        intent=utils.to_CASA_intent(ms, intent),
+                        pol=icorr,
+                        time=timestamp,
+                        field=field,
+                        reason='bad timestamp'))
+            # If there was no significant fraction of affected antennas,
+            # the proceed check if the antenna(s) with the highest number of
+            # outlier scans (within this timestamp) equals-or-exceeds the threshold
+            # and flag the corresponding antenna(s).
+            elif antcnts.max() >= max_frac_outlier_scans * n_outlier_scans_in_timestamp:
+
+                # Identify which antennas matched the highest counts,
+                # and create a flagging command for each.
+                id_ants_highest_cnts = np.where(antcnts == antcnts.max())[0]
+                for ant in id_ants_highest_cnts:
+                    # Create a flagging command for this antenna
+                    newflags.append(
+                        FlagCmd(
+                            filename=ms.name,
+                            spw=spwid,
+                            antenna=ant,
+                            intent=utils.to_CASA_intent(ms, intent),
+                            pol=icorr,
+                            time=timestamp,
+                            field=field,
+                            reason='bad antenna',
+                            antenna_id_to_name=antenna_id_to_name))
+            # Heuristic for catching cross-CAI-dependent issues:
+            # If there are affected antennas, and total number of affected
+            # and partially affected antennas exceeds the larger of 6 or
+            # 20% of the antennas, then flag the timestamp. The minimum
+            # threshold of 6 is there to prevent over-application on ACA 7m
+            # datasets.
+            elif (len(id_affected_ants) + len(id_partly_affected_ants) > np.max([6, 0.2 * nants])
+                  and len(id_affected_ants) > 0):
+                # Create flags only for the "affected" antennas for this timestamp
+                # because CAI-dependent issues do not affect all antennas.
+                for ant in id_affected_ants:
+                    # Create a flagging command for this antenna.
+                    newflags.append(
+                        FlagCmd(
+                            filename=ms.name,
+                            spw=spwid,
+                            antenna=ant,
+                            intent=utils.to_CASA_intent(ms, intent),
+                            pol=icorr,
+                            time=timestamp,
+                            field=field,
+                            reason='bad CAI-dependent data',
+                            antenna_id_to_name=antenna_id_to_name))
+            else:
+                pass
 
         return newflags
 
