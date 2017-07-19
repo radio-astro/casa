@@ -285,9 +285,16 @@ class Correctedampflag(basetask.StandardTaskTemplate):
         # a single antenna can be involved in.
         max_frac_outlier_scans = 0.5
 
-        # Set threshold for maximum fraction of antennas that can be involved
-        # in outlier baseline scans.
+        # Set threshold for maximum fraction of antennas that can be
+        # "affected", by being involved in the most, or close to the most,
+        # number of outlier baseline scans.
         ants_in_outlier_baseline_scans_thresh = 1.0/3.0
+
+        # Set threshold for maximum fraction of antennas that can be either
+        # "affected" or "partially affected", where the latter are antennas
+        # that are not "affected" but still involved in at least one outlier
+        # baseline scan.
+        ants_in_outlier_baseline_scans_partial_thresh = 0.5
 
         # Set threshold for minimum number of "bad baselines" than an antenna
         # may be a part of without getting flagged.
@@ -478,6 +485,13 @@ class Correctedampflag(basetask.StandardTaskTemplate):
                             # ants involved in 0 outliers).
                             id_affected_ants = np.where(antcnts >= max([1, antcnts.max() - 1]))[0]
 
+                            # Identify the ants that are at least partially affected,
+                            # by being involved in at least one outlier, but excluding
+                            # antennas already identified as "affected".
+                            id_partly_affected_ants = np.setdiff1d(
+                                np.where(antcnts >= 1)[0],
+                                id_affected_ants)
+
                             # If the number of affected antennas is a significant fraction of
                             # all antennas, then flag the entire timestamp.
                             if len(id_affected_ants) > ants_in_outlier_baseline_scans_thresh * nants:
@@ -492,6 +506,23 @@ class Correctedampflag(basetask.StandardTaskTemplate):
                                         time=timestamp,
                                         field=field,
                                         reason='bad timestamp'))
+                            # Evaluate a slightly more restrictive threshold, this time
+                            # on the total number of affected and partly affected antennas,
+                            # while still requiring half the original threshold.
+                            elif (len(id_affected_ants) > 0.5 * ants_in_outlier_baseline_scans_thresh * nants
+                                    and len(id_affected_ants) + len(id_partly_affected_ants) >
+                                    ants_in_outlier_baseline_scans_partial_thresh * nants):
+                                # Create a flagging command for all antennas
+                                # in this timestamp (for given spw, intent, pol).
+                                    newflags.append(
+                                        FlagCmd(
+                                            filename=ms.name,
+                                            spw=spwid,
+                                            intent=utils.to_CASA_intent(ms, intent),
+                                            pol=icorr,
+                                            time=timestamp,
+                                            field=field,
+                                            reason='bad timestamp'))
                             # If there was no significant fraction of affected antennas,
                             # the proceed check if the antenna(s) with the highest number of
                             # outlier scans (within this timestamp) equals-or-exceeds the threshold
