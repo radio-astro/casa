@@ -43,8 +43,8 @@ repr_bw = '%.4g MHz' % (cqa.getvalue(cqa.convert(result[0].repr_target[2], 'MHz'
 sens_bw = '%.4g MHz' % (cqa.getvalue(cqa.convert(result[0].sensitivity_bandwidth, 'MHz')))
 minAR_v = cqa.getvalue(cqa.convert(result[0].minAcceptableAngResolution, 'arcsec'))
 maxAR_v = cqa.getvalue(cqa.convert(result[0].maxAcceptableAngResolution, 'arcsec'))
-minAR = '%#.2g arcsec' % (minAR_v)
-maxAR = '%#.2g arcsec' % (maxAR_v)
+minAR = '%#.3g arcsec' % (minAR_v)
+maxAR = '%#.3g arcsec' % (maxAR_v)
 robust = '%.1f' % (result[0].hm_robust)
 uvtaper = '%s' % (result[0].hm_uvtaper)
 %>
