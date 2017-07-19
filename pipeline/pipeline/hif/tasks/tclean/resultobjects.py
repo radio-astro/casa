@@ -58,6 +58,7 @@ class TcleanResult(basetask.Results):
         self._image_rms_max = 0.0
         # Temporarily needed until CAS-8576 is fixed
         self._residual_max = 0.0
+        self._tclean_stopcode = 0
         # This should be automatic, but it does not yet work
         self.pipeline_casa_task = 'Tclean'
         # Dummy settings for the weblog renderer
@@ -278,6 +279,13 @@ class TcleanResult(basetask.Results):
 
     def set_image_rms_max(self, image_rms_max):
         self._image_rms_max = image_rms_max
+
+    @property
+    def tclean_stopcode(self):
+        return self._tclean_stopcode
+
+    def set_tclean_stopcode(self, tclean_stopcode):
+        self._tclean_stopcode = tclean_stopcode
 
     def __repr__(self):
         repr = 'Tclean:\n'
