@@ -9,8 +9,6 @@ import pylab as pl
 import matplotlib.gridspec as gridspec
 import itertools
 
-#import memory_profiler
-
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.renderer.logger as logger
 import pipeline.infrastructure.casatools as casatools
@@ -232,7 +230,6 @@ class SDSparseMapPlotter(object):
         self.atm_transmission = None
         self.atm_frequency = None
         
-    #@memory_profiler.profile
     def plot(self, map_data, averaged_data, frequency, fit_result=None, figfile=None):
         plot_helper = PlotObjectHandler()
         
@@ -404,7 +401,6 @@ class SDSparseMapDisplay(SDImageDisplay):
         
         return self.__plot_sparse_map()
 
-    #@memory_profiler.profile
     def __plot_sparse_map(self):
 
         # Plotting routine

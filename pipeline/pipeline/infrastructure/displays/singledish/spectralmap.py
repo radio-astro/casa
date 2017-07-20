@@ -12,8 +12,6 @@ from .utils import DDMMSSs, HHMMSSss
 from .common import DPIDetail, SDImageDisplay, ShowPlot
 import pipeline.infrastructure.casatools as casatools
 
-#import memory_profiler
-
 LOG = infrastructure.get_logger(__name__)
 
 class SpectralMapAxesManager(object):
@@ -78,7 +76,6 @@ class SDSpectralMapDisplay(SDImageDisplay):
             factors.append( int( numpy.round( abs(self.grid_size / cell) ) ) )
         return factors
 
-    #@memory_profiler.profile
     def __plot_spectral_map(self):
         pl.clf()
 

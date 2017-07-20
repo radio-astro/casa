@@ -10,8 +10,6 @@ from ..common import renderer as sdsharedrenderer
 
 from . import imaging
 
-#import memory_profiler
-
 LOG = logging.get_logger(__name__)
 
 ImageRMSTR = collections.namedtuple('ImageRMSTR', 'name estimate range width rms')
@@ -22,7 +20,7 @@ class T2_4MDetailsSingleDishImagingRenderer(basetemplates.T2_4MDetailsDefaultRen
                  always_rerender=False):
         super(T2_4MDetailsSingleDishImagingRenderer, self).__init__(uri=uri,
                 description=description, always_rerender=always_rerender)
-    #@memory_profiler.profile        
+
     def update_mako_context(self, ctx, context, results):
         plots = []
         image_rms = []

@@ -17,8 +17,6 @@ from .accumulator import Accumulator
 LOG = infrastructure.get_logger(__name__)
 DO_TEST = True
 
-#import memory_profiler
-
 def gridding_factory(observing_pattern):
     LOG.info('ObsPattern = %s' % observing_pattern)
     if observing_pattern.upper() == 'RASTER':
@@ -60,7 +58,6 @@ class GriddingBase(basetask.StandardTaskTemplate):
     def is_multi_vis_task(self):
         return True
 
-    #@memory_profiler.profile
     def prepare(self):
         start = time.time()
         inputs = self.inputs
@@ -139,7 +136,6 @@ class GriddingBase(basetask.StandardTaskTemplate):
     def analyse(self, result):
         return result
         
-    #@memory_profiler.profile
     def dogrid(self, DataIn, kernel_width, combine_radius, allowance_radius, grid_spacing, loglevel=2):
         """
         The process does re-map and combine spectrum for each position
@@ -308,7 +304,6 @@ class GriddingBase(basetask.StandardTaskTemplate):
         return OutputTable
 
 class RasterGridding(GriddingBase):
-    #@memory_profiler.profile
     def _group(self, index_list, rows, msids, ras, decs, stats, CombineRadius, Allowance, GridSpacing, DecCorrection):
         """
         Gridding by RA/DEC position
