@@ -337,8 +337,7 @@ class SDChannelMapDisplay(SDImageDisplay):
             for pol in xrange(self.npol):
                 plotted_objects = []
                 
-                data = self.data.take([pol], axis=self.id_stokes).squeeze()
-                masked_data = data * self.mask.take([pol], axis=self.id_stokes).squeeze()
+                masked_data = (self.data.take([pol], axis=self.id_stokes) * self.mask.take([pol], axis=self.id_stokes)).squeeze()
 #                 flattened_data = masked_data.reshape((nrow,self.nchan))
 #                 valid = ValidSp[:,pol]
                 
@@ -431,6 +430,7 @@ class SDChannelMapDisplay(SDImageDisplay):
                     NMap += 1
                     tmp = masked_data[:,:,C0:C1].sum(axis=2) * ChanVelWidth
                     Map[i] = numpy.flipud(tmp.transpose())
+                del masked_data
                 Vmax0 = Map.max()
                 Vmin0 = Map.min()
                 if type(scale_max) == bool: Vmax = Vmax0 - (Vmax0 - Vmin0) * 0.1

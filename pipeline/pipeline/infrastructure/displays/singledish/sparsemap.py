@@ -422,8 +422,6 @@ class SDSparseMapDisplay(SDImageDisplay):
         
         plotter = SDSparseMapPlotter(NH, NV, STEP, self.brightnessunit)
 
-        masked_data = self.data * self.mask
-
         plot_list = []
 
         refpix = [0,0]
@@ -477,14 +475,10 @@ class SDSparseMapDisplay(SDImageDisplay):
       
         # loop over pol
         for pol in xrange(self.npol):
-            
-            masked_data_p = masked_data.take([pol], axis=self.id_stokes).squeeze()
+            masked_data_p = (self.data.take([pol], axis=self.id_stokes) * self.mask.take([pol], axis=self.id_stokes)).squeeze()
             Plot = numpy.zeros((num_panel, num_panel, (chan1 - chan0)), numpy.float32) + NoData
             TotalSP = masked_data_p.sum(axis=0).sum(axis=0)
-            mask_p = self.mask.take([pol], axis=self.id_stokes).squeeze()
-            #isvalid = mask_p.prod(axis=2)
-            isvalid = numpy.any(mask_p, axis=2)
-            del mask_p
+            isvalid = numpy.any(self.mask.take([pol], axis=self.id_stokes).squeeze(), axis=2)
             Nsp = sum(isvalid.flatten())
             LOG.info('Nsp=%s'%(Nsp))
             TotalSP /= Nsp
@@ -499,6 +493,7 @@ class SDSparseMapDisplay(SDImageDisplay):
                     chunk = masked_data_p[x0:x1,y0:y1]
                     valid_sp = chunk[valid_index[0],valid_index[1],:]
                     Plot[x][y] = valid_sp.mean(axis=0)
+                    del valid_index, chunk, valid_sp
             del masked_data_p, isvalid
  
             FigFileRoot = self.inputs.imagename+'.pol%s_Sparse'%(pol)
@@ -524,7 +519,6 @@ class SDSparseMapDisplay(SDImageDisplay):
                                    parameters=parameters)
                 plot_list.append(plot)
             
-        del masked_data
         return plot_list
 
 def ch_to_freq(ch, frequency):

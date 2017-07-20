@@ -79,8 +79,6 @@ class SDSpectralMapDisplay(SDImageDisplay):
     def __plot_spectral_map(self):
         pl.clf()
 
-        # read data to storage
-        masked_data = self.data * self.mask
         (STEPX, STEPY) = self.__get_strides()
 
         # Raster Case: re-arrange spectra to match RA-DEC orientation
@@ -158,7 +156,7 @@ class SDSpectralMapDisplay(SDImageDisplay):
         is_baselined = reference_data.work_data != reference_data.name
         
         for pol in xrange(self.npol):
-            data = masked_data.take([pol], axis=self.id_stokes).squeeze()
+            data = (self.data.take([pol], axis=self.id_stokes) * self.mask.take([pol], axis=self.id_stokes)).squeeze()
             Npanel = 0
 
             # to eliminate max/min value due to bad pixel or bad fitting,
@@ -231,6 +229,7 @@ class SDSpectralMapDisplay(SDImageDisplay):
 
                     for obj in plot_objects:
                         obj.remove()
+                        del obj
                     plot_objects = []
 
                     parameters = {}
@@ -251,6 +250,6 @@ class SDSpectralMapDisplay(SDImageDisplay):
 
                     Npanel += 1
             del data, mask2d
-        del ROWS, masked_data
+        del ROWS
         print("Returning %d plots from spectralmap" % len(plot_list))
         return plot_list
