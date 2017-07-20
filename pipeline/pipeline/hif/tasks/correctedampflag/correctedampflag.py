@@ -734,8 +734,9 @@ class Correctedampflag(basetask.StandardTaskTemplate):
             # on the total number of affected and partly affected antennas,
             # while still requiring half the original threshold.
             elif (len(id_affected_ants) > 0.5 * ants_in_outlier_baseline_scans_thresh * nants
-                  and len(id_affected_ants) + len(id_partly_affected_ants) >
-                        ants_in_outlier_baseline_scans_partial_thresh * nants):
+                    and len(id_affected_ants) + len(id_partly_affected_ants) >
+                    ants_in_outlier_baseline_scans_partial_thresh * nants):
+
                 # Create a flagging command for all antennas
                 # in this timestamp (for given spw, intent, pol).
                 newflags.append(
@@ -776,7 +777,8 @@ class Correctedampflag(basetask.StandardTaskTemplate):
             # threshold of 6 is there to prevent over-application on ACA 7m
             # datasets.
             elif (len(id_affected_ants) + len(id_partly_affected_ants) > np.max([6, 0.2 * nants])
-                  and len(id_affected_ants) > 0):
+                    and len(id_affected_ants) > 0):
+
                 # Create flags only for the "affected" antennas for this timestamp
                 # because CAI-dependent issues do not affect all antennas.
                 for ant in id_affected_ants:

@@ -2,10 +2,14 @@ from __future__ import absolute_import
 import functools
 import shutil
 
+import collections
+
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.callibrary as callibrary
 import pipeline.infrastructure.displays.applycal as applycal_displays
+import pipeline.infrastructure.utils as utils
+from pipeline.h.tasks.common import commonhelpermethods
 from pipeline.h.tasks.flagging.flagdatasetter import FlagdataSetter
 from pipeline.hif.tasks import applycal
 from pipeline.hif.tasks import correctedampflag
@@ -303,6 +307,259 @@ class Bandpassflag(basetask.StandardTaskTemplate):
         return result
 
     def analyse(self, result):
+        """
+        Analyses the Bandpassflag result:
+
+        If new flags were found, run evaluation of flagging commands for
+        identifying updates to the reference antenna list.
+        """
+
+        # Retrieve flagging commands from correctedampflag result.
+        flags = result.cafresult.flagcmds()
+
+        # If new flags were found, evaluate them for updates to the
+        # refant list.
+        if flags:
+            result = self._evaluate_refant_update(result, flags)
+
+        return result
+
+    def _evaluate_refant_update(self, result, flags):
+        """
+        Identifies "bad" antennas as those that got flagged in all spws
+        (entire timestamp) which are to be removed from the reference antenna
+        list. Identifies "poor" antennas as those that got flagged in at least
+        one spw, but not all, which are to be moved to the end of the reference
+        antenna list.
+        """
+
+        # Get the MS object.
+        ms = self.inputs.context.observing_run.get_ms(name=self.inputs.vis)
+
+        # Retrieve which intents and spws were evaluated by
+        # correctedampflag.
+        intents = result.cafresult.inputs['intent'].split(',')
+        spwids = map(int, result.cafresult.inputs['spw'].split(','))
+
+        # Get number of antennas.
+        antenna_names, antenna_ids = commonhelpermethods.get_antenna_names(ms)
+        nants = len(antenna_names)
+
+        # Create an antenna id-to-name translation dictionary.
+        antenna_id_to_name = {ant.id: ant.name
+                              for ant in ms.antennas
+                              if ant.name.strip()}
+
+        # Check that each antenna ID is represented by a unique non-empty
+        # name, by testing that the unique set of antenna names is same
+        # length as list of IDs. If not, then unset the translation
+        # dictionary to revert back to flagging by ID.
+        if len(set(antenna_id_to_name.values())) != len(ms.antennas):
+            LOG.info('No unique name available for each antenna ID:'
+                     ' flagging by antenna ID instead of by name.')
+            antenna_id_to_name = None
+
+        # Initialize flagging state
+        ants_fully_flagged = collections.defaultdict(set)
+
+        # Create a summary of the flagging state by going through each flagging
+        # command.
+        for flag in flags:
+
+            # Flag specified antenna, otherwise flag all antennas.
+            if flag.antenna is not None:
+                # Skip flagging commands for baselines.
+                if '&' in str(flag.antenna):
+                    continue
+                ants_fully_flagged[(flag.intent, flag.field, flag.spw)].update([flag.antenna])
+            else:
+                ants_fully_flagged[(flag.intent, flag.field, flag.spw)].update(range(nants))
+
+        # For each combination of intent, field, and spw that were found to
+        # have antennas flagged, raise a warning.
+        sorted_keys = sorted(
+            sorted(ants_fully_flagged.keys(), key=lambda keys: keys[2]),
+            key=lambda keys: keys[0])
+        for (intent, field, spwid) in sorted_keys:
+            ants_flagged = ants_fully_flagged[(intent, field, spwid)]
+
+            # Convert antenna IDs to names and create a string.
+            ants_str = ", ".join(map(str, [antenna_id_to_name[iant] for iant in ants_flagged]))
+
+            # Convert CASA intent from flagging command to pipeline intent.
+            intent_str = utils.to_pipeline_intent(ms, intent)
+
+            # Log a warning.
+            LOG.warning(
+                "{msname} - for intent {intent} (field "
+                "{fieldname}) and spw {spw}, the following antennas "
+                "are fully flagged: {ants}".format(
+                    msname=ms.basename, intent=intent_str,
+                    fieldname=field, spw=spwid,
+                    ants=ants_str))
+
+        # Initialize set of antennas that are fully flagged for all spws, for any intent
+        ants_fully_flagged_in_all_spws_any_intent = set()
+
+        # Check if any antennas were found to be fully flagged in all
+        # spws, for any intent.
+
+        # Identify the field and intent combinations for which fully flagged
+        # antennas were found.
+        intent_field_found = set([key[0:2] for key in ants_fully_flagged.keys()])
+        for (intent, field) in intent_field_found:
+
+            # Identify the spws for which fully flagged antennas were found (for current
+            # intent and field).
+            spws_found = set([key[2] for key in ants_fully_flagged.keys()
+                              if key[0:2] == (intent, field)])
+
+            # Only proceed if the set of spws for which flagged antennas were found
+            # matches the set of spws for which correctedampflag ran.
+            if spws_found == set(spwids):
+                # Select the fully flagged antennas for current intent and field.
+                ants_fully_flagged_for_intent_field = [
+                    ants_fully_flagged[key]
+                    for key in ants_fully_flagged.keys()
+                    if key[0:2] == (intent, field)
+                ]
+
+                # Identify which antennas are fully flagged in all spws, for
+                # current intent and field, and store these for later warning
+                # and/or updating of refant.
+                ants_fully_flagged_in_all_spws_any_intent.update(
+                    set.intersection(*ants_fully_flagged_for_intent_field))
+
+        # For the antennas that were found to be fully flagged in all
+        # spws for one or more fields belonging to one or more of the intents,
+        # raise a warning.
+        if ants_fully_flagged_in_all_spws_any_intent:
+            # Convert antenna IDs to names and create a string.
+            ants_str = ", ".join(
+                map(str, [antenna_id_to_name[iant]
+                          for iant in ants_fully_flagged_in_all_spws_any_intent]))
+
+            # Log a warning.
+            LOG.warning(
+                '{0} - the following antennas are fully flagged in all spws '
+                'for one or more fields with intents among '
+                '{1}: {2}'.format(ms.basename, ', '.join(intents), ants_str))
+
+        # The following will assess if/how the list of reference antennas
+        # needs to be updated based on antennas that were found to be
+        # fully flagged.
+
+        # Store the set of antennas that are fully flagged for all spws
+        # in any of the intents in the result as a list of antenna
+        # names.
+        ants_to_remove_as_refant = {
+            antenna_id_to_name[iant]
+            for iant in ants_fully_flagged_in_all_spws_any_intent}
+
+        # Store the set of antennas that were fully flagged in at least
+        # one spw, for any of the fields for any of the intents.
+        ants_to_demote_as_refant = {
+            antenna_id_to_name[iant]
+            for iants in ants_fully_flagged.values()
+            for iant in iants}
+
+        # If any reference antennas were found to be candidates for
+        # removal or demotion (move to end of list), then proceed...
+        if ants_to_remove_as_refant or ants_to_demote_as_refant:
+
+            # If a list of reference antennas was registered with the MS..
+            if (hasattr(ms, 'reference_antenna') and
+                    isinstance(ms.reference_antenna, str)):
+
+                # Create list of current refants
+                refant = ms.reference_antenna.split(',')
+
+                # Identify intersection between refants and fully flagged
+                # and store in result.
+                result.refants_to_remove = {
+                    ant for ant in refant
+                    if ant in ants_to_remove_as_refant}
+
+                # If any refants were found to be removed...
+                if result.refants_to_remove:
+
+                    # Create string for log message.
+                    ant_msg = utils.commafy(result.refants_to_remove, quotes=False)
+
+                    # Check if removal of refants would result in an empty refant list,
+                    # in which case the refant update is skipped.
+                    if result.refants_to_remove == set(refant):
+
+                        # Log warning that refant list should have been updated, but
+                        # will not be updated so as to avoid an empty refant list.
+                        LOG.warning(
+                            '{0} - the following reference antennas became fully flagged '
+                            'in all spws for one or more fields with intents among {1}, '
+                            'but are *NOT* removed from the refant list because doing so '
+                            'would result in an empty refant list: '
+                            '{2}'.format(ms.basename, ', '.join(intents), ant_msg))
+
+                        # Reset the refant removal list in the result to be empty.
+                        result.refants_to_remove = set()
+                    else:
+                        # Log a warning if any antennas are to be removed from
+                        # the refant list.
+                        LOG.warning(
+                            '{0} - the following reference antennas are '
+                            'removed from the refant list because they became '
+                            'fully flagged in all spws for one of the intents '
+                            'among {1}: {2}'.format(ms.basename, ', '.join(intents), ant_msg))
+
+                # Identify intersection between refants and candidate
+                # antennas to demote, skipping those that are to be
+                # removed entirely, and store this list in the result.
+                # These antennas should be moved to the end of the refant
+                # list (demoted) upon merging the result into the context.
+                result.refants_to_demote = {
+                    ant for ant in refant
+                    if ant in ants_to_demote_as_refant
+                    and ant not in result.refants_to_remove}
+
+                # If any refants were found to be demoted...
+                if result.refants_to_demote:
+
+                    # Create string for log message.
+                    ant_msg = utils.commafy(result.refants_to_demote, quotes=False)
+
+                    # Check if the list of refants-to-demote comprises all
+                    # refants, in which case the re-ordering of refants is
+                    # skipped.
+                    if result.refants_to_demote == set(refant):
+
+                        # Log warning that refant list should have been updated, but
+                        # will not be updated so as to avoid an empty refant list.
+                        LOG.warning(
+                            '{0} - the following antennas are fully flagged '
+                            'for one or more spws, in one or more fields '
+                            'with intents among {1}, but since these comprise all '
+                            'refants, the refant list is *NOT* updated to '
+                            're-order these to the end of the refant list: '
+                            '{2}'.format(ms.basename, ', '.join(intents), ant_msg))
+
+                        # Reset the refant demotion list in the result to be empty.
+                        result.refants_to_demote = set()
+                    else:
+                        # Log a warning if any antennas are to be demoted from
+                        # the refant list.
+                        LOG.warning(
+                            '{0} - the following antennas are moved to the end '
+                            'of the refant list because they are fully '
+                            'flagged for one or more spws, in one or more '
+                            'fields with intents among {1}: '
+                            '{2}'.format(ms.basename, ', '.join(intents), ant_msg))
+
+            # If no list of reference antennas was registered with the MS,
+            # raise a warning.
+            else:
+                LOG.warning(
+                    '{0} - no reference antennas found in MS, cannot update '
+                    'the reference antenna list.'.format(ms.basename))
+
         return result
 
     @staticmethod

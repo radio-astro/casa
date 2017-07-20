@@ -38,6 +38,10 @@ class T2_4MDetailsBandpassflagRenderer(basetemplates.T2_4MDetailsDefaultRenderer
 
     def update_mako_context(self, mako_context, pipeline_context, results):
 
+        # Initialize items that are to be exported to the
+        # mako context
+        updated_refants = {}
+
         #
         # Get flagging reports, summaries
         #
@@ -59,8 +63,26 @@ class T2_4MDetailsBandpassflagRenderer(basetemplates.T2_4MDetailsDefaultRenderer
         bpresults.stage_number = results.stage_number
         self.bprenderer.update_mako_context(mako_context, pipeline_context, bpresults)
 
-        plot_dict = {
-            'time_plots': get_plot_dicts(pipeline_context, results, 'time'),
-            'uvdist_plots': get_plot_dicts(pipeline_context, results, 'uvdist')
-        }
-        mako_context.update(plot_dict)
+        #
+        # Get diagnostic plots.
+        #
+        time_plots = get_plot_dicts(pipeline_context, results, 'time')
+        uvdist_plots = get_plot_dicts(pipeline_context, results, 'uvdist')
+
+        #
+        # Check for updated reference antenna lists.
+        #
+        for result in results:
+            vis = result.vis
+            # If the reference antenna list was updated, retrieve new refant
+            # list.
+            if result.refants_to_remove or result.refants_to_demote:
+                ms = pipeline_context.observing_run.get_ms(name=vis)
+                updated_refants[vis] = ms.reference_antenna
+
+        # Update the mako context.
+        mako_context.update({
+            'time_plots': time_plots,
+            'uvdist_plots': uvdist_plots,
+            'updated_refants': updated_refants
+        })
