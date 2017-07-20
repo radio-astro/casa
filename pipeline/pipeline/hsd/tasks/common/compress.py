@@ -35,7 +35,7 @@ def decompress_object(obj):
     decompressed = pickle.loads(bz2.decompress(obj))
     end = time.time()
     size_org = asizeof.asizeof(decompressed)
-    LOG.debug('decompress: size before {0} after {1} ({2} %)'.format(size_org, size_comp, size_comp/size_org))
+    LOG.debug('decompress: size before {0} after {1} ({2} %)'.format(size_org, size_comp, float(size_comp)/float(size_org) * 100))
     LOG.debug('elapsed {0} sec'.format(end - start))
     return decompressed
 
@@ -48,7 +48,7 @@ class CompressedIter(object):
         if self._count < len(self.obj):
             v = self.obj[self._count]
             self._count += 1
-            if hasattr(v, 'decompress'):
+            if isinstance(v, CompressedObj):
                 return v.decompress()
             else:
                 return v

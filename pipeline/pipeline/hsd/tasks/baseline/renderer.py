@@ -116,7 +116,7 @@ class T2_4MDetailsSingleDishBaselineRenderer(basetemplates.T2_4MDetailsDefaultRe
     def _plots_per_field_with_type(self, plots, type_string):
         plot_group = {}
         for x in plots:
-            if hasattr(x, 'decompress'):
+            if isinstance(x, compress.CompressedObj):
                 p = x.decompress()
             else:
                 p = x
@@ -135,7 +135,7 @@ class T2_4MDetailsSingleDishBaselineRenderer(basetemplates.T2_4MDetailsDefaultRe
             spw_list = []
             summary_plots[field_name]= compress.CompressedList()
             for xplot in plots:
-                if hasattr(xplot, 'decompress'):
+                if isinstance(xplot, compress.CompressedObj):
                     plot = xplot.decompress()
                 else:
                     plot = xplot
