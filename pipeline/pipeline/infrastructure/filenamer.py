@@ -14,17 +14,19 @@ _known_intents = {
 }
 
 
-def _char_replacer(s):
+def _char_replacer(s, valid_chars):
     """A small utility function that echoes the argument or returns '_' if the
     argument is in a list of forbidden characters.
     """
-    if s not in _valid_chars:
+    if s not in valid_chars:
         return '_'
     return s
 
 
-def sanitize(text):
-    filename = ''.join(_char_replacer(c) for c in text)
+def sanitize(text, valid_chars=None):
+    if valid_chars is None:
+        valid_chars = _valid_chars
+    filename = ''.join(_char_replacer(c, valid_chars) for c in text)
     return filename
 
 
