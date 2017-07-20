@@ -22,8 +22,6 @@ from pipeline.extern import sensitivity_improvement
 from ..common import utils as sdutils
 from ..baseline import msbaseline
 
-#import memory_profiler
-
 LOG = infrastructure.get_logger(__name__)
 
 class SDImagingInputs(basetask.StandardInputs):
@@ -154,7 +152,6 @@ class SDImaging(basetask.StandardTaskTemplate):
     def is_multi_vis_task(self):
         return True
 
-    #@memory_profiler.profile
     def prepare(self):
         inputs = self.inputs
         context = inputs.context
@@ -338,7 +335,7 @@ class SDImaging(basetask.StandardTaskTemplate):
                                                                 spwid=spwid, fieldid=fieldid,
                                                                 spwtype=spwtype)
                     weighting_task = weighting.WeightMS(weighting_inputs)
-                    weighting_result = self._executor.execute(weighting_task, merge=True)
+                    weighting_result = self._executor.execute(weighting_task)
                     del weighting_result #Not used
    
                 # Step 2.
@@ -373,7 +370,7 @@ class SDImaging(basetask.StandardTaskTemplate):
                                                               celly=celly,
                                                               nx=nx, ny=ny)
                 imager_task = worker.SDImagingWorker(imager_inputs)
-                imager_result = self._executor.execute(imager_task, merge=True)
+                imager_result = self._executor.execute(imager_task)
                   
                 if imager_result.outcome is not None:
                     # Imaging was successful, proceed following steps
@@ -425,7 +422,7 @@ class SDImaging(basetask.StandardTaskTemplate):
                                                                  poltypes=_pols,
                                                                  nx=nx, ny=ny)
                         gridding_task = grid_task_class(gridding_inputs)
-                        gridding_result = self._executor.execute(gridding_task, merge=True)
+                        gridding_result = self._executor.execute(gridding_task)
                         grid_tables.append(gridding_result.outcome)
                     # Extract RMS and number of spectra from grid_tables
                     validsps = []
@@ -511,12 +508,12 @@ class SDImaging(basetask.StandardTaskTemplate):
                                                               cellx=cellx, celly=celly,
                                                               nx=nx, ny=ny)
                 imager_task = worker.SDImagingWorker(imager_inputs)
-                imager_result = self._executor.execute(imager_task, merge=True)
+                imager_result = self._executor.execute(imager_task)
             else:
                 combine_inputs = sdcombine.SDImageCombineInputs(context, inimages=tocombine_images,
                                                                 outfile=imagename)
                 combine_task = sdcombine.SDImageCombine(combine_inputs)
-                imager_result = self._executor.execute(combine_task, merge=True)
+                imager_result = self._executor.execute(combine_task)
 
             if imager_result.outcome is not None:
                 # Imaging was successful, proceed following steps
@@ -562,7 +559,7 @@ class SDImaging(basetask.StandardTaskTemplate):
                                                              poltypes=_pols,
                                                              nx=nx, ny=ny)
                     gridding_task = grid_task_class(gridding_inputs)
-                    gridding_result = self._executor.execute(gridding_task, merge=True)
+                    gridding_result = self._executor.execute(gridding_task)
                     grid_tables.append(gridding_result.outcome)
                 # Extract RMS and number of spectra from grid_tables
                 validsps = []
