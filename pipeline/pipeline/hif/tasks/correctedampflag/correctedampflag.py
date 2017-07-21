@@ -252,11 +252,11 @@ class Correctedampflag(basetask.StandardTaskTemplate):
                     newflags.extend(flags_for_intent_field_spw)
 
         if newflags:
+            # Consolidate flagging commands.
+            newflags = self._consolidate_flags(newflags)
+
             # Propagate PHASE 'bad baseline' flags to TARGET.
             newflags = self._propagate_phase_flags(newflags, ms, antenna_id_to_name)
-
-            # Consolidate flagging commands that differ only by polarisation.
-            newflags = self._consolidate_flags_with_same_pol(newflags)
 
         # Apply flags and get before/after summary.
         stats_before, stats_after = self.apply_flags(newflags)
@@ -853,6 +853,19 @@ class Correctedampflag(basetask.StandardTaskTemplate):
 
         return stats_before, stats_after
 
+    def _consolidate_flags(self, flags):
+        """
+        Method to consolidate a list of FlagCmd objects ("flags").
+        """
+
+        # Consolidate by polarisation.
+        flags = self._consolidate_flags_with_same_pol(flags)
+
+        # Consolidate by timestamps.
+        flags = self._consolidate_flags_by_timestamps(flags)
+
+        return flags
+
     @staticmethod
     def _consolidate_flags_with_same_pol(flags):
         """
@@ -933,7 +946,63 @@ class Correctedampflag(basetask.StandardTaskTemplate):
         return cflags
 
     @staticmethod
+    def _consolidate_flags_by_timestamps(flags):
+        """
+        Method to consolidate a list of FlagCmd objects ("flags") by removing
+        flags with timestamps if the same (ant, spw, field) is covered by
+        a flagging command without timestamp (i.e. across all timestamps).
+
+        This method belongs to correctedampflag, by making assumptions on which
+        properties of the FlagCmd it needs to compare.
+        """
+
+        # Identify list of properties of flag commands without timestamps.
+        flags_without_timestamps = [
+            (flag.filename, flag.spw, flag.antenna, flag.intent, flag.field)
+            for flag in flags if flag.time is None]
+
+        # If flag commands without timestamp exist, go through every flag
+        # command and remove the ones that are cover the same
+        # (filename, intent, field, spw, antenna), ignoring differences in
+        # reason and polarisation.
+        if flags_without_timestamps:
+
+            # Build new list of flags.
+            cflags = []
+
+            # Go through list of flags.
+            for flag in flags:
+
+                # If the current flag matches in properties with one of the
+                # flagging commands without timestamps:
+                if (flag.filename, flag.spw, flag.antenna, flag.intent, flag.field) in flags_without_timestamps:
+
+                    # Preserve flag if it has no timestamp.
+                    if flag.time is None:
+                        cflags.append(flag)
+                    # Skip flags that have explicit timestamps.
+                    else:
+                        LOG.trace('Consolidated flag that was covered by '
+                                  'flagging command without timestamp.')
+                # If the current flag does not match with any of the flagging
+                # commands without timestamps, then preserve it.
+                else:
+                    cflags.append(flag)
+
+        # If no flag commands with timestamp exist, then there is nothing to
+        # consolidate => return flags unmodified.
+        else:
+            cflags = flags
+
+        return cflags
+
+    @staticmethod
     def _propagate_phase_flags(flags, ms, antenna_id_to_name):
+        """
+        Method to take a list of FlagCmd objects ("flags") and propagate
+        flags with reason = 'bad baseline' and intent = PHASE to intents
+        TARGET and CHECK.
+        """
 
         # Intents to propagate to.
         intents_propto = ["TARGET", "CHECK"]
