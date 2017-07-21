@@ -11,6 +11,7 @@ import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.casatools as casatools
 from pipeline.domain import DataTable
 from .. import common 
+from ..common import compress
 
 from .accumulator import Accumulator
 
@@ -123,8 +124,9 @@ class GriddingBase(basetask.StandardTaskTemplate):
         LOG.info('execute: elapsed time %s sec'%(end-start))
         result = GriddingResults(task=self.__class__,
                                  success=True,
-                                 outcome=grid_table)
+                                 outcome=compress.CompressedObj(grid_table))
         result.task = self.__class__
+        del grid_table
 
         if self.inputs.context.subtask_counter is 0: 
             result.stage_number = self.inputs.context.task_counter - 1

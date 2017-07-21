@@ -2,6 +2,7 @@ from __future__ import absolute_import
 
 import os
 import numpy
+import itertools
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
@@ -20,6 +21,7 @@ from . import sdcombine
 from .. import common
 from pipeline.extern import sensitivity_improvement
 from ..common import utils as sdutils
+from ..common import compress 
 from ..baseline import msbaseline
 
 LOG = infrastructure.get_logger(__name__)
@@ -394,7 +396,8 @@ class SDImaging(basetask.StandardTaskTemplate):
  
                     observing_pattern = msobjs[0].observing_pattern[antids[0]][spwids[0]][fieldids[0]]
                     grid_task_class = gridding.gridding_factory(observing_pattern)
-                    grid_tables = []
+                    validsps = []
+                    rmss = []
                     grid_input_dict = {}
                     for (msobj, antid, spwid, fieldid, poltypes, _dummy) in _members:
                         msname = msobj.name # Use parent ms
@@ -423,14 +426,15 @@ class SDImaging(basetask.StandardTaskTemplate):
                                                                  nx=nx, ny=ny)
                         gridding_task = grid_task_class(gridding_inputs)
                         gridding_result = self._executor.execute(gridding_task)
-                        grid_tables.append(gridding_result.outcome)
-                    # Extract RMS and number of spectra from grid_tables
-                    validsps = []
-                    rmss = []
-                    for i in xrange(len(grid_input_dict)):
-                        validsps.append([r[6] for r in grid_tables[i]])
-                        rmss.append([r[8] for r in grid_tables[i]])
-                    del grid_tables
+                        
+                        # Extract RMS and number of spectra from grid_tables
+                        if isinstance(gridding_result.outcome, compress.CompressedObj):
+                            grid_table = gridding_result.outcome.decompress()
+                        else:
+                            grid_table = gridding_result.outcome
+                        validsps.append([r[6] for r in grid_table])
+                        rmss.append([r[8] for r in grid_table])
+                        del grid_table
                     
                     # define RMS ranges in image
                     LOG.info("Calculate spectral line and deviation mask frequency ranges in image.")
@@ -531,10 +535,11 @@ class SDImaging(basetask.StandardTaskTemplate):
                     ny = ia.shape()[dircoords[1]]
                 observing_pattern =  ref_ms.observing_pattern[combined_antids[0]][combined_spws[0]][combined_fieldids[0]]
                 grid_task_class = gridding.gridding_factory(observing_pattern)
-                grid_tables = []
+                validsps = []
+                rmss = []
                 grid_input_dict = {}
                 for (msname, antid, spwid, fieldid, poltypes) in \
-                zip(combined_infiles,combined_antids,combined_spws,combined_fieldids,combined_pols):
+                itertools.izip(combined_infiles,combined_antids,combined_spws,combined_fieldids,combined_pols):
 #                     msobj = context.observing_run.get_ms(name=common.get_parent_ms_name(context,msname)) # Use parent ms
 #                     ddobj = msobj.get_data_description(spw=spwid)
                     for p in poltypes:
@@ -560,14 +565,14 @@ class SDImaging(basetask.StandardTaskTemplate):
                                                              nx=nx, ny=ny)
                     gridding_task = grid_task_class(gridding_inputs)
                     gridding_result = self._executor.execute(gridding_task)
-                    grid_tables.append(gridding_result.outcome)
-                # Extract RMS and number of spectra from grid_tables
-                validsps = []
-                rmss = []
-                for i in xrange(len(grid_input_dict)):
-                    validsps.append([r[6] for r in grid_tables[i]])
-                    rmss.append([r[8] for r in grid_tables[i]])
-                del grid_tables
+                    # Extract RMS and number of spectra from grid_tables
+                    if isinstance(gridding_result.outcome, compress.CompressedObj):
+                        grid_table = gridding_result.outcome.decompress()
+                    else:
+                        grid_table = gridding_result.outcome
+                    validsps.append([r[6] for r in grid_table])
+                    rmss.append([r[8] for r in grid_table])
+                    del grid_table
 
                 # calculate RMS of line free frequencies in a combined image
                 LOG.info('Calculate sensitivity of combined image')
