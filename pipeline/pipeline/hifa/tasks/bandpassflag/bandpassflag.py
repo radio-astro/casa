@@ -366,14 +366,13 @@ class Bandpassflag(basetask.StandardTaskTemplate):
         # command.
         for flag in flags:
 
-            # Flag specified antenna, otherwise flag all antennas.
+            # Only consider flagging commands with a specified antenna; this
+            # ignores flagging command for e.g. bad timestamps.
             if flag.antenna is not None:
                 # Skip flagging commands for baselines.
                 if '&' in str(flag.antenna):
                     continue
                 ants_fully_flagged[(flag.intent, flag.field, flag.spw)].update([flag.antenna])
-            else:
-                ants_fully_flagged[(flag.intent, flag.field, flag.spw)].update(range(nants))
 
         # For each combination of intent, field, and spw that were found to
         # have antennas flagged, raise a warning.
