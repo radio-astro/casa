@@ -11,6 +11,7 @@ from pipeline.hif.tasks.gaincal import gaincalworker
 from pipeline.hif.tasks.gaincal import gtypegaincal
 from pipeline.hifa.heuristics.phasespwmap import combine_spwmap
 from pipeline.hifa.heuristics.phasespwmap import simple_n2wspwmap
+from pipeline.hifa.heuristics.phasespwmap import snr_n2wspwmap
 from pipeline.hifa.tasks.gaincalsnr import gaincalsnr
 
 LOG = infrastructure.get_logger(__name__)
@@ -82,29 +83,59 @@ class SpwPhaseup(gaincalworker.GaincalWorker):
         LOG.info('The spw mapping mode for %s is %s' % \
             (inputs.ms.basename, inputs.hm_spwmapmode))
         if inputs.hm_spwmapmode == 'auto':
-            lowsnr, snrtest_result = self._do_snrtest()
-            if lowsnr:
-                LOG.warn('    Low SNR - Combined spw map required for %s' % (inputs.ms.basename))
-                combinespwmap = combine_spwmap (allspws, scispws, scispws[0].id)
-                phaseupspwmap = []
-            elif (len(snrtest_result.snrs) <= 0):
-                LOG.warn('    No SNR estimate - Forcing combined spw map for %s' % (inputs.ms.basename))
-                combinespwmap = combine_spwmap (allspws, scispws, scispws[0].id)
-                phaseupspwmap = []
-            else:
-                LOG.info('    High SNR - Combined spw map not required for %s' % (inputs.ms.basename))
+
+            nosnrs, spwids, snrs, goodsnrs  = self._do_snrtest()
+
+            # No SNR estimates available, default to simple spw mapping
+            if nosnrs:
+                LOG.warn('    No SNR estimates for any spws - Forcing simple spw mapping for %s' % (inputs.ms.basename))
+                combinespwmap = []
+                phaseupspwmap = simple_n2wspwmap (allspws, scispws, inputs.maxnarrowbw,
+                    inputs.minfracmaxbw, inputs.samebb)
+                LOG.info('    Using spw map %s for %s' % (phaseupspwmap, inputs.ms.basename))
+
+            # All spws have good SNR values, no spw mapping required
+            elif len([goodsnr for goodsnr in goodsnrs if goodsnr is True]) == len(goodsnrs):
+                LOG.info('    High SNR - Default spw mapping used for all spws %s' % (inputs.ms.basename))
                 combinespwmap = []
                 phaseupspwmap = []
-            LOG.info ('    Using spwmap %s' % (inputs.ms.basename))
+                LOG.info('    Using spw map %s for %s' % (phaseupspwmap, inputs.ms.basename))
+
+            # No spws have good SNR values use combine spw mapping
+            elif len([goodsnr for goodsnr in goodsnrs if goodsnr is True]) == 0:
+                LOG.warn('    Low and / or unknown SNR for all spws - Forcing combined spw mapping for %s' % (inputs.ms.basename))
+                if None in goodsnrs:
+                    LOG.warn('    Spws without SNR measurments %s' % [spwid for spwid, goodsnr in zip(spwids, goodsnrs) if goodsnr is None])
+                combinespwmap = combine_spwmap (allspws, scispws, scispws[0].id)
+                phaseupspwmap = []
+                LOG.info('    Using combined spw map %s for %s' % (combinespwmap, inputs.ms.basename))
+
+            else:
+                LOG.warn('    Both high and low SNR spws - Spw map required for %s' % (inputs.ms.basename))
+                if None in goodsnrs:
+                    LOG.warn('    Spws without SNR measurments %s' % [spwid for spwid, goodsnr in zip(spwids, goodsnrs) if goodsnr is None])
+                goodmap, phaseupspwmap, snrmap  = snr_n2wspwmap (allspws, scispws, snrs, goodsnrs, inputs.maxnarrowbw,
+                    inputs.minfracmaxbw, inputs.samebb)
+                if not goodmap:
+                    LOG.warn('    Still unable to match all spws - Forcing combined spw mapping for %s' % (inputs.ms.basename))
+                    phaseupspemap = []
+                    combinespwmap = combine_spwmap (allspws, scispws, scispws[0].id)
+                    LOG.info('    Using spw map %s for %s' % (sombinespwmap, inputs.ms.basename))
+                else:
+                    combinespwmap = []
+                    LOG.info('    Using spw map %s for %s' % (phaseupspwmap, inputs.ms.basename))
+
         elif inputs.hm_spwmapmode == 'combine':
             combinespwmap = combine_spwmap (allspws, scispws, scispws[0].id)
             phaseupspwmap = []
             LOG.info('    Using combined spw map %s for %s' % (combinespwmap, inputs.ms.basename))
+
         elif inputs.hm_spwmapmode == 'simple':
             combinespwmap = []
             phaseupspwmap = simple_n2wspwmap (allspws, scispws, inputs.maxnarrowbw,
                 inputs.minfracmaxbw, inputs.samebb)
             LOG.info('    Using simple spw map %s for %s' % (phaseupspwmap, inputs.ms.basename))
+
         else:
             phaseupspwmap = []
             combinespwmap = []
@@ -115,7 +146,6 @@ class SpwPhaseup(gaincalworker.GaincalWorker):
             (inputs.ms.basename, inputs.hm_spwmapmode))
         phaseupresult = self._do_phaseup()
         self._mod_last_calwt (phaseupresult.pool[0], False)
-        #self._mod_last_calwt (phaseupresult.final[0], False)
 
         # Create the results object.
         result = SpwPhaseupResults(vis=inputs.vis,
@@ -166,13 +196,27 @@ class SpwPhaseup(gaincalworker.GaincalWorker):
         gaincalsnr_task = gaincalsnr.GaincalSnr(task_inputs)
         result = self._executor.execute(gaincalsnr_task)
 
-        lowsnr = False
-        for snr in result.snrs:
-            if snr < inputs.phasesnr:
-                lowsnr = True
-                break
+        nosnr = True
+        spwids = []
+        snrs = []
+        goodsnrs = []
+        for i in range (len(result.spwids)):
+            if result.snrs[i] is None:
+                spwids.append(result.spwids[i])
+                snrs.append(None)
+                goodsnrs.append(None)
+            elif result.snrs[i] < inputs.phasesnr:
+                spwids.append(result.spwids[i])
+                snrs.append(result.snrs[i])
+                goodsnrs.append(False)
+                nosnr = False
+            else:
+                spwids.append(result.spwids[i])
+                goodsnrs.append(True)
+                snrs.append(result.snrs[i])
+                nosnr = False
 
-        return lowsnr, result 
+        return nosnr, spwids, snrs, goodsnrs
 
 
     def _do_phaseup(self):
