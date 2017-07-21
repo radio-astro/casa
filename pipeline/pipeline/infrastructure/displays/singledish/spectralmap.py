@@ -102,11 +102,12 @@ class SDSpectralMapDisplay(SDImageDisplay):
                     row = (self.nx - x - 1) * self.ny + y
                     ROWS[(posy*NH+posx)*NvPanel*NhPanel + offsety*NhPanel + offsetx] = row
         else: ### This block is currently broken (2016/06/23 KS)
-            ROWS = rows[:]
-            NROW = len(rows)
-            Npanel = (NROW - 1) / (self.MaxNhPanel * self.MaxNvPanel) + 1
-            if Npanel > 1:  (NhPanel, NvPanel) = (self.MaxNhPanel, self.MaxNvPanel)
-            else: (NhPanel, NvPanel) = (int((NROW - 0.1) ** 0.5) + 1, int((NROW - 0.1) ** 0.5) + 1)
+            #ROWS = rows[:]
+            #NROW = len(rows)
+            #Npanel = (NROW - 1) / (self.MaxNhPanel * self.MaxNvPanel) + 1
+            #if Npanel > 1:  (NhPanel, NvPanel) = (self.MaxNhPanel, self.MaxNvPanel)
+            #else: (NhPanel, NvPanel) = (int((NROW - 0.1) ** 0.5) + 1, int((NROW - 0.1) ** 0.5) + 1)
+            raise Exception, "non-Raster map is not supported yet."
 
         LOG.debug("Generating spectral map")
         LOG.debug("- Stride: [%d, %d]" % (STEPX, STEPY))

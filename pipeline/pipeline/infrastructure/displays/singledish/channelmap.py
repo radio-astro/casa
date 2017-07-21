@@ -338,8 +338,6 @@ class SDChannelMapDisplay(SDImageDisplay):
                 plotted_objects = []
                 
                 masked_data = (self.data.take([pol], axis=self.id_stokes) * self.mask.take([pol], axis=self.id_stokes)).squeeze()
-#                 flattened_data = masked_data.reshape((nrow,self.nchan))
-#                 valid = ValidSp[:,pol]
                 
                 # Integrated Spectrum
                 t0 = time.time()
