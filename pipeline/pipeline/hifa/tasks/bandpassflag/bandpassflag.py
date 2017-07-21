@@ -366,9 +366,9 @@ class Bandpassflag(basetask.StandardTaskTemplate):
         # command.
         for flag in flags:
 
-            # Only consider flagging commands with a specified antenna; this
-            # ignores flagging command for e.g. bad timestamps.
-            if flag.antenna is not None:
+            # Only consider flagging commands with a specified antenna and
+            # without a specified timestamp.
+            if flag.antenna is not None and flag.time is None:
                 # Skip flagging commands for baselines.
                 if '&' in str(flag.antenna):
                     continue
