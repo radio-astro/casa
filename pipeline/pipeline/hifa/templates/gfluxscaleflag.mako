@@ -84,7 +84,7 @@ $(document).ready(function(){
     after preliminary phase and amplitude calibration but before flagging
     heuristics are run, and after flagging heuristics have been run and
     applied. If no points were flagged, the "after" plots are not generated or
-    displayed. The score for this stage is a the standard data flagging score,
+    displayed. The score for this stage is the standard data flagging score,
     which depends on the fraction of data flagged.
 </p>
 
