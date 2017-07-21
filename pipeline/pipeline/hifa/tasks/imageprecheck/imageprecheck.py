@@ -108,6 +108,7 @@ class ImagePreCheck(basetask.StandardTaskTemplate):
 
         primary_beam_size = image_heuristics.largest_primary_beam_size(spwspec=str(repr_spw))
         field_ids = image_heuristics.field('TARGET', repr_field)
+        phasecenter = image_heuristics.phasecenter(field_ids)
         gridder = image_heuristics.gridder('TARGET', repr_field)
         cont_spw = ','.join([str(s.id) for s in inputs.context.observing_run.measurement_sets[0].get_spectral_windows()])
         num_cont_spw = len(cont_spw.split(','))
@@ -125,7 +126,7 @@ class ImagePreCheck(basetask.StandardTaskTemplate):
             # reprBW sensitivity
             if reprBW_mode == 'cube':
                 sensitivity, min_sensitivity, max_sensitivity, min_field_id, max_field_id, eff_ch_bw, sens_bw = \
-                    image_heuristics.calc_sensitivities(inputs.vis, repr_field, 'TARGET', str(repr_spw), nbin, {}, 'cube', gridder, cells[(robust, '[]')], imsizes[(robust, '[]')], 'briggs', robust, [])
+                    image_heuristics.calc_sensitivities(inputs.vis, repr_field, 'TARGET', str(repr_spw), nbin, {}, 'cube', gridder, cells[(robust, '[]')], imsizes[(robust, '[]')], 'briggs', robust, [], phasecenter)
                 sensitivities.append(Sensitivity( \
                     **{'array': array, \
                        'field': repr_field, \
@@ -141,7 +142,7 @@ class ImagePreCheck(basetask.StandardTaskTemplate):
 
             # full cont sensitivity (no frequency ranges excluded)
             sensitivity, min_sensitivity, max_sensitivity, min_field_id, max_field_id, eff_ch_bw, sens_bw = \
-                image_heuristics.calc_sensitivities(inputs.vis, repr_field, 'TARGET', cont_spw, -1, {}, 'cont', gridder, cells[(robust, '[]')], imsizes[(robust, '[]')], 'briggs', robust, [])
+                image_heuristics.calc_sensitivities(inputs.vis, repr_field, 'TARGET', cont_spw, -1, {}, 'cont', gridder, cells[(robust, '[]')], imsizes[(robust, '[]')], 'briggs', robust, [], phasecenter)
             for cont_sens_bw_mode in cont_sens_bw_modes:
                 sensitivities.append(Sensitivity( \
                     **{'array': array, \
@@ -174,7 +175,7 @@ class ImagePreCheck(basetask.StandardTaskTemplate):
                     imsizes[(hm_robust, str(hm_uvtaper))] = image_heuristics.imsize(field_ids, cells[(hm_robust, str(hm_uvtaper))], primary_beam_size, centreonly=False)
                     if reprBW_mode == 'cube':
                         sensitivity, min_sensitivity, max_sensitivity, min_field_id, max_field_id, eff_ch_bw, sens_bw = \
-                            image_heuristics.calc_sensitivities(inputs.vis, repr_field, 'TARGET', str(repr_spw), nbin, {}, 'cube', gridder, cells[(hm_robust, str(hm_uvtaper))], imsizes[(hm_robust, str(hm_uvtaper))], 'briggs', hm_robust, hm_uvtaper)
+                            image_heuristics.calc_sensitivities(inputs.vis, repr_field, 'TARGET', str(repr_spw), nbin, {}, 'cube', gridder, cells[(hm_robust, str(hm_uvtaper))], imsizes[(hm_robust, str(hm_uvtaper))], 'briggs', hm_robust, hm_uvtaper, phasecenter)
                         sensitivities.append(Sensitivity( \
                             **{'array': array, \
                                'field': repr_field, \
@@ -188,7 +189,7 @@ class ImagePreCheck(basetask.StandardTaskTemplate):
                                'sensitivity': cqa.quantity(sensitivity, 'Jy/beam')}))
 
                     sensitivity, min_sensitivity, max_sensitivity, min_field_id, max_field_id, eff_ch_bw, sens_bw = \
-                        image_heuristics.calc_sensitivities(inputs.vis, repr_field, 'TARGET', cont_spw, -1, {}, 'cont', gridder, cells[(hm_robust, str(hm_uvtaper))], imsizes[(hm_robust, str(hm_uvtaper))], 'briggs', hm_robust, hm_uvtaper)
+                        image_heuristics.calc_sensitivities(inputs.vis, repr_field, 'TARGET', cont_spw, -1, {}, 'cont', gridder, cells[(hm_robust, str(hm_uvtaper))], imsizes[(hm_robust, str(hm_uvtaper))], 'briggs', hm_robust, hm_uvtaper, phasecenter)
                     for cont_sens_bw_mode in cont_sens_bw_modes:
                         sensitivities.append(Sensitivity( \
                             **{'array': array, \

@@ -841,6 +841,28 @@ class ImageParamsHeuristics(object):
 
         return 0.5
 
+    def center_field_ids(self, msnames, field, intent, phasecenter):
+
+        '''Get per-MS IDs of field closest to the phase center.'''
+
+        meTool = casatools.measures
+        qaTool = casatools.quanta
+        ref_field_ids = []
+
+        # Phase center coordinates
+        pc_direc = meTool.source(phasecenter)
+
+        for msname in msnames:
+            try:
+                ms_obj = self.observing_run.get_ms(msname)
+                field_ids = [f.id for f in ms_obj.fields if (f.name == field) and (intent in f.intents)]
+                separations = [qaTool.getvalue(meTool.separation(pc_direc, f.mdirection)) for f in ms_obj.fields if f.id in field_ids]
+                ref_field_ids.append(field_ids[separations.index(min(separations))])
+            except:
+                ref_field_ids.append(-1)
+
+        return ref_field_ids
+
     def calc_topo_ranges(self, inputs):
 
         '''Calculate TOPO ranges for hif_tclean inputs.'''
@@ -858,22 +880,14 @@ class ImageParamsHeuristics(object):
         # across datasets
         ms = self.observing_run.get_ms(name=inputs.vis[0])
 
-        # Get ID of field closest to the phase center
         meTool = casatools.measures
         qaTool = casatools.quanta
-        ref_field_ids = []
 
         # Phase center coordinates
         pc_direc = meTool.source(inputs.phasecenter)
 
-        for msname in inputs.vis:
-            try:
-                ms_obj = self.observing_run.get_ms(msname)
-                field_ids = [f.id for f in ms_obj.fields if (f.name == inputs.field) and (inputs.intent in f.intents)]
-                separations = [meTool.separation(pc_direc, f.mdirection)['value'] for f in ms_obj.fields if f.id in field_ids]
-                ref_field_ids.append(field_ids[separations.index(min(separations))])
-            except:
-                ref_field_ids.append(-1)
+        # Get per-MS IDs of field closest to the phase center
+        ref_field_ids = self.center_field_ids(inputs.vis, inputs.field, inputs.intent, pc_direc)
 
         # Get a cont file handler for the conversion to TOPO
         contfile_handler = contfilehandler.ContFileHandler(self.contfile)
@@ -1051,7 +1065,7 @@ class ImageParamsHeuristics(object):
 
         return False
 
-    def calc_sensitivities(self, vis, field, intent, spw, nbin, spw_topo_chan_param_dict, specmode, gridder, cell, imsize, weighting, robust, uvtaper):
+    def calc_sensitivities(self, vis, field, intent, spw, nbin, spw_topo_chan_param_dict, specmode, gridder, cell, imsize, weighting, robust, uvtaper, phasecenter=None):
         """Compute sensitivity estimate using CASA."""
 
         # Calculate sensitivities
@@ -1064,7 +1078,14 @@ class ImageParamsHeuristics(object):
         max_field_ids = []
         eff_ch_bw = 0.0
         sens_bws = {}
-        for msname in vis:
+
+        # Calculate only center field sensitivity if a phasecenter is given
+        if phasecenter is not None:
+            ref_field_ids = self.center_field_ids(vis, field, intent, phasecenter)
+        else:
+            ref_field_ids = None
+
+        for ms_index, msname in enumerate(vis):
             ms = self.observing_run.get_ms(name=msname)
             detailed_field_sensitivities[os.path.basename(msname)] = {}
             for intSpw in [int(s) for s in spw.split(',')]:
@@ -1092,7 +1113,11 @@ class ImageParamsHeuristics(object):
 
                     if (gridder == 'mosaic'):
                         field_sensitivities = []
-                        for field_id in [f.id for f in ms.fields if (utils.dequote(f.name) == utils.dequote(field) and intent in f.intents)]:
+                        if ref_field_ids is not None:
+                            field_ids = [ref_field_ids[ms_index]]
+                        else:
+                            field_ids = [f.id for f in ms.fields if (utils.dequote(f.name) == utils.dequote(field) and intent in f.intents)]
+                        for field_id in field_ids:
                             try:
                                 field_sensitivity, eff_ch_bw, sens_bws[intSpw] = self.get_sensitivity(ms, field_id, intSpw, chansel, specmode, cell, imsize, weighting, robust, uvtaper)
                                 if (field_sensitivity > 0.0):
