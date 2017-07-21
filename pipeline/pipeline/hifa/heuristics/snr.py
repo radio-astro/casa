@@ -997,13 +997,15 @@ def compute_gaincalsnr(ms, spwlist, spw_dict, edge_fraction):
         polarizationFactor = np.sqrt(2.0)
 
         # SNR computation
-        #timeFactor = 1.0 / np.sqrt(spw_dict[spwid]['integrationtime'])
         timeFactor = 1.0 / np.sqrt(spw_dict[spwid]['exptime'] / len(spw_dict[spwid]['snr_scans']))
         bandwidthFactor = np.sqrt(8.0e9 / min(spw_dict[spwid]['bandwidth'], maxEffectiveBW))
         factor = relativeTsys * timeFactor * arraySizeFactor * \
             areaFactor * bandwidthFactor * polarizationFactor
         sensitivity = ALMA_SENSITIVITIES[bandidx] * factor
-        snrPerScan = spw_dict[spwid]['flux'] * 1000.0 / sensitivity
+        if 'flux' in spw_dict[spwid]:
+            snrPerScan = spw_dict[spwid]['flux'] * 1000.0 / sensitivity
+        else:
+            snrPerScan = None
 
         # Fill in the dictionary
         snr_dict[spwid] = collections.OrderedDict()
@@ -1021,20 +1023,31 @@ def compute_gaincalsnr(ms, spwlist, spw_dict, edge_fraction):
         snr_dict[spwid]['median_tsys'] = spw_dict[spwid]['median_tsys']
 
         # Sensitivity info
-        snr_dict[spwid]['flux_Jy'] = spw_dict[spwid]['flux']
+        if 'flux' in spw_dict[spwid]:
+            snr_dict[spwid]['flux_Jy'] = spw_dict[spwid]['flux']
+        else:
+            snr_dict[spwid]['flux_Jy'] = None
         snr_dict[spwid]['inttime_minutes'] = \
             spw_dict[spwid]['integrationtime']
         snr_dict[spwid]['scantime_minutes'] = \
             spw_dict[spwid]['exptime'] / len(spw_dict[spwid]['snr_scans'])
         snr_dict[spwid]['sensitivity_per_scan_mJy'] = \
            sensitivity
-        snr_dict[spwid]['snr_per_scan'] = snrPerScan
-        LOG.info("Spw %3d  scan (minutes) %6.3f  integration (minutes) %6.3f  sensitivity (mJy) %7.3f  SNR %10.3f" % \
-            (spwid, \
-            snr_dict[spwid]['scantime_minutes'], \
-            snr_dict[spwid]['inttime_minutes'], \
-            snr_dict[spwid]['sensitivity_per_scan_mJy'], \
-            snr_dict[spwid]['snr_per_scan']))
+        if not snrPerScan:
+            snr_dict[spwid]['snr_per_scan'] = None
+            LOG.info("Spw %3d  scan (minutes) %6.3f  integration (minutes) %6.3f  sensitivity (mJy) %7.3f  SNR unknown" % \
+                (spwid, \
+                snr_dict[spwid]['scantime_minutes'], \
+                snr_dict[spwid]['inttime_minutes'], \
+                snr_dict[spwid]['sensitivity_per_scan_mJy']))
+        else:
+            snr_dict[spwid]['snr_per_scan'] = snrPerScan
+            LOG.info("Spw %3d  scan (minutes) %6.3f  integration (minutes) %6.3f  sensitivity (mJy) %7.3f  SNR %10.3f" % \
+                (spwid, \
+                snr_dict[spwid]['scantime_minutes'], \
+                snr_dict[spwid]['inttime_minutes'], \
+                snr_dict[spwid]['sensitivity_per_scan_mJy'], \
+                snr_dict[spwid]['snr_per_scan']))
 
     return snr_dict
 
