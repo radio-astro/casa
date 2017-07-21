@@ -221,10 +221,7 @@ class SDIntegratedImageDisplay(SDImageDisplay):
         
         plot_list = []
         
-#         masked_data = self.data * self.mask
         for pol in xrange(self.npol):
-#             Total = masked_data.take([pol], axis=self.id_stokes).squeeze()
-#             Total = numpy.flipud(Total.transpose())
             masked_data = (self.data.take([pol], axis=self.id_stokes) * self.mask.take([pol], axis=self.id_stokes)).squeeze()
             Total = numpy.flipud(masked_data.transpose())
             del masked_data
