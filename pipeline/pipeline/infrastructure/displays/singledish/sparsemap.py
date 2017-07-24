@@ -475,13 +475,14 @@ class SDSparseMapDisplay(SDImageDisplay):
       
         # loop over pol
         for pol in xrange(self.npol):
-            masked_data_p = (self.data.take([pol], axis=self.id_stokes) * self.mask.take([pol], axis=self.id_stokes)).squeeze()
             Plot = numpy.zeros((num_panel, num_panel, (chan1 - chan0)), numpy.float32) + NoData
-            TotalSP = masked_data_p.sum(axis=0).sum(axis=0)
+            TotalSP = (self.data.take([pol], axis=self.id_stokes) * self.mask.take([pol], axis=self.id_stokes)).squeeze().sum(axis=(0,1))
             isvalid = numpy.any(self.mask.take([pol], axis=self.id_stokes).squeeze(), axis=2)
             Nsp = sum(isvalid.flatten())
             LOG.info('Nsp=%s'%(Nsp))
             TotalSP /= Nsp
+            
+            slice_axes = (self.image.id_direction[0], self.image.id_direction[1], self.id_stokes)
 
             for x in xrange(NH):
                 x0 = x * STEP
@@ -490,11 +491,11 @@ class SDSparseMapDisplay(SDImageDisplay):
                     y0 = y * STEP
                     y1 = (y + 1) * STEP
                     valid_index = isvalid[x0:x1,y0:y1].nonzero()
-                    chunk = masked_data_p[x0:x1,y0:y1]
+                    chunk = self._get_array_chunk(self.data, (x0, y0, pol), (x1, y1, pol+1), slice_axes).squeeze() * self._get_array_chunk(self.mask, (x0, y0, pol), (x1, y1, pol+1), slice_axes).squeeze()
                     valid_sp = chunk[valid_index[0],valid_index[1],:]
                     Plot[x][y] = valid_sp.mean(axis=0)
                     del valid_index, chunk, valid_sp
-            del masked_data_p, isvalid
+            del isvalid
  
             FigFileRoot = self.inputs.imagename+'.pol%s_Sparse'%(pol)
             plotfile = os.path.join(self.stage_dir, FigFileRoot+'_0.png')
@@ -520,6 +521,30 @@ class SDSparseMapDisplay(SDImageDisplay):
                 plot_list.append(plot)
             
         return plot_list
+    
+    def _get_array_chunk(self, data, blc, trc, axes):
+        """
+        Returns a slice of an array
+        
+        data : an array that could be sliced
+        blc : a list of minimum index in each dimention of axes to slice
+        trc : a list of maximum index in each dimention of axes to slice
+              Note trc is used for the second parameter to construct slice.
+              Hence, the indices of last elements in returned array is trc-1
+        axes : a list of demention of axes in cube blc and trc corresponds
+        """
+        array_shape = data.shape
+        ndim = len(array_shape)
+        full_blc = numpy.zeros(ndim, dtype=int)
+        full_trc = numpy.array(array_shape)
+        for i in xrange(len(axes)):
+            iax = axes[i]
+            full_blc[iax] = max(blc[i], 0)
+            full_trc[iax] = min(trc[i], array_shape[iax])
+        return data[map(slice, full_blc,full_trc)]
+        
+        
+        
 
 def ch_to_freq(ch, frequency):
     ich = int(ch)
