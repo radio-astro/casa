@@ -333,7 +333,7 @@ class Gfluxscaleflag(basetask.StandardTaskTemplate):
             LOG.info('Compute amplitude gaincal table.')
             self._do_gaincal(
                 intent=inputs.intent, gaintype='T', calmode='a',
-                combine=phase_combine, solint=inputs.solint,
+                combine='', solint=inputs.solint,
                 minsnr=inputs.minsnr, refant=inputs.refant,
                 interp='linear,linear', merge=True)
 
