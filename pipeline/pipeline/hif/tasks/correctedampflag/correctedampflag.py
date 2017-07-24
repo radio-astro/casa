@@ -967,8 +967,10 @@ class Correctedampflag(basetask.StandardTaskTemplate):
         # reason and polarisation.
         if flags_without_timestamps:
 
-            # Build new list of flags.
+            # Build new list of flags, and preserve skipped flag commands to
+            # report.
             cflags = []
+            skipped_flagcmds = []
 
             # Go through list of flags.
             for flag in flags:
@@ -982,12 +984,18 @@ class Correctedampflag(basetask.StandardTaskTemplate):
                         cflags.append(flag)
                     # Skip flags that have explicit timestamps.
                     else:
-                        LOG.trace('Consolidated flag that was covered by '
-                                  'flagging command without timestamp.')
+                        skipped_flagcmds.append(flag.flagcmd)
+
                 # If the current flag does not match with any of the flagging
                 # commands without timestamps, then preserve it.
                 else:
                     cflags.append(flag)
+
+            # Log a summary of consolidated flag commands:
+            LOG.info('The following time-specific flag commands were '
+                     'consolidated into one or more flag commands '
+                     'without a timestamp:\n'
+                     '{}'.format('\n'.join(skipped_flagcmds)))
 
         # If no flag commands with timestamp exist, then there is nothing to
         # consolidate => return flags unmodified.
