@@ -100,7 +100,9 @@ def make_flux_table(context, results):
     
     return utils.merge_td_columns(rows)
 
-RepsourceTR = collections.namedtuple('RepsourceTR', 'vis source rfreq rbwidth spwid freq bwidth')
+# Leave old defintion which includes the spw frequency in place 
+#RepsourceTR = collections.namedtuple('RepsourceTR', 'vis source rfreq rbwidth spwid freq bwidth')
+RepsourceTR = collections.namedtuple('RepsourceTR', 'vis source rfreq rbwidth spwid bwidth')
 
 
 def make_repsource_table (context, results):
@@ -124,10 +126,6 @@ def make_repsource_table (context, results):
             # If either the representative frequency or bandwidth is undefined then
             # the representatve target is undefined
             if not ms.representative_target[1] or not ms.representative_target[2]: 
-                #tr = RepsourceTR(vis, 'Undefined', 'Undefined', 'Undefined', 'Undefined',
-                #    'Undefined', 'Undefined')
-                #rows.append(tr)
-                #LOG.warn('Undefined representative frequency or bandwidth for data set %s' % (ms.basename))
                 continue
 
             # Is the presentative source in the context or not
@@ -149,15 +147,23 @@ def make_repsource_table (context, results):
             # Populate the table rows
             # No source
             if not repsource_name: 
-                tr = RepsourceTR(vis, 'Undefined', 'Undefined', 'Undefined', 'Undefined',
-                    'Undefined', 'Undefined')
+                #tr = RepsourceTR(vis, 'Unknown', 'Unknown', 'Unknown', 'Unknown',
+                    #'Unknown', 'Unknown')
+                if not ms.representative_target[0]:
+                    tr = RepsourceTR(vis, 'Unknown', 'Unknown', 'Unknown', 'Unknown',
+                        'Unknown')
+                else:
+                    tr = RepsourceTR(vis, ms.representative_target[0], 'Unknown', 'Unknown', 'Unknown',
+                        'Unknown')
                 rows.append(tr)
                 continue
 
             # No spwid
             if not repsource_spwid:
+                #tr = RepsourceTR(vis, repsource_name, qa.tos(ms.representative_target[1],5),
+                    #qa.tos(ms.representative_target[2],5), 'Unknown', 'Unknown', 'Unknown')
                 tr = RepsourceTR(vis, repsource_name, qa.tos(ms.representative_target[1],5),
-                    qa.tos(ms.representative_target[2],5), 'Undefined', 'Undefined', 'Undefined')
+                    qa.tos(ms.representative_target[2],5), 'Unknown', 'Unknown')
                 rows.append(tr)
                 continue
 
@@ -170,9 +176,12 @@ def make_repsource_table (context, results):
                 float(repsource_spw.centre_frequency.to_units(measures.FrequencyUnits.GIGAHERTZ)), \
                 'GHz')
 
+            #tr = RepsourceTR(vis, repsource_name, qa.tos(ms.representative_target[1], 5),
+                #qa.tos(ms.representative_target[2], 5), str(repsource_spwid),
+                #qa.tos(repsource_frequency, 5),
+                #qa.tos(repsource_chanwidth, 5))
             tr = RepsourceTR(vis, repsource_name, qa.tos(ms.representative_target[1], 5),
                 qa.tos(ms.representative_target[2], 5), str(repsource_spwid),
-                qa.tos(repsource_frequency, 5),
                 qa.tos(repsource_chanwidth, 5))
             rows.append(tr)
 
