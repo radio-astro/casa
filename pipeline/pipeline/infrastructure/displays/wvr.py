@@ -220,10 +220,10 @@ class WVRPhaseVsBaselineChart(object):
                                                         self._max_phase_offset))
 
         ratios = [w.y for w in self._wrappers]
-        ratios = [r for r in ratios if r is not None]
-        self._max_ratio = numpy.ma.max(ratios)
-        self._min_ratio = numpy.ma.min(ratios)
-        self._median_ratio = numpy.ma.median(ratios)
+        ratios = numpy.ma.MaskedArray([r for r in ratios if r is not None])
+        self._max_ratio = numpy.ma.max(ratios[~ratios.mask])
+        self._min_ratio = numpy.ma.min(ratios[~ratios.mask])
+        self._median_ratio = numpy.ma.median(ratios[~ratios.mask])
         LOG.trace('Maximum phase ratio for %s = %s' % (self.ms.basename, 
                                                        self._max_ratio))
         LOG.trace('Minimum phase ratio for %s = %s' % (self.ms.basename, 
@@ -240,8 +240,8 @@ class WVRPhaseVsBaselineChart(object):
             # creates an unintelligible mess. 
             for scan in plot_scans:
                 # if spw.id == 17 and scan.id == 3:
-                    plots.append(self.get_plot_wrapper(spw, [scan,],
-                                                       self.ms.antennas))
+                plots.append(self.get_plot_wrapper(spw, [scan,],
+                                                   self.ms.antennas))
 
         return [p for p in plots if p is not None]
 
@@ -437,6 +437,8 @@ class WVRPhaseVsBaselineChart(object):
                 LOG.error('Could not create WVR phase vs baseline plot for'
                           ' spw %s scan %s' % (spw.id, scan_ids))
                 LOG.exception(ex)
+                # close figure just in case state is transferred between calls
+                matplotlib.pyplot.clf()
                 return None
 
         # the plot may not be created if all data for that antenna are flagged
