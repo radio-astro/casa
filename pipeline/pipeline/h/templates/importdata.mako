@@ -98,23 +98,21 @@ ${'is' if num_mses == 1 else 'are'} summarised below.</p>
 % endif
 
 % if repsource_defined:
-<h3>Representative Target Sources</h3>
+<h3>Representative Target Information</h3>
 <p>The following representative target sources and spws are defined</p>
 <table class="table table-bordered table-striped table-condensed"
-	   summary="Representative target source">
-	<caption>Representative target sources. These are imported from the context or derived from the ASDM .</caption>
+	   summary="Representative target information">
+	<caption>Representative target sources. These are imported from the context or derived from the ASDM.</caption>
     <thead>
 	    <tr>
 	        <th scope="col" rowspan="2">Measurement Set</th>
-	        <th scope="col" colspan="3">Representative Source</th>
-	        <th scope="col" colspan="3">Best spw</th>
+	        <th scope="col" colspan="5">Representative Source</th>
 	    </tr>
 	    <tr>
 	        <th scope="col">Name</th>
-	        <th scope="col">Frequency (BARY)</th>
-	        <th scope="col">Chanwidth</th>
-	        <th scope="col">Id</th>
-	        <th scope="col">Frequency (TOPO)</th>
+	        <th scope="col">Frequency</th>
+	        <th scope="col">Bandwidth for Sensitivity</th>
+	        <th scope="col">Spw Id</th>
 	        <th scope="col">Chanwidth</th>
 	    </tr>
     </thead>
