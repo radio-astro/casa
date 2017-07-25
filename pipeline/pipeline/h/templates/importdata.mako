@@ -110,7 +110,7 @@ ${'is' if num_mses == 1 else 'are'} summarised below.</p>
 	    </tr>
 	    <tr>
 	        <th scope="col">Name</th>
-	        <th scope="col">Frequency</th>
+	        <th scope="col">Representative Frequency</th>
 	        <th scope="col">Bandwidth for Sensitivity</th>
 	        <th scope="col">Spw Id</th>
 	        <th scope="col">Chanwidth</th>
