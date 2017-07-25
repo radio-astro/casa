@@ -126,8 +126,11 @@ class SDMSBaseline(basetask.StandardTaskTemplate):
             self.field.append(field_id)
             self.antenna.append(antenna_id)
             self.spw.append(spw_id)
-            self.grid_table.append(compress.CompressedObj(grid_table))
-            self.channelmap_range.append(compress.CompressedObj(channelmap_range))
+            if isinstance(grid_table, compress.CompressedObj):
+                self.grid_table.append(grid_table)
+            else:
+                self.grid_table.append(compress.CompressedObj(grid_table))
+            self.channelmap_range.append(channelmap_range)
             
 #         def extend(self, field_id_list, antenna_id_list, spw_id_list):
 #             self.field.extend(field_id_list)
@@ -163,10 +166,8 @@ class SDMSBaseline(basetask.StandardTaskTemplate):
             for f, a, s, g, c in itertools.izip(self.field, self.antenna, self.spw, 
                                                 self.grid_table, self.channelmap_range):
                 _g = g.decompress()
-                _c = c.decompress()
-                yield f, a, s, _g, _c
+                yield f, a, s, _g, c
                 del _g
-                del _c
             
         
         def get_process_list(self):
@@ -293,15 +294,18 @@ class SDMSBaseline(basetask.StandardTaskTemplate):
             if grid_table is None:
                 LOG.info('Skip reduction group {}', group_id)
                 continue
+            compressed_table = compress.CompressedObj(grid_table)
+            del grid_table
+
             detected_lines = maskline_result.outcome['detected_lines']
             channelmap_range = maskline_result.outcome['channelmap_range']
             cluster_info = maskline_result.outcome['cluster_info']
-
+            
             # register ids to per MS id collection
             for i in member_list:
                 member = group_desc[i]
                 registry[member.ms].append(member.field_id, member.antenna_id, member.spw_id, 
-                                           grid_table, channelmap_range)
+                                           compressed_table, channelmap_range)
              
             # add entry to outcome
             baselined.append({'group_id': group_id, 'iteration': iteration,
@@ -362,6 +366,9 @@ class SDMSBaseline(basetask.StandardTaskTemplate):
                     plot_list.extend(plot_manager.plot_spectra_with_fit(field_id, antenna_id, spw_id, 
                                                                         grid_table, 
                                                                         deviationmask, channelmap_range))
+                    
+                del grid_table
+                
         plot_manager.finalize()
         
         outcome = {'baselined': baselined,
