@@ -39,7 +39,7 @@ def vlassQLIP(vislist, editimlist_infile, importonly=False, pipelinemode='automa
         h_init(plotlevel='summary')
 
         # Load the data
-        hifv_importdata(vis=vislist, pipelinemode=pipelinemode)
+        hifv_importdata(vis=vislist, pipelinemode=pipelinemode, nocopy=True)
         if importonly:
             raise Exception(IMPORT_ONLY)
 
@@ -47,13 +47,22 @@ def vlassQLIP(vislist, editimlist_infile, importonly=False, pipelinemode='automa
         hif_editimlist(parameter_file=editimlist_infile)
 
         # split out selected target data from full MS
-        hif_transformimagedata(datacolumn="corrected")
+        hif_transformimagedata(datacolumn="corrected", clear_pointing=True, modify_weights=False)
 
         # run tclean and create images
-        hif_makeimages(pipelinemode="automatic", hm_cleaning='manual', hm_masking='none')
+        hif_makeimages(pipelinemode=pipelinemode, hm_cleaning='manual', hm_masking='none')
+
+        # apply a primary beam correction on images before rms and cutouts
+        hifv_pbcor(pipelinemode=pipelinemode)
+
+        # make uncertainty (rms) image
+        hif_makermsimages(pipelinemode=pipelinemode)
+
+        # make sub-images of final, primary beam, rms and psf images.
+        hif_makecutoutimages(pipelinemode=pipelinemode)
 
         # Export the data to products directory
-        # hifv_exportdata(pipelinemode=pipelinemode)
+        #hifv_exportdata(pipelinemode=pipelinemode)
 
     except Exception, e:
         if str(e) == IMPORT_ONLY:
