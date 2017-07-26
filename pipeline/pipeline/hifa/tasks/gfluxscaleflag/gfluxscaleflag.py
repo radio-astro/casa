@@ -298,7 +298,7 @@ class Gfluxscaleflag(basetask.StandardTaskTemplate):
 
             # Make "apriori calibrations applied" plots for the weblog
             LOG.info('Creating "apriori calibrations applied" plots')
-            result.plots['apriorical'] = plot_fn('data', inputs.intent, suffix='apriorical')
+            result.plots['apriorical'] = plot_fn(inputs.intent, suffix='apriorical')
 
             # Restore the calibration state to ensure the "apriori" cal tables
             # are included in pre-apply during creation of new caltables.
@@ -350,7 +350,7 @@ class Gfluxscaleflag(basetask.StandardTaskTemplate):
 
             # Make "after calibration, before flagging" plots for the weblog
             LOG.info('Creating "after calibration, before flagging" plots')
-            result.plots['before'] = plot_fn('corrected', inputs.intent, suffix='before')
+            result.plots['before'] = plot_fn(inputs.intent, suffix='before')
 
             # Run correctedampflag to identify outliers for intents specified in
             # intents_for_flagging; let "field" and "spw" be initialized
@@ -370,7 +370,7 @@ class Gfluxscaleflag(basetask.StandardTaskTemplate):
             if cafflags:
                 # Create the "after calibration, after flagging" plots for the weblog.
                 LOG.info('Creating "after calibration, after flagging" plots')
-                result.plots['after'] = plot_fn('corrected', inputs.intent, suffix='after')
+                result.plots['after'] = plot_fn(inputs.intent, suffix='after')
 
         finally:
             # Restore the "pre-bandpassflag" backup of the flagging state.
@@ -437,9 +437,10 @@ class Gfluxscaleflag(basetask.StandardTaskTemplate):
         for task in applycal_tasks:
             self._executor.execute(task, merge=merge)
 
-    def _do_gaincal(self, caltable=None, intent=None, gaintype='G', calmode=None, combine=None, solint=None,
-                    antenna=None, uvrange='', minsnr=None, refant=None, minblperant=None, spwmap=None, interp=None,
-                    append=None, merge=True):
+    def _do_gaincal(self, caltable=None, intent=None, gaintype='G',
+                    calmode=None, combine=None, solint=None, antenna=None,
+                    uvrange='', minsnr=None, refant=None, minblperant=None,
+                    spwmap=None, interp=None, append=None, merge=True):
 
         inputs = self.inputs
 
@@ -554,14 +555,13 @@ class Gfluxscaleflag(basetask.StandardTaskTemplate):
                                   calwt=old_calfrom.calwt)
 
 
-def create_plots(inputs, context, column, intents, suffix=''):
+def create_plots(inputs, context, intents, suffix=''):
     """
     Return amplitude vs time and amplitude vs UV distance plots for the given
-    data column.
+    intents.
 
     :param inputs: pipeline inputs
     :param context: pipeline context
-    :param column: MS column to plot
     :param intents: intents to plot
     :param suffix: optional component to add to the plot filenames
     :return: dict of (x axis type => str, [plots,...])
@@ -573,14 +573,12 @@ def create_plots(inputs, context, column, intents, suffix=''):
     calto = callibrary.CalTo(vis=inputs.vis, spw=inputs.spw, field=inputs.field)
     output_dir = context.output_dir
 
-    # FIXME: is this correctly looping over each field in the current intent?
     amp_uvdist_plots, amp_time_plots = [], []
-
     for intent in intents.split(','):
         amp_uvdist_plots.extend(
-            AmpVsXChart('uvdist', column, intent, context, output_dir, calto, suffix=suffix).plot())
+            AmpVsXChart('uvdist', intent, context, output_dir, calto, suffix=suffix).plot())
         amp_time_plots.extend(
-            AmpVsXChart('time', column, intent, context, output_dir, calto, suffix=suffix).plot())
+            AmpVsXChart('time', intent, context, output_dir, calto, suffix=suffix).plot())
 
     return {
         'uvdist': amp_uvdist_plots,
@@ -593,9 +591,9 @@ class AmpVsXChart(applycal_displays.PlotmsFieldSpwComposite):
     Plotting class that creates an amplitude vs X plot for each field and spw,
     where X is given as a constructor argument.
     """
-    def __init__(self, xaxis, ydatacolumn, intent, context, output_dir, calto, **overrides):
+    def __init__(self, xaxis, intent, context, output_dir, calto, **overrides):
         plot_args = {
-            'ydatacolumn': ydatacolumn,
+            'ydatacolumn': 'corrected',
             'avgtime': '',
             'avgscan': False,
             'avgbaseline': False,
