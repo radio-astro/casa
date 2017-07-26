@@ -158,8 +158,8 @@ class ALMAPhcorBandpass(bandpassworker.BandpassWorker):
             # this intent. We expect this to return one integration
             # interval
             scans = inputs.ms.get_scans(scan_intent=inputs.intent)
-            solints = set([scan.mean_interval(snr_result.spwids[i])
-                                   for scan in scans])
+            solints = set([scan.mean_interval(snr_result.spwids[i]) for scan in scans if snr_result.spwids[i] in [spw.id for spw in scan.spws]]) 
+
             timedelta = solints.pop()
             timedelta_solint = '%ss' % timedelta.total_seconds() 
 
