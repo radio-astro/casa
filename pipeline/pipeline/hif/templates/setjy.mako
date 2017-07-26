@@ -85,7 +85,8 @@ $(document).ready(function(){
 <%block name="title">Set model flux</%block>
 
 <h2>Results</h2>
-<p>The following flux densities were set in the measurement set model column and recorded in the pipeline context:</p>
+<p>The following flux densities were set in the measurement set model column and recorded in the pipeline context.
+Only the spectral index of the bandpass calibrator is set here and its flux density will be set later.</p>
 <table class="table table-bordered table-striped" summary="Flux density results">
 	<caption>Setjy Results</caption>
     <thead>
