@@ -986,36 +986,51 @@ def score_refspw_mapping_fraction(ms, ref_spwmap):
 
 
 @log_qa
-def score_phaseup_mapping_fraction(ms, reqfields, reqintents, phaseup_spwmap):
+def score_phaseup_mapping_fraction(ms, fullcombine, phaseup_spwmap):
     """
     Compute the fraction of science spws that have not been
     mapped to other probably wider windows.
-
-    Note that reqfields and reqintents are no longer used. Remove at some point
     """
-    nunmapped = 0
+
     if not phaseup_spwmap:
+        nunmapped = len([spw for spw in ms.get_spectral_windows(science_windows_only=True)])
         score = 1.0
-        longmsg = 'No mapped science spws for %s ' % ms.basename
-        shortmsg = 'No mapped science spws'
+        longmsg = 'No spw mapping for %s ' % ms.basename
+        shortmsg = 'No spw mapping'
+    elif fullcombine is True:
+        nunmapped = 0
+        score = rutils.SCORE_THRESHOLD_WARNING
+        longmsg = 'Combined spw mapping for %s ' % (ms.basename)
+        shortmsg = 'Combined spw mapping'
     else:
         # Expected science windows
-        scispws = set([spw.id for spw in ms.get_spectral_windows(science_windows_only=True)])
-        nexpected = len(scispws)
+        scispws = [spw for spw in ms.get_spectral_windows(science_windows_only=True)]
+        scispwids = [spw.id for spw in ms.get_spectral_windows(science_windows_only=True)]
+        nexpected = len(scispwids)
 
-        for spwid in scispws:
+        nunmapped = 0
+        samesideband = True
+        for spwid, scispw in zip (scispwids, scispws):
             if spwid == phaseup_spwmap[spwid]:
                 nunmapped += 1
+            else:
+                if scispw.sideband != ms.get_spectral_window(phaseup_spwmap[spwid]).sideband:
+                    samesideband = False
         
         if nunmapped >= nexpected:
             score = 1.0
-            longmsg = 'No mapped science spws for %s ' % ms.basename
-            shortmsg = 'No mapped science spws'
+            longmsg = 'No spw mapping for %s ' % ms.basename
+            shortmsg = 'No spw mapping'
         else:
             # Replace the previous score with a warning
-            score = rutils.SCORE_THRESHOLD_WARNING
-            longmsg = 'There are %d mapped science spws for %s ' % (nexpected - nunmapped, ms.basename)
-            shortmsg = 'There are mapped science spws'
+            if samesideband is True:
+                score = rutils.SCORE_THRESHOLD_SUBOPTIMAL
+                longmsg = 'Spw mapping within sidebands for %s' % (ms.basename)
+                shortmsg = 'Spw mapping within sidebands'
+            else:
+                score = rutils.SCORE_THRESHOLD_WARNING
+                longmsg = 'Spw mapping across sidebands required for %s' % (ms.basename)
+                shortmsg = 'Spw mapping across sidebands'
 
     origin = pqa.QAOrigin(metric_name='score_phaseup_mapping_fraction',
                           metric_score=nunmapped,
