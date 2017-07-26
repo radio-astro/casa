@@ -22,11 +22,9 @@ class SpwPhaseupQAHandler(pqa.QAResultHandler):
         # narrow to wide spw mzp. Note that the input
         # field and intent parameters are no longer used.
         if result.combine_spwmap:
-            score1 = self._phaseup_mapping_fraction(ms, '', 'PHASE',
-                result.combine_spwmap)
+            score1 = self._phaseup_mapping_fraction(ms, True, result.combine_spwmap)
         else:
-            score1 = self._phaseup_mapping_fraction(ms, result.inputs['field'],
-                result.inputs['intent'], result.phaseup_spwmap)
+            score1 = self._phaseup_mapping_fraction(ms, False, result.phaseup_spwmap)
 	if not result.phaseup_result.final:
 	    score2= qacalc.score_path_exists(ms.name,
 	    list(result.phaseup_result.error)[0].gaintable, 'caltable')
@@ -37,11 +35,11 @@ class SpwPhaseupQAHandler(pqa.QAResultHandler):
             
         result.qa.pool.extend(scores)
     
-    def _phaseup_mapping_fraction(self, ms, field, intent, phaseup_spwmap):
+    def _phaseup_mapping_fraction(self, ms, fullcombine, phaseup_spwmap):
         '''
         Check whether or not there has been spw phaseup mapping . 
         '''
-        return qacalc.score_phaseup_mapping_fraction(ms, field, intent, phaseup_spwmap)
+        return qacalc.score_phaseup_mapping_fraction(ms, fullcombine, phaseup_spwmap)
 
 
 class SpwPhaseupListQAHandler(pqa.QAResultHandler):
@@ -63,4 +61,3 @@ class SpwPhaseupListQAHandler(pqa.QAResultHandler):
                                                                 quotes=False,
                                                                 conjunction='or')
         result.qa.all_unity_longmsg = longmsg
-
