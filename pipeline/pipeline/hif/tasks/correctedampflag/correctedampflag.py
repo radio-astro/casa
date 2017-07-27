@@ -717,8 +717,7 @@ class Correctedampflag(basetask.StandardTaskTemplate):
 
             # If the number of affected antennas is a significant fraction of
             # all antennas, then flag the entire timestamp.
-            if len(id_affected_ants) > ants_in_outlier_baseline_scans_thresh * nants \
-                    and n_outlier_scans_in_timestamp > 5:
+            if len(id_affected_ants) > ants_in_outlier_baseline_scans_thresh * nants:
                 # Create a flagging command for all antennas
                 # in this timestamp (for given spw, intent, pol).
                 newflags.append(
@@ -752,7 +751,8 @@ class Correctedampflag(basetask.StandardTaskTemplate):
             # the proceed check if the antenna(s) with the highest number of
             # outlier scans (within this timestamp) equals-or-exceeds the threshold
             # and flag the corresponding antenna(s).
-            elif antcnts.max() >= max_frac_outlier_scans * n_outlier_scans_in_timestamp:
+            elif (antcnts.max() >= max_frac_outlier_scans * n_outlier_scans_in_timestamp
+                    and n_outlier_scans_in_timestamp > 5):
 
                 # Identify which antennas matched the highest counts,
                 # and create a flagging command for each.
@@ -768,7 +768,7 @@ class Correctedampflag(basetask.StandardTaskTemplate):
                             pol=icorr,
                             time=timestamp,
                             field=field,
-                            reason='bad antenna',
+                            reason='bad antenna timestamp',
                             antenna_id_to_name=antenna_id_to_name))
             # Heuristic for catching cross-CAI-dependent issues:
             # If there are affected antennas, and total number of affected
