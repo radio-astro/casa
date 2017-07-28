@@ -1,7 +1,11 @@
 from __future__ import absolute_import
 
+import types
+import os
+
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
+import pipeline.infrastructure.casatools as casatools
 
 import pipeline.h.tasks.restoredata.restoredata as restoredata
 from ..importdata import importdata as importdata
@@ -21,6 +25,55 @@ class SDRestoreDataInputs(restoredata.RestoreDataInputs):
     ocorr_mode = basetask.property_with_default('ocorr_mode', 'ao')
 
 
+class SDRestoreDataResults(restoredata.RestoreDataResults):
+    def __init__(self, importdata_results=None, applycal_results=None):
+        """
+        Initialise the results objects.
+        """
+        super(SDRestoreDataResults, self).__init__(importdata_results, applycal_results)
+
+    def merge_with_context(self, context):
+        super(SDRestoreDataResults, self).merge_with_context(context)
+
+        # set k2jy factor to ms domain objects
+        if isinstance(self.applycal_results, basetask.ResultsList):
+            for result in self.applycal_results:
+                self._merge_k2jycal(context, result)
+        else:
+            self._merge_k2jycal(context, self.applycal_results)
+            
+    def _merge_k2jycal(self, context, applycal_results):
+        for calapp in applycal_results.applied:
+            msobj = context.observing_run.get_ms(name=os.path.basename(calapp.vis))
+            if not hasattr(msobj, 'k2jy_factor'):
+                for _calfrom in calapp.calfrom:
+                    if _calfrom.caltype == 'amp' or _calfrom.caltype == 'gaincal':
+                        LOG.debug('Adding k2jy factor to {0}'.format(msobj.basename))
+                        # k2jy gaincal table
+                        k2jytable = _calfrom.gaintable
+                        k2jy_factor = {}
+                        with casatools.TableReader(k2jytable) as tb:
+                            spws = tb.getcol('SPECTRAL_WINDOW_ID')
+                            antennas = tb.getcol('ANTENNA1')
+                            params = tb.getcol('CPARAM').real
+                            nrow = tb.nrows()
+                        for irow in xrange(nrow):
+                            spwid = spws[irow]
+                            antenna = antennas[irow]
+                            param = params[:,0,irow]
+                            npol = param.shape[0]
+                            antname = msobj.get_antenna(antenna)[0].name
+                            dd = msobj.get_data_description(spw=int(spwid))
+                            if dd is None:
+                                continue
+                            for ipol in xrange(npol):
+                                polname = dd.get_polarization_label(ipol)
+                                k2jy_factor[(spwid, antname, polname)] = 1.0 / (param[ipol] * param[ipol])
+                        msobj.k2jy_factor = k2jy_factor
+            LOG.debug('msobj.k2jy_factor = {0}'.format(msobj.k2jy_factor))
+                            
+        
+
 class SDRestoreData(restoredata.RestoreData):
     Inputs = SDRestoreDataInputs
 
@@ -33,7 +86,10 @@ class SDRestoreData(restoredata.RestoreData):
         
         # apply final flags for baseline-subtracted MSs
         
-        return results
+        sdresults = SDRestoreDataResults(results.importdata_results,
+                                         results.applycal_results)
+        
+        return sdresults
 
     def _do_importasdm(self, sessionlist, vislist):
         inputs = self.inputs
