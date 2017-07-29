@@ -101,21 +101,20 @@ class SpwPhaseup(gaincalworker.GaincalWorker):
                 phaseupspwmap = []
                 LOG.info('    Using spw map %s for %s' % (phaseupspwmap, inputs.ms.basename))
 
-            # No spws have good SNR values use combine spw mapping
+            # No spws have good SNR values use combined spw mapping
             elif len([goodsnr for goodsnr in goodsnrs if goodsnr is True]) == 0:
                 LOG.warn('    Low and / or unknown SNR for all spws - Forcing combined spw mapping for %s' % (inputs.ms.basename))
                 if None in goodsnrs:
-                    LOG.warn('    Spws without SNR measurments %s' % [spwid for spwid, goodsnr in zip(spwids, goodsnrs) if goodsnr is None])
+                    LOG.warn('    Spws without SNR measurements %s' % [spwid for spwid, goodsnr in zip(spwids, goodsnrs) if goodsnr is None])
                 combinespwmap = combine_spwmap (allspws, scispws, scispws[0].id)
                 phaseupspwmap = []
                 LOG.info('    Using combined spw map %s for %s' % (combinespwmap, inputs.ms.basename))
 
             else:
-                LOG.warn('    Both high and low SNR spws - Spw map required for %s' % (inputs.ms.basename))
+                LOG.warn('    Some low SNR spws - using highest good SNR window for these in %s' % (inputs.ms.basename))
                 if None in goodsnrs:
-                    LOG.warn('    Spws without SNR measurments %s' % [spwid for spwid, goodsnr in zip(spwids, goodsnrs) if goodsnr is None])
-                goodmap, phaseupspwmap, snrmap  = snr_n2wspwmap (allspws, scispws, snrs, goodsnrs, inputs.maxnarrowbw,
-                    inputs.minfracmaxbw, inputs.samebb)
+                    LOG.warn('    Spws without SNR measurements %s' % [spwid for spwid, goodsnr in zip(spwids, goodsnrs) if goodsnr is None])
+                goodmap, phaseupspwmap, snrmap  = snr_n2wspwmap (allspws, scispws, snrs, goodsnrs) 
                 if not goodmap:
                     LOG.warn('    Still unable to match all spws - Forcing combined spw mapping for %s' % (inputs.ms.basename))
                     phaseupspemap = []
