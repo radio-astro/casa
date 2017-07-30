@@ -342,12 +342,6 @@ class Gfluxscaleflag(basetask.StandardTaskTemplate):
             # Apply the calibrations.
             self._do_applycal(merge=False)
 
-            # Restore flags that may have come from the latest applycal.
-            LOG.info('Restoring back-up of "pre-calibrated" flagging state.')
-            task = casa_tasks.flagmanager(
-                vis=inputs.vis, mode='restore', versionname=flag_backup_name_after_precal)
-            self._executor.execute(task)
-
             # Make "after calibration, before flagging" plots for the weblog
             LOG.info('Creating "after calibration, before flagging" plots')
             result.plots['before'] = plot_fn(inputs.intent, suffix='before')
