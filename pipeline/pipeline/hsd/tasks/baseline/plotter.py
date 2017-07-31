@@ -4,6 +4,7 @@ import collections
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.casatools as casatools
+import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.renderer.logger as logger
 import pipeline.infrastructure.displays.singledish.sparsemap as sparsemap
 from pipeline.infrastructure.displays.singledish.utils import sd_polmap
@@ -86,15 +87,24 @@ class BaselineSubtractionPlotManager(object):
         self.context = context
         self.datatable = datatable
         stage_number = self.context.task_counter
-        self.stage_dir = os.path.join(self.context.report_dir,"stage%d" % stage_number)    
-        if not os.path.exists(self.stage_dir):
-            os.makedirs(self.stage_dir)
-
-        self.pool = PlotterPool()
-        self.prefit_storage = PlotDataStorage()
-        self.postfit_storage = PlotDataStorage()
+        self.stage_dir = os.path.join(self.context.report_dir,"stage%d" % stage_number) 
+        
+        if basetask.DISABLE_WEBLOG:
+            self.pool = None
+            self.prefit_storage = None
+            self.postfit_storage = None
+        else:
+            if not os.path.exists(self.stage_dir):
+                os.makedirs(self.stage_dir)
+    
+            self.pool = PlotterPool()
+            self.prefit_storage = PlotDataStorage()
+            self.postfit_storage = PlotDataStorage()
         
     def initialize(self, ms, blvis):
+        if basetask.DISABLE_WEBLOG:
+            return True
+        
         self.ms = ms
         
         self.rowmap = utils.make_row_map(ms, blvis)
@@ -104,7 +114,8 @@ class BaselineSubtractionPlotManager(object):
         return True
     
     def finalize(self):
-        self.pool.done()
+        if self.pool is not None:
+            self.pool.done()
         
     def resize_storage(self, num_ra, num_dec, num_pol, num_chan):
         self.prefit_storage.resize_storage(num_ra, num_dec, num_pol, num_chan)
@@ -113,6 +124,9 @@ class BaselineSubtractionPlotManager(object):
     def plot_spectra_with_fit(self, field_id, antenna_id, spw_id, 
                               grid_table=None, deviation_mask=None, channelmap_range=None,
                               showatm=True):
+        if basetask.DISABLE_WEBLOG:
+            return []
+        
         if grid_table is None:
             return []
         
