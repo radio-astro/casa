@@ -20,17 +20,41 @@ class CorrectedampflagQAHandler(pqa.QAResultHandler):
     def handle(self, context, result):
         vis = result.inputs['vis']
         ms = context.observing_run.get_ms(vis)
+        scores = []
+        intents = result.inputs['intent'].split(',')
 
-        score = qacalc.linear_score_fraction_newly_flagged(
-            ms.basename, result.summaries, ms.basename)
-        new_origin = pqa.QAOrigin(
-            metric_name='CorrectedampflagQAHandler',
-            metric_score=score.origin.metric_score,
-            metric_units='Percentage of newly flagged data')
-        score.origin = new_origin
+        # Create a separate flagging score for each intent.
+        for intent in intents:
+            score = qacalc.linear_score_fraction_unflagged_newly_flagged_for_intent(
+                ms, result.summaries, intent)
+            new_origin = pqa.QAOrigin(
+                metric_name='CorrectedampflagQAHandler',
+                metric_score=score.origin.metric_score,
+                metric_units='Fraction of unflagged {} data newly '
+                             'flagged'.format(intent))
+            score.origin = new_origin
 
-        # Gather scores, store in result.
-        scores = [score]
+            scores.append(score)
+
+        # If multiple intents were present, create a combined score that
+        # is the multiplication of the individual intent flagging scores.
+        if len(scores) > 1:
+            combined_score = qacalc.score_multiply([score.score for score in scores])
+
+            longmsg = 'Combined flagging score: multiplication of flagging scores for individual intents.'
+            shortmsg = 'Combined flagging score'
+
+            new_origin = pqa.QAOrigin(
+                metric_name='CorrectedampflagQAHandler',
+                metric_score=bool(combined_score),
+                metric_units='Presence of combined score.')
+            combined_score.longmsg = longmsg
+            combined_score.shortmsg = shortmsg
+            combined_score.origin = new_origin
+
+            scores = [combined_score] + scores
+
+        # Store in result.
         result.qa.pool[:] = scores
 
         result.qa.all_unity_longmsg = 'No extra data was flagged in %s' % vis

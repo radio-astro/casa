@@ -98,6 +98,34 @@ def calc_flags_per_agent(summaries):
     return stats
 
 
+def calc_flags_for_scans_per_agent(summaries, scanids):
+    stats = []
+
+    # Go through summary for each agent.
+    for ind, summary in enumerate(summaries):
+        flagcount = 0
+        totalcount = 0
+
+        # Add up flagged and total from all scans.
+        for scanid in scanids:
+            if scanid in summary['scan']:
+                flagcount += int(summary['scan'][scanid]['flagged'])
+                totalcount += int(summary['scan'][scanid]['total'])
+
+        # From the second summary onwards, subtract counts from the previous
+        # one.
+        if ind > 0:
+            flagcount -= stats[ind-1].flagged
+
+        # Create agent stats object, append to output.
+        stat = AgentStats(name=summary['name'],
+                          flagged=flagcount,
+                          total=totalcount)
+        stats.append(stat)
+
+    return stats
+
+
 def linear_score(x, x1, x2, y1=0.0, y2=1.0):
     """
     Calculate the score for the given data value, assuming the
@@ -647,6 +675,58 @@ def linear_score_fraction_newly_flagged(filename, summaries, vis):
                           metric_units='Fraction of data that is newly flagged')
 
     return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg, vis=os.path.basename(vis), origin=origin)
+
+
+@log_qa
+def linear_score_fraction_unflagged_newly_flagged_for_intent(ms, summaries, intent):
+    """
+    Calculate a score for the flagging task based on the fraction of unflagged
+    data for scans belonging to specified intent that got newly flagged.
+
+    If no unflagged data was found in the before summary, then return a score
+    of 0.0.
+    """
+
+    # Identify scan IDs belonging to intent.
+    scanids = [str(scan.id) for scan in ms.get_scans(scan_intent=intent)]
+
+    # Calculate flags for scans belonging to intent.
+    agent_stats = calc_flags_for_scans_per_agent(summaries, scanids)
+
+    # Calculate counts of unflagged data.
+    unflaggedcount = agent_stats[0].total - agent_stats[0].flagged
+
+    # If the "before" summary had unflagged data, then proceed to compute
+    # the fraction fo unflagged data that got newly flagged.
+    if unflaggedcount > 0:
+        frac_flagged = reduce(operator.add,
+                              [float(s.flagged)/unflaggedcount for s in agent_stats[1:]], 0)
+
+        score = 1.0 - frac_flagged
+        percent = 100.0 * frac_flagged
+        longmsg = '{:0.2f}% of unflagged data with intent {} in {} was newly ' \
+                  'flagged.'.format(percent, intent, ms.basename)
+        shortmsg = '{:0.2f}% unflagged data flagged.'.format(percent)
+
+        origin = pqa.QAOrigin(metric_name='linear_score_fraction_unflagged_newly_flagged_for_intent',
+                              metric_score=frac_flagged,
+                              metric_units='Fraction of unflagged data for intent '
+                                           '{} that is newly flagged'.format(intent))
+    # If no unflagged data was found at the start, return score of 0.
+    else:
+        score = 0.0
+        longmsg = 'No unflagged data with intent {} found in {}.'.format(intent, ms.basename)
+        shortmsg = 'No unflagged data.'
+        origin = pqa.QAOrigin(metric_name='linear_score_fraction_unflagged_newly_flagged_for_intent',
+                              metric_score=False,
+                              metric_units='Presence of unflagged data.')
+
+    # Append extra warning to QA message if score falls at-or-below the "warning" threshold.
+    if score <= rutils.SCORE_THRESHOLD_WARNING:
+        longmsg += ' Please investigate!'
+        shortmsg += ' Please investigate!'
+
+    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg, vis=ms.basename, origin=origin)
 
 
 @log_qa
