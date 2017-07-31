@@ -134,21 +134,22 @@ class FlagDeterALMASingleDishResults(flagdeterbase.FlagDeterBaseResults):
         datatable.exportdata(minimal=False)
         
         # regenerate pointing plots
-        LOG.info('Regenerate pointing plots to update flag information')
-        for antenna in msobj.antennas:
-            for (target, reference) in msobj.calibration_strategy['field_strategy'].iteritems():
-                LOG.debug('target field id %s / reference field id %s'%(target,reference))
-                task = drawpointing.SingleDishPointingChart(context, msobj, antenna, 
-                                                            target_field_id=target,
-                                                            reference_field_id=reference,
-                                                            target_only=True)
-                task.plot(revise_plot=True)
-                task = drawpointing.SingleDishPointingChart(context, msobj, antenna, 
-                                                            target_field_id=target,
-                                                            reference_field_id=reference,
-                                                            target_only=False)
-                task.plot(revise_plot=True)
-        
+        if not basetask.DISABLE_WEBLOG:
+            LOG.info('Regenerate pointing plots to update flag information')
+            for antenna in msobj.antennas:
+                for (target, reference) in msobj.calibration_strategy['field_strategy'].iteritems():
+                    LOG.debug('target field id %s / reference field id %s'%(target,reference))
+                    task = drawpointing.SingleDishPointingChart(context, msobj, antenna, 
+                                                                target_field_id=target,
+                                                                reference_field_id=reference,
+                                                                target_only=True)
+                    task.plot(revise_plot=True)
+                    task = drawpointing.SingleDishPointingChart(context, msobj, antenna, 
+                                                                target_field_id=target,
+                                                                reference_field_id=reference,
+                                                                target_only=False)
+                    task.plot(revise_plot=True)
+            
 
 
 class FlagDeterALMASingleDish(flagdeterbase.FlagDeterBase):
