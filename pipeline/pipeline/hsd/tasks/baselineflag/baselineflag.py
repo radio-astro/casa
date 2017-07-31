@@ -317,11 +317,12 @@ class SDBLFlag(basetask.StandardTaskTemplate):
             flagging_results = self._executor.execute(flagging_task, merge=False)
             thresholds = flagging_results.outcome
             # Summary
-            renderer = SDBLFlagSummary(context, ms_list,
-                                       antenna_list, fieldid_list, spwid_list,
-                                       pols_list, thresholds, flag_rule)
-            result = self._executor.execute(renderer, merge=False)
-            flagResult += result
+            if not basetask.DISABLE_WEBLOG:
+                renderer = SDBLFlagSummary(context, ms_list,
+                                           antenna_list, fieldid_list, spwid_list,
+                                           pols_list, thresholds, flag_rule)
+                result = self._executor.execute(renderer, merge=False)
+                flagResult += result
             
         # Calculate flag fraction after operation.
         flagdata_summary_job = casa_tasks.flagdata(vis=bl_name, mode='summary',
