@@ -1,5 +1,6 @@
 from __future__ import absolute_import
 
+import os
 import types
 
 import pipeline.infrastructure as infrastructure
@@ -18,12 +19,12 @@ LOG = infrastructure.get_logger(__name__)
 class TimeGaincalInputs(gaincalmode.GaincalModeInputs):
     @basetask.log_equivalent_CASA_call
     def __init__(self, context, mode=None, calamptable=None,
-                 calphasetable=None, amptable=None, targetphasetable=None,
+                 calphasetable=None, offsetstable=None, amptable=None, targetphasetable=None,
                  calsolint=None, targetsolint=None, calminsnr=None,
                  targetminsnr=None, **parameters):
         super(TimeGaincalInputs, self).__init__(context, mode='gtype',
                                                 calamptable=calamptable, calphasetable=calphasetable,
-                                                amptable=amptable, targetphasetable=targetphasetable,
+                                                offsetstable=offsetstable, amptable=amptable, targetphasetable=targetphasetable,
                                                 calsolint=calsolint, targetsolint=targetsolint,
                                                 calminsnr=calminsnr, targetminsnr=targetminsnr,
                                                 **parameters)
@@ -78,6 +79,23 @@ class TimeGaincalInputs(gaincalmode.GaincalModeInputs):
     @targetphasetable.setter
     def targetphasetable(self, value):
         self._targetphasetable = value
+
+    @property
+    def offsetstable(self):
+        # The value of caltable is ms-dependent, so test for multiple
+        # measurement sets and listify the results if necessary
+
+        if self._offsetstable is not None:
+            return self._offsetstable
+
+        if type(self.vis) is types.ListType:
+            return self._handle_multiple_vis('offsetstable')
+
+        return gcaltable.GaincalCaltable()
+
+    @offsetstable.setter
+    def offsetstable(self, value):
+        self._offsetstable = value
 
     @property
     def amptable(self):
@@ -175,7 +193,7 @@ class TimeGaincal(gaincalworker.GaincalWorker):
 
         # Compute the science target phase solution
         targetphaseresult = self._do_scitarget_phasecal(solint=inputs.targetsolint,
-                                                        gaintype=phase_gaintype, combine=phase_combine)
+            gaintype=phase_gaintype, combine=phase_combine)
 
         # Readjust to the true calto.intent
         targetphaseresult.pool[0].calto.intent = 'PHASE,CHECK,TARGET'
@@ -198,7 +216,7 @@ class TimeGaincal(gaincalworker.GaincalWorker):
 
         # Compute the calibrator target phase solution
         calphaseresult = self._do_caltarget_phasecal(solint=phase_calsolint,
-                                                     gaintype=phase_gaintype, combine=phase_combine)
+            gaintype=phase_gaintype, combine=phase_combine)
 
         # CalFroms are immutable, so we must replace them with a new one
         self._mod_last_calwt(calphaseresult.pool[0], False)
@@ -212,6 +230,20 @@ class TimeGaincal(gaincalworker.GaincalWorker):
 
         # Do a local merge of this result.
         calphaseresult.accept(inputs.context)
+
+        # Compute an spw mapping diagnostic table which preapplies the
+        # previous table phase table if any spw mapping was done
+        # Compute it for maps including the default map
+        #     The solution interval is set to 'inf'
+        #     The gaintype 'T' or 'G' is set to the gaintype of the parent phase table
+        #     Spw combine is off
+        #     Unique name generated internally
+        #if phaseup_spwmap:
+        phaseoffsetresult = self._do_offsets_phasecal(solint='inf',
+            gaintype=phase_gaintype, combine='')
+        result.phaseoffsetresult = phaseoffsetresult
+        #else:
+            #result.phaseoffsetresult = None
 
         # Readjust to the true calto.intent
         calphaseresult.pool[0].calto.intent = 'AMPLITUDE,BANDPASS'
@@ -268,6 +300,38 @@ class TimeGaincal(gaincalworker.GaincalWorker):
         }
         task_inputs = gtypegaincal.GTypeGaincalInputs(inputs.context,
                                                       **task_args)
+
+        gaincal_task = gtypegaincal.GTypeGaincal(task_inputs)
+        result = self._executor.execute(gaincal_task)
+
+        return result
+
+    # Used to compute spw mapping diagnostic table
+    def _do_offsets_phasecal(self, solint=None, gaintype=None, combine=None):
+        inputs = self.inputs
+
+        task_args = {
+            'output_dir'  : inputs.output_dir,
+            'vis'         : inputs.vis,
+            'caltable'    : inputs.offsetstable,
+            'field'       : inputs.field,
+            'intent'      : inputs.intent,
+            'spw'         : inputs.spw,
+            'solint'      : solint,
+            'gaintype'    : gaintype,
+            'calmode'     : 'p',
+            'minsnr'      : inputs.calminsnr,
+            'combine'     : combine,
+            'refant'      : inputs.refant,
+            'minblperant' : inputs.minblperant,
+            'solnorm'     : inputs.solnorm
+        }
+
+        task_inputs = gtypegaincal.GTypeGaincalInputs(inputs.context,
+                                                      **task_args)
+        # Create a unique table nmae
+        root, ext = os.path.splitext(task_inputs.caltable)
+        task_inputs.caltable = '{!s}.{!s}{!s}'.format(root, 'offsets', ext)
 
         gaincal_task = gtypegaincal.GTypeGaincal(task_inputs)
         result = self._executor.execute(gaincal_task)
