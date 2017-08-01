@@ -20,7 +20,7 @@
     </param>
 
     <param type="any" name="swpow_spw" subparam="true">
-        <description>Spectral-window/frequency/channel: '' ==&gt; all, spw="6,14"</description>
+        <description>swpow_spw – Spectral-window(s) for plotting: '' ==>all, spw='6,14'</description>
         <any type="variant" limittypes="string stringArray" />
         <value type="string" />
     </param>
