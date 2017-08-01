@@ -28,6 +28,11 @@ Previous calibrations are applied on the fly.
 	<value type="string"></value>
    </param>
 
+   <param type="stringArray" name="offsetstable" subparam="true">
+	<description>List of diagnostic output phase offset caltables for calibrator targets</description>
+	<value type="string"></value>
+   </param>
+
    <param type="stringArray" name="calphasetable" subparam="true">
 	<description>List of output phase caltables for calibrator targets</description>
 	<value type="string"></value>
@@ -136,6 +141,7 @@ Previous calibrations are applied on the fly.
 	    <equals type="string" value="interactive">
 	        <default param="vis"><value type="stringArray"></value></default>
 	        <default param="calamptable"><value type="stringArray"></value></default>
+	        <default param="offsetstable"><value type="stringArray"></value></default>
 	        <default param="calphasetable"><value type="stringArray"></value></default>
 	        <default param="targetphasetable"><value type="stringArray"></value></default>
 	        <default param="amptable"><value type="stringArray"></value></default>
@@ -152,6 +158,7 @@ Previous calibrations are applied on the fly.
 	    <equals type="string" value="getinputs">
 	        <default param="vis"><value type="stringArray"></value></default>
 	        <default param="calamptable"><value type="stringArray"></value></default>
+	        <default param="offsetstable"><value type="stringArray"></value></default>
 	        <default param="calphasetable"><value type="stringArray"></value></default>
 	        <default param="targetphasetable"><value type="stringArray"></value></default>
 	        <default param="amptable"><value type="stringArray"></value></default>
@@ -227,6 +234,12 @@ calamptable -- The list of output diagnostic calibration amplitude tables for th
     Defaults to the standard pipeline naming convention.
     default: ''
     example: ['M82.gacal', 'M82B.gacal']
+
+offsetstable -- The list of output diagnostic phase offset tables for the
+    calibration targets.
+    Defaults to the standard pipeline naming convention.
+    default: ''
+    example: ['M82.offsets.gacal', 'M82B.offsets.gacal']
 
 calphasetable -- The list of output calibration phase tables for the
     calibration targets.
