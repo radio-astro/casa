@@ -74,13 +74,34 @@ class PlotDataStorage(object):
             
 class BaselineSubtractionPlotManager(object):
     @staticmethod
-    def generate_plot_table(ms_id, antenna_id, spw_id, polarization_ids, grid_table):
-        def _filter(msid, ant, spw, pols, table):
-            for row in table:
-                if row[0] == spw and row[1] in pols:
-                    new_row_entry = row[2:6] + [numpy.fromiter((r[3] for r in row[6] if r[-1] == msid and r[-2] == ant), dtype=int)]
-                    yield new_row_entry
-        new_table = list(_filter(ms_id, antenna_id, spw_id, polarization_ids, grid_table))
+    def _generate_plot_meta_table(spw_id, polarization_ids, grid_table):
+        for row in grid_table:
+            if row[0] == spw_id and row[1] in polarization_ids:
+                new_row_entry = row[2:6]
+                yield new_row_entry
+                    
+    @staticmethod
+    def generate_plot_meta_table(spw_id, polarization_ids, grid_table):
+        new_table = list(BaselineSubtractionPlotManager._generate_plot_meta_table(spw_id, 
+                                                                                  polarization_ids, 
+                                                                                  grid_table))
+        return new_table
+    
+    @staticmethod
+    def _generate_plot_rowlist(ms_id, antenna_id, spw_id, polarization_ids, grid_table):
+        for row in grid_table:
+            if row[0] == spw_id and row[1] in polarization_ids:
+                new_row_entry = numpy.fromiter((r[3] for r in row[6] if r[-1] == ms_id and r[-2] == antenna_id), 
+                                               dtype=int)
+                yield new_row_entry
+                    
+    @staticmethod
+    def generate_plot_rowlist(ms_id, antenna_id, spw_id, polarization_ids, grid_table):
+        new_table = list(BaselineSubtractionPlotManager._generate_plot_rowlist(ms_id, 
+                                                                               antenna_id, 
+                                                                               spw_id, 
+                                                                               polarization_ids, 
+                                                                               grid_table))
         return new_table
     
     def __init__(self, context, datatable):
@@ -141,11 +162,9 @@ class BaselineSubtractionPlotManager(object):
         self.field_id = field_id
         self.antenna_id = antenna_id
         self.spw_id = spw_id
-        ms_id = self.context.observing_run.measurement_sets.index(self.ms)
         data_desc = self.ms.get_data_description(spw=spw_id)
         num_pol = data_desc.num_polarizations
         self.pol_list = numpy.arange(num_pol, dtype=int)
-        self.plot_table = self.generate_plot_table(ms_id, antenna_id, spw_id, self.pol_list, grid_table)
 
         source_name = self.ms.fields[self.field_id].source.name.replace(' ', '_').replace('/','_')
         LOG.debug('Generating plots for source {} ant {} spw {}',
@@ -167,7 +186,7 @@ class BaselineSubtractionPlotManager(object):
         else:
             atm_transmission = None
             atm_freq = None
-        plot_list = self.plot_profile_map_with_fit(prefit_prefix, postfit_prefix, 
+        plot_list = self.plot_profile_map_with_fit(prefit_prefix, postfit_prefix, grid_table,
                                                    deviation_mask, line_range,
                                                    atm_transmission, atm_freq)
         ret = []
@@ -196,7 +215,7 @@ class BaselineSubtractionPlotManager(object):
                     del plot
         return ret
     
-    def plot_profile_map_with_fit(self, prefit_figfile_prefix, postfit_figfile_prefix, 
+    def plot_profile_map_with_fit(self, prefit_figfile_prefix, postfit_figfile_prefix, grid_table,
                                   deviation_mask, line_range, atm_transmission, atm_frequency):
         """
         plot_table format:
@@ -205,16 +224,22 @@ class BaselineSubtractionPlotManager(object):
          ...]
         """
         ms = self.ms
+        ms_id = self.context.observing_run.measurement_sets.index(ms)
         antid = self.antenna_id
         spwid = self.spw_id
-        plot_table = self.plot_table
+        polids = self.pol_list
         prefit_data = self.prefit_data
         postfit_data = self.postfit_data
         rowmap = self.rowmap
         
         dtrows = self.datatable.getcol('ROW')
     
-        num_ra, num_dec, num_plane, refpix, refval, increment, rowlist = analyze_plot_table(self.datatable, dtrows, ms, antid, spwid, plot_table)
+        num_ra, num_dec, num_plane, refpix, refval, increment, rowlist = analyze_plot_table(ms, 
+                                                                                            ms_id,
+                                                                                            antid, 
+                                                                                            spwid, 
+                                                                                            polids,
+                                                                                            grid_table)
             
         plotter = self.pool.create_plotter(num_ra, num_dec, num_plane, refpix, refval, increment)
         LOG.info('vis {} ant {} spw {} plotter figure id {} has {} axes', ms.basename, antid, spwid, plotter.axes.figure_id, len(plotter.axes.figure.axes))
@@ -305,8 +330,16 @@ class BaselineSubtractionPlotManager(object):
         return plot_list
         
 #@utils.profiler
-def analyze_plot_table(datatable, dtrows, ms, antid, spwid, plot_table):
-    #datatable = context.observing_run.datatable_instance
+def analyze_plot_table(ms, ms_id, antid, spwid, polids, grid_table):
+    # plot table is separated into two parts: meta data part and row list part
+    plot_table = BaselineSubtractionPlotManager.generate_plot_meta_table(spwid, 
+                                                                         polids, 
+                                                                         grid_table)
+    grid_rowlist = BaselineSubtractionPlotManager._generate_plot_rowlist(ms_id, 
+                                                                         antid, 
+                                                                         spwid, 
+                                                                         polids, 
+                                                                         grid_table)
     num_rows = len(plot_table) # num_plane * num_ra * num_dec
     num_dec = plot_table[-1][1] + 1
     num_ra = plot_table[-1][0] + 1
@@ -318,16 +351,16 @@ def analyze_plot_table(datatable, dtrows, ms, antid, spwid, plot_table):
     for row_index, each_plane in enumerate(each_grid):
         def g():
             for plot_table_rowid in each_plane:
-                plot_table_row = plot_table[plot_table_rowid]
+                plot_table_row = grid_rowlist.next()
                 LOG.debug('Process row {}: ra={}, dec={}',
-                          plot_table_rowid, plot_table_row[2],
-                          plot_table_row[3])
-                for i in plot_table_row[-1]:
+                          plot_table_rowid, plot_table[plot_table_rowid][2],
+                          plot_table[plot_table_rowid][3])
+                for i in plot_table_row:
                     # MS stores multiple polarization components in one cell 
                     # so it is not necessary to check polarization id
                     LOG.trace('Adding {} to dataids', i)
                     yield i
-        dataids = numpy.fromiter(g(), dtype=int)
+        dataids = numpy.fromiter(g(), dtype=numpy.int64)
         if len(dataids) > 0:
             midx = median_index(dataids)
         else:
