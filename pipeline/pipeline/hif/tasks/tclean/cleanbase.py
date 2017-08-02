@@ -504,7 +504,9 @@ def set_miscinfo(name, spw=None, field=None, type=None, iter=None, multiterm=Non
             if field:
                 # TODO: Find common key calculation. Long VLASS lists cause trouble downstream.
                 #       Truncated list may cause duplicates.
-                info['field'] = field.split(',')[0]
+                #       Temporarily (?) remove any '"' characters
+                tmpfield = field.split(',')[0].replace('"', '')
+                info['field'] = tmpfield
             if type:
                 info['type'] = type
             if iter is not None:
