@@ -109,7 +109,8 @@ def do_bandpass(vis, caltable, context=None, RefAntOutput=None, spw=None, ktypec
     m = context.observing_run.get_ms(vis)
     bandpass_field_select_string = context.evla['msinfo'][m.name].bandpass_field_select_string
     bandpass_scan_select_string = context.evla['msinfo'][m.name].bandpass_scan_select_string
-    minBL_for_cal = max(3,int(len(m.antennas)/2.0))
+    #minBL_for_cal = max(3,int(len(m.antennas)/2.0))
+    minBL_for_cal = m.vla_minbaselineforcal()
 
     BPGainTables = list(context.callibrary.active.get_caltable())
     BPGainTables.append(ktypecaltable)
