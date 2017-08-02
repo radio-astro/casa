@@ -41,8 +41,9 @@ class CorrectedampflagQAHandler(pqa.QAResultHandler):
         if len(scores) > 1:
             combined_score = qacalc.score_multiply([score.score for score in scores])
 
-            longmsg = 'Combined flagging score: multiplication of flagging scores for individual intents.'
-            shortmsg = 'Combined flagging score'
+            longmsg = 'Combined flagging score for {}: multiplication of '\
+                      'flagging scores for individual intents.'.format(ms.basename)
+            shortmsg = 'Combined flagging score {}'.format(ms.basename)
 
             new_origin = pqa.QAOrigin(
                 metric_name='CorrectedampflagQAHandler',
