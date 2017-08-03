@@ -202,7 +202,7 @@ def get_plot_command_markup(ctx, command):
 
 
 def format_shortmsg(pqascore):
-    if pqascore.score >= SCORE_THRESHOLD_SUBOPTIMAL:
+    if pqascore.score > SCORE_THRESHOLD_SUBOPTIMAL:
         return ''
     else:
         return pqascore.shortmsg
