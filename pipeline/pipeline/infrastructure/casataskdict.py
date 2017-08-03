@@ -223,7 +223,7 @@ CASA_COMMANDS_PROLOGUE = (
 
 TASK_COMMENTS = {
     (h_tasks.ImportData,
-     hifa_tasks.ALMAImportData, 
+     hifa_tasks.ALMAImportData,
      hifv_tasks.VLAImportData,
      hsd_tasks.SDImportData,): (
         'If required, ASDMs are converted to measurement sets.'
@@ -239,11 +239,15 @@ TASK_COMMENTS = {
         'calibrator before the bandpass is calculated.'
     ),
     (hifa_tasks.ALMABandpassflag,): (
-        'The spectral response of each antenna is calibrated. A short-solint '
-        'phase gain is calculated to remove decorrelation of the bandpass '
-        'calibrator before the bandpass is calculated. Outliers are flagged '
-        'based on a comparison of the calibrated (corrected) amplitudes with '
-        'the model amplitudes for the bandpass calibrator source.'
+        'This task performs a preliminary bandpass solution and applies it, '
+        'then calls hif_correctedampflag to evaluate the flagging heuristics, '
+        'looking for outlier visibility points by statistically examining '
+        'the scalar difference of the corrected amplitudes minus model '
+        'amplitudes, flagging those outliers, and then deriving a final '
+        'bandpass solution (if any flags were generated). The philosophy is '
+        'that only outlier data points that have remained outliers after '
+        'calibration will be flagged. Note that the phase of the data is not '
+        'assessed.'
     ),
     (hifa_tasks.BpSolint,): (
         'Compute the best per spw bandpass solution intervals.'
@@ -297,10 +301,10 @@ TASK_COMMENTS = {
         'solution.'
     ),
     (hif_tasks.Correctedampflag,): (
-        'This task identifies baselines and antennas with a significant '
-        'fraction of outlier integrations, based on a comparison of the '
-        'calibrated (corrected) amplitudes with the model amplitudes for one '
-        'or more specified calibrator sources.'
+        'This task identifies, for one or more specified calibrator source '
+        'intents, baselines and antennas with a significant fraction of '
+        'outlier integrations, by statistically examining the scalar '
+        'difference of the corrected amplitudes minus model amplitudes.'
     ),
     (hif_tasks.Setjy,): (
         'If the amplitude calibrator is a resolved solar system source, this '
@@ -322,10 +326,11 @@ TASK_COMMENTS = {
         'sources.'
     ),
     (hifa_tasks.Gfluxscaleflag,): (
-        'The absolute flux calibration is transferred to secondary calibrator '
-        'sources. Outliers are flagged based on a comparison of the '
-        'calibrated (corrected) amplitudes with the model amplitudes for the '
-        'amplitude and phase calibrator sources.'
+        'This task calls hif_correctedampflag to evaluate flagging heuristics '
+        'on the phase calibrator and flux calibrator, looking for outlier '
+        'visibility points by statistically examining the scalar difference '
+        'of corrected amplitudes minus model amplitudes, and flagging those '
+        'outliers.'
     ),
     (hifa_tasks.TimeGaincal,): (
         'Time dependent gain calibrations are computed. '

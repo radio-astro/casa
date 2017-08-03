@@ -325,25 +325,6 @@ class Correctedampflag(basetask.StandardTaskTemplate):
         ncorrs = len(commonhelpermethods.get_corr_products(ms, spwid))
 
         # Read in data from MS.
-        #
-        # TODO: compare data selection approaches:
-        #
-        # Option 1 (used by Todd):
-        #
-        # with casatools.MSMDReader(ms.name) as openmsmd:
-        #     scans = openmsmd.scansforintent('*'+inputs.intent+'*')
-        #     scans_string = ','.join([str(scan) for scan in scans])
-        #
-        # with casatools.MSReader(ms.name) as openms:
-        #     try:
-        #         # Select data for current field, intent, spw.
-        #         openms.msselect({'field': fieldid,
-        #                          'intent': str(inputs.intent),
-        #                          'spw': str(spwid),
-        #                          'scan': scans_string})
-        #
-        # Option 2:
-        #
         LOG.info(
             'Reading data for intent {}, field {}, and spw '
             '{}'.format(intent, field, spwid))
@@ -402,7 +383,6 @@ class Correctedampflag(basetask.StandardTaskTemplate):
             n_time_with_highsig_thresh_frac = tmantint * len(np.unique(time))
             n_time_with_highsig_max = np.max([n_time_with_highsig_thresh_min, n_time_with_highsig_thresh_frac])
 
-            # TODO: equivalent to line 406  (remove before final commit)
             # Select for non-flagged data and non-NaN data.
             id_nonbad = np.where(np.logical_and(
                 np.logical_not(flag),
@@ -411,9 +391,6 @@ class Correctedampflag(basetask.StandardTaskTemplate):
             time_sel = time[id_nonbad]
             ant1_sel = ant1[id_nonbad]
             ant2_sel = ant2[id_nonbad]
-
-            # TODO: check whether an empty selection from this point on would
-            # be handled correctly.
 
             # Compute the median. Assuming the distribution is normal,
             # compute a robust estimate of the standard deviation as
@@ -491,7 +468,6 @@ class Correctedampflag(basetask.StandardTaskTemplate):
                     cmetric_sel < (med - mad * antveryhighsig),
                     cmetric_sel > (med + mad * antveryhighsig)))[0]
 
-            # TODO: equivalent to line 467  (remove before final commit)
             # If outliers were found and checking for positive outliers...
             if len(id_highsig) > 0 and tmantint > 0:
                 # Check whether the outliers were concentrated in only one or a small
@@ -513,7 +489,6 @@ class Correctedampflag(basetask.StandardTaskTemplate):
                 # If all outliers were concentrated within a small number of
                 # timestamps set by a threshold, then evaluate the antenna
                 # based heuristics for those timestamps.
-                # TODO: equivalent to line 485  (remove before final commit)
                 if 0 < len(time_sel_highsig_uniq) <= n_time_with_highsig_max:
                     newflags = self.evaluate_antbased_heuristics(
                         ms, spwid, intent, icorr, field, newflags,
@@ -554,7 +529,6 @@ class Correctedampflag(basetask.StandardTaskTemplate):
             #  Each of these baselines are flagged for all timestamps.
             #
 
-            # TODO: equivalent to line 531  (remove before final commit)
             # If requested, identify both positive and negative
             # outliers, otherwise just identify positive outliers; also
             # select for non-flagged and non-NaN data.
@@ -573,7 +547,6 @@ class Correctedampflag(basetask.StandardTaskTemplate):
 
             # Proceed if outliers were found...
             if len(id_flagsig) > 0:
-                # TODO: equivalent to line 570  (remove before final commit)
                 # Identify baselines involved in each baseline/timestamp
                 # outlier; this list may contain multiples of the same
                 # baseline when it was an outlier in more than one
@@ -600,7 +573,6 @@ class Correctedampflag(basetask.StandardTaskTemplate):
                 # be a part of.
                 tmint_scaled = inputs.tmint * thresh_scale_factor
 
-                # TODO: equivalent to line 563  (remove before final commit)
                 # Identify "bad baselines" as those baselines whose number
                 # of timestamps with outliers exceeds the threshold.
                 bad_bls = [bl for bl, count in outlier_bl_counts.items()
@@ -621,7 +593,6 @@ class Correctedampflag(basetask.StandardTaskTemplate):
                     tmbl_minbadnr,
                     inputs.tmbl * thresh_scale_factor * (nants - 1))
 
-                # TODO: equivalent to line 579  (remove before final commit)
                 # Identify "bad antennas" as those antennas involved in a number of
                 # "bad baselines" that exceeds the threshold.
                 bad_ants = [ant for ant, count in enumerate(ant_in_bad_bl_count)
@@ -654,7 +625,6 @@ class Correctedampflag(basetask.StandardTaskTemplate):
                     bl: float(outlier_bl_counts[bl]) / bl_counts[bl]
                     for bl in bad_bls}
 
-                # TODO: equivalent to line 674  (remove before final commit)
                 # For each bad baseline, check if it was already covered by
                 # one of the bad antennas, and otherwise flag it explicitly
                 # if the fraction of outlier timestamps for this baseline
