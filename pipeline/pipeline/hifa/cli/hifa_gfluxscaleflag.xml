@@ -77,7 +77,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
     <param type="string" name="tmint" subparam="true">
         <description>Initial threshold for maximum fraction of "outlier timestamps" over "total timestamps" that a baseline may be a part of</description>
-        <value>0.09</value>
+        <value>0.085</value>
     </param>
 
     <param type="string" name="tmbl" subparam="true">
@@ -87,7 +87,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
     <param type="string" name="antblnegsig" subparam="true">
         <description>Lower sigma threshold for identifying outliers as a result of "bad baselines" and/or "bad antennas" within baselines (across all timestamps)</description>
-        <value>3.7</value>
+        <value>3.4</value>
     </param>
 
     <param type="string" name="antblpossig" subparam="true">
@@ -132,9 +132,9 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                 <default param="antnegsig"><value>4.0</value></default>
                 <default param="antpossig"><value>4.6</value></default>
                 <default param="tmantint"><value>0.063</value></default>
-                <default param="tmint"><value>0.09</value></default>
+                <default param="tmint"><value>0.085</value></default>
                 <default param="tmbl"><value>0.175</value></default>
-                <default param="antblnegsig"><value>3.7</value></default>
+                <default param="antblnegsig"><value>3.4</value></default>
                 <default param="antblpossig"><value>3.2</value></default>
                 <default param="relaxed_factor"><value>2.0</value></default>
                 <default param="dryrun"><value type="bool">False</value></default>
@@ -207,7 +207,7 @@ tmantint -- Threshold for maximum fraction of timestamps that are allowed to
 
 tmint -- Initial threshold for maximum fraction of "outlier timestamps" over
     "total timestamps" that a baseline may be a part of.
-    default: 0.09
+    default: 0.085
 
 tmbl -- Initial threshold for maximum fraction of "bad baselines" over "all
     baselines" that an antenna may be a part of.
@@ -216,7 +216,7 @@ tmbl -- Initial threshold for maximum fraction of "bad baselines" over "all
 antblnegsig -- Lower sigma threshold for identifying outliers as a result of
     "bad baselines" and/or "bad antennas" within baselines, across all
     timestamps.
-    default: 3.7
+    default: 3.4
 
 antblpossig -- Upper sigma threshold for identifying outliers as a result of
     "bad baselines" and/or "bad antennas" within baselines, across all

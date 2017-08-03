@@ -47,7 +47,7 @@ class BandpassflagInputs(bandpass.ALMAPhcorBandpass.Inputs):
     # Initial threshold for maximum fraction of "outlier timestamps" over
     # "total timestamps" that a baseline may be a part of; equivalent to:
     # tooManyIntegrationsFraction
-    tmint = basetask.property_with_default('tmint', 0.09)
+    tmint = basetask.property_with_default('tmint', 0.085)
 
     # Initial threshold for maximum fraction of "bad baselines" over "all
     # baselines" that an antenna may be a part of; equivalent to:
@@ -58,7 +58,7 @@ class BandpassflagInputs(bandpass.ALMAPhcorBandpass.Inputs):
     # baselines" and/or "bad antennas" within baselines (across all
     # timestamps); equivalent to:
     # catchNegativeOutliers['scalardiff']
-    antblnegsig = basetask.property_with_default('antblnegsig', 3.7)
+    antblnegsig = basetask.property_with_default('antblnegsig', 3.4)
 
     # Upper sigma threshold for identifying outliers as a result of "bad
     # baselines" and/or "bad antennas" within baselines (across all

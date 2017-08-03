@@ -199,7 +199,7 @@ class GfluxscaleflagInputs(basetask.StandardInputs):
     @tmint.setter
     def tmint(self, value):
         if value is None:
-            value = 0.09
+            value = 0.085
         self._tmint = value
 
     # Initial threshold for maximum fraction of "bad baselines" over "all
@@ -224,7 +224,7 @@ class GfluxscaleflagInputs(basetask.StandardInputs):
     @antblnegsig.setter
     def antblnegsig(self, value):
         if value is None:
-            value = 3.7
+            value = 3.4
         self._antblnegsig = value
 
     # Upper sigma threshold for identifying outliers as a result of "bad
