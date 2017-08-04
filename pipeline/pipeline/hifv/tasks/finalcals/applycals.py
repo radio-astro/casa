@@ -97,9 +97,6 @@ class Applycals(applycal.IFApplycal):
 
         jobs = []
 
-        import pdb
-        pdb.set_trace()
-
         for gainfield, scanlist in applycalgroups.iteritems():
             for calto, calfroms in merged.items():
                 # if there's nothing to apply for this data selection, continue
