@@ -51,7 +51,7 @@ def version(showfile=True):
     """
     Returns the CVS revision number.
     """
-    myversion = "$Id: findContinuum.py,v 1.166 2017/07/28 14:21:56 thunter Exp $" 
+    myversion = "$Id: findContinuum.py,v 1.167 2017/08/04 12:40:52 thunter Exp $" 
     if (showfile):
         print "Loaded from %s" % (__file__)
     return myversion
@@ -449,7 +449,6 @@ def findContinuum(img='', spw='', transition='', baselineModeA='min', baselineMo
         return
     selection, mypng, slope, channelWidth, nchan, useLowBaseline = result
     if png == '':
-        print "************ a) png passed into initial call was blank"
         png = mypng
     mytest = False
     if (centralArcsec == 'auto' and img != '' and len(selection.split(separator)) < 2):
@@ -1205,7 +1204,8 @@ def runFindContinuum(img='', spw='', transition='', baselineModeA='min', baselin
     minBWFraction = 0.3
     if (selectedChannels > channelFractionForSlopeRemoval*nchan or 
         (selectedChannels > 0.4*nchan and selections==2) or 
-        (largestGroup>nchan*minBWFraction and selections <= maxSelections and 
+        # fix for project 00956 spw 25 is to put lower bound of 1 < selections:
+        (largestGroup>nchan*minBWFraction and 1 < selections <= maxSelections and 
          channelFractionForSlopeRemoval<1)):
         previousResult = continuumChannels,selection,threshold,median,groups,correctionFactor,medianTrue,mad,medianCorrectionFactor,negativeThreshold,lineStrengthFactor,singleChannelPeaksAboveSFC,allGroupsAboveSFC        
         # remove linear slope from mean spectrum and run it again
