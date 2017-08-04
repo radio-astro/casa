@@ -7,7 +7,7 @@ import pipeline.h.cli.utils as utils
 
 def hifv_applycals(vis=None, field=None, intent=None, spw=None, antenna=None,
     applymode=None, calwt=None, flagbackup=None, flagsum=None,
-    flagdetailedsum=None, pipelinemode=None, dryrun=None, acceptresults=None):
+    flagdetailedsum=None, gainmap=None, pipelinemode=None, dryrun=None, acceptresults=None):
 
     # create a dictionary containing all the arguments given in the
     # constructor

@@ -68,6 +68,11 @@
 	<value type="bool">True</value>
     </param>
 
+    <param type="bool" name="gainmap" subparam="true">
+	<description>Mode to map gainfields to scans.</description>
+	<value>False</value>
+    </param>
+
     <param type="string" name="pipelinemode">
 	<description>The pipeline operating mode</description>
 	<value>automatic</value>
@@ -156,6 +161,9 @@ flagsum -- Compute before and after flagging statistics summaries.
 flagdetailedsum -- Compute detailed before and after flagging statistics summaries
    if flagsum is True.
    default: True
+
+gainmap -- Mode to map gainfields to a particular list of scans
+    default: False
 
 pipelinemode -- The pipeline operating mode. In 'automatic' mode the pipeline
    determines the values of all context defined pipeline inputs automatically.
