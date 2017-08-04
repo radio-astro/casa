@@ -35,9 +35,12 @@ class BandpassflagQAHandler(pqa.QAResultHandler):
              result.bpresult.qa.representative.score])
 
         # Update score.
-        longmsg = 'Combined score: multiplication of flagging score {:0.2f} and bandpass score {:0.2f}'.format(
-            result.cafresult.qa.representative.score, result.bpresult.qa.representative.score)
-        shortmsg = 'Combined score'
+        longmsg = 'Combined score for {}: multiplication of flagging score '\
+                  '{:0.2f} and bandpass score '\
+                  '{:0.2f}.'.format(ms.basename,
+                                    result.cafresult.qa.representative.score,
+                                    result.bpresult.qa.representative.score)
+        shortmsg = 'Combined score {}'.format(ms.basename)
         new_origin = pqa.QAOrigin(
             metric_name='BandpassflagQAHandler',
             metric_score=bool(score),
