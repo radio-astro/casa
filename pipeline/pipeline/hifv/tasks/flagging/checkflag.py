@@ -105,13 +105,20 @@ class Checkflag(basetask.StandardTaskTemplate):
                 extendflag_result = self._do_extendflag(field=fieldselect,
                                                         scan=scanselect)
 
-            for correlation in ['REAL_RR', 'REAL_LL']:
+            datacolumn = 'residual'
+            corrlist = ['REAL_RR', 'REAL_LL']
+
+            if self.inputs.checkflagmode in ('allcals','target'):
+                datacolumn = 'corrected'
+                corrlist = ['ABS_RR', 'ABS_LL']
+
+            for correlation in corrlist:
                 method_args = {'mode': 'rflag',
                                'field': fieldselect,
                                'correlation': correlation,
                                'scan': scanselect,
                                'ntime': 'scan',
-                               'datacolumn': 'residual',
+                               'datacolumn': datacolumn,
                                'flagbackup': True,
                                'timedevscale' : timedevscale,
                                'freqdevscale' : freqdevscale}
