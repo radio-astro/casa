@@ -40,7 +40,7 @@ weblog.add_renderer(FlagBadDeformatters,
 
 weblog.add_renderer(Checkflag,
                     basetemplates.T2_4MDetailsDefaultRenderer(uri='checkflag.mako',
-                                                              description='Flag possible RFI on BP calibrator using rflag'),
+                                                              description='Flag possible RFI using rflag and tfcrop'),
                     group_by=weblog.UNGROUPED)
 
 # weblog.add_renderer(Targetflag, renderer.T2_4MDetailstargetflagRenderer(), group_by=weblog.UNGROUPED)

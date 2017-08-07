@@ -119,7 +119,7 @@ class Checkflag(basetask.StandardTaskTemplate):
                                'scan': scanselect,
                                'ntime': 'scan',
                                'datacolumn': datacolumn,
-                               'flagbackup': True,
+                               'flagbackup': False,
                                'timedevscale' : timedevscale,
                                'freqdevscale' : freqdevscale}
 
@@ -136,7 +136,7 @@ class Checkflag(basetask.StandardTaskTemplate):
                                    'scan':scanselect,
                                    'ntime': tint,
                                    'datacolumn': 'corrected',
-                                   'flagbackup': True}
+                                   'flagbackup': False}
 
                     tfcrop_result = self._do_tfcropflag(**method_args)
 
@@ -150,7 +150,7 @@ class Checkflag(basetask.StandardTaskTemplate):
                                'scan': scanselect,
                                'ntime': tint,
                                'datacolumn': 'corrected',
-                               'flagbackup': True}
+                               'flagbackup': False}
 
                 tfcrop_result = self._do_tfcropflag(**method_args)
 
@@ -166,7 +166,7 @@ class Checkflag(basetask.StandardTaskTemplate):
                                    'scan': scanselect,
                                    'ntime': tint,
                                    'datacolumn': 'corrected',
-                                   'flagbackup': True}
+                                   'flagbackup': False}
 
                     tfcrop_result = self._do_tfcropflag(**method_args)
 
