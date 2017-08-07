@@ -111,6 +111,10 @@ class VLAImportData(importdata.ImportData):
 
         myresults.origin = results.origin
 
+        for ms in myresults.origin:
+            if myresults.origin[ms] == 'ASDM':
+                myresults.origin[ms] = 'SDM'
+
         return myresults
 
     def _do_importasdm(self, asdm):
