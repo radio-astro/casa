@@ -129,7 +129,7 @@ def read_fluxes_db(ms):
             # Filter for problem values.
             #    If there are problem values revert to the ASDM values
 
-            if float(f) == 0.0 or str(f) == 'Infinity' or str(spix) == '-1000':
+            if float(f) <= 0.0 or str(f) == 'Infinity' or str(spix) == '-1000':
                 # Use ASDM values if any
                 if msource is not None:
                     if int(spw_id) in science_spw_ids:
