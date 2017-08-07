@@ -841,7 +841,7 @@ class ImageParamsHeuristics(object):
 
         return 0.5
 
-    def center_field_ids(self, msnames, field, intent, phasecenter):
+    def center_field_ids(self, msnames, field, intent, phasecenter, exclude_intent=None):
 
         '''Get per-MS IDs of field closest to the phase center.'''
 
@@ -855,7 +855,10 @@ class ImageParamsHeuristics(object):
         for msname in msnames:
             try:
                 ms_obj = self.observing_run.get_ms(msname)
-                field_ids = [f.id for f in ms_obj.fields if (f.name == field) and (intent in f.intents)]
+                if exclude_intent  is None:
+                    field_ids = [f.id for f in ms_obj.fields if (f.name == field) and (intent in f.intents)]
+                else:
+                    field_ids = [f.id for f in ms_obj.fields if (f.name == field) and (intent in f.intents) and (exclude_intent not in f.intents)]
                 separations = [qaTool.getvalue(meTool.separation(pc_direc, f.mdirection)) for f in ms_obj.fields if f.id in field_ids]
                 ref_field_ids.append(field_ids[separations.index(min(separations))])
             except:
@@ -1081,7 +1084,7 @@ class ImageParamsHeuristics(object):
 
         # Calculate only center field sensitivity if a phasecenter is given
         if phasecenter is not None:
-            ref_field_ids = self.center_field_ids(vis, field, intent, phasecenter)
+            ref_field_ids = self.center_field_ids(vis, field, intent, phasecenter, exclude_intent='ATMOSPHERE')
         else:
             ref_field_ids = None
 
@@ -1118,13 +1121,14 @@ class ImageParamsHeuristics(object):
                         else:
                             field_ids = [f.id for f in ms.fields if (utils.dequote(f.name) == utils.dequote(field) and intent in f.intents)]
                         for field_id in field_ids:
-                            try:
-                                field_sensitivity, eff_ch_bw, sens_bws[intSpw] = self.get_sensitivity(ms, field_id, intSpw, chansel, specmode, cell, imsize, weighting, robust, uvtaper)
-                                if (field_sensitivity > 0.0):
-                                    field_sensitivities.append(field_sensitivity)
-                                    detailed_field_sensitivities[os.path.basename(msname)][intSpw][field_id] = field_sensitivity
-                            except Exception as e:
-                                LOG.warning('Could not calculate sensitivity for MS %s Field %s (ID %d) SPW %d ChanSel %s' % (os.path.basename(msname), utils.dequote(field), field_id, intSpw, chansel))
+                            if field_id != -1:
+                                try:
+                                    field_sensitivity, eff_ch_bw, sens_bws[intSpw] = self.get_sensitivity(ms, field_id, intSpw, chansel, specmode, cell, imsize, weighting, robust, uvtaper)
+                                    if (field_sensitivity > 0.0):
+                                        field_sensitivities.append(field_sensitivity)
+                                        detailed_field_sensitivities[os.path.basename(msname)][intSpw][field_id] = field_sensitivity
+                                except Exception as e:
+                                    LOG.warning('Could not calculate sensitivity for MS %s Field %s (ID %d) SPW %d ChanSel %s' % (os.path.basename(msname), utils.dequote(field), field_id, intSpw, chansel))
 
                         median_sensitivity = np.median(field_sensitivities)
                         min_field_id, min_sensitivity = min(detailed_field_sensitivities[os.path.basename(msname)][intSpw].iteritems(), key=operator.itemgetter(1))
