@@ -178,15 +178,26 @@ class ImageParamsHeuristicsALMA(ImageParamsHeuristics):
         minbeamfrac = None
 
         min_diameter = 1.e9
+        repBaselineLengths = []
         for msname in self.vislist:
-            min_diameter = min(min_diameter, min([antenna.diameter for antenna in self.observing_run.get_ms(msname).antennas]))
+            ms_do = self.observing_run.get_ms(msname)
+            min_diameter = min(min_diameter, min([antenna.diameter for antenna in ms_do.antennas]))
+            repBaselineLengths.append(np.percentile([float(baseline.length.to_units(measures.DistanceUnits.METRE)) for baseline in ms_do.antenna_array.baselines], 75.))
+        repBaselineLength = np.median(repBaselineLengths)
+        LOG.info('autobox heuristic: Representative baseline length is %.1f meter' % (repBaselineLength)) 
 
-        if 'TARGET' in intent:
+        if ('TARGET' in intent) or ('CHECK' in intent):
             if min_diameter == 12.0:
-                sidelobethreshold = 3.0
-                noisethreshold = 5.0
-                lownoisethreshold = 1.5
-                minbeamfrac = 0.2
+                if repBaselineLength < 300:
+                    sidelobethreshold = 2.0
+                    noisethreshold = 4.0
+                    lownoisethreshold = 1.5
+                    minbeamfrac = 0.3
+                else:
+                    sidelobethreshold = 3.0
+                    noisethreshold = 5.0
+                    lownoisethreshold = 1.5
+                    minbeamfrac = 0.3
             elif min_diameter == 7.0:
                 sidelobethreshold = 1.25
                 noisethreshold = 5.0
@@ -194,10 +205,10 @@ class ImageParamsHeuristicsALMA(ImageParamsHeuristics):
                 minbeamfrac = 0.1
         else:
             if min_diameter == 12.0:
-                sidelobethreshold = 3.0
+                sidelobethreshold = 2.0
                 noisethreshold = 5.0
                 lownoisethreshold = 1.5
-                minbeamfrac = 0.1
+                minbeamfrac = 0.3
             elif min_diameter == 7.0:
                 sidelobethreshold = 1.25
                 noisethreshold = 5.0
