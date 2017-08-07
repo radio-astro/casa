@@ -131,7 +131,7 @@
         <ParameterSet>
             <Parameter>
                 <Keyword xmlns="">maxcubesize</Keyword>
-                <Value xmlns="">30.0</Value>
+                <Value xmlns="">40.0</Value>
             </Parameter>
             <Parameter>
                 <Keyword xmlns="">maxproductsize</Keyword>
