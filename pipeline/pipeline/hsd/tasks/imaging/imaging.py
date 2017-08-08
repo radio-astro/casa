@@ -640,6 +640,8 @@ class SDImaging(basetask.StandardTaskTemplate):
                         is_representative_spw = False
                         LOG.warn("Cycle 2 and earlier project with nominal effective band width. Reporting RMS at native resolution.")
                     else:
+                        if not cqa.isquantity(rep_bw): # assume Hz
+                            rep_bw = cqa.quantity(rep_bw, 'Hz')
                         LOG.info("Estimate RMS in representative bandwidth: %fkHz (native: %fkHz)" % \
                                  (cqa.getvalue(cqa.convert(cqa.quantity(rep_bw), 'kHz')), chan_width*1.e-3))
                         factor = sensitivity_improvement.sensitivityImprovement(ref_ms.name, rep_spwid, rep_bw)
