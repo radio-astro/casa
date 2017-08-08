@@ -641,11 +641,11 @@ class SDImaging(basetask.StandardTaskTemplate):
                         LOG.warn("Cycle 2 and earlier project with nominal effective band width. Reporting RMS at native resolution.")
                     else:
                         LOG.info("Estimate RMS in representative bandwidth: %fkHz (native: %fkHz)" % \
-                                 (cqa.getvalue(cqa.quantity(rep_bw, 'kHz')), chan_width*1.e-3))
+                                 (cqa.getvalue(cqa.convert(cqa.quantity(rep_bw), 'kHz')), chan_width*1.e-3))
                         factor = sensitivity_improvement.sensitivityImprovement(ref_ms.name, rep_spwid, rep_bw)
                         LOG.info("Image RMS improvement of factor %f estimated. %f => %f [Jy/beam]" % (factor, image_rms, image_rms/factor))
                         image_rms = image_rms/factor
-                        chan_width = numpy.abs(cqa.getvalue(cqa.quantity(rep_bw, 'Hz'))[0])
+                        chan_width = numpy.abs(cqa.getvalue(cqa.convert(cqa.quantity(rep_bw), 'Hz'))[0])
                 elif rep_bw is None:
                     LOG.warn("Representative bandwidth is not available. Skipping estimate of sensitivity in representative band width.")
                 elif rep_spwid is None:
