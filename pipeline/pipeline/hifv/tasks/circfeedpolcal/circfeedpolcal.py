@@ -274,10 +274,15 @@ class Circfeedpolcal(polarization.Polarization):
         fluxcalfieldname = ''
         for i, fields in enumerate(standard_source_fields):
             for myfield in fields:
-                if standard_source_names[i] in ('3C48','3C286') and 'AMPLITUDE' in m.get_fields(field_id=myfield)[0].intents:
+                if standard_source_names[i] in ('3C48','3C286') and 'POLANGLE' in m.get_fields(field_id=myfield)[0].intents:
                     fluxcalfieldid = myfield
                     fluxcalfieldname = m.get_fields(field_id=myfield)[0].name
                     fluxcal = standard_source_names[i]
+                elif standard_source_names[i] in ('3C48','3C286') and 'AMPLITUDE' in m.get_fields(field_id=myfield)[0].intents:
+                    fluxcalfieldid = myfield
+                    fluxcalfieldname = m.get_fields(field_id=myfield)[0].name
+                    fluxcal = standard_source_names[i]
+
 
 
         """
