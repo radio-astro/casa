@@ -129,13 +129,23 @@ class ImageParamsHeuristicsALMA(ImageParamsHeuristics):
             # and some maximum expected dynamic range (EDR) values.
             if (diameter == 12.0):
                 maxCalEDR = 1000.0
+                veryHighCalEDR = 3000.0  # use shallower slope above this value
+                LOG.info('DR heuristic: Applying maxCalEDR=%s, veryHighCalEDR=%s' % (maxCalEDR, veryHighCalEDR))
+                matchPoint = veryHighCalEDR/maxCalEDR - 1  # will be 2 for 3000/1000
+                highDR = tlimit * residual_max / maxCalEDR / old_threshold  # will use this value up to 3000
+                veryHighDR = matchPoint + tlimit * residual_max / veryHighCalEDR / old_threshold  # will use this value above 3000
+                n_dr = max(1.0, min(highDR, veryHighDR))
+                LOG.info('DR heuristic: Calculating N_DR as max of (1.0, min of (%f, %f)) = %f' % (highDR, veryHighDR, n_dr))
+                new_threshold = old_threshold * n_dr
             else:
                 maxCalEDR = 200.0
-            LOG.info('DR heuristic: Applying maxCalEDR=%s' % (maxCalEDR))
-            new_threshold = max(old_threshold, residual_max / maxCalEDR * tlimit)
-            maxEDR_used = True
+                LOG.info('DR heuristic: Applying maxCalEDR=%s' % (maxCalEDR))
+                new_threshold = max(old_threshold, residual_max / maxCalEDR * tlimit)
 
-        if (new_threshold != old_threshold):
+            if new_threshold != old_threshold:
+                maxEDR_used = True
+
+        if new_threshold != old_threshold:
             LOG.info('DR heuristic: Modified threshold from %s Jy to %s Jy based on dirty dynamic range calculated from dirty peak / final theoretical sensitivity: %.1f' % (old_threshold, new_threshold, dirty_dynamic_range))
             DR_correction_factor = new_threshold / old_threshold
 
