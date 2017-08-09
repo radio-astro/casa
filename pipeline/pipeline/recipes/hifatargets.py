@@ -20,6 +20,7 @@ __rethrow_casa_exceptions = True
 #     Clunky but import casa does not work for pipeline tasks
 from h_init_cli import h_init_cli as h_init
 from hifa_importdata_cli import hifa_importdata_cli as hifa_importdata
+from hif_checkproductsize_cli import hif_checkproductsize_cli as hif_checkproductsize
 from hif_mstransform_cli import hif_mstransform_cli as hif_mstransform
 from hifa_flagtargets_cli import hifa_flagtargets_cli as hifa_flagtargets
 from hif_findcont_cli import hif_findcont_cli as hif_findcont
@@ -49,6 +50,9 @@ def hifatargets (vislist, importonly=False, pipelinemode='automatic', interactiv
         hifa_importdata (vis=vislist, dbservice=True, pipelinemode=pipelinemode)
         if importonly:
             raise Exception(IMPORT_ONLY)
+
+        # Check product size limits and mitigate imaging parameters
+        hif_checkproductsize(maxcubesize=40.0, maxproductsize=400.0)
 
         # Split out the target data
         hif_mstransform (pipelinemode=pipelinemode)
