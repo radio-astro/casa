@@ -1067,7 +1067,7 @@ finally:
                         products_dir):
 
         """
-        Expora the images to FITS files.
+        Export the images to FITS files.
         """
 
 
@@ -1142,21 +1142,25 @@ finally:
                         if (image['imagename'].find('.pbcor') != -1):
                             if (image['multiterm']):
                                 imagename = image['imagename'].replace('.image.pbcor', '.mask.tt0')
-                                images_list.append(imagename)
-                                cleanlist[image_number]['auxfitsfiles'].append(self._fitsfile(products_dir, imagename))
+                                if os.path.exists(imagename):
+                                    images_list.append(imagename)
+                                    cleanlist[image_number]['auxfitsfiles'].append(self._fitsfile(products_dir, imagename))
                             else:
                                 imagename = image['imagename'].replace('.image.pbcor', '.mask')
-                                images_list.append(imagename)
-                                cleanlist[image_number]['auxfitsfiles'].append(self._fitsfile(products_dir, imagename))
+                                if os.path.exists(imagename):
+                                    images_list.append(imagename)
+                                    cleanlist[image_number]['auxfitsfiles'].append(self._fitsfile(products_dir, imagename))
                         else:
                             if (image['multiterm']):
                                 imagename = image['imagename'].replace('.image', '.mask.tt0')
-                                images_list.append(imagename)
-                                cleanlist[image_number]['auxfitsfiles'].append(self._fitsfile(products_dir, imagename))
+                                if os.path.exists(imagename):
+                                    images_list.append(imagename)
+                                    cleanlist[image_number]['auxfitsfiles'].append(self._fitsfile(products_dir, imagename))
                             else:
                                 imagename = image['imagename'].replace('.image', '.mask')
-                                images_list.append(imagename)
-                                cleanlist[image_number]['auxfitsfiles'].append(self._fitsfile(products_dir, imagename))
+                                if os.path.exists(imagename):
+                                    images_list.append(imagename)
+                                    cleanlist[image_number]['auxfitsfiles'].append(self._fitsfile(products_dir, imagename))
         else:
             # Assume only the root image name was given.
             cleanlib = imagelibrary.ImageLibrary()
