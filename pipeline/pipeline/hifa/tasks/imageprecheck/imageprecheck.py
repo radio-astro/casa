@@ -27,6 +27,7 @@ class ImagePreCheckResults(basetask.Results):
         self.hm_robust = hm_robust
         self.hm_uvtaper = hm_uvtaper
         self.sensitivities = sensitivities
+        self.sensitivities_for_aqua = []
         self.sensitivity_bandwidth = sensitivity_bandwidth
 
     def merge_with_context(self, context):
@@ -45,9 +46,9 @@ class ImagePreCheckResults(basetask.Results):
         # Add sensitivities to be reported to AQUA
         # Note: for Cycle 5 we stay with robust=0.5. This will change for
         # Cycle 6 when we switch to the robust heuristic (self.hm_robust
-        # and sel.hm_uvtaper values).
-        #context.sensitivities.extend([s for s in self.sensitivities if s['robust']==self.hm_robust and s['uvtaper']==self.hm_uvtaper])
-        context.sensitivities.extend([s for s in self.sensitivities if s['robust']==0.5 and s['uvtaper']==[]])
+        # and self.hm_uvtaper values).
+        #self.sensitivities_for_aqua.extend([s for s in self.sensitivities if s['robust']==self.hm_robust and s['uvtaper']==self.hm_uvtaper])
+        self.sensitivities_for_aqua.extend([s for s in self.sensitivities if s['robust']==0.5 and s['uvtaper']==[]])
 
     def __repr__(self):
         return 'ImagePreCheckResults:\n\t{0}'.format(
