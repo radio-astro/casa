@@ -298,7 +298,9 @@ class MeasurementSetReader(object):
                     LOG.info('Populating ms.representative_target ...')
                     ms.representative_target = (sbinfo[0], sbinfo[1], sbinfo[2])
                 if not (sbinfo[3] and sbinfo[4]):
-                    LOG.warn('Undefined angular resolution limits for %s' % (ms.basename))
+                    # Only warn if the number of 12m antennas is greater than the number of 7m antennas
+                    if len([a for a in ms.get_antenna() if a.diameter == 12.0]) > len([a for a in ms.get_antenna() if a.diameter == 7.0]):
+                        LOG.warn('Undefined angular resolution limits for %s' % (ms.basename))
                     ms.science_goals = {'minAcceptableAngResolution': '0.0arcsec', 'maxAcceptableAngResolution': '0.0arcsec'}
                 else:
                     LOG.info('Populating ms.science_goals ...')
