@@ -760,7 +760,7 @@ def analyse_clean_result(multiterm, model, restored, residual, flux, cleanmask, 
         try:
             residual_non_cleanmask_rms = residual_stats['rms'][0]
             if have_mask:
-                LOG.info('Residual rms at the edge of the cleaned area: %s' % residual_non_cleanmask_rms)
+                LOG.info('Residual rms in the annulus: %s' % residual_non_cleanmask_rms)
             else:
                 LOG.info('Residual rms across full area: %s' %  residual_non_cleanmask_rms)
         except:

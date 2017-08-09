@@ -545,7 +545,9 @@ class Tclean(cleanbase.CleanBase):
         extension = '.tt0' if result.multiterm else ''
         self.pblimit_image, self.pblimit_cleanmask = \
             self.image_heuristics.pblimits(result.flux+extension)
-        inputs.pblimit = self.pblimit_image
+        # The modified pblimit is not supposed to be used in the tclean commands
+        # anymore (CAS-10489)
+        #inputs.pblimit = self.pblimit_image
 
         # Give the result to the sequence_manager for analysis
         model_sum, \
@@ -679,10 +681,10 @@ class Tclean(cleanbase.CleanBase):
             result.set_dr_corrected_sensitivity(sequence_manager.dr_corrected_sensitivity)
 
             LOG.info('Clean image iter %s stats' % iter)
-            LOG.info('    Clean image non-cleanmask area rms: %s', nonpbcor_image_non_cleanmask_rms)
+            LOG.info('    Clean image annulus area rms: %s', nonpbcor_image_non_cleanmask_rms)
             LOG.info('    Clean image min: %s', pbcor_image_min)
             LOG.info('    Clean image max: %s', pbcor_image_max)
-            LOG.info('    Residual non-cleanmask area rms: %s', residual_non_cleanmask_rms)
+            LOG.info('    Residual annulus area rms: %s', residual_non_cleanmask_rms)
             LOG.info('    Residual cleanmask area rms: %s', residual_cleanmask_rms)
             LOG.info('    Residual max: %s', residual_max)
             LOG.info('    Residual min: %s', residual_min)
