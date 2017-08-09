@@ -333,7 +333,7 @@ class CleanBase(basetask.StandardTaskTemplate):
             tclean_job_parameters['pbcor'] = False
         else:
             tclean_job_parameters['restoration'] = True
-            tclean_job_parameters['pbcor'] = True
+            tclean_job_parameters['pbcor'] = inputs.heuristics.pb_correction()
 
         # Re-use products from previous iteration.
         if (iter > 0):

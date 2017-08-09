@@ -1330,3 +1330,6 @@ class ImageParamsHeuristics(object):
 
     def reffreq(self):
         return None
+
+    def pb_correction(self):
+        return True

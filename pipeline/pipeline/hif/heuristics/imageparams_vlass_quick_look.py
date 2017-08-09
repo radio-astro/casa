@@ -87,6 +87,9 @@ class ImageParamsHeuristicsVlassQl(ImageParamsHeuristics):
     def stokes(self):
         return 'I'
 
+    def pb_correction(self):
+        return False
+
     def find_fields(self, distance='0deg', phase_center=None, matchregex=''):
 
         # Created STM 2016-May-16 use center direction measure

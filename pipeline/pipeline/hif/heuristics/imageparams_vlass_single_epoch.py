@@ -38,7 +38,7 @@ class ImageParamsHeuristicsVlassSe(ImageParamsHeuristics):
 
     def reffreq(self):
         return '3.0GHz'
-    
+
     def cyclefactor(self):
         return 3.0
 
@@ -71,6 +71,9 @@ class ImageParamsHeuristicsVlassSe(ImageParamsHeuristics):
 
     def stokes(self):
         return 'I'
+
+    def pb_correction(self):
+        return False
 
     def find_fields(self, distance='0deg', phase_center=None, matchregex=''):
 
