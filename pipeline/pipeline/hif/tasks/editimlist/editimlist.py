@@ -183,8 +183,19 @@ class Editimlist(basetask.StandardTaskTemplate):
                                                       observing_run=inp.context.observing_run,
                                                       imaging_mode=img_mode)
 
-        target['threshold'] = th.threshold() if not inpdict['threshold'] else inpdict['threshold']
-        target['nsigma'] = th.threshold_nsigma() if not inpdict['threshold_nsigma'] else inpdict['threshold_nsigma']
+        threshold_set_by_user = bool(inpdict['threshold'])
+        nsigma_set_by_user = bool(inpdict['threshold_nsigma'])
+        if threshold_set_by_user and not nsigma_set_by_user:
+            target['threshold'] = inpdict['threshold']
+        elif nsigma_set_by_user and not threshold_set_by_user:
+            target['nsigma'] = inpdict['threshold_nsigma']
+        elif nsigma_set_by_user and threshold_set_by_user:
+            target['threshold'] = inpdict['threshold']
+            target['nsigma'] = inpdict['threshold_nsigma']
+            LOG.warn("Both 'threshold' and 'threshold_nsigma' were specified.")
+        else:  # neither set by user.  Use nsigma.
+            target['nsigma'] = th.threshold_nsigma()
+
         target['reffreq'] = th.reffreq() if not inpdict['reffreq'] else inpdict['reffreq']
         target['niter'] = th.niter_correction(None, None, None, None, None) if not inpdict['niter'] else inpdict['niter']
         target['cyclefactor'] = th.cyclefactor() if not inpdict['cyclefactor'] else inpdict['cyclefactor']

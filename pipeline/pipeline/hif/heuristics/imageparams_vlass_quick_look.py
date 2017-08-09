@@ -45,9 +45,6 @@ class ImageParamsHeuristicsVlassQl(ImageParamsHeuristics):
     def imsize(self, fields=None, cell=None, primary_beam=None, sfpblimit=None, max_pixels=None, centreonly=None):
         return [7290, 7290]
 
-    def threshold(self):
-        return '0.000360Jy/beam'
-
     def threshold_nsigma(self):
         return 4.0
 

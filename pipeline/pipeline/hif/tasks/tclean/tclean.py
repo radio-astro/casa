@@ -613,7 +613,16 @@ class Tclean(cleanbase.CleanBase):
 
             rms_threshold = self.image_heuristics.rms_threshold(residual_robust_rms, inputs.nsigma)
             if rms_threshold:
-                sequence_manager.threshold = rms_threshold
+                if inputs.threshold:
+                    LOG.warn("Both the 'threshold' and 'threshold_nsigma' were specified.")
+                    LOG.warn('Setting new threshold to max of input threshold and scaled MAD * nsigma.')
+                    LOG.info("    Input 'threshold' = {tt}".format(tt=inputs.threshold))
+                    LOG.info("    Input 'threshold_nsigma' = {ns}".format(ns=inputs.nsigma))
+                    LOG.info("    Scaled MAD * 'threshold_nsigma' = {ts}".format(ts=rms_threshold))
+                    LOG.info('    max(threshold, scaled MAD * nsigma)= {nt}'.format(nt=max(inputs.threshold, rms_threshold)))
+                    sequence_manager.threshold = max(inputs.threshold, rms_threshold)
+                else:
+                    sequence_manager.threshold = rms_threshold
 
             # perform an iteration.
             if (inputs.specmode == 'cube') and (not inputs.cleancontranges):
