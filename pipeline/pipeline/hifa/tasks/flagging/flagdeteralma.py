@@ -9,6 +9,7 @@ LOG = infrastructure.get_logger(__name__)
 
 
 class FlagDeterALMAInputs(flagdeterbase.FlagDeterBaseInputs):
+    flagbackup = basetask.property_with_default('flagbackup', True)
     edgespw = basetask.property_with_default('edgespw', True)
     fracspw = basetask.property_with_default('fracspw', 0.0625)
     template = basetask.property_with_default('template', True)
