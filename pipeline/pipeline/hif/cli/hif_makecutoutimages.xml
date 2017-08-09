@@ -14,6 +14,16 @@
 	<value></value>
     </param>
 
+    <param type="doubleArray" name="offsetblc" subparam="true">
+	<description>-x and -y offsets to the bottom lower corner (blc) in arcseconds</description>
+	<value></value>
+    </param>
+
+    <param type="doubleArray" name="offsettrc" subparam="true">
+	<description>+x and +y offsets to the top right corner (trc) in arcseconds</description>
+	<value></value>
+    </param>
+
 
     <param type="string" name="pipelinemode">
 	<description>The pipeline operating mode</description>
@@ -71,12 +81,17 @@ Keyword arguments:
 
 ---- pipeline parameter arguments which can be set in any pipeline mode
 
-vis -- List of visisbility  data files. These may be ASDMs, tar files of ASDMs,
+vis -- List of visibility  data files. These may be ASDMs, tar files of ASDMs,
    MSs, or tar files of MSs, If ASDM files are specified, they will be
    converted  to MS format.
    default: []
    example: vis=['X227.ms', 'asdms.tar.gz']
 
+offsetblc --  -x and -y offsets to the bottom lower corner (blc) in arcseconds
+    default: [0.0,0.0]
+
+offsettrc --  +x and +y offsets to the top right corner (trc) in arcseconds
+    default: [0.0,0.0]
 
 
 pipelinemode -- The pipeline operating mode. In 'automatic' mode the pipeline

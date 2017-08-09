@@ -5,7 +5,7 @@ from taskinit import casalog
 import pipeline.h.cli.utils as utils
 
 
-def hif_makecutoutimages(vis=None, pipelinemode=None, dryrun=None, acceptresults=None):
+def hif_makecutoutimages(vis=None, offsetblc=None, offsettrc=None, pipelinemode=None, dryrun=None, acceptresults=None):
     # create a dictionary containing all the arguments given in the
     # constructor
     all_inputs = vars()

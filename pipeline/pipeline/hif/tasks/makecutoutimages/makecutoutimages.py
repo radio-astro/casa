@@ -65,10 +65,12 @@ class MakecutoutimagesResults(basetask.Results):
 
 class MakecutoutimagesInputs(basetask.StandardInputs):
     @basetask.log_equivalent_CASA_call
-    def __init__(self, context, vis=None):
+    def __init__(self, context, vis=None, offsetblc=None, offsettrc=None):
         # set the properties to the values given as input arguments
         self._init_properties(vars())
 
+    offsetblc = basetask.property_with_default('offsetblc', [])  #Units of arcseconds
+    offsettrc = basetask.property_with_default('offsettrc', [])  #Units of arcseconds
 
 class Makecutoutimages(basetask.StandardTaskTemplate):
     Inputs = MakecutoutimagesInputs
@@ -120,18 +122,21 @@ class Makecutoutimages(basetask.StandardTaskTemplate):
 
     def _do_subim(self, imagename):
 
+        inputs = self.inputs
+
         # Get image parameters
         imstat_dict = self._do_imstat(imagename)
 
         # Get image header
         imhead_dict = self._do_imhead(imagename)
 
-        imsizex = math.fabs(imhead_dict['refpix'][0]*imhead_dict['incr'][0]*(180.0/math.pi)*2)
-        imsizey = math.fabs(imhead_dict['refpix'][1]*imhead_dict['incr'][1]*(180.0/math.pi)*2)
-        imageSizeX = 1.0  # degrees
-        imageSizeY = 1.0  # degrees
+        imsizex = math.fabs(imhead_dict['refpix'][0]*imhead_dict['incr'][0]*(180.0/math.pi)*2)  # degrees
+        imsizey = math.fabs(imhead_dict['refpix'][1]*imhead_dict['incr'][1]*(180.0/math.pi)*2)  # degrees
+        imageSizeX = 1.0  # degrees:  size of cutout
+        imageSizeY = 1.0  # degrees:  size of cutout
 
-        if (imsizex < 2.0):
+        # For testing of small images, if less than 2 deg, make a half image size cutout
+        if imsizex < 2.0:
             imageSizeX = 0.5 * imsizex
             imageSizeY = 0.5 * imsizey
 
@@ -140,18 +145,34 @@ class Makecutoutimages(basetask.StandardTaskTemplate):
         xcellsize = 3600.0 * (180.0 / math.pi) * math.fabs(imhead_dict['incr'][0])
         ycellsize = 3600.0 * (180.0 / math.pi) * math.fabs(imhead_dict['incr'][1])
 
-        fld_subim_sizeX = int(3600.0 * (imageSizeX + 2.0 / 60.0) / xcellsize)
-        fld_subim_sizeY = int(3600.0 * (imageSizeY + 2.0 / 60.0) / ycellsize)
+        buffer = 2.0 / 60.0
 
-        if (imsizex < 2.0):
-            fld_subim_sizeX = int(3600.0 * (imageSizeX + 10.0 / 3600.0) / xcellsize)
-            fld_subim_sizeY = int(3600.0 * (imageSizeY + 10.0 / 3600.0) / ycellsize)
+        if imsizex < 2.0:
+            buffer = 10.0 / 3600.0
+
+        fld_subim_sizeX = int(3600.0 * (imageSizeX + buffer) / xcellsize)   # Cutout size with buffer in pixels
+        fld_subim_sizeY = int(3600.0 * (imageSizeY + buffer) / ycellsize)   # Cutout size with buffer in pixels
 
         # equivalent blc,trc for extracting requested field, in pixels:
         blcx = imsize[0] / 2 - (fld_subim_sizeX / 2)
         blcy = imsize[1] / 2 - (fld_subim_sizeY / 2)
         trcx = imsize[0] / 2 + (fld_subim_sizeX / 2) + 1
         trcy = imsize[1] / 2 + (fld_subim_sizeY / 2) + 1
+
+        if (inputs.offsetblc and inputs.offsettrc):
+            fld_subim_sizeXblc = int(3600.0 * (inputs.offsetblc[0] / 3600.0 + buffer) / xcellsize)
+            fld_subim_sizeYblc = int(3600.0 * (inputs.offsetblc[1] / 3600.0 + buffer) / ycellsize)
+            fld_subim_sizeXtrc = int(3600.0 * (inputs.offsettrc[0] / 3600.0 + buffer) / xcellsize)
+            fld_subim_sizeYtrc = int(3600.0 * (inputs.offsettrc[1] / 3600.0 + buffer) / ycellsize)
+
+            blcx = imsize[0] / 2 - (fld_subim_sizeXblc)
+            blcy = imsize[1] / 2 - (fld_subim_sizeYblc)
+            trcx = imsize[0] / 2 + (fld_subim_sizeXtrc) + 1
+            trcy = imsize[1] / 2 + (fld_subim_sizeYtrc) + 1
+
+            LOG.info("Using offsets: blc:({!s}), trc:({!s})".format(
+                ','.join([str(i) for i in inputs.offsetblc]),','.join([str(i) for i in inputs.offsettrc])))
+
         fld_subim = str(blcx) + ',' + str(blcy) + ',' + str(trcx) + ',' + str(trcy)
         LOG.info('Using field subimage blc,trc of {!s},{!s}, {!s},{!s}'.format(blcx,blcy,trcx,trcy))
 
