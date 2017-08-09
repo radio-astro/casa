@@ -1054,6 +1054,7 @@ finally:
         fitsname = re.sub('\.s\d+[_]\d+\.', '.', imagename)
         fitsname = re.sub('\.iter\d+\.image', '', fitsname)
         fitsname = re.sub('\.iter\d+\.image.pbcor', '.pbcor', fitsname)
+        fitsname = re.sub('\.iter\d+\.mask', '.mask', fitsname)
         fitsname = re.sub('\.iter\d+\.alpha', '.alpha', fitsname)
         # .pb must be tried after .pbcor.image !
         fitsname = re.sub('\.iter\d+\.pb', '.pb', fitsname)
@@ -1133,6 +1134,27 @@ finally:
                                 cleanlist[image_number]['auxfitsfiles'].append(self._fitsfile(products_dir, imagename))
                             else:
                                 imagename = image['imagename'].replace('.image', '.pb')
+                                images_list.append(imagename)
+                                cleanlist[image_number]['auxfitsfiles'].append(self._fitsfile(products_dir, imagename))
+
+                    # Add auto-boxing masks for interferometry
+                    if (image['imagename'].find('.image') != -1):
+                        if (image['imagename'].find('.pbcor') != -1):
+                            if (image['multiterm']):
+                                imagename = image['imagename'].replace('.image.pbcor', '.mask.tt0')
+                                images_list.append(imagename)
+                                cleanlist[image_number]['auxfitsfiles'].append(self._fitsfile(products_dir, imagename))
+                            else:
+                                imagename = image['imagename'].replace('.image.pbcor', '.mask')
+                                images_list.append(imagename)
+                                cleanlist[image_number]['auxfitsfiles'].append(self._fitsfile(products_dir, imagename))
+                        else:
+                            if (image['multiterm']):
+                                imagename = image['imagename'].replace('.image', '.mask.tt0')
+                                images_list.append(imagename)
+                                cleanlist[image_number]['auxfitsfiles'].append(self._fitsfile(products_dir, imagename))
+                            else:
+                                imagename = image['imagename'].replace('.image', '.mask')
                                 images_list.append(imagename)
                                 cleanlist[image_number]['auxfitsfiles'].append(self._fitsfile(products_dir, imagename))
         else:
