@@ -112,7 +112,7 @@
 
 	<param type="bool" name="flagbackup" subparam="true">
 	    <description>Backup prexistings flags before applying new ones</description>
-	    <value type="bool">False</value>
+	    <value type="bool">True</value>
 	</param>
 
 	<param type="bool" name="dryrun" subparam="true">
@@ -131,13 +131,13 @@
 		</equals>
 		<equals type="string" value="interactive"> 
 		    <default param="vis"><value type="stringArray"></value></default>
-		    <default param="flagbackup"><value type="bool">False</value></default>
+		    <default param="flagbackup"><value type="bool">True</value></default>
 		    <default param="dryrun"><value type="bool">False</value></default>
 		    <default param="acceptresults"><value type="bool">True</value></default>
 		</equals>
 		<equals type="string" value="getinputs"> 
 		    <default param="vis"><value type="stringArray"></value></default>
-		    <default param="flagbackup"><value type="bool">False</value></default>
+		    <default param="flagbackup"><value type="bool">True</value></default>
 		</equals>
 	    </when>
 
@@ -277,7 +277,7 @@ vis -- The list of input measurement sets. Defaults to the list of measurement
     default: ''
 
 flagbackup -- Back up any pre-existing flags.
-       default: False
+       default: True
 
 --- pipeline task execution modes
 dryrun -- Run the commands (True) or generate the commands to be run but
