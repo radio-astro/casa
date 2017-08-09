@@ -221,11 +221,19 @@ class WVRPhaseVsBaselineChart(object):
 
         ratios = [w.y for w in self._wrappers]
         ratios = numpy.ma.MaskedArray([r for r in ratios if r is not None])
+
+        alt_refant_used = (numpy.ma.min(ratios[~ratios.mask]) == 0.0)
+        if alt_refant_used:
+            LOG.warning('Phase ratio of 0 suggests that alternate refant was '
+                        'used during gaincal. This plot might be misleading!')
+            ratios = numpy.ma.MaskedArray([r for r in ratios if r not in (None, 0, 0.0)])
+        self._alt_refant_used = alt_refant_used
+
         self._max_ratio = numpy.ma.max(ratios[~ratios.mask])
         self._min_ratio = numpy.ma.min(ratios[~ratios.mask])
         self._median_ratio = numpy.ma.median(ratios[~ratios.mask])
         LOG.trace('Maximum phase ratio for %s = %s' % (self.ms.basename, 
-                                                       self._max_ratio))
+                                                        self._max_ratio))
         LOG.trace('Minimum phase ratio for %s = %s' % (self.ms.basename, 
                                                        self._min_ratio))
 
@@ -236,12 +244,12 @@ class WVRPhaseVsBaselineChart(object):
 
         plots = []
         for spw in spws:
-            # plot scans individually as plotting multiple scans on one plot 
+            # plot scans individually as plotting multiple scans on one plot
             # creates an unintelligible mess. 
             for scan in plot_scans:
                 # if spw.id == 17 and scan.id == 3:
-                plots.append(self.get_plot_wrapper(spw, [scan,],
-                                                   self.ms.antennas))
+                    plots.append(self.get_plot_wrapper(spw, [scan,],
+                                                       self.ms.antennas))
 
         return [p for p in plots if p is not None]
 
@@ -270,12 +278,12 @@ class WVRPhaseVsBaselineChart(object):
         # length) 
         fig, ((ax1, ax2)) = common.subplots(2, 1, sharex=True)
         ax1.set_yscale('log')
-        pyplot.subplots_adjust(hspace=0.0)        
+        pyplot.subplots_adjust(hspace=0.0)
 
         trans1 = matplotlib.transforms.blended_transform_factory(ax1.transAxes, 
                                                                  ax1.transData)
         ax1.axhspan(self._min_ratio, 1, facecolor='k', linewidth=0.0, alpha=0.04)
-        ax1.text(0.012, numpy.sqrt(self._min_ratio), 'No Improvement', 
+        ax1.text(0.012, numpy.sqrt(self._min_ratio), 'No Improvement',
                  transform=trans1, color='k', ha='left', va='center', size=8, alpha=0.4)
 
         ax1.axhline(y=self._median_ratio, color='k', ls='dotted', alpha=0.4)
@@ -399,8 +407,12 @@ class WVRPhaseVsBaselineChart(object):
         pyplot.text(0.012, 0.97, 'Phase RMS without WVR / Phase RMS with WVR', 
                     color='k', transform=ax1.transAxes, ha='left', va='top', 
                     size=10)
+        if self._alt_refant_used:
+            pyplot.text(0.012, 0.90, 'Warning! Use of alternate refant detected; x-axis values may be unreliable',
+                        color='r', transform=ax1.transAxes, ha='left', va='top',
+                        size=10)
 
-        # We need to draw the canvas, otherwise the labels won't be positioned and 
+        # We need to draw the canvas, otherwise the labels won't be positioned and
         # won't have values yet.
         fig.canvas.draw()
         # omit the last y axis tick label from the lower plot
