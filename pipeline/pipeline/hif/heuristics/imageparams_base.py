@@ -1097,10 +1097,10 @@ class ImageParamsHeuristics(object):
             ms = self.observing_run.get_ms(name=msname)
             detailed_field_sensitivities[os.path.basename(msname)] = {}
             for intSpw in [int(s) for s in spw.split(',')]:
-                spw_do = ms.get_spectral_window(intSpw)
-                detailed_field_sensitivities[os.path.basename(msname)][intSpw] = {}
-                sens_bws[intSpw] = 0.0
                 try:
+                    spw_do = ms.get_spectral_window(intSpw)
+                    detailed_field_sensitivities[os.path.basename(msname)][intSpw] = {}
+                    sens_bws[intSpw] = 0.0
                     if (specmode == 'cube'):
                         # Use the center channel selection
                         if nbin != -1:
