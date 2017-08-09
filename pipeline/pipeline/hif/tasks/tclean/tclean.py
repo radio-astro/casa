@@ -663,7 +663,7 @@ class Tclean(cleanbase.CleanBase):
 
             # Check for cases with zero mask and significant signal
             if (inputs.hm_masking == 'auto') and (result.tclean_stopcode == 7) and (residual_max / residual_robust_rms > 10.0):
-                LOG.warn('No clean mask was found despite the presence of significant signal.')
+                LOG.warn('No clean mask was found despite clean residual peak / scaled MAD > 10.')
 
             # Keep image cleanmask area min and max and non-cleanmask area RMS for weblog and QA
             result.set_image_min(pbcor_image_min)

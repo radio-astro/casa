@@ -44,7 +44,12 @@ class TcleanQAHandler(pqa.QAResultHandler):
             if (numpy.isnan(rms_score)):
                 result.qa.pool[:] = [pqa.QAScore(0.0, longmsg='Cleaning diverged, RMS is NaN. Field: %s Intent: %s SPW: %s' % (result.inputs['field'], result.intent, resultspw), shortmsg='RMS is NaN')]
             else:
-                result.qa.pool[:] = [pqa.QAScore(rms_score, longmsg='RMS outside mask vs. DR corrected sensitivity. Field: %s Intent: %s SPW: %s' % (result.inputs['field'], result.intent, result.spw), shortmsg='RMS vs. sensitivity')]
+                if rms_score > 0.66:
+                    result.qa.pool[:] = [pqa.QAScore(rms_score, longmsg='RMS vs. DR corrected sensitivity. Field: %s Intent: %s SPW: %s' % (result.inputs['field'], result.intent, result.spw), shortmsg='RMS vs. sensitivity')]
+                else:
+                    # The level of 2.7 comes from the Erf scorer limits of 1 and 5.
+                    # The level needs to be adjusted if these limits are modified.
+                    result.qa.pool[:] = [pqa.QAScore(rms_score, longmsg='Observed RMS noise exceeds DR corrected sensitivity by more than 2.7. Field: %s Intent: %s SPW: %s' % (result.inputs['field'], result.intent, result.spw), shortmsg='RMS vs. sensitivity')]
 
             # Check source score
             #    Be careful about the source name vs field name issue
