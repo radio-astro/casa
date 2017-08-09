@@ -246,7 +246,10 @@ class Tclean(cleanbase.CleanBase):
 
         # Determine the phase center
         if inputs.phasecenter in ('', None):
-            field_id = self.image_heuristics.field(inputs.intent, inputs.field)
+            if inputs.intent == 'TARGET':
+                field_id = self.image_heuristics.field('TARGET', inputs.field, exclude_intent='ATMOSPHERE')
+            else:
+                field_id = self.image_heuristics.field(inputs.intent, inputs.field)
             inputs.phasecenter = self.image_heuristics.phasecenter(field_id)
 
         # If imsize not set then use heuristic code to calculate the
@@ -268,7 +271,10 @@ class Tclean(cleanbase.CleanBase):
                 inputs.cell = cell
                 LOG.info('Heuristic cell: %s' % cell)
 
-            field_ids = self.image_heuristics.field(inputs.intent, inputs.field)
+            if inputs.intent == 'TARGET':
+                field_ids = self.image_heuristics.field('TARGET', inputs.field, exclude_intent='ATMOSPHERE')
+            else:
+                field_ids = self.image_heuristics.field(inputs.intent, inputs.field)
             largest_primary_beam = self.image_heuristics.largest_primary_beam_size(spwspec=inputs.spw)
             imsize = self.image_heuristics.imsize( \
                      fields=field_ids, \

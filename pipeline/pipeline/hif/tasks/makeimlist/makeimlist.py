@@ -457,8 +457,12 @@ class MakeImList(basetask.StandardTaskTemplate):
             phasecenters = {}
             for field_intent in field_intent_list:
                 try:
-                    field_ids = self.heuristics.field(
-                      field_intent[1], field_intent[0])
+                    if field_intent[1] == 'TARGET':
+                        field_ids = self.heuristics.field(
+                          'TARGET', field_intent[0], exclude_intent='ATMOSPHERE')
+                    else:
+                        field_ids = self.heuristics.field(
+                          field_intent[1], field_intent[0])
                     phasecenters[field_intent[0]] = \
                       self.heuristics.phasecenter(field_ids)
                 except Exception, e:
@@ -482,8 +486,12 @@ class MakeImList(basetask.StandardTaskTemplate):
                 for spwspec in spwlist:
 
                     try:
-                        field_ids = self.heuristics.field(
-                          field_intent[1], field_intent[0])
+                        if field_intent[1] == 'TARGET':
+                            field_ids = self.heuristics.field(
+                              'TARGET', field_intent[0], exclude_intent='ATMOSPHERE')
+                        else:
+                            field_ids = self.heuristics.field(
+                              field_intent[1], field_intent[0])
                         himsize = self.heuristics.imsize(fields=field_ids,
                           cell=cells[spwspec], primary_beam=largest_primary_beams[spwspec], sfpblimit=sfpblimit)
                         if field_intent[1] in ['PHASE', 'BANDPASS', 'AMPLITUDE', 'FLUX', 'CHECK']:

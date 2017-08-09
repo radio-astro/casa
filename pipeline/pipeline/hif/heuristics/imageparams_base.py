@@ -573,7 +573,7 @@ class ImageParamsHeuristics(object):
         else:
             return '%s %s %s' % (ref, m0, m1), xspread, yspread
 
-    def field(self, intent, field):
+    def field(self, intent, field, exclude_intent=None):
         result = []
 
         for vis in self.vislist:
@@ -596,8 +596,13 @@ class ImageParamsHeuristics(object):
             if intent is not None:
                 # pattern matching to allow intents of form *TARGET* to work
                 re_intent = intent.replace('*', '.*')
-                field_list = [fld.id for fld in fields if
-                  fld.id in field_list and re_intent in fld.intents]
+                if exclude_intent is not None:
+                    re_exclude_intent = exclude_intent.replace('*', '.*')
+                    field_list = [fld.id for fld in fields if
+                      fld.id in field_list and re_intent in fld.intents and re_exclude_intent not in fld.intents]
+                else:
+                    field_list = [fld.id for fld in fields if
+                      fld.id in field_list and re_intent in fld.intents]
 
             # this will be a mosaic if there is more than 1 field_id for any 
             # measurement set - probably needs more work, what if want to
