@@ -217,7 +217,7 @@ def _hifa_preimagecheck_sensitivity_exporter(stage_results):
     # XML exporter expects this function to return a list of dictionaries
     l = []
     for result in stage_results:
-        l.extend(result.sensitivities)
+        l.extend(result.sensitivities_for_aqua)
     return l
 
 aqua.TASK_NAME_TO_SENSITIVITY_EXPORTER['hifa_imageprecheck'] = _hifa_preimagecheck_sensitivity_exporter
