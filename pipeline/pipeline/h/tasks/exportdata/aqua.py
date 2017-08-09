@@ -46,7 +46,6 @@ Future Technical Solutions
 """
 from __future__ import absolute_import
 
-import collections
 import datetime
 import operator
 import os
@@ -57,6 +56,7 @@ import itertools
 from casa_system import casa as casasys
 
 import pipeline.environment as environment
+from pipeline.infrastructure import casatools
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.renderer.qaadapter as qaadapter
 import pipeline.infrastructure.utils as utils
@@ -69,6 +69,9 @@ UNDEFINED = 'Undefined'
 
 # this holds all QA-metric-to-XML export functions
 _AQUA_REGISTRY = set()
+
+# Maps task name to function that gets sensitivity dict from result
+TASK_NAME_TO_SENSITIVITY_EXPORTER = {}
 
 
 def register_aqua_metric(fn):
@@ -312,7 +315,14 @@ class AquaXmlGenerator(object):
         :return: XML for dataset topic
         :rtype: xml.etree.cElementTree.Element
         """
-        return self._xml_for_topic('Dataset', context, topic_results)
+        xml_root = self._xml_for_topic('Dataset', context, topic_results)
+
+        sensitivity_xml = sensitivity_xml_for_stages(context, topic_results)
+        # omit containing element if no measurements were found
+        if len(list(sensitivity_xml)) > 0:
+            xml_root.extend(sensitivity_xml)
+
+        return xml_root
 
     def get_flagging_topic(self, context, topic_results):
         """
@@ -569,3 +579,99 @@ def _get_pipeline_stage_and_score(result):
     stage_name = result.pipeline_casa_task.split('(')[0]
     score = result.qa.representative.score
     return stage_name, score
+
+
+def sensitivity_xml_for_stages(context, results):
+    """
+    Get the XML for all sensitivities reported by all tasks.
+
+    :param context: pipeline context
+    :param results: all results for the imaging topic
+    :return: XML for sensitivities
+    :rtype: xml.etree.cElementTree.Element
+    """
+    xml_root = ElementTree.Element('ImageSensitivity')
+
+    for result in results:
+        for task_name, exporter in TASK_NAME_TO_SENSITIVITY_EXPORTER.iteritems():
+            pipeline_casa_task = result.pipeline_casa_task
+            if pipeline_casa_task.startswith(task_name + '('):
+                stage_xml = xml_for_sensitivity_stage(context, result, task_name, exporter)
+                xml_root.append(stage_xml)
+
+    return xml_root
+
+
+def xml_for_sensitivity_stage(context, stage_results, origin, exporter):
+    """
+    Translate the sensitivity dictionaries contained in a task result to XML.
+
+    :param context: pipeline context
+    :param stage_results: hifa_preimagecheck result
+    :param origin: value to use for the XML stage
+    :param exporter: function that returns a list of sensitivity dicts from the result
+    :return: XML for all sensitivities reported by the result stage
+    :rtype: xml.etree.cElementTree.Element
+    """
+    xml_root = ElementTree.Element('SensitivityEstimates', Origin=origin, Score=UNDEFINED)
+
+    sensitivity_dicts = exporter(stage_results)
+
+    for d in sensitivity_dicts:
+        ms_xml = xml_for_sensitivity(d)
+        xml_root.append(ms_xml)
+
+    return xml_root
+
+
+def xml_for_sensitivity(d):
+    """
+    Return the XML representation for a sensitivity dictionary.
+
+    :param d: sensitivity dict
+    :return: XML element
+    :rtype: xml.etree.cElementTree.Element
+    """
+    qa = casatools.quanta
+
+    def value(quanta):
+        return str(qa.getvalue(quanta)[0])
+
+    bandwidth = qa.quantity(d['bandwidth'])
+    bandwidth_hz = value(qa.convert(bandwidth, 'Hz'))
+
+    major = qa.quantity(d['beam']['major'])
+    major_arcsec = value(qa.convert(major, 'arcsec'))
+
+    minor = qa.quantity(d['beam']['minor'])
+    minor_arcsec = value(qa.convert(minor, 'arcsec'))
+
+    cell_major = qa.quantity(d['cell'][0])
+    cell_major_arcsec = value(qa.convert(cell_major, 'arcsec'))
+
+    cell_minor = qa.quantity(d['cell'][1])
+    cell_minor_arcsec = value(qa.convert(cell_minor, 'arcsec'))
+
+    positionangle = qa.quantity(d['beam']['positionangle'])
+    positionangle_deg = value(qa.convert(positionangle, 'deg'))
+
+    sensitivity = qa.quantity(d['sensitivity'])
+    sensitivity_jy_per_beam = value(qa.convert(sensitivity, 'Jy/beam'))
+
+    xml = ElementTree.Element('Sensitivity',
+        Array=d['array'],
+        BandwidthHz=bandwidth_hz,
+        BeamMajArcsec=major_arcsec,
+        BeamMinArcsec=minor_arcsec,
+        BeamPosAngDeg=positionangle_deg,
+        BwMode=d['bwmode'],
+        CellXArcsec=cell_major_arcsec,
+        CellYArcsec=cell_minor_arcsec,
+        Field=d['field'],
+        Robust=str(d.get('robust', '')),
+        UVTaper=str(d.get('uvtaper', '')),
+        SensitivityJyPerBeam=sensitivity_jy_per_beam,
+        MsSpwId=d['spw'],
+      )
+
+    return xml

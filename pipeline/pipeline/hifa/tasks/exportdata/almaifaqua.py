@@ -4,7 +4,6 @@ import os
 import xml.etree.cElementTree as ElementTree
 
 import pipeline.domain.measures as measures
-from pipeline.infrastructure import casatools
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.launcher as launcher
 
@@ -95,11 +94,6 @@ class AlmaAquaXmlGenerator(aqua.AquaXmlGenerator):
         # omit containing flux measurement element if no measurements were found
         if len(list(flux_xml)) > 0:
             xml_root.extend(flux_xml)
-
-        sensitivity_xml = sensitivity_xml_for_stages(context, topic_results)
-        # omit containing flux measurement element if no measurements were found
-        if len(list(sensitivity_xml)) > 0:
-            xml_root.extend(sensitivity_xml)
 
         return xml_root
 
@@ -219,72 +213,11 @@ def xml_for_extracted_flux_measurements(all_measurements, ms):
     return result
 
 
-def sensitivity_xml_for_stages(context, results):
-    xml_root = ElementTree.Element('ImageSensitivity')
-
-    task_name = 'hifa_imageprecheck'
-
-    for result in results:
-        pipeline_casa_task = result.pipeline_casa_task
-        if pipeline_casa_task.startswith(task_name + '('):
-            stage_xml = xml_for_sensitivity_stage(context, result, task_name)
-            xml_root.append(stage_xml)
-
-    return xml_root
-
-
-def xml_for_sensitivity_stage(context, stage_results, origin):
-    xml_root = ElementTree.Element('SensitivityEstimates', Origin=origin, Score=UNDEFINED)
-
+def _hifa_preimagecheck_sensitivity_exporter(stage_results):
+    # XML exporter expects this function to return a list of dictionaries
+    l = []
     for result in stage_results:
-        for d in result.sensitivities:
-            ms_xml = xml_for_sensitivity(d)
-            xml_root.append(ms_xml)
+        l.extend(result.sensitivities)
+    return l
 
-    return xml_root
-
-
-def xml_for_sensitivity(d):
-    qa = casatools.quanta
-
-    def value(quanta):
-        return str(qa.getvalue(quanta)[0])
-
-    bandwidth = qa.quantity(d['bandwidth'])
-    bandwidth_hz = value(qa.convert(bandwidth, 'Hz'))
-
-    major = qa.quantity(d['beam']['major'])
-    major_arcsec = value(qa.convert(major, 'arcsec'))
-
-    minor = qa.quantity(d['beam']['minor'])
-    minor_arcsec = value(qa.convert(minor, 'arcsec'))
-
-    cell_major = qa.quantity(d['cell'][0])
-    cell_major_arcsec = value(qa.convert(cell_major, 'arcsec'))
-
-    cell_minor = qa.quantity(d['cell'][1])
-    cell_minor_arcsec = value(qa.convert(cell_minor, 'arcsec'))
-
-    positionangle = qa.quantity(d['beam']['positionangle'])
-    positionangle_deg = value(qa.convert(positionangle, 'deg'))
-
-    sensitivity = qa.quantity(d['sensitivity'])
-    sensitivity_jy_per_beam = value(qa.convert(sensitivity, 'Jy/beam'))
-
-    xml = ElementTree.Element('Sensitivity',
-        Array=d['array'],
-        BandwidthHz=bandwidth_hz,
-        BeamMajArcsec=major_arcsec,
-        BeamMinArcsec=minor_arcsec,
-        BeamPosAngDeg=positionangle_deg,
-        BwMode=d['bwmode'],
-        CellXArcsec=cell_major_arcsec,
-        CellYArcsec=cell_minor_arcsec,
-        Field=d['field'],
-        Robust=str(d.get('robust', '')),
-        UVTaper=str(d.get('uvtaper', '')),
-        SensitivityJyPerBeam=sensitivity_jy_per_beam,
-        MsSpwId=d['spw'],
-      )
-
-    return xml
+aqua.TASK_NAME_TO_SENSITIVITY_EXPORTER['hifa_imageprecheck'] = _hifa_preimagecheck_sensitivity_exporter
