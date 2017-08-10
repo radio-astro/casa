@@ -457,7 +457,8 @@ class MakeImList(basetask.StandardTaskTemplate):
             phasecenters = {}
             for field_intent in field_intent_list:
                 try:
-                    if field_intent[1] == 'TARGET':
+                    gridder = self.heuristics.gridder(field_intent[1], field_intent[0])
+                    if field_intent[1] == 'TARGET' and gridder == 'mosaic':
                         field_ids = self.heuristics.field(
                           'TARGET', field_intent[0], exclude_intent='ATMOSPHERE')
                     else:
@@ -486,7 +487,8 @@ class MakeImList(basetask.StandardTaskTemplate):
                 for spwspec in spwlist:
 
                     try:
-                        if field_intent[1] == 'TARGET':
+                        gridder = self.heuristics.gridder(field_intent[1], field_intent[0])
+                        if field_intent[1] == 'TARGET' and gridder == 'mosaic':
                             field_ids = self.heuristics.field(
                               'TARGET', field_intent[0], exclude_intent='ATMOSPHERE')
                         else:

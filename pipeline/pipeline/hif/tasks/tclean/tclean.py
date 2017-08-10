@@ -246,7 +246,7 @@ class Tclean(cleanbase.CleanBase):
 
         # Determine the phase center
         if inputs.phasecenter in ('', None):
-            if inputs.intent == 'TARGET':
+            if inputs.intent == 'TARGET' and gridder == 'mosaic':
                 field_id = self.image_heuristics.field('TARGET', inputs.field, exclude_intent='ATMOSPHERE')
             else:
                 field_id = self.image_heuristics.field(inputs.intent, inputs.field)
@@ -271,7 +271,7 @@ class Tclean(cleanbase.CleanBase):
                 inputs.cell = cell
                 LOG.info('Heuristic cell: %s' % cell)
 
-            if inputs.intent == 'TARGET':
+            if inputs.intent == 'TARGET' and gridder == 'mosaic':
                 field_ids = self.image_heuristics.field('TARGET', inputs.field, exclude_intent='ATMOSPHERE')
             else:
                 field_ids = self.image_heuristics.field(inputs.intent, inputs.field)
