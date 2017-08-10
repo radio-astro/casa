@@ -5,7 +5,7 @@ import pipeline.infrastructure.renderer.htmlrenderer as hr
 %>
 <%inherit file="t2-4m_details-base.mako"/>
 
-<%block name="title">Transformimagedata</%block>
+<%block name="title">Transform Image Data</%block>
 
 <script src="${self.attr.rsc_path}resources/js/pipeline.js"></script>
 
@@ -45,5 +45,5 @@ $(document).ready(function() {
 });
 </script>
 
-<p>Transformimagedata</p>
+<p>Split off relevant data through the CASA task mstransform as specified by the editimlist task.</p>
 

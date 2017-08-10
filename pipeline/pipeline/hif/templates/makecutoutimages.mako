@@ -45,7 +45,7 @@ $(document).ready(function() {
 });
 </script>
 
-<p>Make Cutout images</p>
+<p>Make cutouts of requested imaging products.</p>
 
 <%self:plot_group plot_dict="${subplots}"
                                   url_fn="${lambda ms:  'noop'}">

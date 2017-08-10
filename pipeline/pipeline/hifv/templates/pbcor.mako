@@ -45,7 +45,7 @@ $(document).ready(function() {
 });
 </script>
 
-<p>hifv_pbcor</p>
+<p>Primary beam corrected images</p>
 
 <%self:plot_group plot_dict="${pbcorplots}"
                                   url_fn="${lambda ms:  'noop'}">

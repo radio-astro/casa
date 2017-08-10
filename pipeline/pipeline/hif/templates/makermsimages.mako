@@ -5,7 +5,7 @@ import pipeline.infrastructure.renderer.htmlrenderer as hr
 %>
 <%inherit file="t2-4m_details-base.mako"/>
 
-<%block name="title">Makermsimages</%block>
+<%block name="title">Make RMS Uncertainty Images</%block>
 
 <script src="${self.attr.rsc_path}resources/js/pipeline.js"></script>
 
@@ -45,7 +45,9 @@ $(document).ready(function() {
 });
 </script>
 
-<p>Makermsimages</p>
+<p>RMS Images are meant to represent the root-mean-square deviation from the mean (rmsd)
+   appropriate to measure the noise level in a Gaussian distribution.
+</p>
 
 <%self:plot_group plot_dict="${rmsplots}"
                                   url_fn="${lambda ms:  'noop'}">
