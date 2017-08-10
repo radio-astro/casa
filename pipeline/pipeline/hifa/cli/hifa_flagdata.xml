@@ -238,8 +238,8 @@ edgespw -- Flag the edge spectral window channels.
 fracspw -- Fraction of the baseline correlator TDM edge channels to be flagged.
     default: 0.0625
 
-fracspwfps -- Fraction of the ACS correlator TDM edge channels to be flagged.
-    default: 0.48387
+fracspwfps -- Fraction of the ACA correlator TDM edge channels to be flagged.
+    default: 0.048387
 
 online -- Apply the online flags.
    default: True
