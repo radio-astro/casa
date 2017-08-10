@@ -51,9 +51,15 @@ class T2_4MDetailsCheckProductSizeRenderer(basetemplates.T2_4MDetailsDefaultRend
             else:
                 beam_vs_minAR_maxAR = 'N/A'
             cell = '%.2g x %.2g arcsec' % (cqa.getvalue(cqa.convert(item['cell'][0], 'arcsec')), cqa.getvalue(cqa.convert(item['cell'][1], 'arcsec')))
-            bandwidth = '%.4g MHz' % (cqa.getvalue(cqa.convert(item['bandwidth'], 'MHz')))
+            if cqa.getvalue(item['bandwidth']) != 0.0:
+                bandwidth = '%.4g MHz' % (cqa.getvalue(cqa.convert(item['bandwidth'], 'MHz')))
+            else:
+                bandwidth = 'N/A'
             bwmode = item['bwmode']
-            sensitivity = '%.3g Jy/beam' % (cqa.getvalue(cqa.convert(item['sensitivity'], 'Jy/beam')))
+            if cqa.getvalue(item['sensitivity']) != 0.0:
+                sensitivity = '%.3g Jy/beam' % (cqa.getvalue(cqa.convert(item['sensitivity'], 'Jy/beam')))
+            else:
+                sensitivity = 'N/A'
 
             rows.append(TR(robust=robust, uvtaper=uvtaper, beam=beam, beam_vs_minAR_maxAR=beam_vs_minAR_maxAR, cell=cell, bandwidth=bandwidth, bwmode=bwmode, sensitivity=sensitivity))
 

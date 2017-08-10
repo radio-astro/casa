@@ -419,6 +419,12 @@ class Tclean(cleanbase.CleanBase):
                                                          inputs.weighting, \
                                                          inputs.robust, \
                                                          inputs.uvtaper)
+
+        if sensitivity is None:
+            LOG.error('Could not calculate the sensitivity for Field %s SPW %s' % (inputs.start, inputs.field, inputs.spw))
+            result.error = '%s/%s/spw%s clean error: no sensitivity' % (inputs.field, inputs.intent, inputs.spw)
+            return result
+
         LOG.info('Sensitivity estimate: %s Jy', sensitivity)
 
         # Choose TOPO frequency selections

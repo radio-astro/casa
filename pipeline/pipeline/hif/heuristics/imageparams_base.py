@@ -1188,11 +1188,11 @@ class ImageParamsHeuristics(object):
                 min_field_id = None
                 max_field_id = None
         else:
-            defaultSensitivity = 0.1
+            defaultSensitivity = None
             if (specmode == 'cube'):
-                LOG.warning('Exception in calculating sensitivity. Cube center channel seems to be flagged. Assuming default value of %g Jy/beam.' % (defaultSensitivity))
+                LOG.warning('Exception in calculating sensitivity. Cube center channel seems to be flagged.')
             else:
-                LOG.warning('Exception in calculating sensitivity. Assuming default value of %g Jy/beam.' % (defaultSensitivity))
+                LOG.warning('Exception in calculating sensitivity.')
             sensitivity = defaultSensitivity
             min_sensitivity = None
             max_sensitivity = None
