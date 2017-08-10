@@ -125,12 +125,6 @@ class Applycals(applycal.IFApplycal):
                 args['calwt'] = calapp.calwt
                 args['applymode'] = inputs.applymode
 
-                for dictkey in ('gainmap'):
-                    try:
-                        del args[dictkey]
-                    except KeyError:
-                        pass
-
                 if inputs.gainmap:
                     # Determine what tables gainfield should used with if mode='gainmap'
                     for i, table in enumerate(args['gaintable']):
@@ -143,7 +137,10 @@ class Applycals(applycal.IFApplycal):
                     args['scan'] = ','.join(scanlist)
                     LOG.info("Using gainfield {!s} and scan={!s}".format(gainfield, ','.join(scanlist)))
 
+                args.pop('gainmap', None)
+
                 jobs.append(casa_tasks.applycal(**args))
+
 
         if inputs.gainmap:
             for calto, calfroms in merged.items():
@@ -173,11 +170,7 @@ class Applycals(applycal.IFApplycal):
                 args['calwt'] = calapp.calwt
                 args['applymode'] = inputs.applymode
 
-                for dictkey in ('gainmap'):
-                    try:
-                        del args[dictkey]
-                    except KeyError:
-                        pass
+                args.pop('gainmap', None)
 
                 jobs.append(casa_tasks.applycal(**args))
 
