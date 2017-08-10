@@ -103,7 +103,7 @@ class SpwPhaseup(gaincalworker.GaincalWorker):
 
             # No spws have good SNR values use combined spw mapping
             elif len([goodsnr for goodsnr in goodsnrs if goodsnr is True]) == 0:
-                LOG.warn('    Low and / or unknown SNR for all spws - Forcing combined spw mapping for %s' % (inputs.ms.basename))
+                LOG.warn('    Low SNR for all spws - Forcing combined spw mapping for %s' % (inputs.ms.basename))
                 if None in goodsnrs:
                     LOG.warn('    Spws without SNR measurements %s' % [spwid for spwid, goodsnr in zip(spwids, goodsnrs) if goodsnr is None])
                 combinespwmap = combine_spwmap (allspws, scispws, scispws[0].id)
