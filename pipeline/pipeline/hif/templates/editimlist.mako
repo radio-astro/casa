@@ -47,7 +47,7 @@ import pipeline.infrastructure.renderer.htmlrenderer as hr
             <td>${len(target['field'].split(','))}</td>
         </tr>
         %for key in target.keys():
-            %if key in target.keys() and key not in ('imagename', 'phasecenter', 'cell', 'imsize', 'field'):
+            %if key in target.keys() and key not in ('imagename', 'phasecenter', 'cell', 'imsize', 'field', 'heuristics'):
                 <tr>
                     <td><strong>${key}</strong></td>
                     <td>${target[key]}</td>

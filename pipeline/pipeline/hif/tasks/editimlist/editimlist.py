@@ -78,6 +78,7 @@ class EditimlistInputs(basetask.StandardInputs):
                  uvtaper=None,
                  uvrange=None,
                  width=None,
+                 sensitivity=None,
                  ):
 
         self._init_properties(vars())
@@ -87,7 +88,7 @@ class EditimlistInputs(basetask.StandardInputs):
                             'start', 'width', 'nbin', 'nchan', 'uvrange', 'stokes', 'nterms',
                             'robust', 'uvtaper', 'niter', 'cyclefactor', 'cycleniter', 'mask',
                             'search_radius_arcsec', 'threshold', 'imaging_mode', 'reffreq',
-                            'editmode', 'threshold_nsigma')
+                            'editmode', 'threshold_nsigma', 'sensitivity')
         self.keys_to_change = []
         for key in keys_to_consider:
             # print key, eval(key)
@@ -221,6 +222,7 @@ class Editimlist(basetask.StandardTaskTemplate):
         target['start'] = inpdict['start']
         target['width'] = inpdict['width']
         target['imagename'] = inpdict['imagename']
+        target['sensitivity'] = inpdict['sensitivity']
 
         # set the field name list in the image list target
         if fieldnames:
