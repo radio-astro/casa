@@ -216,13 +216,14 @@ class Editimlist(basetask.StandardTaskTemplate):
         target['intent'] = th.intent() if not inpdict['intent'] else inpdict['intent']
         target['nterms'] = th.nterms() if not inpdict['nterms'] else inpdict['nterms']
         target['stokes'] = th.stokes() if not inpdict['stokes'] else inpdict['stokes']
+        target['sensitivity'] = th.get_sensitivity(None, None, None, None, None, None, None, None, None,
+                                                   None)[0] if not inpdict['sensitivity'] else inpdict['sensitivity']
         # ------------------------------
         target['nchan'] = inpdict['nchan']
         target['nbin'] = inpdict['nbin']
         target['start'] = inpdict['start']
         target['width'] = inpdict['width']
         target['imagename'] = inpdict['imagename']
-        target['sensitivity'] = inpdict['sensitivity']
 
         # set the field name list in the image list target
         if fieldnames:
