@@ -255,6 +255,7 @@ class Fluxboot2(basetask.StandardTaskTemplate):
             powerfit_results = []
             weblog_results = []
             spindex_results = []
+            fluxscale_result = {}
 
         return Fluxboot2Results(sources=self.inputs.sources, flux_densities=self.inputs.flux_densities,
                                spws=self.inputs.spws, weblog_results=weblog_results,
