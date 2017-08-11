@@ -28,8 +28,27 @@ class CutoutimagesSummary(object):
         plot_wrappers = []
 
         for subimagename in self.result.subimagenames:
-            plot_wrappers.append(displays.SkyDisplay().plot(self.context, subimagename,
-                                                            reportdir=stage_dir, intent='',
-                                                            collapseFunction='mean'))
+            if 'rms.subim' in subimagename:
+                with casatools.ImageReader(subimagename) as image:
+                    stats = image.statistics(robust=True)
+                    self.result.RMSmax = stats.get('max')[0]
+                    self.result.RMSmedian = stats.get('median')[0]
+
+        for subimagename in self.result.subimagenames:
+            if '.psf.tt' in subimagename:
+                plot_wrappers.append(displays.SkyDisplay().plot(self.context, subimagename,
+                                                                reportdir=stage_dir, intent='',
+                                                                collapseFunction='mean',
+                                                                vmin=-0.1, vmax=0.3))
+            elif 'image.pbcor.tt0.subim' in subimagename:
+                plot_wrappers.append(displays.SkyDisplay().plot(self.context, subimagename,
+                                                                reportdir=stage_dir, intent='',
+                                                                collapseFunction='mean',
+                                                                vmin=-5 * self.result.RMSmedian,
+                                                                vmax=20 * self.result.RMSmedian))
+            else:
+                plot_wrappers.append(displays.SkyDisplay().plot(self.context, subimagename,
+                                                                reportdir=stage_dir, intent='',
+                                                                collapseFunction='mean'))
 
         return [p for p in plot_wrappers if p is not None]

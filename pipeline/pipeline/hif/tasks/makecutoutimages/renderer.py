@@ -68,4 +68,5 @@ class T2_4MDetailsMakecutoutimagesRenderer(basetemplates.T2_4MDetailsDefaultRend
 
         ctx.update({'subplots'     : subplots,
                     'info_dict' : info_dict,
-                    'dirname'   : weblog_dir})
+                    'dirname'   : weblog_dir,
+                    'plotter'   : plotter})

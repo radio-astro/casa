@@ -47,6 +47,17 @@ $(document).ready(function() {
 
 <p>Make cutouts of requested imaging products.</p>
 
+<table class="table">
+        <tr>
+            <td><strong>RMS maximum</strong></td>
+            <td>${'%#.4g' % (plotter.result.RMSmax)}</td>
+        </tr>
+        <tr>
+            <td><strong>RMS median</strong></td>
+            <td>${'%#.4g' % (plotter.result.RMSmedian)}</td>
+        </tr>
+</table>
+
 <%self:plot_group plot_dict="${subplots}"
                                   url_fn="${lambda ms:  'noop'}">
 
