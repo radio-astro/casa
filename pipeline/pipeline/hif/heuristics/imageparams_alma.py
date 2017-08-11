@@ -39,7 +39,11 @@ class ImageParamsHeuristicsALMA(ImageParamsHeuristics):
             LOG.info('ALMA robust heuristics: No representative target found. Using robust=0.5')
             return 0.5
 
-        native_resolution = math.sqrt(cqa.getvalue(cqa.convert(beam['major'], 'arcsec')) * cqa.getvalue(cqa.convert(beam['minor'], 'arcsec')))
+        try:
+            native_resolution = math.sqrt(cqa.getvalue(cqa.convert(beam['major'], 'arcsec')) * cqa.getvalue(cqa.convert(beam['minor'], 'arcsec')))
+        except Exception as e:
+            LOG.error('Cannot calculate native resolution: %s. Using robust=0.5' % (e))
+            return 0.5
 
         if native_resolution > cqa.getvalue(cqa.convert(maxAcceptableAngResolution, 'arcsec')):
             robust = -0.5
@@ -65,7 +69,12 @@ class ImageParamsHeuristicsALMA(ImageParamsHeuristics):
             LOG.info('ALMA uvtaper heuristics: No representative target found. Using uvtaper=[]')
             return []
 
-        beam_natural_v = math.sqrt(cqa.getvalue(cqa.convert(beam_natural['major'], 'arcsec')) * cqa.getvalue(cqa.convert(beam_natural['minor'], 'arcsec')))
+        try:
+            beam_natural_v = math.sqrt(cqa.getvalue(cqa.convert(beam_natural['major'], 'arcsec')) * cqa.getvalue(cqa.convert(beam_natural['minor'], 'arcsec')))
+        except Exception as e:
+            LOG.error('Cannot get natural beam size: %s. Using uvtaper=[]' % (e))
+            return []
+
         minAR_v = cqa.getvalue(cqa.convert(minAcceptableAngResolution, 'arcsec'))
         maxAR_v = cqa.getvalue(cqa.convert(maxAcceptableAngResolution, 'arcsec'))
 

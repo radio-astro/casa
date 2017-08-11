@@ -41,16 +41,34 @@ class T2_4MDetailsCheckProductSizeRenderer(basetemplates.T2_4MDetailsDefaultRend
         for item in result.sensitivities:
             robust = item['robust']
             uvtaper = item['uvtaper']
-            bmin_v = cqa.getvalue(cqa.convert(item['beam']['minor'], 'arcsec'))
-            bmaj_v = cqa.getvalue(cqa.convert(item['beam']['major'], 'arcsec'))
-            bpa_v = cqa.getvalue(cqa.convert(item['beam']['positionangle'], 'deg'))
-            beam = '%#.3g x %#.3g arcsec @ %#.3g deg' % (bmaj_v, bmin_v, bpa_v)
-            beamsize = sqrt(bmaj_v * bmin_v)
-            if (minAR_v != 0.0) and (maxAR_v != 0.0):
-                beam_vs_minAR_maxAR = '%.1f%% / %.1f%%' % (100. * (beamsize / minAR_v - 1.0), 100. * (beamsize / maxAR_v - 1.0))
-            else:
+            try:
+                bmin_v = cqa.getvalue(cqa.convert(item['beam']['minor'], 'arcsec'))
+            except:
+                bmin_v = 'N/A'
+            try:
+                bmaj_v = cqa.getvalue(cqa.convert(item['beam']['major'], 'arcsec'))
+            except:
+                bmaj_v = 'N/A'
+            try:
+                bpa_v = cqa.getvalue(cqa.convert(item['beam']['positionangle'], 'deg'))
+            except:
+                bpa_v = 'N/A'
+            try:
+                beam = '%#.3g x %#.3g arcsec @ %#.3g deg' % (bmaj_v, bmin_v, bpa_v)
+            except:
+                beam = 'N/A'
+            try:
+                beamsize = sqrt(bmaj_v * bmin_v)
+                if (minAR_v != 0.0) and (maxAR_v != 0.0):
+                    beam_vs_minAR_maxAR = '%.1f%% / %.1f%%' % (100. * (beamsize / minAR_v - 1.0), 100. * (beamsize / maxAR_v - 1.0))
+                else:
+                    beam_vs_minAR_maxAR = 'N/A'
+            except:
                 beam_vs_minAR_maxAR = 'N/A'
-            cell = '%.2g x %.2g arcsec' % (cqa.getvalue(cqa.convert(item['cell'][0], 'arcsec')), cqa.getvalue(cqa.convert(item['cell'][1], 'arcsec')))
+            if cqa.getvalue(item['cell'][0]) != 0.0 and cqa.getvalue(item['cell'][1]) != 0.0:
+                cell = '%.2g x %.2g arcsec' % (cqa.getvalue(cqa.convert(item['cell'][0], 'arcsec')), cqa.getvalue(cqa.convert(item['cell'][1], 'arcsec')))
+            else:
+                cell = 'N/A'
             if cqa.getvalue(item['bandwidth']) != 0.0:
                 bandwidth = '%.4g MHz' % (cqa.getvalue(cqa.convert(item['bandwidth'], 'MHz')))
             else:

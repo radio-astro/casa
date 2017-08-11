@@ -393,9 +393,11 @@ class ImageParamsHeuristics(object):
         '''Calculate cell size.'''
 
         cqa = casatools.quanta
-        cell_size = cqa.getvalue(cqa.convert(beam['minor'], 'arcsec')) / pixperbeam
-
-        return ['%.2garcsec' % (cell_size)]
+        try:
+            cell_size = cqa.getvalue(cqa.convert(beam['minor'], 'arcsec')) / pixperbeam
+            return ['%.2garcsec' % (cell_size)]
+        except:
+            return ['invalid']
 
     def nchan_and_width(self, field_intent, spwspec):
         if field_intent == 'TARGET':

@@ -637,29 +637,59 @@ def xml_for_sensitivity(d):
     def value(quanta):
         return str(qa.getvalue(quanta)[0])
 
-    bandwidth = qa.quantity(d['bandwidth'])
-    bandwidth_hz = value(qa.convert(bandwidth, 'Hz'))
-    if bandwidth_hz == '0.0':
+    try:
+        bandwidth = qa.quantity(d['bandwidth'])
+        bandwidth_hz = value(qa.convert(bandwidth, 'Hz'))
+        if bandwidth_hz == '0.0':
+            bandwidth_hz = 'N/A'
+    except:
         bandwidth_hz = 'N/A'
 
-    major = qa.quantity(d['beam']['major'])
-    major_arcsec = value(qa.convert(major, 'arcsec'))
+    try:
+        major = qa.quantity(d['beam']['major'])
+        major_arcsec = value(qa.convert(major, 'arcsec'))
+        if major_arcsec == '0.0':
+            major_arcsec = 'N/A'
+    except:
+        major_arcsec = 'N/A'
 
-    minor = qa.quantity(d['beam']['minor'])
-    minor_arcsec = value(qa.convert(minor, 'arcsec'))
+    try:
+        minor = qa.quantity(d['beam']['minor'])
+        minor_arcsec = value(qa.convert(minor, 'arcsec'))
+        if minor_arcsec == '0.0':
+            minor_arcsec = 'N/A'
+    except:
+        minor_arcsec = 'N/A'
 
-    cell_major = qa.quantity(d['cell'][0])
-    cell_major_arcsec = value(qa.convert(cell_major, 'arcsec'))
+    try:
+        cell_x = qa.quantity(d['cell'][0])
+        cell_x = value(qa.convert(cell_x, 'arcsec'))
+        if cell_x_arcsec == '0.0':
+            cell_x_arcsec = 'N/A'
+    except:
+        cell_x_arcsec = 'N/A'
 
-    cell_minor = qa.quantity(d['cell'][1])
-    cell_minor_arcsec = value(qa.convert(cell_minor, 'arcsec'))
+    try:
+        cell_y = qa.quantity(d['cell'][1])
+        cell_y_arcsec = value(qa.convert(cell_y, 'arcsec'))
+        if cell_y_arcsec == '0.0':
+            cell_y_arcsec = 'N/A'
+    except:
+        cell_minor_arcsec = 'N/A'
 
-    positionangle = qa.quantity(d['beam']['positionangle'])
-    positionangle_deg = value(qa.convert(positionangle, 'deg'))
+    try:
+        positionangle = qa.quantity(d['beam']['positionangle'])
+        positionangle_deg = value(qa.convert(positionangle, 'deg'))
+        # Do not check for 0.0. Could be a real value.
+    except:
+        positionangle_deg = 'N/A'
 
-    sensitivity = qa.quantity(d['sensitivity'])
-    sensitivity_jy_per_beam = value(qa.convert(sensitivity, 'Jy/beam'))
-    if sensitivity_jy_per_beam == '0.0':
+    try:
+        sensitivity = qa.quantity(d['sensitivity'])
+        sensitivity_jy_per_beam = value(qa.convert(sensitivity, 'Jy/beam'))
+        if sensitivity_jy_per_beam == '0.0':
+            sensitivity_jy_per_beam  = 'N/A'
+    except:
         sensitivity_jy_per_beam  = 'N/A'
 
     xml = ElementTree.Element('Sensitivity',
@@ -669,8 +699,8 @@ def xml_for_sensitivity(d):
         BeamMinArcsec=minor_arcsec,
         BeamPosAngDeg=positionangle_deg,
         BwMode=d['bwmode'],
-        CellXArcsec=cell_major_arcsec,
-        CellYArcsec=cell_minor_arcsec,
+        CellXArcsec=cell_x_arcsec,
+        CellYArcsec=cell_y_arcsec,
         Field=d['field'],
         Robust=str(d.get('robust', '')),
         UVTaper=str(d.get('uvtaper', '')),

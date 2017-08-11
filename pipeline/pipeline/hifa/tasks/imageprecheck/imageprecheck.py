@@ -132,36 +132,66 @@ class ImagePreCheck(basetask.StandardTaskTemplate):
 
             # reprBW sensitivity
             if reprBW_mode == 'cube':
-                sensitivity, min_sensitivity, max_sensitivity, min_field_id, max_field_id, eff_ch_bw, sens_bw = \
-                    image_heuristics.calc_sensitivities(inputs.vis, repr_field, 'TARGET', str(repr_spw), nbin, {}, 'cube', gridder, cells[(robust, '[]')], imsizes[(robust, '[]')], 'briggs', robust, [], phasecenter)
-                sensitivities.append(Sensitivity( \
-                    **{'array': array, \
-                       'field': repr_field, \
-                       'spw': str(repr_spw), \
-                       'bandwidth': cqa.quantity(sens_bw, 'Hz'), \
-                       'bwmode': 'repBW', \
-                       'beam': beams[(robust, '[]')], \
-                       'cell': [cqa.convert(cells[(robust, '[]')][0], 'arcsec'), cqa.convert(cells[(robust, '[]')][0], 'arcsec')], \
-                       'robust': robust, \
-                       'uvtaper': [], \
-                       'sensitivity': cqa.quantity(sensitivity, 'Jy/beam')}))
+                try:
+                    sensitivity, min_sensitivity, max_sensitivity, min_field_id, max_field_id, eff_ch_bw, sens_bw = \
+                        image_heuristics.calc_sensitivities(inputs.vis, repr_field, 'TARGET', str(repr_spw), nbin, {}, 'cube', gridder, cells[(robust, '[]')], imsizes[(robust, '[]')], 'briggs', robust, [], phasecenter)
+                    sensitivities.append(Sensitivity( \
+                        **{'array': array, \
+                           'field': repr_field, \
+                           'spw': str(repr_spw), \
+                           'bandwidth': cqa.quantity(sens_bw, 'Hz'), \
+                           'bwmode': 'repBW', \
+                           'beam': beams[(robust, '[]')], \
+                           'cell': [cqa.convert(cells[(robust, '[]')][0], 'arcsec'), cqa.convert(cells[(robust, '[]')][0], 'arcsec')], \
+                           'robust': robust, \
+                           'uvtaper': [], \
+                           'sensitivity': cqa.quantity(sensitivity, 'Jy/beam')}))
+                except:
+                    sensitivities.append(Sensitivity( \
+                        **{'array': array, \
+                           'field': repr_field, \
+                           'spw': str(repr_spw), \
+                           'bandwidth': cqa.quantity(0.0, 'Hz'), \
+                           'bwmode': 'repBW', \
+                           'beam': beams[(robust, '[]')], \
+                           'cell': ['0.0 arcsec', '0.0 arcsec'], \
+                           'robust': robust, \
+                           'uvtaper': [], \
+                           'sensitivity': cqa.quantity(0.0, 'Jy/beam')}))
+                    sens_bw = 0.0
+
                 sensitivity_bandwidth = cqa.quantity(sens_bw, 'Hz')
 
             # full cont sensitivity (no frequency ranges excluded)
-            sensitivity, min_sensitivity, max_sensitivity, min_field_id, max_field_id, eff_ch_bw, sens_bw = \
-                image_heuristics.calc_sensitivities(inputs.vis, repr_field, 'TARGET', cont_spw, -1, {}, 'cont', gridder, cells[(robust, '[]')], imsizes[(robust, '[]')], 'briggs', robust, [], phasecenter)
-            for cont_sens_bw_mode in cont_sens_bw_modes:
-                sensitivities.append(Sensitivity( \
-                    **{'array': array, \
-                       'field': repr_field, \
-                       'spw': str(repr_spw), \
-                       'bandwidth': cqa.quantity(min(sens_bw, num_cont_spw * 1.875e9), 'Hz'), \
-                       'bwmode': cont_sens_bw_mode, \
-                       'beam': beams[(robust, '[]')], \
-                       'cell': [cqa.convert(cells[(robust, '[]')][0], 'arcsec'), cqa.convert(cells[(robust, '[]')][0], 'arcsec')], \
-                       'robust': robust, \
-                       'uvtaper': [], \
-                       'sensitivity': cqa.quantity(sensitivity, 'Jy/beam')}))
+            try:
+                sensitivity, min_sensitivity, max_sensitivity, min_field_id, max_field_id, eff_ch_bw, sens_bw = \
+                    image_heuristics.calc_sensitivities(inputs.vis, repr_field, 'TARGET', cont_spw, -1, {}, 'cont', gridder, cells[(robust, '[]')], imsizes[(robust, '[]')], 'briggs', robust, [], phasecenter)
+                for cont_sens_bw_mode in cont_sens_bw_modes:
+                    sensitivities.append(Sensitivity( \
+                        **{'array': array, \
+                           'field': repr_field, \
+                           'spw': str(repr_spw), \
+                           'bandwidth': cqa.quantity(min(sens_bw, num_cont_spw * 1.875e9), 'Hz'), \
+                           'bwmode': cont_sens_bw_mode, \
+                           'beam': beams[(robust, '[]')], \
+                           'cell': [cqa.convert(cells[(robust, '[]')][0], 'arcsec'), cqa.convert(cells[(robust, '[]')][0], 'arcsec')], \
+                           'robust': robust, \
+                           'uvtaper': [], \
+                           'sensitivity': cqa.quantity(sensitivity, 'Jy/beam')}))
+            except:
+                for cont_sens_bw_mode in cont_sens_bw_modes:
+                    sensitivities.append(Sensitivity( \
+                        **{'array': array, \
+                           'field': repr_field, \
+                           'spw': str(repr_spw), \
+                           'bandwidth': cqa.quantity(0.0, 'Hz'), \
+                           'bwmode': 'repBW', \
+                           'beam': beams[(robust, '[]')], \
+                           'cell': ['0.0 arcsec', '0.0 arcsec'], \
+                           'robust': robust, \
+                           'uvtaper': [], \
+                           'sensitivity': cqa.quantity(0.0, 'Jy/beam')}))
+                sens_bw = 0.0
 
             if sensitivity_bandwidth is None:
                 sensitivity_bandwidth = cqa.quantity(sens_bw, 'Hz')
@@ -181,34 +211,61 @@ class ImagePreCheck(basetask.StandardTaskTemplate):
                     cells[(hm_robust, str(hm_uvtaper))] = image_heuristics.cell(beams[(hm_robust, str(hm_uvtaper))])
                     imsizes[(hm_robust, str(hm_uvtaper))] = image_heuristics.imsize(field_ids, cells[(hm_robust, str(hm_uvtaper))], primary_beam_size, centreonly=False)
                     if reprBW_mode == 'cube':
-                        sensitivity, min_sensitivity, max_sensitivity, min_field_id, max_field_id, eff_ch_bw, sens_bw = \
-                            image_heuristics.calc_sensitivities(inputs.vis, repr_field, 'TARGET', str(repr_spw), nbin, {}, 'cube', gridder, cells[(hm_robust, str(hm_uvtaper))], imsizes[(hm_robust, str(hm_uvtaper))], 'briggs', hm_robust, hm_uvtaper, phasecenter)
-                        sensitivities.append(Sensitivity( \
-                            **{'array': array, \
-                               'field': repr_field, \
-                               'spw': str(repr_spw), \
-                               'bandwidth': cqa.quantity(sens_bw, 'Hz'), \
-                               'bwmode': 'repBW', \
-                               'beam': beams[(hm_robust, str(hm_uvtaper))], \
-                               'cell': [cqa.convert(cells[(hm_robust, str(hm_uvtaper))][0], 'arcsec'), cqa.convert(cells[(hm_robust, str(hm_uvtaper))][0], 'arcsec')], \
-                               'robust': hm_robust, \
-                               'uvtaper': hm_uvtaper, \
-                               'sensitivity': cqa.quantity(sensitivity, 'Jy/beam')}))
+                        try:
+                            sensitivity, min_sensitivity, max_sensitivity, min_field_id, max_field_id, eff_ch_bw, sens_bw = \
+                                image_heuristics.calc_sensitivities(inputs.vis, repr_field, 'TARGET', str(repr_spw), nbin, {}, 'cube', gridder, cells[(hm_robust, str(hm_uvtaper))], imsizes[(hm_robust, str(hm_uvtaper))], 'briggs', hm_robust, hm_uvtaper, phasecenter)
+                            sensitivities.append(Sensitivity( \
+                                **{'array': array, \
+                                   'field': repr_field, \
+                                   'spw': str(repr_spw), \
+                                   'bandwidth': cqa.quantity(sens_bw, 'Hz'), \
+                                   'bwmode': 'repBW', \
+                                   'beam': beams[(hm_robust, str(hm_uvtaper))], \
+                                   'cell': [cqa.convert(cells[(hm_robust, str(hm_uvtaper))][0], 'arcsec'), cqa.convert(cells[(hm_robust, str(hm_uvtaper))][0], 'arcsec')], \
+                                   'robust': hm_robust, \
+                                   'uvtaper': hm_uvtaper, \
+                                   'sensitivity': cqa.quantity(sensitivity, 'Jy/beam')}))
+                        except:
+                            sensitivities.append(Sensitivity( \
+                                **{'array': array, \
+                                   'field': repr_field, \
+                                   'spw': str(repr_spw), \
+                                   'bandwidth': cqa.quantity(0.0, 'Hz'), \
+                                   'bwmode': 'repBW', \
+                                   'beam': beams[(robust, '[]')], \
+                                   'cell': ['0.0 arcsec', '0.0 arcsec'], \
+                                   'robust': robust, \
+                                   'uvtaper': [], \
+                                   'sensitivity': cqa.quantity(0.0, 'Jy/beam')}))
 
-                    sensitivity, min_sensitivity, max_sensitivity, min_field_id, max_field_id, eff_ch_bw, sens_bw = \
-                        image_heuristics.calc_sensitivities(inputs.vis, repr_field, 'TARGET', cont_spw, -1, {}, 'cont', gridder, cells[(hm_robust, str(hm_uvtaper))], imsizes[(hm_robust, str(hm_uvtaper))], 'briggs', hm_robust, hm_uvtaper, phasecenter)
-                    for cont_sens_bw_mode in cont_sens_bw_modes:
-                        sensitivities.append(Sensitivity( \
-                            **{'array': array, \
-                               'field': repr_field, \
-                               'spw': str(repr_spw), \
-                               'bandwidth': cqa.quantity(min(sens_bw, num_cont_spw * 1.875e9), 'Hz'), \
-                               'bwmode': cont_sens_bw_mode, \
-                               'beam': beams[(hm_robust, str(hm_uvtaper))], \
-                               'cell': [cqa.convert(cells[(hm_robust, str(hm_uvtaper))][0], 'arcsec'), cqa.convert(cells[(hm_robust, str(hm_uvtaper))][0], 'arcsec')], \
-                               'robust': hm_robust, \
-                               'uvtaper': hm_uvtaper, \
-                               'sensitivity': cqa.quantity(sensitivity, 'Jy/beam')}))
+                    try:
+                        sensitivity, min_sensitivity, max_sensitivity, min_field_id, max_field_id, eff_ch_bw, sens_bw = \
+                            image_heuristics.calc_sensitivities(inputs.vis, repr_field, 'TARGET', cont_spw, -1, {}, 'cont', gridder, cells[(hm_robust, str(hm_uvtaper))], imsizes[(hm_robust, str(hm_uvtaper))], 'briggs', hm_robust, hm_uvtaper, phasecenter)
+                        for cont_sens_bw_mode in cont_sens_bw_modes:
+                            sensitivities.append(Sensitivity( \
+                                **{'array': array, \
+                                   'field': repr_field, \
+                                   'spw': str(repr_spw), \
+                                   'bandwidth': cqa.quantity(min(sens_bw, num_cont_spw * 1.875e9), 'Hz'), \
+                                   'bwmode': cont_sens_bw_mode, \
+                                   'beam': beams[(hm_robust, str(hm_uvtaper))], \
+                                   'cell': [cqa.convert(cells[(hm_robust, str(hm_uvtaper))][0], 'arcsec'), cqa.convert(cells[(hm_robust, str(hm_uvtaper))][0], 'arcsec')], \
+                                   'robust': hm_robust, \
+                                   'uvtaper': hm_uvtaper, \
+                                   'sensitivity': cqa.quantity(sensitivity, 'Jy/beam')}))
+                    except:
+                        for cont_sens_bw_mode in cont_sens_bw_modes:
+                            sensitivities.append(Sensitivity( \
+                                **{'array': array, \
+                                   'field': repr_field, \
+                                   'spw': str(repr_spw), \
+                                   'bandwidth': cqa.quantity(0.0, 'Hz'), \
+                                   'bwmode': 'repBW', \
+                                   'beam': beams[(robust, '[]')], \
+                                   'cell': ['0.0 arcsec', '0.0 arcsec'], \
+                                   'robust': robust, \
+                                   'uvtaper': [], \
+                                   'sensitivity': cqa.quantity(0.0, 'Jy/beam')}))
             else:
                 hm_uvtaper = []
         else:
