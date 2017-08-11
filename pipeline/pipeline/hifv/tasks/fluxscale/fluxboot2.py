@@ -220,11 +220,13 @@ class Fluxboot2(basetask.StandardTaskTemplate):
                                           action='apply', flagbackup=False, savepars=False)
             self._executor.execute(flagjob)
 
-            # use applycal to apply fluxflag.g to calibrators.ms, applymode='flagonlystrict
+            # use applycal to apply fluxflag.g to calibrators.ms, applymode='flagonlystrict'
             applycaljob = casa_tasks.applycal(vis=calMs, field="", spw="", intent="",
                                               selectdata=False, docallib=False, gaintable=[fluxflagtable],
                                               gainfield=[''], interp=[''], spwmap=[], calwt=[False], parang=False,
                                               applymode='flagonlystrict', flagbackup=True)
+
+            self._executor.execute(applycaljob)
 
             # -------------------------------------------------------------------------------
 
