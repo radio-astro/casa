@@ -1075,9 +1075,14 @@ def freq_selection_to_channels(img, selection):
             c0 = max(c0, 0)
             c0 = min(c0, numPix - 1)
             c0 = int(round(c0 + 0.5))
+            c0 = max(c0, 0)
+            c0 = min(c0, numPix - 1)
+
             c1 = max(c1, 0)
             c1 = min(c1, numPix - 1)
             c1 = int(round(c1 - 0.5))
+            c1 = max(c1, 0)
+            c1 = min(c1, numPix - 1)
 
             if (c0 < c1):
                 channels.append((c0, c1))
