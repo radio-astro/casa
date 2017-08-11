@@ -597,6 +597,7 @@ class Tclean(cleanbase.CleanBase):
         sequence_manager.niter = new_niter
 
         iterating = True
+        keep_iterating = False
         iter = 1
         while iterating:
             # Create the name of the next clean mask from the root of the 
@@ -632,9 +633,9 @@ class Tclean(cleanbase.CleanBase):
 
             # perform an iteration.
             if (inputs.specmode == 'cube') and (not inputs.cleancontranges):
-                seq_result = sequence_manager.iteration(new_cleanmask, self.pblimit_image, self.pblimit_cleanmask, inputs.spw, inputs.spwsel_lsrk)
+                seq_result = sequence_manager.iteration(new_cleanmask, self.pblimit_image, self.pblimit_cleanmask, inputs.spw, inputs.spwsel_lsrk, keep_iterating=keep_iterating)
             else:
-                seq_result = sequence_manager.iteration(new_cleanmask, self.pblimit_image, self.pblimit_cleanmask)
+                seq_result = sequence_manager.iteration(new_cleanmask, self.pblimit_image, self.pblimit_cleanmask, keep_iterating=keep_iterating)
 
             # Check the iteration status.
             if not seq_result.iterating:
@@ -644,6 +645,10 @@ class Tclean(cleanbase.CleanBase):
             old_pname = '%s.iter%s' % (rootname, iter-1)
             new_pname = '%s.iter%s' % (rootname, iter)
             self.copy_products(os.path.basename(old_pname), os.path.basename(new_pname))
+            if keep_iterating:
+                # Delete existing (iter2) mask from autoboxing since we
+                # now switch to a user supplied mask.
+                shutil.rmtree('%s.iter%s.mask' % (rootname, iter))
 
             # Determine the cleaning threshold
             threshold = seq_result.threshold
@@ -681,6 +686,11 @@ class Tclean(cleanbase.CleanBase):
             # Check for cases with zero mask and significant signal
             if (inputs.hm_masking == 'auto') and (result.tclean_stopcode == 7) and (residual_max / residual_robust_rms > 10.0):
                 LOG.warn('No clean mask was found despite clean residual peak / scaled MAD > 10.')
+
+            # If no automask is found for calibrators, try the simple circular mask
+            if (inputs.intent in ('BANDPASS', 'PHASE')) and (inputs.hm_masking == 'auto') and (result.tclean_stopcode == 7):
+                inputs.hm_masking = 'centralregion'
+                keep_iterating = True
 
             # Keep image cleanmask area min and max and non-cleanmask area RMS for weblog and QA
             result.set_image_min(pbcor_image_min)

@@ -26,7 +26,7 @@ class ImageCentreThresholdSequence(BaseCleanSequence):
         self.result = BoxResult()
         self.sidelobe_ratio = -1
 
-    def iteration(self, new_cleanmask, pblimit_image=0.2, pblimit_cleanmask=0.3, spw=None, frequency_selection=None):
+    def iteration(self, new_cleanmask, pblimit_image=0.2, pblimit_cleanmask=0.3, spw=None, frequency_selection=None, keep_iterating=None):
 
         if (self.multiterm):
             extension = '.tt0'
