@@ -210,9 +210,12 @@ class Fluxboot2(basetask.StandardTaskTemplate):
             # after the first, to obtain (temporary) scan-averaged, normalized
             # amps for flagging, fluxflag.g
             fluxflagtable = 'fluxflag.g'
-            for field in field_objects:
+            for i, field in enumerate(field_objects):
+                append=False
+                if i > 0: append=True
                 gaincal_result = self._do_gaincal(context, calMs, fluxflagtable, 'ap', ['fluxphaseshortgaincal.g'],
-                                                  solint=gain_solint2, minsnr=5.0, refAnt=refAnt, field=field.name)
+                                                  solint=gain_solint2, minsnr=5.0, refAnt=refAnt, field=field.name,
+                                                  solnorm=True, append=append)
 
             # use flagdata to clip fluxflag.g outside the range 0.9-1.1
             flagjob = casa_tasks.flagdata(vis=fluxflagtable, mode='clip', correlation='ABS_ALL',
@@ -634,7 +637,7 @@ class Fluxboot2(basetask.StandardTaskTemplate):
             return None
 
     def _do_gaincal(self, context, calMs, caltable, calmode, gaintablelist,
-                    solint='int', minsnr=3.0, refAnt=None, field=''):
+                    solint='int', minsnr=3.0, refAnt=None, field='', solnorm=False, append=False):
 
         m = self.inputs.context.observing_run.get_ms(self.inputs.vis)
         # minBL_for_cal = context.evla['msinfo'][m.name].minBL_for_cal
@@ -656,11 +659,11 @@ class Fluxboot2(basetask.StandardTaskTemplate):
                      'refant': refAnt.lower(),
                      'minblperant': minBL_for_cal,
                      'minsnr': minsnr,
-                     'solnorm': False,
+                     'solnorm': solnorm,
                      'gaintype': 'G',
                      'smodel': [],
                      'calmode': calmode,
-                     'append': False,
+                     'append': append,
                      'gaintable': gaintablelist,
                      'gainfield': [''],
                      'interp': [''],
