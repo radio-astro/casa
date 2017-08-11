@@ -27,7 +27,8 @@ class BoxResult(basetask.Results):
 
 
 class TcleanResult(basetask.Results):
-    def __init__(self, sourcename=None, intent=None, spw=None, specmode=None, multiterm=None, plotdir=None):
+    def __init__(self, sourcename=None, intent=None, spw=None, specmode=None, multiterm=None, plotdir=None,
+                 imaging_mode=None):
         super(TcleanResult, self).__init__()
         self.sourcename = sourcename
         self.intent = intent
@@ -66,6 +67,8 @@ class TcleanResult(basetask.Results):
         self.targets = ['']
         self.warning = None
         self.error = None
+        # Used to make simple telescope-dependent decisions about weblog output
+        self.imaging_mode = imaging_mode
 
     def empty(self):
         return not(self._psf or self._model or self._flux or 

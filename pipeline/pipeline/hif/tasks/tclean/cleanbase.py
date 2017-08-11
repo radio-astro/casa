@@ -183,7 +183,7 @@ class CleanBase(basetask.StandardTaskTemplate):
                                   spw=inputs.spw,
                                   specmode=inputs.specmode,
                                   multiterm=inputs.nterms if inputs.deconvolver=='mtmfs' else None,
-                                  plotdir=plotdir)
+                                  plotdir=plotdir, imaging_mode=inputs.heuristics.imaging_mode)
         else:
             result = inputs.result
 

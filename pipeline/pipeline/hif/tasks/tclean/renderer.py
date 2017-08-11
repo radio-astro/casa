@@ -170,24 +170,30 @@ class T2_4MDetailsTcleanRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
             #
             # theoretical sensitivity
             #
-            row_sensitivity = '%.2g %s' % (r.sensitivity, brightness_unit)
-            if r.min_sensitivity:
-                row_sensitivity += '<br>min: %.2g %s (field: %s)' % (r.min_sensitivity, brightness_unit, r.min_field_id)
-            if r.max_sensitivity:
-                row_sensitivity += '<br>max: %.2g %s (field: %s)' % (r.max_sensitivity, brightness_unit, r.max_field_id)
+            if 'VLASS' in r.imaging_mode:
+                row_sensitivity = '-'
+            else:
+                row_sensitivity = '%.2g %s' % (r.sensitivity, brightness_unit)
+                if r.min_sensitivity:
+                    row_sensitivity += '<br>min: %.2g %s (field: %s)' % (r.min_sensitivity, brightness_unit, r.min_field_id)
+                if r.max_sensitivity:
+                    row_sensitivity += '<br>max: %.2g %s (field: %s)' % (r.max_sensitivity, brightness_unit, r.max_field_id)
 
             #
             # cleaning threshold cell
             #
-            if r.threshold:
-                row_cleaning_threshold = '%.2g %s' % (casatools.quanta.convert(r.threshold, brightness_unit)['value'], brightness_unit)
-                if r.dirty_dynamic_range:
-                    row_cleaning_threshold += '<br>Dirty DR: %.2g' % r.dirty_dynamic_range
-                    row_cleaning_threshold += '<br>DR correction: %.2g' % r.DR_correction_factor
-                else:
-                    row_cleaning_threshold += '<br>No DR information'
+            if 'VLASS' in r.imaging_mode:
+                row_cleaning_threshold = '%2g' % r.threshold
             else:
-                row_cleaning_threshold = '-'
+                if r.threshold:
+                    row_cleaning_threshold = '%.2g %s' % (casatools.quanta.convert(r.threshold, brightness_unit)['value'], brightness_unit)
+                    if r.dirty_dynamic_range:
+                        row_cleaning_threshold += '<br>Dirty DR: %.2g' % r.dirty_dynamic_range
+                        row_cleaning_threshold += '<br>DR correction: %.2g' % r.DR_correction_factor
+                    else:
+                        row_cleaning_threshold += '<br>No DR information'
+                else:
+                    row_cleaning_threshold = '-'
 
             #
             # heading for non-pbcor RMS cell
