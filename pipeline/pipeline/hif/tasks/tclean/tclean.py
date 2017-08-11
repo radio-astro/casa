@@ -685,7 +685,7 @@ class Tclean(cleanbase.CleanBase):
 
             # Check for cases with zero mask and significant signal
             if (inputs.hm_masking == 'auto') and (result.tclean_stopcode == 7) and (residual_max / residual_robust_rms > 10.0):
-                LOG.warn('No clean mask was found despite clean residual peak / scaled MAD > 10.')
+                LOG.warn('No clean mask was found despite clean residual peak / scaled MAD > 10. Field %s Intent %s SPW %s' % (inputs.field, inputs.intent, inputs.spw))
 
             # If no automask is found for calibrators, try the simple circular mask
             if (inputs.intent in ('BANDPASS', 'PHASE')) and (inputs.hm_masking == 'auto') and (result.tclean_stopcode == 7):
