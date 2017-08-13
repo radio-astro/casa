@@ -4,15 +4,21 @@ import os
 import pipeline.infrastructure.filenamer as filenamer
 import pipeline.infrastructure.renderer.htmlrenderer as hr
 
+def get_mapping(ms, spwid):
+    if ms.combine_spwmap:
+        return 'of <strong>combined</strong> solution '
+    else:
+        return ' for spectral window <strong>' + str(spwid) + '</strong>'
+
 def get_mapped_window(ms, spwid):
     if ms.combine_spwmap:
-        return ms.combine_spwmap[spwid]
+        return 'the <strong>combined</strong> solution '
     elif ms.phaseup_spwmap:
-        return ms.phaseup_spwmap[spwid]
+        return 'spectral window <strong>' + str(ms.phaseup_spwmap[spwid]) + '</strong>'
     else:
         return spwid
 
-def get_mapped_scispws (ms):
+def get_mapped_scispws(ms):
     if ms.combine_spwmap:
         spws = [str(spw.id) for spw in ms.get_spectral_windows()]
         return 'the following spectral windows ' + ','.join(spws) + ' have been combined' 
@@ -146,9 +152,8 @@ $(document).ready(function() {
 	</%def>
 
 	<%def name="caption_text(plot, intent)"> 
-		Phase vs time for spectral window ${plot.parameters['spw']}, 
-		all antennas and correlations.
-	</%def>
+		Phase vs time ${get_mapping(pcontext.observing_run.get_ms(name=plot.parameters['vis']), plot.parameters['spw'])},
+                all antennas and correlations.</%def>
 
 </%self:plot_group>
 
@@ -179,8 +184,7 @@ $(document).ready(function() {
 	</%def>
 
 	<%def name="caption_text(plot, intent)"> 
-		RMS phase vs distance to reference antenna for spectral
-		window ${plot.parameters['spw']}, all antennas.
+                RMS phase vs distance to reference antenna for spectral window ${plot.parameters['spw']}, all antennas.
 	</%def>
 
 </%self:plot_group>
@@ -262,8 +266,8 @@ $(document).ready(function() {
 	</%def>
 
 	<%def name="caption_text(plot, intent)"> 
-		Phase vs time for spectral window ${plot.parameters['spw']}, 
-		all antennas and correlations.
+		Phase vs time ${get_mapping(pcontext.observing_run.get_ms(name=plot.parameters['vis']), plot.parameters['spw'])},
+                all antennas and correlations.
 	</%def>
 
 </%self:plot_group>
@@ -309,8 +313,8 @@ $(document).ready(function() {
 
 	<%def name="caption_text(plot, intent)"> 
 		Phase offset vs time for spectral window <strong>${plot.parameters['spw']}</strong>, which has been 
-		mapped to spectral window <strong>${get_mapped_window(pcontext.observing_run.get_ms(name=plot.parameters['vis']), plot.parameters['spw'])}</strong>,
-                for all antennas and correlations.
+		mapped to ${get_mapped_window(pcontext.observing_run.get_ms(name=plot.parameters['vis']), plot.parameters['spw'])},
+                all antennas and correlations.
 	</%def>
 
 </%self:plot_group>
