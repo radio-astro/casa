@@ -38,6 +38,7 @@ class CleanBaseInputs(basetask.StandardInputs):
                  restoringbeam=None, iter=None, mask=None, hm_masking=None,
                  hm_sidelobethreshold=None, hm_noisethreshold=None,
                  hm_lownoisethreshold=None, hm_minbeamfrac=None,
+                 hm_growiterations=None,
                  pblimit=None, niter=None,
                  threshold=None, sensitivity=None, reffreq=None, result=None, parallel=None,
                  heuristics=None):
@@ -61,6 +62,7 @@ class CleanBaseInputs(basetask.StandardInputs):
     hm_noisethreshold = basetask.property_with_default('hm_noisethreshold', -999.0)
     hm_lownoisethreshold = basetask.property_with_default('hm_lownoisethreshold', -999.0)
     hm_minbeamfrac = basetask.property_with_default('hm_minbeamfrac', -999.0)
+    hm_growiterations = basetask.property_with_default('hm_growiterations', -999)
     niter = basetask.property_with_default('niter', 5000)
     noise = basetask.property_with_default('noise', '1.0Jy')
     nchan = basetask.property_with_default('nchan', -1)
@@ -296,7 +298,7 @@ class CleanBase(basetask.StandardTaskTemplate):
             tclean_job_parameters['usemask'] = 'auto-multithresh'
 
             # get heuristics parameters 
-            sidelobethreshold, noisethreshold, lownoisethreshold, minbeamfrac = inputs.heuristics.get_autobox_params(inputs.intent)
+            sidelobethreshold, noisethreshold, lownoisethreshold, minbeamfrac, growiterations = inputs.heuristics.get_autobox_params(inputs.intent)
 
             # Override individually with manual settings
             if inputs.hm_sidelobethreshold != -999.0:
@@ -318,6 +320,11 @@ class CleanBase(basetask.StandardTaskTemplate):
                 tclean_job_parameters['minbeamfrac'] = inputs.hm_minbeamfrac
             elif minbeamfrac is not None:
                 tclean_job_parameters['minbeamfrac'] = minbeamfrac
+
+            if inputs.hm_growiterations != -999:
+                tclean_job_parameters['growiterations'] = inputs.hm_growiterations
+            elif growiterations is not None:
+                tclean_job_parameters['growiterations'] = growiterations
         else:
             if (inputs.hm_masking != 'none') and (inputs.mask != ''):
                 tclean_job_parameters['usemask'] = 'user'

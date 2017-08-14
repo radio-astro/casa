@@ -216,6 +216,11 @@ Compute a clean map.
        <value>-999.0</value>
   </param>
 
+  <param type="int" name="hm_growiterations" subparam="true">
+     <description>number of binary dilation iterations for growing the mask</description>
+       <value>-999</value>
+  </param>
+
   <param type="string" name="hm_cleaning">
      <description>Pipeline clean control heuristics</description>
        <value>rms</value>
@@ -353,6 +358,7 @@ Compute a clean map.
         <default param="hm_noisethreshold"><value type="double">-999.0</value></default>
         <default param="hm_lownoisethreshold"><value type="double">-999.0</value></default>
         <default param="hm_minbeamfrac"><value type="double">-999.0</value></default>
+        <default param="hm_growiterations"><value type="in">-999</value></default>
       </equals>
       <equals value="centralregion">
       </equals>
@@ -592,6 +598,8 @@ hm_noisethreshold -- Auto-boxing noisethreshold.
 hm_lownoisethreshold -- Auto-boxing lownoisethreshold.
 
 hm_minbeamfrac -- Auto-boxing minbeamfrac.
+
+hm_growiterations -- number of binary dilation iterations for growing the mask.
 
 mask -- Image mask for hm_masking manual mode. User responsible for
     matching image sizes, coordinates, etc.

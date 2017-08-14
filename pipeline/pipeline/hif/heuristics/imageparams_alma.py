@@ -195,6 +195,7 @@ class ImageParamsHeuristicsALMA(ImageParamsHeuristics):
         noisethreshold = None
         lownoisethreshold = None
         minbeamfrac = None
+        growiterations = None
 
         min_diameter = 1.e9
         repBaselineLengths = []
@@ -212,29 +213,34 @@ class ImageParamsHeuristicsALMA(ImageParamsHeuristics):
                     noisethreshold = 4.0
                     lownoisethreshold = 1.5
                     minbeamfrac = 0.3
+                    growiterations = 75
                 else:
                     sidelobethreshold = 3.0
                     noisethreshold = 5.0
                     lownoisethreshold = 1.5
                     minbeamfrac = 0.3
+                    growiterations = 75
             elif min_diameter == 7.0:
                 sidelobethreshold = 1.25
                 noisethreshold = 5.0
                 lownoisethreshold = 2.0
                 minbeamfrac = 0.1
+                growiterations = 75
         else:
             if min_diameter == 12.0:
                 sidelobethreshold = 2.0
                 noisethreshold = 5.0
                 lownoisethreshold = 1.5
                 minbeamfrac = 0.3
+                growiterations = 75
             elif min_diameter == 7.0:
                 sidelobethreshold = 1.25
                 noisethreshold = 5.0
                 lownoisethreshold = 2.0
                 minbeamfrac = 0.1
+                growiterations = 75
 
-        return sidelobethreshold, noisethreshold, lownoisethreshold, minbeamfrac
+        return sidelobethreshold, noisethreshold, lownoisethreshold, minbeamfrac, growiterations
 
     def warn_missing_cont_ranges(self):
 
