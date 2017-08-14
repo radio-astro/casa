@@ -244,6 +244,8 @@ def fluxservice (serviceurl, ms, frequency, sourcename):
     # serviceurl = 'http://bender.csrg.cl:2121/bfs-0.2/ssap'
     # serviceurl =  'http://asa-test.alma.cl/bfs/'
     # serviceurl = 'https://almascience.eso.org/sc/flux'
+    # Example:
+    # https://almascience.eso.org/sc/flux?DATE=10-August-2017&FREQUENCY=232101563000.0&NAME=J1924-2914&WEIGHTED=true&RESULT=1
 
     qt = casatools.quanta
     mt = casatools.measures
@@ -291,12 +293,14 @@ def fluxservice (serviceurl, ms, frequency, sourcename):
 def buildparams(sourcename, date, frequency):
     """
     Inputs are all strings with the format:
-    NAME=3c279&DATE=04-Apr-2014&FREQUENCY=231.435E9
+    NAME=3c279&DATE=04-Apr-2014&FREQUENCY=231.435E9&WEIGHTED=true&RESULT=1
     """
 
-    params = {'NAME': sourcename,
-              'DATE': date,
-              'FREQUENCY': frequency}
+    params = {'NAME'      : sourcename,
+              'DATE'      : date,
+              'FREQUENCY' : frequency,
+              'WEIGHTED'  : 'true',
+              'RESULT'    : 0}
 
     urlparams = urllib.urlencode(params)
 
