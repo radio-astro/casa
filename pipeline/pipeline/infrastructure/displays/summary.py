@@ -319,10 +319,11 @@ class FieldVsTimeChart(object):
         size = [0.4, 0.4, 0.6, 0.6]
         for intent, colour in sorted(self._intent_colours.items(),
                                      key=operator.itemgetter(0)):
-            pylab.gca().fill([x, x+0.05, x+0.05, x], size, facecolor=colour, 
-                             edgecolor=colour)
-            pylab.text(x+0.06, 0.4, intent, size=9, va='bottom', rotation=45)
-            x += 0.12
+            if (intent in self.inputs.ms.intents) or 'UNKNOWN' in intent:
+                pylab.gca().fill([x, x+0.05, x+0.05, x], size, facecolor=colour,
+                                 edgecolor=colour)
+                pylab.text(x+0.06, 0.4, intent, size=9, va='bottom', rotation=45)
+                x += 0.12
 
         pylab.axis(lims)
 
