@@ -117,6 +117,11 @@ a QA score based on its effect on the interferometric data.
       <value>0.8</value>
     </param>
 
+    <param type="bool" name="cont">
+      <description>Estimate the continuum (e.g., due to clouds)</description>
+      <value>False</value>
+    </param>
+
     <param type="string" name="refant" subparam="true">
       <description>Ranked list of reference antennas</description>
       <value></value>
@@ -321,6 +326,9 @@ minnumants -- Minimum number of nearby antennas (up to 3) used for
 
 mingoodfrac -- Minimum fraction of good data per  antenna
     default: 0.8
+
+cont -- If True, estimates the continuum (e.g., due to clouds).
+    default: False
 
 refant -- Ranked comma delimited list of reference antennas.
     default: ''

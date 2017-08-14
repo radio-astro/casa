@@ -23,7 +23,7 @@ class WvrgcalflagInputs(wvrgcal.WvrgcalInputs):
                  hm_tie=None, tie=None, sourceflag=None, nsol=None,
                  disperse=None, wvrflag=None, hm_smooth=None, smooth=None,
                  scale=None, maxdistm=None, minnumants=None, mingoodfrac=None,
-                 refant=None, flag_intent=None, qa_intent=None,
+                 cont=None, refant=None, flag_intent=None, qa_intent=None,
                  qa_bandpass_intent=None, accept_threshold=None, flag_hi=None,
                  fhi_limit=None, fhi_minsample=None):
         self._init_properties(vars())
@@ -132,7 +132,7 @@ class Wvrgcalflag(basetask.StandardTaskTemplate):
             minnumants=inputs.minnumants, mingoodfrac=inputs.mingoodfrac,
             refant=inputs.refant,
             flag_intent=inputs.flag_intent, qa_intent=inputs.qa_intent,
-            qa_bandpass_intent=inputs.qa_bandpass_intent)
+            qa_bandpass_intent=inputs.qa_bandpass_intent, cont=inputs.cont)
         datatask = WvrgcalflagWorker(datainputs)
 
         # Construct the task that will set any flags raised in the
@@ -194,7 +194,8 @@ class WvrgcalflagWorkerInputs(basetask.StandardInputs):
                  hm_tie=None, tie=None, sourceflag=None, nsol=None,
                  disperse=None, wvrflag=None, hm_smooth=None, smooth=None,
                  scale=None, maxdistm=None, minnumants=None, mingoodfrac=None,
-                 refant=None, flag_intent=None, qa_intent=None, qa_bandpass_intent=None):
+                 refant=None, flag_intent=None, qa_intent=None,
+                 qa_bandpass_intent=None, cont=None):
         self._init_properties(vars())
 
 
@@ -219,7 +220,7 @@ class WvrgcalflagWorker(basetask.StandardTaskTemplate):
             context=inputs.context,
             output_dir=inputs.output_dir, vis=inputs.vis,
             hm_toffset=inputs.hm_toffset, toffset=inputs.toffset,
-            hm_tie=inputs.hm_tie, tie=inputs.tie,
+            segsource=inputs.segsource, hm_tie=inputs.hm_tie, tie=inputs.tie,
             sourceflag=inputs.sourceflag, nsol=inputs.nsol,
             disperse=inputs.disperse, wvrflag=inputs.wvrflag,
             hm_smooth=inputs.hm_smooth, smooth=inputs.smooth,
@@ -230,7 +231,7 @@ class WvrgcalflagWorker(basetask.StandardTaskTemplate):
             accept_threshold=0.0,
             bandpass_result=self.result.bandpass_result,
             nowvr_result=self.result.nowvr_result,
-            qa_spw=self.result.qa_spw)
+            qa_spw=self.result.qa_spw, cont=inputs.cont)
         wvrgcaltask = wvrgcal.Wvrgcal(wvrgcalinputs)
         result = self._executor.execute(wvrgcaltask, merge=True)
 
