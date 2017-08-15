@@ -175,6 +175,10 @@ $(document).ready(function() {
 		<p>Click the summary plots to enlarge them.</p> 
 	</%def>
 
+    <%def name="ms_preamble(ms)">
+        <p><strong>Note that ${get_mapped_scispws(pcontext.observing_run.get_ms(name=ms))}</strong></p>
+    </%def>
+
 	<%def name="mouseover(plot)">Click to show phase RMS vs distance plots for spectral window ${plot.parameters['spw']}</%def>
 
 	<%def name="fancybox_caption(plot)">Spectral window ${plot.parameters['spw']}</%def>
@@ -183,9 +187,9 @@ $(document).ready(function() {
 		Spectral window ${plot.parameters['spw']}
 	</%def>
 
-	<%def name="caption_text(plot, intent)"> 
-                RMS phase vs distance to reference antenna for spectral window ${plot.parameters['spw']}, all antennas.
-	</%def>
+    <%def name="caption_text(plot, intent)">
+        RMS phase vs distance to reference antenna ${get_mapping(pcontext.observing_run.get_ms(name=plot.parameters['vis']), plot.parameters['spw'])}, all antennas.
+    </%def>
 
 </%self:plot_group>
 
@@ -300,7 +304,6 @@ $(document).ready(function() {
             using solint='inf'.</p>
 
             <p><strong>Note that ${get_mapped_scispws(pcontext.observing_run.get_ms(name=ms))}</strong></p>
-
         </%def>
 
 	<%def name="mouseover(plot)">Click to show phase offset vs time for spectral window ${plot.parameters['spw']}</%def>
