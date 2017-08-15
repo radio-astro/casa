@@ -366,6 +366,13 @@ class SpectralWindowTable(object):
         spw_names = msmd.namesforspws()            
         bandwidths = msmd.bandwidths()
 
+        # We need the first TARGET source ID to get the correct transitions
+        try:
+            first_target_field_id = msmd.fieldsforintent('*TARGET*')[0]
+            first_target_source_id = msmd.sourceidforfield(first_target_field_id)
+        except:
+            first_target_source_id = 0
+
         spws = []
         for i, spw_name in enumerate(spw_names):
             # get this spw's values from our precalculated lists and dicts
@@ -386,8 +393,8 @@ class SpectralWindowTable(object):
             ref_freq = msmd.reffreq(i)
             try: ### TRANSITIONS column does not exist in old data
                 # TODO: Are the transitions of a given spw the same for all
-                #       source IDs ?
-                transitions = msmd.transitions(sourceid=0, spw=i)
+                #       target source IDs ?
+                transitions = msmd.transitions(sourceid=first_target_source_id, spw=i)
                 if not transitions:
                     transitions = ['Unknown']
             except:
