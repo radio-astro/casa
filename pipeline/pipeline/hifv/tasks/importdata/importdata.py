@@ -46,6 +46,8 @@ class VLAImportDataResults(basetask.Results):
 
     def merge_with_context(self, context):
         target = context.observing_run
+
+        PbandWarning = ''
         for ms in self.mses:
             LOG.info('Adding {0} to context'.format(ms.name))
             target.add_measurement_set(ms)
@@ -60,9 +62,19 @@ class VLAImportDataResults(basetask.Results):
                 context.project_summary.observatory = 'Karl G. Jansky Very Large Array'
                 # context.evla['msinfo'] = { m.name : msinfo }
 
+            for key, value in ms.get_vla_spw2band().iteritems():
+                if 'P' in value:
+                    PbandWarning = 'P-band data detected in the raw data. VLA P-band pipeline calibration has not yet been commissioned and may even fail. Please inspect all P-band pipeline products carefully.”'
+
+        if PbandWarning:
+            LOG.warning(PbandWarning)
+
         if self.setjy_results:
             for result in self.setjy_results:
                 result.merge_with_context(context)
+
+
+
 
     def _do_msinfo_heuristics(self, ms, context):
         """Gets heuristics for VLA via msinfo script
