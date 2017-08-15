@@ -210,7 +210,7 @@ class ImageParamsHeuristicsALMA(ImageParamsHeuristics):
             if min_diameter == 12.0:
                 if repBaselineLength < 300:
                     sidelobethreshold = 2.0
-                    noisethreshold = 4.0
+                    noisethreshold = 4.25
                     lownoisethreshold = 1.5
                     minbeamfrac = 0.3
                     growiterations = 75
