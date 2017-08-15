@@ -592,28 +592,35 @@ def sensitivity_xml_for_stages(context, results):
     """
     xml_root = ElementTree.Element('ImageSensitivity')
 
-    for result in results:
+    ordered_results = sorted(results, key=operator.attrgetter('stage_number'))
+    for stage_result in ordered_results:
+        # Create the generic stage element
+        stage_name, stage_score = _get_pipeline_stage_and_score(stage_result)
+
         for task_name, exporter in TASK_NAME_TO_SENSITIVITY_EXPORTER.iteritems():
-            pipeline_casa_task = result.pipeline_casa_task
-            if pipeline_casa_task.startswith(task_name + '('):
-                stage_xml = xml_for_sensitivity_stage(context, result, task_name, exporter)
+            if stage_name == task_name:
+                stage_xml = xml_for_sensitivity_stage(context, stage_result, exporter)
                 xml_root.append(stage_xml)
 
     return xml_root
 
 
-def xml_for_sensitivity_stage(context, stage_results, origin, exporter):
+def xml_for_sensitivity_stage(context, stage_results, exporter):
     """
     Translate the sensitivity dictionaries contained in a task result to XML.
 
     :param context: pipeline context
     :param stage_results: hifa_preimagecheck result
-    :param origin: value to use for the XML stage
     :param exporter: function that returns a list of sensitivity dicts from the result
     :return: XML for all sensitivities reported by the result stage
     :rtype: xml.etree.cElementTree.Element
     """
-    xml_root = ElementTree.Element('SensitivityEstimates', Origin=origin, Score=UNDEFINED)
+    stage_name, stage_score = _get_pipeline_stage_and_score(stage_results)
+
+    xml_root = ElementTree.Element('SensitivityEstimates',
+                                   Origin=stage_name,
+                                   Number=str(stage_results.stage_number),
+                                   Score=str(stage_score))
 
     sensitivity_dicts = exporter(stage_results)
 
@@ -663,7 +670,7 @@ def xml_for_sensitivity(d):
 
     try:
         cell_x = qa.quantity(d['cell'][0])
-        cell_x = value(qa.convert(cell_x, 'arcsec'))
+        cell_x_arcsec = value(qa.convert(cell_x, 'arcsec'))
         if cell_x_arcsec == '0.0':
             cell_x_arcsec = 'N/A'
     except:
@@ -675,7 +682,7 @@ def xml_for_sensitivity(d):
         if cell_y_arcsec == '0.0':
             cell_y_arcsec = 'N/A'
     except:
-        cell_minor_arcsec = 'N/A'
+        cell_y_arcsec = 'N/A'
 
     try:
         positionangle = qa.quantity(d['beam']['positionangle'])
