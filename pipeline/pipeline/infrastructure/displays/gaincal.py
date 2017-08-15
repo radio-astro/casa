@@ -409,6 +409,7 @@ class RMSOffsetVsRefAntDistanceChart(PhaseVsBaselineChart):
                            x_axis='baseline length',
                            y_axis='phase offset',
                            parameters={
+                               'vis': self.ms.basename,
                                'spw': spw.id,
                                'scan': scan_ids
                            })
