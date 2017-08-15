@@ -376,11 +376,12 @@ class RMSOffsetVsRefAntDistanceChart(PhaseVsBaselineChart):
             return ''
 
     def get_plot_intents(self):
-        return set(['PHASE'])
+        return {'PHASE'}
     
     def get_xlabel(self):
-        return 'Distance to Reference Antenna (m)'
-    
+        # CAS-7955: hif_timegaincal weblog: add refant next to phase(uvdist) plot
+        return 'Distance to Reference Antenna {!s} (m)'.format(self.refant.name)
+
     def get_ylabel(self):
         return 'Unwrapped Phase RMS (degrees)'
             
@@ -407,8 +408,10 @@ class RMSOffsetVsRefAntDistanceChart(PhaseVsBaselineChart):
         return logger.Plot(figfile,
                            x_axis='baseline length',
                            y_axis='phase offset',
-                           parameters={'spw'  : spw.id,
-                                       'scan' : scan_ids})
+                           parameters={
+                               'spw': spw.id,
+                               'scan': scan_ids
+                           })
     
     
 class GaincalPhaseOffsetPlotHelper(phaseoffset.PhaseOffsetPlotHelper):

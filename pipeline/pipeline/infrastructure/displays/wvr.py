@@ -351,7 +351,9 @@ class WVRPhaseVsBaselineChart(object):
                           box2.width, box2.height])
 
         ax1.set_ylabel('ratio', size=10)
-        ax2.set_xlabel('Distance to Reference Antenna (m)', size=10)
+        # CAS-7955: hif_timegaincal weblog: add refant next to phase(uvdist) plot
+        x_axis_title = 'Distance to Reference Antenna {!s} (m)'.format(self._refant.name)
+        ax2.set_xlabel(x_axis_title, size=10)
         ax2.set_ylabel('degrees', size=10)
 
         try:
