@@ -405,14 +405,17 @@ class MakeImList(basetask.StandardTaskTemplate):
         result.set_max_num_targets(len(field_intent_list)*len(spwlist))
 
         # Remove bad spws
-        valid_data = {}
-        filtered_spwlist = []
-        for spw in spwids:
-            valid_data[str(spw)] = self.heuristics.has_data(field_intent_list=field_intent_list, spwspec=spw)
-            # For now we consider the spw for all fields / intents.
-            # May need to handle this individually.
-            if (valid_data[str(spw)][list(field_intent_list)[0]]):
-                filtered_spwlist.append(spw)
+        if field_intent_list != set([]):
+            valid_data = {}
+            filtered_spwlist = []
+            for spw in spwids:
+                valid_data[str(spw)] = self.heuristics.has_data(field_intent_list=field_intent_list, spwspec=spw)
+                # For now we consider the spw for all fields / intents.
+                # May need to handle this individually.
+                if (valid_data[str(spw)][list(field_intent_list)[0]]):
+                    filtered_spwlist.append(spw)
+        else:
+            filtered_spwlist = []
 
         # Collapse cont spws
         if inputs.specmode == 'cont':
