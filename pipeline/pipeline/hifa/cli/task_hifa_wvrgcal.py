@@ -9,7 +9,7 @@ def hifa_wvrgcal(
         sourceflag=None, hm_tie=None, tie=None, nsol=None,
         disperse=None, wvrflag=None, hm_smooth=None,
         smooth=None, scale=None, maxdistm=None, minnumants=None,
-        mingoodfrac=None, cont=None, refant=None, qa_intent=None,
+        mingoodfrac=None, refant=None, qa_intent=None,
         qa_bandpass_intent=None, qa_spw=None, accept_threshold=None,
         pipelinemode=None, dryrun=None, acceptresults=None):
 

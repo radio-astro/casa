@@ -32,7 +32,7 @@ class WvrgcalInputs(basetask.StandardInputs):
                  hm_toffset=None, toffset=None, segsource=None, hm_tie=None,
                  tie=None, sourceflag=None, nsol=None, disperse=None, 
                  wvrflag=None, hm_smooth=None, smooth=None, scale=None, 
-                 maxdistm=None, minnumants=None, mingoodfrac=None, cont=None,
+                 maxdistm=None, minnumants=None, mingoodfrac=None,
                  refant=None, qa_intent=None, qa_bandpass_intent=None,
                  qa_spw=None, accept_threshold=None, bandpass_result=None,
                  nowvr_result=None, ):
@@ -48,16 +48,6 @@ class WvrgcalInputs(basetask.StandardInputs):
             value = 1.0
         self._accept_threshold = value
         
-    @property
-    def cont(self):
-        return self._cont
-
-    @cont.setter
-    def cont(self, value):
-        if value is None:
-            value = False
-        self._cont = value
-
     @property
     def disperse(self):
         return self._disperse
@@ -328,7 +318,6 @@ class Wvrgcal(basetask.StandardTaskTemplate):
         maxdistm = inputs.maxdistm
         minnumants = inputs.minnumants
         mingoodfrac = inputs.mingoodfrac
-        cont = inputs.cont
 
         ms = inputs.context.observing_run.get_ms(name=inputs.vis)
 
@@ -384,7 +373,7 @@ class Wvrgcal(basetask.StandardTaskTemplate):
                                           minnumants=minnumants,
                                           mingoodfrac=mingoodfrac,
                                           spw=science_spwids,
-                                          wvrspw=[wvr_spwids[0]], cont=cont,
+                                          wvrspw=[wvr_spwids[0]],
                                           refant=refant)
                 jobs.append(task)
                 
