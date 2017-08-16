@@ -32,8 +32,8 @@ def ALMAImageCoordinateUtil(context, ms_names, ant_list, spw_list, fieldid_list)
     ref_fieldid = fieldid_list[0]
     ref_spw = spw_list[0]
     source_name = ref_msobj.fields[ref_fieldid].name
-    # trim source name to workaround '"name"' type of sources
-    trimmed_name = source_name.strip('"')
+#     # trim source name to workaround '"name"' type of sources
+#     trimmed_name = source_name.strip('"')
 
     # qa tool
     qa = casatools.quanta
@@ -50,7 +50,8 @@ def ALMAImageCoordinateUtil(context, ms_names, ant_list, spw_list, fieldid_list)
     # msmd-less implementation
     spw = ref_msobj.get_spectral_window(ref_spw)
     freq_hz = numpy.float64(spw.mean_frequency.value)
-    fields = ref_msobj.get_fields(name=trimmed_name)
+#     fields = ref_msobj.get_fields(name=trimmed_name)
+    fields = ref_msobj.get_fields(name=source_name)
     fnames = [f.name for f in fields]
     if USE_FIELD_DIR:
         me_center = fields[0].mdirection
