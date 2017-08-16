@@ -42,10 +42,10 @@ class AlmaAquaXmlGenerator(aqua.AquaXmlGenerator):
 
 def _hsd_imaging_sensitivity_exporter(stage_results):
     # XML exporter expects this function to return a list of dictionaries
-    l = []
+    sensitivities = []
     for result in stage_results:
         if result.sensitivity is not None:
-            l.extend(result.sensitivity)
-    return l
+            sensitivities.append(result.sensitivity)
+    return sensitivities
 
 aqua.TASK_NAME_TO_SENSITIVITY_EXPORTER['hsd_imaging'] = _hsd_imaging_sensitivity_exporter
