@@ -1751,6 +1751,8 @@ def score_checksources(mses, fieldname, spwid, imagename):
         shortmsg = 'Check source fit successful'
         if not refflux:
             score = max(0.0, 1.0 - min(1.0, beams))
+            if score <= 0.9:
+                shortmsg = 'Check source fit not optimal'
             longmsg = ('Check source fit for %s spwd %d:  offet %0.3fmarcsec %0.3fbeams  fit flux %0.3fJy  '
                        'decoherence None' % (fieldname, spwid, offset, beams, fitflux))
             metric_score = beams
@@ -1761,6 +1763,8 @@ def score_checksources(mses, fieldname, spwid, imagename):
             offsetscore = max(0.0, 1.0 - min(1.0, beams))
             fluxscore = max(0.0, 1.0 - fitdict['fluxloss']['value'])
             score = math.sqrt(fluxscore * offsetscore)
+            if score <= 0.9:
+                shortmsg = 'Check source fit not optimal'
             longmsg = ('Check source fit for %s spwd %d:  offet %0.3fmarcsec %0.3fbeams  fit flux %0.3fJy  '
                        'decoherence %0.3f percent' % (fieldname, spwid, offset, beams, fitflux, coherence))
 
