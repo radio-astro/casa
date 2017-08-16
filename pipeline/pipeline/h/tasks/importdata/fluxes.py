@@ -13,6 +13,7 @@ import xml.etree.ElementTree as ElementTree
 import pipeline.domain as domain
 import pipeline.domain.measures as measures
 import pipeline.infrastructure as infrastructure
+import pipeline.infrastructure.utils as utils
 
 from ..common import commonfluxresults
 
@@ -302,7 +303,7 @@ def export_flux_from_result(results, context, filename='flux.csv'):
 
                         ms = context.observing_run.get_ms(ms_basename)
                         field = ms.get_fields(field_id)[0]
-                        comment = field.name + ' ' + 'intent=' + ','.join(sorted(field.intents))
+                        comment = utils.dequote(field.name) + ' ' + 'intent=' + ','.join(sorted(field.intents))
 
                         writer.writerow((ms_basename, field_id, m.spw_id,
                                          I, Q, U, V, float(m.spix), comment+' #'+m.origin))
