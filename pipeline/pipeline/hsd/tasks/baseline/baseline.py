@@ -34,7 +34,7 @@ class SDBaselineInputs(basetask.StandardInputs):
     def __init__(self, context, infiles=None, antenna=None, spw=None, pol=None, field=None,
                  linewindow=None, edge=None, broadline=None, fitorder=None,
                  fitfunc=None, clusteringalgorithm=None, deviationmask=None):
-        self.vis = infiles
+        vis = infiles
         self._init_properties(vars())
         # LOG.debug('attributes summary:')
         # for (k,v) in self.__dict__.iteritems():
