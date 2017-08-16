@@ -24,6 +24,11 @@ Generate a gain table based on Water Vapour Radiometer data, interpolating over 
 	<value></value>
     </param>
 
+    <param type="stringArray" name="offsetstable" subparam="true">
+        <description>List of input temperature offsets table files</description>
+        <value></value>
+    </param>
+
     <param type="string" name="hm_toffset">
         <description>Toffset computation heuristic method</description>
         <value>automatic</value>
@@ -184,6 +189,7 @@ Generate a gain table based on Water Vapour Radiometer data, interpolating over 
             <equals type="string" value="interactive">
                 <default param="vis"><value type="stringArray"></value></default>
                 <default param="caltable"><value type="stringArray"></value></default>
+                <default param="offsetstable"><value type="stringArray"></value></default>
                 <default param="wvrflag"><value type="stringArray"></value></default>
                 <default param="scale"><value type="double">1.0</value></default>
                 <default param="refant"><value type="string"></value></default>
@@ -193,6 +199,7 @@ Generate a gain table based on Water Vapour Radiometer data, interpolating over 
             <equals type="string" value="getinputs">
                 <default param="vis"><value type="stringArray"></value></default>
                 <default param="caltable"><value type="stringArray"></value></default>
+                <default param="offsetstable"><value type="stringArray"></value></default>
                 <default param="wvrflag"><value type="stringArray"></value></default>
                 <default param="scale"><value type="double">1.0</value></default>
                 <default param="refant"><value type="string"></value></default>
@@ -281,6 +288,11 @@ caltable -- List of output gain calibration tables
     default: none, in which case the names of the caltables will be
              generated automatically.
     example: caltable='ngc5921.wvr'
+
+offsetstable -- List of input temperature offsets table files to subtract from
+                WVR measurements before calculating phase corrections.
+    default: none, in which case no offsets are applied.
+    example: offsetstable=['ngc5921.cloud_offsets']
 
 hm_toffset -- If 'manual', set the 'toffset' parameter to the user-specified value.
           If 'automatic', set the 'toffset' parameter according to the

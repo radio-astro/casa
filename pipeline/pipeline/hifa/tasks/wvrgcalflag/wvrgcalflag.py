@@ -18,14 +18,15 @@ LOG = infrastructure.get_logger(__name__)
 class WvrgcalflagInputs(wvrgcal.WvrgcalInputs):
     
     @basetask.log_equivalent_CASA_call
-    def __init__(self, context, output_dir=None, vis=None,
-                 caltable=None, hm_toffset=None, toffset=None, segsource=None,
-                 hm_tie=None, tie=None, sourceflag=None, nsol=None,
-                 disperse=None, wvrflag=None, hm_smooth=None, smooth=None,
-                 scale=None, maxdistm=None, minnumants=None, mingoodfrac=None,
-                 refant=None, flag_intent=None, qa_intent=None,
-                 qa_bandpass_intent=None, accept_threshold=None, flag_hi=None,
-                 fhi_limit=None, fhi_minsample=None):
+    def __init__(self, context, output_dir=None, vis=None, caltable=None,
+                 offsetstable=None, hm_toffset=None, toffset=None,
+                 segsource=None, hm_tie=None, tie=None, sourceflag=None,
+                 nsol=None, disperse=None, wvrflag=None, hm_smooth=None,
+                 smooth=None, scale=None, maxdistm=None, minnumants=None,
+                 mingoodfrac=None, refant=None, flag_intent=None,
+                 qa_intent=None, qa_bandpass_intent=None,
+                 accept_threshold=None, flag_hi=None, fhi_limit=None,
+                 fhi_minsample=None):
         self._init_properties(vars())
 
     # qa_intent setter/getter overrides version in WvrgcalInputs with a 
@@ -122,8 +123,9 @@ class Wvrgcalflag(basetask.StandardTaskTemplate):
         datainputs = WvrgcalflagWorker.Inputs(
             context=inputs.context,
             output_dir=inputs.output_dir, vis=inputs.vis,
-            caltable=inputs.caltable, hm_toffset=inputs.hm_toffset,
-            toffset=inputs.toffset,
+            caltable=inputs.caltable,
+            offsetstable=inputs.offsetstable,
+            hm_toffset=inputs.hm_toffset, toffset=inputs.toffset,
             segsource=inputs.segsource, hm_tie=inputs.hm_tie,
             tie=inputs.tie, sourceflag=inputs.sourceflag, nsol=inputs.nsol,
             disperse=inputs.disperse, wvrflag=inputs.wvrflag,
@@ -189,13 +191,13 @@ class Wvrgcalflag(basetask.StandardTaskTemplate):
 
 
 class WvrgcalflagWorkerInputs(basetask.StandardInputs):
-    def __init__(self, context, output_dir=None, vis=None,
-                 caltable=None, hm_toffset=None, toffset=None, segsource=None,
-                 hm_tie=None, tie=None, sourceflag=None, nsol=None,
-                 disperse=None, wvrflag=None, hm_smooth=None, smooth=None,
-                 scale=None, maxdistm=None, minnumants=None, mingoodfrac=None,
-                 refant=None, flag_intent=None, qa_intent=None,
-                 qa_bandpass_intent=None):
+    def __init__(self, context, output_dir=None, vis=None, caltable=None,
+                 offsetstable=None, hm_toffset=None, toffset=None,
+                 segsource=None, hm_tie=None, tie=None, sourceflag=None,
+                 nsol=None, disperse=None, wvrflag=None, hm_smooth=None,
+                 smooth=None, scale=None, maxdistm=None, minnumants=None,
+                 mingoodfrac=None, refant=None, flag_intent=None,
+                 qa_intent=None, qa_bandpass_intent=None):
         self._init_properties(vars())
 
 
@@ -219,6 +221,7 @@ class WvrgcalflagWorker(basetask.StandardTaskTemplate):
         wvrgcalinputs = wvrgcal.Wvrgcal.Inputs(
             context=inputs.context,
             output_dir=inputs.output_dir, vis=inputs.vis,
+            offsetstable=inputs.offsetstable,
             hm_toffset=inputs.hm_toffset, toffset=inputs.toffset,
             segsource=inputs.segsource, hm_tie=inputs.hm_tie, tie=inputs.tie,
             sourceflag=inputs.sourceflag, nsol=inputs.nsol,
