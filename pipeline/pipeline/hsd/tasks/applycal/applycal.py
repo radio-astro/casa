@@ -3,11 +3,9 @@ import os
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
-#from pipeline.domain import DataTable
 from .. import common
 
-#from pipeline.hif.tasks.applycal.applycal import ApplycalInputs, Applycal, ApplycalResults
-from pipeline.h.tasks.applycal.applycal import ApplycalInputs, Applycal, ApplycalResults
+from pipeline.h.tasks.applycal.applycal import ApplycalInputs, Applycal
 
 LOG = infrastructure.get_logger(__name__)
 

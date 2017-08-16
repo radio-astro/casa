@@ -2,7 +2,7 @@ from __future__ import absolute_import
 
 import os
 #import math
-from math import cos, sqrt
+from math import cos
 import numpy
 import collections
 import itertools

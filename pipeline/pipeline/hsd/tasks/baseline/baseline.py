@@ -1,8 +1,6 @@
 from __future__ import absolute_import
 
 import os
-import shutil
-import glob
 import numpy
 import collections
 import types
@@ -10,10 +8,10 @@ import itertools
 
 #import memory_profiler
 
-import pipeline.infrastructure.mpihelpers as mpihelpers
+# import pipeline.infrastructure.mpihelpers as mpihelpers
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
-import pipeline.infrastructure.casatools as casatools
+# import pipeline.infrastructure.casatools as casatools
 from pipeline.hsd.heuristics import MaskDeviationHeuristic
 from pipeline.domain import DataTable
 
@@ -36,7 +34,7 @@ class SDBaselineInputs(basetask.StandardInputs):
     def __init__(self, context, infiles=None, antenna=None, spw=None, pol=None, field=None,
                  linewindow=None, edge=None, broadline=None, fitorder=None,
                  fitfunc=None, clusteringalgorithm=None, deviationmask=None):
-        vis = infiles
+        self.vis = infiles
         self._init_properties(vars())
         # LOG.debug('attributes summary:')
         # for (k,v) in self.__dict__.iteritems():
