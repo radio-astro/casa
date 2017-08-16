@@ -5,6 +5,7 @@ import pipeline.domain.measures as measures
 
 from pipeline.hif.tasks.makeimlist import makeimlist
 
+import math
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -93,12 +94,19 @@ class CheckProductSizeHeuristics(object):
 
         # If still too large, try changing the FoV (in makeimlist this is applied to single fields only)
         if (self.inputs.maxcubesize != -1.0) and (maxcubesize > self.inputs.maxcubesize):
-            if maxcubesize < 1.4 * self.inputs.maxcubesize:
-                LOG.info('Size mitigation: Setting hm_imsize to 0.3pb')
-                size_mitigation_parameters['hm_imsize'] = '0.3pb'
-            else:
-                LOG.info('Size mitigation: Setting hm_imsize to 0.5pb')
-                size_mitigation_parameters['hm_imsize'] = '0.5pb'
+
+            # Calculate PB level at which the largest cube size of all targets
+            # is equal to the maximum allowed cube size.
+            PB_mitigation = math.exp(math.log(0.2) * self.inputs.maxcubesize / maxcubesize)
+            # Account for imsize padding
+            PB_mitigation = 1.02 * PB_mitigation
+            # Cap at PB=0.7
+            PB_mitigation = min(PB_mitigation, 0.7)
+            # Round to 2 significant digits
+            PB_mitigation = round(PB_mitigation, 2)
+
+            LOG.info('Size mitigation: Setting hm_imsize to %.2gpb' % (PB_mitigation))
+            size_mitigation_parameters['hm_imsize'] = '%.2gpb' % (PB_mitigation)
 
             # Recalculate sizes
             makeimlist_inputs.hm_imsize = size_mitigation_parameters['hm_imsize']
