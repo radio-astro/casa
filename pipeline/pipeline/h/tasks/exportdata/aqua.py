@@ -315,14 +315,7 @@ class AquaXmlGenerator(object):
         :return: XML for dataset topic
         :rtype: xml.etree.cElementTree.Element
         """
-        xml_root = self._xml_for_topic('Dataset', context, topic_results)
-
-        sensitivity_xml = sensitivity_xml_for_stages(context, topic_results)
-        # omit containing element if no measurements were found
-        if len(list(sensitivity_xml)) > 0:
-            xml_root.extend(sensitivity_xml)
-
-        return xml_root
+        return self._xml_for_topic('Dataset', context, topic_results)
 
     def get_flagging_topic(self, context, topic_results):
         """
@@ -344,14 +337,7 @@ class AquaXmlGenerator(object):
         :return: XML for imaging topic
         :rtype: xml.etree.cElementTree.Element
         """
-        xml_root = self._xml_for_topic('Imaging', context, topic_results)
-        
-        sensitivity_xml = sensitivity_xml_for_stages(context, topic_results)
-        # omit containing element if no measurements were found
-        if len(list(sensitivity_xml)) > 0:
-            xml_root.extend(sensitivity_xml)
-
-        return xml_root
+        return self._xml_for_topic('Imaging', context, topic_results)
 
     def _xml_for_topic(self, topic_name, context, topic_results):
         # the overall topic score is defined as the minimum score of all

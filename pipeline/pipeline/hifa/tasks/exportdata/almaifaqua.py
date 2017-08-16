@@ -95,6 +95,11 @@ class AlmaAquaXmlGenerator(aqua.AquaXmlGenerator):
         if len(list(flux_xml)) > 0:
             xml_root.extend(flux_xml)
 
+        sensitivity_xml = aqua.sensitivity_xml_for_stages(context, topic_results)
+        # omit containing element if no measurements were found
+        if len(list(sensitivity_xml)) > 0:
+            xml_root.extend(sensitivity_xml)
+
         return xml_root
 
 
