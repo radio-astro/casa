@@ -685,15 +685,25 @@ class Tclean(cleanbase.CleanBase):
                     pblimit_cleanmask=self.pblimit_cleanmask, \
                     cont_freq_ranges=self.cont_freq_ranges)
 
-            # Check for cases with zero mask and significant signal
-            if (inputs.hm_masking == 'auto') and (result.tclean_stopcode == 7) and (residual_max / residual_robust_rms > 10.0):
-                LOG.warn('No clean mask was found despite clean residual peak / scaled MAD > 10. Field %s Intent %s SPW %s' % (inputs.field, inputs.intent, inputs.spw))
-
-            # If no automask is found, try the simple circular mask for specific imaging targets
-            if ((inputs.intent in ('BANDPASS', 'PHASE')) and (inputs.hm_masking == 'auto') and (result.tclean_stopcode == 7)) or \
-               ((inputs.intent in ('CHECK', 'TARGET')) and (inputs.hm_masking == 'auto') and (result.tclean_stopcode == 7) and (inputs.specmode != 'cube') and (dirty_dynamic_range > 100.0)):
-                inputs.hm_masking = 'centralregion'
-                keep_iterating = True
+            # Check for zero automask
+            if (inputs.hm_masking == 'auto') and (result.tclean_stopcode == 7):
+                if inputs.intent in ('BANDPASS', 'PHASE'):
+                    if residual_max / residual_robust_rms > 10.0:
+                        LOG.warn('No automatic clean mask was found despite clean residual peak / scaled MAD > 10, switched to pb-based mask and tlimit=4. Field %s Intent %s SPW %s' % (inputs.field, inputs.intent, inputs.spw))
+                    else:
+                        LOG.warn('No automatic clean mask was found, switched to pb-based mask and tlimit=4. Field %s Intent %s SPW %s' % (inputs.field, inputs.intent, inputs.spw))
+                    # If no automask is found, always try the simple circular mask for calibrators
+                    inputs.hm_masking = 'centralregion'
+                    keep_iterating = True
+                elif inputs.intent in ('CHECK', 'TARGET'):
+                    if residual_max / residual_robust_rms > 10.0:
+                        if (inputs.specmode == 'cube') or (dirty_dynamic_range <= 100.0):
+                            LOG.warn('No automatic clean mask was found despite clean residual peak / scaled MAD > 10, check the results. Field %s Intent %s SPW %s' % (inputs.field, inputs.intent, inputs.spw))
+                        else:
+                            LOG.warn('No automatic clean mask was found despite clean residual peak / scaled MAD > 10, switched to pb-based mask and tlimit=4. Field %s Intent %s SPW %s' % (inputs.field, inputs.intent, inputs.spw))
+                            # If no automask is found, try the simple circular mask for high DR continuum
+                            inputs.hm_masking = 'centralregion'
+                            keep_iterating = True
 
             # Keep image cleanmask area min and max and non-cleanmask area RMS for weblog and QA
             result.set_image_min(pbcor_image_min)
