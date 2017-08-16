@@ -26,6 +26,9 @@ import collections
 import itertools
 import shutil
 
+from . import almasdaqua
+from pipeline.h.tasks.exportdata.aqua import export_to_disk as aqua_export_to_disk
+
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.sdfilenamer as filenamer
@@ -39,13 +42,13 @@ LOG = infrastructure.get_logger(__name__)
 
 
 # Inputs class must be separated per task class even if it's effectively the same
-class SDMSExportDataInputs(h_exportdata.ExportDataInputs):
+class SDExportDataInputs(h_exportdata.ExportDataInputs):
     pass
 
 
-class SDMSExportData(almaexportdata.ALMAExportData):
+class SDExportData(almaexportdata.ALMAExportData):
     """
-    SDMSExportData is the base class for exporting data to the products
+    SDExportData is the base class for exporting data to the products
     subdirectory. It performs the following operations:
     
     - Saves the pipeline processing request in an XML file
@@ -55,7 +58,7 @@ class SDMSExportData(almaexportdata.ALMAExportData):
     - Saves the final web log in a compressed / tarred file
     - Saves the text formatted list of contents of products directory
     """
-    Inputs = SDMSExportDataInputs
+    Inputs = SDExportDataInputs
     
     # This is almost equivalent to ALMAExportData.prepare() 
     # only difference is to use self._make_lists instead of ExportData._make_lists
@@ -391,4 +394,33 @@ finally:
             shutil.copy (script_file, out_script_file)
 
         return os.path.basename (out_script_file)
+
+    def _export_aqua_report(self, context, oussid, aquareport_name, products_dir):
+        """
+        Save the AQUA report.
+        Note the method is mostly a duplicate of the conterpart
+             in hifa/tasks/exportdata/almaexportdata
+        """
+        aqua_file = os.path.join(context.output_dir, aquareport_name)
+
+        report_generator = almasdaqua.AlmaAquaXmlGenerator()
+        LOG.info('Generating pipeline AQUA report')
+        try:
+            report_xml = report_generator.get_report_xml(context)
+            aqua_export_to_disk(report_xml, aqua_file)
+        except:
+            LOG.error('Error generating the pipeline AQUA report')
+            return 'Undefined'
+
+        ps = context.project_structure
+        if ps is None:
+            out_aqua_file = os.path.join(products_dir, aquareport_name)
+        elif ps.ousstatus_entity_id == 'unknown':
+            out_aqua_file = os.path.join(products_dir, aquareport_name)
+        else:
+            out_aqua_file = os.path.join(products_dir, oussid + '.' + aquareport_name)
+
+        LOG.info('Copying AQUA report %s to %s' % (aqua_file, out_aqua_file))
+        shutil.copy(aqua_file, out_aqua_file)
+        return os.path.basename(out_aqua_file)
         

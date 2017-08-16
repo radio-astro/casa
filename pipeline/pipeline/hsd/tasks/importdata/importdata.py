@@ -94,7 +94,7 @@ class SDImportData(importdata.ImportData):
         reduction_group_list = []
         for ms in results.mses:
             LOG.debug('Start inspection for %s'%(ms.basename))
-            inspector = inspection.SDMSInspection(table_name, ms=ms)
+            inspector = inspection.SDInspection(table_name, ms=ms)
             reduction_group = self._executor.execute(inspector, merge=False)
             reduction_group_list.append(reduction_group)
             

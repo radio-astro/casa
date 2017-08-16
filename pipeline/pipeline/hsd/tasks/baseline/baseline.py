@@ -28,7 +28,7 @@ from ..common import compress
 _LOG = infrastructure.get_logger(__name__)
 LOG = utils.OnDemandStringParseLogger(_LOG)
 
-class SDMSBaselineInputs(basetask.StandardInputs):
+class SDBaselineInputs(basetask.StandardInputs):
     """
     Inputs for baseline subtraction
     """
@@ -46,7 +46,7 @@ class SDMSBaselineInputs(basetask.StandardInputs):
         vis = self.vis
         if type(self.vis) is types.ListType:
             self.vis = vis[0]
-        args = super(SDMSBaselineInputs, self).to_casa_args()
+        args = super(SDBaselineInputs, self).to_casa_args()
         self.vis = vis
         
         if not args.has_key('antenna'):
@@ -65,13 +65,13 @@ class SDMSBaselineInputs(basetask.StandardInputs):
     deviationmask = basetask.property_with_default('deviationmask', True)
             
 
-class SDMSBaselineResults(common.SingleDishResults):
+class SDBaselineResults(common.SingleDishResults):
     def __init__(self, task=None, success=None, outcome=None):
-        super(SDMSBaselineResults, self).__init__(task, success, outcome)
+        super(SDBaselineResults, self).__init__(task, success, outcome)
 
     #@utils.profiler
     def merge_with_context(self, context):
-        super(SDMSBaselineResults, self).merge_with_context(context)
+        super(SDBaselineResults, self).merge_with_context(context)
 
         # increment iteration counter
         # register detected lines to reduction group member
@@ -111,8 +111,8 @@ class SDMSBaselineResults(common.SingleDishResults):
         return '\n'.join(['Reduction Group {0}: member {1}'.format(b['group_id'], b['members'])
                 for b in self.outcome['baselined']])
         
-class SDMSBaseline(basetask.StandardTaskTemplate):
-    Inputs = SDMSBaselineInputs
+class SDBaseline(basetask.StandardTaskTemplate):
+    Inputs = SDBaselineInputs
     
     class RGAccumulator(object):
         def __init__(self):
@@ -215,7 +215,7 @@ class SDMSBaseline(basetask.StandardTaskTemplate):
         deviation_mask = collections.defaultdict(dict)
         
         # collection of field, antenna, and spw ids in reduction group per MS
-        registry = collections.defaultdict(SDMSBaseline.RGAccumulator)
+        registry = collections.defaultdict(SDBaseline.RGAccumulator)
         
         # outcome for baseline subtraction
         baselined = []
@@ -376,7 +376,7 @@ class SDMSBaseline(basetask.StandardTaskTemplate):
                    'edge': edge,
                    'deviation_mask': deviation_mask,
                    'plots': plot_list}
-        results = SDMSBaselineResults(task=self.__class__,
+        results = SDBaselineResults(task=self.__class__,
                                     success=True,
                                     outcome=outcome)
                         

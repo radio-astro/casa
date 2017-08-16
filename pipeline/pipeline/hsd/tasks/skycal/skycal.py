@@ -12,7 +12,7 @@ from .. import common
 
 LOG = infrastructure.get_logger(__name__)
 
-class SDMSSkyCalInputs(basetask.StandardInputs):
+class SDSkyCalInputs(basetask.StandardInputs):
     """
     """
     @basetask.log_equivalent_CASA_call
@@ -62,15 +62,15 @@ class SDMSSkyCalInputs(basetask.StandardInputs):
         
         return args
     
-class SDMSSkyCalResults(common.SingleDishResults):
+class SDSkyCalResults(common.SingleDishResults):
     """
     """
     def __init__(self, task=None, success=None, outcome=None):
-        super(SDMSSkyCalResults, self).__init__(task, success, outcome)
+        super(SDSkyCalResults, self).__init__(task, success, outcome)
         self.final = self.outcome
 
     def merge_with_context(self, context):
-        super(SDMSSkyCalResults, self).merge_with_context(context)
+        super(SDSkyCalResults, self).merge_with_context(context)
         calapps = self.outcome
         if calapps is not None:
             for calapp in calapps:
@@ -79,8 +79,8 @@ class SDMSSkyCalResults(common.SingleDishResults):
     def _outcome_name(self):
         return str(self.outcome)
         
-class SDMSSkyCal(basetask.StandardTaskTemplate):
-    Inputs = SDMSSkyCalInputs
+class SDSkyCal(basetask.StandardTaskTemplate):
+    Inputs = SDSkyCalInputs
     
     def prepare(self):
         args = self.inputs.to_casa_args()
@@ -149,7 +149,7 @@ class SDMSSkyCal(basetask.StandardTaskTemplate):
     
             # make a note of the current inputs state before we start fiddling
             # with it. This origin will be attached to the final CalApplication.
-            origin = callibrary.CalAppOrigin(task=SDMSSkyCal, 
+            origin = callibrary.CalAppOrigin(task=SDSkyCal, 
                                              inputs=args)
             
             calto = callibrary.CalTo(vis=myargs['infile'],
@@ -168,7 +168,7 @@ class SDMSSkyCal(basetask.StandardTaskTemplate):
             calapp = callibrary.CalApplication(calto, calfrom, origin)
             calapps.append(calapp)
         
-        results = SDMSSkyCalResults(task=self.__class__,
+        results = SDSkyCalResults(task=self.__class__,
                                     success=True,
                                     outcome=calapps)
         return results

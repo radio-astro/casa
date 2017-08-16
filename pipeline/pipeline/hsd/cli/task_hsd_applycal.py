@@ -13,7 +13,7 @@ def hsd_applycal(vis=None, field=None, intent=None, spw=None, antenna=None,
     # constructor
     all_inputs = vars()
 
-    task_name = 'SDMSApplycal'
+    task_name = 'SDApplycal'
 
     ##########################################################################
     #                                                                        #

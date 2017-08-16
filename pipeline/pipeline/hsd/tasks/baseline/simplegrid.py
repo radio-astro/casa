@@ -20,7 +20,7 @@ LOG = utils.OnDemandStringParseLogger(_LOG)
 NoData = common.NoData
 DO_TEST = False
 
-class SDMSSimpleGriddingInputs(common.SingleDishInputs):
+class SDSimpleGriddingInputs(common.SingleDishInputs):
     def __init__(self, context, group_id, member_list, 
                  nplane=None):
         self._init_properties(vars())
@@ -41,18 +41,18 @@ class SDMSSimpleGriddingInputs(common.SingleDishInputs):
     def reference_member(self):
         return self.group_desc[self.member_list[0]]
         
-class SDMSSimpleGriddingResults(common.SingleDishResults):
+class SDSimpleGriddingResults(common.SingleDishResults):
     def __init__(self, task=None, success=None, outcome=None):
-        super(SDMSSimpleGriddingResults, self).__init__(task, success, outcome)
+        super(SDSimpleGriddingResults, self).__init__(task, success, outcome)
 
     def merge_with_context(self, context):
-        super(SDMSSimpleGriddingResults, self).merge_with_context(context)
+        super(SDSimpleGriddingResults, self).merge_with_context(context)
     
     def _outcome_name(self):
         return ''
 
-class SDMSSimpleGridding(basetask.StandardTaskTemplate):
-    Inputs = SDMSSimpleGriddingInputs
+class SDSimpleGridding(basetask.StandardTaskTemplate):
+    Inputs = SDSimpleGriddingInputs
 
     def prepare(self, datatable=None, index_list=None):
         if datatable is None:
@@ -74,7 +74,7 @@ class SDMSSimpleGridding(basetask.StandardTaskTemplate):
         outcome = {'spectral_data': retval[0],
                    'meta_data': retval[1],
                    'grid_table': grid_table}
-        result = SDMSSimpleGriddingResults(task=self.__class__,
+        result = SDSimpleGriddingResults(task=self.__class__,
                                        success=True,
                                        outcome=outcome)
         result.task = self.__class__

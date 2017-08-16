@@ -44,15 +44,15 @@ CasaTaskDict = {
     'hif_uvcontfit': 'UVcontFit',
     'hif_uvcontsub': 'UVcontSub',
     # Single dish tasks ------------------------------------------------------
-    'hsd_applycal': 'SDMSApplycal',
-    'hsd_baseline': 'SDMSBaseline',
-    'hsd_blflag': 'SDMSBLFlag',
-    'hsd_exportdata': 'SDMSExportData',
+    'hsd_applycal': 'SDApplycal',
+    'hsd_baseline': 'SDBaseline',
+    'hsd_blflag': 'SDBLFlag',
+    'hsd_exportdata': 'SDExportData',
     'hsd_flagdata': 'FlagDeterALMASingleDish',
-    'hsd_imaging': 'SDMSImaging',
+    'hsd_imaging': 'SDImaging',
     'hsd_importdata': 'SDImportData',
     'hsd_k2jycal': 'SDK2JyCal',
-    'hsd_skycal': 'SDMSSkyCal',
+    'hsd_skycal': 'SDSkyCal',
     'hsd_tsysflag': 'SDTsysflag',
     'hsd_restoredata': 'SDRestoreData',
     # ALMA interferometry tasks ---------------------------------------------
@@ -159,15 +159,15 @@ classToCASATask = {
     hif_tasks.UVcontFit               : 'hif_uvcontfit',
     hif_tasks.UVcontSub               : 'hif_uvcontsub',
     # Single dish tasks ------------------------------------------------------
-    hsd_tasks.SDMSApplycal            : 'hsd_applycal',
-    hsd_tasks.SDMSBaseline            : 'hsd_baseline',
-    hsd_tasks.SDMSBLFlag              : 'hsd_blflag',
-    hsd_tasks.SDMSExportData          : 'hsd_exportdata',
+    hsd_tasks.SDApplycal            : 'hsd_applycal',
+    hsd_tasks.SDBaseline            : 'hsd_baseline',
+    hsd_tasks.SDBLFlag              : 'hsd_blflag',
+    hsd_tasks.SDExportData          : 'hsd_exportdata',
     hsd_tasks.FlagDeterALMASingleDish : 'hsd_flagdata',
-    hsd_tasks.SDMSImaging             : 'hsd_imaging',
+    hsd_tasks.SDImaging             : 'hsd_imaging',
     hsd_tasks.SDImportData            : 'hsd_importdata',
     hsd_tasks.SDK2JyCal               : 'hsd_k2jycal',
-    hsd_tasks.SDMSSkyCal              : 'hsd_skycal',
+    hsd_tasks.SDSkyCal              : 'hsd_skycal',
     hsd_tasks.SDTsysflag              : 'hsd_tsysflag',
     hsd_tasks.SDRestoreData       : 'hsd_restoredata',
     # VLA tasks ----------------------------------------------------------------
@@ -335,7 +335,7 @@ TASK_COMMENTS = {
     (hifa_tasks.TimeGaincal,): (
         'Time dependent gain calibrations are computed. '
     ),
-    (h_tasks.Applycal, hif_tasks.IFApplycal, hsd_tasks.SDMSApplycal): (
+    (h_tasks.Applycal, hif_tasks.IFApplycal, hsd_tasks.SDApplycal): (
         'Calibrations are applied to the data. Final flagging summaries '
         'are computed'
     ),
@@ -354,27 +354,27 @@ TASK_COMMENTS = {
     ),
     (h_tasks.ExportData,
      hifa_tasks.ALMAExportData,
-     hsd_tasks.SDMSExportData): (
+     hsd_tasks.SDExportData): (
         'The output data products are computed. '
     ),
     # Single Dish Tasks
-    (hsd_tasks.SDMSSkyCal,): (
+    (hsd_tasks.SDSkyCal,): (
         'Generates sky calibration table according to calibration '
         'strategy. '
     ),
-    (hsd_tasks.SDMSBaseline,): (
+    (hsd_tasks.SDBaseline,): (
         'Subtracts spectral baseline by least-square fitting with '
         'N-sigma clipping. Spectral lines are automatically detected '
         'and examined to determine the region that is masked to protect '
         'these features from the fit. \n'
         '' + SILENT_TASK_COMMENT
     ),
-    (hsd_tasks.SDMSBLFlag,): (
+    (hsd_tasks.SDBLFlag,): (
         'Perform row-based flagging based on noise level and quality of '
         'spectral baseline subtraction. \n'
         '' + SILENT_TASK_COMMENT
     ),
-    (hsd_tasks.SDMSImaging,): (
+    (hsd_tasks.SDImaging,): (
         'Perform single dish imaging.'
     ),
     (hsd_tasks.SDK2JyCal,): (

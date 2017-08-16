@@ -102,7 +102,7 @@ class SDRestoreData(restoredata.RestoreData):
     
     def _do_applycal(self):
         inputs = self.inputs
-        applycal_inputs = applycal.SDMSApplycal.Inputs(inputs.context)
-        applycal_task = applycal.SDMSApplycal(applycal_inputs)
+        applycal_inputs = applycal.SDApplycal.Inputs(inputs.context)
+        applycal_task = applycal.SDApplycal(applycal_inputs)
         return self._executor.execute(applycal_task, merge=True)
 

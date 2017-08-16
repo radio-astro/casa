@@ -22,7 +22,7 @@ from .. import common
 from pipeline.extern import sensitivity_improvement
 from ..common import utils as sdutils
 from ..common import compress 
-from ..baseline import msbaseline
+from ..baseline import baseline
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -178,7 +178,7 @@ class SDImaging(basetask.StandardTaskTemplate):
         registered_results = [getresult(r) for r in context.results]
         baseline_stage = -1
         for stage in xrange(len(registered_results) - 1, -1, -1):
-            if isinstance(registered_results[stage], msbaseline.SDMSBaselineResults):
+            if isinstance(registered_results[stage], baseline.SDBaselineResults):
                 baseline_stage = stage
         if baseline_stage > 0:
             edge = list(registered_results[baseline_stage].outcome['edge'])

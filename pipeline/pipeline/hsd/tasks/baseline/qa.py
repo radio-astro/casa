@@ -7,13 +7,13 @@ import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.pipelineqa as pqa
 import pipeline.infrastructure.utils as utils
 
-from . import msbaseline
+from . import baseline
 
 LOG = logging.get_logger(__name__)
 
 
 class SDBaselineQAHandler(pqa.QAResultHandler):    
-    result_cls = msbaseline.SDMSBaselineResults
+    result_cls = baseline.SDBaselineResults
     child_cls = None
 
     def handle(self, context, result):
@@ -44,7 +44,7 @@ class SDBaselineQAHandler(pqa.QAResultHandler):
 
 class SDBaselineListQAHandler(pqa.QAResultHandler):
     result_cls = list
-    child_cls = msbaseline.SDMSBaselineResults
+    child_cls = baseline.SDBaselineResults
 
     def handle(self, context, result):
         # collate the QAScores from each child result, pulling them into our

@@ -13,7 +13,7 @@ def hsd_exportdata(pprfile=None,targetimages=None, products_dir=None,
     # constructor
     all_inputs = vars()
 
-    task_name = 'SDMSExportData'
+    task_name = 'SDExportData'
     
     ##########################################################################
     #                                                                        #

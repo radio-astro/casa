@@ -138,8 +138,8 @@ class MaskLine(basetask.StandardTaskTemplate):
  
         # simple gridding
         t0 = time.time()
-        gridding_inputs = simplegrid.SDMSSimpleGridding.Inputs(context, group_id, member_list)
-        gridding_task = simplegrid.SDMSSimpleGridding(gridding_inputs)
+        gridding_inputs = simplegrid.SDSimpleGridding.Inputs(context, group_id, member_list)
+        gridding_task = simplegrid.SDSimpleGridding(gridding_inputs)
         job = common.ParameterContainerJob(gridding_task, datatable=dt, index_list=index_list)
         gridding_result = self._executor.execute(job, merge=False)
         spectra = gridding_result.outcome['spectral_data']

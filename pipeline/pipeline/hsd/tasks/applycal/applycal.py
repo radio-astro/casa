@@ -12,7 +12,7 @@ from pipeline.h.tasks.applycal.applycal import ApplycalInputs, Applycal, Applyca
 LOG = infrastructure.get_logger(__name__)
 
 
-class SDMSApplycalInputs(ApplycalInputs,basetask.StandardInputs,
+class SDApplycalInputs(ApplycalInputs,basetask.StandardInputs,
                          basetask.OnTheFlyCalibrationMixin):
     """
     ApplycalInputs defines the inputs for the Applycal pipeline task.
@@ -52,7 +52,7 @@ class SDMSApplycalInputs(ApplycalInputs,basetask.StandardInputs,
             value = 'calflagstrict'
         self._applymode = value
 
-class SDMSApplycal(Applycal, common.SingleDishTask):#basetask.StandardTaskTemplate):
+class SDApplycal(Applycal, common.SingleDishTask):#basetask.StandardTaskTemplate):
     """
     Applycal executes CASA applycal tasks for the current context state,
     applying calibrations registered with the pipeline context to the target
@@ -62,13 +62,13 @@ class SDMSApplycal(Applycal, common.SingleDishTask):#basetask.StandardTaskTempla
     tables as applied. As a result, they will not be included in future
     on-the-fly calibration arguments.
     """
-    Inputs = SDMSApplycalInputs
+    Inputs = SDApplycalInputs
     ### Note this is a temporary workaround ###
     antenna_to_apply = '*&&&'
     
     def _get_flagsum_arg(self, vis):
         # CAS-8813 flag fraction should be based on target instead of total
-        task_args = super(SDMSApplycal, self)._get_flagsum_arg(vis=vis)
+        task_args = super(SDApplycal, self)._get_flagsum_arg(vis=vis)
         task_args.update({'intent': 'OBSERVE_TARGET#ON_SOURCE'})
         return task_args
         
@@ -81,7 +81,7 @@ class SDMSApplycal(Applycal, common.SingleDishTask):#basetask.StandardTaskTempla
         
     def prepare(self):
         # execute Applycal
-        results = super(SDMSApplycal, self).prepare()
+        results = super(SDApplycal, self).prepare()
         # Update Tsys in datatable
         context = self.inputs.context
         #datatable = DataTable(name=context.observing_run.ms_datatable_name, readonly=False)

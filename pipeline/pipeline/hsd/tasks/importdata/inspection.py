@@ -13,7 +13,7 @@ from . import reader
 
 LOG = infrastructure.get_logger(__name__)
 
-class SDMSInspection(object):
+class SDInspection(object):
     def __init__(self, table_name, ms=None):
         self.ms = ms
         self.table_name = table_name
