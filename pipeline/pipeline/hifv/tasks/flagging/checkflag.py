@@ -89,6 +89,8 @@ class Checkflag(basetask.StandardTaskTemplate):
             self.inputs.checkflagmode == 'allcals' or
             self.inputs.checkflagmode == 'target'):
 
+            flagbackup = True
+
             if ('RL' in pols.corr_type_string) and ('LR' in pols.corr_type_string):
                 for correlation in ['ABS_RL', 'ABS_LR']:
 
@@ -98,9 +100,11 @@ class Checkflag(basetask.StandardTaskTemplate):
                                    'scan': scanselect,
                                    'ntime': 'scan',
                                    'datacolumn': 'corrected',
-                                   'flagbackup': True}
+                                   'flagbackup': flagbackup}
 
                     checkflag_result = self._do_checkflag(**method_args)
+
+                    flagbackup = False
 
                 extendflag_result = self._do_extendflag(field=fieldselect,
                                                         scan=scanselect)
