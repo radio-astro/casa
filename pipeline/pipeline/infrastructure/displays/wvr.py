@@ -219,21 +219,28 @@ class WVRPhaseVsBaselineChart(object):
         LOG.trace('Maximum phase offset for %s = %s' % (self.ms.basename, 
                                                         self._max_phase_offset))
 
-        ratios = [w.y for w in self._wrappers]
-        ratios = numpy.ma.MaskedArray([r for r in ratios if r is not None])
+        # Extract ratios, excluding any that are set to None.
+        ratios = [w.y for w in self._wrappers if w.y is not None]
 
-        alt_refant_used = (numpy.ma.min(ratios[~ratios.mask]) == 0.0)
-        if alt_refant_used:
+        # Convert to masked array that masks out invalid numbers (NaN, Inf).
+        ratios = numpy.ma.masked_invalid(ratios)
+
+        # Determine whether an alternate refant might have been used by
+        # assessing if the minimum ratio was 0.
+        self._alt_refant_used = (ratios.min() == 0.0)
+
+        # If a minimum ratio of 0 was found, raise warning about alternate
+        # refant, and update ratios to also mask out values of 0.
+        if self._alt_refant_used:
             LOG.warning('Phase ratio of 0 suggests that alternate refant was '
                         'used during gaincal. This plot might be misleading!')
-            ratios = numpy.ma.MaskedArray([r for r in ratios if r not in (None, 0, 0.0)])
-        self._alt_refant_used = alt_refant_used
+            ratios = numpy.ma.masked_equal(ratios, 0)
 
-        self._max_ratio = numpy.ma.max(ratios[~ratios.mask])
-        self._min_ratio = numpy.ma.min(ratios[~ratios.mask])
-        self._median_ratio = numpy.ma.median(ratios[~ratios.mask])
+        self._max_ratio = ratios.max()
+        self._min_ratio = ratios.min()
+        self._median_ratio = numpy.ma.median(ratios)
         LOG.trace('Maximum phase ratio for %s = %s' % (self.ms.basename, 
-                                                        self._max_ratio))
+                                                       self._max_ratio))
         LOG.trace('Minimum phase ratio for %s = %s' % (self.ms.basename, 
                                                        self._min_ratio))
 
@@ -248,8 +255,8 @@ class WVRPhaseVsBaselineChart(object):
             # creates an unintelligible mess. 
             for scan in plot_scans:
                 # if spw.id == 17 and scan.id == 3:
-                    plots.append(self.get_plot_wrapper(spw, [scan,],
-                                                       self.ms.antennas))
+                plots.append(self.get_plot_wrapper(spw, [scan, ],
+                                                   self.ms.antennas))
 
         return [p for p in plots if p is not None]
 
