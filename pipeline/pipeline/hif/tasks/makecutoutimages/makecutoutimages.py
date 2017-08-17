@@ -45,7 +45,7 @@ class MakecutoutimagesResults(basetask.Results):
         for subitem in self.subimagelist:
             try:
                 imageitem = imagelibrary.ImageItem(
-                  imagename=subitem['imagename'] + '.sub', sourcename=subitem['sourcename'],
+                  imagename=subitem['imagename'] + '.subim', sourcename=subitem['sourcename'],
                   spwlist=subitem['spwlist'], specmode=subitem['specmode'],
                   sourcetype=subitem['sourcetype'],
                   multiterm=subitem['multiterm'],
@@ -78,7 +78,6 @@ class Makecutoutimages(basetask.StandardTaskTemplate):
     def prepare(self):
 
         imlist = self.inputs.context.sciimlist.get_imlist()
-
         imagenames = []
         # Per VLASS Tech Specs page 22
         for imageitem in imlist:

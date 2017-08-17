@@ -27,3 +27,4 @@ from .restoredata import VLARestoreData
 from .circfeedpolcal import Circfeedpolcal
 from .flagging import Flagcal
 from .pbcor import Pbcor
+from .exportvlassdata import Exportvlassdata

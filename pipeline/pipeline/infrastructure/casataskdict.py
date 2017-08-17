@@ -78,6 +78,7 @@ CasaTaskDict = {
     'hifa_wvrgcal': 'Wvrgcal',
     'hifa_wvrgcalflag': 'Wvrgcalflag',
     # VLA tasks -----------------------------------------------------------------
+    'hifv_exportvlassdata': 'Exportvlassdata',
     'hifv_pbcor': 'Pbcor',
     'hifv_flagcal': 'Flagcal',
     'hifv_tecmaps': 'TecMaps',
@@ -171,6 +172,7 @@ classToCASATask = {
     hsd_tasks.SDTsysflag              : 'hsd_tsysflag',
     hsd_tasks.SDRestoreData       : 'hsd_restoredata',
     # VLA tasks ----------------------------------------------------------------
+    hifv_tasks.Exportvlassdata         : 'hifv_exportvlassdata',
     hifv_tasks.Flagcal                : 'hifv_flagcal',
     hifv_tasks.Pbcor                  : 'hifv_pbcor',
     hifv_tasks.TecMaps                : 'hifv_tecmaps',
