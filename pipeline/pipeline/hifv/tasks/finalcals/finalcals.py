@@ -208,9 +208,13 @@ class Finalcals(basetask.StandardTaskTemplate):
 
         all_sejy_result = self._doall_setjy(calMs, field_spws)
 
-        powerfit_results = self._do_powerfit(field_spws)
-
-        powerfit_setjy = self._do_powerfitsetjy(calMs, powerfit_results)
+        if self.inputs.context.evla['msinfo'][m.name].fbversion == 'fb1':
+            LOG.info("Using power-law fit results from original hifv_fluxboot task.")
+            powerfit_results = self._do_powerfit(field_spws)
+            powerfit_setjy = self._do_powerfitsetjy1(calMs, powerfit_results)
+            LOG.info("Using power-law fits results from fluxcale and hifv_fluxboot2 task.")
+        if self.inputs.context.evla['msinfo'][m.name].fbversion == 'fb2':
+            powerfit_setjy = self._do_powerfitsetjy2(calMs)
 
         m = self.inputs.context.observing_run.get_ms(self.inputs.vis)
         new_gain_solint1 = context.evla['msinfo'][m.name].new_gain_solint1
@@ -835,7 +839,8 @@ class Finalcals(basetask.StandardTaskTemplate):
 
         return results
 
-    def _do_powerfitsetjy(self, calMs, results):
+
+    def _do_powerfitsetjy1(self, calMs, results):
 
         LOG.info("Setting power-law fit in the model column")
 
@@ -864,6 +869,49 @@ class Finalcals(basetask.StandardTaskTemplate):
                     # self._executor.execute(job)
                 except Exception, e:
                     print(e)
+
+            # merge identical jobs into one job with a multi-spw argument
+            LOG.info("Merging setjy jobs for calibrators.ms")
+            jobs_and_components_calMs = utils.merge_jobs(jobs_calMs, casa_tasks.setjy, merge=('spw',))
+            for job, _ in jobs_and_components_calMs:
+                self._executor.execute(job)
+
+        return True
+
+    def _do_powerfitsetjy2(self, calMs):
+
+        LOG.info("Setting power-law fit in the model column")
+
+        m = self.inputs.context.observing_run.get_ms(self.inputs.vis)
+
+        fluxscale_result = self.inputs.context.evla['msinfo'][m.name].fluxscale_result
+        dictkeys = fluxscale_result.keys()
+        keys_to_remove = ['freq', 'spwName', 'spwID']
+        dictkeys = [field_id for field_id in dictkeys if field_id not in keys_to_remove]
+
+        for fieldid in dictkeys:
+            jobs_calMs = []
+
+            try:
+                LOG.info('Running setjy for field ' + str(fieldid) + ': ' + str(fluxscale_result[fieldid]['fieldName']))
+                task_args = {'vis': calMs,
+                             'field': fluxscale_result[fieldid]['fieldName'],
+                             'spw': ','.join([str(spw) for spw in list(fluxscale_result['spwID'])]),
+                             'selectdata': False,
+                             'model': '',
+                             'listmodels': False,
+                             'scalebychan': True,
+                             'fluxdensity': [fluxscale_result[fieldid]['fitFluxd'], 0, 0, 0],
+                             'spix': list(fluxscale_result[fieldid]['spidx']),
+                             'reffreq': str(fluxscale_result[fieldid]['fitRefFreq']) + 'Hz',
+                             'standard': 'manual',
+                             'usescratch': True}
+
+                # job = casa_tasks.setjy(**task_args)
+                jobs_calMs.append(casa_tasks.setjy(**task_args))
+
+            except Exception, e:
+                print(e)
 
             # merge identical jobs into one job with a multi-spw argument
             LOG.info("Merging setjy jobs for calibrators.ms")

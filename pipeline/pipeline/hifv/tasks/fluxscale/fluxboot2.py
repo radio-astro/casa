@@ -92,6 +92,7 @@ class Fluxboot2Results(basetask.Results):
         self.spindex_results = spindex_results
         self.caltable = caltable
         self.fluxscale_result = fluxscale_result
+        self.fbversion = 'fb2'
 
     def merge_with_context(self, context):
         """Add results to context for later use in the final calibration
@@ -101,7 +102,7 @@ class Fluxboot2Results(basetask.Results):
         context.evla['msinfo'][m.name].fluxscale_flux_densities = self.flux_densities
         context.evla['msinfo'][m.name].fluxscale_spws = self.spws
         context.evla['msinfo'][m.name].fluxscale_result = self.fluxscale_result
-
+        context.evla['msinfo'][m.name].fbversion = self.fbversion
 
 class Fluxboot2(basetask.StandardTaskTemplate):
     Inputs = Fluxboot2Inputs
@@ -251,7 +252,7 @@ class Fluxboot2(basetask.StandardTaskTemplate):
             fluxscale_result = self._do_fluxscale(context, calMs, caltable)
             LOG.info("Fitting data with power law")
             powerfit_results, weblog_results, spindex_results = self._do_powerfit(context, fluxscale_result)
-            setjy_result = self._do_setjy(calMs, powerfit_results)
+            setjy_result = self._do_setjy(calMs, fluxscale_result)
         except Exception as e:
             LOG.warning(e.message)
             LOG.warning("A problem was detected while running fluxscale.  Please review the CASA log.")
@@ -563,42 +564,45 @@ class Fluxboot2(basetask.StandardTaskTemplate):
 
         return results, weblog_results, spindex_results
 
-    def _do_setjy(self, calMs, results):
+    def _do_setjy(self, calMs, fluxscale_result):
 
-        for result in results:
+        dictkeys = fluxscale_result.keys()
+        keys_to_remove = ['freq', 'spwName', 'spwID']
+        dictkeys = [field_id for field_id in dictkeys if field_id not in keys_to_remove]
+
+        for fieldid in dictkeys:
 
             jobs_calMs = []
             jobs_vis = []
 
-            for spw_i in result[1]:
+            LOG.info('Running setjy for field ' + str(fieldid) + ': ' +  str(fluxscale_result[fieldid]['fieldName']))
+            task_args = {'vis': calMs,
+                         'field': fluxscale_result[fieldid]['fieldName'],
+                         'spw': ','.join([str(spw) for spw in list(fluxscale_result['spwID'])]),
+                         'selectdata': False,
+                         'model': '',
+                         'listmodels': False,
+                         'scalebychan': True,
+                         'fluxdensity': [fluxscale_result[fieldid]['fitFluxd'], 0, 0, 0],
+                         'spix': list(fluxscale_result[fieldid]['spidx']),
+                         'reffreq': str(fluxscale_result[fieldid]['fitRefFreq']) + 'Hz',
+                         'standard': 'manual',
+                         'usescratch': True}
 
-                LOG.info('Running setjy on spw ' + str(spw_i))
-                task_args = {'vis': calMs,
-                             'field': str(result[0]),
-                             'spw': str(spw_i),
-                             'selectdata': False,
-                             'model': '',
-                             'listmodels': False,
-                             'scalebychan': True,
-                             'fluxdensity': [result[2], 0, 0, 0],
-                             'spix': result[3],
-                             'reffreq': str(result[5]) + 'GHz',
-                             'standard': 'manual',
-                             'usescratch': True}
 
-                # job = casa_tasks.setjy(**task_args)
-                jobs_calMs.append(casa_tasks.setjy(**task_args))
+            # job = casa_tasks.setjy(**task_args)
+            jobs_calMs.append(casa_tasks.setjy(**task_args))
 
-                # self._executor.execute(job)
+            # self._executor.execute(job)
 
-                # Run on the ms
-                task_args['vis'] = self.inputs.vis
-                jobs_vis.append(casa_tasks.setjy(**task_args))
-                # job = casa_tasks.setjy(**task_args)
-                # self._executor.execute(job)
+            # Run on the ms
+            task_args['vis'] = self.inputs.vis
+            jobs_vis.append(casa_tasks.setjy(**task_args))
+            # job = casa_tasks.setjy(**task_args)
+            # self._executor.execute(job)
 
-                if (abs(self.spix) > 5.0):
-                    LOG.warn("abs(spix) > 5.0 - Fail")
+            if (abs(self.spix) > 5.0):
+                LOG.warn("abs(spix) > 5.0 - Fail")
 
             # merge identical jobs into one job with a multi-spw argument
             LOG.info("Merging setjy jobs for " + calMs)

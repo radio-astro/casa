@@ -92,6 +92,7 @@ class FluxbootResults(basetask.Results):
         self.spindex_results = spindex_results
         self.caltable = caltable
         self.fluxscale_result = fluxscale_result
+        self.fbversion = 'fb1'
 
     def merge_with_context(self, context):
         """Add results to context for later use in the final calibration
@@ -101,6 +102,7 @@ class FluxbootResults(basetask.Results):
         context.evla['msinfo'][m.name].fluxscale_flux_densities = self.flux_densities
         context.evla['msinfo'][m.name].fluxscale_spws = self.spws
         context.evla['msinfo'][m.name].fluxscale_result = self.fluxscale_result
+        context.evla['msinfo'][m.name].fbversion = self.fbversion
 
 
 class Fluxboot(basetask.StandardTaskTemplate):
