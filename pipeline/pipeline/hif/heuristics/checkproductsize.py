@@ -51,6 +51,16 @@ class CheckProductSizeHeuristics(object):
         makeimlist_result = makeimlist_task.prepare()
         imlist = makeimlist_result.targets
 
+        if imlist == []:
+            LOG.info('Imaging target list is empty.')
+            return size_mitigation_parameters, \
+                   0.0, 0.0, \
+                   0.0, \
+                   0.0, 0.0, \
+                   False, \
+                   {'longmsg': 'No size mitigation needed', \
+                    'shortmsg': 'No size mitigation'}
+
         # Extract some information for later
         fields = list(set([i['field'] for i in imlist]))
         nfields = len(fields)
@@ -146,7 +156,27 @@ class CheckProductSizeHeuristics(object):
             nfields = int(self.inputs.maxproductsize / (productsize / len(fields)))
             if nfields == 0:
                 nfields = 1
-            size_mitigation_parameters['field'] = ','.join(fields[:nfields])
+
+            # Truncate the field list
+            mitigated_fields = fields[:nfields]
+
+            # Make sure the representative source is included in the new list
+            repr_target, \
+            repr_source, \
+            repr_spw, \
+            reprBW_mode, \
+            real_repr_target, \
+            minAcceptableAngResolution, \
+            maxAcceptableAngResolution = \
+                imlist[0]['heuristics'].representative_target()
+
+            for field in fields[nfields:]:
+                if utils.dequote(field) == utils.dequote(repr_source):
+                    mitigated_fields[0] = field
+                    break
+
+            size_mitigation_parameters['field'] = ','.join(mitigated_fields)
+
             LOG.info('Size mitigation: Setting field to %s' % (size_mitigation_parameters['field']))
 
             # Recalculate sizes
