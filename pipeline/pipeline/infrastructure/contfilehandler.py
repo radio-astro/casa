@@ -28,6 +28,9 @@ class ContFileHandler(object):
 
     def read(self, skip_none=False, warn_nonexist=False):
 
+        if self.filename is None:
+            return {}
+
         cont_ranges = {'fields': {}, 'version': 2}
 
         try:
@@ -86,36 +89,40 @@ class ContFileHandler(object):
 
     def write(self, cont_ranges = None):
 
+        if self.filename is None:
+            return
+
         if (cont_ranges is None):
             cont_ranges = self.cont_ranges
 
         fd = open(self.filename, 'w+')
-        for field_name in cont_ranges['fields'].iterkeys():
-            if (cont_ranges['version'] == 1):
-                fd.write('%s\n\n' % (field_name.replace('"','')))
-            elif (cont_ranges['version'] == 2):
-                fd.write('Field: %s\n\n' % (field_name.replace('"','')))
-            for spw_id in cont_ranges['fields'][field_name].iterkeys():
+        if cont_ranges != {}:
+            for field_name in cont_ranges['fields'].iterkeys():
                 if (cont_ranges['version'] == 1):
-                    fd.write('SPW%s\n' % (spw_id))
+                    fd.write('%s\n\n' % (field_name.replace('"','')))
                 elif (cont_ranges['version'] == 2):
-                    fd.write('SpectralWindow: %s\n' % (spw_id))
-                if (cont_ranges['fields'][field_name][spw_id] in ([], ['NONE'])):
-                    fd.write('NONE\n')
-                elif (cont_ranges['fields'][field_name][spw_id] == ['ALL']):
-                    fd.write('ALL\n')
-                else:
-                    for freq_range in cont_ranges['fields'][field_name][spw_id]:
-                        if (freq_range['range'] == 'NONE'):
-                            fd.write('NONE\n')
-                        elif (freq_range['range'] == 'ALL'):
-                            fd.write('ALL\n')
-                        else:
-                            if (cont_ranges['version'] == 1):
-                                fd.write('%s~%sGHz\n' % (freq_range['range'][0], freq_range['range'][1]))
-                            elif (cont_ranges['version'] == 2):
-                                fd.write('%s~%sGHz %s\n' % (freq_range['range'][0], freq_range['range'][1], freq_range['refer']))
-                fd.write('\n')
+                    fd.write('Field: %s\n\n' % (field_name.replace('"','')))
+                for spw_id in cont_ranges['fields'][field_name].iterkeys():
+                    if (cont_ranges['version'] == 1):
+                        fd.write('SPW%s\n' % (spw_id))
+                    elif (cont_ranges['version'] == 2):
+                        fd.write('SpectralWindow: %s\n' % (spw_id))
+                    if (cont_ranges['fields'][field_name][spw_id] in ([], ['NONE'])):
+                        fd.write('NONE\n')
+                    elif (cont_ranges['fields'][field_name][spw_id] == ['ALL']):
+                        fd.write('ALL\n')
+                    else:
+                        for freq_range in cont_ranges['fields'][field_name][spw_id]:
+                            if (freq_range['range'] == 'NONE'):
+                                fd.write('NONE\n')
+                            elif (freq_range['range'] == 'ALL'):
+                                fd.write('ALL\n')
+                            else:
+                                if (cont_ranges['version'] == 1):
+                                    fd.write('%s~%sGHz\n' % (freq_range['range'][0], freq_range['range'][1]))
+                                elif (cont_ranges['version'] == 2):
+                                    fd.write('%s~%sGHz %s\n' % (freq_range['range'][0], freq_range['range'][1], freq_range['refer']))
+                    fd.write('\n')
         fd.close()
 
     def get_merged_selection(self, field_name, spw_id, cont_ranges = None):

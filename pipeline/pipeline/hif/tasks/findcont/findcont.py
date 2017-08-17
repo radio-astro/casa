@@ -51,6 +51,12 @@ class FindCont(basetask.StandardTaskTemplate):
         inputs = self.inputs
         context = self.inputs.context
 
+        # Check for size mitigation errors.
+        if inputs.context.size_mitigation_parameters.has_key('status'):
+            if inputs.context.size_mitigation_parameters['status'] == 'ERROR':
+                LOG.error('Size mitigation had failed. Can not run continuum finding.')
+                return FindContResult({}, [], 0, 0)
+
         qaTool = casatools.quanta
 
         # make sure inputs.vis is a list, even it is one that contains a
