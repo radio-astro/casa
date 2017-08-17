@@ -305,7 +305,7 @@ class MakeImList(basetask.StandardTaskTemplate):
                 proj_params = inputs.context.project_performance_parameters, \
                 contfile = inputs.contfile, \
                 linesfile = inputs.linesfile, \
-                imaging_mode = 'ALMA')
+                imaging_mode = inputs.context.project_summary.telescope)
 
             repr_target, repr_source, repr_spw, reprBW_mode, real_repr_target, minAcceptableAngResolution, maxAcceptableAngResolution = self.heuristics.representative_target()
             # The PI cube shall only be created for real representative targets
@@ -374,7 +374,7 @@ class MakeImList(basetask.StandardTaskTemplate):
             proj_params = inputs.context.project_performance_parameters, \
             contfile = inputs.contfile, \
             linesfile = inputs.linesfile, \
-            imaging_mode = 'ALMA')
+            imaging_mode = inputs.context.project_summary.telescope)
 
         if inputs.specmode == 'cont':
             # Make sure the spw list is sorted numerically

@@ -170,7 +170,7 @@ class T2_4MDetailsTcleanRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
             #
             # theoretical sensitivity
             #
-            if 'VLASS' in r.imaging_mode:
+            if 'VLA' in r.imaging_mode:
                 row_sensitivity = '-'
             else:
                 row_sensitivity = '%.2g %s' % (r.sensitivity, brightness_unit)
@@ -183,7 +183,9 @@ class T2_4MDetailsTcleanRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
             # cleaning threshold cell
             #
             if 'VLASS' in r.imaging_mode:
-                row_cleaning_threshold = '%2g' % r.threshold
+                row_cleaning_threshold = '%.2g' % r.threshold
+            elif 'VLA' in r.imaging_mode:
+                row_cleaning_threshold = '-'
             else:
                 if r.threshold:
                     row_cleaning_threshold = '%.2g %s' % (casatools.quanta.convert(r.threshold, brightness_unit)['value'], brightness_unit)
