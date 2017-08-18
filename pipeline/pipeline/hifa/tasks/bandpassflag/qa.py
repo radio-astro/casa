@@ -40,7 +40,7 @@ class BandpassflagQAHandler(pqa.QAResultHandler):
                   '{:0.2f}.'.format(ms.basename,
                                     result.cafresult.qa.representative.score,
                                     result.bpresult.qa.representative.score)
-        shortmsg = 'Combined score {}'.format(ms.basename)
+        shortmsg = 'Combined flagging and bandpass score'
         new_origin = pqa.QAOrigin(
             metric_name='BandpassflagQAHandler',
             metric_score=bool(score),
