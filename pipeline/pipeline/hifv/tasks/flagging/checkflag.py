@@ -84,6 +84,7 @@ class Checkflag(basetask.StandardTaskTemplate):
             fieldselect = ','.join([str(fieldid) for fieldid in fieldids])
             scanselect = ''
             timedevscale = 7.0
+            freqdevscale = 7.0
 
         if (self.inputs.checkflagmode == 'bpd' or
             self.inputs.checkflagmode == 'allcals' or
