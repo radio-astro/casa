@@ -491,7 +491,7 @@ class SDSparseMapDisplay(SDImageDisplay):
                     y0 = y * STEP
                     y1 = (y + 1) * STEP
                     valid_index = isvalid[x0:x1,y0:y1].nonzero()
-                    chunk = self._get_array_chunk(self.data, (x0, y0, pol), (x1, y1, pol+1), slice_axes).squeeze() * self._get_array_chunk(self.mask, (x0, y0, pol), (x1, y1, pol+1), slice_axes).squeeze()
+                    chunk = self._get_array_chunk(self.data, (x0, y0, pol), (x1, y1, pol+1), slice_axes).squeeze(axis=self.id_stokes) * self._get_array_chunk(self.mask, (x0, y0, pol), (x1, y1, pol+1), slice_axes).squeeze(axis=self.id_stokes)
                     valid_sp = chunk[valid_index[0],valid_index[1],:]
                     Plot[x][y] = valid_sp.mean(axis=0)
                     del valid_index, chunk, valid_sp
