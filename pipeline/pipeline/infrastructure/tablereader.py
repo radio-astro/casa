@@ -373,6 +373,8 @@ class SpectralWindowTable(object):
         except:
             first_target_source_id = 0
 
+        target_spw_ids = msmd.spwsforintent('*TARGET*')
+
         spws = []
         for i, spw_name in enumerate(spw_names):
             # get this spw's values from our precalculated lists and dicts
@@ -391,7 +393,9 @@ class SpectralWindowTable(object):
             except: ### For Nobeyama (TODO: how to define BBC_NO for NRO)
                 baseband = i
             ref_freq = msmd.reffreq(i)
-            if spw_type in ('TDM', 'FDM'):
+            # Read transitions for target spws. Other spws may cause severe
+            # messages because the target source IDs may not have the spw.
+            if i in target_spw_ids:
                 try: ### TRANSITIONS column does not exist in old data
                     # TODO: Are the transitions of a given spw the same for all
                     #       target source IDs ?
