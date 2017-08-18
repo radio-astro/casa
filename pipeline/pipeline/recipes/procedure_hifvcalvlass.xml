@@ -87,6 +87,10 @@
                 <Keyword xmlns="">tecmaps</Keyword>
                 <Value xmlns="">False</Value>
             </Parameter>
+            <Parameter>
+                <Keyword xmlns="">swpow_spw</Keyword>
+                <Value xmlns="">6,14</Value>
+            </Parameter>
         </ParameterSet>
     </ProcessingCommand>
 
@@ -106,6 +110,10 @@
     <ProcessingCommand>
         <Command xmlns="">hifv_checkflag</Command>
         <ParameterSet>
+            <Parameter>
+                <Keyword xmlns="">checkflagmode</Keyword>
+                <Value xmlns="">bpd</Value>
+            </Parameter>
         </ParameterSet>
     </ProcessingCommand>
 
@@ -120,17 +128,10 @@
         <ParameterSet>
             <Parameter>
                 <Keyword xmlns="">checkflagmode</Keyword>
-                <Value xmlns="">semi</Value>
+                <Value xmlns="">allcals</Value>
             </Parameter>
         </ParameterSet>
     </ProcessingCommand>
-
-    <ProcessingCommand>
-        <Command xmlns="">hifv_semiFinalBPdcals</Command>
-        <ParameterSet>
-        </ParameterSet>
-    </ProcessingCommand>
-
 
     <ProcessingCommand>
         <Command xmlns="">hifv_solint</Command>
@@ -143,7 +144,7 @@
     </ProcessingCommand>
 
     <ProcessingCommand>
-        <Command xmlns="">hifv_fluxboot</Command>
+        <Command xmlns="">hifv_fluxboot2</Command>
         <ParameterSet>
         </ParameterSet>
     </ProcessingCommand>
@@ -177,15 +178,19 @@
                 <Keyword xmlns="">flagdetailedsum</Keyword>
                 <Value xmlns="">False</Value>
             </Parameter>
+            <Parameter>
+                <Keyword xmlns="">gainmap</Keyword>
+                <Value xmlns="">True</Value>
+            </Parameter>
         </ParameterSet>
     </ProcessingCommand>
 
     <ProcessingCommand>
-        <Command xmlns="">hifv_targetflag</Command>
+        <Command xmlns="">hifv_checkflag</Command>
         <ParameterSet>
             <Parameter>
-                <Keyword xmlns="">intents</Keyword>
-                <Value xmlns="">*CALIBRATE*,*TARGET*</Value>
+                <Keyword xmlns="">checkflagmode</Keyword>
+                <Value xmlns="">target</Value>
             </Parameter>
         </ParameterSet>
     </ProcessingCommand>
@@ -198,6 +203,12 @@
 
     <ProcessingCommand>
         <Command xmlns="">hifv_plotsummary</Command>
+        <ParameterSet>
+        </ParameterSet>
+    </ProcessingCommand>
+
+    <ProcessingCommand>
+        <Command xmlns="">hifv_exportdata</Command>
         <ParameterSet>
         </ParameterSet>
     </ProcessingCommand>

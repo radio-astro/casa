@@ -34,6 +34,7 @@ from hifv_checkflag_cli import hifv_checkflag_cli as hifv_checkflag
 from hifv_semiFinalBPdcals_cli import hifv_semiFinalBPdcals_cli as hifv_semiFinalBPdcals
 from hifv_solint_cli import hifv_solint_cli as hifv_solint
 from hifv_fluxboot_cli import hifv_fluxboot_cli as hifv_fluxboot
+from hifv_fluxboot2_cli import hifv_fluxboot2_cli as hifv_fluxboot2
 from hifv_finalcals_cli import hifv_finalcals_cli as hifv_finalcals
 from hifv_flagcal_cli import hifv_flagcal_cli as hifv_flagcal
 from hifv_circfeedpolcal_cli import hifv_circfeedpolcal_cli as hifv_circfeedpolcal
@@ -81,7 +82,7 @@ def hifvcalvlass(vislist, importonly=False, pipelinemode='automatic', interactiv
         # Gain curves, opacities, antenna position corrections,
         # requantizer gains (NB: requires CASA 4.1!)
         # tecmaps default is False
-        hifv_priorcals(pipelinemode=pipelinemode)
+        hifv_priorcals(tecmaps=False, swpow_spw='6,14')
 
         # Initial test calibrations using bandpass and delay calibrators
         hifv_testBPdcals(pipelinemode=pipelinemode)
@@ -90,25 +91,22 @@ def hifvcalvlass(vislist, importonly=False, pipelinemode='automatic', interactiv
         # bp table amps and phases
         hifv_flagbaddef(pipelinemode=pipelinemode)
 
-        # Flag possible RFI on BP calibrator using rflag
-        hifv_checkflag(pipelinemode=pipelinemode)
+        # Flag possible RFI on BP calibrator using rflag with mode=bpd
+        hifv_checkflag(checkflagmode='bpd')
 
         # DO SEMI-FINAL DELAY AND BANDPASS CALIBRATIONS
         # (semi-final because we have not yet determined the spectral index of the bandpass calibrator)
         hifv_semiFinalBPdcals(pipelinemode=pipelinemode)
 
-        # Use flagdata rflag mode again on calibrators
-        hifv_checkflag(pipelinemode=pipelinemode, checkflagmode='semi')
-
-        # Re-run semi-final delay and bandpass calibrations
-        hifv_semiFinalBPdcals(pipelinemode=pipelinemode)
+        # Use mode=allcals again on calibrators
+        hifv_checkflag(checkflagmode='allcals')
 
         # Determine solint for scan-average equivalent
         hifv_solint(limit_short_solint='0.45')
 
         # Do the flux density boostrapping -- fits spectral index of
         # calibrators with a power-law and puts fit in model column
-        hifv_fluxboot(pipelinemode=pipelinemode)
+        hifv_fluxboot2(pipelinemode=pipelinemode)
 
         # Make the final calibration tables
         hifv_finalcals(pipelinemode=pipelinemode)
@@ -120,10 +118,10 @@ def hifvcalvlass(vislist, importonly=False, pipelinemode='automatic', interactiv
         hifv_flagcal(pipelinemode=pipelinemode)
 
         # Apply all the calibrations and check the calibrated data
-        hifv_applycals(flagsum=False, flagdetailedsum=False)
+        hifv_applycals(flagsum=False, flagdetailedsum=False, gainmap=True)
 
-        # Now run all calibrated data, including the target, through rflag
-        hifv_targetflag(pipelinemode=pipelinemode, intents='*CALIBRATE*,*TARGET*')
+        # Flag possible RFI on BP calibrator using rflag with mode=bpd
+        hifv_checkflag(checkflagmode='target')
 
         # Calculate data weights based on standard deviation within each spw
         hifv_statwt(pipelinemode=pipelinemode)
@@ -138,7 +136,7 @@ def hifvcalvlass(vislist, importonly=False, pipelinemode='automatic', interactiv
         # hif_makeimages(pipelinemode=pipelinemode)
 
         # Export the data
-        # hifv_exportdata(pipelinemode=pipelinemode)
+        hifv_exportdata(pipelinemode=pipelinemode)
 
     except Exception, e:
         if str(e) == IMPORT_ONLY:
