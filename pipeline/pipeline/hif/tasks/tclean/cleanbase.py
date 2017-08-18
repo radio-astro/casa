@@ -37,8 +37,8 @@ class CleanBaseInputs(basetask.StandardInputs):
                  robust=None, noise=None, npixels=None,
                  restoringbeam=None, iter=None, mask=None, hm_masking=None,
                  hm_sidelobethreshold=None, hm_noisethreshold=None,
-                 hm_lownoisethreshold=None, hm_minbeamfrac=None,
-                 hm_growiterations=None,
+                 hm_lownoisethreshold=None, hm_negativethreshold=None,
+                 hm_minbeamfrac=None, hm_growiterations=None,
                  pblimit=None, niter=None,
                  threshold=None, sensitivity=None, reffreq=None, result=None, parallel=None,
                  heuristics=None):
@@ -61,6 +61,7 @@ class CleanBaseInputs(basetask.StandardInputs):
     hm_sidelobethreshold = basetask.property_with_default('hm_sidelobethreshold', -999.0)
     hm_noisethreshold = basetask.property_with_default('hm_noisethreshold', -999.0)
     hm_lownoisethreshold = basetask.property_with_default('hm_lownoisethreshold', -999.0)
+    hm_negativethreshold = basetask.property_with_default('hm_negativethreshold', -999.0)
     hm_minbeamfrac = basetask.property_with_default('hm_minbeamfrac', -999.0)
     hm_growiterations = basetask.property_with_default('hm_growiterations', -999)
     niter = basetask.property_with_default('niter', 5000)
@@ -298,7 +299,7 @@ class CleanBase(basetask.StandardTaskTemplate):
             tclean_job_parameters['usemask'] = 'auto-multithresh'
 
             # get heuristics parameters 
-            sidelobethreshold, noisethreshold, lownoisethreshold, minbeamfrac, growiterations = inputs.heuristics.get_autobox_params(inputs.intent)
+            sidelobethreshold, noisethreshold, lownoisethreshold, negativethreshold, minbeamfrac, growiterations = inputs.heuristics.get_autobox_params(inputs.intent)
 
             # Override individually with manual settings
             if inputs.hm_sidelobethreshold != -999.0:
@@ -315,6 +316,11 @@ class CleanBase(basetask.StandardTaskTemplate):
                 tclean_job_parameters['lownoisethreshold'] = inputs.hm_lownoisethreshold
             elif lownoisethreshold is not None:
                 tclean_job_parameters['lownoisethreshold'] = lownoisethreshold
+
+            if inputs.hm_negativethreshold != -999.0:
+                tclean_job_parameters['negativethreshold'] = inputs.hm_negativethreshold
+            elif negativethreshold is not None:
+                tclean_job_parameters['negativethreshold'] = negativethreshold
 
             if inputs.hm_minbeamfrac != -999.0:
                 tclean_job_parameters['minbeamfrac'] = inputs.hm_minbeamfrac

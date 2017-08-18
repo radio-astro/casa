@@ -36,8 +36,8 @@ class TcleanInputs(cleanbase.CleanBaseInputs):
                  robust=None, noise=None, npixels=None,
                  restoringbeam=None, hm_masking=None,
                  hm_sidelobethreshold=None, hm_noisethreshold=None,
-                 hm_lownoisethreshold=None, hm_minbeamfrac=None,
-                 hm_growiterations=None,
+                 hm_lownoisethreshold=None, hm_negativethreshold=None,
+                 hm_minbeamfrac=None, hm_growiterations=None,
                  hm_cleaning=None, mask=None,
                  niter=None, threshold=None, tlimit=None, masklimit=None,
                  maxncleans=None, cleancontranges=None, subcontms=None,
@@ -77,6 +77,7 @@ class TcleanInputs(cleanbase.CleanBaseInputs):
     hm_sidelobethreshold = basetask.property_with_default('hm_sidelobethreshold', -999.0)
     hm_noisethreshold = basetask.property_with_default('hm_noisethreshold', -999.0)
     hm_lownoisethreshold = basetask.property_with_default('hm_lownoisethreshold', -999.0)
+    hm_negativethreshold = basetask.property_with_default('hm_negativethreshold', -999.0)
     hm_minbeamfrac = basetask.property_with_default('hm_minbeamfrac', -999.0)
     hm_growiterations = basetask.property_with_default('hm_growiterations', -999)
     masklimit = basetask.property_with_default('masklimit', 4.0)
@@ -878,6 +879,7 @@ class Tclean(cleanbase.CleanBase):
                                                   hm_sidelobethreshold=inputs.hm_sidelobethreshold,
                                                   hm_noisethreshold=inputs.hm_noisethreshold,
                                                   hm_lownoisethreshold=inputs.hm_lownoisethreshold,
+                                                  hm_negativethreshold=inputs.hm_negativethreshold,
                                                   hm_minbeamfrac=inputs.hm_minbeamfrac,
                                                   hm_growiterations=inputs.hm_growiterations,
                                                   niter=niter,

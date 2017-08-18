@@ -211,6 +211,11 @@ Compute a clean map.
        <value>-999.0</value>
   </param>
 
+  <param type="double" name="hm_negativethreshold" subparam="true">
+     <description>negativethreshold * rms in residual image</description>
+       <value>-999.0</value>
+  </param>
+
   <param type="double" name="hm_minbeamfrac" subparam="true">
      <description>minimum beam fraction for pruning</description>
        <value>-999.0</value>
@@ -357,6 +362,7 @@ Compute a clean map.
         <default param="hm_sidelobethreshold"><value type="double">-999.0</value></default>
         <default param="hm_noisethreshold"><value type="double">-999.0</value></default>
         <default param="hm_lownoisethreshold"><value type="double">-999.0</value></default>
+        <default param="hm_negativethreshold"><value type="double">-999.0</value></default>
         <default param="hm_minbeamfrac"><value type="double">-999.0</value></default>
         <default param="hm_growiterations"><value type="in">-999</value></default>
       </equals>
@@ -596,6 +602,8 @@ hm_sidelobethreshold -- Auto-boxing sidelobetheshold.
 hm_noisethreshold -- Auto-boxing noisethreshold.
 
 hm_lownoisethreshold -- Auto-boxing lownoisethreshold.
+
+hm_negativethreshold -- Auto-boxing negativethreshold.
 
 hm_minbeamfrac -- Auto-boxing minbeamfrac.
 

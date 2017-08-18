@@ -1311,10 +1311,11 @@ class ImageParamsHeuristics(object):
         sidelobethreshold = None
         noisethreshold = None
         lownoisethreshold = None
+        negativethreshold = None
         minbeamfrac = None
         growiterations = None
 
-        return sidelobethreshold, noisethreshold, lownoisethreshold, minbeamfrac, growiterations
+        return sidelobethreshold, noisethreshold, lownoisethreshold, negativethreshold, minbeamfrac, growiterations
 
     def cyclefactor(self):
         return None
