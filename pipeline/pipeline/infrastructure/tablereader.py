@@ -391,13 +391,16 @@ class SpectralWindowTable(object):
             except: ### For Nobeyama (TODO: how to define BBC_NO for NRO)
                 baseband = i
             ref_freq = msmd.reffreq(i)
-            try: ### TRANSITIONS column does not exist in old data
-                # TODO: Are the transitions of a given spw the same for all
-                #       target source IDs ?
-                transitions = msmd.transitions(sourceid=first_target_source_id, spw=i)
-                if not transitions:
+            if spw_type in ('TDM', 'FDM'):
+                try: ### TRANSITIONS column does not exist in old data
+                    # TODO: Are the transitions of a given spw the same for all
+                    #       target source IDs ?
+                    transitions = msmd.transitions(sourceid=first_target_source_id, spw=i)
+                    if not transitions:
+                        transitions = ['Unknown']
+                except:
                     transitions = ['Unknown']
-            except:
+            else:
                 transitions = ['Unknown']
 
             spw = domain.SpectralWindow(i, spw_name, spw_type, bandwidth,
