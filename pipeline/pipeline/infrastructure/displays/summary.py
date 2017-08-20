@@ -620,7 +620,7 @@ class PlotAntsChart(object):
                 subpl.add_artist(circ)
                 circ.set_alpha(0.5)
                 circ.set_facecolor([1.0, 1.0, 1.0])
-                tt = subpl.text(padpos[0]+8., padpos[1]-4., antenna.station)
+                tt = subpl.text(padpos[0]+antenna.diameter/2.0*1.3, padpos[1]-4., antenna.station)
                 pylab.setp(tt, size='small', alpha=0.5)
 
         (xmin, xmax, ymin, ymax) = (9e9, -9e9, 9e9, -9e9)
@@ -630,7 +630,7 @@ class PlotAntsChart(object):
             subpl.add_artist(circ)
             circ.set_alpha(1.0)
             circ.set_facecolor([0.8, 0.8, 0.8])
-            subpl.text(padpos[0]+8, padpos[1]+1, antenna.name)
+            subpl.text(padpos[0]+antenna.diameter/2.0*1.3, padpos[1]+1, antenna.name)
             if padpos[0] < xmin: xmin = padpos[0]
             if padpos[0] > xmax: xmax = padpos[0]
             if padpos[1] < ymin: ymin = padpos[1]
