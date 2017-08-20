@@ -201,6 +201,7 @@ class SingleDishPointingChart(object):
                 
         pl.clf()
         draw_pointing(self.axes_manager, RA, DEC, FLAG, self.figfile, circle=[0.5*beam_size_in_deg], ObsPattern=obs_pattern, plotpolicy='greyed')
+        pl.close()
 
         return self._get_plot_object()
 
