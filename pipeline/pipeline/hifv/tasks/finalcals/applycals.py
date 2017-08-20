@@ -154,6 +154,9 @@ class Applycals(applycal.IFApplycal):
                 inputs.intent = 'AMPLITUDE, BANDPASS, CHECK, POLARIZATION'
 
                 args = inputs.to_casa_args()
+
+                args['intent'] = 'AMPLITUDE, BANDPASS, CHECK, POLARIZATION'
+
                 # Do this a different way ?
                 args.pop('flagsum', None)  # Flagsum is not a CASA applycal task argument
                 args.pop('flagdetailedsum', None)  # Flagdetailedsum is not a CASA applycal task argument
