@@ -1,0 +1,256 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+<task type="function" name="hifa_gfluxscaleflag" category="pipeline">
+
+<shortdescription>Derive the flux density scale with flagging</shortdescription>
+
+<description>
+    This task computes the flagging heuristics on the phase calibrator and flux
+    calibrator by calling hif_correctedampflag which looks for outlier
+    visibility points by statistically examining the scalar difference of
+    corrected amplitudes minus model amplitudes, and flags those outliers. The
+    philosophy is that only outlier data points that have remained outliers
+    after calibration will be flagged. The heuristic works equally well on
+    resolved calibrators and point sources because it is not performing a
+    vector difference, and thus is not sensitive to nulls in the flux density
+    vs. uvdistance domain. Note that the phase of the data is not assessed.
+
+    In further detail, the workflow is as follows: an a priori calibration is
+    applied using pre-existing caltables in the calibration state, a
+    preliminary phase and amplitude gaincal solution is solved and applied, the
+    flagging heuristics are run, and any outliers are flagged. Plots are
+    generated at three points in this workflow: after a priori calibration,
+    after preliminary phase and amplitude calibration but before flagging
+    heuristics are run, and after flagging heuristics have been run and
+    applied. If no points were flagged, the "after" plots are not generated or
+    displayed. The score for this stage is the standard data flagging score,
+    which depends on the fraction of data flagged.
+</description>
+
+<input>
+    <param type="stringArray" name="vis" subparam="true">
+        <description>List of input measurement sets</description>
+        <value></value>
+    </param>
+
+    <param type="any" name="phaseupsolint" subparam="true">
+        <description>Phaseup correction solution interval</description>
+        <any type="variant"/>
+        <value type="string">int</value>
+    </param>
+
+    <param type="any" name="solint" subparam="true">
+        <description>Solution intervals</description>
+        <any type="variant"/>
+        <value type="string">inf</value>
+    </param>
+
+    <param type="double" name="minsnr" subparam="true">
+        <description>Reject solutions below this SNR</description>
+        <value>2.0</value>
+    </param>
+
+    <param type="string" name="refant" subparam="true">
+        <description>Reference antenna names</description>
+        <value></value>
+    </param>
+
+    <param type="string" name="antnegsig" subparam="true">
+        <description>Lower sigma threshold for identifying outliers as a result of bad antennas within individual timestamps</description>
+        <value>4.0</value>
+    </param>
+
+    <param type="string" name="antpossig" subparam="true">
+        <description>Upper sigma threshold for identifying outliers as a result of bad antennas within individual timestamps</description>
+        <value>4.6</value>
+    </param>
+
+    <param type="string" name="tmantint" subparam="true">
+        <description>Threshold for maximum fraction of timestamps that are allowed to contain outliers</description>
+        <value>0.063</value>
+    </param>
+
+    <param type="string" name="tmint" subparam="true">
+        <description>Initial threshold for maximum fraction of "outlier timestamps" over "total timestamps" that a baseline may be a part of</description>
+        <value>0.085</value>
+    </param>
+
+    <param type="string" name="tmbl" subparam="true">
+        <description>Initial threshold for maximum fraction of "bad baselines" over "all baselines" that an antenna may be a part of</description>
+        <value>0.175</value>
+    </param>
+
+    <param type="string" name="antblnegsig" subparam="true">
+        <description>Lower sigma threshold for identifying outliers as a result of "bad baselines" and/or "bad antennas" within baselines (across all timestamps)</description>
+        <value>3.4</value>
+    </param>
+
+    <param type="string" name="antblpossig" subparam="true">
+        <description>Upper sigma threshold for identifying outliers as a result of "bad baselines" and/or "bad antennas" within baselines (across all timestamps)</description>
+        <value>3.2</value>
+    </param>
+
+    <param type="string" name="relaxed_factor" subparam="true">
+        <description>Relaxed value to set the threshold scaling factor to under certain conditions (see task description)</description>
+        <value>2.0</value>
+    </param>
+
+    <param type="string" name="pipelinemode">
+        <description>The pipeline operations mode</description>
+        <value>automatic</value>
+        <allowed kind="enum">
+            <value>automatic</value>
+            <value>interactive</value>
+            <value>getinputs</value>
+        </allowed>
+    </param>
+
+    <param type="bool" name="dryrun" subparam="true">
+        <description>Run the task (False) or list commands(True)</description>
+       <value>False</value>
+    </param>
+
+    <param type="bool" name="acceptresults" subparam="true">
+        <description>Automatically apply results to context</description>
+        <value>True</value>
+    </param>
+
+    <constraints>
+        <when param="pipelinemode">
+            <equals type="string" value="automatic" />
+            <equals type="string" value="interactive">
+                <default param="vis"><value type="stringArray"></value></default>
+                <default param="phaseupsolint"><value type="string">int</value></default>
+                <default param="solint"><value type="string">inf</value></default>
+                <default param="minsnr"><value>2.0</value></default>
+                <default param="refant"><value type="string"></value></default>
+                <default param="antnegsig"><value>4.0</value></default>
+                <default param="antpossig"><value>4.6</value></default>
+                <default param="tmantint"><value>0.063</value></default>
+                <default param="tmint"><value>0.085</value></default>
+                <default param="tmbl"><value>0.175</value></default>
+                <default param="antblnegsig"><value>3.4</value></default>
+                <default param="antblpossig"><value>3.2</value></default>
+                <default param="relaxed_factor"><value>2.0</value></default>
+                <default param="dryrun"><value type="bool">False</value></default>
+                <default param="acceptresults"><value type="bool">True</value></default>
+            </equals>
+            <equals type="string" value="getinputs">
+                <default param="vis"><value type="stringArray"></value></default>
+            </equals>
+        </when>
+    </constraints>
+</input>
+
+<output>
+    <param type="any" name="results">
+        <description>The output results object</description>
+        <any type="variant"/>
+        <value></value>
+    </param>
+</output>
+
+<example>
+
+Keyword arguments:
+
+--- pipeline parameter arguments which can be set in any pipeline mode
+
+pipelinemode -- The pipeline operating mode. In 'automatic' mode the pipeline
+   determines the values of all context defined pipeline inputs automatically.
+   In interactive mode the user can set the pipeline context defined parameters
+   manually.  In 'getinputs' mode the user can check the settings of all
+   pipeline parameters without running the task.
+   default: 'automatic'.
+
+---- pipeline context defined parameter arguments which can be set only in
+'interactive mode'
+
+vis -- The list of input measurement sets. Defaults to the list of measurement
+    sets specified in the pipeline context.
+    default: ''
+    example: ['M51.ms']
+
+phaseupsolint -- The phase correction solution interval in CASA syntax.
+    default: 'int'
+    example: phaseupsolint='300s'
+
+solint --  Time and channel solution intervals in CASA syntax.
+    default: 'inf'
+    example: solint='inf,10ch', solint='inf'
+
+minsnr -- Solutions below this SNR are rejected.
+    default: 2.0
+
+refant -- Reference antenna names. Defaults to the value(s) stored in the
+    pipeline context. If undefined in the pipeline context defaults to
+    the CASA reference antenna naming scheme.
+    default: ''
+    example: refant='DV01', refant='DV06,DV07'
+
+antnegsig -- Lower sigma threshold for identifying outliers as a result of bad
+    antennas within individual timestamps.
+    default: 4.0
+
+antpossig -- Upper sigma threshold for identifying outliers as a result of bad
+    antennas within individual timestamps.
+    default: 4.6
+
+tmantint -- Threshold for maximum fraction of timestamps that are allowed to
+    contain outliers.
+    default: 0.063
+
+tmint -- Initial threshold for maximum fraction of "outlier timestamps" over
+    "total timestamps" that a baseline may be a part of.
+    default: 0.085
+
+tmbl -- Initial threshold for maximum fraction of "bad baselines" over "all
+    baselines" that an antenna may be a part of.
+    default: 0.175
+
+antblnegsig -- Lower sigma threshold for identifying outliers as a result of
+    "bad baselines" and/or "bad antennas" within baselines, across all
+    timestamps.
+    default: 3.4
+
+antblpossig -- Upper sigma threshold for identifying outliers as a result of
+    "bad baselines" and/or "bad antennas" within baselines, across all
+    timestamps.
+    default: 3.2
+
+relaxed_factor -- Relaxed value to set the threshold scaling factor to under
+    certain conditions (see task description).
+    default: 2.0
+
+--- pipeline task execution modes
+dryrun -- Run the commands (True) or generate the commands to be run but
+   do not execute (False).
+   default: False
+
+acceptresults -- Add the results of the task to the pipeline context (True) or
+   reject them (False).
+   default: True
+
+
+Output:
+
+results -- If pipeline mode is 'getinputs' then None is returned. Otherwise
+    the results object for the pipeline task is returned.
+
+
+Examples:
+
+1. run with recommended settings to create flux scale calibration with flagging
+    using recommended thresholds:
+
+    hifa_gfluxscaleflag()
+
+</example>
+
+</task>
+</casaxml>
