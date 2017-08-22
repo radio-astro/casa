@@ -593,7 +593,6 @@ class AmpVsXChart(applycal_displays.PlotmsFieldSpwComposite):
             'avgbaseline': False,
             'avgchannel': '9000',
             'coloraxis': 'corr',
-            'correlation': 'XX,YY',
             'overwrite': True,
             'plotrange': [0, 0, 0, 0]
         }
