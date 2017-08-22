@@ -1140,27 +1140,17 @@ finally:
                     # Add auto-boxing masks for interferometry
                     if (image['imagename'].find('.image') != -1):
                         if (image['imagename'].find('.pbcor') != -1):
-                            if (image['multiterm']):
-                                imagename = image['imagename'].replace('.image.pbcor', '.mask.tt0')
-                                if os.path.exists(imagename):
-                                    images_list.append(imagename)
-                                    cleanlist[image_number]['auxfitsfiles'].append(self._fitsfile(products_dir, imagename))
-                            else:
-                                imagename = image['imagename'].replace('.image.pbcor', '.mask')
-                                if os.path.exists(imagename):
-                                    images_list.append(imagename)
-                                    cleanlist[image_number]['auxfitsfiles'].append(self._fitsfile(products_dir, imagename))
+                            imagename = image['imagename'].replace('.image.pbcor', '.mask')
+                            imagename2 = image['imagename'].replace('.image.pbcor', '.cleanmask')
+                            if os.path.exists(imagename) and not os.path.exists(imagename2):
+                                images_list.append(imagename)
+                                cleanlist[image_number]['auxfitsfiles'].append(self._fitsfile(products_dir, imagename))
                         else:
-                            if (image['multiterm']):
-                                imagename = image['imagename'].replace('.image', '.mask.tt0')
-                                if os.path.exists(imagename):
-                                    images_list.append(imagename)
-                                    cleanlist[image_number]['auxfitsfiles'].append(self._fitsfile(products_dir, imagename))
-                            else:
-                                imagename = image['imagename'].replace('.image', '.mask')
-                                if os.path.exists(imagename):
-                                    images_list.append(imagename)
-                                    cleanlist[image_number]['auxfitsfiles'].append(self._fitsfile(products_dir, imagename))
+                            imagename = image['imagename'].replace('.image', '.mask')
+                            imagename2 = image['imagename'].replace('.image', '.cleanmask')
+                            if os.path.exists(imagename) and not os.path.exists(imagename2):
+                                images_list.append(imagename)
+                                cleanlist[image_number]['auxfitsfiles'].append(self._fitsfile(products_dir, imagename))
         else:
             # Assume only the root image name was given.
             cleanlib = imagelibrary.ImageLibrary()
