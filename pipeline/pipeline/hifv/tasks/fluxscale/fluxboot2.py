@@ -584,7 +584,7 @@ class Fluxboot2(basetask.StandardTaskTemplate):
                          'listmodels': False,
                          'scalebychan': True,
                          'fluxdensity': [fluxscale_result[fieldid]['fitFluxd'], 0, 0, 0],
-                         'spix': list(fluxscale_result[fieldid]['spidx']),
+                         'spix': fluxscale_result[fieldid]['spidx'][1],
                          'reffreq': str(fluxscale_result[fieldid]['fitRefFreq']) + 'Hz',
                          'standard': 'manual',
                          'usescratch': True}
