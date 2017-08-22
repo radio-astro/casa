@@ -993,8 +993,8 @@ class Correctedampflag(basetask.StandardTaskTemplate):
             casa_intent = utils.to_CASA_intent(ms, intent)
             if casa_intent:
                 valid_intents.append(casa_intent)
-                fields = [field.name
-                          for field in ms.get_fields(intent=intent)]
+                fields = {field.name
+                          for field in ms.get_fields(intent=intent)}
                 valid_intents_fields[casa_intent] = ','.join(fields)
 
         # Proceed if there are valid intents to propagate to.
