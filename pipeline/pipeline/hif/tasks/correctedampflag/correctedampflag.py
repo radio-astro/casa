@@ -354,9 +354,9 @@ class Correctedampflag(basetask.StandardTaskTemplate):
 
         # Remove the channel dimension (should be of length 1 as we asked
         # for average across all channels).
-        corrdata = np.squeeze(data['corrected_data'])
-        modeldata = np.squeeze(data['model_data'])
-        flag_all = np.squeeze(data['flag'])
+        corrdata = np.squeeze(data['corrected_data'], axis=1)
+        modeldata = np.squeeze(data['model_data'], axis=1)
+        flag_all = np.squeeze(data['flag'], axis=1)
 
         # Compute "scalar difference" between corrected data and
         # model data.
