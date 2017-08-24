@@ -151,11 +151,11 @@ class Applycals(applycal.IFApplycal):
                 # arrange a calibration job for the unique data selection
                 inputs.spw = calto.spw
                 inputs.field = calto.field
-                inputs.intent = 'AMPLITUDE, BANDPASS, CHECK, POLARIZATION'
+                inputs.intent = calto.intent
 
                 args = inputs.to_casa_args()
 
-                args['intent'] = 'AMPLITUDE, BANDPASS, CHECK, POLARIZATION'
+                args['intent'] = 'CALIBRATE*'
 
                 # Do this a different way ?
                 args.pop('flagsum', None)  # Flagsum is not a CASA applycal task argument
