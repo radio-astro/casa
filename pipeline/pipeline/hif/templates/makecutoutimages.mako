@@ -71,12 +71,12 @@ $(document).ready(function() {
         </%def>
 
 
-        <%def name="mouseover(plot)">Cutout image plot </%def>
+        <%def name="mouseover(plot)">${plot.basename}</%def>
 
 
 
         <%def name="fancybox_caption(plot)">
-          Cutout image plot
+          ${plot.basename}
         </%def>
 
 
