@@ -366,7 +366,7 @@ def space_comma(s):
 				  data_spw="${True}"
 				  data_field="${True}"
                   break_rows_by=""
-                  sort_row_by="baseband,spw">
+                  sort_row_by="field, baseband, spw">
 
 	<%def name="title()">
 		Science target: calibrated amplitude vs frequency

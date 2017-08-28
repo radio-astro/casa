@@ -162,7 +162,7 @@ class T2_4MDetailsplotsummaryRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
             plots = self.create_plots(context,
                                       result,
                                       applycal.PhaseVsFrequencyPerBasebandSummaryChart,
-                                      intents, correlation=correlation, coloraxis='corr', avgtime='60',
+                                      intents, correlation=correlation, coloraxis='corr', avgtime='1e8',
                                       avgbaseline=True, avgantenna=False, plotrange=[0, 0, -180, 180])
 
             use_pol_plots = False
