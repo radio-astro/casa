@@ -25,7 +25,7 @@ class CheckProductSizeHeuristics(object):
                 nbin = target['nbin']
             else:
                 nbin = 1
-            mfssize = 4. * nx * ny / 1e9 # Should include nterms
+            mfssize = 4. * nx * ny / 1e9 # Should include nterms, though overall size is dominated by cube which is currently always nterms=1
             cubesize = 4. * nx * ny * nchan / nbin / 1e9
             cubesizes.append(cubesize)
             productsize += 2.0 * (mfssize + cubesize)
@@ -82,7 +82,7 @@ class CheckProductSizeHeuristics(object):
         original_maxcubesize = maxcubesize
         original_productsize = productsize
         LOG.info('Default imaging leads to a maximum cube size of %s GB and a product size of %s GB' % (maxcubesize, productsize))
-        LOG.info('Allowed maximum cube size: %s GB. Allowed maximum product size: %s GB.' % (self.inputs.maxcubesize, self.inputs.maxproductsize))
+        LOG.info('Allowed maximum cube size: %s GB. Allowed cube size limit: %s GB. Allowed maximum product size: %s GB.' % (self.inputs.maxcubesize, self.inputs.maxcubelimit, self.inputs.maxproductsize))
 
         # If too large, try to mitigate via channel binning
         if (self.inputs.maxcubesize != -1.0) and (maxcubesize > self.inputs.maxcubesize):
@@ -142,14 +142,17 @@ class CheckProductSizeHeuristics(object):
 
         # If still too large, stop with an error
         if (self.inputs.maxcubesize != -1.0) and (maxcubesize > self.inputs.maxcubesize):
-            LOG.error('Maximum cube size cannot be mitigated. Remaining factor: %.4f' % (maxcubesize / self.inputs.maxcubesize))
-            return size_mitigation_parameters, \
-                   original_maxcubesize, original_productsize, \
-                   cube_mitigated_productsize, \
-                   maxcubesize, productsize, \
-                   True, \
-                   {'longmsg': 'Maximum cube size cannot be mitigated. Remaining factor: %.4f' % (maxcubesize / self.inputs.maxcubesize), \
-                    'shortmsg': 'Cube size mitigation error'}
+            if maxcubesize > self.inputs.maxcubelimit:
+                LOG.error('Maximum cube size cannot be mitigated. Remaining factor: %.4f and cube size larger than limit of %s GB.' % (maxcubesize / self.inputs.maxcubesize, self.inputs.maxcubelimit))
+                return size_mitigation_parameters, \
+                       original_maxcubesize, original_productsize, \
+                       cube_mitigated_productsize, \
+                       maxcubesize, productsize, \
+                       True, \
+                       {'longmsg': 'Maximum cube size cannot be mitigated. Remaining factor: %.4f and cube size larger than limit of %s GB.' % (maxcubesize / self.inputs.maxcubesize, self.inputs.maxcubelimit), \
+                        'shortmsg': 'Cube size mitigation error'}
+            else:
+                LOG.info('Maximum cube size cannot be mitigated. Remaining factor: %.4f. But cube size is smaller than limit of %s GB.' % (maxcubesize / self.inputs.maxcubesize, self.inputs.maxcubelimit))
 
         # If product size too large, try reducing number of fields / targets
         if (self.inputs.maxproductsize != -1.0) and (productsize > self.inputs.maxproductsize):

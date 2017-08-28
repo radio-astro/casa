@@ -10,6 +10,7 @@ LOG = infrastructure.get_logger(__name__)
 class CheckProductSizeResult(basetask.Results):
     def __init__(self, \
                  allowed_maxcubesize, \
+                 allowed_maxcubelimit, \
                  allowed_productsize, \
                  original_maxcubesize, \
                  original_productsize, \
@@ -21,6 +22,7 @@ class CheckProductSizeResult(basetask.Results):
                  reason):
         super(CheckProductSizeResult, self).__init__()
         self.allowed_maxcubesize = allowed_maxcubesize
+        self.allowed_maxcubelimit = allowed_maxcubelimit
         self.allowed_productsize = allowed_productsize
         self.original_maxcubesize = original_maxcubesize
         self.original_productsize = original_productsize
@@ -40,9 +42,10 @@ class CheckProductSizeResult(basetask.Results):
         repr += ' Status: %s\n' % (self.status)
         repr += ' Reason: %s\n' % (self.reason['longmsg'])
         repr += ' Allowed maximum cube size: %.3g GB\n' % (self.allowed_maxcubesize)
+        repr += ' Allowed maximum cube limit: %.3g GB\n' % (self.allowed_maxcubelimit)
         repr += ' Predicted maximum cube size: %.3g GB\n' % (self.original_maxcubesize)
         repr += ' Mitigated maximum cube size: %.3g GB\n' % (self.mitigated_maxcubesize)
-        repr += ' Allowed product size: %.3g GB\n' % (self.allowed_productsize)
+        repr += ' Allowed maximum product size: %.3g GB\n' % (self.allowed_productsize)
         repr += ' Initial predicted product size: %.3g GB\n' % (self.original_productsize)
         repr += ' Predicted product size after cube size mitigation: %.3g GB\n' % (self.cube_mitigated_productsize)
         repr += ' Mitigated product size: %.3g GB\n' % (self.mitigated_productsize)
