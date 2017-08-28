@@ -212,44 +212,45 @@ class ImageParamsHeuristicsALMA(ImageParamsHeuristics):
                     sidelobethreshold = 2.0
                     noisethreshold = 4.25
                     lownoisethreshold = 1.5
+                    minbeamfrac = 0.3
+                    growiterations = 75
                     if specmode == 'cube':
                         negativethreshold = 15.0
                     else:
                         negativethreshold = 0.0
-                    minbeamfrac = 0.3
-                    growiterations = 75
                 else:
                     sidelobethreshold = 3.0
                     noisethreshold = 5.0
                     lownoisethreshold = 1.5
+                    minbeamfrac = 0.3
                     if specmode == 'cube':
                         negativethreshold = 7.0
+                        growiterations = 50
                     else:
                         negativethreshold = 0.0
-                    minbeamfrac = 0.3
-                    growiterations = 75
+                        growiterations = 75
             elif min_diameter == 7.0:
                 sidelobethreshold = 1.25
                 noisethreshold = 5.0
                 lownoisethreshold = 2.0
-                negativethreshold = 0.0
                 minbeamfrac = 0.1
                 growiterations = 75
+                negativethreshold = 0.0
         else:
             if min_diameter == 12.0:
                 sidelobethreshold = 2.0
                 noisethreshold = 7.0
                 lownoisethreshold = 3.0
-                negativethreshold = 0.0
                 minbeamfrac = 0.1
                 growiterations = 75
+                negativethreshold = 0.0
             elif min_diameter == 7.0:
                 sidelobethreshold = 1.5
                 noisethreshold = 6.0
                 lownoisethreshold = 2.0
-                negativethreshold = 0.0
                 minbeamfrac = 0.1
                 growiterations = 75
+                negativethreshold = 0.0
 
         return sidelobethreshold, noisethreshold, lownoisethreshold, negativethreshold, minbeamfrac, growiterations
 
