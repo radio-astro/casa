@@ -86,6 +86,10 @@ class Checkflag(basetask.StandardTaskTemplate):
             timedevscale = 7.0
             freqdevscale = 7.0
 
+            if not fieldselect:
+                LOG.warning("No scans with intent=TARGET are present.  CASA task flagdata not executed.")
+                return
+
         if (self.inputs.checkflagmode == 'bpd' or
             self.inputs.checkflagmode == 'allcals' or
             self.inputs.checkflagmode == 'target'):
