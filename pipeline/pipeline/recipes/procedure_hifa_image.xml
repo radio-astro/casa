@@ -13,6 +13,10 @@
         <ParameterSet>
             <Parameter>
                 <Keyword xmlns="">maxcubesize</Keyword>
+                <Value xmlns="">30.0</Value>
+            </Parameter>
+            <Parameter>
+                <Keyword xmlns="">maxcubelimit</Keyword>
                 <Value xmlns="">40.0</Value>
             </Parameter>
             <Parameter>

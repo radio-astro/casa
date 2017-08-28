@@ -17,12 +17,17 @@ Check interferometry imaging product size and try to mitigate to maximum allowed
   </param>
 
   <param type="double" name="maxcubesize" subparam="true">
-     <description>Maximum cube size</description>
+     <description>Maximum cube size (mitigation goal)</description>
+     <value>-1.0</value>
+  </param>
+
+  <param type="double" name="maxcubelimit" subparam="true">
+     <description>Maximum cube limit (mitigation failure limit)</description>
      <value>-1.0</value>
   </param>
 
   <param type="double" name="maxproductsize" subparam="true">
-     <description>Maximum product size</description>
+     <description>Maximum product size (mitigation goal and failure limit)</description>
      <value>-1.0</value>
   </param>
 
@@ -64,6 +69,7 @@ Check interferometry imaging product size and try to mitigate to maximum allowed
       <equals type="string" value="interactive">
         <default param="vis"><value type="stringArray"></value></default>
         <default param="maxcubesize"><value>-1.0</value></default>
+        <default param="maxcubelimit"><value>-1.0</value></default>
         <default param="maxproductsize"><value>-1.0</value></default>
         <default param="dryrun"><value type="bool">False</value></default>
         <default param="acceptresults"><value type="bool">True</value></default>
@@ -119,13 +125,16 @@ vis -- The list of input measurement sets. Defaults to the list of measurement
              vis=['ngc5921a.ms', ngc5921b.ms', 'ngc5921c.ms']
     default: use all measurement sets in the context 
 
-maxcubesize -- Maximum allowed cube size in GB. Used for product size
-               mitigation.
+maxcubesize -- Maximum allowed cube size mitigation goal in GB.
     default: -1 (automatic from performance parameters)
     example: 30.0
 
-maxproductsize -- Maximum allowed product size in GB. Used for product size
-                  mitigation.
+maxcubelimit -- Maximum allowed cube size mitigation failure limit in GB.
+    default: -1 (automatic from performance parameters)
+    example: 30.0
+
+maxproductsize -- Maximum allowed product size mitigation goal
+                  and failure limit in GB.
     default: -1 (automatic from performance parameters)
     example: 200.0
 

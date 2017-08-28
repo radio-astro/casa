@@ -4,7 +4,7 @@ from taskinit import casalog
 
 import pipeline.h.cli.utils as utils
 
-def hif_checkproductsize(vis=None, maxcubesize=None, maxproductsize=None,
+def hif_checkproductsize(vis=None, maxcubesize=None, maxcubelimit=None, maxproductsize=None,
                          parallel=None, pipelinemode=None,
                          dryrun=None, acceptresults=None):
 

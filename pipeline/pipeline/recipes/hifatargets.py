@@ -52,7 +52,7 @@ def hifatargets (vislist, importonly=False, pipelinemode='automatic', interactiv
             raise Exception(IMPORT_ONLY)
 
         # Check product size limits and mitigate imaging parameters
-        hif_checkproductsize(maxcubesize=40.0, maxproductsize=400.0)
+        hif_checkproductsize(maxcubesize=30.0, maxcubelimit=40.0, maxproductsize=400.0)
 
         # Split out the target data
         hif_mstransform (pipelinemode=pipelinemode)

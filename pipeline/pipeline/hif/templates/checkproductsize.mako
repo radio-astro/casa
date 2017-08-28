@@ -31,6 +31,7 @@ $(document).ready(function() {
 % else:
     <%
     allowed_maxcubesize = '%.3g GB' % (result[0].allowed_maxcubesize)
+    allowed_maxcubelimit = '%.3g GB' % (result[0].allowed_maxcubelimit)
     original_maxcubesize = '%.3g GB' % (result[0].original_maxcubesize)
     mitigated_maxcubesize = '%.3g GB' % (result[0].mitigated_maxcubesize)
     allowed_productsize = '%.3g GB' % (result[0].allowed_productsize)
@@ -40,6 +41,8 @@ $(document).ready(function() {
     %>
     <p>
     Allowed maximum cube size: ${allowed_maxcubesize}
+    <br>
+    Allowed cube size limit: ${allowed_maxcubelimit}
     <br>
     Predicted maximum cube size: ${original_maxcubesize}
     <br>
