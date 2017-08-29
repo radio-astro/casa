@@ -64,6 +64,7 @@ $(document).ready(function() {
                 <th>hm_imsize</th>
                 <th>hm_cell</th>
                 <th>field</th>
+                <th>spw (cube)</th>
             </tr>
         </thead>
         <tbody>

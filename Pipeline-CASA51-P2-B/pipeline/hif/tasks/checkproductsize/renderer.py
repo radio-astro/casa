@@ -13,7 +13,7 @@ import pipeline.infrastructure.renderer.logger as logger
 
 LOG = logging.get_logger(__name__)
 
-TR = collections.namedtuple('TR', 'nbins hm_imsize hm_cell field')
+TR = collections.namedtuple('TR', 'nbins hm_imsize hm_cell field spw')
 
 
 class T2_4MDetailsCheckProductSizeRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
@@ -55,6 +55,11 @@ class T2_4MDetailsCheckProductSizeRenderer(basetemplates.T2_4MDetailsDefaultRend
         else:
             field = 'default'
 
-        rows = [TR(nbins=nbins, hm_imsize=hm_imsize, hm_cell=hm_cell, field=field)]
+        if result.size_mitigation_parameters.has_key('spw'):
+            spw = str(result.size_mitigation_parameters['spw'])
+        else:
+            spw = 'default'
+
+        rows = [TR(nbins=nbins, hm_imsize=hm_imsize, hm_cell=hm_cell, field=field, spw=spw)]
 
         return utils.merge_td_columns(rows)
