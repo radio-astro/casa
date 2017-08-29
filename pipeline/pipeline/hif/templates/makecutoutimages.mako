@@ -56,6 +56,14 @@ $(document).ready(function() {
             <td><strong>RMS median</strong></td>
             <td>${'%#.4g' % (plotter.result.RMSmedian)}</td>
         </tr>
+        <tr>
+            <td><strong>Fraction of pixels <= 120 &mu;Jy</strong></td>
+            <td>${'%4.2f &#37;' % (plotter.result.RMSfraction120)}</td>
+        </tr>
+        <tr>
+            <td><strong>Fraction of pixels <= 200 &mu;Jy</strong></td>
+            <td>${'%4.2f &#37;' % (plotter.result.RMSfraction200)}</td>
+        </tr>
 </table>
 
 <%self:plot_group plot_dict="${subplots}"

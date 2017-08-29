@@ -2,6 +2,8 @@ from __future__ import absolute_import
 import collections
 import os
 
+import numpy as np
+
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.displays as displays
 import pipeline.infrastructure.casatools as casatools
@@ -33,6 +35,11 @@ class CutoutimagesSummary(object):
                     stats = image.statistics(robust=True)
                     self.result.RMSmax = stats.get('max')[0]
                     self.result.RMSmedian = stats.get('median')[0]
+                    arr = image.getchunk()
+                    # get fraction of pixels <= 120 micro Jy VLASS technical goal.  ignore 0 (masked) values.
+                    self.result.RMSfraction120 = (np.count_nonzero((arr != 0) & (arr <= 120e-6)) / float(arr.size)) * 100
+                    # get fraction of pixels <= 200 micro Jy VLASS technical requirement.  ignore 0 (masked) values.
+                    self.result.RMSfraction200 = (np.count_nonzero((arr != 0) & (arr <= 200e-6)) / float(arr.size)) * 100
 
         for subimagename in self.result.subimagenames:
             if '.psf.tt' in subimagename:
