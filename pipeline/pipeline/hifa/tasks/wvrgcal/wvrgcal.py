@@ -130,15 +130,18 @@ class WvrgcalInputs(basetask.StandardInputs):
 
     @property
     def offsetstable(self):
+        # The value of caltable is ms-dependent, so test for multiple
+        # measurement sets and listify the results if necessary
+
+        if self._offsetstable is not None:
+            return self._offsetstable
+
         if type(self.vis) is types.ListType:
             return self._handle_multiple_vis('offsetstable')
 
-        if self._offsetstable is None:
-            # default is blank, which means the wvrgcal task
-            # will not apply any offsets.
-            return ''
-
-        return self._offsetstable
+        # default is blank, which means the wvrgcal task
+        # will not apply any offsets.
+        return ''
 
     @offsetstable.setter
     def offsetstable(self, value):
