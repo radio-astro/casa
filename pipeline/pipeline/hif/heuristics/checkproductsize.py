@@ -30,7 +30,7 @@ class CheckProductSizeHeuristics(object):
             cubesizes.append(cubesize)
             productsize += 2.0 * (mfssize + cubesize)
 
-        return max(cubesizes), productsize
+        return cubesizes, max(cubesizes), productsize
 
     def mitigate_sizes(self):
 
@@ -51,16 +51,6 @@ class CheckProductSizeHeuristics(object):
         makeimlist_result = makeimlist_task.prepare()
         imlist = makeimlist_result.targets
 
-        if imlist == []:
-            LOG.info('Imaging target list is empty.')
-            return size_mitigation_parameters, \
-                   0.0, 0.0, \
-                   0.0, \
-                   0.0, 0.0, \
-                   False, \
-                   {'longmsg': 'No size mitigation needed', \
-                    'shortmsg': 'No size mitigation'}
-
         # Extract some information for later
         fields = list(set([i['field'] for i in imlist]))
         nfields = len(fields)
@@ -77,8 +67,18 @@ class CheckProductSizeHeuristics(object):
             LOG.error('Cannot determine any default imaging targets')
             return {}, 0.0, 0.0, True, {'longmsg': 'Cannot determine any default imaging targets', 'shortmsg': 'Cannot determine targets'}
 
+        # Get representative target information
+        repr_target, \
+        repr_source, \
+        repr_spw, \
+        reprBW_mode, \
+        real_repr_target, \
+        minAcceptableAngResolution, \
+        maxAcceptableAngResolution = \
+            imlist[0]['heuristics'].representative_target()
+
         # Get original maximum cube and product sizes
-        maxcubesize, productsize = self.calculate_sizes(imlist)
+        cubesizes, maxcubesize, productsize = self.calculate_sizes(imlist)
         original_maxcubesize = maxcubesize
         original_productsize = productsize
         LOG.info('Default imaging leads to a maximum cube size of %s GB and a product size of %s GB' % (maxcubesize, productsize))
@@ -99,7 +99,7 @@ class CheckProductSizeHeuristics(object):
             makeimlist_inputs.nbins = size_mitigation_parameters['nbins']
             makeimlist_result = makeimlist_task.prepare()
             imlist = makeimlist_result.targets
-            maxcubesize, productsize = self.calculate_sizes(imlist)
+            cubesizes, maxcubesize, productsize = self.calculate_sizes(imlist)
             LOG.info('nbin mitigation leads to a maximum cube size of %s GB' % (maxcubesize))
 
         # If still too large, try changing the FoV (in makeimlist this is applied to single fields only)
@@ -122,7 +122,7 @@ class CheckProductSizeHeuristics(object):
             makeimlist_inputs.hm_imsize = size_mitigation_parameters['hm_imsize']
             makeimlist_result = makeimlist_task.prepare()
             imlist = makeimlist_result.targets
-            maxcubesize, productsize = self.calculate_sizes(imlist)
+            cubesizes, maxcubesize, productsize = self.calculate_sizes(imlist)
             LOG.info('hm_imsize mitigation leads to a maximum cube size of %s GB' % (maxcubesize))
 
         # If still too large, try changing pixperbeam setting
@@ -134,7 +134,7 @@ class CheckProductSizeHeuristics(object):
             makeimlist_inputs.hm_cell = size_mitigation_parameters['hm_cell']
             makeimlist_result = makeimlist_task.prepare()
             imlist = makeimlist_result.targets
-            maxcubesize, productsize = self.calculate_sizes(imlist)
+            cubesizes, maxcubesize, productsize = self.calculate_sizes(imlist)
             LOG.info('hm_cell mitigation leads to a maximum cube size of %s GB' % (maxcubesize))
 
         # Save cube mitigated product size for logs
@@ -164,15 +164,6 @@ class CheckProductSizeHeuristics(object):
             mitigated_fields = fields[:nfields]
 
             # Make sure the representative source is included in the new list
-            repr_target, \
-            repr_source, \
-            repr_spw, \
-            reprBW_mode, \
-            real_repr_target, \
-            minAcceptableAngResolution, \
-            maxAcceptableAngResolution = \
-                imlist[0]['heuristics'].representative_target()
-
             for field in fields[nfields:]:
                 if utils.dequote(field) == utils.dequote(repr_source):
                     mitigated_fields[0] = field
@@ -186,7 +177,7 @@ class CheckProductSizeHeuristics(object):
             makeimlist_inputs.field = size_mitigation_parameters['field']
             makeimlist_result = makeimlist_task.prepare()
             imlist = makeimlist_result.targets
-            maxcubesize, productsize = self.calculate_sizes(imlist)
+            cubesizes, maxcubesize, productsize = self.calculate_sizes(imlist)
             LOG.info('field / target mitigation leads to product size of %s GB' % (productsize))
 
         # If product size is still too large, try mitigating further with nbin, FoV, and cell size, otherwise stop with an error
@@ -206,7 +197,7 @@ class CheckProductSizeHeuristics(object):
             makeimlist_inputs.nbins = size_mitigation_parameters['nbins']
             makeimlist_result = makeimlist_task.prepare()
             imlist = makeimlist_result.targets
-            maxcubesize, productsize = self.calculate_sizes(imlist)
+            cubesizes, maxcubesize, productsize = self.calculate_sizes(imlist)
             LOG.info('nbin mitigation leads to a maximum cube size of %s GB' % (maxcubesize))
 
         if (self.inputs.maxproductsize != -1.0) and (productsize > self.inputs.maxproductsize):
@@ -229,7 +220,7 @@ class CheckProductSizeHeuristics(object):
             makeimlist_inputs.hm_imsize = size_mitigation_parameters['hm_imsize']
             makeimlist_result = makeimlist_task.prepare()
             imlist = makeimlist_result.targets
-            maxcubesize, productsize = self.calculate_sizes(imlist)
+            cubesizes, maxcubesize, productsize = self.calculate_sizes(imlist)
             LOG.info('hm_imsize mitigation leads to a maximum cube size of %s GB' % (maxcubesize))
 
         if (self.inputs.maxproductsize != -1.0) and (productsize > self.inputs.maxproductsize):
@@ -242,8 +233,27 @@ class CheckProductSizeHeuristics(object):
             makeimlist_inputs.hm_cell = size_mitigation_parameters['hm_cell']
             makeimlist_result = makeimlist_task.prepare()
             imlist = makeimlist_result.targets
-            maxcubesize, productsize = self.calculate_sizes(imlist)
+            cubesizes, maxcubesize, productsize = self.calculate_sizes(imlist)
             LOG.info('hm_cell mitigation leads to a maximum cube size of %s GB' % (maxcubesize))
+
+        # Check if there is more than one spw leading to cubes larger than
+        # 0.5 * maxcubelimit. Remove all but one of these spws and make sure
+        # the representative spw is still included.
+        spw_oversizes = dict([(i, 0) for i in spws])
+        for i, target in enumerate(imlist):
+            if cubesizes[i] > 0.5 * self.inputs.maxcubelimit:
+                spw_oversizes[target['spw']] += 1
+
+        if [n != 0 for n in spw_oversizes.itervalues()].count(True) > 1:
+            size_mitigation_parameters['spw'] = ','.join([str(repr_spw)] + [spw for spw, n in spw_oversizes.iteritems() if n==0])
+            LOG.info('Size mitigation: Setting (cube) spw to %s' % (size_mitigation_parameters['spw']))
+
+            # Recalculate sizes
+            makeimlist_inputs.spw = size_mitigation_parameters['spw']
+            makeimlist_result = makeimlist_task.prepare()
+            imlist = makeimlist_result.targets
+            cubesizes, maxcubesize, productsize = self.calculate_sizes(imlist)
+            LOG.info('spw mitigation leads to product size of %s GB' % (productsize))
 
         # Save cube mitigated product size for logs
         cube_mitigated_productsize = productsize

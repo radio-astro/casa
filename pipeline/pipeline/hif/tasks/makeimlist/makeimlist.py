@@ -62,7 +62,10 @@ class MakeImListInputs(basetask.StandardInputs):
 
     @property
     def spw(self):
-        return self._spw
+        if (self.specmode == 'cube') and self.context.size_mitigation_parameters.has_key('spw'):
+            return self.context.size_mitigation_parameters['spw']
+        else:
+            return self._spw
 
     @spw.setter
     def spw(self, value):
