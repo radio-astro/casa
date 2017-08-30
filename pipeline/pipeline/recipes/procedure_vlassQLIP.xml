@@ -70,10 +70,16 @@
         </ParameterSet>
     </ProcessingCommand>
 
-    <!--<ProcessingCommand>-->
-        <!--<Command xmlns="">hifv_exportdata</Command>-->
-        <!--<ParameterSet>-->
-        <!--</ParameterSet>-->
-    <!--</ProcessingCommand>-->
+    <ProcessingCommand>
+        <Command xmlns="">hifv_exportdata</Command>
+        <ParameterSet>
+        </ParameterSet>
+    </ProcessingCommand>
+
+    <ProcessingCommand>
+        <Command xmlns="">hifv_exportvlassdata</Command>
+        <ParameterSet>
+        </ParameterSet>
+    </ProcessingCommand>
 
 </ProcessingProcedure>
