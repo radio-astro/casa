@@ -367,7 +367,7 @@ class Gfluxscaleflag(basetask.StandardTaskTemplate):
                 result.plots['after'] = plot_fn(inputs.intent, suffix='after')
 
         finally:
-            # Restore the "pre-bandpassflag" backup of the flagging state.
+            # Restore the "pre-gfluxscaleflag" backup of the flagging state.
             LOG.info('Restoring back-up of "pre-gfluxscaleflag" flagging state.')
             task = casa_tasks.flagmanager(
                 vis=inputs.vis, mode='restore', versionname=flag_backup_name_pregfsf)
