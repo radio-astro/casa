@@ -48,7 +48,7 @@ class T2_4MDetailsImportDataRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
 
             # copy flux.csv file across to weblog directory
             fluxcsv_filename = 'flux.csv'
-            ms = pipeline_context.observing_run.get_ms(os.path.basename(r.inputs['vis']))
+            ms = pipeline_context.observing_run.get_ms(os.path.basename(r.inputs['vis'].rstrip('/')))
             fluxcsv_path = os.path.join(weblog_dir, fluxcsv_filename)
             if os.path.exists(fluxcsv_filename):
                 LOG.trace('Copying %s to %s' % (fluxcsv_filename, weblog_dir))
