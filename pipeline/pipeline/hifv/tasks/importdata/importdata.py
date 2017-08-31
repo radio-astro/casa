@@ -47,7 +47,6 @@ class VLAImportDataResults(basetask.Results):
     def merge_with_context(self, context):
         target = context.observing_run
 
-        PbandWarning = ''
         for ms in self.mses:
             LOG.info('Adding {0} to context'.format(ms.name))
             target.add_measurement_set(ms)
@@ -61,13 +60,6 @@ class VLAImportDataResults(basetask.Results):
                 context.project_summary.telescope = 'EVLA'
                 context.project_summary.observatory = 'Karl G. Jansky Very Large Array'
                 # context.evla['msinfo'] = { m.name : msinfo }
-
-            for key, value in ms.get_vla_spw2band().iteritems():
-                if 'P' in value:
-                    PbandWarning = 'P-band data detected in the raw data. VLA P-band pipeline calibration has not yet been commissioned and may even fail. Please inspect all P-band pipeline products carefully.'
-
-        if PbandWarning:
-            LOG.warning(PbandWarning)
 
         if self.setjy_results:
             for result in self.setjy_results:
@@ -126,6 +118,15 @@ class VLAImportData(importdata.ImportData):
         for ms in myresults.origin:
             if myresults.origin[ms] == 'ASDM':
                 myresults.origin[ms] = 'SDM'
+
+        PbandWarning = ''
+        for ms in myresults.mses:
+            for key, value in ms.get_vla_spw2band().iteritems():
+                if 'P' in value:
+                    PbandWarning = 'P-band data detected in the raw data. VLA P-band pipeline calibration has not yet been commissioned and may even fail. Please inspect all P-band pipeline products carefully.'
+
+        if PbandWarning:
+            LOG.warning(PbandWarning)
 
         return myresults
 
