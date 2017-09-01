@@ -28,7 +28,7 @@ LOG = infrastructure.get_logger(__name__)
 class CleanBaseInputs(basetask.StandardInputs):
     @basetask.log_equivalent_CASA_call
     def __init__(self, context, output_dir=None, vis=None, imagename=None, datacolumn=None,
-                 intent=None, field=None, spw=None, spwsel=None, uvrange=None, specmode=None,
+                 intent=None, field=None, spw=None, spwsel=None, uvrange=None, orig_specmode=None, specmode=None,
                  gridder=None, deconvolver=None, uvtaper=None,
                  nterms=None, cycleniter=None, cyclefactor=None, scales=None,
                  outframe=None, imsize=None, cell=None,
@@ -82,6 +82,7 @@ class CleanBaseInputs(basetask.StandardInputs):
     uvrange = basetask.property_with_default('uvrange', '')
     weighting = basetask.property_with_default('weighting', 'briggs')
     width = basetask.property_with_default('width', '')
+    orig_specmode = basetask.property_with_default('orig_specmode', '')
 
     @property
     def spw(self):
@@ -184,6 +185,7 @@ class CleanBase(basetask.StandardTaskTemplate):
             result = TcleanResult(sourcename=inputs.field,
                                   intent=inputs.intent,
                                   spw=inputs.spw,
+                                  orig_specmode=inputs.orig_specmode,
                                   specmode=inputs.specmode,
                                   multiterm=inputs.nterms if inputs.deconvolver=='mtmfs' else None,
                                   plotdir=plotdir, imaging_mode=inputs.heuristics.imaging_mode)
