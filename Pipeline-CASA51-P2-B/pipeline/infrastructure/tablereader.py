@@ -403,7 +403,7 @@ class SpectralWindowTable(object):
                     # TODO: Are the transitions of a given spw the same for all
                     #       target source IDs ?
                     transitions = msmd.transitions(sourceid=first_target_source_id, spw=i)
-                    if not transitions:
+                    if transitions is False:
                         transitions = ['Unknown']
                 except:
                     transitions = ['Unknown']
