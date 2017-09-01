@@ -246,7 +246,10 @@ class T2_4MDetailsTcleanRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                 row_fractional_bw = '-'
             elif nchan > 1:
                 row_fractional_bw_label = 'channels'
-                row_fractional_bw = '%d x %s (LSRK)' % (nchan, width)
+                if r.orig_specmode == 'repBW':
+                    row_fractional_bw = '%d x %s (repBW, LSRK)' % (nchan, width)
+                else:
+                    row_fractional_bw = '%d x %s (LSRK)' % (nchan, width)
             else:
                 row_fractional_bw_label = 'fractional bandwidth / nterms'
                 row_fractional_bw = '%s / %s' % (fractional_bandwidth, nterms)

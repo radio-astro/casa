@@ -27,12 +27,13 @@ class BoxResult(basetask.Results):
 
 
 class TcleanResult(basetask.Results):
-    def __init__(self, sourcename=None, intent=None, spw=None, specmode=None, multiterm=None, plotdir=None,
+    def __init__(self, sourcename=None, intent=None, spw=None, orig_specmode=None, specmode=None, multiterm=None, plotdir=None,
                  imaging_mode=None):
         super(TcleanResult, self).__init__()
         self.sourcename = sourcename
         self.intent = intent
         self.spw = spw
+        self.orig_specmode = orig_specmode
         self.specmode = specmode
         self.multiterm = multiterm
         self.plotdir = plotdir

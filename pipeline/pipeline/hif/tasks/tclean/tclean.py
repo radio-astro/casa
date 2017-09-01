@@ -103,8 +103,10 @@ class TcleanInputs(cleanbase.CleanBaseInputs):
     @specmode.setter
     def specmode(self, value):
         if value == 'repBW':
+            self.orig_specmode = 'repBW'
             self._specmode = 'cube'
         else:
+            self.orig_specmode = value
             self._specmode = value
 
     @property
@@ -852,6 +854,7 @@ class Tclean(cleanbase.CleanBase):
                                                   spwsel=inputs.spwsel_topo,
                                                   reffreq=inputs.reffreq,
                                                   uvrange=inputs.uvrange,
+                                                  orig_specmode=inputs.orig_specmode,
                                                   specmode=inputs.specmode,
                                                   gridder=inputs.gridder,
                                                   deconvolver=inputs.deconvolver,
