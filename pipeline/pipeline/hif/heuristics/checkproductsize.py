@@ -245,7 +245,11 @@ class CheckProductSizeHeuristics(object):
                 spw_oversizes[target['spw']] += 1
 
         if [n != 0 for n in spw_oversizes.itervalues()].count(True) > 1:
-            size_mitigation_parameters['spw'] = ','.join([str(repr_spw)] + [spw for spw, n in spw_oversizes.iteritems() if n==0])
+            oversize_spws = [spw for spw, n in spw_oversizes.iteritems() if n>0]
+            if str(repr_spw) in oversize_spws:
+                size_mitigation_parameters['spw'] = ','.join([str(repr_spw)] + [spw for spw, n in spw_oversizes.iteritems() if n==0])
+            else:
+                size_mitigation_parameters['spw'] = ','.join(oversize_spws[0] + [spw for spw, n in spw_oversizes.iteritems() if n==0])
             LOG.info('Size mitigation: Setting (cube) spw to %s' % (size_mitigation_parameters['spw']))
 
             # Recalculate sizes
@@ -280,7 +284,7 @@ class CheckProductSizeHeuristics(object):
                    cube_mitigated_productsize, \
                    maxcubesize, productsize, \
                    False, \
-                   {'longmsg': 'Size had to be mitigated', \
+                   {'longmsg': 'Size had to be mitigated (%s)' % (','.join(size_mitigation_parameters.iterkeys())), \
                     'shortmsg': 'Size was mitigated'}
         else:
             return size_mitigation_parameters, \
