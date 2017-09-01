@@ -459,6 +459,7 @@ class ImageParamsHeuristics(object):
                             aipsfieldofview = '%4.1farcsec' % (2.0 * self.largest_primary_beam_size(spwspec))
                             # Need to run advise to check if the current selection is completely flagged
                             rtn = casatools.imager.advise(takeadvice=False, amplitudeloss=0.5, fieldofview=aipsfieldofview)
+                            casatools.imager.done()
                             if rtn[0]:
                                 valid_data[field_intent] = True
                         except:
