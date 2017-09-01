@@ -213,11 +213,12 @@ class ImageParamsHeuristicsALMA(ImageParamsHeuristics):
                     noisethreshold = 4.25
                     lownoisethreshold = 1.5
                     minbeamfrac = 0.3
-                    growiterations = 75
                     if specmode == 'cube':
                         negativethreshold = 15.0
+                        growiterations = 50
                     else:
                         negativethreshold = 0.0
+                        growiterations = 75
                 else:
                     sidelobethreshold = 3.0
                     noisethreshold = 5.0

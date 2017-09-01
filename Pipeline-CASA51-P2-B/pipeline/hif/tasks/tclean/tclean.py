@@ -698,7 +698,7 @@ class Tclean(cleanbase.CleanBase):
                     keep_iterating = True
                 elif inputs.intent in ('CHECK', 'TARGET'):
                     if residual_max / residual_robust_rms > 10.0:
-                        if (inputs.specmode == 'cube') or (dirty_dynamic_range <= 100.0):
+                        if (inputs.specmode == 'cube') or (dirty_dynamic_range <= 30.0):
                             LOG.warn('No automatic clean mask was found despite clean residual peak / scaled MAD > 10, check the results. Field %s Intent %s SPW %s' % (inputs.field, inputs.intent, inputs.spw))
                         else:
                             LOG.warn('No automatic clean mask was found despite clean residual peak / scaled MAD > 10, switched to pb-based mask and tlimit=4. Field %s Intent %s SPW %s' % (inputs.field, inputs.intent, inputs.spw))
