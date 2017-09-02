@@ -132,7 +132,7 @@ class Applycals(applycal.IFApplycal):
                             args['interp'][i] = 'linear'
                             args['gainfield'][i] = gainfield
 
-                    # args['interp'] = ['', '', '', '', 'linear,freqflag', '', 'linear', 'linear']
+                    # args['interp'] = ['', '', '', '', 'linear,linearflag', '', 'linear', 'linear']
                     # args['gainfield'] = ['','','','','','', gainfield, gainfield]
                     args['scan'] = ','.join(scanlist)
                     LOG.info("Using gainfield {!s} and scan={!s}".format(gainfield, ','.join(scanlist)))
