@@ -210,6 +210,10 @@
     <ProcessingCommand>
         <Command xmlns="">hifv_exportdata</Command>
         <ParameterSet>
+            <Parameter>
+                <Keyword xmlns="">gainmap</Keyword>
+                <Value xmlns="">True</Value>
+            </Parameter>
         </ParameterSet>
     </ProcessingCommand>
 
