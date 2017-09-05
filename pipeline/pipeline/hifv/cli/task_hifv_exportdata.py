@@ -6,7 +6,7 @@ import pipeline.h.cli.utils as utils
 
 
 def hifv_exportdata(vis=None, session=None, exportmses=None, pprfile=None,
-    calintents=None, calimages=None, targetimages=None, products_dir=None,
+    calintents=None, calimages=None, targetimages=None, products_dir=None, gainmap=None,
     pipelinemode=None, dryrun=None, acceptresults=None):
 
     # create a dictionary containing all the arguments given in the

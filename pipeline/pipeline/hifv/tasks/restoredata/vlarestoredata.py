@@ -10,6 +10,7 @@ from ..importdata import importdata
 from ..finalcals import applycals
 from ..hanning import hanning
 
+
 # the logger for this module
 LOG = infrastructure.get_logger(__name__)
 
@@ -18,13 +19,14 @@ class VLARestoreDataInputs(restoredata.RestoreDataInputs):
     @basetask.log_equivalent_CASA_call
     def __init__(self, context, copytoraw=None, products_dir=None, rawdata_dir=None,
                  output_dir=None, session=None, vis=None, bdfflags=None, lazy=None, asis=None,
-                 ocorr_mode=None):
+                 ocorr_mode=None, gainmap=None):
         # set the properties to the values given as input arguments
         self._init_properties(vars())
 
     bdfflags = basetask.property_with_default('bdfflags', False)
     ocorr_mode = basetask.property_with_default('ocorr_mode', 'co')
     asis = basetask.property_with_default('asis', 'Receiver CalAtmosphere')
+    gainmap = basetask.property_with_default('gainmap', False)
 
 
 class VLARestoreData(restoredata.RestoreData):
@@ -127,5 +129,12 @@ class VLARestoreData(restoredata.RestoreData):
         applycal_inputs.field = ''
         applycal_inputs.spw = ''
 
+        applycal_inputs.gainmap = inputs.gainmap
+        if inputs.gainmap:
+            applycal_inputs.flagsum = False
+            applycal_inputs.flagdetailedsum =False
+
         applycal_task = applycals.Applycals(applycal_inputs)
         return self._executor.execute(applycal_task, merge=True)
+
+

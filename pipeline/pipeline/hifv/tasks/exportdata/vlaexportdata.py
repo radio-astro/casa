@@ -14,7 +14,7 @@ class VLAExportDataInputs(exportdata.ExportDataInputs):
     @basetask.log_equivalent_CASA_call
     def __init__(self, context, output_dir=None, session=None, vis=None, exportmses=None,
                  pprfile=None, calintents=None, calimages=None, targetimages=None,
-                 products_dir=None ):
+                 products_dir=None, gainmap=None):
         # set the properties to the values given as input arguments
         self._init_properties(vars())
 
@@ -58,8 +58,8 @@ class VLAExportData(exportdata.ExportData):
             if filename.endswith('.ms'):
                 filename, filext = os.path.splitext(filename)
             tmpvislist.append(filename)
-        task_string = "    hifv_restoredata (vis=%s, session=%s, ocorr_mode='%s')" % (
-        tmpvislist, session_list, ocorr_mode)
+        task_string = "    hifv_restoredata (vis=%s, session=%s, ocorr_mode='%s', gainmap=%s)" % (
+        tmpvislist, session_list, ocorr_mode, self.inputs.gainmap)
 
         task_string += '\n    hifv_statwt()'
 

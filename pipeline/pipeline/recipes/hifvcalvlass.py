@@ -136,7 +136,7 @@ def hifvcalvlass(vislist, importonly=False, pipelinemode='automatic', interactiv
         # hif_makeimages(pipelinemode=pipelinemode)
 
         # Export the data
-        hifv_exportdata(pipelinemode=pipelinemode)
+        hifv_exportdata(gainmap=True)
 
     except Exception, e:
         if str(e) == IMPORT_ONLY:
