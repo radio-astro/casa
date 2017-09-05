@@ -19,7 +19,11 @@ from hifv_importdata_cli import hifv_importdata_cli as hifv_importdata
 from hif_editimlist_cli import hif_editimlist_cli as hif_editimlist
 from hif_transformimagedata import hif_transformimagedata as hif_transformimagedata
 from hif_makeimages_cli import hif_makeimages_cli as hif_makeimages
+from hifv_pbcor_cli import hifv_pbcor_cli as hifv_pbcor
+from hif_makermsimages_cli import hif_makermsimages_cli as hif_makermsimages
+from hif_makecutoutimages_cli import hif_makecutoutimages_cli as hif_makecutoutimages
 from hifv_exportdata_cli import hifv_exportdata_cli as hifv_exportdata
+from hifv_exportvlassdata_cli import hifv_exportvlassdata_cli as hifv_exportvlassdata
 from h_save_cli import h_save_cli as h_save
 
 # Pipeline imports
@@ -62,7 +66,10 @@ def vlassQLIP(vislist, editimlist_infile, importonly=False, pipelinemode='automa
         hif_makecutoutimages(pipelinemode=pipelinemode)
 
         # Export the data to products directory
-        #hifv_exportdata(pipelinemode=pipelinemode)
+        hifv_exportdata(pipelinemode=pipelinemode)
+
+        # Export FITS images of primary beam corrected tt0 and RMS cutout images
+        hifv_exportvlassdata(pipelinemode=pipelinemode)
 
     except Exception, e:
         if str(e) == IMPORT_ONLY:
