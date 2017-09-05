@@ -18,6 +18,8 @@ class VLAExportDataInputs(exportdata.ExportDataInputs):
         # set the properties to the values given as input arguments
         self._init_properties(vars())
 
+    gainmap = basetask.property_with_default('gainmap', False)
+
 class VLAExportData(exportdata.ExportData):
 
     # link the accompanying inputs to this task
