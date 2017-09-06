@@ -38,6 +38,8 @@ class CutoutimagesSummary(object):
                     arr = image.getchunk()
                     # get fraction of pixels <= 120 micro Jy VLASS technical goal.  ignore 0 (masked) values.
                     self.result.RMSfraction120 = (np.count_nonzero((arr != 0) & (arr <= 120e-6)) / float(arr.size)) * 100
+                    # get fraction of pixels <= 168 micro Jy VLASS SE goal.  ignore 0 (masked) values.
+                    self.result.RMSfraction168 = (np.count_nonzero((arr != 0) & (arr <= 168e-6)) / float(arr.size)) * 100
                     # get fraction of pixels <= 200 micro Jy VLASS technical requirement.  ignore 0 (masked) values.
                     self.result.RMSfraction200 = (np.count_nonzero((arr != 0) & (arr <= 200e-6)) / float(arr.size)) * 100
 

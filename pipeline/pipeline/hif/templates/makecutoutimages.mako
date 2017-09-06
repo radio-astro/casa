@@ -61,6 +61,10 @@ $(document).ready(function() {
             <td>${'%4.2f &#37;' % (plotter.result.RMSfraction120)}</td>
         </tr>
         <tr>
+            <td><strong>Fraction of pixels <= 168 &mu;Jy</strong></td>
+            <td>${'%4.2f &#37;' % (plotter.result.RMSfraction168)}</td>
+        </tr>
+        <tr>
             <td><strong>Fraction of pixels <= 200 &mu;Jy</strong></td>
             <td>${'%4.2f &#37;' % (plotter.result.RMSfraction200)}</td>
         </tr>
