@@ -346,7 +346,10 @@ class Applycals(applycal.IFApplycal):
             #applycalgroups.append({'gainfield' : gainfield,
             #                       'scan'      : targetscans
             #                       })
-            gainfieldkey = gainfield.split(',')[1]
+            try:
+                gainfieldkey = gainfield.split(',')[1]
+            except:
+                gainfieldkey = gainfield.split(',')[0]
             applycalgroups[gainfieldkey].extend(targetscans)
 
         for gainfield, scanlist in applycalgroups.iteritems():
