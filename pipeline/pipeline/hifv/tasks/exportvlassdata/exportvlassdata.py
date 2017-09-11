@@ -34,14 +34,6 @@ class ExportvlassdataResults(basetask.Results):
         self.preceding = preceding[:]
         self.error = set()
 
-    def merge_with_context(self, context):
-        """
-        See :method:`~pipeline.infrastructure.api.Results.merge_with_context`
-        """
-        if not self.final:
-            LOG.warn('No exportvlassdata results')
-            return
-
     def __repr__(self):
         #return 'ExportvlassdataResults:\n\t{0}'.format(
         #    '\n\t'.join([ms.name for ms in self.mses]))
