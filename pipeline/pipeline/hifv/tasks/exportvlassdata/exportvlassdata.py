@@ -75,7 +75,6 @@ class Exportvlassdata(basetask.StandardTaskTemplate):
         #    The pipeline processing request
         #    A compressed tarfile of the weblog
         #    The pipeline processing script
-        #    The pipeline restore script (if exportmses = False)
         #    The CASA commands log
         recipe_name = self.get_recipename(inputs.context)
         if not recipe_name:
@@ -88,37 +87,8 @@ class Exportvlassdata(basetask.StandardTaskTemplate):
             result.pprequest = os.path.basename(stdfproducts.ppr_file) 
         result.weblog = os.path.basename(stdfproducts.weblog_file)
         result.pipescript = os.path.basename(stdfproducts.casa_pipescript)
-        if inputs.exportmses:
-            result.restorescript = 'Undefined'
-        else:
-            result.restorescript = os.path.basename(stdfproducts.casa_restore_script)
+        result.restorescript = os.path.basename(stdfproducts.casa_restore_script)
         result.commandslog = os.path.basename(stdfproducts.casa_commands_file)
-
-        # Make the standard ms dictionary and export per ms products
-        #    Currently these are compressed tar files of per MS flagging tables and per MS text files of calibration apply instructions
-        if inputs.exportmses:
-            visdict = self._do_ms_products (inputs.context, vislist, inputs.products_dir)
-        else:
-            visdict = self._do_standard_ms_products (inputs.context, vislist, inputs.products_dir)
-        result.visdict=visdict
-
-        # Make the standard sessions dictionary and export per session products
-        #    Currently these are compressed tar files of per session calibration tables
-        sessiondict = self._do_standard_session_products (inputs.context, oussid, session_names, session_vislists,
-            inputs.products_dir)
-        result.sessiondict=sessiondict
-
-        # Export calibrator images to FITS
-        calimages_list, calimages_fitslist = self._export_images ( \
-            inputs.context, True, inputs.calintents, inputs.calimages, \
-            inputs.products_dir)
-        result.calimages=(calimages_list, calimages_fitslist)
-
-        # Export science target images to FITS
-        targetimages_list, targetimages_fitslist = self._export_images ( \
-            inputs.context, False, 'TARGET', inputs.targetimages, \
-            inputs.products_dir)
-        result.targetimages=(targetimages_list, targetimages_fitslist)
 
         imlist = self.inputs.context.subimlist.get_imlist()
 
@@ -139,7 +109,7 @@ class Exportvlassdata(basetask.StandardTaskTemplate):
         # Export the pipeline manifest file
         #    TBD Remove support for auxiliary data products to the individual pipelines
         pipemanifest = self._make_pipe_manifest(inputs.context, oussid, stdfproducts,
-                                                sessiondict, visdict, inputs.exportmses, [],
+                                                {}, {}, inputs.exportmses, [],
                                                 [os.path.basename(fits_pbcor_image), os.path.basename(fits_rms_image)])
         casa_pipe_manifest = self._export_pipe_manifest(inputs.context, oussid,
                                                         'pipeline_manifest.xml', 
@@ -240,109 +210,16 @@ class Exportvlassdata(basetask.StandardTaskTemplate):
                                                    context.logs['pipeline_script'], products_dir, oussid)
 
         # Export the restore script independently of the web log
-        if exportmses:
-            casa_restore_script = 'Undefined'
-        else:
-            casa_restore_script = self._export_casa_restore_script(context,
-                                                                   context.logs['pipeline_restore_script'],
-                                                                   products_dir,
-                                                                   oussid, vislist, session_list)
+        casa_restore_script = self._export_casa_restore_script(context,
+                                                               context.logs['pipeline_restore_script'],
+                                                               products_dir,
+                                                               oussid, vislist, session_list)
 
         return StdFileProducts(ppr_file,
                                weblog_file,
                                casa_commands_file,
                                casa_pipescript,
                                casa_restore_script)
-
-    def _do_ms_products(self, context, vislist, products_dir):
-        '''
-        Tar up the final calibrated mses and put them in the products
-        directory.
-        Used for reprocessing applications
-        '''
-
-        # Loop over the measurements sets in the working directory and tar
-        # them up.
-        mslist = []
-        for visfile in vislist:
-            ms_file = self._export_final_ms(context, visfile, products_dir)
-            mslist.append(ms_file)
-
-        # Create the ordered vis dictionary
-        #    The keys are the base vis names
-        #    The values are the ms files
-        visdict = collections.OrderedDict()
-        for i in range(len(vislist)):
-            visdict[os.path.basename(vislist[i])] = \
-                os.path.basename(mslist[i])
-
-        return visdict
-
-    def _do_standard_ms_products(self, context, vislist, products_dir):
-
-        '''
-        Generate the per ms standard products
-        '''
-
-        # Loop over the measurements sets in the working directory and
-        # save the final flags using the flag manager.
-        flag_version_name = 'Pipeline_Final'
-        for visfile in vislist:
-            self._save_final_flagversion(visfile, flag_version_name)
-
-        # Copy the final flag versions to the data products directory
-        # and tar them up.
-        flag_version_list = []
-        for visfile in vislist:
-            flag_version_file = self._export_final_flagversion( \
-                context, visfile, flag_version_name, \
-                products_dir)
-            flag_version_list.append(flag_version_file)
-
-        # Loop over the measurements sets in the working directory, and
-        # create the calibration apply file(s) in the products directory.
-        apply_file_list = []
-        for visfile in vislist:
-            apply_file = self._export_final_applylist(context, \
-                                                      visfile, products_dir)
-            apply_file_list.append(apply_file)
-
-        # Create the ordered vis dictionary
-        #    The keys are the base vis names
-        #    The values are a tuple containing the flags and applycal files
-        visdict = collections.OrderedDict()
-        for i in range(len(vislist)):
-            visdict[os.path.basename(vislist[i])] = \
-                (os.path.basename(flag_version_list[i]), \
-                 os.path.basename(apply_file_list[i]))
-
-        return visdict
-
-    def _do_standard_session_products(self, context, oussid, session_names, session_vislists, products_dir,
-                                      imaging=False):
-
-        '''
-        Generate the per ms standard products
-        '''
-
-        # Export tar files of the calibration tables one per session
-        caltable_file_list = []
-        for i in range(len(session_names)):
-            caltable_file = self._export_final_calfiles(context, oussid,
-                                                        session_names[i], session_vislists[i], products_dir,
-                                                        imaging=imaging)
-            caltable_file_list.append(caltable_file)
-
-        # Create the ordered session dictionary
-        #    The keys are the session names
-        #    The values are a tuple containing the vislist and the caltables
-        sessiondict = collections.OrderedDict()
-        for i in range(len(session_names)):
-            sessiondict[session_names[i]] = \
-                ([os.path.basename(visfile) for visfile in session_vislists[i]], \
-                 os.path.basename(caltable_file_list[i]))
-
-        return sessiondict
 
     def _make_pipe_manifest(self, context, oussid, stdfproducts, sessiondict,
                             visdict, exportmses, calimages, targetimages):
@@ -366,11 +243,8 @@ class Exportvlassdata(basetask.StandardTaskTemplate):
             session = pipemanifest.set_session(ouss, session_name)
             pipemanifest.add_caltables(session, sessiondict[session_name][1])
             for vis_name in sessiondict[session_name][0]:
-                if exportmses:
-                    pipemanifest.add_ms(session, vis_name, visdict[vis_name])
-                else:
-                    pipemanifest.add_asdm(session, vis_name, visdict[vis_name][0],
-                                          visdict[vis_name][1])
+                pipemanifest.add_asdm(session, vis_name, visdict[vis_name][0],
+                                      visdict[vis_name][1])
 
         # Add a tar file of the web log
         pipemanifest.add_weblog(ouss, os.path.basename(stdfproducts.weblog_file))
@@ -383,10 +257,7 @@ class Exportvlassdata(basetask.StandardTaskTemplate):
         pipemanifest.add_pipescript(ouss, os.path.basename(stdfproducts.casa_pipescript))
 
         # Add the restore script independently of the web log
-        if exportmses:
-            pipemanifest.add_restorescript(ouss, '')
-        else:
-            pipemanifest.add_restorescript(ouss, os.path.basename(stdfproducts.casa_restore_script))
+        pipemanifest.add_restorescript(ouss, os.path.basename(stdfproducts.casa_restore_script))
 
         # Add the calibrator images
         pipemanifest.add_images(ouss, calimages, 'calibrator')
@@ -445,135 +316,6 @@ class Exportvlassdata(basetask.StandardTaskTemplate):
 
         return pprmatchesout
 
-    def _export_final_ms(self, context, vis, products_dir):
-
-        """
-        Save the ms to a compressed tarfile in products.
-        """
-
-        # Save the current working directory and move to the pipeline
-        # working directory. This is required for tarfile IO
-        cwd = os.getcwd()
-        try:
-            os.chdir(context.output_dir)
-
-            # Define the name of the output tarfile
-            visname = os.path.basename(vis)
-            tarfilename = visname + '.tgz'
-            LOG.info('Storing final ms %s in %s' % (visname, tarfilename))
-
-            # Create the tar file
-            if self._executor._dry_run:
-                return tarfilename
-
-            tar = tarfile.open(os.path.join(products_dir, tarfilename), "w:gz")
-            tar.add(visname)
-            tar.close()
-
-        finally:
-            # Restore the original current working directory
-            os.chdir(cwd)
-
-        return tarfilename
-
-    def _save_final_flagversion(self, vis, flag_version_name):
-
-        """
-        Save the final flags to a final flag version.
-        """
-
-        LOG.info('Saving final flags for %s in flag version %s' % \
-                 (os.path.basename(vis), flag_version_name))
-        if not self._executor._dry_run:
-            task = casa_tasks.flagmanager(vis=vis,
-                                          mode='save', versionname=flag_version_name)
-            self._executor.execute(task)
-
-    def _export_final_flagversion(self, context, vis, flag_version_name,
-                                  products_dir):
-
-        """
-        Save the final flags version to a compressed tarfile in products.
-        """
-
-        # Save the current working directory and move to the pipeline
-        # working directory. This is required for tarfile IO
-        cwd = os.getcwd()
-        os.chdir(context.output_dir)
-
-        # Define the name of the output tarfile
-        visname = os.path.basename(vis)
-        tarfilename = visname + '.flagversions.tgz'
-        LOG.info('Storing final flags for %s in %s' % (visname, tarfilename))
-
-        # Define the directory to be saved
-        flagsname = os.path.join(visname + '.flagversions',
-                                 'flags.' + flag_version_name)
-        LOG.info('Saving flag version %s' % (flag_version_name))
-
-        # Define the versions list file to be saved
-        flag_version_list = os.path.join(visname + '.flagversions',
-                                         'FLAG_VERSION_LIST')
-        ti = tarfile.TarInfo(flag_version_list)
-        # line = "Pipeline_Final : Final pipeline flags\n"
-        line = "%s : Final pipeline flags\n" % flag_version_name
-        ti.size = len(line)
-        LOG.info('Saving flag version list')
-
-        # Create the tar file
-        if not self._executor._dry_run:
-            tar = tarfile.open(os.path.join(products_dir, tarfilename), "w:gz")
-            tar.add(flagsname)
-            tar.addfile(ti, StringIO.StringIO(line))
-            tar.close()
-
-        # Restore the original current working directory
-        os.chdir(cwd)
-
-        return tarfilename
-
-    def _export_final_applylist(self, context, vis, products_dir, imaging=False):
-        """
-        Save the final calibration list to a file. For now this is
-        a text file. Eventually it will be the CASA callibrary file.
-        """
-
-        if imaging:
-            applyfile_name = os.path.basename(vis) + '.auxcalapply.txt'
-        else:
-            applyfile_name = os.path.basename(vis) + '.calapply.txt'
-        LOG.info('Storing calibration apply list for %s in  %s',
-                 os.path.basename(vis), applyfile_name)
-
-        if self._executor._dry_run:
-            return applyfile_name
-
-        try:
-            calto = callibrary.CalTo(vis=vis)
-            applied_calstate = context.callibrary.applied.trimmed(context, calto)
-
-            # Log the list in human readable form. Better way to do this ?
-            for calto, calfrom in applied_calstate.merged().iteritems():
-                LOG.info('Apply to:  Field: %s  Spw: %s  Antenna: %s',
-                         calto.field, calto.spw, calto.antenna)
-                for item in calfrom:
-                    LOG.info('    Gaintable: %s  Caltype: %s  Gainfield: %s  Spwmap: %s  Interp: %s',
-                             os.path.basename(item.gaintable),
-                             item.caltype,
-                             item.gainfield,
-                             item.spwmap,
-                             item.interp)
-
-            # Open the file.
-            with open(os.path.join(products_dir, applyfile_name), "w") as applyfile:
-                applyfile.write('# Apply file for %s\n' % (os.path.basename(vis)))
-                applyfile.write(applied_calstate.as_applycal())
-        except:
-            applyfile_name = 'Undefined'
-            LOG.info('No calibrations for MS %s' % os.path.basename(vis))
-
-        return applyfile_name
-
     def _get_sessions(self, context, sessions, vis):
 
         """
@@ -625,57 +367,6 @@ class Exportvlassdata(basetask.StandardTaskTemplate):
                      (session_names[i], session_vis_list[i]))
 
         return wksessions, session_names, session_vis_list
-
-    def _export_final_calfiles(self, context, oussid, session, vislist, products_dir, imaging=False):
-        """
-        Save the final calibration tables in a tarfile one file
-        per session.
-        """
-
-        # Save the current working directory and move to the pipeline
-        # working directory. This is required for tarfile IO
-        cwd = os.getcwd()
-        try:
-            os.chdir(context.output_dir)
-
-            # Define the name of the output tarfile
-            if imaging:
-                tarfilename = '{}.{}.auxcaltables.tgz'.format(oussid, session)
-            else:
-                tarfilename = '{}.{}.caltables.tgz'.format(oussid, session)
-            LOG.info('Saving final caltables for %s in %s', session, tarfilename)
-
-            # Create the tar file
-            if self._executor._dry_run:
-                return tarfilename
-
-            caltables = set()
-
-            for visfile in vislist:
-                LOG.info('Collecting final caltables for %s in %s',
-                         os.path.basename(visfile), tarfilename)
-
-                # Create the list of applied caltables for that vis
-                try:
-                    calto = callibrary.CalTo(vis=visfile)
-                    calstate = context.callibrary.applied.trimmed(context, calto)
-                    caltables.update(calstate.get_caltable())
-                except:
-                    LOG.info('No caltables for MS %s' % os.path.basename(visfile))
-
-            if not caltables:
-                return 'Undefined'
-
-            with tarfile.open(os.path.join(products_dir, tarfilename), 'w:gz') as tar:
-                # Tar the session list.
-                for table in caltables:
-                    tar.add(table, arcname=os.path.basename(table))
-
-            return tarfilename
-
-        finally:
-            # Restore the original current working directory
-            os.chdir(cwd)
 
     def _export_weblog(self, context, products_dir, oussid):
 
@@ -826,155 +517,8 @@ finally:
 
         return out_manifest_file
 
-    def _fitsfile(self, products_dir, imagename):
 
-        """Strip off stage and iter information to generate
-           FITS file name."""
 
-        # Need to remove stage / iter information
-        # fitsname = re.sub('\.s\d+.*\.iter.*\.', '.', imagename)
-        fitsname = re.sub('\.s\d+[_]\d+\.', '.', imagename)
-        fitsname = re.sub('\.iter\d+\.image', '', fitsname)
-        fitsname = re.sub('\.iter\d+\.image.pbcor', '.pbcor', fitsname)
-        fitsname = re.sub('\.iter\d+\.mask', '.mask', fitsname)
-        fitsname = re.sub('\.iter\d+\.alpha', '.alpha', fitsname)
-        # .pb must be tried after .pbcor.image !
-        fitsname = re.sub('\.iter\d+\.pb', '.pb', fitsname)
-        fitsfile = os.path.join(products_dir,
-                                os.path.basename(fitsname) + '.fits')
-
-        return fitsfile
-
-    def _export_images(self, context, calimages, calintents, images,
-                       products_dir):
-
-        """
-        Export the images to FITS files.
-        """
-
-        # Create the image list
-        images_list = []
-        if len(images) == 0:
-            # Get the image library
-            if calimages:
-                LOG.info('Exporting calibrator source images')
-                if calintents == '':
-                    intents = ['PHASE', 'BANDPASS', 'CHECK', 'AMPLITUDE']
-                else:
-                    intents = calintents.split(',')
-                cleanlist = context.calimlist.get_imlist()
-            else:
-                LOG.info('Exporting target source images')
-                intents = ['TARGET']
-                cleanlist = context.sciimlist.get_imlist()
-            for image_number, image in enumerate(cleanlist):
-                # We need to store the image
-                cleanlist[image_number]['fitsfiles'] = []
-                cleanlist[image_number]['auxfitsfiles'] = []
-                # Image name probably includes path
-                if image['sourcetype'] in intents:
-                    if (image['multiterm']):
-                        for nt in xrange(image['multiterm']):
-                            imagename = image['imagename'].replace('.image', '.image.tt%d' % (nt))
-                            images_list.append(imagename)
-                            cleanlist[image_number]['fitsfiles'].append(self._fitsfile(products_dir, imagename))
-                        if (image['imagename'].find('.pbcor') != -1):
-                            imagename = image['imagename'].replace('.image.pbcor', '.alpha')
-                            images_list.append(imagename)
-                            cleanlist[image_number]['fitsfiles'].append(self._fitsfile(products_dir, imagename))
-                            imagename = '%s.error' % (image['imagename'].replace('.image.pbcor', '.alpha'))
-                            images_list.append(imagename)
-                            cleanlist[image_number]['fitsfiles'].append(self._fitsfile(products_dir, imagename))
-                        else:
-                            imagename = image['imagename'].replace('.image', '.alpha')
-                            images_list.append(imagename)
-                            cleanlist[image_number]['fitsfiles'].append(self._fitsfile(products_dir, imagename))
-                            imagename = '%s.error' % (image['imagename'].replace('.image', '.alpha'))
-                            images_list.append(imagename)
-                            cleanlist[image_number]['fitsfiles'].append(self._fitsfile(products_dir, imagename))
-                    else:
-                        imagename = image['imagename']
-                        images_list.append(imagename)
-                        cleanlist[image_number]['fitsfiles'].append(self._fitsfile(products_dir, imagename))
-
-                    # Add PBs for interferometry
-                    if (image['imagename'].find('.image') != -1):
-                        if (image['imagename'].find('.pbcor') != -1):
-                            if (image['multiterm']):
-                                imagename = image['imagename'].replace('.image.pbcor', '.pb.tt0')
-                                images_list.append(imagename)
-                                cleanlist[image_number]['auxfitsfiles'].append(self._fitsfile(products_dir, imagename))
-                            else:
-                                imagename = image['imagename'].replace('.image.pbcor', '.pb')
-                                images_list.append(imagename)
-                                cleanlist[image_number]['auxfitsfiles'].append(self._fitsfile(products_dir, imagename))
-                        else:
-                            if (image['multiterm']):
-                                imagename = image['imagename'].replace('.image', '.pb.tt0')
-                                images_list.append(imagename)
-                                cleanlist[image_number]['auxfitsfiles'].append(self._fitsfile(products_dir, imagename))
-                            else:
-                                imagename = image['imagename'].replace('.image', '.pb')
-                                images_list.append(imagename)
-                                cleanlist[image_number]['auxfitsfiles'].append(self._fitsfile(products_dir, imagename))
-
-                    # Add auto-boxing masks for interferometry
-                    if (image['imagename'].find('.image') != -1):
-                        if (image['imagename'].find('.pbcor') != -1):
-                            imagename = image['imagename'].replace('.image.pbcor', '.mask')
-                            imagename2 = image['imagename'].replace('.image.pbcor', '.cleanmask')
-                            if os.path.exists(imagename) and not os.path.exists(imagename2):
-                                images_list.append(imagename)
-                                cleanlist[image_number]['auxfitsfiles'].append(self._fitsfile(products_dir, imagename))
-                        else:
-                            imagename = image['imagename'].replace('.image', '.mask')
-                            imagename2 = image['imagename'].replace('.image', '.cleanmask')
-                            if os.path.exists(imagename) and not os.path.exists(imagename2):
-                                images_list.append(imagename)
-                                cleanlist[image_number]['auxfitsfiles'].append(self._fitsfile(products_dir, imagename))
-        else:
-            # Assume only the root image name was given.
-            cleanlib = imagelibrary.ImageLibrary()
-            for image in images:
-                if calimages:
-                    imageitem = imagelibrary.ImageItem(imagename=image,
-                                                       sourcename='UNKNOWN',
-                                                       spwlist='UNKNOWN',
-                                                       sourcetype='CALIBRATOR')
-                else:
-                    imageitem = imagelibrary.ImageItem(imagename=image,
-                                                       sourcename='UNKNOWN',
-                                                       spwlist='UNKNOWN',
-                                                       sourcetype='TARGET')
-                cleanlib.add_item(imageitem)
-                if os.path.basename(image) == '':
-                    images_list.append(os.path.join(context.output_dir, image))
-                else:
-                    images_list.append(image)
-            cleanlist = cleanlib.get_imlist()
-            # Need to add the FITS names
-            for i in xrange(len(cleanlist)):
-                cleanlist[i]['fitsfiles'] = [self._fitsfile(products_dir, images_list[i])]
-                cleanlist[i]['auxfitsfiles'] = []
-
-        # Convert to FITS.
-        fits_list = []
-        for image in images_list:
-            print 'Working on', image
-            fitsfile = self._fitsfile(products_dir, image)
-            LOG.info('Saving final image %s to FITS file %s' % \
-                     (os.path.basename(image), os.path.basename(fitsfile)))
-            if not self._executor._dry_run:
-                task = casa_tasks.exportfits(imagename=image,
-                                             fitsimage=fitsfile, velocity=False, optical=False,
-                                             bitpix=-32, minpix=0, maxpix=-1, overwrite=True,
-                                             dropstokes=False, stokeslast=True)
-                self._executor.execute(task)
-                fits_list.append(fitsfile)
-
-        new_cleanlist = copy.deepcopy(cleanlist)
-
-        return new_cleanlist, fits_list
 
 
 
