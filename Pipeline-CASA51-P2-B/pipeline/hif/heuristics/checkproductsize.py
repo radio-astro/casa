@@ -249,7 +249,7 @@ class CheckProductSizeHeuristics(object):
             if str(repr_spw) in oversize_spws:
                 size_mitigation_parameters['spw'] = ','.join([str(repr_spw)] + [spw for spw, n in spw_oversizes.iteritems() if n==0])
             else:
-                size_mitigation_parameters['spw'] = ','.join(oversize_spws[0] + [spw for spw, n in spw_oversizes.iteritems() if n==0])
+                size_mitigation_parameters['spw'] = ','.join([oversize_spws[0]] + [spw for spw, n in spw_oversizes.iteritems() if n==0])
             LOG.info('Size mitigation: Setting (cube) spw to %s' % (size_mitigation_parameters['spw']))
 
             # Recalculate sizes
