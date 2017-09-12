@@ -227,7 +227,7 @@ class ImageParamsHeuristics(object):
 
     def get_scanidlist(self, vis, field, intent):
         # Use scanids to select data with the specified intent
-        # Note CASA clean now supports intent selectin but leave
+        # Note CASA clean now supports intent selection but leave
         # this logic in place and use it to eliminate vis that
         # don't contain the requested data.
         scanidlist = []
