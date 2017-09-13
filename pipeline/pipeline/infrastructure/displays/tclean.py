@@ -56,7 +56,7 @@ class CleanSummary(object):
             for i, iteration in [(k, r.iterations[k]) for k in sorted(r.iterations)]:
                 # process image for this iteration
                 if 'image' in iteration:
-                    collapse_function = 'max' if 'cube' in iteration['image'] else 'mean'
+                    collapse_function = 'max' if (('cube' in iteration['image']) or ('repBW' in iteration['cleanmask'])) else 'mean'
 
                     # PB corrected
                     image_path = iteration['image'].replace('.image', '.image%s' % (extension))
@@ -139,7 +139,7 @@ class CleanSummary(object):
 
                 # cleanmask for this iteration - not for iter 0
                 if i > 0:
-                    collapse_function = 'max' if 'cube' in iteration['cleanmask'] else 'mean'
+                    collapse_function = 'max' if (('cube' in iteration['cleanmask']) or ('repBW' in iteration['cleanmask'])) else 'mean'
                     plot_wrappers.append(
                         displays.SkyDisplay().plot(self.context, iteration['cleanmask'], reportdir=stage_dir,
                                                    intent=r.intent, collapseFunction=collapse_function))
