@@ -40,7 +40,8 @@ class CleanBaseInputs(basetask.StandardInputs):
                  hm_lownoisethreshold=None, hm_negativethreshold=None,
                  hm_minbeamfrac=None, hm_growiterations=None,
                  pblimit=None, niter=None,
-                 threshold=None, sensitivity=None, reffreq=None, result=None, parallel=None,
+                 threshold=None, sensitivity=None, reffreq=None, conjbeams=None,
+                 result=None, parallel=None,
                  heuristics=None):
         self._init_properties(vars())
         self.heuristics = heuristics
@@ -399,6 +400,13 @@ class CleanBase(basetask.StandardTaskTemplate):
             reffreq = inputs.heuristics.reffreq()
             if reffreq:
                 tclean_job_parameters['reffreq'] = reffreq
+
+        if inputs.conjbeams is not None:
+            tclean_job_parameters['conjbeams'] = inputs.conjbeams
+        else:
+            conjbeams = inputs.heuristics.conjbeams()
+            if conjbeams is not None:
+                tclean_job_parameters['conjbeams'] = conjbeams
 
         job = casa_tasks.tclean(**tclean_job_parameters)
         tclean_result = self._executor.execute(job)

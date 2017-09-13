@@ -49,6 +49,7 @@ class EditimlistInputs(basetask.StandardInputs):
     def __init__(self, context, output_dir=None, vis=None,
                  search_radius_arcsec=None,
                  cell=None,
+                 conjbeams=None,
                  cyclefactor=None,
                  cycleniter=None,
                  deconvolver=None,
@@ -88,7 +89,7 @@ class EditimlistInputs(basetask.StandardInputs):
                             'start', 'width', 'nbin', 'nchan', 'uvrange', 'stokes', 'nterms',
                             'robust', 'uvtaper', 'niter', 'cyclefactor', 'cycleniter', 'mask',
                             'search_radius_arcsec', 'threshold', 'imaging_mode', 'reffreq',
-                            'editmode', 'threshold_nsigma', 'sensitivity')
+                            'editmode', 'threshold_nsigma', 'sensitivity', 'conjbeams')
         self.keys_to_change = []
         for key in keys_to_consider:
             # print key, eval(key)
@@ -197,6 +198,7 @@ class Editimlist(basetask.StandardTaskTemplate):
         else:  # neither set by user.  Use nsigma.
             target['nsigma'] = th.threshold_nsigma()
 
+        target['conjbeams'] = th.conjbeams()  # if not inpdict['conjbeams'] else inpdict['conjbeams']
         target['reffreq'] = th.reffreq() if not inpdict['reffreq'] else inpdict['reffreq']
         target['niter'] = th.niter_correction(None, None, None, None, None) if not inpdict['niter'] else inpdict['niter']
         target['cyclefactor'] = th.cyclefactor() if not inpdict['cyclefactor'] else inpdict['cyclefactor']

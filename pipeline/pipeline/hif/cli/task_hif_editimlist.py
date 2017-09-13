@@ -6,6 +6,7 @@ import pipeline.h.cli.utils as utils
 def hif_editimlist(imagename=None,
                    search_radius_arcsec=None,
                    cell=None,
+                   # conjbeams=None,
                    cyclefactor=None,
                    cycleniter=None,
                    deconvolver=None,

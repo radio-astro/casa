@@ -87,6 +87,9 @@ class ImageParamsHeuristicsVlassQl(ImageParamsHeuristics):
     def pb_correction(self):
         return False
 
+    def conjbeams(self):
+        return False
+
     def get_sensitivity(self, ms_do, field, spw, chansel, specmode, cell, imsize, weighting, robust, uvtaper):
         return 0.0, None, None
 
