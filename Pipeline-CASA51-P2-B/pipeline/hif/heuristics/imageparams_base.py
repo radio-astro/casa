@@ -632,7 +632,7 @@ class ImageParamsHeuristics(object):
             # Check if representative bandwidth is larger than spw bandwidth. If so, switch to fullcont.
             repr_spw_obj = repr_ms.get_spectral_window(repr_spw)
             repr_spw_bw = cqa.quantity(float(repr_spw_obj.bandwidth.convert_to(measures.FrequencyUnits.HERTZ).value), 'Hz')
-            if cqa.gt(repr_target[2], repr_spw_bw):
+            if cqa.gt(repr_target[2], cqa.mul(repr_spw_bw, 0.2)):
                 repr_spw = ','.join([str(s.id) for s in repr_ms.get_spectral_windows()])
                 reprBW_mode = 'cont'
         else:
