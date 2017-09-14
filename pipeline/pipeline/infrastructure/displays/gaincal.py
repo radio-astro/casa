@@ -6,6 +6,7 @@ import matplotlib
 import matplotlib.pyplot as pyplot
 
 import pipeline.infrastructure as infrastructure
+import pipeline.infrastructure.filenamer as filenamer
 import pipeline.infrastructure.renderer.logger as logger
 import pipeline.infrastructure.utils as utils
 from pipeline.infrastructure import casa_tasks
@@ -398,9 +399,25 @@ class RMSOffsetVsRefAntDistanceChart(PhaseVsBaselineChart):
     def get_figfile(self, spw, scans, antennas):
         vis = os.path.basename(self.result.inputs['vis'])
         scan_ids = '_'.join(['%0.2d' % scan.id for scan in scans])
-        return os.path.join(self.context.report_dir, 
-                            'stage%s' % self.result.stage_number, 
-                            '%s.unwrapped_rms_vs_refant_distance.spw%0.2d.scan%s.png' % (vis, spw.id, scan_ids))
+
+        png = '%s.unwrapped_rms_vs_refant_distance.spw%0.2d.scan%s.png' % (vis, spw.id, scan_ids)
+        png = filenamer.sanitize(png)
+
+        # SCOPS-5084: PL fails to create phase RMS v/s baseline plot due to
+        # filename in MOUS uid://A001/X879/X85e.
+        #
+        # Maximum filename size for Lustre filesystems is 255 bytes. The scan
+        # filename component can exceed this limit for fast target-phase
+        # switching observations. Truncate over-long filenames whilst keeping
+        # them unique and reproducible/identifiable  by replacing them with
+        # the hash of the component.
+        if len(png) > 251:  # 255 - '.png'
+            png_hash = str(hash(png))
+            LOG.info('Truncating plot filename to avoid filesystem limit.\n'
+                     'Result: %s -> %s', png, png_hash)
+            png = '%s.png' % png_hash
+
+        return os.path.join(self.context.report_dir, 'stage%s' % self.result.stage_number, png)
 
     def get_plot_object(self, spw, scans, antenna):
         figfile = self.get_figfile(spw, scans, antenna)
