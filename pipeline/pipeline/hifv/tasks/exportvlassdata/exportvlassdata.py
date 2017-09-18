@@ -23,7 +23,7 @@ import pipeline.infrastructure.imagelibrary as imagelibrary
 
 LOG = infrastructure.get_logger(__name__)
 
-StdFileProducts = collections.namedtuple('StdFileProducts', 'ppr_file weblog_file casa_commands_file casa_pipescript casa_restore_script')
+StdFileProducts = collections.namedtuple('StdFileProducts', 'ppr_file weblog_file casa_commands_file casa_pipescript')
 
 
 class ExportvlassdataResults(basetask.Results):
@@ -68,8 +68,8 @@ class Exportvlassdata(basetask.StandardTaskTemplate):
         result = ExportvlassdataResults()
 
         # Make the standard vislist and the sessions lists.
-        session_list, session_names, session_vislists, vislist = self._make_lists(inputs.context,
-            inputs.session, inputs.vis)
+        session_list, session_names, session_vislists, vislist = self._make_lists(inputs.context, inputs.session,
+                                                                                  inputs.vis)
 
         # Export the standard per OUS file products
         #    The pipeline processing request
@@ -84,10 +84,9 @@ class Exportvlassdata(basetask.StandardTaskTemplate):
         stdfproducts = self._do_standard_ous_products(inputs.context, inputs.exportmses,
             prefix, inputs.pprfile, session_list, vislist, inputs.output_dir, inputs.products_dir)
         if stdfproducts.ppr_file:
-            result.pprequest = os.path.basename(stdfproducts.ppr_file) 
+            result.pprequest = os.path.basename(stdfproducts.ppr_file)
         result.weblog = os.path.basename(stdfproducts.weblog_file)
         result.pipescript = os.path.basename(stdfproducts.casa_pipescript)
-        result.restorescript = os.path.basename(stdfproducts.casa_restore_script)
         result.commandslog = os.path.basename(stdfproducts.casa_commands_file)
 
         imlist = self.inputs.context.subimlist.get_imlist()
@@ -111,9 +110,7 @@ class Exportvlassdata(basetask.StandardTaskTemplate):
         pipemanifest = self._make_pipe_manifest(inputs.context, oussid, stdfproducts,
                                                 {}, {}, inputs.exportmses, [],
                                                 [os.path.basename(fits_pbcor_image), os.path.basename(fits_rms_image)])
-        casa_pipe_manifest = self._export_pipe_manifest(inputs.context, oussid,
-                                                        'pipeline_manifest.xml', 
-                                                        inputs.products_dir, pipemanifest)
+        casa_pipe_manifest = self._export_pipe_manifest('pipeline_manifest.xml', inputs.products_dir, pipemanifest)
         result.manifest = os.path.basename(casa_pipe_manifest)
 
         # Return the results object, which will be used for the weblog
@@ -209,17 +206,10 @@ class Exportvlassdata(basetask.StandardTaskTemplate):
         casa_pipescript = self._export_casa_script(context,
                                                    context.logs['pipeline_script'], products_dir, oussid)
 
-        # Export the restore script independently of the web log
-        casa_restore_script = self._export_casa_restore_script(context,
-                                                               context.logs['pipeline_restore_script'],
-                                                               products_dir,
-                                                               oussid, vislist, session_list)
-
         return StdFileProducts(ppr_file,
                                weblog_file,
                                casa_commands_file,
-                               casa_pipescript,
-                               casa_restore_script)
+                               casa_pipescript)
 
     def _make_pipe_manifest(self, context, oussid, stdfproducts, sessiondict,
                             visdict, exportmses, calimages, targetimages):
@@ -255,9 +245,6 @@ class Exportvlassdata(basetask.StandardTaskTemplate):
 
         # Add the processing script independently of the web log
         pipemanifest.add_pipescript(ouss, os.path.basename(stdfproducts.casa_pipescript))
-
-        # Add the restore script independently of the web log
-        pipemanifest.add_restorescript(ouss, os.path.basename(stdfproducts.casa_restore_script))
 
         # Add the calibrator images
         pipemanifest.add_images(ouss, calimages, 'calibrator')
@@ -425,60 +412,6 @@ class Exportvlassdata(basetask.StandardTaskTemplate):
 
         return os.path.basename(out_casalog_file)
 
-    def _export_casa_restore_script(self, context, script_name, products_dir, oussid, vislist, session_list):
-
-        """
-        Save the CASA restore scropt.
-        """
-
-        # Generate the file list
-
-        # Get the output file name
-        ps = context.project_structure
-        if ps is None:
-            script_file = os.path.join(context.report_dir, script_name)
-            out_script_file = os.path.join(products_dir, script_name)
-        elif ps.ousstatus_entity_id == 'unknown':
-            script_file = os.path.join(context.report_dir, script_name)
-            out_script_file = os.path.join(products_dir, script_name)
-        else:
-            script_file = os.path.join(context.report_dir, script_name)
-            out_script_file = os.path.join(products_dir, oussid + '.' + script_name)
-
-        LOG.info('Creating casa restore script %s' % (script_file))
-
-        # This is hardcoded.
-        tmpvislist = []
-
-        # ALMA default
-        ocorr_mode = 'ca'
-
-        for vis in vislist:
-            filename = os.path.basename(vis)
-            if filename.endswith('.ms'):
-                filename, filext = os.path.splitext(filename)
-            tmpvislist.append(filename)
-        task_string = "    hif_restoredata (vis=%s, session=%s, ocorr_mode='%s')" % (
-        tmpvislist, session_list, ocorr_mode)
-
-        template = '''__rethrow_casa_exceptions = True
-h_init()
-try:
-%s
-finally:
-    h_save()
-''' % task_string
-
-        with open(script_file, 'w') as casa_restore_file:
-            casa_restore_file.write(template)
-
-        LOG.info('Copying casa restore script %s to %s' % \
-                 (script_file, out_script_file))
-        if not self._executor._dry_run:
-            shutil.copy(script_file, out_script_file)
-
-        return os.path.basename(out_script_file)
-
     def _export_casa_script(self, context, casascript_name, products_dir, oussid):
 
         """
@@ -504,13 +437,13 @@ finally:
 
         return os.path.basename(out_casascript_file)
 
-    def _export_pipe_manifest(self, context, oussid, manifest_name, products_dir, pipemanifest):
+    def _export_pipe_manifest(self, manifest_name, products_dir, pipemanifest):
 
         """
         Save the manifest file.
         """
 
-        out_manifest_file = os.path.join(products_dir, oussid + '.' + manifest_name)
+        out_manifest_file = os.path.join(products_dir, manifest_name)
         LOG.info('Creating manifest file %s' % (out_manifest_file))
         if not self._executor._dry_run:
             pipemanifest.write(out_manifest_file)
