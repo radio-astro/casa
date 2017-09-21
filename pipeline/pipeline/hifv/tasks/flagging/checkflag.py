@@ -88,7 +88,7 @@ class Checkflag(basetask.StandardTaskTemplate):
 
             if not fieldselect:
                 LOG.warning("No scans with intent=TARGET are present.  CASA task flagdata not executed.")
-                return
+                return CheckflagResults()
 
         if (self.inputs.checkflagmode == 'bpd' or
             self.inputs.checkflagmode == 'allcals' or
