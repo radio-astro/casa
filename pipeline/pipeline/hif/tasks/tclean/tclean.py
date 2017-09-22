@@ -228,6 +228,10 @@ class Tclean(cleanbase.CleanBase):
         # Get the image parameter heuristics
         self.image_heuristics = inputs.image_heuristics
 
+        # Remove MSs that do not contain data for the given field(s)
+        scanidlist, visindexlist = self.image_heuristics.get_scanidlist(inputs.vis, inputs.field, inputs.intent)
+        inputs.vis = [inputs.vis[i] for i in visindexlist]
+
         # Generate the image name if one is not supplied.
         if inputs.imagename in ('', None):
             inputs.imagename = self.image_heuristics.imagename(intent=inputs.intent,
@@ -246,7 +250,7 @@ class Tclean(cleanbase.CleanBase):
         # Determine nterms
         if inputs.nterms in ('', None):
             if inputs.deconvolver == 'mtmfs':
-                # ALMA heuristics
+                # ALMA heuristics (TODO: move to heuristics class)
                 inputs.nterms = 2
 
         # Determine the phase center
