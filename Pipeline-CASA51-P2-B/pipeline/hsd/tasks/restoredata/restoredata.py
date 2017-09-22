@@ -21,7 +21,7 @@ class SDRestoreDataInputs(restoredata.RestoreDataInputs):
                  bdfflags=None, lazy=None, asis=None, ocorr_mode=None):
         self._init_properties(vars())
 
-    asis = basetask.property_with_default('asis', 'Antenna Station Receiver Source CalAtmosphere CalWVR')
+    asis = basetask.property_with_default('asis', 'SBSummary ExecBlock Antenna Station Receiver Source CalAtmosphere CalWVR')
     ocorr_mode = basetask.property_with_default('ocorr_mode', 'ao')
 
 
