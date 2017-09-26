@@ -1894,7 +1894,7 @@ class NewMatrixFlagger(basetask.StandardTaskTemplate):
         return newflags, flag_reason
 
 
-class VectorFlaggerInputs(basetask.StandardInputs):
+class OldVectorFlaggerInputs(basetask.StandardInputs):
 
     def __init__(self, context, output_dir=None, vis=None, datatask=None,
                  flagsettertask=None, rules=None, niter=None, intent=None,
@@ -1904,8 +1904,8 @@ class VectorFlaggerInputs(basetask.StandardInputs):
         self._init_properties(vars())
 
 
-class VectorFlagger(basetask.StandardTaskTemplate):
-    Inputs = VectorFlaggerInputs
+class OldVectorFlagger(basetask.StandardTaskTemplate):
+    Inputs = OldVectorFlaggerInputs
 
     # override the inherited __init__ method so that references to the
     # task objects can be kept outside self.inputs. Later on self.inputs
@@ -2067,13 +2067,13 @@ class VectorFlagger(basetask.StandardTaskTemplate):
                     if len(valid_data):
 
                         # find left edge
-                        left_edge = VectorFlagger._find_small_diff(rdata,
-                          rflag, limit, vector.description)
+                        left_edge = OldVectorFlagger._find_small_diff(rdata,
+                                                                      rflag, limit, vector.description)
 
                         # and right edge
                         reverse_data = rdata[-1::-1]
                         reverse_flag = rflag[-1::-1]
-                        right_edge = VectorFlagger._find_small_diff(
+                        right_edge = OldVectorFlagger._find_small_diff(
                           reverse_data, reverse_flag, limit, vector.description)
 
                         # flag the 'view'

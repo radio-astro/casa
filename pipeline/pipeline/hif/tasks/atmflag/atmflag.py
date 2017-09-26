@@ -94,10 +94,10 @@ class Atmflag(basetask.StandardTaskTemplate):
 
         # Translate the input flagging parameters to a more compact
         # list of rules.
-        rules = viewflaggers.VectorFlagger.make_flag_rules(
+        rules = viewflaggers.OldVectorFlagger.make_flag_rules(
           flag_minabs=inputs.flag_minabs, fmin_limit=inputs.fmin_limit,
           flag_nmedian=inputs.flag_nmedian, fnm_limit=inputs.fnm_limit)
-        flagger = viewflaggers.VectorFlagger
+        flagger = viewflaggers.OldVectorFlagger
 
         # Construct the flagger task around the data view task  and the
         # flagger task. When executed this will:
