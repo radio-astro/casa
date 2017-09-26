@@ -16,7 +16,7 @@ from pipeline.infrastructure import casa_tasks
 LOG = infrastructure.get_logger(__name__)
 
 
-class MatrixFlaggerInputs(basetask.StandardInputs):
+class OldMatrixFlaggerInputs(basetask.StandardInputs):
 
     def __init__(self, context, output_dir=None, vis=None, datatask=None,
                  flagsettertask=None, rules=None, niter=None,
@@ -26,8 +26,8 @@ class MatrixFlaggerInputs(basetask.StandardInputs):
         self._init_properties(vars())
 
 
-class MatrixFlagger(basetask.StandardTaskTemplate):
-    Inputs = MatrixFlaggerInputs
+class OldMatrixFlagger(basetask.StandardTaskTemplate):
+    Inputs = OldMatrixFlaggerInputs
 
     flag_reason_index = {'max abs': 1,
                          'min abs': 2,

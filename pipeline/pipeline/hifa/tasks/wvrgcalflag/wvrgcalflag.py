@@ -145,7 +145,7 @@ class Wvrgcalflag(basetask.StandardTaskTemplate):
 
         # Translate the input flagging parameters to a more compact
         # list of rules.
-        rules = viewflaggers.MatrixFlagger.make_flag_rules(
+        rules = viewflaggers.OldMatrixFlagger.make_flag_rules(
           flag_hi=inputs.flag_hi,
           fhi_limit=inputs.fhi_limit, 
           fhi_minsample=inputs.fhi_minsample)
@@ -157,11 +157,11 @@ class Wvrgcalflag(basetask.StandardTaskTemplate):
         #     examine view, raise flags
         #     execute flagsetter task to set flags in underlying data        
         #     exit loop if no flags raised or if # iterations > niter 
-        matrixflaggerinputs = viewflaggers.MatrixFlaggerInputs(
+        matrixflaggerinputs = viewflaggers.OldMatrixFlaggerInputs(
           context=inputs.context, output_dir=inputs.output_dir,
           vis=inputs.vis, datatask=datatask, flagsettertask=flagsettertask,
           rules=rules, niter=1)
-        flaggertask = viewflaggers.MatrixFlagger(matrixflaggerinputs)
+        flaggertask = viewflaggers.OldMatrixFlagger(matrixflaggerinputs)
 
         # Wrap the child task in a SuspendCapturingLogger so that warnings
         # emitted by the child task do not make it to the web log page.
