@@ -18,7 +18,6 @@ The following pipeline tasks make use of the flagging framework and are part of 
 The following pipeline tasks make use of the flagging framework, but are not presently part of standard pipeline recipes:
 - hif_atmflag: flags channels where the atmospheric transmission is low
 - hif_bpflagchans: flags the bandpass caltable created within task.
-- hif_flagcorrected: flags corrected data in MS (experimental task, see https://bugs.nrao.edu/browse/CAS-6839)
 - hif_gainflag: flags antennas in MS, based on evaluating heuristics on gain amplitude caltable created within task.
 
 Finally, the following are pipeline tasks that perform flagging, but that do not make use of the common flagging framework:
