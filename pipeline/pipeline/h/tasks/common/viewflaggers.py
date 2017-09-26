@@ -796,7 +796,7 @@ class OldMatrixFlagger(basetask.StandardTaskTemplate):
         return newflags, flag_reason
 
 
-class NewMatrixFlaggerInputs(basetask.StandardInputs):
+class MatrixFlaggerInputs(basetask.StandardInputs):
 
     def __init__(self, context, output_dir=None, vis=None, datatask=None,
                  viewtask=None, flagsettertask=None, rules=None, niter=None,
@@ -817,11 +817,11 @@ class NewMatrixFlaggerInputs(basetask.StandardInputs):
         self._use_antenna_names = value
 
 
-class NewMatrixFlaggerResults(basetask.Results,
-                              flaggableviewresults.FlaggableViewResults):
+class MatrixFlaggerResults(basetask.Results,
+                           flaggableviewresults.FlaggableViewResults):
     def __init__(self):
         """
-        Construct and return a new NewMatrixFlaggerResults.
+        Construct and return a new MatrixFlaggerResults.
         """
         basetask.Results.__init__(self)
         flaggableviewresults.FlaggableViewResults.__init__(self)
@@ -830,12 +830,12 @@ class NewMatrixFlaggerResults(basetask.Results,
         pass
 
     def __repr__(self):
-        s = 'NewMatrixFlaggerResults'
+        s = 'MatrixFlaggerResults'
         return s
 
 
-class NewMatrixFlagger(basetask.StandardTaskTemplate):
-    Inputs = NewMatrixFlaggerInputs
+class MatrixFlagger(basetask.StandardTaskTemplate):
+    Inputs = MatrixFlaggerInputs
 
     flag_reason_index = {'max abs': 1,
                          'min abs': 2,
@@ -855,7 +855,7 @@ class NewMatrixFlagger(basetask.StandardTaskTemplate):
     # its references to the tasks and the originals.
     def __init__(self, inputs):
         self.inputs = inputs
-        self.result = NewMatrixFlaggerResults()
+        self.result = MatrixFlaggerResults()
 
     def prepare(self):
 

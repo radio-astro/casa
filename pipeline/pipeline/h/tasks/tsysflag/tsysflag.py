@@ -737,7 +737,7 @@ class Tsysflag(basetask.StandardTaskTemplate):
         # Depending on the flagging metric, select the appropriate type of 
         # flagger task (Vector vs. Matrix)
         if metric in ['nmedian', 'derivative', 'fieldshape', 'toomany']:
-            flagger = viewflaggers.NewMatrixFlagger
+            flagger = viewflaggers.MatrixFlagger
         elif metric in ['birdies', 'edgechans']:
             flagger = viewflaggers.VectorFlagger
         

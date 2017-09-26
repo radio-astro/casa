@@ -127,7 +127,7 @@ class Lowgainflag(basetask.StandardTaskTemplate):
         flagsettertask = FlagdataSetter(flagsetterinputs)
 
         # Define which type of flagger to use.
-        flagger = viewflaggers.NewMatrixFlagger
+        flagger = viewflaggers.MatrixFlagger
 
         # Translate the input flagging parameters to a more compact
         # list of rules.
