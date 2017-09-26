@@ -1,4 +1,8 @@
-At the highest level of abstraction, we can execute a pipline processing request (ppr)
+# Ways to run the Pipeline
+
+## PPR
+
+At the highest level of abstraction, we can execute a pipeline processing request (ppr)
 This can be done at the command line, or at a CASA command prompt.
 
 Execute PPR from the command line:
@@ -7,7 +11,7 @@ $ casa --nologger --nogui -c $SCIPIPE_HEURISTICS/pipeline/runvlapipeline.py PPRn
 
 $ casa --nogui --log2term -c $SCIPIPE_HEURISTICS/pipeline/runvlapipeline.py PPRnew_VLAT003.xml
 ```
-At a casa command prompt:
+At a CASA command prompt:
 
 ```
 $ casa
@@ -16,6 +20,8 @@ CASA <1>: import pipeline.infrastructure.executevlappr as eppr
 CASA <2>: eppr.executeppr('PPR_VLAT003.xml', importonly=False)
 ```
 
+## Series of steps invoking CASA Pipeline tasks
+
 A little lower level of abstraction would be to run the pipeline as a series of
 steps as described in the VLA pipeline [casaguide](
 https://casaguides.nrao.edu/index.php/VLA_CASA_Pipeline-CASA4.5.3)
@@ -23,7 +29,7 @@ https://casaguides.nrao.edu/index.php/VLA_CASA_Pipeline-CASA4.5.3)
 At the lowest level of abstraction, we can run the pipeline as a series of steps
 like the following
 
-A pipeline run will generate a file like the following
+A pipeline run will generate a file like the following:
 ```
   pipeline_test_data/VLAT003/working/pipeline-20161014T172229/html/casa_pipescript.py
  ```
@@ -56,7 +62,7 @@ Or we can turn debug mode on, weblog off:
 CASA <1>: h_init(pipelinemode="automatic",loglevel="debug",plotlevel="summary",output_dir="./",weblog=True,overwrite=True,dryrun=False,acceptresults=True)
 ```
 
-At the lowest level of abstraction
+Full example of running Pipeline importdata task on CASA prompt:
 
 ```
 CASA <1>: h_init()
@@ -73,7 +79,11 @@ casa
 CASA <1>: context = h_resume(filename='last')
 ```
 
-Alternatively
+## Creating and running Pipeline tasks, bypassing CASA task interface
+At the lowest level of abstraction, we can bypass the CASA Pipeline Task interface, and work directly within 
+CASA / Python, by instantiating Pipeline Task Inputs object, using it to instantiate a Pipeline Task object,
+and then running its 'execute' method to get the task result, as shown in this example (assumed to run in a 
+directory where the Pipeline has already been partly run, i.e. a context already exists):
 ```
 CASA <1>: context = pipeline.Pipeline(context='last').context
 
@@ -108,14 +118,40 @@ m.intents  # shows a python set of the MS intents
 m.polarization  # show a list of polarization objects
 ```
 
-To run one of the standard recipes we can use a recipereducer
+## Running Pipeline with the "recipereducer"
 
+To run one of the standard recipes we can use a recipereducer:
 ```
 import pipeline.recipereducer
 pipeline.recipereducer.reduce(vis=['../rawdata/yourasdm'], procedure='procedure_hifv.xml')
 ```
 
-Known issues
+To run a standard recipe until the end of a specified stage number (dependent on recipe) and running it with
+ a different log level:
+
+```
+import pipeline.recipereducer
+pipeline.recipereducer.reduce(vis=['../rawdata/yourasdm'], procedure='procedure_hifa.xml', exitstage=6, loglevel='trace')
+```
+This can be useful to run the Pipeline just up to the stage that you want to debug / develop. Once the PL run has exited
+ after e.g. stage 6, you could tarball the "working" directory (to be able to restore the run up to this point), 
+ then create a short script in "../debug.script" with:
+  
+```
+import pipeline
+context = pipeline.Pipeline(context='last', loglevel='info', plotlevel='default').context
+inputs = pipeline.hifa.tasks.tsysflag.Tsysflag.Inputs(context)
+task = pipeline.hifa.tasks.tsysflag.Tsysflag(inputs)
+result = task.execute(dry_run=False)
+result.accept(context)
+context.save()
+``` 
+and then run this with:
+```
+casa -c ../debug.script
+```
+
+## Known issues
 
 Don't worry about the following intermittent message at the end of a pipeline run. It's a bug
   but it doesn't mean the pipeline was unsuccessful.
