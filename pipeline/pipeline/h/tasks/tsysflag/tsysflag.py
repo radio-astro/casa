@@ -739,7 +739,7 @@ class Tsysflag(basetask.StandardTaskTemplate):
         if metric in ['nmedian', 'derivative', 'fieldshape', 'toomany']:
             flagger = viewflaggers.NewMatrixFlagger
         elif metric in ['birdies', 'edgechans']:
-            flagger = viewflaggers.NewVectorFlagger
+            flagger = viewflaggers.VectorFlagger
         
         # Depending on the flagging metric, translate the appropriate input
         # flagging parameters to a more compact list of flagging rules.

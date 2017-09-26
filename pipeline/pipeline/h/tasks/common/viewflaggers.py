@@ -2406,7 +2406,7 @@ class OldVectorFlagger(basetask.StandardTaskTemplate):
         return result
 
 
-class NewVectorFlaggerInputs(basetask.StandardInputs):
+class VectorFlaggerInputs(basetask.StandardInputs):
 
     def __init__(self, context, output_dir=None, vis=None, datatask=None,
                  viewtask=None, flagsettertask=None, rules=None, niter=None,
@@ -2426,11 +2426,11 @@ class NewVectorFlaggerInputs(basetask.StandardInputs):
         self._use_antenna_names = value
 
 
-class NewVectorFlaggerResults(basetask.Results,
-                              flaggableviewresults.FlaggableViewResults):
+class VectorFlaggerResults(basetask.Results,
+                           flaggableviewresults.FlaggableViewResults):
     def __init__(self):
         """
-        Construct and return a new NewVectorFlaggerResults.
+        Construct and return a new VectorFlaggerResults.
         """
         basetask.Results.__init__(self)
         flaggableviewresults.FlaggableViewResults.__init__(self)
@@ -2439,12 +2439,12 @@ class NewVectorFlaggerResults(basetask.Results,
         pass
 
     def __repr__(self):
-        s = 'NewVectorFlaggerResults'
+        s = 'VectorFlaggerResults'
         return s
 
 
-class NewVectorFlagger(basetask.StandardTaskTemplate):
-    Inputs = NewVectorFlaggerInputs
+class VectorFlagger(basetask.StandardTaskTemplate):
+    Inputs = VectorFlaggerInputs
 
     # override the inherited __init__ method so that references to the
     # task objects can be kept outside self.inputs. Later on self.inputs
@@ -2452,7 +2452,7 @@ class NewVectorFlagger(basetask.StandardTaskTemplate):
     # its references to the tasks and the originals.
     def __init__(self, inputs):
         self.inputs = inputs
-        self.result = NewVectorFlaggerResults()
+        self.result = VectorFlaggerResults()
 
     def prepare(self):
         
@@ -2775,13 +2775,13 @@ class NewVectorFlagger(basetask.StandardTaskTemplate):
                     if len(valid_data):
 
                         # find left edge
-                        left_edge = NewVectorFlagger._find_small_diff(
+                        left_edge = VectorFlagger._find_small_diff(
                             rdata, rflag, limit, vector.description)
 
                         # and right edge
                         reverse_data = rdata[-1::-1]
                         reverse_flag = rflag[-1::-1]
-                        right_edge = NewVectorFlagger._find_small_diff(
+                        right_edge = VectorFlagger._find_small_diff(
                             reverse_data, reverse_flag, limit, vector.description)
 
                         # flag the 'view'
