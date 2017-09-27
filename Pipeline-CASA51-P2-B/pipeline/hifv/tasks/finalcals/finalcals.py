@@ -235,7 +235,7 @@ class Finalcals(basetask.StandardTaskTemplate):
                                                                refantmode=refantmode)
 
         basevis = os.path.basename(self.inputs.vis)
-        tablesToAdd = [('finaldelay.k', '', ''), ('finalBPcal.b', 'linear,linearflag', ''),
+        tablesToAdd = [('finaldelay.k', '', ''), ('finalBPcal.b', 'linear,nearestflag', ''),
                        ('averagephasegain.g', '', ''), ('finalampgaincal.g', '', ''),
                        ('finalphasegaincal.g', '', '')]
         tablesToAdd = [(basevis + '.' + table, interp, gainfield) for table, interp, gainfield in tablesToAdd]
