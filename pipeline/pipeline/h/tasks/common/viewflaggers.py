@@ -2130,13 +2130,13 @@ class OldVectorFlagger(basetask.StandardTaskTemplate):
                               intent=intent))
 
                 elif rulename == 'nmedian':
-                    limit = rule['limit']
+                    lo_limit = rule['lo_limit']
+                    hi_limit = rule['hi_limit']
                     if len(valid_data):
 
-                        if limit < 1:
-                            flag_chan = (data < np.median(data)*limit) & np.logical_not(flag)
-                        else:
-                            flag_chan = (data > np.median(data)*limit) & np.logical_not(flag)
+                        flag_chan = ((data < np.median(data)*lo_limit) |
+                                     (data > np.median(data)*hi_limit) &
+                                     np.logical_not(flag))
 
                         # flag the 'view'
                         rflag[flag_chan] = True
@@ -2839,13 +2839,13 @@ class VectorFlagger(basetask.StandardTaskTemplate):
                                 antenna_id_to_name=antenna_id_to_name))
 
                 elif rulename == 'nmedian':
-                    limit = rule['limit']
+                    lo_limit = rule['lo_limit']
+                    hi_limit = rule['hi_limit']
                     if len(valid_data):
 
-                        if limit < 1:
-                            flag_chan = (data < np.median(data)*limit) & np.logical_not(flag)
-                        else:
-                            flag_chan = (data > np.median(data)*limit) & np.logical_not(flag)
+                        flag_chan = ((data < np.median(data)*lo_limit) |
+                                     (data > np.median(data)*hi_limit) &
+                                     np.logical_not(flag))
 
                         # flag the 'view'
                         rflag[flag_chan] = True
