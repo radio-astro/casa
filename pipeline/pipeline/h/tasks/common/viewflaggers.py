@@ -1637,8 +1637,10 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
                             # For current antenna data selection, identify points
                             # that are both low outliers and not already flagged.
                             j_ant = np.arange(np.shape(ant_flag)[0])
-                            j2flag_lo = j_ant[np.logical_and(data_median - ant_data > \
-                              mad_max * data_mad, np.logical_not(ant_flag))]
+                            j2flag_lo = j_ant[
+                                np.logical_and(
+                                    data_median - ant_data > mad_max * data_mad,
+                                    np.logical_not(ant_flag))]
  
                             # If no low outliers were found, skip this antenna.
                             if len(j2flag_lo) <= 0:
@@ -1746,8 +1748,7 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
                     flag_copy = np.copy(flag)
                     flag_reason_copy = np.copy(flag_reason)
                     flag_copy[i2flag, j2flag] = True
-                    flag_reason_copy[i2flag, j2flag] = \
-                      self.flag_reason_index['outlier']
+                    flag_reason_copy[i2flag, j2flag] = self.flag_reason_index['outlier']
 
                     # look for bad antenna/quadrants in view copy
                     data_shape = np.shape(data)
@@ -2474,8 +2475,8 @@ class VectorFlagger(basetask.StandardTaskTemplate):
 
                         # second, flag all channels if more than nchan_limit 
                         # were flagged by the first stage
-                        if len(newflag[newflag == True]) >= nchan_limit:
-                            newflag[newflag == False] = True
+                        if np.count_nonzero(newflag) >= nchan_limit:
+                            newflag = np.ones(diff.shape, np.bool)
 
                         # set channels flagged 
                         flag_chan = np.zeros([len(newflag)+1], np.bool) 
@@ -2510,9 +2511,9 @@ class VectorFlagger(basetask.StandardTaskTemplate):
                     if len(valid_data):
                         # flag all channels if fraction already flagged 
                         # is greater than tmf_limit of total
-                        if (float(len(rdata[rflag == True])) / len(rdata) >= frac_limit)\
-                                or (len(rdata[rflag == True]) >= nchan_limit):
-                            newflag = (rflag == False)
+                        if (float(np.count_nonzero(rflag)) / len(rdata) >= frac_limit
+                                or np.count_nonzero(rflag) >= nchan_limit):
+                            newflag = np.logical_not(rflag)
 
                             # flag the 'view'
                             rflag[newflag] = True
