@@ -855,11 +855,12 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
     # its references to the tasks and the originals.
     def __init__(self, inputs):
         self.inputs = inputs
-        self.result = MatrixFlaggerResults()
 
     def prepare(self):
-
         inputs = self.inputs
+
+        # Initialize result.
+        result = MatrixFlaggerResults()
 
         # Expand flag commands to larger scope, if requested, by removing
         # selection in specified fields
@@ -917,7 +918,7 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
             if viewresult.descriptions():
             
                 # Import the views from viewtask into the final result
-                self.result.importfrom(viewresult)
+                result.importfrom(viewresult)
     
                 # Flag the view
                 newflags, newflags_reason = self.flag_view(viewresult,
@@ -991,7 +992,7 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
                 viewresult = inputs.viewtask(dataresult)
 
                 # Import the post-flagging view into the final result
-                self.result.importfrom(viewresult)
+                result.importfrom(viewresult)
                 
             # If no newflags were found on last iteration loop
             else:
@@ -1011,12 +1012,12 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
                         flags, summarize_before=True, summarize_after=True)
             
             # Store the final set of flags in the final result
-            self.result.addflags(flags)
+            result.addflags(flags)
             
             # Store the flag reasons in the last (i.e. post-flagging) view in
             # the final result
-            self.result.add_flag_reason_plane(flag_reason_plane,
-                                              self.flag_reason_key)
+            result.add_flag_reason_plane(flag_reason_plane,
+                                         self.flag_reason_key)
         
         # if no flags were found at all
         else:
@@ -1029,15 +1030,15 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
         
         # Store in the final result the name of the measurement set or caltable to 
         # which any potentially found flags would need to be applied to
-        self.result.table = inputs.flagsettertask.inputs.table
+        result.table = inputs.flagsettertask.inputs.table
         
         # Store the flagging summaries in the final result
-        self.result.summaries = [stats_before, stats_after]
+        result.summaries = [stats_before, stats_after]
 
         # Sort the final list of flagging commands.
-        self.result.sort_flagcmds()
+        result.sort_flagcmds()
 
-        return self.result
+        return result
 
     def analyse(self, result):
         return result
@@ -1941,11 +1942,12 @@ class VectorFlagger(basetask.StandardTaskTemplate):
     # its references to the tasks and the originals.
     def __init__(self, inputs):
         self.inputs = inputs
-        self.result = VectorFlaggerResults()
 
     def prepare(self):
-        
         inputs = self.inputs
+
+        # Initialize result.
+        result = VectorFlaggerResults()
 
         # Initialize flags and iteration counter
         flags = []
@@ -1986,7 +1988,7 @@ class VectorFlagger(basetask.StandardTaskTemplate):
             if viewresult.descriptions():
             
                 # Import the views from viewtask into the final result
-                self.result.importfrom(viewresult)
+                result.importfrom(viewresult)
     
                 # Flag the view
                 newflags = self.flag_view(viewresult)
@@ -2051,7 +2053,7 @@ class VectorFlagger(basetask.StandardTaskTemplate):
                 viewresult = inputs.viewtask(dataresult)
 
                 # Import the post-flagging view into the final result
-                self.result.importfrom(viewresult)
+                result.importfrom(viewresult)
                 
             # If no newflags were found on last iteration loop
             else:
@@ -2071,7 +2073,7 @@ class VectorFlagger(basetask.StandardTaskTemplate):
                                                                summarize_after=True)
             
             # Store the final set of flags in the final result
-            self.result.addflags(flags)
+            result.addflags(flags)
             
         # if no flags were found at all
         else:
@@ -2083,15 +2085,15 @@ class VectorFlagger(basetask.StandardTaskTemplate):
         
         # Store in the final result the name of the measurement set or caltable to 
         # which any potentially found flags would need to be applied to
-        self.result.table = inputs.flagsettertask.inputs.table
+        result.table = inputs.flagsettertask.inputs.table
         
         # Store the flagging summaries in the final result
-        self.result.summaries = [stats_before, stats_after]
+        result.summaries = [stats_before, stats_after]
 
         # Sort the final list of flagging commands.
-        self.result.sort_flagcmds()
+        result.sort_flagcmds()
 
-        return self.result
+        return result
 
     def analyse(self, result):
         return result
