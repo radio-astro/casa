@@ -136,7 +136,7 @@ class WvrgcalInputs(basetask.StandardInputs):
         if self._offsetstable is not None:
             return self._offsetstable
 
-        if type(self.vis) is types.ListType:
+        if isinstance(self.vis, list):
             return self._handle_multiple_vis('offsetstable')
 
         # default is blank, which means the wvrgcal task
@@ -159,7 +159,7 @@ class WvrgcalInputs(basetask.StandardInputs):
 
     @property
     def qa_bandpass_intent(self):
-        if type(self.vis) is types.ListType:
+        if isinstance(self.vis, list):
             return self._handle_multiple_vis('qa_bandpass_intent')
 
         if self._qa_bandpass_intent is None:
@@ -262,7 +262,7 @@ class WvrgcalInputs(basetask.StandardInputs):
     def wvrflag(self, value):
         if value in (None, ''):
             value = []
-        elif type(value) is types.StringType:
+        elif isinstance(value, str):
             if value[0] == '[':
                 value = value.translate(None, '[]\'')
             value = value.split(',')
@@ -284,10 +284,10 @@ class Wvrgcal(basetask.StandardTaskTemplate):
         # get parameters that can be set from outside or which will be derived
         # from heuristics otherwise
         wvrheuristics = wvrgcal_heuristic.WvrgcalHeuristics(
-          context=inputs.context, vis=inputs.vis, hm_tie=inputs.hm_tie, 
-          tie=inputs.tie, hm_smooth=inputs.hm_smooth, smooth=inputs.smooth,
-          sourceflag=inputs.sourceflag, nsol=inputs.nsol,
-          segsource=inputs.segsource)
+            context=inputs.context, vis=inputs.vis, hm_tie=inputs.hm_tie,
+            tie=inputs.tie, hm_smooth=inputs.hm_smooth, smooth=inputs.smooth,
+            sourceflag=inputs.sourceflag, nsol=inputs.nsol,
+            segsource=inputs.segsource)
         
         # return an empty results object if no WVR data available
         if not wvrheuristics.wvr_available():
@@ -299,7 +299,7 @@ class Wvrgcal(basetask.StandardTaskTemplate):
         elif len([a for a in inputs.ms.antennas if a.diameter == 12.0]) <= 1:
             # WVR data available for only 1 antenna
             LOG.error('WVR data available for only 1 antenna in %s'
-                          '' % os.path.basename(inputs.vis))
+                      '' % os.path.basename(inputs.vis))
             return result
         
         if inputs.hm_toffset == 'automatic':
@@ -424,7 +424,7 @@ class Wvrgcal(basetask.StandardTaskTemplate):
             input_wvrflag = set(wvrflag)
             generated_wvrflag = job_wvrflag.difference(input_wvrflag)
             if generated_wvrflag:
-                LOG.warn('%s wvrgcal has flagged antennas: %s' % ( 
+                LOG.warn('%s wvrgcal has flagged antennas: %s' % (
                   os.path.basename(inputs.vis), list(generated_wvrflag)))
          
             wvrflag_set = set(result.wvrflag)
@@ -466,16 +466,15 @@ class Wvrgcal(basetask.StandardTaskTemplate):
             return result
         
         # get the spw for which qa results are needed
-        atmheuristics = atm_heuristic.AtmHeuristics(context=inputs.context,
-          vis=inputs.vis) 
+        atmheuristics = atm_heuristic.AtmHeuristics(
+            context=inputs.context, vis=inputs.vis)
         if inputs.qa_spw == '':
             qa_spw_list = atmheuristics.spwid_rank_by_opacity()
         else:
             qa_spw_list = inputs.qa_spw.split(',')
         
         for qa_spw in qa_spw_list:
-            LOG.info('qa: %s attempting to calculate wvrgcal QA using spw %s' %
-              (os.path.basename(inputs.vis), qa_spw))
+            LOG.info('qa: %s attempting to calculate wvrgcal QA using spw %s' %(os.path.basename(inputs.vis), qa_spw))
             inputs.qa_spw = qa_spw
 
             # Do a bandpass calibration
@@ -517,7 +516,7 @@ class Wvrgcal(basetask.StandardTaskTemplate):
         
         LOG.info('qa: calculate ratio no-WVR phase RMS / with-WVR phase rms')
         wvrg_qa.calculate_view(inputs.context, nowvr_caltable,
-                                wvr_caltable, result.qa_wvr, qa_intent)
+                               wvr_caltable, result.qa_wvr, qa_intent)
         
         wvrg_qa.calculate_qa_numbers(result.qa_wvr)
         
@@ -547,10 +546,10 @@ class Wvrgcal(basetask.StandardTaskTemplate):
         else:
             LOG.info('Calculating new bandpass for QA analysis')
             result = self._do_new_qa_bandpass(inputs)
-            # inputs.bandpass_result = result
             return result
     
-    def _do_user_qa_bandpass(self, inputs):
+    @staticmethod
+    def _do_user_qa_bandpass(inputs):
         """
         Accept and return the bandpass result affixed to the inputs.
         
@@ -567,24 +566,25 @@ class Wvrgcal(basetask.StandardTaskTemplate):
         merging the results with the context.
         """
         # passing an empty string as intent tells bandpass to use all intents,
-        # which resolves to all fields. Convert '' to None, which will tell
-        # bandpass to use the default bandpass intents, as expected. 
-        if inputs.qa_bandpass_intent is '':
-            intent = None
-        else:
+        # which resolves to all fields. Convert empty/blank string to None,
+        # which will tell bandpass to use the default bandpass intents, as
+        # expected.
+        if inputs.qa_bandpass_intent and inputs.qa_bandpass_intent.strip():
+            # qa_bandpass_intent is not None and is not empty/blank string.
             intent = inputs.qa_bandpass_intent
-        
-        args = {'vis'         : inputs.vis,
-                'mode'        : 'channel',
-                'intent'      : intent,
-                'spw'         : inputs.qa_spw,
-                'hm_phaseup'  : 'manual',
-                'hm_bandpass' : 'fixed',
-                'solint'      : 'inf,7.8125MHz'}
+        else:
+            intent = None
+
+        args = {'vis': inputs.vis,
+                'mode': 'channel',
+                'intent': intent,
+                'spw': inputs.qa_spw,
+                'hm_phaseup': 'manual',
+                'hm_bandpass': 'fixed',
+                'solint': 'inf,7.8125MHz'}
         
         inputs = bandpass.ALMAPhcorBandpass.Inputs(inputs.context, **args)        
         task = bandpass.ALMAPhcorBandpass(inputs)
-        # result = self._executor.execute(task, merge=True)
         result = self._executor.execute(task, merge=False)
         if not result.final:
             pass
@@ -605,11 +605,8 @@ class Wvrgcal(basetask.StandardTaskTemplate):
         else:
             LOG.debug('Calculating new gaincal with B but no WVR')
             # get namer that will add '.wvr' to caltable filename 
-            nowvr_caltable_namer = self._get_nowvr_caltable_namer(inputs)            
+            nowvr_caltable_namer = self._get_nowvr_caltable_namer()
             result = self._do_qa_gaincal(inputs, nowvr_caltable_namer)            
-            # cache the no WVR result on the inputs to save us having to
-            # recalculate it in future runs
-            # inputs.nowvr_result = result
             return result
         
     def _do_wvr_gaincal(self, inputs):
@@ -626,12 +623,12 @@ class Wvrgcal(basetask.StandardTaskTemplate):
         preapply. Coding the gaincal as a separate function with minimal
         outside interaction helps enforce that requirement.  
         """
-        args = {'vis'    : inputs.vis,
-                'intent' : inputs.qa_intent,
-                'spw'    : inputs.qa_spw,
-                'solint' : 'int',
+        args = {'vis': inputs.vis,
+                'intent': inputs.qa_intent,
+                'spw': inputs.qa_spw,
+                'solint': 'int',
                 'calmode': 'p',
-                'minsnr' : 0.0}
+                'minsnr': 0.0}
         
         inputs = gaincal.GTypeGaincal.Inputs(inputs.context, **args)
         
@@ -644,7 +641,8 @@ class Wvrgcal(basetask.StandardTaskTemplate):
         
         return result
 
-    def _get_nowvr_caltable_namer(self, inputs):
+    @staticmethod
+    def _get_nowvr_caltable_namer():
         """        
         Returns a function that inserts a '.nowvr' component into a filename.
         """
@@ -674,9 +672,10 @@ class Wvrgcal(basetask.StandardTaskTemplate):
         return caltable_namer    
 
     def _get_wvrinfos(self, result):
-        to_microns = lambda x : measures.Distance(x, 
-                                                  measures.DistanceUnits.MICROMETRE)
-        
+
+        def to_microns(x):
+            return measures.Distance(x, measures.DistanceUnits.MICROMETRE)
+
         # copy result in case we need it unaltered elsewhere, then convert raw
         # values to domain measures    
         copied = dict(result)

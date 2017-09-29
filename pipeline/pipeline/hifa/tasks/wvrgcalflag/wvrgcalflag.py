@@ -140,15 +140,15 @@ class Wvrgcalflag(basetask.StandardTaskTemplate):
         # Construct the task that will set any flags raised in the
         # underlying data.
         flagsetterinputs = wvrgcalflagsetter.WvrgcalFlagSetterInputs(
-          context=inputs.context, vis=inputs.vis, wvrgcaltask=datatask)
+            context=inputs.context, vis=inputs.vis, wvrgcaltask=datatask)
         flagsettertask = wvrgcalflagsetter.WvrgcalFlagSetter(flagsetterinputs)
 
         # Translate the input flagging parameters to a more compact
         # list of rules.
         rules = viewflaggers.OldMatrixFlagger.make_flag_rules(
-          flag_hi=inputs.flag_hi,
-          fhi_limit=inputs.fhi_limit, 
-          fhi_minsample=inputs.fhi_minsample)
+            flag_hi=inputs.flag_hi,
+            fhi_limit=inputs.fhi_limit,
+            fhi_minsample=inputs.fhi_minsample)
 
         # Construct the flagger task around the data view task  and the
         # flagger task. When executed this will:
@@ -158,9 +158,9 @@ class Wvrgcalflag(basetask.StandardTaskTemplate):
         #     execute flagsetter task to set flags in underlying data        
         #     exit loop if no flags raised or if # iterations > niter 
         matrixflaggerinputs = viewflaggers.OldMatrixFlaggerInputs(
-          context=inputs.context, output_dir=inputs.output_dir,
-          vis=inputs.vis, datatask=datatask, flagsettertask=flagsettertask,
-          rules=rules, niter=1)
+            context=inputs.context, output_dir=inputs.output_dir,
+            vis=inputs.vis, datatask=datatask, flagsettertask=flagsettertask,
+            rules=rules, niter=1)
         flaggertask = viewflaggers.OldMatrixFlagger(matrixflaggerinputs)
 
         # Wrap the child task in a SuspendCapturingLogger so that warnings

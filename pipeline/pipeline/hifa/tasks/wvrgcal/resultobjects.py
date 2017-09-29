@@ -2,7 +2,6 @@ from __future__ import absolute_import
 
 import collections
 import os
-import types
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
@@ -14,11 +13,21 @@ LOG = infrastructure.get_logger(__name__)
 
 class WvrgcalResult(basetask.Results):
 
-    def __init__(self, vis, final=[], pool=[], preceding=[], wvrflag=[]):
+    def __init__(self, vis, final=None, pool=None, preceding=None,
+                 wvrflag=None):
         """
         Construct and return a new WvrgcalflagResult.
         """
         super(WvrgcalResult, self).__init__()
+
+        if final is None:
+            final = []
+        if pool is None:
+            pool = []
+        if preceding is None:
+            preceding = []
+        if wvrflag is None:
+            wvrflag = []
 
         self.vis = vis
         self.pool = pool[:]
