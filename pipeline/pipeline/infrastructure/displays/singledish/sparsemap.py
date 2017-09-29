@@ -57,7 +57,7 @@ class SparseMapAxesManager(object):
             self.figure_id = self.MATPLOTLIB_FIGURE_ID()
         else:
             self.figure_id = figure_id
-        self.figure = pl.figure(self.figure_id)
+        self.figure = pl.figure(self.figure_id, dpi=DPIDetail)
         if clearpanel:
             pl.clf()
             
@@ -158,6 +158,7 @@ class SDSparseMapPlotter(object):
             ticksize = 10 - int(max(nh, nv) * step / (step - 1)) / 2
         elif step == 1:
             ticksize = 10 - int(max(nh, nv)) / 2
+        ticksize = max(ticksize, 3)
         self.axes = SparseMapAxesManager(nh, nv, brightnessunit, ticksize, clearpanel, figure_id)
         self.lines_averaged = None
         self.lines_map = None

@@ -51,7 +51,7 @@
 
     <param type="string" name="asis">
 	<description>List of tables to import asis</description>
-	<value>Antenna Station Receiver Source CalAtmosphere CalWVR</value>
+	<value>SBSummary ExecBlock Antenna Station Receiver Source CalAtmosphere CalWVR</value>
     </param>
 
     <param type="string" name="pipelinemode">
