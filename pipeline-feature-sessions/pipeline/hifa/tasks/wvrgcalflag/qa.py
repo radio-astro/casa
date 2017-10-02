@@ -27,9 +27,10 @@ class WvrgcalflagQAHandler(pqa.QAResultHandler):
             wvr_score = result.qa_wvr.overall_score
             if wvr_score is not None:
                 score_object = qacalc.score_wvrgcal(ms_name, result.qa_wvr.overall_score)
-                new_origin = pqa.QAOrigin(metric_name='PhaseRmsRatio',
-                              metric_score=score_object.origin.metric_score,
-                              metric_units='Phase RMS improvement after applying WVR correction')
+                new_origin = pqa.QAOrigin(
+                    metric_name='PhaseRmsRatio',
+                    metric_score=score_object.origin.metric_score,
+                    metric_units='Phase RMS improvement after applying WVR correction')
                 score_object.origin = new_origin
                 result.qa.pool[:] = [score_object]
             else:
@@ -39,9 +40,9 @@ class WvrgcalflagQAHandler(pqa.QAResultHandler):
                 ms = context.observing_run.get_ms(result.inputs['vis'])
                 if not all([a for a in ms.antennas if a.diameter != 12.0]):
                     score_object = pqa.QAScore(0.0, longmsg='No WVR scores available',
-                                         shortmsg='No wvr', vis=ms_name)
-                    score_object.origin.metric_name='PhaseRmsRatio'
-                    score_object.origin.metric_units='Phase RMS improvement after applying WVR correction'
+                                               shortmsg='No wvr', vis=ms_name)
+                    score_object.origin.metric_name = 'PhaseRmsRatio'
+                    score_object.origin.metric_units = 'Phase RMS improvement after applying WVR correction'
                     result.qa.pool[:] = [score_object]
         except AttributeError:
             pass

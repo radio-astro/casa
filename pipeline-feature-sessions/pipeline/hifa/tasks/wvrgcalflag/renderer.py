@@ -1,8 +1,9 @@
-'''
+"""
 Created on 10 Sep 2014
 
 @author: sjw
-'''
+"""
+
 import collections
 import os
 
@@ -27,8 +28,8 @@ class T2_4MDetailsWvrgcalflagRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
     def __init__(self, uri='wvrgcalflag.mako',
                  description='Calculate and flag WVR calibration',
                  always_rerender=False):
-        super(T2_4MDetailsWvrgcalflagRenderer, self).__init__(uri=uri,
-                description=description, always_rerender=always_rerender)
+        super(T2_4MDetailsWvrgcalflagRenderer, self).__init__(
+            uri=uri, description=description, always_rerender=always_rerender)
 
     """
     Update the Mako context appropriate to the results created by a Wvrgcalflag
@@ -70,7 +71,7 @@ class T2_4MDetailsWvrgcalflagRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
             applications.extend(self.get_wvr_applications(result))
             try:
                 wvrinfos[vis] = result.wvr_infos
-            except:
+            except AttributeError:
                 pass
 
             # collect flagging metric plots from result
@@ -79,14 +80,14 @@ class T2_4MDetailsWvrgcalflagRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
                 plots = plotter.plot(context, result.qa_wvr, reportdir=plots_dir, 
                                      prefix='qa', change='WVR')
                 # sort plots by spw
-                metric_plots[vis] = sorted(plots, key=lambda p: int(p.parameters['spw']))
+                metric_plots[vis] = sorted(plots, key=lambda plot: int(plot.parameters['spw']))
 
             if result.view:
                 flag_plotter = image.ImageDisplay()
                 plots = flag_plotter.plot(context, result, reportdir=plots_dir, 
                                           prefix='flag', change='Flagging')
                 # sort plots by spw
-                flag_plots[vis] = sorted(plots, key=lambda p: int(p.parameters['spw']))
+                flag_plots[vis] = sorted(plots, key=lambda plot: int(plot.parameters['spw']))
 
             if result.nowvr_result:
                 # generate the phase offset summary plots
@@ -103,7 +104,7 @@ class T2_4MDetailsWvrgcalflagRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
                 # get the first scan for the QA intent(s)
                 qa_intent = set(result.inputs['qa_intent'].split(','))
                 qa_scan = sorted([scan.id for scan in ms.scans 
-                                   if not qa_intent.isdisjoint(scan.intents)])[0]                               
+                                  if not qa_intent.isdisjoint(scan.intents)])[0]
                 # scan parameter on plot is comma-separated string 
                 qa_scan = str(qa_scan)            
                 LOG.trace('Using scan %s for phase vs baseline summary plots', qa_scan)
@@ -159,11 +160,12 @@ class T2_4MDetailsWvrgcalflagRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
 
         # Phase vs time for the overview plot should be for the widest window
         # at the highest frequency
-#         spws = sorted(ms.spectral_windows, 
-#                       key=operator.attrgetter('bandwidth', 'centre_frequency'))
-#         overview_spw = spws[-1]
+        # spws = sorted(ms.spectral_windows,
+        #               key=operator.attrgetter('bandwidth', 'centre_frequency'))
+        # overview_spw = spws[-1]
 
-    def get_wvr_applications(self, result):
+    @staticmethod
+    def get_wvr_applications(result):
         applications = []
 
         interpolated = utils.commafy(result.wvrflag, False)

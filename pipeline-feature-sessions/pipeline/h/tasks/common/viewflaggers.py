@@ -10,13 +10,11 @@ import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 from pipeline.h.tasks.common import arrayflaggerbase
 from pipeline.h.tasks.common import flaggableviewresults
-from pipeline.infrastructure import casa_tasks
-
 
 LOG = infrastructure.get_logger(__name__)
 
 
-class MatrixFlaggerInputs(basetask.StandardInputs):
+class OldMatrixFlaggerInputs(basetask.StandardInputs):
 
     def __init__(self, context, output_dir=None, vis=None, datatask=None,
                  flagsettertask=None, rules=None, niter=None,
@@ -26,8 +24,8 @@ class MatrixFlaggerInputs(basetask.StandardInputs):
         self._init_properties(vars())
 
 
-class MatrixFlagger(basetask.StandardTaskTemplate):
-    Inputs = MatrixFlaggerInputs
+class OldMatrixFlagger(basetask.StandardTaskTemplate):
+    Inputs = OldMatrixFlaggerInputs
 
     flag_reason_index = {'max abs': 1,
                          'min abs': 2,
@@ -796,7 +794,7 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
         return newflags, flag_reason
 
 
-class NewMatrixFlaggerInputs(basetask.StandardInputs):
+class MatrixFlaggerInputs(basetask.StandardInputs):
 
     def __init__(self, context, output_dir=None, vis=None, datatask=None,
                  viewtask=None, flagsettertask=None, rules=None, niter=None,
@@ -817,11 +815,11 @@ class NewMatrixFlaggerInputs(basetask.StandardInputs):
         self._use_antenna_names = value
 
 
-class NewMatrixFlaggerResults(basetask.Results,
-                              flaggableviewresults.FlaggableViewResults):
+class MatrixFlaggerResults(basetask.Results,
+                           flaggableviewresults.FlaggableViewResults):
     def __init__(self):
         """
-        Construct and return a new NewMatrixFlaggerResults.
+        Construct and return a new MatrixFlaggerResults.
         """
         basetask.Results.__init__(self)
         flaggableviewresults.FlaggableViewResults.__init__(self)
@@ -830,12 +828,12 @@ class NewMatrixFlaggerResults(basetask.Results,
         pass
 
     def __repr__(self):
-        s = 'NewMatrixFlaggerResults'
+        s = 'MatrixFlaggerResults'
         return s
 
 
-class NewMatrixFlagger(basetask.StandardTaskTemplate):
-    Inputs = NewMatrixFlaggerInputs
+class MatrixFlagger(basetask.StandardTaskTemplate):
+    Inputs = MatrixFlaggerInputs
 
     flag_reason_index = {'max abs': 1,
                          'min abs': 2,
@@ -855,11 +853,12 @@ class NewMatrixFlagger(basetask.StandardTaskTemplate):
     # its references to the tasks and the originals.
     def __init__(self, inputs):
         self.inputs = inputs
-        self.result = NewMatrixFlaggerResults()
 
     def prepare(self):
-
         inputs = self.inputs
+
+        # Initialize result.
+        result = MatrixFlaggerResults()
 
         # Expand flag commands to larger scope, if requested, by removing
         # selection in specified fields
@@ -917,7 +916,7 @@ class NewMatrixFlagger(basetask.StandardTaskTemplate):
             if viewresult.descriptions():
             
                 # Import the views from viewtask into the final result
-                self.result.importfrom(viewresult)
+                result.importfrom(viewresult)
     
                 # Flag the view
                 newflags, newflags_reason = self.flag_view(viewresult,
@@ -962,7 +961,7 @@ class NewMatrixFlagger(basetask.StandardTaskTemplate):
         
         # If flags were found...
         if len(flags) > 0:
-            
+
             # If newflags were found on last iteration loop, we need to still
             # set these.
             if len(newflags) > 0:
@@ -991,18 +990,16 @@ class NewMatrixFlagger(basetask.StandardTaskTemplate):
                 viewresult = inputs.viewtask(dataresult)
 
                 # Import the post-flagging view into the final result
-                self.result.importfrom(viewresult)
+                result.importfrom(viewresult)
                 
             # If no newflags were found on last iteration loop
             else:
                 
                 # If datatask needs to be iterated, then the "before" summary has
                 # already been done, and the flags have already been set, so only
-                # need to do an "after" summary
+                # need to do an "after" summary.
                 if inputs.iter_datatask is True:
-                    summary_job = casa_tasks.flagdata(
-                        vis=inputs.flagsettertask.inputs.table, mode='summary')
-                    stats_after = self._executor.execute(summary_job)
+                    _, stats_after = self.set_flags([], summarize_after=True)
                 # If the datatask did not need to be iterated, then no flags
                 # were set yet and no "before" summary was performed yet, 
                 # so set all flags and include both "before" and "after" summary.
@@ -1011,33 +1008,31 @@ class NewMatrixFlagger(basetask.StandardTaskTemplate):
                         flags, summarize_before=True, summarize_after=True)
             
             # Store the final set of flags in the final result
-            self.result.addflags(flags)
+            result.addflags(flags)
             
             # Store the flag reasons in the last (i.e. post-flagging) view in
             # the final result
-            self.result.add_flag_reason_plane(flag_reason_plane,
-                                              self.flag_reason_key)
+            result.add_flag_reason_plane(flag_reason_plane,
+                                         self.flag_reason_key)
         
         # if no flags were found at all
         else:
             # Run a single flagging summary and use the result as both the "before" 
             # and "after" summary.
-            summary_job = casa_tasks.flagdata(
-                vis=inputs.flagsettertask.inputs.table, mode='summary')
-            stats_before = self._executor.execute(summary_job)
-            stats_after = copy.deepcopy(stats_before)        
+            stats_before, _ = self.set_flags(flags, summarize_before=True)
+            stats_after = copy.deepcopy(stats_before)
         
         # Store in the final result the name of the measurement set or caltable to 
         # which any potentially found flags would need to be applied to
-        self.result.table = inputs.flagsettertask.inputs.table
+        result.table = inputs.flagsettertask.inputs.table
         
         # Store the flagging summaries in the final result
-        self.result.summaries = [stats_before, stats_after]
+        result.summaries = [stats_before, stats_after]
 
         # Sort the final list of flagging commands.
-        self.result.sort_flagcmds()
+        result.sort_flagcmds()
 
-        return self.result
+        return result
 
     def analyse(self, result):
         return result
@@ -1637,8 +1632,10 @@ class NewMatrixFlagger(basetask.StandardTaskTemplate):
                             # For current antenna data selection, identify points
                             # that are both low outliers and not already flagged.
                             j_ant = np.arange(np.shape(ant_flag)[0])
-                            j2flag_lo = j_ant[np.logical_and(data_median - ant_data > \
-                              mad_max * data_mad, np.logical_not(ant_flag))]
+                            j2flag_lo = j_ant[
+                                np.logical_and(
+                                    data_median - ant_data > mad_max * data_mad,
+                                    np.logical_not(ant_flag))]
  
                             # If no low outliers were found, skip this antenna.
                             if len(j2flag_lo) <= 0:
@@ -1746,8 +1743,7 @@ class NewMatrixFlagger(basetask.StandardTaskTemplate):
                     flag_copy = np.copy(flag)
                     flag_reason_copy = np.copy(flag_reason)
                     flag_copy[i2flag, j2flag] = True
-                    flag_reason_copy[i2flag, j2flag] = \
-                      self.flag_reason_index['outlier']
+                    flag_reason_copy[i2flag, j2flag] = self.flag_reason_index['outlier']
 
                     # look for bad antenna/quadrants in view copy
                     data_shape = np.shape(data)
@@ -1897,518 +1893,6 @@ class NewMatrixFlagger(basetask.StandardTaskTemplate):
 class VectorFlaggerInputs(basetask.StandardInputs):
 
     def __init__(self, context, output_dir=None, vis=None, datatask=None,
-                 flagsettertask=None, rules=None, niter=None, intent=None,
-                 prepend=''):
-
-        # set the properties to the values given as input arguments
-        self._init_properties(vars())
-
-
-class VectorFlagger(basetask.StandardTaskTemplate):
-    Inputs = VectorFlaggerInputs
-
-    # override the inherited __init__ method so that references to the
-    # task objects can be kept outside self.inputs. Later on self.inputs
-    # will be replaced by a copy which breaks the connection between
-    # its references to the tasks and the originals.
-    def __init__(self, inputs):
-        self.inputs = inputs
-        self.datatask = inputs.datatask
-        self.flagsettertask = inputs.flagsettertask
-
-    def prepare(self):
-        inputs = self.inputs
-
-        datatask = self.datatask
-        rules = inputs.rules
-        flagsettertask = self.flagsettertask
-        niter = inputs.niter
-        intent = inputs.intent
-
-        iter = 1
-        flags = []
-        while iter <= niter:
-
-            # Get latest data
-            result = self._executor.execute(datatask)
-            if not result:
-                return []
-
-            descriptionlist = result.descriptions()
-            descriptionlist.sort()
-            newflags = []
-            for description in descriptionlist:
-                image = result.last(description)
-                # get flags for this view according to the rules
-                newflags += self.generate_flags(image, rules, intent)
-
-            # set any flags raised
-            if newflags:
-                LOG.warning('%s%s iteration %s raised %s flagging commands' % \
-                  (inputs.prepend, os.path.basename(inputs.vis), iter, len(newflags)))
-            else:
-                LOG.info('%s%s iteration %s raised %s flagging commands' % \
-                  (inputs.prepend, os.path.basename(inputs.vis), iter, len(newflags)))
-            flagsettertask.flags_to_set(newflags)
-            ignore = self._executor.execute(flagsettertask)
-
-            # accumulate all flags set
-            flags += newflags
-
-            if len(newflags) == 0:
-                break
-
-            iter += 1
-
-        if len(newflags) != 0:
-            # exited loop when flags still being found, recalculate
-            # result with latest flags incorporated.
-            result = self._executor.execute(datatask)
-
-        # add a record of flags set to the results object
-        result.addflags(flags)
-        result.table = flagsettertask.inputs.table
-
-        return result
-
-    def analyse(self, result):
-        return result
-
-    @staticmethod
-    def make_flag_rules (flag_edges=False, edge_limit=2.0,
-      flag_minabs=False, fmin_limit=0.0,
-      flag_nmedian=False, fnm_lo_limit=0.7, fnm_hi_limit=1.3,
-      flag_hilo=False, fhl_limit=5.0, fhl_minsample=5, 
-      flag_sharps=False, sharps_limit=0.05,
-      flag_diffmad=False, diffmad_limit=10, diffmad_nchan_limit=4,
-      flag_tmf=None, tmf_frac_limit=0.1, tmf_nchan_limit=4):
-
-        """
-        Generate a list of flagging rules from a set of flagging parameters.
-        Added detailed docs here.
-        """
-
-        # Construct rules from flag properties
-        rules = []
-        if flag_edges:
-            rules.append({'name':'edges', 'limit':edge_limit})
-        if flag_minabs:
-            rules.append({'name':'min abs', 'limit':fmin_limit})
-        if flag_nmedian:
-            rules.append({'name':'nmedian', 'lo_limit':fnm_lo_limit,
-              'hi_limit':fnm_hi_limit})
-        if flag_hilo:
-            rules.append({'name':'outlier', 'limit':fhl_limit,
-              'minsample':fhl_minsample})
-        if flag_sharps:
-            rules.append({'name':'sharps', 'limit':sharps_limit})
-        if flag_diffmad:
-            rules.append({'name':'diffmad', 'limit':diffmad_limit,
-              'nchan_limit':diffmad_nchan_limit})
-        if flag_tmf:
-            rules.append({'name':'tmf', 'frac_limit':tmf_frac_limit,
-              'nchan_limit':tmf_nchan_limit})
-
-        return rules
-
-    def generate_flags(self, vector, rules, intent):
-        """
-        Calculate the statistics of a vector and flag the data according
-        to a list of specified rules.
-
-        Keyword arguments:
-        vector - SpectrumResult object containing data to be flagged.
-        rules - Rules to be applied.
-        """
-
-        # Get the attributes - ensure all arrays are numpy arrays
-        # as some subsequent processing depends on numpy array indexing
-        data = np.array(vector.data)
-        flag = np.array(vector.flag)
-        nodata = np.array(vector.nodata)
-        xtitle = vector.axis.name
-        xdata = np.array(vector.axis.data)
-        spw = vector.spw
-        pol = vector.pol
-        antenna = vector.ant
-        if antenna is not None:
-            # deal with antenna id not name
-            antenna = antenna[0]
-        table = vector.filename
-
-        # any flags found will apply to this subset of the data
-        axisnames = []
-        flagcoords = []
-        if antenna is not None:
-            axisnames.append('ANTENNA1')
-            flagcoords.append(antenna)
-
-        # Initialize flags
-        newflags = []
-
-        # Index arrays
-        i = np.indices(np.shape(data))
-
-        rdata = np.ravel(data)
-        rflag = np.ravel(flag)
-        valid_data = rdata[np.logical_not(rflag)]
-
-        # If there is valid data (non-flagged), then proceed with flagging
-        if len(valid_data) > 0:
-
-            # calculate statistics for valid data
-            data_median, data_mad = arrayflaggerbase.median_and_mad(valid_data)
-
-            # flag data according to each rule in turn
-            for rule in rules:
-                rulename = rule['name']
-                if rulename == 'edges':
-                    limit = rule['limit']
-                    if len(valid_data):
-
-                        # find left edge
-                        left_edge = VectorFlagger._find_small_diff(rdata,
-                          rflag, limit, vector.description)
-
-                        # and right edge
-                        reverse_data = rdata[-1::-1]
-                        reverse_flag = rflag[-1::-1]
-                        right_edge = VectorFlagger._find_small_diff(
-                          reverse_data, reverse_flag, limit, vector.description)
-
-                        # flag the 'view'
-                        rflag[:left_edge] = True
-                        if right_edge > 0:
-                            rflag[-right_edge:] = True
-
-                        # now compose a description of the flagging required on
-                        # the MS
-                        nchannels = len(rdata)
-                        channels = np.arange(nchannels)
-                        channels_flagged = channels[np.logical_or(
-                          channels < left_edge,
-                          channels > (nchannels-1-right_edge))]
-
-                        axisnames = ['channels']
-                        flagcoords = [list(channels_flagged)]
-                        if len(channels_flagged) > 0:
-                            # Add new flag command to flag data underlying the
-                            # view.
-                            newflags.append(arrayflaggerbase.FlagCmd(
-                              reason='edges',
-                              filename=table,
-                              rulename=rulename, spw=spw, axisnames=axisnames,
-                              flagcoords=flagcoords))
-
-                elif rulename == 'min abs':
-                    limit = rule['limit']
-                    if len(valid_data):
-
-                        flag_chan = (np.abs(data)<limit) & np.logical_not(flag)
-
-                        # flag the 'view'
-                        rflag[flag_chan] = True
-
-                        # now compose a description of the flagging required on
-                        # the MS
-                        nchannels = len(rdata)
-                        channels = np.arange(nchannels)
-                        channels_flagged = channels[flag_chan]
-
-                        axisnames = ['channels']
-                        flagcoords = [list(channels_flagged)]
-
-                        if len(channels_flagged) > 0:
-                            # Add new flag command to flag data underlying the
-                            # view.
-                            newflags.append(arrayflaggerbase.FlagCmd(
-                              reason='min_abs',
-                              filename=table, rulename=rulename,
-                              spw=spw, axisnames=axisnames,
-                              flagcoords=flagcoords,
-                              channel_axis=vector.axis,
-                              intent=intent))
-
-                elif rulename == 'nmedian':
-                    limit = rule['limit']
-                    if len(valid_data):
-
-                        if limit < 1:
-                            flag_chan = (data < np.median(data)*limit) & np.logical_not(flag)
-                        else:
-                            flag_chan = (data > np.median(data)*limit) & np.logical_not(flag)
-
-                        # flag the 'view'
-                        rflag[flag_chan] = True
-
-                        # now compose a description of the flagging required on
-                        # the MS
-                        nchannels = len(rdata)
-                        channels = np.arange(nchannels)
-                        channels_flagged = channels[flag_chan]
-
-                        axisnames = ['channels']
-                        flagcoords = [list(channels_flagged)]
-
-                        if len(channels_flagged) > 0:
-                            # Add new flag command to flag data underlying the
-                            # view.
-                            newflags.append(arrayflaggerbase.FlagCmd(
-                              reason='nmedian',
-                              filename=table, rulename=rulename,
-                              spw=spw, axisnames=axisnames,
-                              flagcoords=flagcoords,
-                              channel_axis=vector.axis,
-                              intent=intent))
-
-                elif rulename == 'outlier':
-                    minsample = rule['minsample']
-                    limit = rule['limit']
-
-                    # enough data for valid statistics?
-                    if len(valid_data) < minsample:
-                        continue
-  
-                    # get channels to flag
-                    flag_chan = (np.abs(data-data_median) > data_mad*limit) & np.logical_not(flag)
-
-                    # flag the 'view'
-                    rflag[flag_chan] = True
-
-                    # now compose a description of the flagging required on
-                    # the MS
-                    nchannels = len(rdata)
-                    channels = np.arange(nchannels)
-                    channels_flagged = channels[flag_chan]
-
-                    axisnames = ['channels']
-                    flagcoords = [list(channels_flagged)]
-
-                    if len(channels_flagged) > 0:
-                        # Add new flag command to flag data underlying the
-                        # view.
-                        newflags.append(arrayflaggerbase.FlagCmd(
-                          reason='outlier',
-                          filename=table, rulename=rulename,
-                          spw=spw, pol=pol, antenna=antenna,
-                          axisnames=axisnames, flagcoords=flagcoords))
-
-                elif rulename == 'sharps':
-                    limit = rule['limit']
-                    if len(valid_data):
-                        diff = abs(rdata[1:] - rdata[:-1])
-                        diff_flag = (rflag[1:] | rflag[:-1])
-
-                        # flag channels whose slope is greater than the 
-                        # limit for a 'sharp feature'
-                        newflag = (diff>limit) & np.logical_not(diff_flag)
-
-                        # now broaden the flags until the diff falls below
-                        # 2 times the median diff, to catch the wings of
-                        # sharp features
-                        if np.any([np.logical_not(diff_flag | newflag)]):
-                            median_diff = np.median(diff[np.logical_not(
-                              diff_flag | newflag)])
-                            median_flag = ((diff > 2 * median_diff) &
-                              np.logical_not(diff_flag)) 
-                        else:
-                            median_flag = newflag
-
-                        start = None
-                        for i in np.arange(len(median_flag)):
-                            if median_flag[i]:
-                                end = i
-                                if start is None:
-                                    start = i
-                            else:
-                                if start is not None:
-                                    # have found start and end of a block
-                                    # of contiguous True flags. Does the
-                                    # block contain a sharp feature? If 
-                                    # so broaden the sharp feature flags 
-                                    # to include the whole block
-                                    if np.any(newflag[start:end]):
-                                        newflag[start:end] = True
-                                    start = None
-
-                        flag_chan = np.zeros([len(newflag)+1], np.bool) 
-                        flag_chan[:-1] = newflag
-                        flag_chan[1:] = (flag_chan[1:] | newflag)
-
-                        # flag the 'view'
-                        rflag[flag_chan] = True
-
-                        # now compose a description of the flagging required on
-                        # the MS
-                        nchannels = len(rdata)
-                        channels = np.arange(nchannels)
-                        channels_flagged = channels[flag_chan]
-
-                        axisnames = ['channels']
-                        flagcoords = [list(channels_flagged)]
-
-                        if len(channels_flagged) > 0:
-                            # Add new flag command to flag data underlying the
-                            # view.
-                            newflags.append(arrayflaggerbase.FlagCmd(
-                              reason='sharps',
-                              filename=table,
-                              rulename=rulename,
-                              spw=spw, antenna=antenna, axisnames=axisnames,
-                              flagcoords=flagcoords))
-
-                elif rulename == 'diffmad':
-                    limit = rule['limit']
-                    nchan_limit = rule['nchan_limit']
-                    if len(valid_data):
-                        diff = rdata[1:] - rdata[:-1]
-                        diff_flag = np.logical_or(rflag[1:], rflag[:-1])
-                        median_diff = np.median(diff[diff_flag==0])
-                        mad = np.median(
-                          np.abs(diff[diff_flag==0] - median_diff))
-
-                        # first, flag channels further from the median than
-                        # limit * MAD
-                        newflag = (abs(diff-median_diff) > limit*mad) & \
-                          (diff_flag==0)
-
-                        # second, flag all channels if more than nchan_limit 
-                        # were flagged by the first stage
-                        if len(newflag[newflag==True]) >= nchan_limit:
-                            newflag[newflag==False] = True         
-
-                        # set channels flagged 
-                        flag_chan = np.zeros([len(newflag)+1], np.bool) 
-                        flag_chan[:-1] = newflag
-                        flag_chan[1:] = np.logical_or(flag_chan[1:], newflag)
-
-                        # flag the 'view'
-                        rflag[flag_chan] = True
-
-                        # now compose a description of the flagging required on
-                        # the MS
-                        nchannels = len(rdata)
-                        channels = np.arange(nchannels)
-                        channels_flagged = channels[flag_chan]
-
-                        axisnames = ['channels']
-                        flagcoords = [list(channels_flagged)]
-
-                        if len(channels_flagged) > 0:
-                            # Add new flag command to flag data underlying the
-                            # view.
-                            newflags.append(arrayflaggerbase.FlagCmd(
-                              reason='diffmad',
-                              filename=table, rulename=rulename,
-                              spw=spw, pol=pol, antenna=antenna,
-                              axisnames=axisnames, flagcoords=flagcoords))
-
-                elif rulename == 'tmf':
-                    frac_limit = rule['frac_limit']
-                    nchan_limit = rule['nchan_limit']
-                    if len(valid_data):
-                        # flag all channels if fraction already flagged 
-                        # is greater than tmf_limit of total
-                        if (float(len(rdata[rflag==True])) / len(rdata) >= frac_limit) or \
-                          (len(rdata[rflag==True]) >= nchan_limit):
-                            newflag = (rflag==False)
-
-                            # flag the 'view'
-                            rflag[newflag] = True
-
-                            # now compose a description of the flagging required on
-                            # the MS
-                            nchannels = len(rdata)
-                            channels = np.arange(nchannels)
-                            channels_flagged = channels[newflag]
-
-                            axisnames = ['channels']
-                            flagcoords = [list(channels_flagged)]
-
-                            if len(channels_flagged) > 0:
-                                # Add new flag command to flag data underlying the
-                                # view.
-                                newflags.append(arrayflaggerbase.FlagCmd(
-                                  reason='tmf',
-                                  filename=table, rulename=rulename,
-                                  spw=spw, pol=pol, antenna=antenna,
-                                  axisnames=axisnames, flagcoords=flagcoords))
-
-                else:           
-                    raise NameError, 'bad rule: %s' % rule
-
-        return newflags
-
-    @staticmethod
-    def _find_noise_edge(mad, flag):
-        """Return the index in the mad array where the noise first
-        dips below the median value.
-
-        Keyword arguments:
-        mad    -- The noise array to be examined.
-        flag   -- Array whose elements are True where mad is invalid.
-
-        The index of the first point where the noise dips below twice the median
-        for the first half of the spectrum. Looking at half the spectrum
-        handles the case where the spectrum is a composite of 2 subbands,
-        with different noise levels; it's a fudge in that some spectra may
-        be composed of more than 2 subbands.
-        """
-
-        noise_edge = None
-
-        nchan = len(mad)
-        median_mad = np.median(mad[:nchan/4][np.logical_not(flag[:nchan/4])])
-        for i in range(nchan):
-            if not flag[i]:
-                if mad[i] < 2.0 * median_mad:
-                    noise_edge = i
-                    break
-
-        return noise_edge
-
-    @staticmethod
-    def _find_small_diff(data, flag, limit=2.0, description='unknown'):
-        """Return the index in the first quarter of the data array where the
-        point to point difference first falls below a threshold, where 
-        the threshold is defined as the "limit" * the median point-to-point
-        difference.
-        
-        Keyword arguments:
-        data -- The data array to be examined.
-        flag -- Array whose elements are True where list_data is bad.
-        limit -- Multiple of median value where the 'edge' will be set.
-
-        Returns:
-        The index of the first point where the point to point difference
-        first falls below 'limit' times the median value.
-        """
-        result = None
-
-        nchan = len(data)
-        good_data = data[:nchan/4][np.logical_not(flag[:nchan/4])]
-        good_data_index = np.arange(nchan/4)[np.logical_not(flag[:nchan/4])]
-        good_data_diff = abs(good_data[1:] - good_data[:-1])
-        median_diff = np.median(good_data_diff)
-
-        for i, diff in enumerate(good_data_diff):
-            if diff < limit * median_diff:
-                result = good_data_index[i]
-                break
-
-        if result is None:
-            LOG.warning('edge finder failed for:%s' % description)
-            # flag one edge channel - sole purpose of this is to ensure
-            # that a plot is made in the weblog so that the problem
-            # can be understood
-            result = 1
-
-        return result
-
-
-class NewVectorFlaggerInputs(basetask.StandardInputs):
-
-    def __init__(self, context, output_dir=None, vis=None, datatask=None,
                  viewtask=None, flagsettertask=None, rules=None, niter=None,
                  iter_datatask=None, use_antenna_names=None, prepend=''):
 
@@ -2426,11 +1910,11 @@ class NewVectorFlaggerInputs(basetask.StandardInputs):
         self._use_antenna_names = value
 
 
-class NewVectorFlaggerResults(basetask.Results,
-                              flaggableviewresults.FlaggableViewResults):
+class VectorFlaggerResults(basetask.Results,
+                           flaggableviewresults.FlaggableViewResults):
     def __init__(self):
         """
-        Construct and return a new NewVectorFlaggerResults.
+        Construct and return a new VectorFlaggerResults.
         """
         basetask.Results.__init__(self)
         flaggableviewresults.FlaggableViewResults.__init__(self)
@@ -2439,12 +1923,12 @@ class NewVectorFlaggerResults(basetask.Results,
         pass
 
     def __repr__(self):
-        s = 'NewVectorFlaggerResults'
+        s = 'VectorFlaggerResults'
         return s
 
 
-class NewVectorFlagger(basetask.StandardTaskTemplate):
-    Inputs = NewVectorFlaggerInputs
+class VectorFlagger(basetask.StandardTaskTemplate):
+    Inputs = VectorFlaggerInputs
 
     # override the inherited __init__ method so that references to the
     # task objects can be kept outside self.inputs. Later on self.inputs
@@ -2452,11 +1936,12 @@ class NewVectorFlagger(basetask.StandardTaskTemplate):
     # its references to the tasks and the originals.
     def __init__(self, inputs):
         self.inputs = inputs
-        self.result = NewVectorFlaggerResults()
 
     def prepare(self):
-        
         inputs = self.inputs
+
+        # Initialize result.
+        result = VectorFlaggerResults()
 
         # Initialize flags and iteration counter
         flags = []
@@ -2497,7 +1982,7 @@ class NewVectorFlagger(basetask.StandardTaskTemplate):
             if viewresult.descriptions():
             
                 # Import the views from viewtask into the final result
-                self.result.importfrom(viewresult)
+                result.importfrom(viewresult)
     
                 # Flag the view
                 newflags = self.flag_view(viewresult)
@@ -2562,7 +2047,7 @@ class NewVectorFlagger(basetask.StandardTaskTemplate):
                 viewresult = inputs.viewtask(dataresult)
 
                 # Import the post-flagging view into the final result
-                self.result.importfrom(viewresult)
+                result.importfrom(viewresult)
                 
             # If no newflags were found on last iteration loop
             else:
@@ -2571,8 +2056,7 @@ class NewVectorFlagger(basetask.StandardTaskTemplate):
                 # already been done, and the flags have already been set, so only
                 # need to do an "after" summary
                 if inputs.iter_datatask is True:
-                    summary_job = casa_tasks.flagdata(vis=inputs.flagsettertask.inputs.table, mode='summary')
-                    stats_after = self._executor.execute(summary_job)
+                    _, stats_after = self.set_flags([], summarize_after=True)
                 # If the datatask did not need to be iterated, then no flags
                 # were set yet and no "before" summary was performed yet, 
                 # so set all flags and include both "before" and "after" summary.
@@ -2582,27 +2066,26 @@ class NewVectorFlagger(basetask.StandardTaskTemplate):
                                                                summarize_after=True)
             
             # Store the final set of flags in the final result
-            self.result.addflags(flags)
+            result.addflags(flags)
             
         # if no flags were found at all
         else:
             # Run a single flagging summary and use the result as both the "before" 
             # and "after" summary.
-            summary_job = casa_tasks.flagdata(vis=inputs.flagsettertask.inputs.table, mode='summary')
-            stats_before = self._executor.execute(summary_job)
-            stats_after = copy.deepcopy(stats_before)        
+            stats_before, _ = self.set_flags(flags, summarize_before=True)
+            stats_after = copy.deepcopy(stats_before)
         
         # Store in the final result the name of the measurement set or caltable to 
         # which any potentially found flags would need to be applied to
-        self.result.table = inputs.flagsettertask.inputs.table
+        result.table = inputs.flagsettertask.inputs.table
         
         # Store the flagging summaries in the final result
-        self.result.summaries = [stats_before, stats_after]
+        result.summaries = [stats_before, stats_after]
 
         # Sort the final list of flagging commands.
-        self.result.sort_flagcmds()
+        result.sort_flagcmds()
 
-        return self.result
+        return result
 
     def analyse(self, result):
         return result
@@ -2775,13 +2258,13 @@ class NewVectorFlagger(basetask.StandardTaskTemplate):
                     if len(valid_data):
 
                         # find left edge
-                        left_edge = NewVectorFlagger._find_small_diff(
+                        left_edge = VectorFlagger._find_small_diff(
                             rdata, rflag, limit, vector.description)
 
                         # and right edge
                         reverse_data = rdata[-1::-1]
                         reverse_flag = rflag[-1::-1]
-                        right_edge = NewVectorFlagger._find_small_diff(
+                        right_edge = VectorFlagger._find_small_diff(
                             reverse_data, reverse_flag, limit, vector.description)
 
                         # flag the 'view'
@@ -2839,13 +2322,13 @@ class NewVectorFlagger(basetask.StandardTaskTemplate):
                                 antenna_id_to_name=antenna_id_to_name))
 
                 elif rulename == 'nmedian':
-                    limit = rule['limit']
+                    lo_limit = rule['lo_limit']
+                    hi_limit = rule['hi_limit']
                     if len(valid_data):
 
-                        if limit < 1:
-                            flag_chan = (data < np.median(data)*limit) & np.logical_not(flag)
-                        else:
-                            flag_chan = (data > np.median(data)*limit) & np.logical_not(flag)
+                        flag_chan = ((data < np.median(data)*lo_limit) |
+                                     (data > np.median(data)*hi_limit) &
+                                     np.logical_not(flag))
 
                         # flag the 'view'
                         rflag[flag_chan] = True
@@ -2986,8 +2469,8 @@ class NewVectorFlagger(basetask.StandardTaskTemplate):
 
                         # second, flag all channels if more than nchan_limit 
                         # were flagged by the first stage
-                        if len(newflag[newflag == True]) >= nchan_limit:
-                            newflag[newflag == False] = True
+                        if np.count_nonzero(newflag) >= nchan_limit:
+                            newflag = np.ones(diff.shape, np.bool)
 
                         # set channels flagged 
                         flag_chan = np.zeros([len(newflag)+1], np.bool) 
@@ -3022,9 +2505,9 @@ class NewVectorFlagger(basetask.StandardTaskTemplate):
                     if len(valid_data):
                         # flag all channels if fraction already flagged 
                         # is greater than tmf_limit of total
-                        if (float(len(rdata[rflag == True])) / len(rdata) >= frac_limit)\
-                                or (len(rdata[rflag == True]) >= nchan_limit):
-                            newflag = (rflag == False)
+                        if (float(np.count_nonzero(rflag)) / len(rdata) >= frac_limit
+                                or np.count_nonzero(rflag) >= nchan_limit):
+                            newflag = np.logical_not(rflag)
 
                             # flag the 'view'
                             rflag[newflag] = True

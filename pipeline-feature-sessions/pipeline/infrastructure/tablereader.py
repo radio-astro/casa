@@ -298,8 +298,11 @@ class MeasurementSetReader(object):
                     LOG.info('Populating ms.representative_target ...')
                     ms.representative_target = (sbinfo[0], sbinfo[1], sbinfo[2])
                 if not (sbinfo[3] and sbinfo[4]):
+                    observing_mode = SBSummaryTable.get_observing_mode(ms)
                     # Only warn if the number of 12m antennas is greater than the number of 7m antennas
-                    if len([a for a in ms.get_antenna() if a.diameter == 12.0]) > len([a for a in ms.get_antenna() if a.diameter == 7.0]):
+                    # and if the observation is not single dish
+                    if len([a for a in ms.get_antenna() if a.diameter == 12.0]) > len([a for a in ms.get_antenna() if a.diameter == 7.0]) \
+                      and 'Standard Single Dish' not in observing_mode:
                         LOG.warn('Undefined angular resolution limits for %s' % (ms.basename))
                     ms.science_goals = {'minAcceptableAngResolution': '0.0arcsec', 'maxAcceptableAngResolution': '0.0arcsec'}
                 else:
@@ -534,6 +537,20 @@ class SBSummaryTable(object):
             if 'ALMA' in obsnames:
                 LOG.warn('Error reading science goals for %s' % (ms.basename))
             return (None, None, None, None, None)
+
+    @staticmethod
+    def get_observing_mode(ms):
+        msname = _get_ms_name(ms)
+        sbsummary_table = os.path.join(msname, 'ASDM_SBSUMMARY')
+        observing_modes = []
+        with casatools.TableReader(sbsummary_table) as tb:
+            observing_mode = tb.getcol('observingMode')
+            for irow in xrange(tb.nrows()):
+                cell = observing_mode[:,irow]
+                for mode in cell:
+                    if mode not in observing_modes:
+                        observing_modes.append(mode)
+        return observing_modes
 
     @staticmethod
     def _create_sbsummary_info(repSource, repFrequency, repBandwidth, minAngResolution, maxAngResolution):

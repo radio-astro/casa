@@ -1,14 +1,12 @@
 import sys
 
-from taskinit import casalog
-
 import pipeline.h.cli.utils as utils
 
 
-def hif_atmflag(vis=None, intent=None,
-  flag_minabs=None, fmin_limit=None,
-  flag_nmedian=None, fnm_limit=None,
-  pipelinemode=None, dryrun=None, acceptresults=None):
+def hif_atmflag(
+        vis=None, intent=None, flag_minabs=None, fmin_limit=None,
+        flag_nmedian=None, fnm_lo_limit=None, fnm_hi_limit=None,
+        pipelinemode=None, dryrun=None, acceptresults=None):
 
     # create a dictionary containing all the arguments given in the
     # constructor

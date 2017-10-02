@@ -181,8 +181,8 @@ class semiFinalBPdcals(basetask.StandardTaskTemplate):
             AllCalTables.append(bpcaltable)
             ntables = len(AllCalTables)
             interp = [''] * ntables
-            LOG.info("Using 'linear,linearflag' for bandpass table")
-            interp[-1] = 'linear,linearflag'
+            LOG.info("Using 'linear,nearestflag' for bandpass table")
+            interp[-1] = 'linear,nearestflag'
 
 
         #self._executor.execute(bandpass_job)
