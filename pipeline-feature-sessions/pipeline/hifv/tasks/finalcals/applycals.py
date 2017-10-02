@@ -72,10 +72,19 @@ class Applycals(basetask.StandardTaskTemplate):
     def applycal_run(self):
         inputs = self.inputs
 
-        # Get the calibration state for the user's target data selection. This
-        # dictionary of CalTo:CalFroms gives us which calibrations should be
-        # applied and how.
-        merged = inputs.calstate.merged()
+        # Get the target data selection for this task as a CalTo object
+        calto = callibrary.get_calto_from_inputs(inputs)
+
+        # Now get the calibration state for that CalTo data selection. The
+        # returned dictionary of CalTo:CalFroms specifies the calibrations to
+        # be applied and the data selection to apply them to.
+        #
+        # Note that no 'ignore' argument is given to get_calstate
+        # (specifically, we don't say ignore=['calwt'] like many other tasks)
+        # as applycal is a task that can handle calwt and so different values
+        # of calwt should in this case result in different tasks.
+        calstate = inputs.context.callibrary.get_calstate(calto)
+        merged = calstate.merged()
 
         # run a flagdata job to find the flagged state before applycal
         if inputs.flagsum:
