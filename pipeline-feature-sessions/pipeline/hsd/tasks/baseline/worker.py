@@ -242,9 +242,9 @@ class BaselineFitParamConfig(basetask.StandardTaskTemplate):
                 # here we assume that masklist is polarization-independent
                 # (this is because that line detection/validation process accumulates 
                 # polarization components together
-                masklist = [datatable.tb2.getcell('MASKLIST',idx)
+                masklist = [datatable.getcell('MASKLIST',idx)
                             for idx in idxs]
-    #                 masklist = [datatable.tb2.getcell('MASKLIST',idxs[i]) + flaglist[i]
+    #                 masklist = [datatable.getcell('MASKLIST',idxs[i]) + flaglist[i]
     #                             for i in range(len(idxs))]
                 LOG.debug('DONE {}', y)
                 
@@ -269,7 +269,7 @@ class BaselineFitParamConfig(basetask.StandardTaskTemplate):
                         row = rows[i]
                         idx = idxs[i]
                         LOG.trace('===== Processing at row = {} =====', row)
-                        #nochange = datatable.tb2.getcell('NOCHANGE',idx)
+                        #nochange = datatable.getcell('NOCHANGE',idx)
                         #LOG.trace('row = %s, Flag = %s'%(row, nochange))
     
                         # mask lines
@@ -422,8 +422,6 @@ class BaselineSubtractionWorker(basetask.StandardTaskTemplate):
         
         assert process_list is not None
         assert deviationmask_list is not None
-        field_id_list, antenna_id_list, spw_id_list = process_list.get_process_list()
-        assert len(field_id_list) == len(deviationmask_list)
         
         # initialization of blparam file
         # blparam file needs to be removed before starting iteration through 
@@ -432,8 +430,11 @@ class BaselineSubtractionWorker(basetask.StandardTaskTemplate):
             LOG.debug('Cleaning up blparam file for {vis}', vis=vis)
             os.remove(blparam)        
         
-        for (field_id, antenna_id, spw_id, deviationmask) in \
-            zip(field_id_list, antenna_id_list, spw_id_list, deviationmask_list):
+        for (field_id, antenna_id, spw_id) in process_list.iterate_id():
+            if (field_id, antenna_id, spw_id) in deviationmask_list:
+                deviationmask = deviationmask_list[(field_id, antenna_id, spw_id)]
+            else:
+                deviationmask = None
             inputs = self.SubTask.Inputs(context, vis=vis, field_id=field_id,
                                          antenna_id=antenna_id, spw_id=spw_id,
                                          fit_order=fit_order, edge=edge, 

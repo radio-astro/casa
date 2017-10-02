@@ -18,7 +18,10 @@ class MakeImagesInputs(basetask.StandardInputs):
     @basetask.log_equivalent_CASA_call
     def __init__(self, context, output_dir=None, vis=None, target_list=None,
                  weighting=None, robust=None, noise=None, npixels=None,
-                 hm_masking=None, hm_autotest=None, hm_cleaning=None, tlimit=None,
+                 hm_masking=None, hm_sidelobethreshold=None, hm_noisethreshold=None,
+                 hm_lownoisethreshold=None, hm_negativethreshold=None,
+                 hm_minbeamfrac=None, hm_growiterations=None,
+                 hm_cleaning=None, tlimit=None,
                  masklimit=None, maxncleans=None, cleancontranges=None, subcontms=None, parallel=None):
         self._init_properties(vars())
 
@@ -33,8 +36,13 @@ class MakeImagesInputs(basetask.StandardInputs):
         self._target_list = value
 
     hm_cleaning = basetask.property_with_default('hm_cleaning', 'rms')
-    hm_masking = basetask.property_with_default('hm_masking', 'centralregion')
-    hm_autotest = basetask.property_with_default('hm_autotest', '')
+    hm_masking = basetask.property_with_default('hm_masking', 'auto')
+    hm_sidelobethreshold = basetask.property_with_default('hm_sidelobethreshold', -999.0)
+    hm_noisethreshold = basetask.property_with_default('hm_noisethreshold', -999.0)
+    hm_lownoisethreshold = basetask.property_with_default('hm_lownoisethreshold', -999.0)
+    hm_negativethreshold = basetask.property_with_default('hm_negativethreshold', -999.0)
+    hm_minbeamfrac = basetask.property_with_default('hm_minbeamfrac', -999.0)
+    hm_growiterations = basetask.property_with_default('hm_growiterations', -999)
     masklimit = basetask.property_with_default('masklimit', 2.0)
     maxncleans = basetask.property_with_default('maxncleans', 10)
     noise = basetask.property_with_default('noise', '1.0Jy')
@@ -43,7 +51,7 @@ class MakeImagesInputs(basetask.StandardInputs):
     robust = basetask.property_with_default('robust', -999.0)
     cleancontranges = basetask.property_with_default('cleancontranges', False)
     subcontms = basetask.property_with_default('subcontms', False)
-    tlimit = basetask.property_with_default('tlimit', 4.0)
+    tlimit = basetask.property_with_default('tlimit', 2.0)
     weighting = basetask.property_with_default('weighting', 'briggs')
 
 
@@ -68,6 +76,9 @@ class MakeImages(basetask.StandardTaskTemplate):
 
         result = MakeImagesResult()
 
+        # Carry any message from hif_makeimlist (e.g. for missing PI cube target)
+        result.set_info(inputs.context.clean_list_info)
+
         with CleanTaskFactory(inputs, self._executor) as factory:
             task_queue = [(target, factory.get_task(target))
                           for target in inputs.target_list]
@@ -81,10 +92,15 @@ class MakeImages(basetask.StandardTaskTemplate):
                     result.add_result(worker_result, target, outcome='success')
 
         # set of descriptions
-        description = {
-            _get_description_map(target['intent']).get(target['specmode'], 'Calculate clean products')  # map specmode to description..
-            for target in inputs.target_list                       # .. for every clean target..
-        }
+        if inputs.context.clean_list_info.get('msg', '') != '':
+            description = {
+                _get_description_map(inputs.context.clean_list_info.get('intent', '')).get(inputs.context.clean_list_info.get('specmode', ''), 'Calculate clean products')  # map specmode to description..
+            }
+        else:
+            description = {
+                _get_description_map(target['intent']).get(target['specmode'], 'Calculate clean products')  # map specmode to description..
+                for target in inputs.target_list                       # .. for every clean target..
+            }
 
         result.metadata['long description'] = ' / '.join(description)
 
@@ -197,14 +213,19 @@ class CleanTaskFactory(object):
                 # inner quarter. Other methods will be made available
                 # later.
                 #datatask_args['hm_masking'] = 'psfiter'
-                task_args['hm_masking'] = 'centralregion'
+                task_args['hm_masking'] = 'auto'
             else:
-                task_args['hm_masking'] = 'centralregion'
+                task_args['hm_masking'] = 'auto'
         else:
             task_args['hm_masking'] = inputs.hm_masking
 
         if inputs.hm_masking == 'auto':
-            task_args['hm_autotest'] = inputs.hm_autotest
+            task_args['hm_sidelobethreshold'] = inputs.hm_sidelobethreshold
+            task_args['hm_noisethreshold'] = inputs.hm_noisethreshold
+            task_args['hm_lownoisethreshold'] = inputs.hm_lownoisethreshold
+            task_args['hm_negativethreshold'] = inputs.hm_negativethreshold
+            task_args['hm_minbeamfrac'] = inputs.hm_minbeamfrac
+            task_args['hm_growiterations'] = inputs.hm_growiterations
 
         if inputs.hm_cleaning == '':
             task_args['hm_cleaning'] = 'rms'
@@ -228,7 +249,8 @@ def _get_description_map(intent):
         return {
             'mfs': 'Make target per-spw continuum images',
             'cont': 'Make target aggregate continuum images',
-            'cube': 'Make target cubes'
+            'cube': 'Make target cubes',
+            'repBW': 'Make representative bandwidth target cube'
 
         }
     else:

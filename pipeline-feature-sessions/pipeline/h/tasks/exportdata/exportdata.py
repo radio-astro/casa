@@ -87,8 +87,7 @@ class ExportDataInputs(basetask.StandardInputs):
 
     .. py:attribute:: pprfile
 
-    the pipeline processing request. Defaults to a file matching the
-    'PPR_*.xml' template
+    the pipeline processing request. 
 
     .. py:attribute:: calintents
 
@@ -305,8 +304,13 @@ class ExportData(basetask.StandardTaskTemplate):
         #    The pipeline processing script
         #    The pipeline restore script (if exportmses = False)
         #    The CASA commands log
+        recipe_name = self.get_recipename(inputs.context)
+        if not recipe_name:
+            prefix = oussid
+        else:
+            prefix = oussid + '.' + recipe_name
         stdfproducts = self._do_standard_ous_products(inputs.context, inputs.exportmses,
-            oussid, inputs.pprfile, session_list, vislist, inputs.output_dir, inputs.products_dir)
+            prefix, inputs.pprfile, session_list, vislist, inputs.output_dir, inputs.products_dir)
         if stdfproducts.ppr_file:
             result.pprequest = os.path.basename(stdfproducts.ppr_file) 
         result.weblog = os.path.basename(stdfproducts.weblog_file)
@@ -316,8 +320,6 @@ class ExportData(basetask.StandardTaskTemplate):
         else:
             result.restorescript = os.path.basename(stdfproducts.casa_restore_script)
         result.commandslog = os.path.basename(stdfproducts.casa_commands_file)
-
-        auxfproducts = None
 
         # Make the standard ms dictionary and export per ms products
         #    Currently these are compressed tar files of per MS flagging tables and per MS text files of calibration apply instructions
@@ -347,7 +349,7 @@ class ExportData(basetask.StandardTaskTemplate):
 
         # Export the pipeline manifest file
         #    TBD Remove support for auxiliary data products to the individual pipelines
-        pipemanifest = self._make_pipe_manifest (inputs.context, oussid, stdfproducts, auxfproducts, sessiondict, visdict,
+        pipemanifest = self._make_pipe_manifest (inputs.context, oussid, stdfproducts, sessiondict, visdict,
             inputs.exportmses,
             [os.path.basename(image) for image in calimages_fitslist], 
             [os.path.basename(image) for image in targetimages_fitslist])
@@ -389,7 +391,26 @@ class ExportData(basetask.StandardTaskTemplate):
 
         return oussid
 
-    def _make_lists (self, context, session, vis):
+    def get_recipename (self, context):
+
+        """
+        Get the recipe name
+        """
+
+        # Get the parent ous ousstatus name. This is the sanitized ous
+        # status uid
+        ps = context.project_structure
+        if ps is None:
+            recipe_name = ''
+        elif ps.recipe_name == 'Undefined':
+            recipe_name  = ''
+        else:
+            recipe_name = ps.recipe_name
+
+        return recipe_name
+
+
+    def _make_lists (self, context, session, vis, imaging=False):
 
         '''
         Create the vis and sessions lists
@@ -399,7 +420,10 @@ class ExportData(basetask.StandardTaskTemplate):
         vislist = vis
         if type(vislist) is types.StringType:
             vislist = [vislist,]
-        vislist = [vis for vis in vislist if not context.observing_run.get_ms(name=vis).is_imaging_ms]
+        if imaging:
+            vislist = [vis for vis in vislist if context.observing_run.get_ms(name=vis).is_imaging_ms]
+        else:
+            vislist = [vis for vis in vislist if not context.observing_run.get_ms(name=vis).is_imaging_ms]
 
         # Get the session list and the visibility files associated with
         # each session.
@@ -417,7 +441,7 @@ class ExportData(basetask.StandardTaskTemplate):
         # Locate and copy the pipeline processing request.
         #     There should normally be at most one pipeline processing request.
         #     In interactive mode there is no PPR.
-        ppr_files = self._export_pprfile (context, output_dir, products_dir, pprfile)
+        ppr_files = self._export_pprfile (context, output_dir, products_dir, oussid, pprfile)
         if (ppr_files != []):
             ppr_file = os.path.basename(ppr_files[0])
         else:
@@ -512,7 +536,7 @@ class ExportData(basetask.StandardTaskTemplate):
 
         return visdict
 
-    def _do_standard_session_products (self, context, oussid, session_names, session_vislists, products_dir):
+    def _do_standard_session_products (self, context, oussid, session_names, session_vislists, products_dir, imaging=False):
 
         '''
         Generate the per ms standard products
@@ -522,7 +546,7 @@ class ExportData(basetask.StandardTaskTemplate):
         caltable_file_list = []
         for i in range(len(session_names)):
             caltable_file = self._export_final_calfiles (context, oussid,
-                session_names[i], session_vislists[i], products_dir)
+                session_names[i], session_vislists[i], products_dir, imaging=imaging)
             caltable_file_list.append (caltable_file)
 
         # Create the ordered session dictionary
@@ -536,7 +560,7 @@ class ExportData(basetask.StandardTaskTemplate):
 
         return sessiondict
 
-    def _make_pipe_manifest (self, context, oussid, stdfproducts, auxfproducts, sessiondict,
+    def _make_pipe_manifest (self, context, oussid, stdfproducts, sessiondict,
         visdict, exportmses, calimages, targetimages):
 
         '''
@@ -580,8 +604,6 @@ class ExportData(basetask.StandardTaskTemplate):
         else:
             pipemanifest.add_restorescript (ouss, os.path.basename(stdfproducts.casa_restore_script))
 
-        if auxfproducts:
-            pass
 
         # Add the calibrator images
         pipemanifest.add_images (ouss, calimages, 'calibrator')
@@ -599,14 +621,11 @@ class ExportData(basetask.StandardTaskTemplate):
         pipemanifest = manifest.PipelineManifest(oussid)
         return pipemanifest
 
-    def _export_pprfile (self, context, output_dir, products_dir, pprfile):
+    def _export_pprfile (self, context, output_dir, products_dir, oussid, pprfile):
 
-        """
-        Export the pipeline processing request to the output products
-        directory as is.
-        """
-        # Prepare the search template for the pipeline processing
-        # request file.
+        # Prepare the search template for the pipeline processing request file.
+        #    Was a template in the past
+        #    Forced to one file now but keep the template structure for the moment
         if pprfile == '':
             ps = context.project_structure
             if ps is None:
@@ -629,13 +648,19 @@ class ExportData(basetask.StandardTaskTemplate):
                     pprmatches.append (os.path.join(output_dir, file))
 
         # Copy the pipeline processing request files.
+        pprmatchesout = []
         for file in pprmatches:
+            if oussid:
+                outfile = os.path.join (products_dir, oussid + '.pprequest.xml')
+            else:
+                outfile = file
+            pprmatchesout.append(outfile)
             LOG.info('Copying pipeline processing file %s to %s' % \
-                     (os.path.basename(file), products_dir))
+                     (os.path.basename(file), os.path.basename(outfile)))
             if not self._executor._dry_run:
-                shutil.copy (file, products_dir)
+                shutil.copy (file, outfile)
 
-        return pprmatches
+        return pprmatchesout
 
     def _export_final_ms (self, context, vis, products_dir):
 
@@ -725,13 +750,16 @@ class ExportData(basetask.StandardTaskTemplate):
 
         return tarfilename
 
-    def _export_final_applylist (self, context, vis, products_dir):
+    def _export_final_applylist (self, context, vis, products_dir, imaging=False):
         """
         Save the final calibration list to a file. For now this is
         a text file. Eventually it will be the CASA callibrary file.
         """
 
-        applyfile_name = os.path.basename(vis) + '.calapply.txt'
+        if imaging:
+            applyfile_name = os.path.basename(vis) + '.auxcalapply.txt'
+        else:
+            applyfile_name = os.path.basename(vis) + '.calapply.txt'
         LOG.info('Storing calibration apply list for %s in  %s',
                  os.path.basename(vis), applyfile_name)
 
@@ -815,7 +843,7 @@ class ExportData(basetask.StandardTaskTemplate):
 
         return wksessions, session_names, session_vis_list
 
-    def _export_final_calfiles(self, context, oussid, session, vislist, products_dir):
+    def _export_final_calfiles(self, context, oussid, session, vislist, products_dir, imaging=False):
         """
         Save the final calibration tables in a tarfile one file
         per session.
@@ -828,7 +856,10 @@ class ExportData(basetask.StandardTaskTemplate):
             os.chdir(context.output_dir)
 
             # Define the name of the output tarfile
-            tarfilename = '{}.{}.caltables.tgz'.format(oussid, session)
+            if imaging:
+                tarfilename = '{}.{}.auxcaltables.tgz'.format(oussid, session)
+            else:
+                tarfilename = '{}.{}.caltables.tgz'.format(oussid, session)
             LOG.info('Saving final caltables for %s in %s', session, tarfilename)
 
             # Create the tar file
@@ -1023,6 +1054,7 @@ finally:
         fitsname = re.sub('\.s\d+[_]\d+\.', '.', imagename)
         fitsname = re.sub('\.iter\d+\.image', '', fitsname)
         fitsname = re.sub('\.iter\d+\.image.pbcor', '.pbcor', fitsname)
+        fitsname = re.sub('\.iter\d+\.mask', '.mask', fitsname)
         fitsname = re.sub('\.iter\d+\.alpha', '.alpha', fitsname)
         # .pb must be tried after .pbcor.image !
         fitsname = re.sub('\.iter\d+\.pb', '.pb', fitsname)
@@ -1035,7 +1067,7 @@ finally:
                         products_dir):
 
         """
-        Expora the images to FITS files.
+        Export the images to FITS files.
         """
 
 
@@ -1102,6 +1134,21 @@ finally:
                                 cleanlist[image_number]['auxfitsfiles'].append(self._fitsfile(products_dir, imagename))
                             else:
                                 imagename = image['imagename'].replace('.image', '.pb')
+                                images_list.append(imagename)
+                                cleanlist[image_number]['auxfitsfiles'].append(self._fitsfile(products_dir, imagename))
+
+                    # Add auto-boxing masks for interferometry
+                    if (image['imagename'].find('.image') != -1):
+                        if (image['imagename'].find('.pbcor') != -1):
+                            imagename = image['imagename'].replace('.image.pbcor', '.mask')
+                            imagename2 = image['imagename'].replace('.image.pbcor', '.cleanmask')
+                            if os.path.exists(imagename) and not os.path.exists(imagename2):
+                                images_list.append(imagename)
+                                cleanlist[image_number]['auxfitsfiles'].append(self._fitsfile(products_dir, imagename))
+                        else:
+                            imagename = image['imagename'].replace('.image', '.mask')
+                            imagename2 = image['imagename'].replace('.image', '.cleanmask')
+                            if os.path.exists(imagename) and not os.path.exists(imagename2):
                                 images_list.append(imagename)
                                 cleanlist[image_number]['auxfitsfiles'].append(self._fitsfile(products_dir, imagename))
         else:

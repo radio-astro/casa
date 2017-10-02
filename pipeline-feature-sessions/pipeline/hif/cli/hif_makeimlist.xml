@@ -53,13 +53,14 @@ Create a a list of images to be cleaned.
   </param>
 
   <param type="string" name="specmode">
-     <description>Spectral gridding type (mfs, cont, cube, \'\' for default)</description>
+     <description>Spectral gridding type (mfs, cont, cube, repBW, \'\' for default)</description>
      <value></value>
        <allowed kind="enum">
          <value></value>
          <value>mfs</value>
          <value>cont</value>
          <value>cube</value>
+         <value>repBW</value>
        </allowed>
   </param>
 
@@ -72,12 +73,12 @@ Create a a list of images to be cleaned.
        </allowed>
   </param>
 
-  <param type="stringArray" name="hm_imsize">
+  <param type="stringArray" name="hm_imsize" subparam="true">
     <description>Image X and Y size(s) in pixels or PB level (single fields), \'\' for default. Single value same for both. \'&lt;number&gt;pb\' for PB level.</description>
     <value></value>
   </param>
 
-  <param type="stringArray" name="hm_cell">
+  <param type="stringArray" name="hm_cell" subparam="true">
     <description>Image X and Y cell size(s) with units or pixels per beam, \'\' for default. Single value same for both. \'&lt;number&gt;ppb\' for pixels per beam.</description>
     <value></value>
   </param>
@@ -104,13 +105,13 @@ Create a a list of images to be cleaned.
     <value type="string"></value>
   </param>
 
-  <param type="any" name="width">
+  <param type="any" name="width" subparam="true">
     <description>Channel width, \'\' for default.</description>
     <any type="variant"/>
     <value type="string"></value>
   </param>
 
-  <param type="any" name="nbins">
+  <param type="any" name="nbins" subparam="true">
     <description>Channel binning factors per spw, \'\' for default.</description>
     <any type="variant"/>
     <value type="string"></value>
@@ -154,6 +155,10 @@ Create a a list of images to be cleaned.
         <default param="phasecenter"><value type="string"></value></default>
         <default param="start"><value type="string"></value></default>
         <default param="nchan"><value type="int">-1</value></default>
+        <default param="hm_imsize"><value type="stringArray"></value></default>
+        <default param="hm_cell"><value type="stringArray"></value></default>
+        <default param="width"><value type="string"></value></default>
+        <default param="nbins"><value type="string"></value></default>
         <default param="dryrun"><value type="bool">False</value></default>
         <default param="acceptresults"><value type="bool">True</value></default>
       </equals>
@@ -212,16 +217,17 @@ pipelinemode -- The pipeline operating mode. In 'automatic' mode the pipeline
 
 --- pipeline parameter arguments which can be set in any pipeline mode
 
-specmode -- Frequency imaging mode, 'mfs', 'cont', 'cube'. \'\' defaults to
+specmode -- Frequency imaging mode, 'mfs', 'cont', 'cube', 'repBW'. \'\' defaults to
     'cube' if intent parameter includes 'TARGET' otherwise 'mfs'.
     default: ''
-    example: 'mfs', 'cont', 'cube'
+    example: 'mfs', 'cont', 'cube', 'repBW'
     example:
-        mode='mfs' produce one image per source and spw
-        mode='cont' produce one image per source and aggregate over all
+        specmode='mfs' produce one image per source and spw
+        specmode='cont' produce one image per source and aggregate over all
              specified spws
-        mode='cube' produce an LSRK frequency cube, channels are specified
+        specmode='cube' produce an LSRK frequency cube, channels are specified
              in frequency
+        specmode='repBW' produce an LSRK frequency cube at representative channel width
 
 hm_cell -- Cell size (x, y)
     default '' Compute cell size based on the UV coverage of all the fields

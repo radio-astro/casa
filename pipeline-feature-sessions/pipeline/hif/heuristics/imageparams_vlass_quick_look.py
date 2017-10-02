@@ -10,35 +10,47 @@ LOG = infrastructure.get_logger(__name__)
 
 class ImageParamsHeuristicsVlassQl(ImageParamsHeuristics):
 
-    def __init__(self, vislist, spw, observing_run, imagename_prefix='', science_goals=None, contfile=None, linesfile=None):
-        ImageParamsHeuristics.__init__(self, vislist, spw, observing_run, imagename_prefix, science_goals, contfile, linesfile)
+    def __init__(self, vislist, spw, observing_run, imagename_prefix='', proj_params=None, contfile=None, linesfile=None):
+        ImageParamsHeuristics.__init__(self, vislist, spw, observing_run, imagename_prefix, proj_params, contfile, linesfile)
         self.imaging_mode = 'VLASS-QL'
 
     # niter
     def niter_correction(self, niter, cell, imsize, residual_max, threshold):
-        return 20000
+        if niter:
+            return int(niter)
+        else:
+            return 20000
+
+    def rms_threshold(self, rms, nsigma):
+        try:
+            LOG.info('Threshold nsigma multiplier: %s', nsigma)
+            threshold = rms * float(nsigma)
+            LOG.info('Setting new threshold to [robust rms * nsigma]: {th}'.format(th=threshold))
+        except TypeError:
+            threshold = None
+        return threshold
 
     def deconvolver(self, specmode, spwspec):
         return 'mtmfs'
 
-    def robust(self, spw):
-        return 1.0
+    def robust(self, beam=None):
+        return 1.0, 0.0, 0.0
 
     def gridder(self, intent, field):
         return 'mosaic'
 
-    def cell(self, field_intent_list, spwspec, oversample=None):
-        return '1.0arcsec'
+    def cell(self, beam=None, pixperbeam=None):
+        return ['1.0arcsec']
 
-    def imsize(self, fields, cell, beam, sfpblimit=None, max_pixels=None):
+    def imsize(self, fields=None, cell=None, primary_beam=None, sfpblimit=None, max_pixels=None, centreonly=None):
         return [7290, 7290]
 
-    def threshold(self):
-        return '0.000360Jy/beam'
+    def threshold_nsigma(self):
+        return 4.0
 
     def reffreq(self):
         return '3.0GHz'
-    
+
     def cyclefactor(self):
         return 2.0
 
@@ -48,7 +60,7 @@ class ImageParamsHeuristicsVlassQl(ImageParamsHeuristics):
     def scales(self):
         return [0]
 
-    def uvtaper(self):
+    def uvtaper(self, beam_natural=None):
         return []
 
     def uvrange(self):
@@ -71,6 +83,15 @@ class ImageParamsHeuristicsVlassQl(ImageParamsHeuristics):
 
     def stokes(self):
         return 'I'
+
+    def pb_correction(self):
+        return False
+
+    def conjbeams(self):
+        return False
+
+    def get_sensitivity(self, ms_do, field, spw, chansel, specmode, cell, imsize, weighting, robust, uvtaper):
+        return 0.0, None, None
 
     def find_fields(self, distance='0deg', phase_center=None, matchregex=''):
 

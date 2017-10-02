@@ -72,7 +72,7 @@ def _get_task_class(cli_command):
     raise KeyError('%s not registered in casataskdict' % cli_command)
 
 
-def _get_tasks(context, args, procedure='procedure_hifa.xml'):
+def _get_tasks(context, args, procedure):
     # find the procedure file on disk, then fall back to the standard recipes
     if os.path.exists(procedure):
         procedure_file = os.path.abspath(procedure)
@@ -156,7 +156,7 @@ def _as_task_call(task_class, task_args):
     return '%s(%s)' % (task_class.__name__, ', '.join(kw_args))
 
 
-def reduce(vis=None, infiles=None, procedure='procedure_hifa.xml',
+def reduce(vis=None, infiles=None, procedure='procedure_hifa_calimage.xml',
            context=None, name=None, loglevel='info', plotlevel='default',
            session=None, exitstage=None):
     if vis is None:

@@ -147,7 +147,7 @@ class MeasurementSet(object):
                     (source_name, self.basename))
                 target_source = target_sources[0]
             else:
-                LOG.warn('User defined representative target source %s not found in data set %s' % \
+                LOG.warning('User defined representative target source %s not found in data set %s' % \
                     (source_name, self.basename))
                 target_source = None
         elif self.representative_target[0]:
@@ -162,7 +162,7 @@ class MeasurementSet(object):
                     (self.representative_target[0], self.basename))
                 target_source = target_sources[0]
             else:
-                LOG.warn('Representative target source %s not found in data set %s' % \
+                LOG.warning('Representative target source %s not found in data set %s' % \
                     (self.representative_target[0], self.basename))
                 target_source = None
         else:
@@ -262,7 +262,7 @@ class MeasurementSet(object):
                           if spw.channels[0].getWidth().to_units(measures.FrequencyUnits.HERTZ) <= target_bw['m0']['value']]
 
         if len(target_spws_bw) <= 0:
-            LOG.warn('No target spws have channel width <= representative bandwidth in data set %s' % \
+            LOG.warning('No target spws have channel width <= representative bandwidth in data set %s' % \
                 (self.basename))
 
             # Now find all the taret spws that contain the representative frequency.
@@ -271,7 +271,7 @@ class MeasurementSet(object):
                                 target_frequency_topo['m0']['value'] <= spw.max_frequency.value]
 
             if len(target_spws_freq) <= 0:
-                LOG.warn('No target spws overlap the representative frequency in data set %s' % \
+                LOG.warning('No target spws overlap the representative frequency in data set %s' % \
                     (self.basename))
 
                 # Now find the closest match to the center frequency
@@ -298,7 +298,7 @@ class MeasurementSet(object):
         target_spws_freq = [spw for spw in target_spws_bw if target_frequency_topo['m0']['value'] >= spw.min_frequency.value and \
             target_frequency_topo['m0']['value'] <= spw.max_frequency.value]
         if len(target_spws_freq) <= 0:
-            LOG.warn('No target spws with channel spacing <= representative bandwith overlap the representative frequency in data set %s' % (self.basename))
+            LOG.warning('No target spws with channel spacing <= representative bandwith overlap the representative frequency in data set %s' % (self.basename))
             max_chanwidth = None
             for spw in target_spws_bw:
                chanwidth = spw.channels[0].getWidth().to_units(measures.FrequencyUnits.HERTZ)

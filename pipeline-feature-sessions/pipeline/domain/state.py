@@ -291,7 +291,7 @@ class StateFactory(object):
             self._constructor = StateAPEX
         elif (observatory == 'SMT'):
             self._constructor = StateSMT
-        elif (observatory == 'NRO'):
+        elif (observatory == 'NRO' or observatory == 'ASTE'):
             self._constructor = StateNAOJ
         else:
             raise KeyError('%s has no matching State class' % observatory)

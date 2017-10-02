@@ -292,7 +292,8 @@ class T1_1Renderer(RendererBase):
                     break
             if has_reference_scan:
                 # target scan has OFF-source need to go harder way
-                time_on_source =  utils.total_time_on_target_on_source(ms)
+                autocorr_only = is_singledish_ms(context)
+                time_on_source =  utils.total_time_on_target_on_source(ms, autocorr_only)
             else:
                 time_on_source = utils.total_time_on_source(target_scans)
             time_on_source = utils.format_timedelta(time_on_source)

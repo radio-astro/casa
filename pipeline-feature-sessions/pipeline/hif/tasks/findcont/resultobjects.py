@@ -42,6 +42,8 @@ class FindContResult(basetask.Results):
                         if ((self.cont_ranges['fields'][source_name][spwid] == ['NONE']) and (target['intent'] == 'TARGET')):
                             spwsel['spw%s' % (spwid)] = ''
                             LOG.warn('No continuum frequency range information found for %s, spw %s.' % (target['field'], spwid))
+                        elif self.cont_ranges['fields'][source_name][spwid] == ['ALL']:
+                            spwsel['spw%s' % (spwid)] = 'ALL'
                         else:
                             new_spwids.append(spwid)
                             spwsel['spw%s' % (spwid)] = ';'.join(['%s~%sGHz' % (cont_range['range'][0], cont_range['range'][1]) for cont_range in self.cont_ranges['fields'][source_name][spwid]])
@@ -75,6 +77,8 @@ class FindContResult(basetask.Results):
                 repr += '  SpW %s:' % (spwid)
                 if (self.result_cont_ranges[source_name][spwid]['cont_ranges'] in (['NONE'], [], [{'range': 'NONE', 'refer': 'LSRK'}], [{'range': 'NONE', 'refer': 'TOPO'}])):
                     repr += '   Ranges: None\n'
+                elif self.result_cont_ranges[source_name][spwid]['cont_ranges'] == ['ALL']:
+                    repr += '   Ranges: All\n'
                 else:
                     repr += '   Ranges: %s' % (';'.join(['%s~%sGHz' % (cont_range['range'][0], cont_range['range'][1]) for cont_range in self.result_cont_ranges[source_name][spwid]['cont_ranges']]))
                     refers = numpy.array([cont_range['refer'] for cont_range in self.result_cont_ranges[source_name][spwid]['cont_ranges']])

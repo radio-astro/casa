@@ -88,9 +88,10 @@ class SDChannelAveragedImageDisplay(SDImageDisplay):
         
         plot_list = []
         
-        masked_data = self.data * self.mask
+#         masked_data = self.data * self.mask
         for pol in xrange(self.npol):
-            Total = masked_data.take([pol], axis=self.id_stokes).squeeze()
+#             Total = masked_data.take([pol], axis=self.id_stokes).squeeze()
+            Total = (self.data.take([pol], axis=self.id_stokes) * self.mask.take([pol], axis=self.id_stokes)).squeeze()
             Total = numpy.flipud(Total.transpose())
             tmin = Total.min()
             tmax = Total.max()
@@ -98,6 +99,7 @@ class SDChannelAveragedImageDisplay(SDImageDisplay):
             # 2008/9/20 DEC Effect
             im = pl.imshow(Total, interpolation='nearest', aspect=self.aspect, extent=Extent)
             #im = pl.imshow(Total, interpolation='nearest', aspect='equal', extent=Extent)
+            del Total
 
             xlim = axes_tpmap.get_xlim()
             ylim = axes_tpmap.get_ylim()
@@ -219,16 +221,17 @@ class SDIntegratedImageDisplay(SDImageDisplay):
         
         plot_list = []
         
-        masked_data = self.data * self.mask
         for pol in xrange(self.npol):
-            Total = masked_data.take([pol], axis=self.id_stokes).squeeze()
-            Total = numpy.flipud(Total.transpose())
-            tmin = Total.min()
-            tmax = Total.max()
+            masked_data = (self.data.take([pol], axis=self.id_stokes) * self.mask.take([pol], axis=self.id_stokes)).squeeze()
+            Total = numpy.flipud(masked_data.transpose())
+            del masked_data
 
             # 2008/9/20 DEC Effect
             im = pl.imshow(Total, interpolation='nearest', aspect=self.aspect, extent=Extent)
             #im = pl.imshow(Total, interpolation='nearest', aspect='equal', extent=Extent)
+            tmin = Total.min()
+            tmax = Total.max()
+            del Total
 
             xlim = axes_tpmap.get_xlim()
             ylim = axes_tpmap.get_ylim()

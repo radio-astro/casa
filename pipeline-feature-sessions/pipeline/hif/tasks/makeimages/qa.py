@@ -16,11 +16,14 @@ class MakeImagesQAHandler(pqa.QAResultHandler):
 
     def handle(self, context, result):
         # calculate QA score as minimum of all sub-scores
-        if (len(result.results) > 0):
+        if len(result.results) > 0:
             score_objects = reduce(lambda x,y: x+y, [item.qa.pool for item in result.results])
             result.qa.pool[:] = score_objects
         else:
-            result.qa.pool[:] = [pqa.QAScore(-0.1, longmsg='No imaging results found', shortmsg='No imaging results')]
+            if len(result.targets) == 0:
+                result.qa.pool[:] = [pqa.QAScore(1.0, longmsg='No imaging targets were defined', shortmsg='Nothing to image')]
+            else:
+                result.qa.pool[:] = [pqa.QAScore(0.0, longmsg='No imaging results found. Expected %d.' % (len(result.targets)), shortmsg='No imaging results')]
 
 
 class MakeImagesListQAHandler(pqa.QAResultHandler):

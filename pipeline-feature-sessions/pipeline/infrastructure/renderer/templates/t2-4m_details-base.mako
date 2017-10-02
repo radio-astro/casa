@@ -11,9 +11,11 @@ import pipeline.infrastructure.renderer.htmlrenderer as hr
 import pipeline.infrastructure.renderer.rendererutils as rendererutils
 import pipeline.infrastructure.utils as utils
 
+
 def get_qascores(pool, lo, hi):
     with_score = [s for s in pool if s.score not in ('', 'N/A', None)]
     return [s for s in with_score if s.score > lo and s.score <= hi]
+
 
 def get_notification_trs(result, alerts_info, alerts_success):
     notifications = []
@@ -41,18 +43,18 @@ def get_notification_trs(result, alerts_info, alerts_success):
 
     return notifications
 
+
 def format_notification(tr_class, alert, msg, icon_class=None):
     if icon_class:
         icon = '<span class="%s"></span> ' % icon_class
     else:
         icon = ''
     return '<tr class="%s"><td>%s<strong>%s</strong> %s</td></tr>' % (tr_class, icon, alert, msg)
-
 %>
 
 <%def name="plot_group(plot_dict, url_fn, data_spw=False, data_field=False, data_baseband=False, data_tsysspw=False,
-                       data_vis=False, title_id=None, plot_accessor=lambda d: [('No Intent', d)], transmission=None,
-                       rel_fn=None)">
+                       data_vis=False, title_id=None, transmission=None, rel_fn=None, break_rows_by='',
+                       sort_row_by='')">
 % if plot_dict:
     % if title_id:
         <h3 id="${title_id}" class="jumptarget">${caller.title()}</h3>
@@ -98,113 +100,119 @@ def format_notification(tr_class, alert, msg, icon_class=None):
             ${caller.ms_preamble(ms)}
         % endif
 
+        % for plots_in_row in rendererutils.group_plots(ms_plots, break_rows_by):
         <div class="row">
-            % for intent, intent_plots in plot_accessor(ms_plots):
-                % if intent_plots is not None:
-                % for plot in intent_plots:
-                <div class="col-md-3 col-sm-4">
-                    % if os.path.exists(plot.thumbnail):
-                    <%
-                        fullsize_relpath = os.path.relpath(plot.abspath, pcontext.report_dir)
-                        thumbnail_relpath = os.path.relpath(plot.thumbnail, pcontext.report_dir)
+            % if plots_in_row is not None:
+            % for plot in rendererutils.sort_row_by(plots_in_row, sort_row_by):
+            <%
+                intent = plot.parameters.get('intent', 'No intent')
+                if isinstance(intent, list):
+                    intent = utils.commafy(intent, quotes=False)
+                intent = intent.upper()
+            %>
+            <div class="col-md-3 col-sm-4">
+                % if os.path.exists(plot.thumbnail):
+                <%
+                    fullsize_relpath = os.path.relpath(plot.abspath, pcontext.report_dir)
+                    thumbnail_relpath = os.path.relpath(plot.thumbnail, pcontext.report_dir)
 
-                        if intent in ms_transmission_plots:
-                            transmission_plots = [p for p in ms_transmission_plots.get(intent, [])
-                                                  if p.parameters['spw'] == plot.parameters['spw']]
+                    if intent in ms_transmission_plots:
+                        transmission_plots = [p for p in ms_transmission_plots.get(intent, [])
+                                              if p.parameters['spw'] == plot.parameters['spw']]
 
-                            if intent == 'TARGET':
-                                transmission_plots = [p for p in transmission_plots
-                                                      if p.parameters['field'] == plot.parameters['field']]
+                        if intent == 'TARGET':
+                            transmission_plots = [p for p in transmission_plots
+                                                  if p.parameters['field'] == plot.parameters['field']]
 
-                            if len(transmission_plots) is 1:
-                                transmission_plot = transmission_plots[0]
-                                if os.path.exists(transmission_plot.thumbnail):
-                                    transmission_fullsize_relpath = os.path.relpath(transmission_plot.abspath, pcontext.report_dir)
-                                    transmission_thumbnail_relpath = os.path.relpath(transmission_plot.thumbnail, pcontext.report_dir)
-                                else:
-                                    transmission_plot = False
-                        else:
-                            transmission_plot = False
-                    %>
+                        if len(transmission_plots) is 1:
+                            transmission_plot = transmission_plots[0]
+                            if os.path.exists(transmission_plot.thumbnail):
+                                transmission_fullsize_relpath = os.path.relpath(transmission_plot.abspath, pcontext.report_dir)
+                                transmission_thumbnail_relpath = os.path.relpath(transmission_plot.thumbnail, pcontext.report_dir)
+                            else:
+                                transmission_plot = False
+                    else:
+                        transmission_plot = False
+                %>
 
-                    <div class="thumbnail">
-                        % if transmission_plot:
-                        <a href="${transmission_fullsize_relpath}"
-                           class="fancybox"
-                           rel="${'transmission-%s-%s'.format(ms, intent)}"
-                           % if hasattr(caller, 'fancybox_caption'):
-                           title='<div class="pull-left">${caller.fancybox_caption(transmission_plot)}</div><div class="pull-right"><a href="${transmission_fullsize_relpath}">Full Size</a><br>${rendererutils.get_plot_command_markup(pcontext, transmission_plot.command)}</div>'
-                           % endif
-                           data-thumbnail="${transmission_thumbnail_relpath}">
-                            <img src="${transmission_thumbnail_relpath}"
-                                 % if hasattr(caller, 'transmission_mouseover'):
-                                 title="${caller.transmission_mouseover(transmission_plot)}"
-                                 % endif
-                                 data-thumbnail="${transmission_thumbnail_relpath}">
-                        </a>
-                        <br>
-                        % endif
-                        <a href="${fullsize_relpath}"
-                           class="fancybox"
-                           % if rel_fn:
-                           rel="${rel_fn(plot)}"
-                           % elif relurl:
-                           rel="${relurl}"
-                           % else:
-                           rel="${caller.title()}"
-                           % endif
-                           % if hasattr(caller, 'fancybox_caption'):
-                           title='<div class="pull-left">${caller.fancybox_caption(plot)}</div><div class="pull-right"><a href="${fullsize_relpath}">Full Size</a><br>${rendererutils.get_plot_command_markup(pcontext, plot.command)}</div>'
-                           % endif
-                           data-thumbnail="${thumbnail_relpath}">
-                            <img src="${thumbnail_relpath}"
-                                 % if hasattr(caller, 'mouseover'):
-                                 title="${caller.mouseover(plot)}"
-                                 % endif
-                                 data-thumbnail="${thumbnail_relpath}">
-                        </a>
-
-                        <div class="caption">
-                            <h4>
-                            % if subpage_exists:
-                                <a href="${subpage_path}"
-                                % if data_field:
-                                   data-field="${cgi.escape(plot.parameters['field'], True)}"
-                                % endif
-                                % if data_spw:
-                                   data-spw="${plot.parameters['spw']}"
-                                % endif
-                                % if data_tsysspw:
-                                   data-tsys_spw="${plot.parameters['tsys_spw']}"
-                                % endif
-                                % if data_baseband and 'baseband' in plot.parameters:
-                                   data-baseband="${plot.parameters['baseband']}"
-                                % endif
-                                % if data_vis:
-                                   data-vis="${plot.parameters['vis']}"
-                                % endif
-                                   class="replace">
-                            % endif
-                            ${caller.caption_title(plot)}
-                            % if subpage_exists:
-                                </a>
-                            % endif
-                            </h4>
-                            % if hasattr(caller, 'caption_subtitle'):
-                                <h6>${caller.caption_subtitle(plot)}</h6>
-                            % endif
-
-                            % if hasattr(caller, 'caption_text'):
-                            <p>${caller.caption_text(plot, intent)}</p>
-                            % endif
-                        </div>
-                    </div>
+                <div class="thumbnail">
+                    % if transmission_plot:
+                    <a href="${transmission_fullsize_relpath}"
+                       class="fancybox"
+                       rel="${'transmission-%s-%s'.format(ms, intent)}"
+                       % if hasattr(caller, 'fancybox_caption'):
+                       title='<div class="pull-left">${caller.fancybox_caption(transmission_plot)}</div><div class="pull-right"><a href="${transmission_fullsize_relpath}">Full Size</a><br>${rendererutils.get_plot_command_markup(pcontext, transmission_plot.command)}</div>'
+                       % endif
+                       data-thumbnail="${transmission_thumbnail_relpath}">
+                        <img src="${transmission_thumbnail_relpath}"
+                             % if hasattr(caller, 'transmission_mouseover'):
+                             title="${caller.transmission_mouseover(transmission_plot)}"
+                             % endif
+                             data-thumbnail="${transmission_thumbnail_relpath}">
+                    </a>
+                    <br>
                     % endif
+                    <a href="${fullsize_relpath}"
+                       class="fancybox"
+                       % if rel_fn:
+                       rel="${rel_fn(plot)}"
+                       % elif relurl:
+                       rel="${relurl}"
+                       % else:
+                       rel="${caller.title()}"
+                       % endif
+                       % if hasattr(caller, 'fancybox_caption'):
+                       title='<div class="pull-left">${caller.fancybox_caption(plot)}</div><div class="pull-right"><a href="${fullsize_relpath}">Full Size</a><br>${rendererutils.get_plot_command_markup(pcontext, plot.command)}</div>'
+                       % endif
+                       data-thumbnail="${thumbnail_relpath}">
+                        <img src="${thumbnail_relpath}"
+                             % if hasattr(caller, 'mouseover'):
+                             title="${caller.mouseover(plot)}"
+                             % endif
+                             data-thumbnail="${thumbnail_relpath}">
+                    </a>
+
+                    <div class="caption">
+                        <h4>
+                        % if subpage_exists:
+                            <a href="${subpage_path}"
+                            % if data_field:
+                               data-field="${cgi.escape(plot.parameters['field'], True)}"
+                            % endif
+                            % if data_spw:
+                               data-spw="${plot.parameters['spw']}"
+                            % endif
+                            % if data_tsysspw:
+                               data-tsys_spw="${plot.parameters['tsys_spw']}"
+                            % endif
+                            % if data_baseband:
+                               data-baseband="${plot.parameters['baseband']}"
+                            % endif
+                            % if data_vis:
+                               data-vis="${plot.parameters['vis']}"
+                            % endif
+                               class="replace">
+                        % endif
+                        ${caller.caption_title(plot)}
+                        % if subpage_exists:
+                            </a>
+                        % endif
+                        </h4>
+                        % if hasattr(caller, 'caption_subtitle'):
+                            <h6>${caller.caption_subtitle(plot)}</h6>
+                        % endif
+
+                        % if hasattr(caller, 'caption_text'):
+                        <p>${caller.caption_text(plot, intent)}</p>
+                        % endif
+                    </div>
                 </div>
-                % endfor
                 % endif
+            </div>
             % endfor
+            % endif
         </div><!-- end row -->
+        % endfor
 
     % endfor
 

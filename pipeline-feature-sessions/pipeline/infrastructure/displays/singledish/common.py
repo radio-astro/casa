@@ -278,8 +278,8 @@ class SDImageDisplay(object):
         self.image = SpectralImage(self.imagename)
         qa = casatools.quanta
         self.nchan = self.image.nchan
-        self.data = self.image.data
-        self.mask = self.image.mask
+#         self.data = self.image.data
+#         self.mask = self.image.mask
         self.nx = self.image.nx
         self.ny = self.image.ny
         self.npol = self.image.npol
@@ -308,6 +308,14 @@ class SDImageDisplay(object):
 
         # 2008/9/20 Dec Effect has been taken into account
         self.aspect = 1.0 / math.cos(0.5 * (self.dec_min + self.dec_max) / 180.0 * 3.141592653)
+
+    @property
+    def data(self):
+        return self.image.data if self.image is not None else None
+
+    @property
+    def mask(self):
+        return self.image.mask if self.image is not None else None
 
     @property
     def id_spectral(self):

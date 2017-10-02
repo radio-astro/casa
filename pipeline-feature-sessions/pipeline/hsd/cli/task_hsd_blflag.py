@@ -25,7 +25,7 @@ def hsd_blflag(iteration=None, edge=None, flag_tsys=None, tsys_thresh=None,
     # constructor
     all_inputs = vars()
 
-    task_name = 'SDMSBLFlag'
+    task_name = 'SDBLFlag'
 
     ##########################################################################
     #                                                                        #

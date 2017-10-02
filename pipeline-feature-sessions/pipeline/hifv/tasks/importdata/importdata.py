@@ -1,11 +1,14 @@
 from __future__ import absolute_import
 import collections
-
+import os
+import shutil
 import numpy
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.casatools as casatools
+from pipeline.infrastructure import casa_tasks
+import pipeline.infrastructure.mpihelpers as mpihelpers
 
 import pipeline.h.tasks.importdata.importdata as importdata
 from pipeline.hifv.heuristics.vlascanheuristics import VLAScanHeuristics
@@ -43,6 +46,7 @@ class VLAImportDataResults(basetask.Results):
 
     def merge_with_context(self, context):
         target = context.observing_run
+
         for ms in self.mses:
             LOG.info('Adding {0} to context'.format(ms.name))
             target.add_measurement_set(ms)
@@ -60,6 +64,9 @@ class VLAImportDataResults(basetask.Results):
         if self.setjy_results:
             for result in self.setjy_results:
                 result.merge_with_context(context)
+
+
+
 
     def _do_msinfo_heuristics(self, ms, context):
         """Gets heuristics for VLA via msinfo script
@@ -108,4 +115,63 @@ class VLAImportData(importdata.ImportData):
 
         myresults.origin = results.origin
 
+        for ms in myresults.origin:
+            if myresults.origin[ms] == 'ASDM':
+                myresults.origin[ms] = 'SDM'
+
+        PbandWarning = ''
+        for ms in myresults.mses:
+            for key, value in ms.get_vla_spw2band().iteritems():
+                if 'P' in value:
+                    PbandWarning = 'P-band data detected in the raw data. VLA P-band pipeline calibration has not yet been commissioned and may even fail. Please inspect all P-band pipeline products carefully.'
+
+        if PbandWarning:
+            LOG.warning(PbandWarning)
+
         return myresults
+
+    def _do_importasdm(self, asdm):
+        inputs = self.inputs
+        vis = self._asdm_to_vis_filename(asdm)
+        outfile = os.path.join(inputs.output_dir,
+                               os.path.basename(asdm) + '.flagonline.txt')
+
+        if inputs.save_flagonline:
+            # Create the standard calibration flagging template file
+            template_flagsfile = os.path.join(inputs.output_dir,
+                                              os.path.basename(asdm) + '.flagtemplate.txt')
+            self._make_template_flagfile(asdm, template_flagsfile,
+                                         'User flagging commands file for the calibration pipeline')
+            # Create the imaging targets file
+            template_flagsfile = os.path.join(inputs.output_dir,
+                                              os.path.basename(asdm) + '.flagtargetstemplate.txt')
+            self._make_template_flagfile(asdm, template_flagsfile,
+                                         'User flagging commands file for the imaging pipeline')
+
+        createmms = mpihelpers.parse_mpi_input_parameter(inputs.createmms)
+
+        with_pointing_correction = getattr(inputs, 'with_pointing_correction', True)
+
+        task = casa_tasks.importasdm(asdm=asdm,
+                                     vis=vis,
+                                     savecmds=inputs.save_flagonline,
+                                     outfile=outfile,
+                                     process_caldevice=inputs.process_caldevice,
+                                     asis=inputs.asis,
+                                     overwrite=inputs.overwrite,
+                                     bdfflags=inputs.bdfflags,
+                                     lazy=inputs.lazy,
+                                     with_pointing_correction=with_pointing_correction,
+                                     ocorr_mode=inputs.ocorr_mode,
+                                     process_pointing=True,
+                                     createmms=createmms)
+
+        self._executor.execute(task)
+
+        for xml_filename in ['Source.xml', 'SpectralWindow.xml', 'DataDescription.xml']:
+            asdm_source = os.path.join(asdm, xml_filename)
+            if os.path.exists(asdm_source):
+                vis_source = os.path.join(vis, xml_filename)
+                LOG.info('Copying %s from ASDM to measurement set', xml_filename)
+                LOG.trace('Copying %s: %s to %s', xml_filename, asdm_source, vis_source)
+                shutil.copyfile(asdm_source, vis_source)

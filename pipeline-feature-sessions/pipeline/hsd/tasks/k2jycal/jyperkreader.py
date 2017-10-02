@@ -3,6 +3,7 @@ import os
 import numpy
 import csv
 import contextlib
+import itertools
 
 import pipeline.infrastructure as infrastructure
 
@@ -131,7 +132,7 @@ class JyPerK(object):
     def register_data(self, content):
         assert len(self.header) > 0
         assert len(self.header) == len(content)
-        for (k,v) in zip(self.header, content):
+        for (k,v) in itertools.izip(self.header, content):
             self.data[k].append(v)
 
 @contextlib.contextmanager

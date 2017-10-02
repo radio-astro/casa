@@ -64,7 +64,8 @@ class TecMapsInputs(basetask.StandardInputs):
 
 
 class TecMapsResults(basetask.Results):
-    def __init__(self, final=None, pool=None, preceding=None, tec_image=None, tec_rms_image=None):
+    def __init__(self, final=None, pool=None, preceding=None, tec_image=None, tec_rms_image=None,
+                 tec_plotfile=None):
 
         if final is None:
             final = []
@@ -82,6 +83,7 @@ class TecMapsResults(basetask.Results):
         self.error = set()
         self.tec_image = tec_image
         self.tec_rms_image = tec_rms_image
+        self.tec_plotfile = tec_plotfile
 
     def merge_with_context(self, context):
         if not self.final:
@@ -95,9 +97,9 @@ class TecMapsResults(basetask.Results):
 
     def __repr__(self):
         # Format the GainCurve results.
-        s = 'GainCurvesResults:\n'
+        s = 'TecMapsResults:\n'
         for calapplication in self.final:
-            s += '\tGaincurves caltable written to {name}\n'.format(
+            s += '\tTecMaps caltable written to {name}\n'.format(
                 name=calapplication.gaintable)
         return s
 
@@ -110,7 +112,7 @@ class TecMaps(basetask.StandardTaskTemplate):
 
         tec_image = None
         tec_rms_image = None
-        tec_image, tec_rms_image = tec_maps.create(vis=inputs.vis, doplot=True, imname='iono')
+        tec_image, tec_rms_image, tec_plotfile = tec_maps.create(vis=inputs.vis, doplot=True, imname='iono')
 
         gencal_args = inputs.to_casa_args()
         gencal_args['infile'] = tec_image
@@ -123,7 +125,8 @@ class TecMaps(basetask.StandardTaskTemplate):
         calapp = callibrary.CalApplication(calto, calfrom)
         callist.append(calapp)
 
-        return TecMapsResults(pool=callist, final=callist, tec_image=tec_image, tec_rms_image=tec_rms_image)
+        return TecMapsResults(pool=callist, final=callist, tec_image=tec_image, tec_rms_image=tec_rms_image,
+                              tec_plotfile=tec_plotfile)
 
     def analyse(self, result):
         # double-check that the caltable was actually generated

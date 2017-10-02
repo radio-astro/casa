@@ -28,6 +28,8 @@ import numpy
 import math
 import re
 import collections
+import shutil
+import itertools
 
 #import memory_profiler
 
@@ -55,59 +57,59 @@ def __coldesc( vtype, option, maxlen,
 # Description for data table columns as dictionary.
 # Each value is a tuple containing:
 #
-#    (valueType,option,ndim,maxlen,comment[,unit])
+#    (valueType,option,maxlen,ndim,comment[,unit])
 #
 # dataManagerGroup and dataManagerType is always 'StandardStMan'.
-TD_DESC_RO = [
-#    __coldesc('integer', 0, 0, -1, 'Primary key'),
-    __coldesc('integer', 0, 0, -1, 'Row number'),
-    __coldesc('integer', 0, 0, -1, 'Scan number'),
-    __coldesc('integer', 0, 0, -1, 'IF number'),
-    __coldesc('integer', 0, 0, -1, 'Number of Polarizations'),
-    __coldesc('integer', 0, 0, -1, 'Beam number'),
-    __coldesc('string',  0, 0, -1, 'Date'),
-    __coldesc('double',  0, 0, -1, 'Time in MJD', 'd'),
-    __coldesc('double',  0, 0, -1, 'Elapsed time since first scan' 'd'),
-    __coldesc('double',  0, 0, -1, 'Exposure time', 's'),
-    __coldesc('double',  0, 0, -1, 'Right Ascension', 'deg'),
-    __coldesc('double',  0, 0, -1, 'Declination', 'deg'),
-    __coldesc('double',  0, 0, -1, 'Azimuth', 'deg'),
-    __coldesc('double',  0, 0, -1, 'Elevation', 'deg'),
-    __coldesc('integer', 0, 0, -1, 'Number of channels'),
-    __coldesc('double',  0, 0,  1, 'Tsys', 'K'),
-    __coldesc('string',  0, 0, -1, 'Target name'),
-    __coldesc('integer', 0, 0, -1, 'Antenna index'),
-    __coldesc('integer', 0, 0, -1, 'Source type enum'),
-    __coldesc('integer', 0, 0, -1, 'MS index'),
-    __coldesc('integer', 0, 0, -1, 'Field ID')
-    ]
-
-TD_DESC_RW = [
-    __coldesc('double',  0, 0,  2, 'Statistics'),
-    __coldesc('integer', 0, 0,  2, 'Flgas'),
-    __coldesc('integer', 0, 0,  2, 'Permanent flags'),
-    __coldesc('integer', 0, 0,  1, 'Actual flag'),
-    __coldesc('integer', 0, 0, -1, 'Number of mask regions'),
-    __coldesc('integer', 0, 0,  2, 'List of mask ranges'),
-    __coldesc('integer', 0, 0, -1, 'Unchanged row or not'),
-    __coldesc('integer', 0, 0, -1, 'Position group id')#,
-    ]
-
 def __tabledescro():
+    TD_DESC_RO = [
+    #    __coldesc('integer', 0, 0, -1, 'Primary key'),
+        __coldesc('integer', 0, 0, -1, 'Row number'),
+        __coldesc('integer', 0, 0, -1, 'Scan number'),
+        __coldesc('integer', 0, 0, -1, 'IF number'),
+        __coldesc('integer', 0, 0, -1, 'Number of Polarizations'),
+        __coldesc('integer', 0, 0, -1, 'Beam number'),
+        __coldesc('string',  0, 0, -1, 'Date'),
+        __coldesc('double',  0, 0, -1, 'Time in MJD', 'd'),
+        __coldesc('double',  0, 0, -1, 'Elapsed time since first scan' 'd'),
+        __coldesc('double',  0, 0, -1, 'Exposure time', 's'),
+        __coldesc('double',  0, 0, -1, 'Right Ascension', 'deg'),
+        __coldesc('double',  0, 0, -1, 'Declination', 'deg'),
+        __coldesc('double',  0, 0, -1, 'Azimuth', 'deg'),
+        __coldesc('double',  0, 0, -1, 'Elevation', 'deg'),
+        __coldesc('integer', 0, 0, -1, 'Number of channels'),
+        __coldesc('double',  0, 0,  1, 'Tsys', 'K'),
+        __coldesc('string',  0, 0, -1, 'Target name'),
+        __coldesc('integer', 0, 0, -1, 'Antenna index'),
+        __coldesc('integer', 0, 0, -1, 'Source type enum'),
+        __coldesc('integer', 0, 0, -1, 'MS index'),
+        __coldesc('integer', 0, 0, -1, 'Field ID')
+        ]
+
     name = [
         'ROW', 'SCAN', 'IF', 'NPOL', 'BEAM', 'DATE',
         'TIME', 'ELAPSED', 'EXPOSURE', 'RA', 'DEC',
         'AZ', 'EL', 'NCHAN', 'TSYS', 'TARGET', 'ANTENNA',
         'SRCTYPE', 'MS', 'FIELD_ID'
         ]
-    return dict( zip(name,TD_DESC_RO) )
+    return dict( itertools.izip(name,TD_DESC_RO) )
 
 def __tabledescrw():
+    TD_DESC_RW = [
+        __coldesc('double',  0, 0,  2, 'Statistics'),
+        __coldesc('integer', 0, 0,  2, 'Flgas'),
+        __coldesc('integer', 0, 0,  2, 'Permanent flags'),
+        __coldesc('integer', 0, 0,  1, 'Actual flag'),
+        __coldesc('integer', 0, 0, -1, 'Number of mask regions'),
+        __coldesc('integer', 0, 0,  2, 'List of mask ranges'),
+        __coldesc('integer', 0, 0, -1, 'Unchanged row or not'),
+        __coldesc('integer', 0, 0, -1, 'Position group id')#,
+        ]
+
     name = [
         'STATISTICS', 'FLAG', 'FLAG_PERMANENT',
         'FLAG_SUMMARY', 'NMASK', 'MASKLIST', 'NOCHANGE',
         'POSGRP']
-    return dict( zip(name,TD_DESC_RW) )
+    return dict( itertools.izip(name,TD_DESC_RW) )
 
 TABLEDESC_RO = __tabledescro()
 TABLEDESC_RW = __tabledescrw()
@@ -115,7 +117,7 @@ TABLEDESC_RW = __tabledescrw()
 def create_table(table, name, desc, memtype='plain', nrow=0):
     ret = table.create(name, desc, memtype=memtype, nrow=nrow)
     assert ret == True
-    for (_colname, _coldesc) in desc.items():
+    for (_colname, _coldesc) in desc.iteritems():
         if _coldesc.has_key('keywords'):
             table.putcolkeywords(_colname, _coldesc['keywords'])
 
@@ -193,7 +195,7 @@ class DataTableImpl( object ):
         else:
             if readonly is None:
                 readonly = True
-            self.importdata(name=name, minimal=False, readonly=readonly)
+            self.importdata2(name=name, minimal=False, readonly=readonly)
 
     def __del__( self ):
         # make sure that table is closed
@@ -294,6 +296,24 @@ class DataTableImpl( object ):
         """
         self.cols[name].putcell(idx,val)
 
+    def getcolslice(self, name, blc, trc, incr, startrow=0, nrow=-1, rowincr=1):
+        return self.cols[name].getcolslice(blc, trc, incr, startrow, nrow, rowincr)
+        
+    def putcolslice(self, name, value, blc, trc, incr, startrow=0, nrow=-1, rowincr=1):
+        self.cols[name].putcolslice(value, blc, trc, incr, startrow, nrow, rowincr)
+        
+    def getcellslice(self, name, rownr, blc, trc, incr):
+        return self.cols[name].getcellslice(rownr, blc, trc, incr)
+    
+    def putcellslice(self, name, rownr, value, blc, trc, incr):
+        self.cols[name].putcellslice(rownr, value, blc, trc, incr)
+        
+    def getcolkeyword(self, columnname, keyword):
+        if columnname in TABLEDESC_RO.keys():
+            return self.tb1.getcolkeyword(columnname, keyword)
+        else:
+            return self.tb2.getcolkeyword(columnname, keyword)
+
     def putkeyword( self, name, val ):
         """
         name -- keyword name
@@ -321,6 +341,17 @@ class DataTableImpl( object ):
 
         # copy input table to memory
         self._copyfrom( name, minimal )
+        self.plaintable = absolute_path(name)
+        self.__init_cols(readonly=readonly)
+
+    def importdata2( self, name, minimal=True, readonly=True ):
+        """
+        name -- name of DataTable to be imported
+        """
+        LOG.debug('Importing DataTable from %s...'%(name))
+
+        # copy input table to memory
+        self._copyfrom2( name, minimal )
         self.plaintable = absolute_path(name)
         self.__init_cols(readonly=readonly)
 
@@ -357,9 +388,14 @@ class DataTableImpl( object ):
         # save
         if not minimal or not os.path.exists( os.path.join(abspath,'RO') ):
             #LOG.trace('Exporting RO table')
-            tbloc = self.tb1.copy( os.path.join(abspath,'RO'), deep=True,
+            if os.path.exists(self.tb1.name()):
+                # self.tb1 seems to be plain table, nothing to be done
+                pass
+            else:
+                # tb1 is memory table
+                tbloc = self.tb1.copy( os.path.join(abspath,'RO'), deep=True,
                                    valuecopy=True, returnobject=True )
-            tbloc.close()
+                tbloc.close()
         #LOG.trace('Exporting RW table')
         tbloc = self.tb2.copy( os.path.join(abspath,'RW'), deep=True,
                                valuecopy=True, returnobject=True )
@@ -386,9 +422,9 @@ class DataTableImpl( object ):
                     'string': str}
         datatype = lambda desc: list if desc.has_key('ndim') and desc['ndim'] > 0 \
                                   else type_map[desc['valueType']]
-        for (k,v) in TABLEDESC_RO.items():
+        for (k,v) in TABLEDESC_RO.iteritems():
             self.cols[k] = RO_COLUMN(self.tb1,k,datatype(v))
-        for (k,v) in TABLEDESC_RW.items():
+        for (k,v) in TABLEDESC_RW.iteritems():
             if k == 'MASKLIST':
                 self.cols[k] = DataTableColumnMaskList(self.tb2)
             elif k == 'NOCHANGE':
@@ -416,6 +452,22 @@ class DataTableImpl( object ):
                                 returnobject=True )
         self.isopened = True
 
+    def _copyfrom2( self, name, minimal=True ):
+        self._close()
+        abspath = absolute_path(name)
+        if not minimal or abspath != self.plaintable:
+            #with casatools.TableReader(os.path.join(name,'RO')) as tb:
+            #    self.tb1 = tb.copy( self.memtable1, deep=True,
+            #                        valuecopy=True, memorytable=True,
+            #                        returnobject=True )
+            self.tb1 = casatools.casac.table()
+            self.tb1.open(os.path.join(name, 'RO'), nomodify=False)
+        with casatools.TableReader(os.path.join(name,'RW')) as tb:
+            self.tb2 = tb.copy( self.memtable2, deep=True,
+                                valuecopy=True, memorytable=True,
+                                returnobject=True )
+        self.isopened = True
+
     def get_posdict(self, ant, spw, pol):
         posgrp_list = self.getkeyword('POSGRP_LIST')
         try:
@@ -429,7 +481,7 @@ class DataTableImpl( object ):
         rows = self.getcol('ROW')
         posgrp = self.getcol('POSGRP')
         posdict = {}
-        for (k,v) in posgrp_rep.items():
+        for (k,v) in posgrp_rep.iteritems():
             if int(k) not in mygrp:
                 continue
             key = rows[v]
@@ -603,7 +655,7 @@ class DataTableImpl( object ):
                 time_sel = times.take(cal_idxs) #in sec
                 field_sel = fieldids.take(cal_idxs)
                 for dt_id in dtrows:
-                    tref = self.tb1.getcell('TIME', dt_id)*86400 # day->sec
+                    tref = self.getcell('TIME', dt_id)*86400 # day->sec
                     if gainfield=='':
                         cal_field_idxs = cal_idxs
                     else:
@@ -618,12 +670,12 @@ class DataTableImpl( object ):
                     #LOG.trace("cal_field_ids=%s" % cal_field_idxs)
                     #LOG.trace('atsys = %s' % str(atsys))
                     if atsys.shape[0] == 1: #only one Tsys measurement selected
-                        self.tb1.putcell('TSYS', dt_id, atsys[0,:])
+                        self.putcell('TSYS', dt_id, atsys[0,:])
                     else:
                         tsys_time = times.take(cal_field_idxs) #in sec
                         itsys = [ _interpolate(atsys[:,ipol], tsys_time, tref) \
                                  for ipol in range(atsys.shape[-1]) ]
-                        self.tb1.putcell('TSYS', dt_id, itsys)
+                        self.putcell('TSYS', dt_id, itsys)
 
     #@memory_profiler.profile
     def _update_flag(self, context, infile):
@@ -643,135 +695,30 @@ class DataTableImpl( object ):
                 break
         LOG.info('MS idx=%d'%(msidx))
             
-#         # current implementation
-#         start = time.time()
-#         msidcol = self.tb1.getcol('MS')
-#         rows = self.tb1.getcol('ROW')
-#         flag_permanent = self.tb2.getcol('FLAG_PERMANENT')
-#         online_flag = flag_permanent[:,OnlineFlagIndex,:]
-#         index = numpy.where(msidcol == msidx)
-#         irow = 0
-#         with casatools.TableReader(infile) as tb:
-#             for dt_row in index[0]:
-#                 ms_row = rows[dt_row]
-#                 flag = tb.getcell('FLAG', ms_row)
-#                 rowflag = tb.getcell('FLAG_ROW', ms_row)
-#                 irow += 1
-#                 if rowflag == True:
-#                     online_flag[:,dt_row] = 0
-#                 else:
-#                     for ipol in range(online_flag.shape[0]):
-#                         online_flag[ipol, dt_row] = 0 if flag[ipol].all() else 1
-#         self.tb2.putcol('FLAG_PERMANENT', flag_permanent)
-#         end = time.time()
-#         LOG.info('current implementation: {0} sec'.format(end-start))
-                   
-        # new implementation
-#         start = time.time()
-        tb = self.tb1
-        taql = 'SELECT ROWID() AS ROWID FROM "{dt}" WHERE MS == {msid} ORDER BY ROWID()'.format(dt=self.get_rotable_name(self.plaintable),
-                                                                                                msid=msidx)
-        indextable = tb.taql(taql)
-        try:
-            dt_rows = indextable.getcol('ROWID')  
-        finally:
-            indextable.close()
-            del indextable
- 
-        taql = ' '.join(['SELECT IIF(FLAG_ROW || ALLS(FLAG,2), 0, 1) AS IFLAG FROM "{vis}"'.format(vis=infile),
-                         'WHERE ROWID() IN [SELECT ROW FROM "{dt}" WHERE MS == {msid}]'.format(dt=self.get_rotable_name(self.plaintable),
-                                                                                               msid=msidx),
-                         'ORDER BY ROWID()'])
-        collapsed = tb.taql(taql)
-        try:
-            assert len(dt_rows) == collapsed.nrows()
-#             assert numpy.all(dt_rows == index[0])
-            for (irow, dt_row) in enumerate(dt_rows):
-                _online_flag = self.tb2.getcell('FLAG_PERMANENT', dt_row)
-                _iflag = collapsed.getcell('IFLAG', irow)
-                _online_flag[:, OnlineFlagIndex] = _iflag
-                # CAS-2799: dt_row must be casted to Python int since tb.putcell 
-                #           doesn't accept numpy int
-                self.tb2.putcell('FLAG_PERMANENT', int(dt_row), _online_flag)
-        finally:
-            collapsed.close()
-            del collapsed 
-             
-#         end = time.time()
-#         LOG.info('taql implementation: {0} sec'.format(end-start))
-        
-#         new_flag = self.tb2.getcol('FLAG_PERMANENT')
-#         for i in xrange(new_flag.shape[2]):
-#             assert numpy.all(flag_permanent[:,OnlineFlagIndex,i] == new_flag[:,OnlineFlagIndex,i]), \
-#             '{0}: current impl: {1}, new impl: {2}'.format(i, flag_permanent[:,OnlineFlagIndex,i], new_flag[:,OnlineFlagIndex,i])
-
-
-# def map_spwchans(atm_spw, science_spw):
-#     atm_nchan = atm_spw.nchan
-#     atm_freq_min, atm_freq_max, atm_incr = atm_spw.freq_min, atm_spw.freq_max, atm_spw.increment
-#     science_freq_min, science_freq_max = atm_spw.freq_min, atm_spw.freq_max
-#     if atm_incr < 0: # LSB
-#         get_channel = lambda ref, freq, incr, offset: int(math.floor((ref - freq)/abs(incr) + offset))
-#         LOG.trace('--- LSB ----')
-#         start_atmchan = max(0, get_channel(atm_freq_max, science_freq_max, atm_incr, 0.5))
-#         end_atmchan = min(atm_nchan, get_channel(atm_freq_max, science_freq_min, atm_incr, -0.5) + 1)
-#     elif(atm_incr > 0): # USB
-#         get_channel = lambda ref, freq, incr, offset: math.floor((freq - ref)/abs(incr) + offset)
-#         LOG.trace('--- USB ----')
-#         start_atmchan = max(0, get_channel(atm_freq_min, science_freq_min, atm_incr, 0.5))
-#         end_atmchan = min(atm_nchan, get_channel(atm_freq_min, science_freq_max, atm_incr, -0.5) + 1)
-#     else:
-#         raise RuntimeError, 'error: atm_increment should not be 0'
-#     
-#     LOG.trace('calculate_average_tsys:   satrt_atmchan == %d' % start_atmchan)
-#     LOG.trace('calculate_average_tsys:   end_atmchan == %d' % end_atmchan)
-# 
-#     if end_atmchan == start_atmchan:
-#         end_atmchan = start_atmchan + 1
-#     
-#     return start_atmchan, end_atmchan
-    
-# def calculate_average_tsys(atm_nchan,atm_freq_min,atm_freq_max,target_freq_min,target_freq_max,atm_increment,tsyslist) :
-#     
-#     if atm_increment < 0: # LSB
-#         get_channel = lambda ref, freq, incr, offset: int(math.floor((ref - freq)/abs(incr) + offset))
-#         LOG.trace('--- LSB ----')
-#         if atm_freq_min < target_freq_min and target_freq_max < atm_freq_max:
-#             # start_atmchan
-#             start_atmchan = get_channel(atm_freq_max, target_freq_max, atm_increment, 0.5)
-#             LOG.trace('calculate_average_tsys:   satrt_atmchan == %d' % start_atmchan)
-#                 
-#             # end_atmchan
-#             end_atmchan = get_channel(atm_freq_max, target_freq_min, atm_increment, -0.5)
-#             LOG.trace('calculate_average_tsys:   end_atmchan == %d' % end_atmchan) + 1
-#         else:
-#             start_atmchan = 0
-#             end_atmchan = atm_nchan
-#         
-#     elif(atm_increment > 0): # USB)
-#         get_channel = lambda ref, freq, incr, offset: math.floor((freq - ref)/abs(incr) + offset)
-#         LOG.trace('--- USB ----')
-#         if(atm_freq_min < target_freq_min and target_freq_max < atm_freq_max):
-#             # start_atmchan
-#             start_atmchan = get_channel(atm_freq_min, target_freq_min, atm_increment, 0.5)
-#             LOG.trace('calculate_average_tsys:   satrt_atmchan == %d' % start_atmchan)
-#                 
-#             # end_atmchan
-#             end_atmchan = get_channel(atm_freq_min, target_freq_max, atm_increment, -0.5) + 1
-#             LOG.trace('calculate_average_tsys:   end_atmchan == %d' % end_atmchan)
-#         else:
-#             start_atmchan = 0
-#             end_atmchan = atm_nchan
-#     else:
-#         raise RuntimeError, 'error: atm_increment should not be 0'
-#         
-#     LOG.debug('calculate_average_tsys:   end_atmchan - start_atmchan = %d ' % (end_atmchan - start_atmchan))
-#     if start_atmchan - end_atmchan > 1:
-#         averaged_tsys = numpy.mean(tsyslist[start_atmchan:end_atmchan])
-#     else:
-#         averaged_tsys = numpy.mean(tsyslist)
-#     return averaged_tsys
-
+        # back to previous impl. with reduced memory usage
+        # (performance degraded)
+        ms_ids = self.getcol('MS')
+        dt_rows = numpy.where(ms_ids == msidx)[0]
+        del ms_ids
+        rows = self.getcol('ROW')
+        ms_rows = rows[dt_rows] 
+        with casatools.TableReader(infile) as tb:
+            #for dt_row in index[0]:
+            for dt_row, ms_row in itertools.izip(dt_rows, ms_rows):
+                #ms_row = rows[dt_row]
+                flag = tb.getcell('FLAG', ms_row)
+                rowflag = tb.getcell('FLAG_ROW', ms_row)
+                #irow += 1
+                npol = flag.shape[0]
+                online_flag = numpy.empty((npol, 1,), dtype=numpy.int32)
+                if rowflag == True:
+                    online_flag[:] = 0
+                else:
+                    for ipol in range(npol):
+                        online_flag[ipol,0] = 0 if flag[ipol].all() else 1
+                self.putcellslice('FLAG_PERMANENT', int(dt_row), online_flag,
+                                  blc=[0, OnlineFlagIndex], trc=[npol-1, OnlineFlagIndex], 
+                                  incr=[1,1])
 
 class RODataTableColumn( object ):
     def __init__( self, table, name, dtype ):
@@ -783,17 +730,27 @@ class RODataTableColumn( object ):
         return '%s("%s","%s")'%(self.__class__.__name__,self.name,self.caster_get)
 
     def getcell( self, idx ):
-        #return self.caster_get(self.tb.getcell(self.name, idx))
         return self.tb.getcell(self.name, idx)
 
     def getcol( self, startrow=0, nrow=-1, rowincr=1 ):
-        #return self.tb.getcol(self.name, startrow, nrow, rowincr).tolist()
         return self.tb.getcol(self.name, startrow, nrow, rowincr)
+    
+    def getcellslice(self, rownr, blc, trc, incr):
+        return self.tb.getcellslice(self.name, rownr, blc, trc, incr)
+    
+    def getcolslice(self, blc, trc, incr, startrow=0, nrow=-1, rowincr=1):
+        return self.tb.getcolslice(self.name, blc, trc, incr, startrow, nrow, rowincr)
 
     def putcell( self, idx, val ):
         self.__raise()
 
     def putcol( self, val, startrow=0, nrow=-1, rowincr=1 ):
+        self.__raise()
+
+    def putcellslice(self, rownr, value, blc, trc, incr):
+        self.__raise()
+    
+    def putcolslice(self, value, blc, trc, incr, startrow=0, nrow=-1, rowincr=1):
         self.__raise()
 
     def __raise( self ):
@@ -813,29 +770,15 @@ class RWDataTableColumn( RODataTableColumn ):
     def putcol( self, val, startrow=0, nrow=-1, rowincr=1 ):
         self.tb.putcol(self.name,numpy.asarray(val),int(startrow),int(nrow),int(rowincr))
         
+    def putcellslice(self, rownr, value, blc, trc, incr):
+        return self.tb.putcellslice(self.name, rownr, value, blc, trc, incr)
+    
+    def putcolslice(self, value, blc, trc, incr, startrow=0, nrow=-1, rowincr=1):
+        return self.tb.putcolslice(self.name, value, blc, trc, incr, startrow, nrow, rowincr)
+
 class DataTableColumnNoChange( RWDataTableColumn ):
     def __init__( self, table):
         super(RWDataTableColumn,self).__init__(table, "NOCHANGE", int)
-
-#     def getcell( self, idx ):
-#         v = self.tb.getcell(self.name, int(idx))
-#         #if v < 0:
-#         #    return False
-#         #else:
-#         #    return int(v)
-#         return v
-
-    #def getcol( self, startrow=0, nrow=-1, rowincr=1 ):
-        #if nrow < 0:
-        #    nrow = self.tb.nrows()
-        #ret = [0 for i in xrange(startrow,nrow,rowincr)]
-        #ret = numpy.zeros(len(xrange(startrow, nrow, rowincr)), dtype=numpy.int32)
-        #idx = 0
-        #for i in xrange(startrow,nrow,rowincr):
-        #    tNOCHANGE = self.tb.getcell(self.name,i)
-        #    ret[idx] = False if tNOCHANGE < 0 else tNOCHANGE
-        #    idx += 1
-        #return ret
 
     def putcell( self, idx, val ):
         if type(val)==bool:
@@ -843,14 +786,6 @@ class DataTableColumnNoChange( RWDataTableColumn ):
         else:
             v = val
         self.tb.putcell(self.name, int(idx), int(v))
-
-#     def putcol( self, val, startrow=0, nrow=-1, rowincr=1 ):
-#         if nrow < 0:
-#             nrow = min(startrow+len(val)*rowincr,self.tb.nrows())
-#         idx = 0
-#         for i in xrange(startrow,nrow,rowincr):
-#             self.putcell(i,val[idx])
-#             idx += 1
 
 class DataTableColumnMaskList( RWDataTableColumn ):
     NoMask = numpy.zeros((1,2), dtype=numpy.int32) - 1#[[-1,-1]]
@@ -861,10 +796,8 @@ class DataTableColumnMaskList( RWDataTableColumn ):
     def getcell( self, idx ):
         v = self.tb.getcell(self.name, int(idx))
         if sum(v[0]) < 0:
-            #return []
             return numpy.zeros(0, dtype=numpy.int32)
         else:
-            #return v.tolist() 
             return v
 
     def getcol( self, startrow=0, nrow=-1, rowincr=1 ):
@@ -875,10 +808,9 @@ class DataTableColumnMaskList( RWDataTableColumn ):
         """
         if nrow < 0:
             nrow = self.tb.nrows()
-        ret = collections.defaultdict(list)#[[] for i in xrange(startrow,nrow,rowincr)]
+        ret = collections.defaultdict(list)
         idx=0
         for i in xrange(startrow,nrow,rowincr):
-            #tMASKLIST = list(self.getcell(i))
             tMASKLIST = self.getcell(i)
             if len(tMASKLIST)==1 and tMASKLIST[0][0]==0 and \
                    tMASKLIST[0][1]==0:

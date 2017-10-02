@@ -10,7 +10,7 @@ def hsd_imaging(mode=None, pipelinemode=None,
     # constructor
     all_inputs = vars()
 
-    task_name = 'SDMSImaging'
+    task_name = 'SDImaging'
     
     ##########################################################################
     #                                                                        #

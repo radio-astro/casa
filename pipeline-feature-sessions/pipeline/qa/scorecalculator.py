@@ -98,6 +98,34 @@ def calc_flags_per_agent(summaries):
     return stats
 
 
+def calc_flags_for_scans_per_agent(summaries, scanids):
+    stats = []
+
+    # Go through summary for each agent.
+    for ind, summary in enumerate(summaries):
+        flagcount = 0
+        totalcount = 0
+
+        # Add up flagged and total from all scans.
+        for scanid in scanids:
+            if scanid in summary['scan']:
+                flagcount += int(summary['scan'][scanid]['flagged'])
+                totalcount += int(summary['scan'][scanid]['total'])
+
+        # From the second summary onwards, subtract counts from the previous
+        # one.
+        if ind > 0:
+            flagcount -= stats[ind-1].flagged
+
+        # Create agent stats object, append to output.
+        stat = AgentStats(name=summary['name'],
+                          flagged=flagcount,
+                          total=totalcount)
+        stats.append(stat)
+
+    return stats
+
+
 def linear_score(x, x1, x2, y1=0.0, y2=1.0):
     """
     Calculate the score for the given data value, assuming the
@@ -290,7 +318,8 @@ def score_bands(mses):
     # measurement sets containing the following bands.
     score = 1.0
     score_map = {'8': -1.0,
-                 '9': -1.0}
+                 '9': -1.0,
+                '10': -1.0}
 
     unsupported = set(score_map.keys())
 
@@ -328,7 +357,8 @@ def score_bands(mses):
                           metric_units='MS score based on presence of high-frequency data')
 
     # Make score linear
-    return pqa.QAScore(max(0.0, score), longmsg=longmsg, shortmsg=shortmsg, origin=origin)
+    #return pqa.QAScore(max(0.0, score), longmsg=longmsg, shortmsg=shortmsg, origin=origin)
+    return pqa.QAScore(max(rutils.SCORE_THRESHOLD_SUBOPTIMAL, score), longmsg=longmsg, shortmsg=shortmsg, origin=origin)
 
 
 @log_qa
@@ -486,7 +516,7 @@ def score_online_shadow_template_agents(ms, summaries):
     0 < score < 1 === 60% < frac_flagged < 5%
     """
     score = score_data_flagged_by_agents(ms, summaries, 0.05, 0.6,
-                                         ['online', 'shadow', 'qa0', 'before', 'template'])
+                                         ['online', 'shadow', 'qa0', 'qa2', 'before', 'template'])
 
     new_origin = pqa.QAOrigin(metric_name='score_online_shadow_template_agents',
                               metric_score=score.origin.metric_score,
@@ -645,6 +675,58 @@ def linear_score_fraction_newly_flagged(filename, summaries, vis):
                           metric_units='Fraction of data that is newly flagged')
 
     return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg, vis=os.path.basename(vis), origin=origin)
+
+
+@log_qa
+def linear_score_fraction_unflagged_newly_flagged_for_intent(ms, summaries, intent):
+    """
+    Calculate a score for the flagging task based on the fraction of unflagged
+    data for scans belonging to specified intent that got newly flagged.
+
+    If no unflagged data was found in the before summary, then return a score
+    of 0.0.
+    """
+
+    # Identify scan IDs belonging to intent.
+    scanids = [str(scan.id) for scan in ms.get_scans(scan_intent=intent)]
+
+    # Calculate flags for scans belonging to intent.
+    agent_stats = calc_flags_for_scans_per_agent(summaries, scanids)
+
+    # Calculate counts of unflagged data.
+    unflaggedcount = agent_stats[0].total - agent_stats[0].flagged
+
+    # If the "before" summary had unflagged data, then proceed to compute
+    # the fraction fo unflagged data that got newly flagged.
+    if unflaggedcount > 0:
+        frac_flagged = reduce(operator.add,
+                              [float(s.flagged)/unflaggedcount for s in agent_stats[1:]], 0)
+
+        score = 1.0 - frac_flagged
+        percent = 100.0 * frac_flagged
+        longmsg = '{:0.2f}% of unflagged data with intent {} in {} was newly ' \
+                  'flagged.'.format(percent, intent, ms.basename)
+        shortmsg = '{:0.2f}% unflagged data flagged.'.format(percent)
+
+        origin = pqa.QAOrigin(metric_name='linear_score_fraction_unflagged_newly_flagged_for_intent',
+                              metric_score=frac_flagged,
+                              metric_units='Fraction of unflagged data for intent '
+                                           '{} that is newly flagged'.format(intent))
+    # If no unflagged data was found at the start, return score of 0.
+    else:
+        score = 0.0
+        longmsg = 'No unflagged data with intent {} found in {}.'.format(intent, ms.basename)
+        shortmsg = 'No unflagged data.'
+        origin = pqa.QAOrigin(metric_name='linear_score_fraction_unflagged_newly_flagged_for_intent',
+                              metric_score=False,
+                              metric_units='Presence of unflagged data.')
+
+    # Append extra warning to QA message if score falls at-or-below the "warning" threshold.
+    if score <= rutils.SCORE_THRESHOLD_WARNING:
+        longmsg += ' Please investigate!'
+        shortmsg += ' Please investigate!'
+
+    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg, vis=ms.basename, origin=origin)
 
 
 @log_qa
@@ -984,36 +1066,51 @@ def score_refspw_mapping_fraction(ms, ref_spwmap):
 
 
 @log_qa
-def score_phaseup_mapping_fraction(ms, reqfields, reqintents, phaseup_spwmap):
+def score_phaseup_mapping_fraction(ms, fullcombine, phaseup_spwmap):
     """
     Compute the fraction of science spws that have not been
     mapped to other probably wider windows.
-
-    Note that reqfields and reqintents are no longer used. Remove at some point
     """
-    nunmapped = 0
+
     if not phaseup_spwmap:
+        nunmapped = len([spw for spw in ms.get_spectral_windows(science_windows_only=True)])
         score = 1.0
-        longmsg = 'No mapped science spws for %s ' % ms.basename
-        shortmsg = 'No mapped science spws'
+        longmsg = 'No spw mapping for %s ' % ms.basename
+        shortmsg = 'No spw mapping'
+    elif fullcombine is True:
+        nunmapped = 0
+        score = rutils.SCORE_THRESHOLD_WARNING
+        longmsg = 'Combined spw mapping for %s ' % (ms.basename)
+        shortmsg = 'Combined spw mapping'
     else:
         # Expected science windows
-        scispws = set([spw.id for spw in ms.get_spectral_windows(science_windows_only=True)])
-        nexpected = len(scispws)
+        scispws = [spw for spw in ms.get_spectral_windows(science_windows_only=True)]
+        scispwids = [spw.id for spw in ms.get_spectral_windows(science_windows_only=True)]
+        nexpected = len(scispwids)
 
-        for spwid in scispws:
+        nunmapped = 0
+        samesideband = True
+        for spwid, scispw in zip (scispwids, scispws):
             if spwid == phaseup_spwmap[spwid]:
                 nunmapped += 1
+            else:
+                if scispw.sideband != ms.get_spectral_window(phaseup_spwmap[spwid]).sideband:
+                    samesideband = False
         
         if nunmapped >= nexpected:
             score = 1.0
-            longmsg = 'No mapped science spws for %s ' % ms.basename
-            shortmsg = 'No mapped science spws'
+            longmsg = 'No spw mapping for %s ' % ms.basename
+            shortmsg = 'No spw mapping'
         else:
             # Replace the previous score with a warning
-            score = rutils.SCORE_THRESHOLD_WARNING
-            longmsg = 'There are %d mapped science spws for %s ' % (nexpected - nunmapped, ms.basename)
-            shortmsg = 'There are mapped science spws'
+            if samesideband is True:
+                score = rutils.SCORE_THRESHOLD_SUBOPTIMAL
+                longmsg = 'Spw mapping within sidebands for %s' % (ms.basename)
+                shortmsg = 'Spw mapping within sidebands'
+            else:
+                score = rutils.SCORE_THRESHOLD_WARNING
+                longmsg = 'Spw mapping across sidebands required for %s' % (ms.basename)
+                shortmsg = 'Spw mapping across sidebands'
 
     origin = pqa.QAOrigin(metric_name='score_phaseup_mapping_fraction',
                           metric_score=nunmapped,
@@ -1654,6 +1751,8 @@ def score_checksources(mses, fieldname, spwid, imagename):
         shortmsg = 'Check source fit successful'
         if not refflux:
             score = max(0.0, 1.0 - min(1.0, beams))
+            if score <= 0.9:
+                shortmsg = 'Check source fit not optimal'
             longmsg = ('Check source fit for %s spwd %d:  offet %0.3fmarcsec %0.3fbeams  fit flux %0.3fJy  '
                        'decoherence None' % (fieldname, spwid, offset, beams, fitflux))
             metric_score = beams
@@ -1664,6 +1763,8 @@ def score_checksources(mses, fieldname, spwid, imagename):
             offsetscore = max(0.0, 1.0 - min(1.0, beams))
             fluxscore = max(0.0, 1.0 - fitdict['fluxloss']['value'])
             score = math.sqrt(fluxscore * offsetscore)
+            if score <= 0.9:
+                shortmsg = 'Check source fit not optimal'
             longmsg = ('Check source fit for %s spwd %d:  offet %0.3fmarcsec %0.3fbeams  fit flux %0.3fJy  '
                        'decoherence %0.3f percent' % (fieldname, spwid, offset, beams, fitflux, coherence))
 

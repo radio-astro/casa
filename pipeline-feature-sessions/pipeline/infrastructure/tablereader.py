@@ -298,7 +298,9 @@ class MeasurementSetReader(object):
                     LOG.info('Populating ms.representative_target ...')
                     ms.representative_target = (sbinfo[0], sbinfo[1], sbinfo[2])
                 if not (sbinfo[3] and sbinfo[4]):
-                    LOG.warn('Undefined angular resolution limits for %s' % (ms.basename))
+                    # Only warn if the number of 12m antennas is greater than the number of 7m antennas
+                    if len([a for a in ms.get_antenna() if a.diameter == 12.0]) > len([a for a in ms.get_antenna() if a.diameter == 7.0]):
+                        LOG.warn('Undefined angular resolution limits for %s' % (ms.basename))
                     ms.science_goals = {'minAcceptableAngResolution': '0.0arcsec', 'maxAcceptableAngResolution': '0.0arcsec'}
                 else:
                     LOG.info('Populating ms.science_goals ...')
@@ -364,6 +366,15 @@ class SpectralWindowTable(object):
         spw_names = msmd.namesforspws()            
         bandwidths = msmd.bandwidths()
 
+        # We need the first TARGET source ID to get the correct transitions
+        try:
+            first_target_field_id = msmd.fieldsforintent('*TARGET*')[0]
+            first_target_source_id = msmd.sourceidforfield(first_target_field_id)
+        except:
+            first_target_source_id = 0
+
+        target_spw_ids = msmd.spwsforintent('*TARGET*')
+
         spws = []
         for i, spw_name in enumerate(spw_names):
             # get this spw's values from our precalculated lists and dicts
@@ -382,13 +393,18 @@ class SpectralWindowTable(object):
             except: ### For Nobeyama (TODO: how to define BBC_NO for NRO)
                 baseband = i
             ref_freq = msmd.reffreq(i)
-            try: ### TRANSITIONS column does not exist in old data
-                # TODO: Are the transitions of a given spw the same for all
-                #       source IDs ?
-                transitions = msmd.transitions(sourceid=0, spw=i)
-                if not transitions:
+            # Read transitions for target spws. Other spws may cause severe
+            # messages because the target source IDs may not have the spw.
+            if i in target_spw_ids:
+                try: ### TRANSITIONS column does not exist in old data
+                    # TODO: Are the transitions of a given spw the same for all
+                    #       target source IDs ?
+                    transitions = msmd.transitions(sourceid=first_target_source_id, spw=i)
+                    if transitions is False:
+                        transitions = ['Unknown']
+                except:
                     transitions = ['Unknown']
-            except:
+            else:
                 transitions = ['Unknown']
 
             spw = domain.SpectralWindow(i, spw_name, spw_type, bandwidth,
@@ -551,33 +567,33 @@ class SBSummaryTable(object):
             for i in range(table.nrows()):
 
                 # Create source
-                repSource = _get_science_goal_value (scienceGoals[0:numScienceGoals[i]-1,i],
+                repSource = _get_science_goal_value (scienceGoals[0:numScienceGoals[i],i],
                     'representativeSource')
                 repSources.append(repSource)
 
                 # Create frequency
-                repFrequency = qa.quantity(_get_science_goal_value (scienceGoals[0:numScienceGoals[i]-1,i],
+                repFrequency = qa.quantity(_get_science_goal_value (scienceGoals[0:numScienceGoals[i],i],
                     'representativeFrequency'))
                 if repFrequency['value'] <= 0.0 or repFrequency['unit'] == '':
                     repFrequency = None
                 repFrequencies.append(repFrequency)
 
                 # Create representative bandwidth
-                repBandWidth = qa.quantity(_get_science_goal_value (scienceGoals[0:numScienceGoals[i]-1,i],
+                repBandWidth = qa.quantity(_get_science_goal_value (scienceGoals[0:numScienceGoals[i],i],
                     'representativeBandwidth'))
                 if repBandWidth['value'] <= 0.0 or repBandWidth['unit'] == '':
                     repBandWidth = None
                 repBandWidths.append(repBandWidth)
 
                 # Create minimum angular resolution
-                minAngResolution = qa.quantity(_get_science_goal_value (scienceGoals[0:numScienceGoals[i]-1,i],
+                minAngResolution = qa.quantity(_get_science_goal_value (scienceGoals[0:numScienceGoals[i],i],
                     'minAcceptableAngResolution'))
                 if minAngResolution['value'] <= 0.0 or minAngResolution['unit'] == '':
                     minAngResolution = None
                 minAngResolutions.append(minAngResolution)
 
                 # Create maximum angular resolution
-                maxAngResolution = qa.quantity(_get_science_goal_value (scienceGoals[0:numScienceGoals[i]-1,i],
+                maxAngResolution = qa.quantity(_get_science_goal_value (scienceGoals[0:numScienceGoals[i],i],
                     'maxAcceptableAngResolution'))
                 if maxAngResolution['value'] <= 0.0 or maxAngResolution['unit'] == '':
                     maxAngResolution = None

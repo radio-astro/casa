@@ -40,7 +40,7 @@ class T2_4MDetailsSingleDishK2JyCalRenderer(basetemplates.T2_4MDetailsDefaultRen
                     for corr in corrs:
                         factor = self.__get_factor(r.factors, vis, spwid, ant_name, corr)
 #                         corr_collector[factor].append(corr)
-#                     for factor, corrlist in corr_collector.items():
+#                     for factor, corrlist in corr_collector.iteritems():
 #                         corr = str(', ').join(corrlist)
                         jyperk = factor if factor is not None else 'N/A (1.0)'
 #                         tr = JyperKTR(vis, spwid, ant_name, corr, jyperk)
@@ -52,7 +52,7 @@ class T2_4MDetailsSingleDishK2JyCalRenderer(basetemplates.T2_4MDetailsDefaultRen
         stage_dir = os.path.join(context.report_dir, 'stage%s'%(results.stage_number))
         # histogram plots of Jy/K factors
         hist_plots = []
-        for spwid, valid_factors in valid_spw_factors.items():
+        for spwid, valid_factors in valid_spw_factors.iteritems():
             if len(valid_factors) > 0:
                 task = displays.K2JyHistDisplay(stage_dir, spwid, valid_factors, spw_band[spwid])
                 hist_plots += task.plot()

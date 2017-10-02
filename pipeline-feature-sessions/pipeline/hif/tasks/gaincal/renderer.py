@@ -29,18 +29,25 @@ class T2_4MDetailsGaincalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
     def update_mako_context(self, ctx, context, results):
         applications = []
         structure_plots = {}
+
         amp_vs_time_summaries = {}
         phase_vs_time_summaries = {}
         amp_vs_time_details = {}
         phase_vs_time_details = {}
+
         diagnostic_amp_vs_time_summaries = {}
         diagnostic_phase_vs_time_summaries = {}
+        diagnostic_phaseoffset_vs_time_summaries = {}
         diagnostic_amp_vs_time_details = {}
         diagnostic_phase_vs_time_details = {}
+        diagnostic_phaseoffset_vs_time_details = {}
+
         amp_vs_time_subpages = {}
         phase_vs_time_subpages = {}
         diagnostic_amp_vs_time_subpages = {}
         diagnostic_phase_vs_time_subpages = {}
+        diagnostic_phaseoffset_vs_time_subpages = {}
+
         diagnostic_solints = collections.defaultdict(dict)
 
         for result in results:
@@ -97,6 +104,13 @@ class T2_4MDetailsGaincalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                                                                     calapps, '')
             diagnostic_amp_vs_time_summaries[vis] = plotter.plot()
 
+            # generate diganostic phase offset vs time plots
+            if result.phaseoffsetresult is not None:
+                calapps = result.phaseoffsetresult.final
+                plotter = gaincal_displays.GaincalPhaseVsTimeSummaryChart(context, result, 
+                                                                    calapps, '')
+                diagnostic_phaseoffset_vs_time_summaries[vis] = plotter.plot()
+
             if pipeline.infrastructure.generate_detail_plots(result):
                 calapps = result.final
 
@@ -141,6 +155,18 @@ class T2_4MDetailsGaincalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                     fileobj.write(renderer.render())        
                     diagnostic_amp_vs_time_subpages[vis] = renderer.path
 
+                # diagnostic phaseoffset vs time plots for solint=inf
+                if result.phaseoffsetresult is not None:
+                    calapps = result.phaseoffsetresult.final
+                    plotter = gaincal_displays.GaincalPhaseVsTimeDetailChart(context, result,
+                                                                       calapps, '')
+                    diagnostic_phaseoffset_vs_time_details[vis] = plotter.plot()
+                    renderer = GaincalPhaseOffsetVsTimeDiagnosticPlotRenderer(context, 
+                        result, diagnostic_phaseoffset_vs_time_details[vis])
+                    with renderer.get_file() as fileobj:
+                        fileobj.write(renderer.render())        
+                        diagnostic_phaseoffset_vs_time_subpages[vis] = renderer.path
+
 
             # get the first scan for the PHASE intent(s)
 #             first_phase_scan = ms.get_scans(scan_intent='PHASE')[0]
@@ -155,7 +181,8 @@ class T2_4MDetailsGaincalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                 (amp_vs_time_details, GaincalAmpVsTimePlotRenderer, amp_vs_time_subpages),
                 (phase_vs_time_details, GaincalPhaseVsTimePlotRenderer, phase_vs_time_subpages),
                 (diagnostic_amp_vs_time_details, GaincalAmpVsTimeDiagnosticPlotRenderer, diagnostic_amp_vs_time_subpages),
-                (diagnostic_phase_vs_time_details, GaincalPhaseVsTimeDiagnosticPlotRenderer, diagnostic_phase_vs_time_subpages)):
+                (diagnostic_phase_vs_time_details, GaincalPhaseVsTimeDiagnosticPlotRenderer, diagnostic_phase_vs_time_subpages),
+                (diagnostic_phaseoffset_vs_time_details, GaincalPhaseOffsetVsTimeDiagnosticPlotRenderer, diagnostic_phaseoffset_vs_time_subpages)):
             if d:
                 all_plots = list(utils.flatten([v for v in d.values()]))
                 renderer = plotter_cls(context, results, all_plots)
@@ -175,10 +202,12 @@ class T2_4MDetailsGaincalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
             'phase_vs_time_plots': phase_vs_time_summaries,
             'diagnostic_amp_vs_time_plots': diagnostic_amp_vs_time_summaries,
             'diagnostic_phase_vs_time_plots': diagnostic_phase_vs_time_summaries,
+            'diagnostic_phaseoffset_vs_time_plots': diagnostic_phaseoffset_vs_time_summaries,
             'amp_vs_time_subpages': amp_vs_time_subpages,
             'phase_vs_time_subpages': phase_vs_time_subpages,
             'diagnostic_amp_vs_time_subpages': diagnostic_amp_vs_time_subpages,
             'diagnostic_phase_vs_time_subpages': diagnostic_phase_vs_time_subpages,
+            'diagnostic_phaseoffset_vs_time_subpages': diagnostic_phaseoffset_vs_time_subpages,
             'diagnostic_solints': diagnostic_solints
         })
 
@@ -317,5 +346,16 @@ class GaincalAmpVsTimeDiagnosticPlotRenderer(basetemplates.JsonPlotRenderer):
         outfile = filenamer.sanitize('diagnostic_amp_vs_time-%s.html' % vis)
         
         super(GaincalAmpVsTimeDiagnosticPlotRenderer, self).__init__(
+                'generic_x_vs_y_spw_ant_plots.mako', context, 
+                result, plots, title, outfile)
+
+class GaincalPhaseOffsetVsTimeDiagnosticPlotRenderer(basetemplates.JsonPlotRenderer):
+    def __init__(self, context, result, plots):
+        vis = utils.get_vis_from_plots(plots)
+
+        title = 'Phase offset vs time for %s' % vis
+        outfile = filenamer.sanitize('diagnostic_phaseoffset_vs_time-%s.html' % vis)
+        
+        super(GaincalPhaseOffsetVsTimeDiagnosticPlotRenderer, self).__init__(
                 'generic_x_vs_y_spw_ant_plots.mako', context, 
                 result, plots, title, outfile)

@@ -61,9 +61,9 @@ class SDImportDataResults(basetask.Results):
             
         # merge reduction group
         for reduction_group in reduction_group_list:
-            for (myid, mydesc) in reduction_group.items():
+            for (myid, mydesc) in reduction_group.iteritems():
                 matched_id = -1
-                for (group_id, group_desc) in observing_run.ms_reduction_group.items():
+                for (group_id, group_desc) in observing_run.ms_reduction_group.iteritems():
                     if group_desc == mydesc:
                         LOG.info('merge input group %s to group %s'%(myid, group_id))
                         matched_id = group_id
@@ -94,7 +94,7 @@ class SDImportData(importdata.ImportData):
         reduction_group_list = []
         for ms in results.mses:
             LOG.debug('Start inspection for %s'%(ms.basename))
-            inspector = inspection.SDMSInspection(table_name, ms=ms)
+            inspector = inspection.SDInspection(table_name, ms=ms)
             reduction_group = self._executor.execute(inspector, merge=False)
             reduction_group_list.append(reduction_group)
             

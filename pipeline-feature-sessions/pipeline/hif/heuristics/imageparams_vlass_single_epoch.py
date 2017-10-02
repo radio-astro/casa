@@ -10,8 +10,8 @@ LOG = infrastructure.get_logger(__name__)
 
 class ImageParamsHeuristicsVlassSe(ImageParamsHeuristics):
 
-    def __init__(self, vislist, spw, observing_run, imagename_prefix='', science_goals=None, contfile=None, linesfile=None):
-        ImageParamsHeuristics.__init__(self, vislist, spw, observing_run, imagename_prefix, science_goals, contfile, linesfile)
+    def __init__(self, vislist, spw, observing_run, imagename_prefix='', proj_params=None, contfile=None, linesfile=None):
+        ImageParamsHeuristics.__init__(self, vislist, spw, observing_run, imagename_prefix, proj_params, contfile, linesfile)
         self.imaging_mode = 'VLASS-SE'
 
     # niter
@@ -21,16 +21,16 @@ class ImageParamsHeuristicsVlassSe(ImageParamsHeuristics):
     def deconvolver(self, specmode, spwspec):
         return 'mtmfs'
 
-    def robust(self, spw):
+    def robust(self, beam=None):
         return 1.0
 
     def gridder(self, intent, field):
         return 'mosaic'
 
-    def cell(self, field_intent_list, spwspec, oversample=None):
-        return '0.6arcsec'
+    def cell(self, beam=None, pixperbeam=None):
+        return ['0.6arcsec']
 
-    def imsize(self, fields, cell, beam, sfpblimit=None, max_pixels=None):
+    def imsize(self, fields=None, cell=None, primary_beam=None, sfpblimit=None, max_pixels=None, centreonly=None):
         return [11520, 11520]
 
     def threshold(self):
@@ -38,7 +38,7 @@ class ImageParamsHeuristicsVlassSe(ImageParamsHeuristics):
 
     def reffreq(self):
         return '3.0GHz'
-    
+
     def cyclefactor(self):
         return 3.0
 
@@ -48,7 +48,7 @@ class ImageParamsHeuristicsVlassSe(ImageParamsHeuristics):
     def scales(self):
         return [0]
 
-    def uvtaper(self):
+    def uvtaper(self, beam_natural=None):
         return []
 
     def uvrange(self):
@@ -71,6 +71,9 @@ class ImageParamsHeuristicsVlassSe(ImageParamsHeuristics):
 
     def stokes(self):
         return 'I'
+
+    def pb_correction(self):
+        return False
 
     def find_fields(self, distance='0deg', phase_center=None, matchregex=''):
 

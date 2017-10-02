@@ -15,7 +15,7 @@ class CheckProductSizeInputs(basetask.StandardInputs):
 
     @basetask.log_equivalent_CASA_call
     def __init__(self, context, output_dir=None, vis=None,
-                 maxcubesize=None, maxproductsize=None, parallel=None):
+                 maxcubesize=None, maxcubelimit=None, maxproductsize=None, parallel=None):
         self.performanceparameters = project.PerformanceParameters()
         self._init_properties(vars())
 
@@ -29,6 +29,17 @@ class CheckProductSizeInputs(basetask.StandardInputs):
     @maxcubesize.setter
     def maxcubesize(self, value):
         self._maxcubesize = value
+
+    @property
+    def maxcubelimit(self):
+        if self._maxcubelimit in (None, -1.0):
+            return self.maxcubesize
+        else:
+            return self._maxcubelimit
+
+    @maxcubelimit.setter
+    def maxcubelimit(self, value):
+        self._maxcubelimit = value
 
     @property
     def maxproductsize(self):
@@ -76,6 +87,7 @@ class CheckProductSize(basetask.StandardTaskTemplate):
         size_mitigation_parameters['status'] = status
 
         result = CheckProductSizeResult(self.inputs.maxcubesize, \
+                                        self.inputs.maxcubelimit, \
                                         self.inputs.maxproductsize, \
                                         original_maxcubesize, \
                                         original_productsize, \

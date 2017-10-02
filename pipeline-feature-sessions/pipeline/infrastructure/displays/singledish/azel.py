@@ -117,10 +117,10 @@ class SDAzElDisplay(common.SDInspectionDisplay):
         TmpArr = []
         FlagArr = []
 
-        tTIME = datatable.tb1.getcol('TIME')
-        Az = datatable.tb1.getcol('AZ').take(rows)
-        El = datatable.tb1.getcol('EL').take(rows)
-        Flag = datatable.tb2.getcol('FLAG_PERMANENT').take(rows, axis=1)[OnlineFlagIndex]
+        tTIME = datatable.getcol('TIME')
+        Az = datatable.getcol('AZ').take(rows)
+        El = datatable.getcol('EL').take(rows)
+        Flag = datatable.getcol('FLAG_PERMANENT').take(rows, axis=1)[OnlineFlagIndex]
 
         for gap in TimeGap:
             if gap > rows[-1]: break

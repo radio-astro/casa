@@ -13,14 +13,14 @@ Example:
     The ``vlass_QLIP_parameters.list`` file might contain something like the
     following::
 
-        phasecenter='J2000 12:16:04.600 +059.24.50.300' 
+        phasecenter='J2000 12:16:04.600 +059.24.50.300'
         imagename='QLIP_image'
-        
+
     An equivalent way to invoke the above example would be::
-    
+
         CASA <2>: hif_editimlist(phasecenter='J2000 12:16:04.600 +059.24.50.300',
                                  imagename='QLIP_image')
-        
+
 Any imaging parameters that are not specified when hif_editimlist() is called,
 either as a task parameter or via a parameter file, will have a default value
 or heuristic applied.
@@ -50,6 +50,7 @@ class EditimlistInputs(basetask.StandardInputs):
     def __init__(self, context, output_dir=None, vis=None,
                  search_radius_arcsec=None,
                  cell=None,
+                 conjbeams=None,
                  cyclefactor=None,
                  cycleniter=None,
                  deconvolver=None,
@@ -75,9 +76,11 @@ class EditimlistInputs(basetask.StandardInputs):
                  start=None,
                  stokes=None,
                  threshold=None,
+                 threshold_nsigma=None,
                  uvtaper=None,
                  uvrange=None,
                  width=None,
+                 sensitivity=None,
                  ):
 
         self._init_properties(vars())
@@ -87,7 +90,7 @@ class EditimlistInputs(basetask.StandardInputs):
                             'start', 'width', 'nbin', 'nchan', 'uvrange', 'stokes', 'nterms',
                             'robust', 'uvtaper', 'niter', 'cyclefactor', 'cycleniter', 'mask',
                             'search_radius_arcsec', 'threshold', 'imaging_mode', 'reffreq',
-                            'editmode')
+                            'editmode', 'threshold_nsigma', 'sensitivity', 'conjbeams')
         self.keys_to_change = []
         for key in keys_to_consider:
             # print key, eval(key)
@@ -147,7 +150,7 @@ class Editimlist(basetask.StandardTaskTemplate):
         # we use the ms to change field ids to fieldnames, if needed
         ms = inp.context.observing_run.get_ms(inp.vis[0])
         fieldnames = []
-        if type(inpdict['field']) is not type(None):
+        if not isinstance(inpdict['field'], type(None)):
             for fid in inpdict['field']:
                 if isinstance(fid, int):
                     fieldobj = ms.get_fields(field_id=fid)
@@ -183,27 +186,42 @@ class Editimlist(basetask.StandardTaskTemplate):
                                                       observing_run=inp.context.observing_run,
                                                       imaging_mode=img_mode)
 
-        target['threshold'] = th.threshold() if not inpdict['threshold'] else inpdict['threshold']
+        threshold_set_by_user = bool(inpdict['threshold'])
+        nsigma_set_by_user = bool(inpdict['threshold_nsigma'])
+        if threshold_set_by_user and not nsigma_set_by_user:
+            target['threshold'] = inpdict['threshold']
+        elif nsigma_set_by_user and not threshold_set_by_user:
+            target['nsigma'] = inpdict['threshold_nsigma']
+        elif nsigma_set_by_user and threshold_set_by_user:
+            target['threshold'] = inpdict['threshold']
+            target['nsigma'] = inpdict['threshold_nsigma']
+            LOG.warn("Both 'threshold' and 'threshold_nsigma' were specified.")
+        else:  # neither set by user.  Use nsigma.
+            target['nsigma'] = th.threshold_nsigma()
+
+        target['conjbeams'] = th.conjbeams()  # if not inpdict['conjbeams'] else inpdict['conjbeams']
         target['reffreq'] = th.reffreq() if not inpdict['reffreq'] else inpdict['reffreq']
         target['niter'] = th.niter_correction(None, None, None, None, None) if not inpdict['niter'] else inpdict['niter']
         target['cyclefactor'] = th.cyclefactor() if not inpdict['cyclefactor'] else inpdict['cyclefactor']
-        target['cycleniter'] = th.cycleniter() if not inpdict['cycleniter'] else inpdict['cycleniter']
+        target['cycleniter'] = th.cycleniter() if not inpdict['cycleniter'] else int(inpdict['cycleniter'])
         target['scales'] = th.scales() if not inpdict['scales'] else inpdict['scales']
-        target['uvtaper'] = th.uvtaper() if not inpdict['uvtaper'] else inpdict['uvtaper']
+        target['uvtaper'] = th.uvtaper(None) if not inpdict['uvtaper'] else inpdict['uvtaper']
         target['uvrange'] = th.uvrange() if not inpdict['uvrange'] else inpdict['uvrange']
         target['deconvolver'] = th.deconvolver(None, None) if not inpdict['deconvolver'] else inpdict['deconvolver']
-        target['robust'] = th.robust(None) if not inpdict['robust'] else inpdict['robust']
+        target['robust'] = th.robust(None)[0] if not inpdict['robust'] else inpdict['robust']
         target['mask'] = th.mask() if not inpdict['mask'] else inpdict['mask']
         target['specmode'] = th.specmode() if not inpdict['specmode'] else inpdict['specmode']
         target['gridder'] = th.gridder(None, None) if not inpdict['gridder'] else inpdict['gridder']
         buffer_arcsec = th.buffer_radius() if not inpdict['search_radius_arcsec'] else inpdict['search_radius_arcsec']
         result.capture_buffer_size(buffer_arcsec)
-        target['cell'] = th.cell(None, None, None) if not inpdict['cell'] else inpdict['cell']
-        target['imsize'] = th.imsize(None, None, None, None, None) if not inpdict['imsize'] else inpdict['imsize']
+        target['cell'] = th.cell(None, None) if not inpdict['cell'] else inpdict['cell']
+        target['imsize'] = th.imsize(None, None, None, None, None, None) if not inpdict['imsize'] else inpdict['imsize']
         target['intent'] = th.intent() if not inpdict['intent'] else inpdict['intent']
         target['nterms'] = th.nterms() if not inpdict['nterms'] else inpdict['nterms']
         target['stokes'] = th.stokes() if not inpdict['stokes'] else inpdict['stokes']
-        #------------------------------
+        target['sensitivity'] = th.get_sensitivity(None, None, None, None, None, None, None, None, None,
+                                                   None)[0] if not inpdict['sensitivity'] else inpdict['sensitivity']
+        # ------------------------------
         target['nchan'] = inpdict['nchan']
         target['nbin'] = inpdict['nbin']
         target['start'] = inpdict['start']
@@ -214,13 +232,23 @@ class Editimlist(basetask.StandardTaskTemplate):
         if fieldnames:
             target['field'] = fieldnames[0]
         else:
-            if type(target['phasecenter']) is not type(None):
+            if not isinstance(target['phasecenter'], type(None)):
                 # TODO: remove the dependency on cell size being in arcsec
-                cellsize_arcsec = float(target['cell'].strip('arcsec'))
+
+                # remove brackets and begin/end string characters
+                # if cell is a list, get the first string element
+                if isinstance(target['cell'], type([])):
+                    target['cell'] = target['cell'][0]
+                target['cell'] = target['cell'].strip('[').strip(']')
+                target['cell'] = target['cell'].replace("'", '')
+                target['cell'] = target['cell'].replace('"', '')
+                # We always search for fields in 1sq degree with a surrounding buffer
                 mosaic_side_arcsec = 3600  # 1 degree
-                dist = ( mosaic_side_arcsec / 2.) + float(buffer_arcsec)
+                dist = (mosaic_side_arcsec / 2.) + float(buffer_arcsec)
                 dist_arcsec = str(dist) + 'arcsec'
-                found_fields = target['heuristics'].find_fields(distance=dist_arcsec, phase_center=target['phasecenter'])
+                found_fields = target['heuristics'].find_fields(distance=dist_arcsec,
+                                                                phase_center=target['phasecenter'],
+                                                                matchregex=['^0', '^1', '^2'])
                 if found_fields:
                     target['field'] = ','.join(str(x) for x in found_fields)
 
@@ -242,4 +270,3 @@ class Editimlist(basetask.StandardTaskTemplate):
 
     def analyse(self, result):
         return result
-

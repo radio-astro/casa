@@ -12,6 +12,7 @@ from .fluxcalflag import FluxcalFlag
 from .fluxscale import GcorFluxscale, SessionGcorFluxscale
 from .gaincal import TimeGaincal
 from .gaincalsnr import GaincalSnr
+from .gfluxscaleflag import Gfluxscaleflag
 from .importdata import ALMAImportData
 from .linpolcal import Linpolcal
 from .restoredata import ALMARestoreData
@@ -19,3 +20,4 @@ from .spwphaseup import SpwPhaseup
 from .tsysflag import Tsysflag as ALMATsysflag
 from .wvrgcal import Wvrgcal
 from .wvrgcalflag import Wvrgcalflag
+from .imageprecheck import ImagePreCheck

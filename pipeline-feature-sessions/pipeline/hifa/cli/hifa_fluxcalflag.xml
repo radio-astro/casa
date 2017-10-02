@@ -130,7 +130,7 @@ threshold -- If the fraction of an spw occupied by line regions is greater
 ---- pipeline context defined parameter arguments which can be set only in
 'interactive mode'
 
-vis -- The list of input measurement sets. Defaults to the list of measurment
+vis -- The list of input measurement sets. Defaults to the list of measurement
     sets defined in the pipeline context.
     default: []
     example:

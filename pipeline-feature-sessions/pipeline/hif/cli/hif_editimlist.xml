@@ -26,6 +26,11 @@
                 <value></value>
             </param>
 
+            <!--<param type="string" name="conjbeams">-->
+                <!--<description>Use conjugate frequency in tclean for wideband A-terms.</description>-->
+                <!--<value></value>-->
+            <!--</param>-->
+
             <param type="string" name="cyclefactor">
                 <description>Controls the depth of clean in minor cycles based on PSF. </description>
                 <value></value>

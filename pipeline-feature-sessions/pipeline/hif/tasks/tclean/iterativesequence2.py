@@ -15,6 +15,7 @@ class IterativeSequence2(BaseCleanSequence):
 
 	self.maxncleans = maxncleans
 	self.sensitivity = sensitivity
+	self.dr_corrected_sensitivity = sensitivity
 
         self.sidelobe_ratio = None
         self.psf = None

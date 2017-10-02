@@ -60,9 +60,11 @@ class CircfeedpolcalResults(polarization.PolarizationResults):
 
 class CircfeedpolcalInputs(polarization.PolarizationInputs):
     @basetask.log_equivalent_CASA_call
-    def __init__(self, context, vis=None):
+    def __init__(self, context, vis=None, Dterm_solint=None):
         # set the properties to the values given as input arguments
         self._init_properties(vars())
+
+    Dterm_solint = basetask.property_with_default('Dterm_solint', '2MHz')
 
 
 class Circfeedpolcal(polarization.Polarization):
@@ -160,10 +162,11 @@ class Circfeedpolcal(polarization.Polarization):
 
 
 
-        # D-terms in 16MHz pieces, minsnr of 5.0
+        # D-terms in 2MHz pieces, minsnr of 5.0
+        LOG.info("Polcal D-terms using solint=\'inf,{!s}\'".format(self.inputs.Dterm_solint))
         self.do_polcal(tablesToAdd[1][0], poltype=poltype, field=polleakagefield,
                        intent='CALIBRATE_POL_LEAKAGE#UNSPECIFIED',
-                       gainfield=[''], spwmap=[], solint='inf,16MHz', minsnr=5.0)
+                       gainfield=[''], spwmap=[], solint='inf,{!s}'.format(self.inputs.Dterm_solint), minsnr=5.0)
 
         # 2MHz pieces, minsnr of 3.0
         self.do_polcal(tablesToAdd[2][0], poltype='Xf', field=polanglefield,
@@ -225,9 +228,6 @@ class Circfeedpolcal(polarization.Polarization):
         m = self.inputs.context.observing_run.get_ms(self.inputs.vis)
         minBL_for_cal = m.vla_minbaselineforcal()
 
-        # import pdb
-        # pdb.set_trace()
-
         task_args = {'vis': self.inputs.vis,
                      'caltable'   : caltable,
                      'field'      : field,
@@ -274,10 +274,15 @@ class Circfeedpolcal(polarization.Polarization):
         fluxcalfieldname = ''
         for i, fields in enumerate(standard_source_fields):
             for myfield in fields:
-                if standard_source_names[i] in ('3C48','3C286') and 'AMPLITUDE' in m.get_fields(field_id=myfield)[0].intents:
+                if standard_source_names[i] in ('3C48','3C286') and 'POLANGLE' in m.get_fields(field_id=myfield)[0].intents:
                     fluxcalfieldid = myfield
                     fluxcalfieldname = m.get_fields(field_id=myfield)[0].name
                     fluxcal = standard_source_names[i]
+                elif standard_source_names[i] in ('3C48','3C286') and 'AMPLITUDE' in m.get_fields(field_id=myfield)[0].intents:
+                    fluxcalfieldid = myfield
+                    fluxcalfieldname = m.get_fields(field_id=myfield)[0].name
+                    fluxcal = standard_source_names[i]
+
 
 
         """

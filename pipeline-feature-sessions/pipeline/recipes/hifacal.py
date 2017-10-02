@@ -30,16 +30,14 @@ from hifa_tsysflag_cli import hifa_tsysflag_cli as hifa_tsysflag
 from hifa_antpos_cli import hifa_antpos_cli as hifa_antpos
 from hifa_wvrgcalflag_cli import hifa_wvrgcalflag_cli as hifa_wvrgcalflag
 from hif_lowgainflag_cli import hif_lowgainflag_cli as hif_lowgainflag
-from hif_gainflag_cli import hif_gainflag_cli as hif_gainflag
-from hif_setjy_cli import hif_setjy_cli as hif_setjy
 from hif_setmodels_cli import hif_setmodels_cli as hif_setmodels
-# from hif_bandpass_cli import hif_bandpass_cli as hif_bandpass
-from hifa_bandpass_cli import hifa_bandpass_cli as hifa_bandpass
-from hif_bpflagchans_cli import hif_bpflagchans_cli as hif_bpflagchans
+from hifa_bandpassflag_cli import hifa_bandpassflag_cli as hifa_bandpassflag
 from hifa_spwphaseup_cli import hifa_spwphaseup_cli as hifa_spwphaseup
+from hifa_gfluxscaleflag_cli import hifa_gfluxscaleflag_cli as hifa_gfluxscaleflag
 from hifa_gfluxscale_cli import hifa_gfluxscale_cli as hifa_gfluxscale
 from hifa_timegaincal_cli import hifa_timegaincal_cli as hifa_timegaincal
 from hif_applycal_cli import hif_applycal_cli as hif_applycal
+from hifa_imageprecheck_cli import hifa_imageprecheck_cli as hifa_imageprecheck
 from hif_checkproductsize_cli import hif_checkproductsize_cli as hif_checkproductsize
 # from hif_makecleanlist_cli import hif_makecleanlist_cli as hif_makecleanlist
 from hif_makeimlist_cli import hif_makeimlist_cli as hif_makeimlist
@@ -98,20 +96,19 @@ def hifacal(vislist, importonly=True, pipelinemode='automatic',
         # Flag antennas with low gain
         hif_lowgainflag(pipelinemode=pipelinemode)
 
-        # Flag antennas with deviant gain
-        hif_gainflag(pipelinemode=pipelinemode)
-    
         # Set the flux calibrator model
         hif_setmodels(pipelinemode=pipelinemode)
     
         # Compute the bandpass calibration
-        hifa_bandpass(pipelinemode=pipelinemode)
+        hifa_bandpassflag(pipelinemode=pipelinemode)
 
-        # Flag deviant channels in the bandpass calibration
-        hif_bpflagchans(pipelinemode=pipelinemode)
-    
         # Compute the bandpass calibration
         hifa_spwphaseup(pipelinemode=pipelinemode)
+
+        # Derive the flux density scale from standard calibrators, and flag
+        # outliers in corrected - model amplitudes for flux and phase
+        # calibrators.
+        hifa_gfluxscaleflag(pipelinemode=pipelinemode)
 
         # Determine flux values for the bandpass and gain calibrators
         # assuming point sources and set their model fluxes
@@ -123,6 +120,9 @@ def hifacal(vislist, importonly=True, pipelinemode='automatic',
         # Apply the calibrations
         hif_applycal(pipelinemode=pipelinemode)
     
+        # Check imaging parameters against PI specified values
+        hifa_imageprecheck(pipelinemode=pipelinemode)
+    
         # Make a list of expected point source calibrators to be cleaned
         hif_makeimlist(intent='PHASE,BANDPASS,CHECK', pipelinemode=pipelinemode)
     
@@ -130,7 +130,7 @@ def hifacal(vislist, importonly=True, pipelinemode='automatic',
         hif_makeimages(pipelinemode=pipelinemode)
 
         # Check product size limits and mitigate imaging parameters
-        hif_checkproductsize(maxcubesize=30.0, maxproductsize=400.0)
+        hif_checkproductsize(maxcubesize=30.0, maxcubelimit=40.0, maxproductsize=400.0)
     
         # Export the data
         hifa_exportdata(pipelinemode=pipelinemode)

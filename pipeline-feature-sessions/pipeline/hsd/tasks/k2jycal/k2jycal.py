@@ -85,12 +85,12 @@ class SDK2JyCalResults(basetask.Results):
                       '%s\n%s' % (calapp.calto, calapp.calfrom))
             context.callibrary.add(calapp.calto, calapp.calfrom)
         # merge k2jy factor to context assing the value as an attribute of MS
-        for vis, valid_k2jy in self.factors.items():
+        for vis, valid_k2jy in self.factors.iteritems():
             msobj = context.observing_run.get_ms(name=vis)
             msobj.k2jy_factor = {}
-            for spwid, spw_k2jy in valid_k2jy.items():
-                for ant, ant_k2jy in spw_k2jy.items():
-                    for pol, pol_k2jy in ant_k2jy.items():
+            for spwid, spw_k2jy in valid_k2jy.iteritems():
+                for ant, ant_k2jy in spw_k2jy.iteritems():
+                    for pol, pol_k2jy in ant_k2jy.iteritems():
                         msobj.k2jy_factor[(spwid, ant, pol)] = pol_k2jy
 
     def __repr__(self):

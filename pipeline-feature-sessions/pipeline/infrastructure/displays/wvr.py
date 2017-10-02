@@ -219,10 +219,25 @@ class WVRPhaseVsBaselineChart(object):
         LOG.trace('Maximum phase offset for %s = %s' % (self.ms.basename, 
                                                         self._max_phase_offset))
 
-        ratios = [w.y for w in self._wrappers]
-        ratios = [r for r in ratios if r is not None]
-        self._max_ratio = numpy.ma.max(ratios)
-        self._min_ratio = numpy.ma.min(ratios)
+        # Extract ratios, excluding any that are set to None.
+        ratios = [w.y for w in self._wrappers if w.y is not None]
+
+        # Convert to masked array that masks out invalid numbers (NaN, Inf).
+        ratios = numpy.ma.masked_invalid(ratios)
+
+        # Determine whether an alternate refant might have been used by
+        # assessing if the minimum ratio was 0.
+        self._alt_refant_used = (ratios.min() == 0.0)
+
+        # If a minimum ratio of 0 was found, raise warning about alternate
+        # refant, and update ratios to also mask out values of 0.
+        if self._alt_refant_used:
+            LOG.warning('Phase ratio of 0 suggests that alternate refant was '
+                        'used during gaincal. This plot might be misleading!')
+            ratios = numpy.ma.masked_equal(ratios, 0)
+
+        self._max_ratio = ratios.max()
+        self._min_ratio = ratios.min()
         self._median_ratio = numpy.ma.median(ratios)
         LOG.trace('Maximum phase ratio for %s = %s' % (self.ms.basename, 
                                                        self._max_ratio))
@@ -236,12 +251,12 @@ class WVRPhaseVsBaselineChart(object):
 
         plots = []
         for spw in spws:
-            # plot scans individually as plotting multiple scans on one plot 
+            # plot scans individually as plotting multiple scans on one plot
             # creates an unintelligible mess. 
             for scan in plot_scans:
                 # if spw.id == 17 and scan.id == 3:
-                    plots.append(self.get_plot_wrapper(spw, [scan,],
-                                                       self.ms.antennas))
+                plots.append(self.get_plot_wrapper(spw, [scan, ],
+                                                   self.ms.antennas))
 
         return [p for p in plots if p is not None]
 
@@ -270,12 +285,12 @@ class WVRPhaseVsBaselineChart(object):
         # length) 
         fig, ((ax1, ax2)) = common.subplots(2, 1, sharex=True)
         ax1.set_yscale('log')
-        pyplot.subplots_adjust(hspace=0.0)        
+        pyplot.subplots_adjust(hspace=0.0)
 
         trans1 = matplotlib.transforms.blended_transform_factory(ax1.transAxes, 
                                                                  ax1.transData)
         ax1.axhspan(self._min_ratio, 1, facecolor='k', linewidth=0.0, alpha=0.04)
-        ax1.text(0.012, numpy.sqrt(self._min_ratio), 'No Improvement', 
+        ax1.text(0.012, numpy.sqrt(self._min_ratio), 'No Improvement',
                  transform=trans1, color='k', ha='left', va='center', size=8, alpha=0.4)
 
         ax1.axhline(y=self._median_ratio, color='k', ls='dotted', alpha=0.4)
@@ -343,7 +358,9 @@ class WVRPhaseVsBaselineChart(object):
                           box2.width, box2.height])
 
         ax1.set_ylabel('ratio', size=10)
-        ax2.set_xlabel('Distance to Reference Antenna (m)', size=10)
+        # CAS-7955: hif_timegaincal weblog: add refant next to phase(uvdist) plot
+        x_axis_title = 'Distance to Reference Antenna {!s} (m)'.format(self._refant.name)
+        ax2.set_xlabel(x_axis_title, size=10)
         ax2.set_ylabel('degrees', size=10)
 
         try:
@@ -399,8 +416,12 @@ class WVRPhaseVsBaselineChart(object):
         pyplot.text(0.012, 0.97, 'Phase RMS without WVR / Phase RMS with WVR', 
                     color='k', transform=ax1.transAxes, ha='left', va='top', 
                     size=10)
+        if self._alt_refant_used:
+            pyplot.text(0.012, 0.90, 'Warning! Use of alternate refant detected; x-axis values may be unreliable',
+                        color='r', transform=ax1.transAxes, ha='left', va='top',
+                        size=10)
 
-        # We need to draw the canvas, otherwise the labels won't be positioned and 
+        # We need to draw the canvas, otherwise the labels won't be positioned and
         # won't have values yet.
         fig.canvas.draw()
         # omit the last y axis tick label from the lower plot
@@ -437,6 +458,8 @@ class WVRPhaseVsBaselineChart(object):
                 LOG.error('Could not create WVR phase vs baseline plot for'
                           ' spw %s scan %s' % (spw.id, scan_ids))
                 LOG.exception(ex)
+                # close figure just in case state is transferred between calls
+                matplotlib.pyplot.clf()
                 return None
 
         # the plot may not be created if all data for that antenna are flagged

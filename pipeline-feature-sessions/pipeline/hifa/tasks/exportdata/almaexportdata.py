@@ -39,26 +39,77 @@ class ALMAExportData(exportdata.ExportData):
 
         oussid = self.get_oussid(self.inputs.context)
 
+        # Make the imaging vislist and the sessions lists.
+        session_list, session_names, session_vislists, vislist = super(ALMAExportData, self)._make_lists(self.inputs.context,
+            self.inputs.session, self.inputs.vis, imaging=True)
+
+        if vislist:
+            # Export the auxiliary caltables if any
+            #    These are currently the uvcontinuum fit tables.
+            auxcaltables = self._do_aux_session_products(self.inputs.context, oussid, session_names, session_vislists,
+                self.inputs.output_dir, self.inputs.products_dir)
+
+            # Export the auxiliary cal apply files if any
+            #    These are currently the uvcontinuum fit tables.
+            auxcalapplys = self._do_aux_ms_products(self.inputs.context, vislist, self.inputs.products_dir)
+        else:
+            auxcaltables = None
+            auxcalapplys = None
+
         # Export the auxiliary file products into a single tar file
         #    These are optional for reprocessing but informative to the user
         #    The calibrator source fluxes file
         #    The antenna positions file
         #    The continuum regions file
         #    The target flagging file
-        auxfproducts =  self._do_auxiliary_products(self.inputs.context, oussid, self.inputs.output_dir, self.inputs.products_dir)
+        recipe_name = self.get_recipename(self.inputs.context)
+        if not recipe_name:
+            prefix = oussid
+        else:
+            prefix = oussid + '.' + recipe_name
+        auxfproducts =  self._do_auxiliary_products(self.inputs.context, prefix, self.inputs.output_dir, self.inputs.products_dir)
 
         # Export the AQUA report
         aquareport_name = 'pipeline_aquareport.xml'
-        pipe_aqua_reportfile = self._export_aqua_report (self.inputs.context, oussid, aquareport_name,
-            almaifaqua, self.inputs.products_dir)
+        pipe_aqua_reportfile = self._export_aqua_report(self.inputs.context, oussid, aquareport_name,
+                                                        self.inputs.products_dir)
 
         # Update the manifest
         manifest = os.path.join(self.inputs.context.products_dir, results.manifest)
         if auxfproducts is not None or pipe_aqua_reportfile is not None:
             manifest = os.path.join(self.inputs.context.products_dir, results.manifest)
-            self._add_to_manifest(manifest, auxfproducts, pipe_aqua_reportfile)
+            self._add_to_manifest(manifest, auxfproducts, auxcaltables, auxcalapplys, pipe_aqua_reportfile)
 
         return results
+
+    def _do_aux_session_products (self, context, oussid, session_names, session_vislists, output_dir, products_dir):
+
+        # Make the standard sessions dictionary and export per session products
+        #    Currently these are compressed tar files of per session calibration tables
+        sessiondict = super(ALMAExportData, self)._do_standard_session_products (context, oussid, session_names,
+            session_vislists, products_dir, imaging=True)
+
+        return sessiondict
+
+    def _do_aux_ms_products (self, context, vislist, products_dir):
+   
+        # Loop over the measurements sets in the working directory, and
+        # create the calibration apply file(s) in the products directory.
+        apply_file_list = []
+        for visfile in vislist:
+            apply_file =  super(ALMAExportData, self)._export_final_applylist (context, \
+                visfile, products_dir, imaging=True)
+            apply_file_list.append (apply_file)
+
+        # Create the ordered vis dictionary
+        #    The keys are the base vis names
+        #    The values are a tuple containing the flags and applycal files
+        visdict = collections.OrderedDict()
+        for i in range(len(vislist)):
+            visdict[os.path.basename(vislist[i])] = \
+                os.path.basename(apply_file_list[i])
+
+        return visdict
 
     def _do_auxiliary_products(self, context, oussid, output_dir, products_dir):
 
@@ -79,13 +130,15 @@ class ALMAExportData(exportdata.ExportData):
         if os.path.exists(flux_file) or os.path.exists(antpos_file) or os.path_exists(cont_file):
             empty = False
 
-        # Export the target source template flagging files
-        #    Whether or not these should be exported to the archive depends on
-        #    the final place of the target flagging step in the work flow and
+        # Export the general and target source template flagging files
+        #    The general template flagging files are nnot required for the restore but are
+        #    informative to the user
+        #    Whether or not the target template files  should be exported to the archive depends
+        #    on the final place of the target flagging step in the work flow and
         #    how flags will or will not be stored back into the ASDM
 
         targetflags_filelist = []
-        for file_name in glob.glob('*_flagtargetstemplate.txt'):
+        for file_name in glob.glob('*.flag*template.txt'):
             flags_file = os.path.join (output_dir, file_name)
             if os.path.exists(flags_file):
                 empty = False
@@ -135,7 +188,7 @@ class ALMAExportData(exportdata.ExportData):
 
                 # Save target flag files
                 for flags_file in targetflags_filelist:
-                    if os.path.exists(cont_file):
+                    if os.path.exists(flags_file):
                         tar.add(flags_file, arcname=os.path.basename(flags_file))
                         LOG.info('Saving auxiliary data product %s in %s', os.path.basename(flags_file), tarfilename)
                     else:
@@ -148,36 +201,34 @@ class ALMAExportData(exportdata.ExportData):
 
         return tarfilename
 
-    def _export_aqua_report (self, context, oussid, aquareport_name, aqua, products_dir):
-
+    def _export_aqua_report(self, context, oussid, aquareport_name, products_dir):
         """
         Save the AQUA report.
         """
+        aqua_file = os.path.join(context.output_dir, aquareport_name)
 
-        LOG.info ('Generating pipeline AQUA report')
+        report_generator = almaifaqua.AlmaAquaXmlGenerator()
+        LOG.info('Generating pipeline AQUA report')
         try:
-            aqua.aquaReportFromContext (context, aquareport_name)
+            report_xml = report_generator.get_report_xml(context)
+            almaifaqua.export_to_disk(report_xml, aqua_file)
         except:
-            LOG.error ('Error generating the pipeline AQUA report')
-        finally:
-            ps = context.project_structure
-            if ps is None:
-                aqua_file = os.path.join (context.output_dir, aquareport_name)
-                out_aqua_file = os.path.join (products_dir, aquareport_name)
-            elif ps.ousstatus_entity_id == 'unknown':
-                aqua_file = os.path.join (context.output_dir, aquareport_name)
-                out_aqua_file = os.path.join (products_dir, aquareport_name)
-            else:
-                aqua_file = os.path.join (context.output_dir, aquareport_name)
-                out_aqua_file = os.path.join (products_dir, oussid + '.' + aquareport_name)
-            if os.path.exists(aqua_file):
-                LOG.info('Copying AQUA report %s to %s' % (aqua_file, out_aqua_file))
-                shutil.copy (aqua_file, out_aqua_file)
-                return os.path.basename(out_aqua_file)
-            else:
-                return 'Undefined'
+            LOG.error('Error generating the pipeline AQUA report')
+            return 'Undefined'
 
-    def _add_to_manifest(self, manifest_file, auxfproducts, aqua_report):
+        ps = context.project_structure
+        if ps is None:
+            out_aqua_file = os.path.join(products_dir, aquareport_name)
+        elif ps.ousstatus_entity_id == 'unknown':
+            out_aqua_file = os.path.join(products_dir, aquareport_name)
+        else:
+            out_aqua_file = os.path.join(products_dir, oussid + '.' + aquareport_name)
+
+        LOG.info('Copying AQUA report %s to %s' % (aqua_file, out_aqua_file))
+        shutil.copy(aqua_file, out_aqua_file)
+        return os.path.basename(out_aqua_file)
+
+    def _add_to_manifest(self, manifest_file, aux_fproducts, aux_caltablesdict, aux_calapplysdict, aqua_report):
 
         pipemanifest = manifest.ALMAIfPipelineManifest('')
         pipemanifest.import_xml(manifest_file)
@@ -186,8 +237,16 @@ class ALMAExportData(exportdata.ExportData):
         if aqua_report:
             pipemanifest.add_aqua_report(ouss, os.path.basename(aqua_report))
 
-        if auxfproducts:
+        if aux_fproducts:
             # Add auxliary data products file
-            pipemanifest.add_aux_products_file (ouss, os.path.basename(auxfproducts))
+            pipemanifest.add_aux_products_file (ouss, os.path.basename(aux_fproducts))
+
+        # Add the auxiliary caltables
+        if aux_caltablesdict:
+            for session_name in aux_caltablesdict:
+                session = pipemanifest.get_session(ouss, session_name)
+                pipemanifest.add_auxcaltables(session, aux_caltablesdict[session_name][1])
+                for vis_name in aux_caltablesdict[session_name][0]:
+                    pipemanifest.add_auxasdm (session, vis_name, aux_calapplysdict[vis_name])
 
         pipemanifest.write(manifest_file)

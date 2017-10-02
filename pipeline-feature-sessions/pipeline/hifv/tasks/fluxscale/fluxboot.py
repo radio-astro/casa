@@ -56,7 +56,7 @@ class FluxbootInputs(basetask.StandardInputs):
 class FluxbootResults(basetask.Results):
     def __init__(self, final=None, pool=None, preceding=None, sources=None,
                  flux_densities=None, spws=None, weblog_results=None, spindex_results=None,
-                 vis=None, caltable=None):
+                 vis=None, caltable=None, fluxscale_result=None):
 
         if sources is None:
             sources = []
@@ -76,6 +76,8 @@ class FluxbootResults(basetask.Results):
             spindex_results = []
         if caltable is None:
             caltable = ''
+        if fluxscale_result is None:
+            fluxscale_result = {}
 
         super(FluxbootResults, self).__init__()
         self.vis = vis
@@ -89,6 +91,8 @@ class FluxbootResults(basetask.Results):
         self.weblog_results = weblog_results
         self.spindex_results = spindex_results
         self.caltable = caltable
+        self.fluxscale_result = fluxscale_result
+        self.fbversion = 'fb1'
 
     def merge_with_context(self, context):
         """Add results to context for later use in the final calibration
@@ -97,6 +101,8 @@ class FluxbootResults(basetask.Results):
         context.evla['msinfo'][m.name].fluxscale_sources = self.sources
         context.evla['msinfo'][m.name].fluxscale_flux_densities = self.flux_densities
         context.evla['msinfo'][m.name].fluxscale_spws = self.spws
+        context.evla['msinfo'][m.name].fluxscale_result = self.fluxscale_result
+        context.evla['msinfo'][m.name].fbversion = self.fbversion
 
 
 class Fluxboot(basetask.StandardTaskTemplate):
@@ -219,7 +225,8 @@ class Fluxboot(basetask.StandardTaskTemplate):
 
         return FluxbootResults(sources=self.inputs.sources, flux_densities=self.inputs.flux_densities,
                                spws=self.inputs.spws, weblog_results=weblog_results,
-                               spindex_results=spindex_results, vis=self.inputs.vis, caltable=caltable)
+                               spindex_results=spindex_results, vis=self.inputs.vis, caltable=caltable,
+                               fluxscale_result=fluxscale_result)
 
     def analyse(self, results):
         return results
@@ -395,6 +402,7 @@ class Fluxboot(basetask.StandardTaskTemplate):
                 if len(lfds) < 2:
                     aa = lfds[0]
                     bb = 0.0
+                    bberr = 0.0
                     SNR = 0.0
                 else:
                     alfds = scp.array(lfds)
@@ -406,6 +414,7 @@ class Fluxboot(basetask.StandardTaskTemplate):
                     covar = fit_out[1]
                     aa = pfinal[0]
                     bb = pfinal[1]
+                    bberr = 0.0
         
                     #
                     # the fit is of the form:
@@ -432,15 +441,23 @@ class Fluxboot(basetask.StandardTaskTemplate):
                 reffreq = 10.0**lfreqs[0]/1.0e9
                 fluxdensity = 10.0**(aa + bb*lfreqs[0])
                 spix = bb
+                spixerr = bberr
                 results.append([ source, uspws, fluxdensity, spix, SNR, reffreq ])
                 LOG.info(source + ' ' + band + ' fitted spectral index & SNR = ' + str(spix) + ' ' + str(SNR))
-                spindex_results.append({'source': source,
-                                        'band'  : band,
-                                        'spix'  : str(spix),
-                                        'SNR'   : str(SNR)})
+                spindex_results.append({'source'  : source,
+                                        'band'    : band,
+                                        'spix'    : str(spix),
+                                        'spixerr' : str(spixerr),
+                                        'SNR'     : str(SNR)})
                 LOG.info("Frequency, data, error, and fitted data:")
+                # Sort arrays based on frequency
+                lfreqs_orig = lfreqs
+                lfreqs, lfds = zip(*sorted(zip(lfreqs, lfds)))
+                lfreqs_orig, lerrs = zip(*sorted(zip(lfreqs_orig, lerrs)))
+
                 for ii in range(len(lfreqs)):
                     SS = fluxdensity * (10.0**lfreqs[ii]/reffreq/1.0e9)**spix
+
                     fderr = lerrs[ii]*(10**lfds[ii])/math.log10(math.e)
                     LOG.info('    '+str(10.0**lfreqs[ii]/1.0e9)+'  '+ str(10.0**lfds[ii])+'  '+str(fderr)+'  '+str(SS))
                     weblog_results.append({'source': source,
@@ -448,7 +465,8 @@ class Fluxboot(basetask.StandardTaskTemplate):
                                            'data' : str(10.0**lfds[ii]),
                                            'error': str(fderr),
                                            'fitteddata': str(SS)})
-        
+
+
         self.spix = spix
         
         LOG.info("Setting power-law fit in the model column")

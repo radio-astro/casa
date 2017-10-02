@@ -1141,7 +1141,7 @@ class StandardTaskTemplate(api.Task):
         tail = self.inputs.vis[1:]
 
         if isinstance(self.inputs, (StandardInputs, ModeInputs)):
-            to_split = ('calphasetable', 'targetphasetable')
+            to_split = ('calphasetable', 'targetphasetable', 'offsetstable')
             split_properties = self._get_handled_headtails(to_split)
 
             for name, ht in split_properties.items():

@@ -8,6 +8,7 @@ import re
 import time
 import collections
 import functools
+import itertools
 
 import pipeline.infrastructure.mpihelpers as mpihelpers
 import pipeline.infrastructure as infrastructure
@@ -250,6 +251,11 @@ def get_mask_from_flagtra(flagtra):
     """Convert FLAGTRA (unsigned char) to a mask array (1=valid, 0=flagged)"""
     return (numpy.asarray(flagtra) == 0).astype(int)
 
+def iterate_group_member(group_desc, member_id_list):
+    for mid in member_id_list:
+        member = group_desc[mid]
+        yield member.ms, member.field_id, member.antenna_id, member.spw_id
+        
 def get_index_list_for_ms(datatable, vis_list, antennaid_list, fieldid_list, 
                           spwid_list, srctype=None):
     return numpy.fromiter(_get_index_list_for_ms(datatable, vis_list, antennaid_list, fieldid_list, 
@@ -258,15 +264,31 @@ def get_index_list_for_ms(datatable, vis_list, antennaid_list, fieldid_list,
 def _get_index_list_for_ms(datatable, vis_list, antennaid_list, fieldid_list, 
                           spwid_list, srctype=None):
     # use time_table instead of data selection
-    #online_flag = datatable.tb2.getcolslice('FLAG_PERMANENT', [0, OnlineFlagIndex], [-1, OnlineFlagIndex], 1)[0]
+    #online_flag = datatable.getcolslice('FLAG_PERMANENT', [0, OnlineFlagIndex], [-1, OnlineFlagIndex], 1)[0]
     #LOG.info('online_flag=%s'%(online_flag))
-    for (_vis, _field, _ant, _spw) in zip(vis_list, fieldid_list, antennaid_list, spwid_list):
+    for (_vis, _field, _ant, _spw) in itertools.izip(vis_list, fieldid_list, antennaid_list, spwid_list):
         time_table = datatable.get_timetable(_ant, _spw, None, os.path.basename(_vis), _field)
         # time table separated by large time gap
         the_table = time_table[1]
         for group in the_table:
             for row in group[1]:
-                permanent_flag = datatable.tb2.getcell('FLAG_PERMANENT', row)
+                permanent_flag = datatable.getcell('FLAG_PERMANENT', row)
+                online_flag = permanent_flag[:,OnlineFlagIndex]
+                if any(online_flag == 1):
+                    yield row  
+                      
+def get_index_list_for_ms2(datatable, group_desc, member_list, srctype=None):
+    # use time_table instead of data selection
+    #online_flag = datatable.getcolslice('FLAG_PERMANENT', [0, OnlineFlagIndex], [-1, OnlineFlagIndex], 1)[0]
+    #LOG.info('online_flag=%s'%(online_flag))
+    for (_ms, _field, _ant, _spw) in iterate_group_member(group_desc, member_list):
+        _vis = _ms.name
+        time_table = datatable.get_timetable(_ant, _spw, None, os.path.basename(_vis), _field)
+        # time table separated by large time gap
+        the_table = time_table[1]
+        for group in the_table:
+            for row in group[1]:
+                permanent_flag = datatable.getcell('FLAG_PERMANENT', row)
                 online_flag = permanent_flag[:,OnlineFlagIndex]
                 if any(online_flag == 1):
                     yield row    
@@ -292,6 +314,29 @@ def get_valid_ms_members(group_desc, msname_filter, ant_selection, field_selecti
             if (len(spwsel) == 0 or spw_id in spwsel) and \
             (len(fieldsel) == 0 or field_id in fieldsel) and \
             (len(antsel) == 0 or ant_id in antsel):
+                yield member_id
+
+def get_valid_ms_members2(group_desc, ms_filter, ant_selection, field_selection, spw_selection):
+    for member_id in xrange(len(group_desc)):
+        member = group_desc[member_id]
+        spw_id = member.spw_id
+        field_id = member.field_id
+        ant_id = member.antenna_id
+        msobj = member.ms
+        if msobj in ms_filter:
+            try:
+                mssel = casatools.ms.msseltoindex(vis=msobj.name, spw=spw_selection,
+                                                  field=field_selection, baseline=ant_selection)
+            except RuntimeError, e:
+                LOG.trace('RuntimeError: {0}'.format(str(e)))
+                LOG.trace('vis="{0}" field_selection: "{1}"'.format(msobj.name, field_selection))
+                continue
+            spwsel = mssel['spw']
+            fieldsel = mssel['field']
+            antsel = mssel['antenna1']
+            if (spwsel.size == 0 or spw_id in spwsel) and \
+              (fieldsel.size == 0 or field_id in fieldsel) and \
+              (antsel.size == 0 or ant_id in antsel):
                 yield member_id
 
 def _collect_logrecords(logger):
@@ -516,7 +561,7 @@ def make_row_map(src_ms, derived_vis):
                             #assert set(tstate0) == set(states[scan_number])
                             assert set(tstate0).issubset(set(states[scan_number]))
                             
-                            for (i0, i1) in zip(sort_index0, sort_index1):
+                            for (i0, i1) in itertools.izip(sort_index0, sort_index1):
                                 r0 = trow0[i0]
                                 r1 = trow1[i1]
                                 rowmap[r0] = r1
@@ -596,7 +641,7 @@ def make_spwid_map(srcvis, dstvis):
                 map_byname[src_spw].append(dst_spw)
     
     spwid_map = {}
-    for (src,dst) in map_byname.items():
+    for (src,dst) in map_byname.iteritems():
         LOG.trace('map_byname src spw %s: dst spws %s'%(src.id, [spw.id for spw in dst]))    
         if len(dst) == 0:
             continue
@@ -634,8 +679,14 @@ def make_polid_map(srcvis, dstvis):
 
 #@profiler
 def make_ddid_map(vis):
-    table_rows = _read_table(casatools.MSMDReader, tablereader.DataDescriptionTable, vis)
-    return dict((((polid,spwid),ddid) for ddid,spwid,polid in table_rows))
+    with casatools.TableReader(os.path.join(vis, 'DATA_DESCRIPTION')) as tb:
+        pol_ids = tb.getcol('POLARIZATION_ID')
+        spw_ids = tb.getcol('SPECTRAL_WINDOW_ID')
+        num_ddids = tb.nrows()
+    ddid_map = {}
+    for ddid in xrange(num_ddids):
+        ddid_map[(pol_ids[ddid], spw_ids[ddid])] = ddid
+    return ddid_map
 
 def get_datacolumn_name(vis):
     colname_candidates = ['CORRECTED_DATA', 'FLOAT_DATA', 'DATA']

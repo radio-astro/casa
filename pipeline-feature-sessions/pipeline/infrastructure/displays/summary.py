@@ -13,9 +13,11 @@ import pipeline.infrastructure.renderer.logger as logger
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.casatools as casatools
-import pipeline.extern.analysis_scripts.analysisUtils as analysisUtils
+#import pipeline.extern.analysis_scripts.analysisUtils as analysisUtils
 from . import plotpwv
-from pipeline.extern import analysis_scripts
+from . import plotweather
+from . import plotmosaic
+#from pipeline.extern import analysis_scripts
 from pipeline.infrastructure import casa_tasks
 import pipeline.infrastructure.utils as utils
 import casa
@@ -109,7 +111,9 @@ class WeatherChart(object):
 
         LOG.debug('Creating new Weather plot')
         try:
-            analysisUtils.plotWeather(vis=self.ms.name, figfile=self.figfile)
+            #analysisUtils.plotWeather(vis=self.ms.name, figfile=self.figfile)
+            # based on the analysisUtils method
+            plotweather.plotWeather(vis=self.ms.name, figfile=self.figfile)
         except:
             return None
         finally:
@@ -315,10 +319,11 @@ class FieldVsTimeChart(object):
         size = [0.4, 0.4, 0.6, 0.6]
         for intent, colour in sorted(self._intent_colours.items(),
                                      key=operator.itemgetter(0)):
-            pylab.gca().fill([x, x+0.05, x+0.05, x], size, facecolor=colour, 
-                             edgecolor=colour)
-            pylab.text(x+0.06, 0.4, intent, size=9, va='bottom', rotation=45)
-            x += 0.12
+            if (intent in self.inputs.ms.intents) or 'UNKNOWN' in intent:
+                pylab.gca().fill([x, x+0.05, x+0.05, x], size, facecolor=colour,
+                                 edgecolor=colour)
+                pylab.text(x+0.06, 0.4, intent, size=9, va='bottom', rotation=45)
+                x += 0.12
 
         pylab.axis(lims)
 
@@ -516,7 +521,12 @@ class MosaicChart(object):
             return self._get_plot_object()
 
         try:
-            analysisUtils.plotMosaic(self.ms.name, 
+            # based on the analysisUtils method
+            #analysisUtils.plotMosaic(self.ms.name, 
+                                     #sourceid=self.source.id,
+                                     #coord='rel',
+                                     #figfile=self.figfile)
+            plotmosaic.plotMosaic(self.ms.name, 
                                      sourceid=self.source.id,
                                      coord='rel',
                                      figfile=self.figfile)
@@ -610,7 +620,7 @@ class PlotAntsChart(object):
                 subpl.add_artist(circ)
                 circ.set_alpha(0.5)
                 circ.set_facecolor([1.0, 1.0, 1.0])
-                tt = subpl.text(padpos[0]+8., padpos[1]-4., antenna.station)
+                tt = subpl.text(padpos[0]+antenna.diameter/2.0*1.3, padpos[1]-4., antenna.station)
                 pylab.setp(tt, size='small', alpha=0.5)
 
         (xmin, xmax, ymin, ymax) = (9e9, -9e9, 9e9, -9e9)
@@ -620,7 +630,7 @@ class PlotAntsChart(object):
             subpl.add_artist(circ)
             circ.set_alpha(1.0)
             circ.set_facecolor([0.8, 0.8, 0.8])
-            subpl.text(padpos[0]+8, padpos[1]+1, antenna.name)
+            subpl.text(padpos[0]+antenna.diameter/2.0*1.3, padpos[1]+1, antenna.name)
             if padpos[0] < xmin: xmin = padpos[0]
             if padpos[0] > xmax: xmax = padpos[0]
             if padpos[1] < ymin: ymin = padpos[1]

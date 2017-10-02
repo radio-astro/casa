@@ -27,11 +27,13 @@ class BoxResult(basetask.Results):
 
 
 class TcleanResult(basetask.Results):
-    def __init__(self, sourcename=None, intent=None, spw=None, specmode=None, multiterm=None, plotdir=None):
+    def __init__(self, sourcename=None, intent=None, spw=None, orig_specmode=None, specmode=None, multiterm=None, plotdir=None,
+                 imaging_mode=None):
         super(TcleanResult, self).__init__()
         self.sourcename = sourcename
         self.intent = intent
         self.spw = spw
+        self.orig_specmode = orig_specmode
         self.specmode = specmode
         self.multiterm = multiterm
         self.plotdir = plotdir
@@ -46,6 +48,7 @@ class TcleanResult(basetask.Results):
         self._max_sensitivity = None
         self._min_field_id = None
         self._max_field_id = None
+        self._dr_corrected_sensitivity = 0.0
         self._threshold = 0.0
         self._dirty_dynamic_range = 0.0
         self._DR_correction_factor = 1.0
@@ -53,8 +56,11 @@ class TcleanResult(basetask.Results):
         self._image_min = 0.0
         self._image_max = 0.0
         self._image_rms = 0.0
+        self._image_rms_min = 0.0
+        self._image_rms_max = 0.0
         # Temporarily needed until CAS-8576 is fixed
         self._residual_max = 0.0
+        self._tclean_stopcode = 0
         # This should be automatic, but it does not yet work
         self.pipeline_casa_task = 'Tclean'
         # Dummy settings for the weblog renderer
@@ -62,6 +68,8 @@ class TcleanResult(basetask.Results):
         self.targets = ['']
         self.warning = None
         self.error = None
+        # Used to make simple telescope-dependent decisions about weblog output
+        self.imaging_mode = imaging_mode
 
     def empty(self):
         return not(self._psf or self._model or self._flux or 
@@ -207,6 +215,13 @@ class TcleanResult(basetask.Results):
         self._max_field_id = max_field_id
 
     @property
+    def dr_corrected_sensitivity(self):
+        return self._dr_corrected_sensitivity
+
+    def set_dr_corrected_sensitivity(self, dr_corrected_sensitivity):
+        self._dr_corrected_sensitivity = dr_corrected_sensitivity
+
+    @property
     def threshold(self):
         return self._threshold
 
@@ -254,6 +269,27 @@ class TcleanResult(basetask.Results):
 
     def set_image_rms(self, image_rms):
         self._image_rms = image_rms
+
+    @property
+    def image_rms_min(self):
+        return self._image_rms_min
+
+    def set_image_rms_min(self, image_rms_min):
+        self._image_rms_min = image_rms_min
+
+    @property
+    def image_rms_max(self):
+        return self._image_rms_max
+
+    def set_image_rms_max(self, image_rms_max):
+        self._image_rms_max = image_rms_max
+
+    @property
+    def tclean_stopcode(self):
+        return self._tclean_stopcode
+
+    def set_tclean_stopcode(self, tclean_stopcode):
+        self._tclean_stopcode = tclean_stopcode
 
     def __repr__(self):
         repr = 'Tclean:\n'

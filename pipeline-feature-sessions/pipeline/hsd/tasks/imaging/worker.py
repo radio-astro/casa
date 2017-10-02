@@ -4,6 +4,7 @@ import os
 import numpy
 import math
 import shutil
+import itertools
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
@@ -16,7 +17,7 @@ from ..common import utils
 LOG = infrastructure.get_logger(__name__)
 
 
-def ALMAImageCoordinateUtil(context, datatable, ms_names, ant_list, spw_list, fieldid_list):
+def ALMAImageCoordinateUtil(context, ms_names, ant_list, spw_list, fieldid_list):
     """
     An utility function to calculate spatial coordinate of image for ALMA
     """
@@ -28,12 +29,11 @@ def ALMAImageCoordinateUtil(context, datatable, ms_names, ant_list, spw_list, fi
         ref_msobj = context.observing_run.measurement_sets[idx]
     else:
         raise ValueError, "The reference ms, %s, not registered to context" % ms_names[0]
-    ref_ms_name = ref_msobj.name
     ref_fieldid = fieldid_list[0]
     ref_spw = spw_list[0]
     source_name = ref_msobj.fields[ref_fieldid].name
-    # trim source name to workaround '"name"' type of sources
-    trimmed_name = source_name.strip('"')
+#     # trim source name to workaround '"name"' type of sources
+#     trimmed_name = source_name.strip('"')
 
     # qa tool
     qa = casatools.quanta
@@ -46,12 +46,15 @@ def ALMAImageCoordinateUtil(context, datatable, ms_names, ant_list, spw_list, fi
     diameter_m = 12.0
     obscure_alma = 0.75
     ### END OF ALMA part ###
-    with casatools.MSMDReader(ref_ms_name) as msmd:
-        freq_hz = msmd.meanfreq(ref_spw)
 
-        fnames = [name for name in msmd.fieldnames() if name.find(trimmed_name) > -1]
-        if USE_FIELD_DIR:
-            me_center = msmd.phasecenter(msmd.fieldsforname(fnames[0])[0])
+    # msmd-less implementation
+    spw = ref_msobj.get_spectral_window(ref_spw)
+    freq_hz = numpy.float64(spw.mean_frequency.value)
+#     fields = ref_msobj.get_fields(name=trimmed_name)
+    fields = ref_msobj.get_fields(name=source_name)
+    fnames = [f.name for f in fields]
+    if USE_FIELD_DIR:
+        me_center = fields[0].mdirection
 
     # cellx and celly
     import sdbeamutil
@@ -63,6 +66,7 @@ def ALMAImageCoordinateUtil(context, datatable, ms_names, ant_list, spw_list, fi
     LOG.info('Calculating image coordinate of field \'%s\', reference frequency %fGHz' % (fnames[0], freq_hz * 1.e-9))
     LOG.info('cell=%s' % (qa.tos(cellx)))
 
+    datatable = DataTable(name=context.observing_run.ms_datatable_name, readonly=True)
     # nx, ny and center
     parent_mses = [utils.get_parent_ms_name(context, name) for name in ms_names]
     index_list = common.get_index_list_for_ms(datatable, parent_mses, ant_list, fieldid_list, spw_list)
@@ -76,11 +80,12 @@ def ALMAImageCoordinateUtil(context, datatable, ms_names, ant_list, spw_list, fi
     index_list.sort()
 
     # the unit of RA and DEC should be in deg
-    ra = datatable.tb1.getcol('RA').take(index_list)
-    dec = datatable.tb1.getcol('DEC').take(index_list)
-    if (datatable.tb1.getcolkeyword('RA', 'UNIT') != 'deg') or \
-            (datatable.tb1.getcolkeyword('DEC', 'UNIT') != 'deg'):
+    ra = datatable.getcol('RA').take(index_list)
+    dec = datatable.getcol('DEC').take(index_list)
+    if (datatable.getcolkeyword('RA', 'UNIT') != 'deg') or \
+        (datatable.getcolkeyword('DEC', 'UNIT') != 'deg'):
         raise RuntimeError, "Found unexpected unit of RA/DEC in DataTable. It should be in 'deg'"
+    del datatable
 
     ra_min = min(ra)
     ra_max = max(ra)
@@ -221,8 +226,7 @@ class SDImagingWorker(basetask.StandardTaskTemplate):
         if coord_set:
             return params
         else:
-            datatable = DataTable(name=context.observing_run.ms_datatable_name, readonly=True)
-            return ALMAImageCoordinateUtil(context, datatable, infiles, ant_list, spw_list, field_list)
+            return ALMAImageCoordinateUtil(context, infiles, ant_list, spw_list, field_list)
 
     def _do_imaging(self, infiles, antid_list, spwid_list, fieldid_list, imagename, imagemode, edge, phasecenter, cellx,
                     celly, nx, ny):
@@ -235,9 +239,9 @@ class SDImagingWorker(basetask.StandardTaskTemplate):
         ref_spwid = spwid_list[0]
 
         LOG.debug('Members to be processed:')
-        for (m, a, s, f) in zip(infiles, antid_list, spwid_list, fieldid_list):
-            LOG.debug('\tMS %s: Antenna %s Spw %s Field %s' % (os.path.basename(m), a, s, f))
-
+        for (m, a,s, f) in itertools.izip(infiles, antid_list, spwid_list, fieldid_list):
+            LOG.debug('\tMS %s: Antenna %s Spw %s Field %s'%(os.path.basename(m), a,s,f))
+    
         # Check for ephemeris source
         known_ephemeris_list = ['MERCURY', 'VENUS', 'MARS', 'JUPITER', 'SATURN', 'URANUS', 'NEPTUNE', 'PLUTO', 'SUN',
                                 'MOON']
@@ -289,8 +293,8 @@ class SDImagingWorker(basetask.StandardTaskTemplate):
         # truncate, gwidth, jwidth, and convsupport
         truncate = gwidth = jwidth = -1  # defaults (not used)
         convsupport = 6
-
-        #         temporary_name = imagename.rstrip('/')+'.tmp'
+    
+#         temporary_name = imagename.rstrip('/')+'.tmp'
         cleanup_params = ['outfile', 'infiles', 'spw', 'scan']
         qa = casatools.quanta
         image_args = {'mode': mode,
@@ -321,10 +325,9 @@ class SDImagingWorker(basetask.StandardTaskTemplate):
         spwsel_list = []
         fieldsel_list = []
         antsel_list = []
-        for (msname, ant, spw, field) in zip(infiles, antid_list, spwid_list, fieldid_list):
-            LOG.debug('Registering data to image: vis=\'%s\', ant=%s, spw=%s, field=%s%s' % (msname, ant, spw, field,
-                                                                                             (
-                                                                                             ' (ephemeris source)' if ephemsrcname != '' else '')))
+        for (msname, ant, spw, field) in itertools.izip(infiles, antid_list, spwid_list, fieldid_list):
+            LOG.debug('Registering data to image: vis=\'%s\', ant=%s, spw=%s, field=%s%s'%(msname, ant, spw, field,
+                                                                                           (' (ephemeris source)' if ephemsrcname!='' else '')))
             infile_list.append(msname)
             spwsel_list.append(str(spw))
             fieldsel_list.append(str(field))

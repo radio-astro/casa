@@ -118,15 +118,18 @@ def read_fluxes_db(ms):
         #  - The observation date
         #  and attempt to call the online flux catalog web service, and use the flux result
         #  and spectral index
+        utcnow = datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC")
         try:
             serviceurl = 'https://almascience.eso.org/sc/flux'
             fluxdict = fluxservice(serviceurl, ms, frequency, source_name)
             f = fluxdict['fluxdensity']
             spix = fluxdict['spectralindex']
+            origin = 'Source.xml'
 
             # Filter for problem values.
             #    If there are problem values revert to the ASDM values
-            if float(f) == 0.0 or str(f) == 'Infinity' or str(spix) == '-1000':
+
+            if float(f) <= 0.0 or str(f) == 'Infinity' or str(spix) == '-1000':
                 # Use ASDM values if any
                 if msource is not None:
                     if int(spw_id) in science_spw_ids:
@@ -136,6 +139,7 @@ def read_fluxes_db(ms):
                         LOG.info("         Online catalog Spectral Index: {!s}".format(str(spix)))
                         LOG.info("         Unusable online catalog information.")
                         LOG.info("---------------------------------------------")
+                        origin = 'Source.xml'
                     m = msource
                 else:
                     if int(spw_id) in science_spw_ids:
@@ -145,6 +149,7 @@ def read_fluxes_db(ms):
                         LOG.info("         Online catalog Spectral Index: {!s}".format(str(spix)))
                         LOG.info("         Unusable online catalog information.")
                         LOG.info("---------------------------------------------")
+                        origin = 'Source.xml'
                     continue
             else:
                 if msource is None:
@@ -157,6 +162,7 @@ def read_fluxes_db(ms):
                         measures.FluxDensity(0.0, measures.FluxDensityUnits.JANSKY),
                         measures.FluxDensity(0.0, measures.FluxDensityUnits.JANSKY),
                         measures.FluxDensity(0.0, measures.FluxDensityUnits.JANSKY))
+                    origin = 'DB query {!s}'.format(utcnow)
                 # Use ASDM polarization values if any
                 else:
                     if int(spw_id) in science_spw_ids:
@@ -169,7 +175,10 @@ def read_fluxes_db(ms):
                         measures.FluxDensity(float(msource.Q.value), measures.FluxDensityUnits.JANSKY),
                         measures.FluxDensity(float(msource.U.value), measures.FluxDensityUnits.JANSKY),
                         measures.FluxDensity(float(msource.V.value), measures.FluxDensityUnits.JANSKY))
-                m = domain.FluxMeasurement(spw_id, *iquv_db, spix=decimal.Decimal('%0.3f' % float(spix)))
+                    origin = 'DB query {!s}'.format(utcnow)
+
+                m = domain.FluxMeasurement(spw_id, *iquv_db, spix=decimal.Decimal('%0.3f' % float(spix)),
+                                           origin=origin)
 
         except:
 
@@ -206,13 +215,17 @@ def flux_nosourcexml(ms):
 
                 serviceurl = 'https://almascience.eso.org/sc/flux'
                 fluxdict = fluxservice(serviceurl, ms, frequency, sourcename)
+
                 f = fluxdict['fluxdensity']
                 spix = fluxdict['spectralindex']
                 iquv_db = (measures.FluxDensity(float(f), measures.FluxDensityUnits.JANSKY),
                        measures.FluxDensity(0.0, measures.FluxDensityUnits.JANSKY),
                        measures.FluxDensity(0.0, measures.FluxDensityUnits.JANSKY),
                        measures.FluxDensity(0.0, measures.FluxDensityUnits.JANSKY))
-                m = domain.FluxMeasurement(spw_id, *iquv_db, spix=decimal.Decimal('%0.3f' % float(spix)))
+                utcnow = datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC")
+                m = domain.FluxMeasurement(spw_id, *iquv_db,
+                                           spix=decimal.Decimal('%0.3f' % float(spix)),
+                                           origin='DB query {!s}'.format(utcnow))
                 result[source].append(m)
             except:
                 LOG.debug("    No flux catalog values for source " + str(source.name) + "  spw:" + str(spw_id))
@@ -231,6 +244,8 @@ def fluxservice (serviceurl, ms, frequency, sourcename):
     # serviceurl = 'http://bender.csrg.cl:2121/bfs-0.2/ssap'
     # serviceurl =  'http://asa-test.alma.cl/bfs/'
     # serviceurl = 'https://almascience.eso.org/sc/flux'
+    # Example:
+    # https://almascience.eso.org/sc/flux?DATE=10-August-2017&FREQUENCY=232101563000.0&NAME=J1924-2914&WEIGHTED=true&RESULT=1
 
     qt = casatools.quanta
     mt = casatools.measures
@@ -250,6 +265,7 @@ def fluxservice (serviceurl, ms, frequency, sourcename):
         LOG.warn('DB flux service timeout/connection problem...')
     LOG.debug('url: ' + serviceurl + '?%s' % urlparams)
 
+
     domtable = dom.getElementsByTagName('TR')
     rowdict = {}
     for node in domtable:
@@ -266,8 +282,10 @@ def fluxservice (serviceurl, ms, frequency, sourcename):
         rowdict['error4'] = row[9].childNodes[0].nodeValue
         rowdict['warning'] = row[10].childNodes[0].nodeValue
         rowdict['notms'] = row[11].childNodes[0].nodeValue
-        rowdict['verbose'] = row[12].childNodes[0].nodeValue
+        #rowdict['verbose'] = row[12].childNodes[0].nodeValue
         rowdict['url'] = serviceurl + '?%s' % urlparams
+
+
 
     return rowdict
 
@@ -275,12 +293,14 @@ def fluxservice (serviceurl, ms, frequency, sourcename):
 def buildparams(sourcename, date, frequency):
     """
     Inputs are all strings with the format:
-    NAME=3c279&DATE=04-Apr-2014&FREQUENCY=231.435E9
+    NAME=3c279&DATE=04-Apr-2014&FREQUENCY=231.435E9&WEIGHTED=true&RESULT=1
     """
 
-    params = {'NAME': sourcename,
-              'DATE': date,
-              'FREQUENCY': frequency}
+    params = {'NAME'      : sourcename,
+              'DATE'      : date,
+              'FREQUENCY' : frequency,
+              'WEIGHTED'  : 'true',
+              'RESULT'    : 0}
 
     urlparams = urllib.urlencode(params)
 

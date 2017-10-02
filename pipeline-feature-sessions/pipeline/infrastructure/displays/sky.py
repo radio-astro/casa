@@ -65,11 +65,10 @@ def plotfilename(image, reportdir):
 class SkyDisplay(object):
     """Class to plot sky images."""
 
-    def plot(self, context, result, reportdir, intent=None, collapseFunction='mean', vmin=None, vmax=None):
+    def plot(self, context, result, reportdir, intent=None, collapseFunction='mean', vmin=None, vmax=None, **imshow_args):
         if not result:
             return []
 
-        imshow_args = {}
         if vmin is not None and vmax is not None:
             imshow_args['norm'] = plt.normalize(vmin, vmax, clip=True)
 
@@ -164,9 +163,10 @@ class SkyDisplay(object):
             f1 = plt.figure(1)
 
             # plot data
-            cmap = copy.deepcopy(matplotlib.cm.jet)
-            cmap.set_bad('k', 1.0)
-            plt.imshow(np.transpose(mdata), cmap=cmap, interpolation='nearest', origin='lower', aspect='equal',
+            if not imshow_args.has_key('cmap'):
+                imshow_args['cmap'] = copy.deepcopy(matplotlib.cm.jet)
+            imshow_args['cmap'].set_bad('k', 1.0)
+            plt.imshow(np.transpose(mdata), interpolation='nearest', origin='lower', aspect='equal',
                        extent=[x[0], x[-1], y[0], y[-1]], **imshow_args)
 
             plt.axis('image')

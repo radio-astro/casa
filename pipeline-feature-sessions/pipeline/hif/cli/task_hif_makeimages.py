@@ -5,7 +5,10 @@ from taskinit import casalog
 import pipeline.h.cli.utils as utils
 
 def hif_makeimages(vis=None, target_list=None, weighting=None,
-                   robust=None, noise=None, npixels=None, hm_masking=None, hm_autotest=None,
+                   robust=None, noise=None, npixels=None, hm_masking=None,
+                   hm_sidelobethreshold=None, hm_noisethreshold=None,
+                   hm_lownoisethreshold=None, hm_negativethreshold=None,
+                   hm_minbeamfrac=None, hm_growiterations=None,
                    hm_cleaning=None, tlimit=None, masklimit=None,
                    maxncleans=None, cleancontranges=None, subcontms=None, parallel=None,
                    pipelinemode=None, dryrun=None, acceptresults=None):

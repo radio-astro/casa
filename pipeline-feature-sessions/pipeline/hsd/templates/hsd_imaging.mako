@@ -105,11 +105,35 @@ It generates an image combined spectral data from whole antenna as well as image
 
 <h3>Contents</h3>
 <ul>
+<li><a href="#sensitivity">Image Sensitivity Table</a></li>
 <li><a href="#profilemap">Profile Map</a></li>
 % for plots in plots_list:
     <li><a href="#${plots['title'].replace(" ", "")}">${plots['title']}</a></li>
 % endfor
 </ul>
+
+<h3 id="sensitivity" class="jumptarget">Image Sensitivity</h3>
+<p>
+RMS of line-free channels. Estimated RMS is listed for representative images.
+</p>
+<table class="table table-bordered table-striped" summary="Image Sentivitity">
+	<caption>RMS of line-free channels</caption>
+    <thead>
+	    <tr>
+	        <th>Name</th><th>Representative (Estimate)</th><th>Frequency Ranges</th><th>Channel width [kHz]</th><th>RMS [Jy/beam]</th>
+	    </tr>
+
+	</thead>
+	<tbody>
+	% for tr in rms_table:
+		<tr>
+		% for td in tr:
+			${td}
+		% endfor
+		</tr>
+	%endfor
+	</tbody>
+</table>
 
 
 <h3 id="profilemap" class="jumptarget">Profile Map</h3>
@@ -148,7 +172,7 @@ It generates an image combined spectral data from whole antenna as well as image
 	                    <h4>Detailed profile map</h4>
 	                    <table border width="100%">
 		                    <tr><th>ANTENNA</th><th colspan="${len(profilemap_entries[field].values()[0])}">POL</th></tr>
-		                    % for (ant, pols) in profilemap_entries[field].items():
+		                    % for (ant, pols) in profilemap_entries[field].iteritems():
 		                        <tr><td>${ant}</td>
 		                        <td align="center">
 		                        % for pol in pols:

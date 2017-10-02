@@ -285,6 +285,64 @@ pipeline.pages = pipeline.pages || function() {
         return innerModule;
     }();
 
+    module.tclean_plots = function() {
+        var innerModule = {};
+
+        innerModule.ready = function() {
+            // add on-click handler to our thumbnails to launch FancyBox with the
+            // relevant thumbnails
+            $(".fancybox").fancybox({
+                type: 'image',
+                prevEffect: 'none',
+                nextEffect: 'none',
+                loop: false,
+                helpers: {
+                    title: {
+                        type: 'outside'
+                    },
+                    thumbs: {
+                        width: 50,
+                        height: 50,
+                    }
+                },
+                beforeShow: function () {
+                    this.title = $(this.element).attr('title');
+                }
+            });
+
+            // $("div.thumbnail a").click(function (evt) {
+            //     evt.preventDefault();
+            //     var target = this.href;
+            //     UTILS.launchFancybox(target);
+            //     return false;
+            // });
+
+            $("button.replace").click(function(evt) {
+                evt.preventDefault();
+
+                // take a snapshot of the current state so we can restore the page on
+                // return.
+                pipeline.history.replaceState();
+
+                // load the new page into the fake frame
+                var href = $(this).data("href");
+
+                // when switching between measurement sets, maintain the same position
+                // on the page.
+                var currentPosition = pipeline.detailsframe.getScrollTop();
+                var onSuccess = [function() {
+                    pipeline.detailsframe.setScrollTop(currentPosition);
+                }];
+                pipeline.detailsframe.load(href, onSuccess);
+
+                // store the new state
+                pipeline.history.pushState();
+            });
+        };
+
+        return innerModule;
+    }();
+
     return module;
 }();
 

@@ -7,20 +7,16 @@ import pipeline.hif.tasks.tclean.renderer as clean_renderer
 import pipeline.infrastructure.utils as utils
 import pipeline.infrastructure.renderer.rendererutils as rendererutils
 
-columns = {'cleanmask' : 'Clean Mask',
-           'flux' : 'Primary Beam',
-           'image' : 'Image',
-           'residual' : 'Residual',
-           'model' : 'Final Model',
-           'psf' : 'PSF'}
+columns = {
+    'cleanmask' : 'Clean Mask',
+    'flux' : 'Primary Beam',
+    'image' : 'Image',
+    'residual' : 'Residual',
+    'model' : 'Final Model',
+    'psf' : 'PSF'
+}
 
 colorder = ['image', 'residual', 'cleanmask']
-
-def get_plot(plots, field, spw, i, colname):
-	try:
-		return plots[field][spw][i][colname]
-	except KeyError:
-		return None
 %>
 <%inherit file="t2-4m_details-base.mako"/>
 
@@ -62,212 +58,140 @@ except:
 <h2>Image Details</h2>
 
 %if not len(result[0].targets):
-    <p>There are no clean results.
+    %if result[0].clean_list_info == {}:
+        <p>There are no clean targets.
+    %else:
+        <p>${result[0].clean_list_info.get('msg', '')}
+    %endif
 %else:
     <table class="table table-striped">
-                <thead>
+        <thead>
+        <tr>
+            <th>Field</th>
+            <th>Spw</th>
+            <th>Pol</th>
+            <th colspan="2">Image details</th>
+            <th>Image result</th>
+        </tr>
+        </thead>
+        <tbody>
+
+            % for row in image_info:
+                %if row.frequency is not None:
                 <tr>
-                    <th>Field</th>
-                    <th>Spw</th>
-                    <th>Pol</th>
-                    <th colspan="2">Image details</th>
-                    <th>Image result</th>
+                    %if row.nchan is not None:
+                        %if row.nchan == 1:
+                            <td rowspan="12">${row.field}</td>
+                            <td rowspan="12">${row.spw}</td>
+                            <td rowspan="12">${row.pol}</td>
+                        %else:
+                            <td rowspan="11">${row.field}</td>
+                            <td rowspan="11">${row.spw}</td>
+                            <td rowspan="11">${row.pol}</td>
+                        %endif
+                    %else:
+                        <td rowspan="11">${row.field}</td>
+                        <td rowspan="11">${row.spw}</td>
+                        <td rowspan="11">${row.pol}</td>
+                    %endif
+                    <th>${row.frequency_label}</th>
+                    <td>${row.frequency}</td>
+                    % if row.plot is not None:
+                    <%
+                    fullsize_relpath = os.path.relpath(row.plot.abspath, pcontext.report_dir)
+                    thumbnail_relpath = os.path.relpath(row.plot.thumbnail, pcontext.report_dir)
+                    %>
+                    %if row.nchan == 1:
+                    <td rowspan="11">
+                    %else:
+                    <td rowspan="10">
+                    %endif
+                        <a class="fancybox"
+                           href="${fullsize_relpath}"
+                           rel="clean-summary-images"
+                           title='<div class="pull-left">Iteration: ${row.plot.parameters['iter']}<br>
+                                  Spw: ${row.plot.parameters['spw']}<br>
+                                  Field: ${cgi.escape(row.field, True)}</div><div class="pull-right"><a href="${fullsize_relpath}">Full Size</a></div>'
+                           data-thumbnail="${thumbnail_relpath}">
+                          <img src="${thumbnail_relpath}"
+                               title="Iteration ${row.plot.parameters['iter']}: image"
+                               alt="Iteration ${row.plot.parameters['iter']}: image"
+                               class="img-thumbnail img-responsive"
+                               data-thumbnail="${thumbnail_relpath}">
+                        </a>
+                        <div class="caption">
+                            <p>
+                                <a class="replace"
+                                   href="${os.path.relpath(row.qa_url, pcontext.report_dir)}"
+                                   role="button">
+                                    View other QA images...
+                                </a>
+                            </p>
+                        </div>
+                    </td>
+                    % else:
+                    <td>No image available</td>
+                    % endif
+			    </tr>
+
+                <tr>
+    				<th>beam</th>
+                    <td>${row.beam}</td>
+			    </tr>
+
+                <tr>
+                    <th>beam p.a.</th>
+                    <td>${row.beam_pa}</td>
                 </tr>
-                </thead>
-                <tbody>
 
-                <%
-                ## get sorted key lists so that table entries are ordered
-                fields = sorted(set([k[0] for k in info_dict]))
-                spws = []
-                for k in info_dict.keys():
-                    try:
-                        spws.append(int(k[1]))
-                    except:
-                        spws.append(k[1])
-                spws = sorted(set(spws))
-                pols = sorted(set([k[2] for k in info_dict]))
-                %>
-                % for field in fields:
-                    % for spw in spws:
-                        % for pol in pols:
-                            %if info_dict.get((field,str(spw),pol,'frequency')) is not None:
-                            <tr>
-                                <td rowspan="11">${field}</td>
-                                <td rowspan="11">${spw}</td>
-                                <td rowspan="11">${pol}</td>
-                                %if info_dict.get((field,str(spw),pol,'nchan')) is not None:
-                                    %if info_dict[(field,str(spw),pol,'nchan')] == 1:
-								<th>center frequency of image</th>
-                                    %else:
-								<th>center frequency of cube</th>
-                                    %endif
-                                %else:
-								<th>center frequency</th>
-                                %endif
-								<td>${casatools.quanta.tos(info_dict[(field,str(spw),pol,'frequency')], 4)} (LSRK)</td>
-                                <% 
-                                try:
-                                    final_iter = sorted(plots_dict[field][str(spw)].keys())[-1]
-                                    plot = get_plot(plots_dict, field, str(spw), final_iter, 'image') 
-                                except:
-                                    plot = None
-                                %>
-                                % if plot is not None:
-                                    <%
-                                    renderer = clean_renderer.TCleanPlotsRenderer(pcontext, result, plots_dict, field, str(spw), pol)
-                                    with renderer.get_file() as fileobj:
-                                        fileobj.write(renderer.render())
+                <tr>
+                    <th>final theoretical sensitivity</th>
+                    <td>${row.sensitivity}</td>
+                </tr>
 
-                                    fullsize_relpath = os.path.relpath(plot.abspath, pcontext.report_dir)
-                                    thumbnail_relpath = os.path.relpath(plot.thumbnail, pcontext.report_dir)
-                                    %>
-                                <td rowspan="10">
-										<a class="fancybox"
-                                           href="${fullsize_relpath}"
-                                           rel="clean-summary-images"
-                                           title='<div class="pull-left">Iteration: ${final_iter}<br>
-		                                          Spw: ${plot.parameters['spw']}<br>
-		                                          Field: ${cgi.escape(field, True)}</div><div class="pull-right"><a href="${fullsize_relpath}">Full Size</a></div>'
-                                           data-thumbnail="${thumbnail_relpath}">
-										  <img src="${thumbnail_relpath}"
-										       title="Iteration ${final_iter}: image"
-										       alt="Iteration ${final_iter}: image"
-										       class="img-thumbnail img-responsive"
-                                               data-thumbnail="${thumbnail_relpath}">
-										</a>
-                                        <div class="caption">
-                                            <p>
-                                                <a class="replace"
-                                                   href="${os.path.relpath(renderer.path, pcontext.report_dir)}"
-                                                   role="button">
-                                                    View other QA images...
-                                                </a>
-                                            </p>
-                                        </div>
-                                </td>
-                                %else:
-                                <td>No image available</td>
-                                %endif
-			    </tr>
-                            <tr>
-				<th>beam</th>
-                                %if info_dict.get((field,str(spw),pol,'beam major')) is not None:
-                                    <td>${'%#.2g x %#.2g %s' % (info_dict[(field,str(spw),pol,'beam major')]['value'], info_dict[(field,str(spw),pol,'beam minor')]['value'], info_dict[(field,str(spw),pol,'beam major')]['unit'])}</td>
-                                %else:
-                                    <td>-</td>
-                                %endif
-			    </tr>
-                            <tr>
-                                            <th>beam p.a.</th> 
-                                %if info_dict.get((field,str(spw),pol,'beam pa')) is not None:
-                                            <td>${casatools.quanta.tos(info_dict[(field,str(spw),pol,'beam pa')],1)}</td>
-                                %else:
-                                            <td>-</td>
-                                %endif
-                            </tr>
-                            <tr>
-                                <th>final theoretical sensitivity</th>
-                                %if info_dict.get((field,str(spw),pol,'sensitivity')) is not None:
-                                            <td>${'%.2g %s' % (info_dict[(field,str(spw),pol,'sensitivity')],
-                                                info_dict[(field,str(spw),pol,'brightness unit')])}
-                                    %if info_dict.get((field,str(spw),pol,'min sensitivity')) is not None and info_dict.get((field,str(spw),pol,'max sensitivity')) is not None:
-                                            <br>${'min: %.2g %s (field: %s)' % (info_dict[(field,str(spw),pol,'min sensitivity')], info_dict[(field,str(spw),pol,'brightness unit')], info_dict[(field,str(spw),pol,'min field id')])}
-                                            <br>${'max: %.2g %s (field: %s)' % (info_dict[(field,str(spw),pol,'max sensitivity')], info_dict[(field,str(spw),pol,'brightness unit')], info_dict[(field,str(spw),pol,'max field id')])}
-                                    %endif
-                                            </td>
-                                %else:
-                                            <td>-</td>
-                                %endif
-                            </tr>
-                            <tr>
-                                <th>cleaning threshold</th>
-                                %if info_dict.get((field,str(spw),pol,'threshold')) is not None:
-                                            <td>${'%.2g %s' % (casatools.quanta.convert(info_dict[(field,str(spw),pol,'threshold')], info_dict[(field,str(spw),pol,'brightness unit')])['value'],
-                                                info_dict[(field,str(spw),pol,'brightness unit')])}
-                                    %if info_dict.get((field,str(spw),pol,'dirty DR')) is not None:
-                                            <br>${'Dirty DR: %.2g' % (info_dict[(field,str(spw),pol,'dirty DR')])}
-                                        %if info_dict[(field,str(spw),pol,'maxEDR used')]:
-                                            <br>${'DR correction: %.2g' % (info_dict[(field,str(spw),pol,'DR correction factor')])}
-                                        %else:
-                                            <br>${'DR correction: %.2g' % (info_dict[(field,str(spw),pol,'DR correction factor')])}
-                                        %endif
-                                    %else:
-                                            <br>No DR information
-                                    %endif
-                                            </td>
-                                %else:
-                                            <td>-</td>
-                                %endif
-                            </tr>
-                            <tr>
-                                <th>non-pbcor image rms</th>
-                                %if info_dict.get((field,str(spw),pol,'masked rms')) is not None:
-                                            <td>${'%#.2g %s' % (info_dict[(field,str(spw),pol,'masked rms')],
-                                                info_dict[(field,str(spw),pol,'brightness unit')])}</td>
-                                %else:
-                                            <td>-</td>
-                                %endif
-                            </tr>
-                            <tr>
-                                <th>pbcor image max / min </th>
-                                %if info_dict.get((field,str(spw),pol,'non-masked max')) is not None and info_dict.get((field,str(spw),pol,'non-masked min')) is not None:
-                                            <td>${'%#.3g / %#.3g %s' % (info_dict[(field,str(spw),pol,'non-masked max')], info_dict[(field,str(spw),pol,'non-masked min')],
-                                                info_dict[(field,str(spw),pol,'brightness unit')])}</td>
-                                %else:
-                                            <td>-</td>
-                                %endif
-                            </tr>
-                            <tr>
-                                %if info_dict.get((field,str(spw),pol,'nchan')) is not None:
-                                    %if info_dict[(field,str(spw),pol,'nchan')] > 1:
-                                        <th>channels</th>
-                                            <td>${'%d x %s' % (info_dict[(field,str(spw),pol,'nchan')],
-                                                info_dict[(field,str(spw),pol,'width')])} (LSRK)</td>
-                                    %else:
-                                        <th>fractional bandwidth / nterms</th>
-                                            <td>${'%s / %s' % (info_dict[(field,str(spw),pol,'fractional bandwidth')],
-                                                info_dict[(field,str(spw),pol,'nterms')])}</td>
-                                    %endif
-                                %else:
-                                        <th>No channel / width information</th>
-                                            <td>-</td>
-                                %endif
-                            </tr>
-                            <tr>
-                                %if info_dict.get((field,str(spw),pol,'nchan')) is not None:
-                                    %if info_dict[(field,str(spw),pol,'nchan')] == 1:
-                                        <th>aggregate bandwidth</th>
-                                        %if info_dict.get((field,str(spw),pol,'aggregate bandwidth')) is not None:
-                                            <td>${info_dict[(field,str(spw),pol,'aggregate bandwidth')]}</td>
-                                        %else:
-                                            <td>-</td>
-                                        %endif
-                                    %else:
-                                        <th></th>
-                                            <td></td>
-                                    %endif
-                                %else:
-                                        <th>No bandwidth information</th>
-                                            <td>-</td>
-                                %endif
-                            </tr>
-                            <tr>
-                                        <th>score</th>
-                                %if info_dict.get((field,str(spw),pol,'score')) is not None:
-                                            <td><span class="badge ${rendererutils.get_badge_class(info_dict[(field,str(spw),pol,'score')])}">${'%0.2f' % (info_dict[(field,str(spw),pol,'score')].score)}</span></td>
-                                %else:
-                                            <td>-</td>
-                                %endif
-                            </tr>
-                            <tr>
-                               <th>image file</th>
-                               <td colspan="2">${info_dict[(field,str(spw),pol,'image name')].replace('.pbcor','')}</td>
-                            </tr>
-                            %endif
-                        %endfor
-                    %endfor
-                %endfor
-                </tbody>
-        </table>
+                <tr>
+                    <th>cleaning threshold</th>
+                    <td>${row.cleaning_threshold}</td>
+                </tr>
+
+                <tr>
+                    <th>clean residual peak / scaled MAD</th>
+                    <td>${row.residual_ratio}</td>
+                </tr>
+
+                <tr>
+                    <th>${row.non_pbcor_label}</th>
+                    <td>${row.non_pbcor}</td>
+                </tr>
+
+                <tr>
+                    <th>pbcor image max / min</th>
+                    <td>${row.pbcor}</td>
+                </tr>
+
+                <tr>
+                    <th>${row.fractional_bw_label}</th>
+                    <td>${row.fractional_bw}</td>
+                </tr>
+
+                % if row.aggregate_bw_label is not None:
+                <tr>
+                    <th>${row.aggregate_bw_label}</th>
+                    <td>${row.aggregate_bw}</td>
+                </tr>
+                % endif
+
+                <tr>
+                    <th>score</th>
+                    <td>${row.score}</td>
+                </tr>
+
+                <tr>
+                   <th>image file</th>
+                   <td colspan="2">${row.image_file}</td>
+                </tr>
+            %endif
+        %endfor
+        </tbody>
+    </table>
 %endif

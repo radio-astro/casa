@@ -31,12 +31,12 @@ class ImageParamsHeuristics(object):
        call. There are subclasses for different imaging modes such as ALMA
        or VLASS.'''
 
-    def __init__(self, vislist, spw, observing_run, imagename_prefix='', science_goals=None, contfile=None, linesfile=None):
+    def __init__(self, vislist, spw, observing_run, imagename_prefix='', proj_params=None, contfile=None, linesfile=None):
         self.imaging_mode = 'BASE'
 
         self.observing_run = observing_run
         self.imagename_prefix = imagename_prefix
-        self.science_goals = science_goals
+        self.proj_params = proj_params
 
         if type(vislist) is types.ListType:
             self.vislist = vislist
@@ -61,13 +61,11 @@ class ImageParamsHeuristics(object):
             spwidsclean = map(int, spwidsclean)
             self.spwids.update(spwidsclean)
 
-    def beam_radius(self):
+    def primary_beam_size(self, spwid):
 
-        '''Calculate beam radius for all spwids'''
+        '''Calculate primary beam size in arcsec.'''
 
         cqa = casatools.quanta
-
-        beam_radius = {}
 
         # get the diameter of the smallest antenna used among all vis sets
         diameters = []
@@ -81,19 +79,21 @@ class ImageParamsHeuristics(object):
         # get spw info from first vis set, assume spws uniform
         # across datasets
         ms = self.observing_run.get_ms(name=self.vislist[0])
-        for spwid in self.spwids:
-            spw = ms.get_spectral_window(spwid)
-            ref_frequency = float(
-              spw.ref_frequency.to_units(measures.FrequencyUnits.HERTZ))
+        spw = ms.get_spectral_window(spwid)
+        ref_frequency = float(
+          spw.ref_frequency.to_units(measures.FrequencyUnits.HERTZ))
 
-            # use the smallest antenna diameter and the reference frequency
-            # to estimate the primary beam radius -
-            # radius of first null in arcsec = 1.22*lambda/D
-            beam_radius[spwid] = \
-              (1.22 * (cqa.constants('c')['value'] / ref_frequency) / smallest_diameter) * \
-              (180.0 * 3600.0 / math.pi)
+        # use the smallest antenna diameter and the reference frequency
+        # to estimate the primary beam radius -
+        # radius of first null in arcsec = 1.22*lambda/D
+        primary_beam_size = \
+          1.22 \
+          * cqa.getvalue(cqa.convert(cqa.constants('c'), 'm/s')) \
+          / ref_frequency \
+          / smallest_diameter \
+          * (180.0 * 3600.0 / math.pi)
 
-        return beam_radius
+        return primary_beam_size
 
     def cont_ranges_spwsel(self):
 
@@ -227,7 +227,7 @@ class ImageParamsHeuristics(object):
 
     def get_scanidlist(self, vis, field, intent):
         # Use scanids to select data with the specified intent
-        # Note CASA clean now supports intent selectin but leave
+        # Note CASA clean now supports intent selection but leave
         # this logic in place and use it to eliminate vis that
         # don't contain the requested data.
         scanidlist = []
@@ -252,9 +252,7 @@ class ImageParamsHeuristics(object):
 
         return scanidlist, visindexlist
 
-    def beam(self, spwspec):
-        # reset state of imager
-        casatools.imager.done()
+    def largest_primary_beam_size(self, spwspec):
 
         # get the spwids in spwspec
         p=re.compile(r"[ ,]+(\d+)")
@@ -263,13 +261,15 @@ class ImageParamsHeuristics(object):
         spwids = list(set(spwids))
 
         # find largest beam among spws in spwspec
-        beam = 0.0
+        largest_primary_beam_size = 0.0
         for spwid in spwids:
-            beam = max(beam, self.beam_radius()[spwid])
+            largest_primary_beam_size = max(largest_primary_beam_size, self.primary_beam_size(spwid))
 
-        return beam
+        return largest_primary_beam_size
 
-    def cell(self, field_intent_list, spwspec, oversample=2.5, robust=0.5):
+    def synthesized_beam(self, field_intent_list, spwspec, robust=0.5, uvtaper=[]):
+
+        '''Calculate synthesized beam for a given field / spw selection.'''
 
         qaTool = casatools.quanta
 
@@ -283,16 +283,15 @@ class ImageParamsHeuristics(object):
         spwids = map(int, spwids)
         spwids = list(set(spwids))
 
-        # find largest beam among spws in spwspec
-        beam = self.beam(spwspec)
+        # find largest primary beam size among spws in spwspec
+        largest_primary_beam_size = self.largest_primary_beam_size(spwspec)
 
         # put code in try-block to ensure that imager.done gets
         # called at the end
         cell = None
         valid_data = {}
+        makepsf_beams = []
         try:
-            advise_cellvs = []
-            makepsf_cellvs = []
             for field, intent in field_intent_list:
                 for spwid in spwids:
                     # select data to be imaged
@@ -322,7 +321,7 @@ class ImageParamsHeuristics(object):
                         continue
 
                     # use imager.advise to get the maximum cell size
-                    aipsfieldofview = '%4.1farcsec' % (2.0 * beam)
+                    aipsfieldofview = '%4.1farcsec' % (2.0 * largest_primary_beam_size)
                     rtn = casatools.imager.advise(takeadvice=False,
                       amplitudeloss=0.5, fieldofview=aipsfieldofview)
                     casatools.imager.done()
@@ -332,14 +331,11 @@ class ImageParamsHeuristics(object):
                         # record indicates success or failure
                         LOG.warning('imager.advise failed for field/intent %s/%s spw %s - no valid data?' 
                           % (field, intent, spwid))
-                        valid_data[(field, intent, spwdid)] = False
+                        valid_data[(field, intent, spwid)] = False
                     else:
                         cellv = qaTool.convert(rtn[2], 'arcsec')['value']
                         cellu = 'arcsec'
-                        cellv /= oversample
-                        advise_cellvs.append(cellv)
-                        LOG.debug('Cell (oversample %s) for %s/%s spw %s: %s' % (
-                          oversample, field, intent, spwspec, cellv))
+                        cellv /= 2.5
 
                         # Now get better estimate from makePSF
                         tmp_psf_filename = str(uuid.uuid4())
@@ -348,11 +344,12 @@ class ImageParamsHeuristics(object):
                                                      spw=str(spwid),
                                                      field=field,
                                                      imagename=tmp_psf_filename,
-                                                     imsize=cleanhelper.cleanhelper.getOptimumSize(int(2.0*beam/cellv)),
+                                                     imsize=cleanhelper.cleanhelper.getOptimumSize(int(2.0*largest_primary_beam_size/cellv)),
                                                      cell='%.2g%s' % (cellv, cellu),
                                                      gridder='standard',
                                                      weighting='briggs',
                                                      robust=robust,
+                                                     uvtaper=uvtaper,
                                                      specmode='cube',
                                                      start=center_chan,
                                                      nchan=1)
@@ -364,34 +361,43 @@ class ImageParamsHeuristics(object):
                         makepsf_imager.deleteTools()
 
                         with casatools.ImageReader('%s.psf' % (tmp_psf_filename)) as image:
-                            restoringbeam = image.restoringbeam()
-                            bmaj = restoringbeam['major']
-                            bmin = restoringbeam['minor']
-                            bpa = restoringbeam['positionangle']
+                            makepsf_beams.append(image.restoringbeam())
 
                         tmp_psf_images = glob.glob('%s.*' % (tmp_psf_filename))
                         for tmp_psf_image in tmp_psf_images:
                             shutil.rmtree(tmp_psf_image)
-                        makepsf_cellv = qaTool.convert(bmin, 'arcsec')['value'] / 2.0 / oversample
-                        makepsf_cellvs.append(makepsf_cellv)
-
-            if advise_cellvs:
-                # cell that's good for all field/intents
-                cell = '%.2g%s' % (min(makepsf_cellvs), cellu)
-                LOG.debug('RESULT cell for spw %s: %s' % (spwspec, cell))
-            else:
-                cell = 'invalid'
 
         finally:
             casatools.imager.done()
 
-        # Make aggregate valid_data entries for field/intent pairs
-        for field, intent in field_intent_list:
-            valid_data[(field, intent)] = True
-            for spwid in spwids:
-                valid_data[(field, intent)] = valid_data[(field, intent)] and valid_data[(field, intent, spwid)]
+        if makepsf_beams:
+            # beam that's good for all field/intents
+            smallest_beam = {'minor': '1e9arcsec', 'major': '1e9arcsec', 'positionangle': '0.0deg'}
+            for beam in makepsf_beams:
+                bmin_v = qaTool.getvalue(qaTool.convert(beam['minor'], 'arcsec'))
+                if bmin_v < qaTool.getvalue(qaTool.convert(smallest_beam['minor'], 'arcsec')):
+                    smallest_beam = beam
+        else:
+            smallest_beam = 'invalid'
 
-        return [cell], valid_data
+        # Make aggregate valid_data entries for field/intent pairs
+        #for field, intent in field_intent_list:
+        #    valid_data[(field, intent)] = True
+        #    for spwid in spwids:
+        #        valid_data[(field, intent)] = valid_data[(field, intent)] and valid_data[(field, intent, spwid)]
+
+        return smallest_beam
+
+    def cell(self, beam, pixperbeam=5.0):
+
+        '''Calculate cell size.'''
+
+        cqa = casatools.quanta
+        try:
+            cell_size = cqa.getvalue(cqa.convert(beam['minor'], 'arcsec')) / pixperbeam
+            return ['%.2garcsec' % (cell_size)]
+        except:
+            return ['invalid']
 
     def nchan_and_width(self, field_intent, spwspec):
         if field_intent == 'TARGET':
@@ -432,13 +438,6 @@ class ImageParamsHeuristics(object):
         # reset state of imager
         casatools.imager.done()
 
-        # get the spwids in spwspec - imager tool likes these rather than 
-        # a string
-        p=re.compile(r"[ ,]+(\d+)")
-        spwids = p.findall(' %s' % spwspec)
-        spwids = map(int, spwids)
-        spwids = list(set(spwids))
-
         # put code in try-block to ensure that imager.done gets
         # called at the end
         valid_data = {}
@@ -448,23 +447,27 @@ class ImageParamsHeuristics(object):
                 valid_data[field_intent] = False
                 for vis in self.vislist:
                     ms = self.observing_run.get_ms(name=vis)
-                    scanids = [scan.id for scan in ms.scans if
+                    scanids = [str(scan.id) for scan in ms.scans if
                       field_intent[1] in scan.intents and 
                       field_intent[0] in [fld.name for fld in scan.fields]]
-                    scanids = str(scanids)
-                    scanids = scanids.replace('[', '')
-                    scanids = scanids.replace(']', '')
-                    try:
-                        casatools.imager.selectvis(vis=vis,
-                          field=field_intent[0], spw=spwids, scan=scanids,
-                          usescratch=False)
-                        valid_data[field_intent] = True
-                    except:
-                        pass
+                    if scanids != []:
+                        scanids = ','.join(scanids)
+                        try:
+                            casatools.imager.selectvis(vis=vis,
+                              field=field_intent[0], spw=spwspec, scan=scanids,
+                              usescratch=False)
+                            aipsfieldofview = '%4.1farcsec' % (2.0 * self.largest_primary_beam_size(spwspec))
+                            # Need to run advise to check if the current selection is completely flagged
+                            rtn = casatools.imager.advise(takeadvice=False, amplitudeloss=0.5, fieldofview=aipsfieldofview)
+                            casatools.imager.done()
+                            if rtn[0]:
+                                valid_data[field_intent] = True
+                        except:
+                            pass
 
                 if not valid_data[field_intent]:
                     LOG.debug('No data for SpW %s field %s' %
-                      (spwids, field_intent[0]))
+                      (spwspec, field_intent[0]))
 
         finally:
             casatools.imager.done()
@@ -573,7 +576,7 @@ class ImageParamsHeuristics(object):
         else:
             return '%s %s %s' % (ref, m0, m1), xspread, yspread
 
-    def field(self, intent, field):
+    def field(self, intent, field, exclude_intent=None):
         result = []
 
         for vis in self.vislist:
@@ -596,8 +599,13 @@ class ImageParamsHeuristics(object):
             if intent is not None:
                 # pattern matching to allow intents of form *TARGET* to work
                 re_intent = intent.replace('*', '.*')
-                field_list = [fld.id for fld in fields if
-                  fld.id in field_list and re_intent in fld.intents]
+                if exclude_intent is not None:
+                    re_exclude_intent = exclude_intent.replace('*', '.*')
+                    field_list = [fld.id for fld in fields if
+                      fld.id in field_list and re_intent in fld.intents and re_exclude_intent not in fld.intents]
+                else:
+                    field_list = [fld.id for fld in fields if
+                      fld.id in field_list and re_intent in fld.intents]
 
             # this will be a mosaic if there is more than 1 field_id for any 
             # measurement set - probably needs more work, what if want to
@@ -609,9 +617,57 @@ class ImageParamsHeuristics(object):
 
         return result
 
-    def imsize(self, fields, cell, beam, sfpblimit=None, max_pixels=None):
+    def representative_target(self):
+
+        cqa = casatools.quanta
+
+        repr_ms = self.observing_run.get_ms(self.vislist[0])
+        repr_target = repr_ms.representative_target
+
+        reprBW_mode = 'cube'
+        if repr_target != (None, None, None):
+            real_repr_target = True
+            # Get representative source and spw
+            repr_source, repr_spw = repr_ms.get_representative_source_spw()
+            # Check if representative bandwidth is larger than spw bandwidth. If so, switch to fullcont.
+            repr_spw_obj = repr_ms.get_spectral_window(repr_spw)
+            repr_spw_bw = cqa.quantity(float(repr_spw_obj.bandwidth.convert_to(measures.FrequencyUnits.HERTZ).value), 'Hz')
+            if cqa.gt(repr_target[2], cqa.mul(repr_spw_bw, 0.2)):
+                repr_spw = ','.join([str(s.id) for s in repr_ms.get_spectral_windows()])
+                reprBW_mode = 'cont'
+        else:
+            real_repr_target = False
+            # Pick arbitrary source for pre-Cycle 5 data
+            repr_source = [s.name for s in repr_ms.sources if 'TARGET' in s.intents][0]
+            repr_spw_obj = repr_ms.get_spectral_windows()[0]
+            repr_spw = repr_spw_obj.id
+            repr_chan_obj = repr_spw_obj.channels[int(repr_spw_obj.num_channels/2)]
+            repr_freq = cqa.quantity(float(repr_chan_obj.getCentreFrequency().convert_to(measures.FrequencyUnits.HERTZ).value), 'Hz')
+            repr_bw = cqa.quantity(float(repr_chan_obj.getWidth().convert_to(measures.FrequencyUnits.HERTZ).value), 'Hz')
+            repr_target = (repr_source, repr_freq, repr_bw)
+            LOG.info('ImagePreCheck: No representative target found. Choosing %s SPW %d.' % (repr_source, repr_spw))
+
+        # Check if there is a non-zero min/max angular resolution
+        minAcceptableAngResolution = cqa.convert(self.proj_params.min_angular_resolution, 'arcsec')
+        maxAcceptableAngResolution = cqa.convert(self.proj_params.max_angular_resolution, 'arcsec')
+        if (cqa.getvalue(minAcceptableAngResolution) == 0.0) or (cqa.getvalue(maxAcceptableAngResolution) == 0.0):
+            desired_angular_resolution = cqa.convert(self.proj_params.desired_angular_resolution, 'arcsec')
+            if (cqa.getvalue(desired_angular_resolution) != 0.0):
+                minAcceptableAngResolution = cqa.mul(desired_angular_resolution, 0.8)
+                maxAcceptableAngResolution = cqa.mul(desired_angular_resolution, 1.2)
+            else:
+                science_goals = self.observing_run.get_measurement_sets()[0].science_goals
+                minAcceptableAngResolution = cqa.convert(science_goals['minAcceptableAngResolution'], 'arcsec')
+                maxAcceptableAngResolution = cqa.convert(science_goals['maxAcceptableAngResolution'], 'arcsec')
+
+        return repr_target, repr_source, repr_spw, reprBW_mode, real_repr_target, minAcceptableAngResolution, maxAcceptableAngResolution
+
+    def imsize(self, fields, cell, primary_beam, sfpblimit=None, max_pixels=None, centreonly=False):
         # get spread of beams
-        ignore, xspread, yspread = self.phasecenter(fields, centreonly=False)
+        if centreonly:
+            xspread = yspread = 0.0
+        else:
+            ignore, xspread, yspread = self.phasecenter(fields, centreonly=centreonly)
 
         cqa = casatools.quanta
 
@@ -625,28 +681,20 @@ class ImageParamsHeuristics(object):
             return [0, 0]
 
         # get cell and beam sizes in arcsec
-        cellq = cqa.quantity(cellx)
-        cqa.convert(cellq, 'arcsec')
-        cellvx = cellq['value']
-
-        cellq = cqa.quantity(celly)
-        cqa.convert(cellq, 'arcsec')
-        cellvy = cellq['value']
-
-        beam_radiusq = cqa.quantity(beam)
-        cqa.convert(beam_radiusq, 'arcsec')
-        beam_radiusv = beam_radiusq['value']
+        cellx_v = cqa.getvalue(cqa.convert(cellx, 'arcsec'))
+        celly_v = cqa.getvalue(cqa.convert(celly, 'arcsec'))
+        beam_radius_v = primary_beam
 
         # set size of image to spread of field centres plus a
         # border of 0.75 * beam radius (radius is to first null)
         # wide
-        nxpix = int((1.5 * beam_radiusv + xspread) / cellvx)
-        nypix = int((1.5 * beam_radiusv + yspread) / cellvy)
+        nxpix = int((1.5 * beam_radius_v + xspread) / cellx_v)
+        nypix = int((1.5 * beam_radius_v + yspread) / celly_v)
 
         if (not self._mosaic) and (sfpblimit is not None):
-            beam_fwhp = 1.12 / 1.22 * beam_radiusv
-            nxpix = int(round(1.1 * beam_fwhp * math.sqrt(-math.log(sfpblimit) / math.log(2.)) / cellvx))
-            nypix = int(round(1.1 * beam_fwhp * math.sqrt(-math.log(sfpblimit) / math.log(2.)) / cellvy))
+            beam_fwhp = 1.12 / 1.22 * beam_radius_v
+            nxpix = int(round(1.1 * beam_fwhp * math.sqrt(-math.log(sfpblimit) / math.log(2.)) / cellx_v))
+            nypix = int(round(1.1 * beam_fwhp * math.sqrt(-math.log(sfpblimit) / math.log(2.)) / celly_v))
 
         if max_pixels is not None:
             nxpix = min(nxpix, max_pixels)
@@ -747,9 +795,19 @@ class ImageParamsHeuristics(object):
                 iaTool = casatools.image
                 iaTool.open(pb)
                 nx, ny, np, nf = iaTool.shape()
+
+                # First check if the center edge is masked. If so, then the
+                # default pb level of 0.2 is fully within the image and no
+                # adjustmnt is needed.
+                if not iaTool.getchunk([nx/2, 0, 0, nf/2], [nx/2, 0, 0, nf/2], getmask=True).flatten()[0]:
+                    return pblimit_image, pblimit_cleanmask
+
                 pb_edge = 0.0
                 i_pb_edge = -1
-                # There are cases with zero edged PBs (due to masking)
+                # There are cases with zero edged PBs (due to masking),
+                # check for first unmasked value.
+                # Should no longer encounter the mask here due to the
+                # above check, but keep code around for now.
                 while ((pb_edge == 0.0) and (i_pb_edge < ny/2)):
                     i_pb_edge += 1
                     pb_edge = iaTool.getchunk([nx/2, i_pb_edge, 0, nf/2], [nx/2, i_pb_edge, 0, nf/2]).flatten()[0]
@@ -785,11 +843,36 @@ class ImageParamsHeuristics(object):
         else:
             return 'hogbom'
 
-    def robust(self, spw):
+    def robust(self, beam):
 
-        '''Default robust value.'''
+        '''Default robust and min/max acceptable resolution values.'''
 
         return 0.5
+
+    def center_field_ids(self, msnames, field, intent, phasecenter, exclude_intent=None):
+
+        '''Get per-MS IDs of field closest to the phase center.'''
+
+        meTool = casatools.measures
+        qaTool = casatools.quanta
+        ref_field_ids = []
+
+        # Phase center coordinates
+        pc_direc = meTool.source(phasecenter)
+
+        for msname in msnames:
+            try:
+                ms_obj = self.observing_run.get_ms(msname)
+                if exclude_intent  is None:
+                    field_ids = [f.id for f in ms_obj.fields if (f.name == field) and (intent in f.intents)]
+                else:
+                    field_ids = [f.id for f in ms_obj.fields if (f.name == field) and (intent in f.intents) and (exclude_intent not in f.intents)]
+                separations = [qaTool.getvalue(meTool.separation(pc_direc, f.mdirection)) for f in ms_obj.fields if f.id in field_ids]
+                ref_field_ids.append(field_ids[separations.index(min(separations))])
+            except:
+                ref_field_ids.append(-1)
+
+        return ref_field_ids
 
     def calc_topo_ranges(self, inputs):
 
@@ -808,22 +891,14 @@ class ImageParamsHeuristics(object):
         # across datasets
         ms = self.observing_run.get_ms(name=inputs.vis[0])
 
-        # Get ID of field closest to the phase center
         meTool = casatools.measures
         qaTool = casatools.quanta
-        ref_field_ids = []
 
         # Phase center coordinates
         pc_direc = meTool.source(inputs.phasecenter)
 
-        for msname in inputs.vis:
-            try:
-                ms_obj = self.observing_run.get_ms(msname)
-                field_ids = [f.id for f in ms_obj.fields if (f.name == inputs.field) and (inputs.intent in f.intents)]
-                separations = [meTool.separation(pc_direc, f.mdirection)['value'] for f in ms_obj.fields if f.id in field_ids]
-                ref_field_ids.append(field_ids[separations.index(min(separations))])
-            except:
-                ref_field_ids.append(-1)
+        # Get per-MS IDs of field closest to the phase center
+        ref_field_ids = self.center_field_ids(inputs.vis, inputs.field, inputs.intent, pc_direc)
 
         # Get a cont file handler for the conversion to TOPO
         contfile_handler = contfilehandler.ContFileHandler(self.contfile)
@@ -842,7 +917,7 @@ class ImageParamsHeuristics(object):
             total_topo_freq_ranges.append((min_frequency, max_frequency))
 
             if (inputs.spwsel_lsrk.has_key('spw%s' % (spwid))):
-                if (inputs.spwsel_lsrk['spw%s' % (spwid)] not in ['', 'NONE']):
+                if (inputs.spwsel_lsrk['spw%s' % (spwid)] not in ['ALL', '', 'NONE']):
                     freq_selection, refer = inputs.spwsel_lsrk['spw%s' % (spwid)].split()
                     if (refer == 'LSRK'):
                         # Convert to TOPO
@@ -880,7 +955,7 @@ class ImageParamsHeuristics(object):
                         spw_topo_chan_param_dict[os.path.basename(msname)][spwid] = ''
                     topo_freq_ranges.append((min_frequency, max_frequency))
                     aggregate_spw_lsrk_bw = '%sGHz' % (max_frequency - min_frequency)
-                    if (inputs.intent == 'TARGET') and (inputs.specmode in ('mfs', 'cont')):
+                    if (inputs.spwsel_lsrk['spw%s' % (spwid)] != 'ALL') and (inputs.intent == 'TARGET') and (inputs.specmode in ('mfs', 'cont') and self.warn_missing_cont_ranges()):
                         LOG.warning('No continuum frequency selection for Target Field %s SPW %s' % (inputs.field, spwid))
             else:
                 spw_topo_freq_param_lists.append([spwid] * len(inputs.vis))
@@ -890,7 +965,7 @@ class ImageParamsHeuristics(object):
                     spw_topo_chan_param_dict[os.path.basename(msname)][spwid] = ''
                 topo_freq_ranges.append((min_frequency, max_frequency))
                 aggregate_spw_lsrk_bw = '%sGHz' % (max_frequency - min_frequency)
-                if (inputs.intent == 'TARGET') and (inputs.specmode in ('mfs', 'cont')):
+                if (inputs.intent == 'TARGET') and (inputs.specmode in ('mfs', 'cont') and self.warn_missing_cont_ranges()):
                     LOG.warning('No continuum frequency selection for Target Field %s SPW %s' % (inputs.field, spwid))
 
             aggregate_lsrk_bw = qaTool.add(aggregate_lsrk_bw, aggregate_spw_lsrk_bw)
@@ -997,7 +1072,11 @@ class ImageParamsHeuristics(object):
         else:
             return -1, -1, 0
 
-    def calc_sensitivities(self, vis, field, intent, spw, nbin, spw_topo_chan_param_dict, specmode, gridder, cell, imsize, weighting, robust):
+    def warn_missing_cont_ranges(self):
+
+        return False
+
+    def calc_sensitivities(self, vis, field, intent, spw, nbin, spw_topo_chan_param_dict, specmode, gridder, cell, imsize, weighting, robust, uvtaper, phasecenter=None):
         """Compute sensitivity estimate using CASA."""
 
         # Calculate sensitivities
@@ -1009,37 +1088,55 @@ class ImageParamsHeuristics(object):
         min_field_ids = []
         max_field_ids = []
         eff_ch_bw = 0.0
-        for msname in vis:
+        sens_bws = {}
+
+        # Calculate only center field sensitivity if a phasecenter is given
+        if phasecenter is not None:
+            ref_field_ids = self.center_field_ids(vis, field, intent, phasecenter, exclude_intent='ATMOSPHERE')
+        else:
+            ref_field_ids = None
+
+        for ms_index, msname in enumerate(vis):
             ms = self.observing_run.get_ms(name=msname)
             detailed_field_sensitivities[os.path.basename(msname)] = {}
             for intSpw in [int(s) for s in spw.split(',')]:
-                spw_do = ms.get_spectral_window(intSpw)
-                detailed_field_sensitivities[os.path.basename(msname)][intSpw] = {}
                 try:
+                    spw_do = ms.get_spectral_window(intSpw)
+                    detailed_field_sensitivities[os.path.basename(msname)][intSpw] = {}
+                    sens_bws[intSpw] = 0.0
                     if (specmode == 'cube'):
                         # Use the center channel selection
                         if nbin != -1:
-                            chansel = '%d~%d' % (int(spw_do.num_channels / 2.0), int(spw_do.num_channels / 2.0) + nbin - 1)
+                            chansel = '%d~%d' % (int((spw_do.num_channels - nbin) / 2.0), int((spw_do.num_channels + nbin) / 2.0) - 1)
                         else:
                             chansel = '%d~%d' % (int(spw_do.num_channels / 2.0), int(spw_do.num_channels / 2.0))
                     else:
-                        if (spw_topo_chan_param_dict[os.path.basename(msname)][str(intSpw)] != ''):
-                            # Use continuum frequency selection
-                            chansel = spw_topo_chan_param_dict[os.path.basename(msname)][str(intSpw)]
+                        if spw_topo_chan_param_dict.get(os.path.basename(msname), None):
+                            if (spw_topo_chan_param_dict[os.path.basename(msname)][str(intSpw)] != ''):
+                                # Use continuum frequency selection
+                                chansel = spw_topo_chan_param_dict[os.path.basename(msname)][str(intSpw)]
+                            else:
+                                # Use full spw
+                                chansel = '0~%d' % (spw_do.num_channels - 1)
                         else:
                             # Use full spw
                             chansel = '0~%d' % (spw_do.num_channels - 1)
 
                     if (gridder == 'mosaic'):
                         field_sensitivities = []
-                        for field_id in [f.id for f in ms.fields if (utils.dequote(f.name) == utils.dequote(field) and intent in f.intents)]:
-                            try:
-                                field_sensitivity, eff_ch_bw = self.get_sensitivity(ms, field_id, intSpw, chansel, specmode, cell, imsize, weighting, robust)
-                                if (field_sensitivity > 0.0):
-                                    field_sensitivities.append(field_sensitivity)
-                                    detailed_field_sensitivities[os.path.basename(msname)][intSpw][field_id] = field_sensitivity
-                            except Exception as e:
-                                LOG.warning('Could not calculate sensitivity for MS %s Field %s (ID %d) SPW %d ChanSel %s' % (os.path.basename(msname), utils.dequote(field), field_id, intSpw, chansel))
+                        if ref_field_ids is not None:
+                            field_ids = [ref_field_ids[ms_index]]
+                        else:
+                            field_ids = [f.id for f in ms.fields if (utils.dequote(f.name) == utils.dequote(field) and intent in f.intents)]
+                        for field_id in field_ids:
+                            if field_id != -1:
+                                try:
+                                    field_sensitivity, eff_ch_bw, sens_bws[intSpw] = self.get_sensitivity(ms, field_id, intSpw, chansel, specmode, cell, imsize, weighting, robust, uvtaper)
+                                    if (field_sensitivity > 0.0):
+                                        field_sensitivities.append(field_sensitivity)
+                                        detailed_field_sensitivities[os.path.basename(msname)][intSpw][field_id] = field_sensitivity
+                                except Exception as e:
+                                    LOG.warning('Could not calculate sensitivity for MS %s Field %s (ID %d) SPW %d ChanSel %s' % (os.path.basename(msname), utils.dequote(field), field_id, intSpw, chansel))
 
                         median_sensitivity = np.median(field_sensitivities)
                         min_field_id, min_sensitivity = min(detailed_field_sensitivities[os.path.basename(msname)][intSpw].iteritems(), key=operator.itemgetter(1))
@@ -1067,7 +1164,7 @@ class ImageParamsHeuristics(object):
                         # Still need to loop over field ID with proper intent for single field case
                         field_sensitivities = []
                         for field_id in [f.id for f in ms.fields if (utils.dequote(f.name) == utils.dequote(field) and intent in f.intents)]:
-                            field_sensitivity, eff_ch_bw = self.get_sensitivity(ms, field_id, intSpw, chansel, specmode, cell, imsize, weighting, robust)
+                            field_sensitivity, eff_ch_bw, sens_bws[intSpw] = self.get_sensitivity(ms, field_id, intSpw, chansel, specmode, cell, imsize, weighting, robust, uvtaper)
                             if (field_sensitivity > 0.0):
                                 field_sensitivities.append(field_sensitivity)
                         # Check if we have anything
@@ -1094,20 +1191,20 @@ class ImageParamsHeuristics(object):
                 min_field_id = None
                 max_field_id = None
         else:
-            defaultSensitivity = 0.1
+            defaultSensitivity = None
             if (specmode == 'cube'):
-                LOG.warning('Exception in calculating sensitivity. Cube center channel seems to be flagged. Assuming default value of %g Jy/beam.' % (defaultSensitivity))
+                LOG.warning('Exception in calculating sensitivity. Cube center channel seems to be flagged.')
             else:
-                LOG.warning('Exception in calculating sensitivity. Assuming default value of %g Jy/beam.' % (defaultSensitivity))
+                LOG.warning('Exception in calculating sensitivity.')
             sensitivity = defaultSensitivity
             min_sensitivity = None
             max_sensitivity = None
             min_field_id = None
             max_field_id = None
 
-        return sensitivity, min_sensitivity, max_sensitivity, min_field_id, max_field_id, eff_ch_bw
+        return sensitivity, min_sensitivity, max_sensitivity, min_field_id, max_field_id, eff_ch_bw, sum(sens_bws.values())
 
-    def get_sensitivity(self, ms_do, field, spw, chansel, specmode, cell, imsize, weighting, robust):
+    def get_sensitivity(self, ms_do, field, spw, chansel, specmode, cell, imsize, weighting, robust, uvtaper):
         """
         Get sensitivity for a field / spw / chansel combination from CASA's
         apparentsens method and a correction for effective channel widths
@@ -1140,6 +1237,7 @@ class ImageParamsHeuristics(object):
             N_smooth = 0
 
         chansel_sensitivities = []
+        sens_bw = 0.0
         for chanrange in chansel.split(';'):
 
             try:
@@ -1149,17 +1247,23 @@ class ImageParamsHeuristics(object):
                     imTool.defineimage(mode=specmode if specmode=='cube' else 'mfs', spw=spw,
                                        cellx=cell[0], celly=cell[0],
                                        nx=imsize[0], ny=imsize[1])
-                    imTool.weight(type=weighting, robust=robust)
+                    imTool.weight(type=weighting, rmode='norm', robust=robust)
+                    if uvtaper not in (None, []):
+                        imTool.filter(type='gaussian', bmaj=uvtaper[0])
                     result = imTool.apparentsens()
 
                 if (result[1] == 0.0):
                     raise Exception('Empty selection')
 
                 apparentsens_value = result[1]
+
                 LOG.info('apparentsens result for MS %s Field %s SPW %s ChanRange %s: %s Jy/beam' % (os.path.basename(ms_do.name), field, spw, chanrange, apparentsens_value))
+
+                cstart, cstop = map(int, chanrange.split('~'))
+                nchan = cstop - cstart + 1
+                sens_bw += nchan * physicalBW_of_1chan
+
                 if (N_smooth > 0):
-                    cstart, cstop = map(int, chanrange.split('~'))
-                    nchan = cstop - cstart + 1
                     if (nchan > 1):
                         optimisticBW = nchan * float(effectiveBW_of_1chan)
                         approximateEffectiveBW = (nchan + 1.12 * (spwchan - nchan) / spwchan / N_smooth) * float(physicalBW_of_1chan)
@@ -1178,9 +1282,9 @@ class ImageParamsHeuristics(object):
                     LOG.info('Could not calculate sensitivity for MS %s Field %s SPW %s ChanRange %s: %s' % (os.path.basename(ms_do.name), field, spw, chanrange, e))
 
         if (len(chansel_sensitivities) > 0):
-            return 1.0 / np.sqrt(np.sum(1.0 / np.array(chansel_sensitivities)**2)), effectiveBW_of_1chan
+            return 1.0 / np.sqrt(np.sum(1.0 / np.array(chansel_sensitivities)**2)), effectiveBW_of_1chan, sens_bw
         else:
-            return 0.0, effectiveBW_of_1chan
+            return 0.0, effectiveBW_of_1chan, sens_bw
 
     def dr_correction(self, threshold, dirty_dynamic_range, residual_max, intent, tlimit):
 
@@ -1191,6 +1295,9 @@ class ImageParamsHeuristics(object):
 
         return threshold, DR_correction_factor, maxEDR_used
 
+    def rms_threshold(self, rms, nsigma):
+        return None
+
     def niter_correction(self, niter, cell, imsize, residual_max, threshold):
         # TODO: parameter should be clean mask to be able to count the pixels
 
@@ -1198,16 +1305,18 @@ class ImageParamsHeuristics(object):
 
         return niter
 
-    def get_autobox_params(self):
+    def get_autobox_params(self, intent, specmode):
 
         '''Default auto-boxing parameters.'''
 
         sidelobethreshold = None
         noisethreshold = None
         lownoisethreshold = None
+        negativethreshold = None
         minbeamfrac = None
+        growiterations = None
 
-        return sidelobethreshold, noisethreshold, lownoisethreshold, minbeamfrac
+        return sidelobethreshold, noisethreshold, lownoisethreshold, negativethreshold, minbeamfrac, growiterations
 
     def cyclefactor(self):
         return None
@@ -1221,7 +1330,7 @@ class ImageParamsHeuristics(object):
         return None
 
 
-    def uvtaper(self):
+    def uvtaper(self, beam_natural=None):
         return None
 
 
@@ -1231,3 +1340,9 @@ class ImageParamsHeuristics(object):
 
     def reffreq(self):
         return None
+
+    def conjbeams(self):
+        return None
+
+    def pb_correction(self):
+        return True

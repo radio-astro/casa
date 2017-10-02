@@ -7,6 +7,7 @@ import numpy
 import math
 import pylab as pl
 import matplotlib.gridspec as gridspec
+import itertools
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.renderer.logger as logger
@@ -254,6 +255,7 @@ class SDSparseMapPlotter(object):
         valid_index = numpy.where(map_data.min(axis=2) > NoDataThreshold)
         valid_data = map_data[valid_index[0],valid_index[1],:]
         LOG.debug('valid_data.shape={shape}'.format(shape=valid_data.shape))
+        del valid_index
         if isinstance(map_data, numpy.ma.masked_array):
             def stat_per_spectra(spectra, oper):
                 for v in spectra:
@@ -271,6 +273,7 @@ class SDSparseMapPlotter(object):
         else:
             ListMax = valid_data.max(axis=1)
             ListMin = valid_data.min(axis=1)
+        del valid_data
         if len(ListMax) == 0 or len(ListMin) == 0: 
             return False
         #if isinstance(ListMin, numpy.ma.masked_array):
@@ -308,7 +311,7 @@ class SDSparseMapPlotter(object):
             pl.gcf().sca(self.axes.axes_atm)
             amin = 1.0
             amax = 0.0
-            for (t, f) in zip(self.atm_transmission, self.atm_frequency):
+            for (t, f) in itertools.izip(self.atm_transmission, self.atm_frequency):
                 plot_helper.plot(f, t, color='m', linestyle='-', linewidth=0.4)           
                 amin = min(amin, t.min())
                 amax = max(amax, t.max())
@@ -419,8 +422,6 @@ class SDSparseMapDisplay(SDImageDisplay):
         
         plotter = SDSparseMapPlotter(NH, NV, STEP, self.brightnessunit)
 
-        masked_data = self.data * self.mask
-
         plot_list = []
 
         refpix = [0,0]
@@ -442,7 +443,8 @@ class SDSparseMapDisplay(SDImageDisplay):
                 frame = self.frequency_frame
                 if frame != 'TOPO':
                     # do conversion
-                    field_id = self.inputs.fieldid_list[0]
+                    assoc_id = self.inputs.msid_list.index(ms_id)
+                    field_id = self.inputs.fieldid_list[assoc_id]
                     field = ms.fields[field_id]
                     direction_ref = field.mdirection
                     start_time = ms.start_time
@@ -473,16 +475,14 @@ class SDSparseMapDisplay(SDImageDisplay):
       
         # loop over pol
         for pol in xrange(self.npol):
-            
-            masked_data_p = masked_data.take([pol], axis=self.id_stokes).squeeze()
             Plot = numpy.zeros((num_panel, num_panel, (chan1 - chan0)), numpy.float32) + NoData
-            TotalSP = masked_data_p.sum(axis=0).sum(axis=0)
-            mask_p = self.mask.take([pol], axis=self.id_stokes).squeeze()
-            #isvalid = mask_p.prod(axis=2)
-            isvalid = numpy.any(mask_p, axis=2)
+            TotalSP = (self.data.take([pol], axis=self.id_stokes) * self.mask.take([pol], axis=self.id_stokes)).squeeze().sum(axis=(0,1))
+            isvalid = numpy.any(self.mask.take([pol], axis=self.id_stokes).squeeze(), axis=2)
             Nsp = sum(isvalid.flatten())
             LOG.info('Nsp=%s'%(Nsp))
             TotalSP /= Nsp
+            
+            slice_axes = (self.image.id_direction[0], self.image.id_direction[1], self.id_stokes)
 
             for x in xrange(NH):
                 x0 = x * STEP
@@ -491,15 +491,18 @@ class SDSparseMapDisplay(SDImageDisplay):
                     y0 = y * STEP
                     y1 = (y + 1) * STEP
                     valid_index = isvalid[x0:x1,y0:y1].nonzero()
-                    chunk = masked_data_p[x0:x1,y0:y1]
+                    chunk = self._get_array_chunk(self.data, (x0, y0, pol), (x1, y1, pol+1), slice_axes).squeeze(axis=self.id_stokes) * self._get_array_chunk(self.mask, (x0, y0, pol), (x1, y1, pol+1), slice_axes).squeeze(axis=self.id_stokes)
                     valid_sp = chunk[valid_index[0],valid_index[1],:]
                     Plot[x][y] = valid_sp.mean(axis=0)
+                    del valid_index, chunk, valid_sp
+            del isvalid
  
             FigFileRoot = self.inputs.imagename+'.pol%s_Sparse'%(pol)
             plotfile = os.path.join(self.stage_dir, FigFileRoot+'_0.png')
 
             status = plotter.plot(Plot, TotalSP, self.frequency[chan0:chan1], 
                                   figfile=plotfile)
+            del Plot, TotalSP
             
             if status:
                 parameters = {}
@@ -517,8 +520,31 @@ class SDSparseMapDisplay(SDImageDisplay):
                                    parameters=parameters)
                 plot_list.append(plot)
             
-
         return plot_list
+    
+    def _get_array_chunk(self, data, blc, trc, axes):
+        """
+        Returns a slice of an array
+        
+        data : an array that could be sliced
+        blc : a list of minimum index in each dimention of axes to slice
+        trc : a list of maximum index in each dimention of axes to slice
+              Note trc is used for the second parameter to construct slice.
+              Hence, the indices of last elements in returned array is trc-1
+        axes : a list of demention of axes in cube blc and trc corresponds
+        """
+        array_shape = data.shape
+        ndim = len(array_shape)
+        full_blc = numpy.zeros(ndim, dtype=int)
+        full_trc = numpy.array(array_shape)
+        for i in xrange(len(axes)):
+            iax = axes[i]
+            full_blc[iax] = max(blc[i], 0)
+            full_trc[iax] = min(trc[i], array_shape[iax])
+        return data[map(slice, full_blc,full_trc)]
+        
+        
+        
 
 def ch_to_freq(ch, frequency):
     ich = int(ch)

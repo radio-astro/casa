@@ -17,34 +17,34 @@ def get_plot(plots, field, spw, i, colname):
 	except KeyError:
 		return None
 %>
-
+<script src="${self.attr.rsc_path}resources/js/pipeline.js"></script>
 <script>
-$(document).ready(function() {
-	$(".fancybox").fancybox({
-        type: 'image',
-        prevEffect: 'none',
-        nextEffect: 'none',
-        loop: false,
-        helpers: {
-            title: {
-                type: 'outside'
-            },
-            thumbs: {
-                width: 50,
-                height: 50,
-            }
-        },
-    	beforeShow : function() {
-        	this.title = $(this.element).attr('title');
-       	}    
-    }); 
- });
+    pipeline.pages.tclean_plots.ready();
 </script>
 
-<script src="${self.attr.rsc_path}resources/js/pipeline.js"></script>
 
 <div class="page-header">
-        <h2>Clean results for ${field} SpW ${spw} <button class="btn btn-default pull-right" onClick="javascript:window.history.back();">Back</button></h2>
+    <h2>Clean results for ${field} SpW ${spw}
+        <div class="btn-toolbar pull-right" role="toolbar">
+            % if qa_previous or qa_next:
+            <div class="btn-group" role="group">
+                % if qa_previous:
+                    <button type="button" class="btn btn-default replace" data-href="${os.path.relpath(qa_previous, pcontext.report_dir)}"><span class="glyphicon glyphicon-step-backward"></span></button>
+                % else:
+                    <button type="button" class="btn btn-default disabled"><span class="glyphicon glyphicon-step-backward"></button>
+                % endif
+                % if qa_next:
+                    <button type="button" class="btn btn-default replace" data-href="${os.path.relpath(qa_next, pcontext.report_dir)}"><span class="glyphicon glyphicon-step-forward"></span></button>
+                % else:
+                    <button type="button" class="btn btn-default disabled"><span class="glyphicon glyphicon-step-forward"></span></button>
+                % endif
+            </div>
+            % endif
+            <div class="btn-group" role="group">
+                <button class="btn btn-default replace" data-href="${os.path.relpath(base_url, pcontext.report_dir)}">Back</button>
+            </div>
+        </div>
+    </h2>
 </div>
 
 <div class="row">

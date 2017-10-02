@@ -12,7 +12,7 @@ def hsd_baseline(fitfunc=None, fitorder=None,
     # constructor
     all_inputs = vars()
 
-    task_name = 'SDMSBaseline'
+    task_name = 'SDBaseline'
     
     ##########################################################################
     #                                                                        #

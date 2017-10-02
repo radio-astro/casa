@@ -132,7 +132,8 @@ class PlotmsLeaf(object):
             'intent': '' if self._intent == '' else '%s-' % self._intent.replace(',', '_'),
             'uvrange': '' if self._uvrange == '' else 'uvrange%s-' % self._uvrange.replace(',', '_'),
             'receiver': '' if self._receiver == '' else '%s-' % self._receiver.replace(',', '_'),
-            'suffix': '' if self._suffix == '' else '-%s' % self._suffix
+            'suffix': '' if self._suffix == '' else '-%s' % self._suffix,
+            'correlation': '' if self._correlation == '' else '-%s' % self._correlation
         }
 
         if self._spw == '':
@@ -145,7 +146,7 @@ class PlotmsLeaf(object):
         if self._baseband:
             fileparts['spw'] = 'bb%s-' % self._baseband
 
-        png = '{vis}{field}-{receiver}{spw}{ant}{intent}{uvrange}{y}_vs_{x}{suffix}.png'.format(**fileparts)
+        png = '{vis}{field}-{receiver}{spw}{ant}{intent}{uvrange}{y}_vs_{x}{suffix}{correlation}.png'.format(**fileparts)
         png = filenamer.sanitize(png)
 
         # Maximum filename size for Lustre filesystems is 255 bytes. Mosaics

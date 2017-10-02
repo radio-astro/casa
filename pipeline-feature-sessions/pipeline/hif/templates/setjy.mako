@@ -85,7 +85,8 @@ $(document).ready(function(){
 <%block name="title">Set model flux</%block>
 
 <h2>Results</h2>
-<p>The following flux densities were set in the measurement set model column and recorded in the pipeline context:</p>
+<p>The following flux densities were set in the measurement set model column and recorded in the pipeline context.
+Only the spectral index of the bandpass calibrator is set here and its flux density will be set later.</p>
 <table class="table table-bordered table-striped" summary="Flux density results">
 	<caption>Setjy Results</caption>
     <thead>
@@ -97,6 +98,7 @@ $(document).ready(function(){
 	        <th scope="col" rowspan="2">Band</th>
 	        <th scope="col" colspan="4">Flux Density</th>
 	        <th scope="col" rowspan="2">Spix</th>
+	        <th scope="col" rowspan="2">flux.csv</th>
 		</tr>
 		<tr>
 	        <th scope="col">I</th>
@@ -119,7 +121,8 @@ $(document).ready(function(){
 
 <%self:plot_group plot_dict="${amp_vs_uv_plots}"
 				  url_fn="${lambda ms: 'noop'}"
-				  plot_accessor="${lambda ms_plots: ms_plots.items()}">
+				  break_rows_by=""
+                  sort_row_by="baseband">
 	<%def name="title()">
 		Model amplitude vs UV distance
 	</%def>

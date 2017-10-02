@@ -2,9 +2,10 @@ from __future__ import absolute_import
 
 import os
 #import math
-from math import cos, sqrt
+from math import cos
 import numpy
 import collections
+import itertools
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
@@ -19,8 +20,8 @@ LOG = utils.OnDemandStringParseLogger(_LOG)
 NoData = common.NoData
 DO_TEST = False
 
-class SDMSSimpleGriddingInputs(common.SingleDishInputs):
-    def __init__(self, context, vis_list, field_list, antenna_list, spwid_list, 
+class SDSimpleGriddingInputs(common.SingleDishInputs):
+    def __init__(self, context, group_id, member_list, 
                  nplane=None):
         self._init_properties(vars())
         
@@ -32,18 +33,26 @@ class SDMSSimpleGriddingInputs(common.SingleDishInputs):
     def nplane(self, value):
         self._nplane = value
         
-class SDMSSimpleGriddingResults(common.SingleDishResults):
+    @property
+    def group_desc(self):
+        return self.context.observing_run.ms_reduction_group[self.group_id]
+    
+    @property
+    def reference_member(self):
+        return self.group_desc[self.member_list[0]]
+        
+class SDSimpleGriddingResults(common.SingleDishResults):
     def __init__(self, task=None, success=None, outcome=None):
-        super(SDMSSimpleGriddingResults, self).__init__(task, success, outcome)
+        super(SDSimpleGriddingResults, self).__init__(task, success, outcome)
 
     def merge_with_context(self, context):
-        super(SDMSSimpleGriddingResults, self).merge_with_context(context)
+        super(SDSimpleGriddingResults, self).merge_with_context(context)
     
     def _outcome_name(self):
         return ''
 
-class SDMSSimpleGridding(basetask.StandardTaskTemplate):
-    Inputs = SDMSSimpleGriddingInputs
+class SDSimpleGridding(basetask.StandardTaskTemplate):
+    Inputs = SDSimpleGriddingInputs
 
     def prepare(self, datatable=None, index_list=None):
         if datatable is None:
@@ -65,7 +74,7 @@ class SDMSSimpleGridding(basetask.StandardTaskTemplate):
         outcome = {'spectral_data': retval[0],
                    'meta_data': retval[1],
                    'grid_table': grid_table}
-        result = SDMSSimpleGriddingResults(task=self.__class__,
+        result = SDSimpleGriddingResults(task=self.__class__,
                                        success=True,
                                        outcome=outcome)
         result.task = self.__class__
@@ -79,18 +88,14 @@ class SDMSSimpleGridding(basetask.StandardTaskTemplate):
         """
         Calculate Parameters for grid by RA/DEC positions
         """
-        vis_list = self.inputs.vis_list
-        spwid_list = self.inputs.spwid_list
-        antenna_list = self.inputs.antenna_list
-        assert len(antenna_list) == len(spwid_list)
-        reference_data = self.inputs.context.observing_run.get_ms(vis_list[0])
-        reference_antenna = antenna_list[0]
-        reference_spw = spwid_list[0]
+        reference_data = self.inputs.reference_member.ms
+        reference_antenna = self.inputs.reference_member.antenna_id
+        reference_spw = self.inputs.reference_member.spw_id
         beam_size = reference_data.beam_sizes[reference_antenna][reference_spw]
         grid_size = casatools.quanta.convert(beam_size, 'deg')['value']
         
-        ras = datatable.tb1.getcol('RA').take(index_list)
-        decs = datatable.tb1.getcol('DEC').take(index_list)
+        ras = datatable.getcol('RA').take(index_list)
+        decs = datatable.getcol('DEC').take(index_list)
         
         # Curvature has not been taken account
         dec_corr = 1.0 / cos(decs[0] / 180.0 * 3.141592653)
@@ -134,7 +139,7 @@ class SDMSSimpleGridding(basetask.StandardTaskTemplate):
 
         # Store indexes
         index = 0
-        for (ira, idec) in zip(index_ra, index_dec):
+        for (ira, idec) in itertools.izip(index_ra, index_dec):
             combine_list[counter[ira][idec] % nplane][ira][idec].append(index)
             counter[ira][idec] += 1
             index += 1
@@ -143,7 +148,7 @@ class SDMSSimpleGridding(basetask.StandardTaskTemplate):
         # Create grid_table for output
         grid_table = []
         # vIF, vPOL: dummy (not necessary)
-        vIF = spwid_list[0]
+        vIF = reference_spw
         vPOL = 0
 
         for y in range(ngrid_dec):
@@ -166,10 +171,10 @@ class SDMSSimpleGridding(basetask.StandardTaskTemplate):
                         #             * dec_corr * dec_corr 
                         #             + (decs[index] - DEC) * (decs[index] - DEC))
                         datatable_index = index_list[index]
-                        row = datatable.tb1.getcell('ROW', datatable_index)
-                        #stat = datatable.tb2.getcell('STATISTICS', datatable_index)[0] 
-                        ant = datatable.tb1.getcell('ANTENNA', datatable_index)
-                        msid = datatable.tb1.getcell('MS', datatable_index)
+                        row = datatable.getcell('ROW', datatable_index)
+                        #stat = datatable.getcell('STATISTICS', datatable_index)[0] 
+                        ant = datatable.getcell('ANTENNA', datatable_index)
+                        msid = datatable.getcell('MS', datatable_index)
                         line[6].append([row, None, None, datatable_index, ant, msid])
                     line[6] = numpy.array(line[6])
                     grid_table.append(line)
@@ -200,10 +205,8 @@ class SDMSSimpleGridding(basetask.StandardTaskTemplate):
         nrow = len(grid_table)
         LOG.info('SimpleGrid: Processing {} spectra...', nrow)
 
-        spwid_list = self.inputs.spwid_list
-        vis_list = self.inputs.vis_list
-        reference_data = self.inputs.context.observing_run.get_ms(vis_list[0])
-        reference_spw = spwid_list[0]
+        reference_data = self.inputs.reference_member.ms
+        reference_spw = self.inputs.reference_member.spw_id 
         nchan = reference_data.spectral_windows[reference_spw].num_channels
         npol = reference_data.get_data_description(spw=reference_spw).num_polarizations
         LOG.debug('nrow={} nchan={} npol={}', nrow,nchan,npol)
@@ -259,7 +262,7 @@ class SDMSSimpleGridding(basetask.StandardTaskTemplate):
             elif x[1] > y[1]:
                 return 1
             return 0
-        for (k,v) in bind_to_grid.items():
+        for (k,v) in bind_to_grid.iteritems():
             v.sort(cmp=cmp)
         LOG.debug('sorted bind_to_grid={}', bind_to_grid)
         
@@ -288,7 +291,7 @@ class SDMSSimpleGridding(basetask.StandardTaskTemplate):
         #for i in xrange(len(antenna_list)):
         #query = lambda condition: 1 if condition else 0
         #vquery = numpy.vectorize(query)
-        for (ms, entries) in bind_to_grid.items():
+        for (ms, entries) in bind_to_grid.iteritems():
             #AntID = antenna_list[i]
             #with casatools.TableReader(infiles[i]) as tb:
             vis = ms.work_data
@@ -305,7 +308,7 @@ class SDMSSimpleGridding(basetask.StandardTaskTemplate):
                     Mask = None
                     mapped_row = rowmap[tROW]
                     LOG.debug('tROW {}: mapped_row {}', tROW, mapped_row)
-                    for (Weight, Pol, SFLAG) in zip(weights, pols, flags):
+                    for (Weight, Pol, SFLAG) in itertools.izip(weights, pols, flags):
                         if SFLAG == 1:
                             if Sp is None:
                                 Sp = tb.getcell(ms_colname, mapped_row)

@@ -95,6 +95,11 @@
 	    <value>True</value>
 	</param>
 
+        <param type="bool" name="qa2">
+	    <description>QA2 flags</description>
+	    <value>True</value>
+	</param>
+
 	<param type="string" name="pipelinemode">
 	    <description>The pipeline operating mode</description>
 	    <value>automatic</value>
@@ -107,7 +112,7 @@
 
 	<param type="bool" name="flagbackup" subparam="true">
 	    <description>Backup prexistings flags before applying new ones</description>
-	    <value type="bool">False</value>
+	    <value type="bool">True</value>
 	</param>
 
 	<param type="bool" name="dryrun" subparam="true">
@@ -126,13 +131,13 @@
 		</equals>
 		<equals type="string" value="interactive"> 
 		    <default param="vis"><value type="stringArray"></value></default>
-		    <default param="flagbackup"><value type="bool">False</value></default>
+		    <default param="flagbackup"><value type="bool">True</value></default>
 		    <default param="dryrun"><value type="bool">False</value></default>
 		    <default param="acceptresults"><value type="bool">True</value></default>
 		</equals>
 		<equals type="string" value="getinputs"> 
 		    <default param="vis"><value type="stringArray"></value></default>
-		    <default param="flagbackup"><value type="bool">False</value></default>
+		    <default param="flagbackup"><value type="bool">True</value></default>
 		</equals>
 	    </when>
 
@@ -233,15 +238,15 @@ edgespw -- Flag the edge spectral window channels.
 fracspw -- Fraction of the baseline correlator TDM edge channels to be flagged.
     default: 0.0625
 
-fracspwfps -- Fraction of the ACS correlator TDM edge channels to be flagged.
-    default: 0.48387
+fracspwfps -- Fraction of the ACA correlator TDM edge channels to be flagged.
+    default: 0.048387
 
 online -- Apply the online flags.
    default: True
 
 fileonline -- File containing the online flags. These are computed by the
     h_init or hif_importdata data tasks. If the online flags files
-    are undefined a name of the form 'msname_flagonline.txt' is assumed.
+    are undefined a name of the form 'msname.flagonline.txt' is assumed.
     default: ''
 
 template -- Apply flagging templates
@@ -249,7 +254,7 @@ template -- Apply flagging templates
 
 filetemplate -- The name of an text file that contains the flagging template
     for RFI, birdies, telluric lines, etc.  If the template flags files
-    is undefined a name of the form 'msname_flagtemplate.txt' is assumed.
+    is undefined a name of the form 'msname.flagtemplate.txt' is assumed.
     default: ''
 
 hm_tbuff -- The heuristic for computing the default time interval padding parameter.
@@ -272,7 +277,7 @@ vis -- The list of input measurement sets. Defaults to the list of measurement
     default: ''
 
 flagbackup -- Back up any pre-existing flags.
-       default: False
+       default: True
 
 --- pipeline task execution modes
 dryrun -- Run the commands (True) or generate the commands to be run but

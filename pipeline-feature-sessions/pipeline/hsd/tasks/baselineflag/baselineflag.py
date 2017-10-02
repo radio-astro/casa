@@ -168,7 +168,7 @@ class SDBLFlagInputs(basetask.StandardInputs):
               'RunMeanPreFitFlag': (self.flag_prfrm, [self.prfrm_thresh, self.prfrm_nmean]),
               'RunMeanPostFitFlag': (self.flag_pofrm, [self.pofrm_thresh, self.pofrm_nmean]) }
         keys = ['Threshold', 'Nmean']
-        for (k,v) in d.items():
+        for (k,v) in d.iteritems():
             (b,p) = v
             if b is None:
                 # Don't touch operation flag but need to update thresholds.
@@ -264,7 +264,7 @@ class SDBLFlag(basetask.StandardTaskTemplate):
 
         # loop over reduction group (spw and source combination)
         flagResult = []
-        for (group_id,group_desc) in reduction_group.items():
+        for (group_id,group_desc) in reduction_group.iteritems():
             LOG.debug('Processing Reduction Group %s'%(group_id))
             LOG.debug('Group Summary:')
             for m in group_desc:
@@ -317,11 +317,12 @@ class SDBLFlag(basetask.StandardTaskTemplate):
             flagging_results = self._executor.execute(flagging_task, merge=False)
             thresholds = flagging_results.outcome
             # Summary
-            renderer = SDBLFlagSummary(context, ms_list,
-                                       antenna_list, fieldid_list, spwid_list,
-                                       pols_list, thresholds, flag_rule)
-            result = self._executor.execute(renderer, merge=False)
-            flagResult += result
+            if not basetask.DISABLE_WEBLOG:
+                renderer = SDBLFlagSummary(context, ms_list,
+                                           antenna_list, fieldid_list, spwid_list,
+                                           pols_list, thresholds, flag_rule)
+                result = self._executor.execute(renderer, merge=False)
+                flagResult += result
             
         # Calculate flag fraction after operation.
         flagdata_summary_job = casa_tasks.flagdata(vis=bl_name, mode='summary',

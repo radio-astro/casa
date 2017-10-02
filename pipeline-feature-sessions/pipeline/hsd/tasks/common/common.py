@@ -6,6 +6,7 @@ import types
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
+import pipeline.domain.datatable as datatable
 from . import utils
 
 LOG = infrastructure.get_logger(__name__)
@@ -45,6 +46,35 @@ class SingleDishResults(basetask.Results):
         #taskname = self.task if hasattr(self,'task') else 'none'
         s = '%s:\n\toutcome is %s'%(self.__class__.__name__,self._outcome_name())
         return s
+
+class SingleDishTask(basetask.StandardTaskTemplate):
+    def __init__(self, inputs):
+        super(SingleDishTask, self).__init__(inputs)
+
+    @property
+    def datatable_name(self):
+        if hasattr(self.inputs.context.observing_run, 'ms_datatable_name'):
+            return self.inputs.context.observing_run.ms_datatable_name
+        else:
+            return None
+         
+    @property
+    def datatable_instance(self):
+        if hasattr(self, '_datatable_instance'):
+            if self._datatable_instance is None and self._datatable_name is not None:
+                LOG.info('SingleDishTask: Creating DataTable instance...')
+                self._datatable_instance = datatable.DataTableImpl(name=self.datatable_name, 
+                                                                   readonly=False)
+            return self._datatable_instance
+        else:
+            if self.datatable_name is not None:
+                LOG.info('SingleDishTask: Creating DataTable instance...')
+                self._datatable_instance = datatable.DataTableImpl(name=self.datatable_name, 
+                                                                   readonly=False)
+            else:
+                self._datatable_instance = None
+            return self._datatable_instance
+    
 
 class ParameterContainerJob(object):
     def __init__(self, task, **parameters):

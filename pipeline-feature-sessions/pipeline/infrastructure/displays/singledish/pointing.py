@@ -34,11 +34,11 @@ class SDPointingDisplay(common.SDInspectionDisplay):
         plots = []
         
         #ROW = datatable.getcol('ROW')
-        tRA = datatable.tb1.getcol('RA').take(rows)
-        tDEC = datatable.tb1.getcol('DEC').take(rows)
-        tNCHAN = datatable.tb1.getcol('NCHAN').take(rows)
-        tSRCTYPE = datatable.tb1.getcol('SRCTYPE').take(rows)
-        tFLAG = datatable.tb2.getcol('FLAG_PERMANENT').take(rows, axis=1)[OnlineFlagIndex]
+        tRA = datatable.getcol('RA').take(rows)
+        tDEC = datatable.getcol('DEC').take(rows)
+        tNCHAN = datatable.getcol('NCHAN').take(rows)
+        tSRCTYPE = datatable.getcol('SRCTYPE').take(rows)
+        tFLAG = datatable.getcol('FLAG_PERMANENT').take(rows, axis=1)[OnlineFlagIndex]
         
         full_pointing_index = numpy.where(tNCHAN > 1)
         

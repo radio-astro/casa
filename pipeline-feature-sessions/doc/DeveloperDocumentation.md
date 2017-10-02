@@ -20,6 +20,12 @@ CASA <1>: import pipeline
 CASA <2>: context = pipeline.Pipeline(context='last').context
 ```
 
+Read a result from the context:
+
+```
+CASA <1>: result = context.results[3].read()[0]
+```
+
 ### Imaging
 
 ### Task interface

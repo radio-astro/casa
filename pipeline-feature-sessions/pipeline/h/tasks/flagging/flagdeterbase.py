@@ -141,7 +141,7 @@ class FlagDeterBaseInputs(basetask.StandardInputs):
         
         if self._fileonline is None:
             vis_root = os.path.splitext(self.vis)[0]
-            return vis_root + '_flagonline.txt'
+            return vis_root + '.flagonline.txt'
         return self._fileonline
     
     @fileonline.setter
@@ -155,7 +155,7 @@ class FlagDeterBaseInputs(basetask.StandardInputs):
 
         if not self._filetemplate:
             vis_root = os.path.splitext(self.vis)[0]
-            return vis_root + '_flagtemplate.txt'
+            return vis_root + '.flagtemplate.txt'
 
         if type(self._filetemplate) is types.ListType:
             idx = self._my_vislist.index(self.vis)
@@ -191,7 +191,7 @@ class FlagDeterBaseInputs(basetask.StandardInputs):
             return self._handle_multiple_vis('inpfile')
 
         vis_root = os.path.splitext(self.vis)[0]
-        return os.path.join(self.output_dir, vis_root + '_flagcmds.txt')
+        return os.path.join(self.output_dir, vis_root + '.flagcmds.txt')
 
     @property
     def intents(self):
@@ -346,7 +346,7 @@ class FlagDeterBase(basetask.StandardTaskTemplate):
 
         agent_summaries = dict((v['name'], v) for v in summary_dict.values())
         
-        ordered_agents = ['before', 'anos', 'intents', 'qa0', 'online',  'template', 'autocorr',
+        ordered_agents = ['before', 'anos', 'intents', 'qa0', 'qa2', 'online',  'template', 'autocorr',
                           'shadow', 'edgespw', 'clip', 'quack',
                           'baseband']
 
@@ -421,14 +421,22 @@ class FlagDeterBase(basetask.StandardTaskTemplate):
                             'flagging for %s disabled.' % (inputs.fileonline, 
                                                            inputs.ms.basename))
             else:
-                # QA0 flag
-                if inputs.qa0:
+                # QA0 / QA2 flag
+                if inputs.qa0 or inputs.qa2:
                     cmdlist = self._read_flagfile(inputs.fileonline)
-                    flag_cmds.extend([cmd for cmd in cmdlist if ('QA0' in cmd)])
-                    flag_cmds.append("mode='summary' name='qa0'")
+
+                    # QA0 flag
+                    if inputs.qa0:
+                        flag_cmds.extend([cmd for cmd in cmdlist if ('QA0' in cmd)])
+                        flag_cmds.append("mode='summary' name='qa0'")
+
+                    # QA2 flag
+                    if inputs.qa2:
+                        flag_cmds.extend([cmd for cmd in cmdlist if ('QA2' in cmd)])
+                        flag_cmds.append("mode='summary' name='qa2'")
                     
                     # All other online flags
-                    flag_cmds.extend([cmd for cmd in cmdlist if not ('QA0' in cmd)])
+                    flag_cmds.extend([cmd for cmd in cmdlist if not ('QA0' in cmd) and not('QA2' in cmd)])
                     flag_cmds.append("mode='summary' name='online'")
             
                 else:

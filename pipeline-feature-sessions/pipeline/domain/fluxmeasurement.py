@@ -10,13 +10,17 @@ LOG = infrastructure.get_logger(__name__)
 class FluxMeasurement():
     def __init__(self, spw_id, I, Q=measures.FluxDensity(0),
                  U=measures.FluxDensity(0), V=measures.FluxDensity(0),
-                 spix=decimal.Decimal('0.0')):
+                 spix=decimal.Decimal('0.0'), origin=None):
         self.spw_id = spw_id
         self.I = self._to_flux_density(I)
         self.Q = self._to_flux_density(Q)
         self.U = self._to_flux_density(U)
         self.V = self._to_flux_density(V)
         self.spix = self._to_decimal(spix)
+        if origin is None:
+            self.origin = ''
+        else:
+            self.origin = origin
         
     def _to_flux_density(self, arg):
         """

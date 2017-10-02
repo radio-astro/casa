@@ -142,7 +142,7 @@ class WeightMS(basetask.StandardTaskTemplate):
         # get corresponding datatable rows (only IDs of target scans will be retruned)
         index_list = common.get_index_list_for_ms(datatable, [infile], [antid], [fieldid], [spwid])
     
-        in_rows = datatable.tb1.getcol('ROW').take(index_list)
+        in_rows = datatable.getcol('ROW').take(index_list)
         # row map filtered by target scans (key: target input 
         target_row_map = {}
         for idx in in_rows:
@@ -155,7 +155,7 @@ class WeightMS(basetask.StandardTaskTemplate):
         # set weight (key: input MS row ID, value: weight)
         # TODO: proper handling of pols
         if weight_rms:
-            stats = datatable.tb2.getcol('STATISTICS').take(index_list, axis=2)
+            stats = datatable.getcol('STATISTICS').take(index_list, axis=2)
             for index in xrange(len(in_rows)):
                 row = in_rows[index]
                 cell_stat = stats[:,:,index]
@@ -173,8 +173,8 @@ class WeightMS(basetask.StandardTaskTemplate):
                         weight[row][ipol] = 0.0
     
         if weight_tintsys:
-            exposures = datatable.tb1.getcol('EXPOSURE').take(index_list)
-            tsyss = datatable.tb1.getcol('TSYS').take(index_list, axis=1)
+            exposures = datatable.getcol('EXPOSURE').take(index_list)
+            tsyss = datatable.getcol('TSYS').take(index_list, axis=1)
             for index in xrange(len(in_rows)):
                 row = in_rows[index]
                 exposure = exposures[index]

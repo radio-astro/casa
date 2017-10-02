@@ -29,13 +29,13 @@ WVRInfo = collections.namedtuple('WVRInfo',
 class WvrgcalInputs(basetask.StandardInputs):
     @basetask.log_equivalent_CASA_call        
     def __init__(self, context, output_dir=None, vis=None, caltable=None, 
-                 hm_toffset=None, toffset=None, segsource=None, hm_tie=None,
-                 tie=None, sourceflag=None, nsol=None, disperse=None, 
-                 wvrflag=None, hm_smooth=None, smooth=None, scale=None, 
-                 maxdistm=None, minnumants=None, mingoodfrac=None, refant=None,
-                 qa_intent=None, qa_bandpass_intent=None, qa_spw=None,
-                 accept_threshold=None, bandpass_result=None,
-                 nowvr_result=None):
+                 offsetstable=None, hm_toffset=None, toffset=None,
+                 segsource=None, hm_tie=None, tie=None, sourceflag=None,
+                 nsol=None, disperse=None, wvrflag=None, hm_smooth=None,
+                 smooth=None, scale=None, maxdistm=None, minnumants=None,
+                 mingoodfrac=None, refant=None, qa_intent=None,
+                 qa_bandpass_intent=None, qa_spw=None, accept_threshold=None,
+                 bandpass_result=None, nowvr_result=None, ):
         self._init_properties(vars())
 
     @property
@@ -47,7 +47,7 @@ class WvrgcalInputs(basetask.StandardInputs):
         if value is None:
             value = 1.0
         self._accept_threshold = value
-        
+
     @property
     def disperse(self):
         return self._disperse
@@ -127,6 +127,25 @@ class WvrgcalInputs(basetask.StandardInputs):
         if value is None:
             value = 1
         self._nsol = value
+
+    @property
+    def offsetstable(self):
+        # The value of caltable is ms-dependent, so test for multiple
+        # measurement sets and listify the results if necessary
+
+        if self._offsetstable is not None:
+            return self._offsetstable
+
+        if type(self.vis) is types.ListType:
+            return self._handle_multiple_vis('offsetstable')
+
+        # default is blank, which means the wvrgcal task
+        # will not apply any offsets.
+        return ''
+
+    @offsetstable.setter
+    def offsetstable(self, value):
+        self._offsetstable = value
 
     @property
     def refant(self):
@@ -365,6 +384,7 @@ class Wvrgcal(basetask.StandardTaskTemplate):
                 shutil.rmtree(caltable, ignore_errors=True)
                 
                 task = casa_tasks.wvrgcal(vis=inputs.vis, caltable=caltable,
+                                          offsetstable=inputs.offsetstable,
                                           toffset=toffset, segsource=segsource,
                                           tie=tie, sourceflag=sourceflag, 
                                           nsol=nsol, disperse=disperse,
@@ -373,7 +393,8 @@ class Wvrgcal(basetask.StandardTaskTemplate):
                                           minnumants=minnumants,
                                           mingoodfrac=mingoodfrac,
                                           spw=science_spwids,
-                                          wvrspw=[wvr_spwids[0]], refant=refant)
+                                          wvrspw=[wvr_spwids[0]],
+                                          refant=refant)
                 jobs.append(task)
                 
                 smooths_done.add(smooth)

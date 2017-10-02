@@ -150,7 +150,7 @@ def mjd_seconds_to_datetime(mjd_secs):
     unix_offset = 40587 * 86400
     return unix_seconds_to_datetime(mjd_secs - unix_offset)
 
-def total_time_on_target_on_source(ms):
+def total_time_on_target_on_source(ms, autocorr_only=False):
     '''
     Return the nominal total time on target source for the given MeasurementSet
     excluding OFF-source integrations (REFERENCE). The flag is not taken into account.
@@ -165,20 +165,17 @@ def total_time_on_target_on_source(ms):
     science_spws = ms.get_spectral_windows(science_windows_only=True)
     state_ids = [s.id for s in ms.states if 'TARGET' in s.intents]
     max_time = 0.0
-    ddids = []
-    with casatools.MSMDReader(ms.name) as msmd:
-        ant_ids = msmd.antennaids()
-        baseline_mask = msmd.baselines()
-        for spw in science_spws:
-            ddids.extend(msmd.datadescids(spw=spw.id))
-        science_dds = np.unique(ddids)
+    ant_ids = [a.id for a in ms.antennas]
+    dds = [ms.get_data_description(spw=spw) for spw in science_spws]
+    science_dds = np.unique([dd.id for dd in dds])
     with casatools.TableReader(ms.name) as tb:
         for dd in science_dds:
             for a1 in ant_ids:
                 for a2 in ant_ids:
-                    if not baseline_mask[a1, a2]: continue
+                    if autocorr_only and a1 != a2: continue
                     seltb = tb.query('DATA_DESC_ID == %d AND ANTENNA1 == %d AND ANTENNA2 == %d AND STATE_ID IN %s' % (dd, a1, a2, state_ids))
                     try:
+                        if seltb.nrows() == 0: continue
                         target_exposures = seltb.getcol('EXPOSURE').sum()
                         LOG.debug("Selected %d ON-source rows for DD=%d, Ant1=%d, Ant2=%d: total exposure time = %f sec" % (seltb.nrows(), dd, a1, a2, target_exposures))
                         max_time = max(max_time, target_exposures)
@@ -1123,13 +1120,20 @@ def freq_selection_to_channels(img, selection):
             # Avoid stepping outside possible channel range
             c0 = max(c0, 0)
             c0 = min(c0, numPix - 1)
+            c0 = int(round(c0 + 0.5))
+            c0 = max(c0, 0)
+            c0 = min(c0, numPix - 1)
+
+            c1 = max(c1, 0)
+            c1 = min(c1, numPix - 1)
+            c1 = int(round(c1 - 0.5))
             c1 = max(c1, 0)
             c1 = min(c1, numPix - 1)
 
             if (c0 < c1):
-                channels.append((int(round(c0 + 0.5)), int(round(c1 - 0.5))))
+                channels.append((c0, c1))
             else:
-                channels.append((int(round(c1 + 0.5)), int(round(c0 - 0.5))))
+                channels.append((c1, c0))
     else:
         channels = ['NONE']
 
@@ -1338,3 +1342,25 @@ def get_origin_input_arg(calapp, attr):
     values = {o.inputs[attr] for o in calapp.origin}
     assert (len(values) == 1)
     return values.pop()
+
+
+def write_errorexit_file(path, root, extension):
+
+    # Get formatted UTC time
+    now = datetime.datetime.utcnow().strftime('%Y%m%dT%H%M%S')
+
+    # Root name is composed of root, the current UTC time, and the extension
+    basename = root + '-' + now + '.' + extension
+
+    # Generate the root name
+    if path:
+        errorfile = os.path.join (path, basename)
+    else:
+        errorfile = basename
+    with open(errorfile, 'w'):
+        pass
+
+    if os.path.exists(errorfile):
+        return errorfile
+    else:
+        return ''

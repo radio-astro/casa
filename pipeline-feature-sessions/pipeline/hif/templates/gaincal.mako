@@ -3,6 +3,31 @@ rsc_path = ""
 import os
 import pipeline.infrastructure.filenamer as filenamer
 import pipeline.infrastructure.renderer.htmlrenderer as hr
+
+def get_mapping(ms, spwid):
+    if ms.combine_spwmap:
+        return 'of <strong>combined</strong> solution '
+    else:
+        return ' for spectral window <strong>' + str(spwid) + '</strong>'
+
+def get_mapped_window(ms, spwid):
+    if ms.combine_spwmap:
+        return 'the <strong>combined</strong> solution '
+    elif ms.phaseup_spwmap:
+        return 'spectral window <strong>' + str(ms.phaseup_spwmap[spwid]) + '</strong>'
+    else:
+        return spwid
+
+def get_mapped_scispws(ms):
+    if ms.combine_spwmap:
+        spws = [str(spw.id) for spw in ms.get_spectral_windows()]
+        return 'the following spectral windows ' + ','.join(spws) + ' have been combined' 
+    elif ms.phaseup_spwmap:
+        spws = [str(spw.id) for spw in ms.get_spectral_windows() if spw.id != ms.phaseup_spwmap[spw.id]]
+        return 'the following spectral windows '  + ','.join(spws) + ' have been remapped' 
+    else:
+        return 'no spectral windows have been combined or remapped'
+
 %>
 <%inherit file="t2-4m_details-base.mako"/>
 
@@ -55,6 +80,9 @@ $(document).ready(function() {
     % if diagnostic_phase_vs_time_plots:
         <li><a href="#diagnostic_phase_vs_time_plots">Phase vs time</a></li>
     % endif
+    % if diagnostic_phaseoffset_vs_time_plots:
+        <li><a href="#diagnostic_phaseoffset_vs_time_plots">Phase offsets vs time</a></li>
+    % endif
     % if diagnostic_amp_vs_time_plots:
         <li><a href="#diagnostic_amp_vs_time_plots">Amplitude vs time</a></li>
     % endif
@@ -99,6 +127,7 @@ $(document).ready(function() {
 				  url_fn="${lambda x: phase_vs_time_subpages[x]}"
 				  data_spw="${True}"
                   data_vis="${True}"
+                  sort_row_by="spw"
                   title_id="phase_vs_time_plots">
 
 	<%def name="title()">
@@ -123,15 +152,15 @@ $(document).ready(function() {
 	</%def>
 
 	<%def name="caption_text(plot, intent)"> 
-		Phase vs time for spectral window ${plot.parameters['spw']}, 
-		all antennas and correlations.
-	</%def>
+		Phase vs time ${get_mapping(pcontext.observing_run.get_ms(name=plot.parameters['vis']), plot.parameters['spw'])},
+                all antennas and correlations.</%def>
 
 </%self:plot_group>
 
 
 <%self:plot_group plot_dict="${structure_plots}"
 				  url_fn="${lambda x: 'baseline-%s.html' % filenamer.sanitize(x)}"
+                  sort_row_by="spw"
                   title_id="structure_plots">
 
 	<%def name="title()">
@@ -146,6 +175,10 @@ $(document).ready(function() {
 		<p>Click the summary plots to enlarge them.</p> 
 	</%def>
 
+    <%def name="ms_preamble(ms)">
+        <p><strong>Note that ${get_mapped_scispws(pcontext.observing_run.get_ms(name=ms))}</strong></p>
+    </%def>
+
 	<%def name="mouseover(plot)">Click to show phase RMS vs distance plots for spectral window ${plot.parameters['spw']}</%def>
 
 	<%def name="fancybox_caption(plot)">Spectral window ${plot.parameters['spw']}</%def>
@@ -154,10 +187,9 @@ $(document).ready(function() {
 		Spectral window ${plot.parameters['spw']}
 	</%def>
 
-	<%def name="caption_text(plot, intent)"> 
-		RMS phase vs distance to reference antenna for spectral
-		window ${plot.parameters['spw']}, all antennas.
-	</%def>
+    <%def name="caption_text(plot, intent)">
+        RMS phase vs distance to reference antenna ${get_mapping(pcontext.observing_run.get_ms(name=plot.parameters['vis']), plot.parameters['spw'])}, all antennas.
+    </%def>
 
 </%self:plot_group>
 
@@ -166,6 +198,7 @@ $(document).ready(function() {
 				  url_fn="${lambda x: amp_vs_time_subpages[x]}"
 				  data_spw="${True}"
                   data_vis="${True}"
+                  sort_row_by="spw"
                   title_id="amp_vs_time_plots">
 
 	<%def name="title()">
@@ -198,13 +231,14 @@ $(document).ready(function() {
 
 %endif
 
-% if diagnostic_phase_vs_time_plots or diagnostic_amp_vs_time_plots:
+% if diagnostic_phase_vs_time_plots or diagnostic_phaseoffset_vs_time_plots or diagnostic_amp_vs_time_plots:
 <h2>Diagnostic plots</h2>
 
 <%self:plot_group plot_dict="${diagnostic_phase_vs_time_plots}"
 				  url_fn="${lambda x: diagnostic_phase_vs_time_subpages[x]}"
 				  data_spw="${True}"
                   data_vis="${True}"
+                  sort_row_by="spw"
                   title_id="diagnostic_phase_vs_time_plots">
 
 	<%def name="title()">
@@ -236,8 +270,54 @@ $(document).ready(function() {
 	</%def>
 
 	<%def name="caption_text(plot, intent)"> 
-		Phase vs time for spectral window ${plot.parameters['spw']}, 
-		all antennas and correlations.
+		Phase vs time ${get_mapping(pcontext.observing_run.get_ms(name=plot.parameters['vis']), plot.parameters['spw'])},
+                all antennas and correlations.
+	</%def>
+
+</%self:plot_group>
+
+<%self:plot_group plot_dict="${diagnostic_phaseoffset_vs_time_plots}"
+				  url_fn="${lambda x: diagnostic_phaseoffset_vs_time_subpages[x]}"
+				  data_spw="${True}"
+                  data_vis="${True}"
+                  sort_row_by="spw"
+                  title_id="diagnostic_phaseoffset_vs_time_plots">
+
+	<%def name="title()">
+		Phase offsets vs time
+	</%def>
+
+	<%def name="preamble()">
+		<p>These diagnostic plots show the phase offsets as a function of time. The
+            phase offsets are computed by preapplying the previous phase only solutions to the
+            data and computing a new phase solution. The new phase solutions should scatter
+            around zero. The new solutions are not applied to the target. One plot is shown for
+            each spectral window, with phase offset plotted per antenna and correlation as a
+            function of time.</p>
+                
+		<p>Click the summary plots to enlarge them, or the spectral window
+            heading to see detailed plots per spectral window and antenna.</p>
+	</%def>
+
+        <%def name="ms_preamble(ms)">
+                <p>Plots show the diagnostic phase offsets for ${ms} calculated
+            using solint='inf'.</p>
+
+            <p><strong>Note that ${get_mapped_scispws(pcontext.observing_run.get_ms(name=ms))}</strong></p>
+        </%def>
+
+	<%def name="mouseover(plot)">Click to show phase offset vs time for spectral window ${plot.parameters['spw']}</%def>
+
+	<%def name="fancybox_caption(plot)">Spectral window ${plot.parameters['spw']}</%def>
+
+	<%def name="caption_title(plot)">
+		Spectral window ${plot.parameters['spw']}
+	</%def>
+
+	<%def name="caption_text(plot, intent)"> 
+		Phase offset vs time for spectral window <strong>${plot.parameters['spw']}</strong>, which has been 
+		mapped to ${get_mapped_window(pcontext.observing_run.get_ms(name=plot.parameters['vis']), plot.parameters['spw'])},
+                all antennas and correlations.
 	</%def>
 
 </%self:plot_group>
@@ -247,6 +327,7 @@ $(document).ready(function() {
 				  url_fn="${lambda x: diagnostic_amp_vs_time_subpages[x]}"
 				  data_spw="${True}"
                   data_vis="${True}"
+                  sort_row_by="spw"
                   title_id="diagnostic_amp_vs_time_plots">
 
 	<%def name="title()">

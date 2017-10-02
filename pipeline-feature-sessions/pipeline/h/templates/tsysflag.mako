@@ -192,7 +192,11 @@ $(document).ready(function() {
 	<caption>Summary of flagged data. Each cell states the amount of data 
 		flagged as a fraction of the specified data selection, with the 
 		<em>Flagging Step</em> columns giving this information per flagging
-		 step.
+		step. Note: for each data selection intent, the flagging statistics
+        are calculated for the T<sub>sys</sub> scans (with intent=ATMOSPHERE)
+        that cover those fields that also match the data selection intent. A
+        value of "N/A" in a row means that no T<sub>sys</sub> scan was acquired
+        on the object(s) observed for the corresponding intent.
 	</caption>
 	<thead>
 		<tr>
@@ -228,12 +232,15 @@ $(document).ready(function() {
 % endfor
 
 <h2>Flag Step Details</h2>
-<p>The following section provides plots showing the flagging metrics that the pipeline
-uses to determine deviant Tsys measurements, and the flagging commands that resulted 
-from each flagging metric. For certain flagging metrics, the pipeline evaluates the 
-metric separately for each polarisation. However, if the Tsys measurement for an 
-antenna is found to be deviant in one polarisation, the pipeline will flag the 
-antenna for both polarisations.</p>
+<p>
+    The following section provides plots showing the flagging metrics that the
+    pipeline uses to determine deviant T<sub>sys</sub> measurements, and the
+    flagging commands that resulted from each flagging metric. For certain
+    flagging metrics, the pipeline evaluates the metric separately for each
+    polarisation. However, if the T<sub>sys</sub> measurement for an antenna is
+    found to be deviant in one polarisation, the pipeline will flag the antenna
+    for both polarisations.
+</p>
 
 % for component in components: 
   % if htmlreports.get(component) is not None:

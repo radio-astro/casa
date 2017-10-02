@@ -201,7 +201,7 @@ standard -- Flux density standard, used if fluxdensity[0] less than 0.0. The
 ---- pipeline context defined parameter arguments which can be set only in
 'interactive mode'
 
-vis -- The list of input measurement sets. Defaults to the list of measurment
+vis -- The list of input measurement sets. Defaults to the list of measurement
     sets defined in the pipeline context.
     default: []
     example:

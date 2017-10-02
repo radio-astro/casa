@@ -4,12 +4,14 @@ import os
 import math
 import numpy
 import time
+import itertools
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.casatools as casatools
 from pipeline.domain import DataTable
 from .. import common 
+from ..common import compress
 
 from .accumulator import Accumulator
 
@@ -86,7 +88,7 @@ class GriddingBase(basetask.StandardTaskTemplate):
             self.spw = inputs.spwids
         # maps variety of spwid among MSes (not supposed to happen)
         self.msidxs = [common.get_parent_ms_idx(context, name) for name in self.files]
-        self.spwmap = dict([(m,s) for (m,s) in zip(self.msidxs,self.spw)])
+        self.spwmap = dict([(m,s) for (m,s) in itertools.izip(self.msidxs,self.spw)])
         if type(inputs.fieldids) == int:
             self.field = [inputs.fieldids]
         else:
@@ -110,7 +112,7 @@ class GriddingBase(basetask.StandardTaskTemplate):
             self.polid[msidx] = ddobj.get_polarization_id(poltype)
         
         LOG.debug('Members to be processed:')
-        for (m,a,s,p) in zip(self.files, self.antenna, self.spw, self.poltype):
+        for (m,a,s,p) in itertools.izip(self.files, self.antenna, self.spw, self.poltype):
             LOG.debug('\t%s Antenna %s Spw %s Pol %s'%(os.path.basename(m),a,s,p))
         
         reference_data = context.observing_run.get_ms(name=self.files[0])
@@ -132,8 +134,9 @@ class GriddingBase(basetask.StandardTaskTemplate):
         LOG.info('execute: elapsed time %s sec'%(end-start))
         result = GriddingResults(task=self.__class__,
                                  success=True,
-                                 outcome=grid_table)
+                                 outcome=compress.CompressedObj(grid_table))
         result.task = self.__class__
+        del grid_table
 
         if self.inputs.context.subtask_counter is 0: 
             result.stage_number = self.inputs.context.task_counter - 1
@@ -183,9 +186,9 @@ class GriddingBase(basetask.StandardTaskTemplate):
         polids = numpy.array([self.polid[i] for i in msids])
         # TSYS and FLAG_SUMMARY cols have NPOL x nrow elements
         ttsys = table.getcol('TSYS').take(index_list, axis=1)
-        tnet_flag = datatable.tb2.getcol('FLAG_SUMMARY').take(index_list, axis=1)
+        tnet_flag = datatable.getcol('FLAG_SUMMARY').take(index_list, axis=1)
         # STATISTICS col has NPOL x 7 x nrow elements -> stats 7 x selected nrow elements
-        tstats = datatable.tb2.getcol('STATISTICS').take(index_list, axis=2)
+        tstats = datatable.getcol('STATISTICS').take(index_list, axis=2)
         # filter polid of each row
         if len(set(polids)) == 1:
             tsys = ttsys[polids[0]]
@@ -205,8 +208,8 @@ class GriddingBase(basetask.StandardTaskTemplate):
         ### test code (to check selected index_list meets selection)
         if DO_TEST:
             ants = table.getcol('ANTENNA').take(index_list)
-            fids = datatable.tb1.getcol('FIELD_ID').take(index_list)
-            ifnos = datatable.tb1.getcol('IF').take(index_list)
+            fids = datatable.getcol('FIELD_ID').take(index_list)
+            ifnos = datatable.getcol('IF').take(index_list)
             for _i in xrange(len(rows)):
                 _msid = msids[_i]
                 _ant = ants[_i]
@@ -270,19 +273,20 @@ class GriddingBase(basetask.StandardTaskTemplate):
         # Create progress timer
         Timer = common.ProgressTimer(80, num_grid, loglevel)
         ID = 0
-        for [IFS, POL, X, Y, RAcent, DECcent, RowDelta] in GridTable:
+        for (IFS, POL, X, Y, RAcent, DECcent, RowDelta) in GridTable:
             IF = IFS[0]
             # RowDelta is numpy array
             if len(RowDelta) == 0:
-                indexlist = []
-                deltalist = []
-                rmslist = []
+                indexlist = ()
+                deltalist = ()
+                rmslist = ()
             else:
                 indexlist = numpy.array([IDX2StorageID[int(idx)] for idx in RowDelta[:,3]])
                 valid_index = numpy.where(net_flag[indexlist] == 1)[0]
                 indexlist = indexlist.take(valid_index)
                 deltalist = RowDelta[:,1].take(valid_index)
                 rmslist = RowDelta[:,2].take(valid_index)
+                del valid_index
             num_valid = len(indexlist)
             num_flagged = len(RowDelta) - num_valid
             if num_valid == 0:
@@ -299,7 +303,7 @@ class GriddingBase(basetask.StandardTaskTemplate):
                 
                 RMS = accum.rms
 
-            OutputTable.append([IF, POL, X, Y, RAcent, DECcent, num_valid, num_flagged, RMS])
+            OutputTable.append((IF, POL, X, Y, RAcent, DECcent, num_valid, num_flagged, RMS))
             ID += 1
             del indexlist, deltalist, rmslist
 
@@ -308,6 +312,7 @@ class GriddingBase(basetask.StandardTaskTemplate):
 
         end = time.time()
         LOG.info('dogrid: elapsed time %s sec'%(end-start))
+        del GridTable
         return OutputTable
 
 class RasterGridding(GriddingBase):
@@ -377,11 +382,14 @@ class RasterGridding(GriddingBase):
                     ssIDX = numpy.take(sIDX, SelectR)
                     ssMS = numpy.take(sMS, SelectR)
                     ssDelta = numpy.sqrt(numpy.take(Delta, SelectR))
-                    line = [map(lambda x: self.spwmap[x], ssMS), self.poltype[0], x, y, RA, DEC, numpy.transpose([ssROW, ssDelta, ssRMS, ssIDX, ssMS])]
+                    line = (map(lambda x: self.spwmap[x], ssMS), self.poltype[0], x, y, RA, DEC, numpy.transpose([ssROW, ssDelta, ssRMS, ssIDX, ssMS]))
+                    del ssROW, ssRMS, ssIDX, ssMS, ssDelta
                 else:
-                    line = [self.spw, self.poltype[0], x, y, RA, DEC, []]
+                    line = (self.spw, self.poltype[0], x, y, RA, DEC, ())
                 GridTable.append(line)
+                del SelectR
                 #LOG.debug("GridTable: %s" % line)
+            del SelectD, sDeltaDEC, sRA, sROW, sIDX, sRMS, sMS
 
         LOG.info('NGridRA = %s  NGridDEC = %s' % (NGridRA, NGridDEC))
 

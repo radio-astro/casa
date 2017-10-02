@@ -1,10 +1,12 @@
 from __future__ import absolute_import
 import os
 import shutil
+import types
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 from pipeline.infrastructure import casa_tasks
+import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.tablereader as tablereader
 from pipeline.h.tasks.mstransform import mssplit
 
@@ -45,8 +47,13 @@ class TransformimagedataResults(basetask.Results):
                 LOG.info('Adding {} to context'.format(self.ms.name))
                 target.add_measurement_set(self.ms)
 
+        # Remove original measurement set from context
+        context.observing_run.measurement_sets.pop(0)
+
         for i in range(0,len(context.clean_list_pending)):
             context.clean_list_pending[i]['heuristics'].observing_run.measurement_sets[0].name = self.outputvis
+            newvislist = [self.outputvis]
+            context.clean_list_pending[i]['heuristics'].vislist = newvislist
 
     def __str__(self):
         # Format the MsSplit results.
@@ -62,15 +69,60 @@ class TransformimagedataResults(basetask.Results):
 
 
 class TransformimagedataInputs(mssplit.MsSplitInputs):
+    
+    clear_pointing = basetask.property_with_default('clear_pointing', True)
+    modify_weights = basetask.property_with_default('modify_weights', False)
+    wtmode = basetask.property_with_default('wtmode', '')
+    
     @basetask.log_equivalent_CASA_call
     def __init__(self, context, output_dir=None, vis=None,
                  outputvis=None, field=None, intent=None, spw=None,
-                 datacolumn=None, chanbin=None, timebin=None, replace=None):
+                 datacolumn=None, chanbin=None, timebin=None, replace=None,
+                 clear_pointing=None, modify_weights=None, wtmode=None):
         # set the properties to the values given as input arguments
         self._init_properties(vars())
+        
+        if clear_pointing is not False:
+            clear_pointing = True
+        self.clear_pointing = clear_pointing
+
+        if modify_weights is not True:
+            modify_weights = False
+        self.modify_weights = modify_weights
+
+        self.wtmode = wtmode
+        self.context = context
 
     replace = basetask.property_with_default('replace', False)
     datacolumn = basetask.property_with_default('datacolumn', 'corrected')
+
+    @property
+    def outputvis(self):
+
+        output_dir = self.context.output_dir
+
+        if type(self.vis) is types.ListType:
+            return self._handle_multiple_vis('outputvis')
+
+        if not self._outputvis:
+            # Need this to be in the working directory
+            # vis_root = os.path.splitext(self.vis)[0]
+            vis_root = os.path.splitext(os.path.basename(self.vis))[0]
+            return output_dir + '/' + vis_root + '_split.ms'
+
+        if type(self._outputvis) is types.ListType:
+            idx = self._my_vislist.index(self.vis)
+            return output_dir + '/' + os.path.basename(self._outputvis[idx])
+
+        return output_dir + '/' + os.path.basename(self._outputvis)
+
+    @outputvis.setter
+    def outputvis(self, value):
+        if value in (None, ''):
+            value = []
+        elif type(value) is types.StringType:
+            value = list(value.replace('[', '').replace(']', '').replace("'", "").split(','))
+        self._outputvis = value
 
 
 class Transformimagedata(mssplit.MsSplit):
@@ -114,6 +166,13 @@ class Transformimagedata(mssplit.MsSplit):
         mstransform_args['field'] = visfields
         mstransform_args['reindex'] = False
         mstransform_args['spw'] = visspws
+
+        for dictkey in ('clear_pointing', 'modify_weights', 'wtmode'):
+            try:
+                del mstransform_args[dictkey]
+            except KeyError:
+                pass
+
         mstransform_job = casa_tasks.mstransform(**mstransform_args)
 
         self._executor.execute(mstransform_job)
@@ -146,6 +205,20 @@ class Transformimagedata(mssplit.MsSplit):
 
         # Note there will be only 1 MS in the temporary observing run structure
         result.ms = observing_run.measurement_sets[0]
+        
+        if inputs.clear_pointing:
+            LOG.info('Removing POINTING table from ' + ms.name)
+            with casatools.TableReader(ms.name + '/POINTING', nomodify=False) as table:
+                rows = table.rownumbers()
+                table.removerows(rows)
+
+        if inputs.modify_weights:
+            LOG.info('Re-initializing the weights in ' + ms.name)
+            if inputs.wtmode:
+                task = casa_tasks.initweights(ms.name, wtmode=inputs.wtmode)
+            else:
+                task = casa_tasks.initweights(ms.name)
+            self._executor.execute(task)
 
         return result
 

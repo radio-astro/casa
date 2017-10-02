@@ -17,6 +17,7 @@ import pipeline.extern.XmlObjectifier as XmlObjectifier
 from pipeline.infrastructure.casataskdict import CasaTaskDict
 import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.project as project
+import pipeline.infrastructure.utils as utils
 import argmapper
 
 # Make sure CASA exceptions are rethrown
@@ -34,6 +35,9 @@ def executeppr (pprXmlFile, importonly=True, dry_run=False, loglevel='info',
 
     # Useful mode parameters
     echo_to_screen = interactive
+    workingDir = None
+    rawDir = None
+
 
     try:
         # Decode the processing request
@@ -61,6 +65,7 @@ def executeppr (pprXmlFile, importonly=True, dry_run=False, loglevel='info',
 	    echo_to_screen=echo_to_screen)
         casatools.post_to_log ("Terminating procedure execution ...", 
             echo_to_screen=echo_to_screen)
+        errorfile = utils.write_errorexit_file(workingDir, 'errorexit', 'txt')
 	return
 
     # Request decoded, starting run.
@@ -75,18 +80,21 @@ def executeppr (pprXmlFile, importonly=True, dry_run=False, loglevel='info',
             echo_to_screen=echo_to_screen)
         casatools.post_to_log ("Terminating pipeline execution ...", 
             echo_to_screen=echo_to_screen)
+        errorfile = utils.write_errorexit_file(workingDir, 'errorexit', 'txt')
 	return
     elif len(asdmList) < 1:
         casatools.post_to_log ("    Empty ASDM list", 
             echo_to_screen=echo_to_screen)
         casatools.post_to_log ("Terminating pipeline execution ...", 
             echo_to_screen=echo_to_screen)
+        errorfile = utils.write_errorexit_file(workingDir, 'errorexit', 'txt')
 	return
     elif len(commandsList) < 1:
         casatools.post_to_log ("    Empty commands list", 
             echo_to_screen=echo_to_screen)
         casatools.post_to_log ("Terminating pipeline execution ...", 
             echo_to_screen=echo_to_screen)
+        errorfile = utils.write_errorexit_file(workingDir, 'errorexit', 'txt')
 	return
 
     # List project summary information
@@ -209,6 +217,7 @@ def executeppr (pprXmlFile, importonly=True, dry_run=False, loglevel='info',
             #traceback.print_exc(file=sys.stdout)
             errstr=traceback.format_exc()
             casatools.post_to_log (errstr, echo_to_screen=echo_to_screen)
+            errorfile = utils.write_errorexit_file(workingDir, 'errorexit', 'txt')
             break
 
     # Save the context

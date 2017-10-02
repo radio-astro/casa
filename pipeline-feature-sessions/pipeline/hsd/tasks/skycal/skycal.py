@@ -13,7 +13,7 @@ from .. import common
 LOG = infrastructure.get_logger(__name__)
 
 
-class SDMSSkyCalInputs(basetask.StandardInputs):
+class SDSkyCalInputs(basetask.StandardInputs):
     @basetask.log_equivalent_CASA_call
     def __init__(self, context, calmode=None, fraction=None, noff=None,
                  width=None, elongated=None, output_dir=None,
@@ -48,29 +48,30 @@ class SDMSSkyCalInputs(basetask.StandardInputs):
         del args['vis']
         
         return args
-
-
-class SDMSSkyCalResults(common.SingleDishResults):
+    
+class SDSkyCalResults(common.SingleDishResults):
+    """
+    """
     def __init__(self, task=None, success=None, outcome=None):
-        super(SDMSSkyCalResults, self).__init__(task, success, outcome)
+        super(SDSkyCalResults, self).__init__(task, success, outcome)
         self.final = self.outcome
 
     def merge_with_context(self, context):
-        super(SDMSSkyCalResults, self).merge_with_context(context)
+        super(SDSkyCalResults, self).merge_with_context(context)
 
         if self.outcome is None:
             return
 
         for calapp in self.outcome:
             context.callibrary.add(calapp.calto, calapp.calfrom)
-        
+
     def _outcome_name(self):
         return str(self.outcome)
 
 
-class SDMSSkyCal(basetask.StandardTaskTemplate):
-    Inputs = SDMSSkyCalInputs
-    
+class SDSkyCal(basetask.StandardTaskTemplate):
+    Inputs = SDSkyCalInputs
+
     def prepare(self):
         args = self.inputs.to_casa_args()
         LOG.trace('args: %s' % args)
@@ -96,7 +97,7 @@ class SDMSSkyCal(basetask.StandardTaskTemplate):
             field_strategy = {}
             field_ids = casatools.ms.msseltoindex(vis=ms.name, field=args['field'])
             for field_id in field_ids:
-                for target_id, reference_id in default_field_strategy.items():
+                for target_id, reference_id in default_field_strategy.iteritems():
                     if field_id == target_id:
                         field_strategy[field_id] = default_field_strategy[field_id]
                         continue
@@ -109,7 +110,7 @@ class SDMSSkyCal(basetask.StandardTaskTemplate):
             args['scan'] = ''
             
         calapps = []
-        for (target_id, reference_id) in field_strategy.items():
+        for (target_id, reference_id) in field_strategy.iteritems():
             myargs = args.copy()
             
             # output file
@@ -138,7 +139,7 @@ class SDMSSkyCal(basetask.StandardTaskTemplate):
     
             # make a note of the current inputs state before we start fiddling
             # with it. This origin will be attached to the final CalApplication.
-            origin = callibrary.CalAppOrigin(task=SDMSSkyCal, 
+            origin = callibrary.CalAppOrigin(task=SDSkyCal,
                                              inputs=args)
             
             calto = callibrary.CalTo(vis=myargs['infile'],
@@ -156,7 +157,7 @@ class SDMSSkyCal(basetask.StandardTaskTemplate):
             calapp = callibrary.CalApplication(calto, calfrom, origin)
             calapps.append(calapp)
         
-        results = SDMSSkyCalResults(task=self.__class__,
+        results = SDSkyCalResults(task=self.__class__,
                                     success=True,
                                     outcome=calapps)
         return results

@@ -9,6 +9,7 @@ LOG = infrastructure.get_logger(__name__)
 
 
 class FlagDeterALMAInputs(flagdeterbase.FlagDeterBaseInputs):
+    flagbackup = basetask.property_with_default('flagbackup', True)
     edgespw = basetask.property_with_default('edgespw', True)
     fracspw = basetask.property_with_default('fracspw', 0.0625)
     template = basetask.property_with_default('template', True)
@@ -16,8 +17,9 @@ class FlagDeterALMAInputs(flagdeterbase.FlagDeterBaseInputs):
     # new property for ACA correlator
     fracspwfps = basetask.property_with_default('fracspwfps', 0.048387)
 
-    # New property for QA0 flags
+    # New property for QA0 / QA2 flags
     qa0 = basetask.property_with_default('qa0', True)
+    qa2 = basetask.property_with_default('qa2', True)
 
     @basetask.log_equivalent_CASA_call
     def __init__(self, context, vis=None, output_dir=None, flagbackup=None,
@@ -25,7 +27,7 @@ class FlagDeterALMAInputs(flagdeterbase.FlagDeterBaseInputs):
                  intents=None, edgespw=None, fracspw=None, 
                  fracspwfps=None, online=None, fileonline=None,
                  template=None, filetemplate=None, hm_tbuff=None, 
-                 tbuff=None, qa0=None):
+                 tbuff=None, qa0=None, qa2=None):
         # set the properties to the values given as input arguments
         self._init_properties(vars())
 

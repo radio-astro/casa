@@ -64,10 +64,61 @@ $(document).ready(function(){
 <%block name="title">Bandpass Calibration and Flagging</%block>
 
 <p>
-    This task creates bandpass solutions for each measurement set, and
-    flags outliers based on a comparison of the calibrated (corrected)
-    amplitudes with the model amplitudes for the bandpass calibrator source.
+    This task performs a preliminary bandpass solution and applies it, then
+    computes the flagging heuristics by calling hif_correctedampflag which
+    looks for outlier visibility points by statistically examining the scalar
+    difference of the corrected amplitude minus model amplitudes, flags those
+    outliers, then derives a final bandpass solution (if any flags were
+    generated). The philosophy is that only outlier data points that have
+    remained outliers after calibration will be flagged. Note that the phase of
+    the data is not assessed.
 </p>
+<p>
+    In further detail, the workflow is as follows: an a priori calibration is
+    applied using pre-existing caltables in the calibration state, a
+    preliminary bandpass solution and amplitude gaincal solution is solved and
+    applied, the flagging heuristics are run and any outliers are flagged, a
+    final bandpass solution is solved (if necessary) and the name "final" is
+    appended to this caltable. Plots are generated at three points in this
+    workflow: after a priori calibration, after bandpass calibration but before
+    flagging heuristics are run, and after flagging heuristics have been run
+    and applied. If no points were flagged, the "after" plots are not
+    generated or displayed. The score for this stage is a simple combination
+    (multiplication) of the standard data flagging score (depending on the
+    fraction of data flagged) and the score for the bandpass solution.
+</p>
+
+% if updated_refants:
+<h2 id="refants" class="jumptarget">Reference Antenna update</h2>
+
+<p>For the measurement set(s) listed below, the reference antenna
+    list was updated due to significant flagging (antennas moved to
+    end and/or removed). See warnings in task notifications
+    for details. Shown below are the updated reference antenna lists,
+    only for those measurement sets where it was modified.</p>
+
+<table class="table table-bordered table-striped"
+	   summary="Reference Antennas">
+	<caption>Updated reference antenna selection per measurement set. Antennas are
+	listed in order of highest to lowest priority.</caption>
+	<thead>
+		<tr>
+			<th>Measurement Set</th>
+			<th>Reference Antennas (Highest to Lowest)</th>
+		</tr>
+	</thead>
+	<tbody>
+%for vis in updated_refants:
+		<tr>
+			<td>${os.path.basename(vis)}</td>
+			## insert spaces in refant list to allow browser to break string
+			## if it wants
+			<td>${updated_refants[vis].replace(',', ', ')}</td>
+		</tr>
+%endfor
+	</tbody>
+</table>
+% endif
 
 % if htmlreports:
     <h2>Flagging</h2>
@@ -110,7 +161,7 @@ $(document).ready(function(){
 		</tr>
 	</thead>
 	<tbody>
-		% for k in ['TOTAL', 'BANDPASS', 'AMPLITUDE', 'PHASE', 'TARGET','ATMOSPHERE']:
+		% for k in ['TOTAL', 'BANDPASS', 'AMPLITUDE', 'PHASE', 'TARGET']:
 		<tr>
 			<th>${k}</th>
 			% for step in ['before','after']:
@@ -385,8 +436,9 @@ $(document).ready(function(){
 <%self:plot_group plot_dict="${time_plots}"
 				  url_fn="${lambda x: 'junk'}"
                   rel_fn="${lambda plot: 'amp_vs_time_%s_%s' % (plot.parameters['vis'], plot.parameters['spw'])}"
-				  plot_accessor="${lambda ms_plots: ms_plots.items()}"
-				  title_id="amp_vs_time">
+				  title_id="amp_vs_time"
+                  break_rows_by="intent,field,type_idx"
+                  sort_row_by="spw">
 
 	<%def name="title()">
 		Amplitude vs time
@@ -428,8 +480,9 @@ $(document).ready(function(){
 <%self:plot_group plot_dict="${uvdist_plots}"
 				  url_fn="${lambda x: 'junk'}"
                   rel_fn="${lambda plot: 'amp_vs_uvdist_%s_%s' % (plot.parameters['vis'], plot.parameters['spw'])}"
-				  plot_accessor="${lambda ms_plots: ms_plots.items()}"
-				  title_id="amp_vs_uvdist">
+				  title_id="amp_vs_uvdist"
+                  break_rows_by="intent,field,type_idx"
+                  sort_row_by="spw">
 
 	<%def name="title()">
 		Amplitude vs UV distance

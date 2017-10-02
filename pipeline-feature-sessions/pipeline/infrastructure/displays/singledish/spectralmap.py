@@ -79,8 +79,6 @@ class SDSpectralMapDisplay(SDImageDisplay):
     def __plot_spectral_map(self):
         pl.clf()
 
-        # read data to storage
-        masked_data = self.data * self.mask
         (STEPX, STEPY) = self.__get_strides()
 
         # Raster Case: re-arrange spectra to match RA-DEC orientation
@@ -104,11 +102,12 @@ class SDSpectralMapDisplay(SDImageDisplay):
                     row = (self.nx - x - 1) * self.ny + y
                     ROWS[(posy*NH+posx)*NvPanel*NhPanel + offsety*NhPanel + offsetx] = row
         else: ### This block is currently broken (2016/06/23 KS)
-            ROWS = rows[:]
-            NROW = len(rows)
-            Npanel = (NROW - 1) / (self.MaxNhPanel * self.MaxNvPanel) + 1
-            if Npanel > 1:  (NhPanel, NvPanel) = (self.MaxNhPanel, self.MaxNvPanel)
-            else: (NhPanel, NvPanel) = (int((NROW - 0.1) ** 0.5) + 1, int((NROW - 0.1) ** 0.5) + 1)
+            #ROWS = rows[:]
+            #NROW = len(rows)
+            #Npanel = (NROW - 1) / (self.MaxNhPanel * self.MaxNvPanel) + 1
+            #if Npanel > 1:  (NhPanel, NvPanel) = (self.MaxNhPanel, self.MaxNvPanel)
+            #else: (NhPanel, NvPanel) = (int((NROW - 0.1) ** 0.5) + 1, int((NROW - 0.1) ** 0.5) + 1)
+            raise Exception, "non-Raster map is not supported yet."
 
         LOG.debug("Generating spectral map")
         LOG.debug("- Stride: [%d, %d]" % (STEPX, STEPY))
@@ -158,7 +157,7 @@ class SDSpectralMapDisplay(SDImageDisplay):
         is_baselined = reference_data.work_data != reference_data.name
         
         for pol in xrange(self.npol):
-            data = masked_data.take([pol], axis=self.id_stokes).squeeze()
+            data = (self.data.take([pol], axis=self.id_stokes) * self.mask.take([pol], axis=self.id_stokes)).squeeze()
             Npanel = 0
 
             # to eliminate max/min value due to bad pixel or bad fitting,
@@ -169,6 +168,7 @@ class SDSpectralMapDisplay(SDImageDisplay):
             valid_data = data[valid_index[0],valid_index[1],chan0:chan1]
             ListMax = valid_data.max(axis=1)
             ListMin = valid_data.min(axis=1)
+            del valid_index, valid_data
             if len(ListMax) == 0: continue 
             if is_baselined:
                 ymax = numpy.sort(ListMax)[len(ListMax) - len(ListMax)/10 - 1]
@@ -230,6 +230,7 @@ class SDSpectralMapDisplay(SDImageDisplay):
 
                     for obj in plot_objects:
                         obj.remove()
+                        del obj
                     plot_objects = []
 
                     parameters = {}
@@ -249,6 +250,7 @@ class SDSpectralMapDisplay(SDImageDisplay):
             
 
                     Npanel += 1
-        del ROWS, data
+            del data, mask2d
+        del ROWS
         print("Returning %d plots from spectralmap" % len(plot_list))
         return plot_list

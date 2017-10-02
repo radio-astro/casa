@@ -76,7 +76,7 @@ This task identifies baselines and antennas with a significant fraction of
             </tr>
         </thead>
         <tbody>
-            % for k in ['TOTAL', 'BANDPASS', 'AMPLITUDE', 'PHASE', 'TARGET','ATMOSPHERE']:
+            % for k in ['TOTAL', 'BANDPASS', 'AMPLITUDE', 'PHASE', 'TARGET']:
             <tr>
                 <th>${k}</th>
                 % for step in ['before','after']:

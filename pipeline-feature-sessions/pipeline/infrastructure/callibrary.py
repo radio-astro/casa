@@ -1204,7 +1204,7 @@ def defrag_interval_tree(tree):
 
 # this chain of functions defines how to add overlapping Intervals when adding
 # IntervalTrees
-intent_add = create_data_reducer(join=merge_lists())
+intent_add = create_data_reducer(join=merge_lists(join_fn=operator.add))
 field_add = create_data_reducer(join=merge_intervaltrees(intent_add))
 spw_add = create_data_reducer(join=merge_intervaltrees(field_add))
 ant_add = create_data_reducer(join=merge_intervaltrees(spw_add))
@@ -1369,7 +1369,7 @@ def expand_calstate_to_calapps(calstate):
     calapps = []
 
     for vis in calstate:
-        # Set the vis argument for the CalToArgs constructor through partially
+        # Set the vis argument for the CalToArgs constructor through partial
         # application. The subsequent calls will set the other arguments for
         # CalToArgs (field, intent, spw, etc.)
         caltoarg_fn = functools.partial(CalToArgs, vis={vis})
@@ -1408,22 +1408,89 @@ def consolidate_calibrations(calapps):
     :param calapps: an iterable of (CalTo, [CalFrom..]) 2-tuples
     :return: a list of (CalTo, [CalFrom..]) tuples
     """
-    hashes = {}
-    for calto_args, calfrom in calapps:
+
+    # dict mapping an object hash to the object itself:
+    #     hash([CalFrom, ...]): [CalFrom, ...]
+    hash_to_calfroms = {}
+    # dict mapping from object hash to corresponding list of CalToArgs
+    hash_to_calto_args = collections.defaultdict(list)
+
+    # create our maps of hashes, which we need to test for overlapping data
+    # selections
+    for calto_args, calfroms in calapps:
         # create a tuple, as lists are not hashable
-        calfrom_hash = tuple([hash(cf) for cf in calfrom])
+        calfrom_hash = tuple([hash(cf) for cf in calfroms])
+        hash_to_calto_args[calfrom_hash].append(calto_args)
 
-        if calfrom_hash not in hashes:
-            LOG.trace('Creating new CalFrom hash for %s', calfrom)
-            hashes[calfrom_hash] = (calto_args, calfrom)
+        if calfrom_hash not in hash_to_calfroms:
+            hash_to_calfroms[calfrom_hash] = calfroms
 
-        else:
-            existing_calto = hashes[calfrom_hash][0]
+    # dict that maps holds accepted data selections and their CalFroms
+    accepted = {}
+    for calfrom_hash, calto_args in hash_to_calto_args.iteritems():
+        # assemble the other data selections (the other CalToArgs) which we
+        # will use to search for conflicting data selections
+        other_data_selections = []
+        for v in [v for k, v in hash_to_calto_args.iteritems() if k != calfrom_hash]:
+            other_data_selections.extend(v)
 
-            for existing_values, new_values in zip(existing_calto, calto_args):
-                existing_values.update(new_values)
+        for to_merge in calto_args:
+            if calfrom_hash not in accepted:
+                # first time round for this calibration application, therefore it can always be added
+                # as there will be nothing to merge
+                accepted[calfrom_hash] = [(copy.deepcopy(to_merge), hash_to_calfroms[calfrom_hash])]
+                continue
 
-    return hashes.values()
+            for idx, (existing_calto, calfroms) in enumerate(accepted[calfrom_hash]):
+                proposed_calto = CalToArgs(*copy.deepcopy(existing_calto))
+
+                for proposed_values, to_merge_values in zip(proposed_calto, to_merge):
+                    proposed_values.update(to_merge_values)
+
+                # if the merged data selection does not conflict with any of
+                # the explicitly registered data selections that require a
+                # different calibration application, then it is safe to add
+                # the merged data selection and discard the unmerged data
+                # selection
+                if not any((data_selection_contains(proposed_calto, other) for other in other_data_selections)):
+                    LOG.trace('No conflicting data selection detected')
+                    LOG.trace('Accepting merged data selection: {!s}'.format(proposed_calto))
+                    LOG.trace('Discarding unmerged data selection: {!s}'.format(to_merge))
+                    accepted[calfrom_hash][idx] = (proposed_calto, hash_to_calfroms[calfrom_hash])
+                    break
+
+            else:
+                # we get here if all of the proposed merged data selections
+                # conflict with the data selection in hand. In this case, it
+                # should be added as it stands, completely unaltered.
+                LOG.trace('Merged data selection conflicts with other registrations')
+                LOG.trace('Abandoning proposed data selection: {!s}'.format(proposed_calto))
+                LOG.trace('Appending new unmerged data selection: {!s}'.format(to_merge))
+                unmergeable = (to_merge, hash_to_calfroms[calfrom_hash])
+                accepted[calfrom_hash].append(unmergeable)
+
+    # dict values are lists, which we need to flatten into a single list
+    result = []
+    for l in accepted.values():
+        result.extend(l)
+    return result
+
+
+def data_selection_contains(proposed, calto_args):
+    """
+    Return True if one data selection is contained within another.
+
+    :param proposed: data selection 1
+    :type proposed: CalToArgs
+    :param calto_args: data selection 2
+    :type calto_args: CalToArgs
+    :return: True if data selection 2 is contained within data selection 1
+    """
+    return all([not proposed.vis.isdisjoint(calto_args.vis),
+                not proposed.antenna.isdisjoint(calto_args.antenna),
+                not proposed.field.isdisjoint(calto_args.field),
+                not proposed.spw.isdisjoint(calto_args.spw),
+                not proposed.intent.isdisjoint(calto_args.intent)])
 
 
 def expand_calstate(calstate):
@@ -1822,7 +1889,7 @@ class IntervalCalState(object):
 
         # ensure that the other calstate is not considered equal to this
         # calstate, even if they the values they hold are identical. This step
-        # is required so that all entries are added to the in the union
+        # is required so that all entries are added to in the union
         # (my_root | other_root) operation, and ensures that arithmetic like
         # 'calstate_x - calstate_x = 0' holds true.
         marker = uuid.uuid4()

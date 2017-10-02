@@ -20,6 +20,7 @@ __rethrow_casa_exceptions = True
 #     Clunky but import casa does not work for pipeline tasks
 from h_init_cli import h_init_cli as h_init
 from hifa_importdata_cli import hifa_importdata_cli as hifa_importdata
+from hif_checkproductsize_cli import hif_checkproductsize_cli as hif_checkproductsize
 from hif_mstransform_cli import hif_mstransform_cli as hif_mstransform
 from hifa_flagtargets_cli import hifa_flagtargets_cli as hifa_flagtargets
 from hif_findcont_cli import hif_findcont_cli as hif_findcont
@@ -50,6 +51,9 @@ def hifatargets (vislist, importonly=False, pipelinemode='automatic', interactiv
         if importonly:
             raise Exception(IMPORT_ONLY)
 
+        # Check product size limits and mitigate imaging parameters
+        hif_checkproductsize(maxcubesize=30.0, maxcubelimit=40.0, maxproductsize=400.0)
+
         # Split out the target data
         hif_mstransform (pipelinemode=pipelinemode)
 
@@ -78,10 +82,16 @@ def hifatargets (vislist, importonly=False, pipelinemode='automatic', interactiv
         hif_makeimages (pipelinemode=pipelinemode)
 
         # Make a list of expected targets to be cleaned in continuum subtracted cube mode
-        hif_makeimlist (width='', pipelinemode=pipelinemode)
+        hif_makeimlist (pipelinemode=pipelinemode)
 
         # Make clean continuum subtracted cube images for the selected targets
-        hif_makeimages (subcontms=False, pipelinemode=pipelinemode)
+        hif_makeimages (pipelinemode=pipelinemode)
+
+        # Make a list of expected targets to be cleaned in continuum subtracted PI cube mode
+        hif_makeimlist (specmode='repBW', pipelinemode=pipelinemode)
+
+        # Make clean continuum subtracted PI cube
+        hif_makeimages (pipelinemode=pipelinemode)
 
     except Exception, e:
         if str(e) == IMPORT_ONLY:

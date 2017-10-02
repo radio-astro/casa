@@ -7,6 +7,7 @@ import pipeline.h.cli.utils as utils
 
 def hif_transformimagedata(vis=None, outputvis=None, field=None, intent=None,
     spw=None, datacolumn=None, chanbin=None, timebin=None, replace=None,
+    clear_pointing=None, modify_weights=None, wtmode=None,
     pipelinemode=None, dryrun=None, acceptresults=None):
     # create a dictionary containing all the arguments given in the
     # constructor

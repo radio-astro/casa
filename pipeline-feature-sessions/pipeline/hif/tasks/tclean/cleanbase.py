@@ -28,15 +28,20 @@ LOG = infrastructure.get_logger(__name__)
 class CleanBaseInputs(basetask.StandardInputs):
     @basetask.log_equivalent_CASA_call
     def __init__(self, context, output_dir=None, vis=None, imagename=None, datacolumn=None,
-                 intent=None, field=None, spw=None, spwsel=None, uvrange=None, specmode=None,
+                 intent=None, field=None, spw=None, spwsel=None, uvrange=None, orig_specmode=None, specmode=None,
                  gridder=None, deconvolver=None, uvtaper=None,
                  nterms=None, cycleniter=None, cyclefactor=None, scales=None,
                  outframe=None, imsize=None, cell=None,
                  phasecenter=None, nchan=None, start=None, width=None, stokes=None,
                  weighting=None,
                  robust=None, noise=None, npixels=None,
-                 restoringbeam=None, iter=None, mask=None, hm_masking=None, hm_autotest=None, pblimit=None, niter=None,
-                 threshold=None, sensitivity=None, reffreq=None, result=None, parallel=None,
+                 restoringbeam=None, iter=None, mask=None, hm_masking=None,
+                 hm_sidelobethreshold=None, hm_noisethreshold=None,
+                 hm_lownoisethreshold=None, hm_negativethreshold=None,
+                 hm_minbeamfrac=None, hm_growiterations=None,
+                 pblimit=None, niter=None,
+                 threshold=None, sensitivity=None, reffreq=None, conjbeams=None,
+                 result=None, parallel=None,
                  heuristics=None):
         self._init_properties(vars())
         self.heuristics = heuristics
@@ -53,8 +58,13 @@ class CleanBaseInputs(basetask.StandardInputs):
     intent = basetask.property_with_default('intent', '')
     iter = basetask.property_with_default('iter', 0)
     mask = basetask.property_with_default('mask', '')
-    hm_masking = basetask.property_with_default('hm_masking', 'centralregion')
-    hm_autotest = basetask.property_with_default('hm_autotest', '')
+    hm_masking = basetask.property_with_default('hm_masking', 'auto')
+    hm_sidelobethreshold = basetask.property_with_default('hm_sidelobethreshold', -999.0)
+    hm_noisethreshold = basetask.property_with_default('hm_noisethreshold', -999.0)
+    hm_lownoisethreshold = basetask.property_with_default('hm_lownoisethreshold', -999.0)
+    hm_negativethreshold = basetask.property_with_default('hm_negativethreshold', -999.0)
+    hm_minbeamfrac = basetask.property_with_default('hm_minbeamfrac', -999.0)
+    hm_growiterations = basetask.property_with_default('hm_growiterations', -999)
     niter = basetask.property_with_default('niter', 5000)
     noise = basetask.property_with_default('noise', '1.0Jy')
     nchan = basetask.property_with_default('nchan', -1)
@@ -73,6 +83,7 @@ class CleanBaseInputs(basetask.StandardInputs):
     uvrange = basetask.property_with_default('uvrange', '')
     weighting = basetask.property_with_default('weighting', 'briggs')
     width = basetask.property_with_default('width', '')
+    orig_specmode = basetask.property_with_default('orig_specmode', '')
 
     @property
     def spw(self):
@@ -175,9 +186,10 @@ class CleanBase(basetask.StandardTaskTemplate):
             result = TcleanResult(sourcename=inputs.field,
                                   intent=inputs.intent,
                                   spw=inputs.spw,
+                                  orig_specmode=inputs.orig_specmode,
                                   specmode=inputs.specmode,
                                   multiterm=inputs.nterms if inputs.deconvolver=='mtmfs' else None,
-                                  plotdir=plotdir)
+                                  plotdir=plotdir, imaging_mode=inputs.heuristics.imaging_mode)
         else:
             result = inputs.result
 
@@ -288,22 +300,40 @@ class CleanBase(basetask.StandardTaskTemplate):
         # Set up masking parameters
         if inputs.hm_masking == 'auto':
             tclean_job_parameters['usemask'] = 'auto-multithresh'
-            sidelobethreshold, noisethreshold, lownoisethreshold, minbeamfrac = inputs.heuristics.get_autobox_params()
-            if sidelobethreshold is not None:
+
+            # get heuristics parameters 
+            sidelobethreshold, noisethreshold, lownoisethreshold, negativethreshold, minbeamfrac, growiterations = inputs.heuristics.get_autobox_params(inputs.intent, inputs.specmode)
+
+            # Override individually with manual settings
+            if inputs.hm_sidelobethreshold != -999.0:
+                tclean_job_parameters['sidelobethreshold'] = inputs.hm_sidelobethreshold
+            elif sidelobethreshold is not None:
                 tclean_job_parameters['sidelobethreshold'] = sidelobethreshold
-            if noisethreshold is not None:
+
+            if inputs.hm_noisethreshold != -999.0:
+                tclean_job_parameters['noisethreshold'] = inputs.hm_noisethreshold
+            elif noisethreshold is not None:
                 tclean_job_parameters['noisethreshold'] = noisethreshold
-            if lownoisethreshold is not None:
+
+            if inputs.hm_lownoisethreshold != -999.0:
+                tclean_job_parameters['lownoisethreshold'] = inputs.hm_lownoisethreshold
+            elif lownoisethreshold is not None:
                 tclean_job_parameters['lownoisethreshold'] = lownoisethreshold
-            if minbeamfrac is not None:
+
+            if inputs.hm_negativethreshold != -999.0:
+                tclean_job_parameters['negativethreshold'] = inputs.hm_negativethreshold
+            elif negativethreshold is not None:
+                tclean_job_parameters['negativethreshold'] = negativethreshold
+
+            if inputs.hm_minbeamfrac != -999.0:
+                tclean_job_parameters['minbeamfrac'] = inputs.hm_minbeamfrac
+            elif minbeamfrac is not None:
                 tclean_job_parameters['minbeamfrac'] = minbeamfrac
 
-            # Override with any manual test parameters
-            if inputs.hm_autotest != '':
-                hm_autotest_params = dict((key.strip(), float(value)) for key, value in [kvpair.split(':') for kvpair in inputs.hm_autotest.split(',')])
-                for key in hm_autotest_params.iterkeys():
-                    if key in ['sidelobethreshold', 'noisethreshold', 'lownoisethreshold', 'minbeamfrac']:
-                        tclean_job_parameters[key] = hm_autotest_params[key]
+            if inputs.hm_growiterations != -999:
+                tclean_job_parameters['growiterations'] = inputs.hm_growiterations
+            elif growiterations is not None:
+                tclean_job_parameters['growiterations'] = growiterations
         else:
             if (inputs.hm_masking != 'none') and (inputs.mask != ''):
                 tclean_job_parameters['usemask'] = 'user'
@@ -319,7 +349,7 @@ class CleanBase(basetask.StandardTaskTemplate):
             tclean_job_parameters['pbcor'] = False
         else:
             tclean_job_parameters['restoration'] = True
-            tclean_job_parameters['pbcor'] = True
+            tclean_job_parameters['pbcor'] = inputs.heuristics.pb_correction()
 
         # Re-use products from previous iteration.
         if (iter > 0):
@@ -360,7 +390,7 @@ class CleanBase(basetask.StandardTaskTemplate):
         if inputs.uvtaper:
             tclean_job_parameters['uvtaper'] = inputs.uvtaper
         else:
-            uvtaper = inputs.heuristics.uvtaper()
+            uvtaper = inputs.heuristics.uvtaper(None)
             if uvtaper:
                 tclean_job_parameters['uvtaper'] = uvtaper
 
@@ -370,6 +400,13 @@ class CleanBase(basetask.StandardTaskTemplate):
             reffreq = inputs.heuristics.reffreq()
             if reffreq:
                 tclean_job_parameters['reffreq'] = reffreq
+
+        if inputs.conjbeams is not None:
+            tclean_job_parameters['conjbeams'] = inputs.conjbeams
+        else:
+            conjbeams = inputs.heuristics.conjbeams()
+            if conjbeams is not None:
+                tclean_job_parameters['conjbeams'] = conjbeams
 
         job = casa_tasks.tclean(**tclean_job_parameters)
         tclean_result = self._executor.execute(job)
@@ -393,6 +430,8 @@ class CleanBase(basetask.StandardTaskTemplate):
                 result.error = CleanBaseError('tclean reached niter limit. Field: %s SPW: %s' % (inputs.field, inputs.spw), 'Reached niter limit')
                 LOG.warning('tclean reached niter limit of %d for %s / spw%s !' % (tclean_niter, utils.dequote(inputs.field), inputs.spw))
 
+            result.set_tclean_stopcode(tclean_stopcode)
+
             if (tclean_stopcode == 5):
                 result.error = CleanBaseError('tclean stopped to prevent divergence. Field: %s SPW: %s' % (inputs.field, inputs.spw), 'tclean stopped to prevent divergence.')
                 LOG.warning('tclean stopped to prevent divergence. Field: %s SPW: %s' % (inputs.field, inputs.spw))
@@ -400,45 +439,53 @@ class CleanBase(basetask.StandardTaskTemplate):
         if (iter > 0):
             # Store the model.
             set_miscinfo(name=model_name, spw=inputs.spw, field=inputs.field,
-                         type='model', iter=iter, multiterm=result.multiterm)
+                         type='model', iter=iter, multiterm=result.multiterm,
+                         intent=inputs.intent, specmode=inputs.specmode)
             result.set_model(iter=iter, image=model_name)
 
             # Always set info on the uncorrected image for plotting
             set_miscinfo(name=image_name, spw=inputs.spw, field=inputs.field,
-                         type='image', iter=iter, multiterm=result.multiterm)
+                         type='image', iter=iter, multiterm=result.multiterm,
+                         intent=inputs.intent, specmode=inputs.specmode)
 
             # Store the PB corrected image.
-            if os.path.exists(pbcor_image_name):
+            if os.path.exists('%s' % (pbcor_image_name.replace('.image.pbcor', '.image.tt0.pbcor' if result.multiterm else '.image.pbcor'))):
                 set_miscinfo(name=pbcor_image_name, spw=inputs.spw, field=inputs.field,
-                             type='pbcorimage', iter=iter, multiterm=result.multiterm)
+                             type='pbcorimage', iter=iter, multiterm=result.multiterm,
+                             intent=inputs.intent, specmode=inputs.specmode)
                 result.set_image(iter=iter, image=pbcor_image_name)
             else:
                 result.set_image(iter=iter, image=image_name)
 
         # Store the residual.
         set_miscinfo(name=residual_name, spw=inputs.spw, field=inputs.field,
-                     type='residual', iter=iter, multiterm=result.multiterm)
+                     type='residual', iter=iter, multiterm=result.multiterm,
+                     intent=inputs.intent, specmode=inputs.specmode)
         result.set_residual(iter=iter, image=residual_name)
 
         # Store the PSF.
         set_miscinfo(name=psf_name, spw=inputs.spw, field=inputs.field,
-                     type='psf', iter=iter, multiterm=result.multiterm)
+                     type='psf', iter=iter, multiterm=result.multiterm,
+                     intent=inputs.intent, specmode=inputs.specmode)
         result.set_psf(image=psf_name)
 
         # Store the flux image.
         set_miscinfo(name=flux_name, spw=inputs.spw, field=inputs.field,
-                     type='flux', iter=iter, multiterm=result.multiterm)
+                     type='flux', iter=iter, multiterm=result.multiterm,
+                     intent=inputs.intent, specmode=inputs.specmode)
         result.set_flux(image=flux_name)
 
         # Make sure mask has path name
         if os.path.exists(inputs.mask):
             set_miscinfo(name=inputs.mask, spw=inputs.spw, field=inputs.field,
-                         type='cleanmask', iter=iter)
+                         type='cleanmask', iter=iter,
+                         intent=inputs.intent, specmode=inputs.specmode)
             result.set_cleanmask(iter=iter, image=inputs.mask)
         elif os.path.exists(mask_name):
             # Use mask made by tclean
             set_miscinfo(name=mask_name, spw=inputs.spw, field=inputs.field,
-                         type='cleanmask', iter=iter)
+                         type='cleanmask', iter=iter,
+                         intent=inputs.intent, specmode=inputs.specmode)
             result.set_cleanmask(iter=iter, image=mask_name)
 
         # Keep threshold and sensitivity for QA and weblog
@@ -456,7 +503,7 @@ def rename_image(old_name, new_name, extensions=['']):
             with casatools.ImageReader('%s%s' % (old_name, extension)) as image:
                 image.rename(name=new_name, overwrite=True)
 
-def set_miscinfo(name, spw=None, field=None, type=None, iter=None, multiterm=None):
+def set_miscinfo(name, spw=None, field=None, type=None, iter=None, multiterm=None, intent=None, specmode=None):
     """
     Define miscellaneous image information
     """
@@ -470,16 +517,27 @@ def set_miscinfo(name, spw=None, field=None, type=None, iter=None, multiterm=Non
             imagename = name
         with casatools.ImageReader(imagename) as image:
             info = image.miscinfo()
+            if imagename is not None:
+                filename_components = os.path.basename(imagename).split('.')
+                info['nfilnam'] = len(filename_components)
+                for i in xrange(len(filename_components)):
+                    info['filnam%02d' % (i+1)] = filename_components[i]
             if spw:
                 info['spw'] = spw
             if field:
                 # TODO: Find common key calculation. Long VLASS lists cause trouble downstream.
                 #       Truncated list may cause duplicates.
-                info['field'] = field.split(',')[0]
+                #       Temporarily (?) remove any '"' characters
+                tmpfield = field.split(',')[0].replace('"', '')
+                info['field'] = tmpfield
             if type:
                 info['type'] = type
             if iter is not None:
                 info['iter'] = iter
+            if intent is not None:
+                info['intent'] = intent
+            if specmode is not None:
+                info['specmode'] = specmode
             image.setmiscinfo(info)
 
 

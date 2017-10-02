@@ -6,6 +6,7 @@ import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.pipelineqa as pqa
 import pipeline.infrastructure.utils as utils
 
+from ..exportdata import aqua
 from . import applycal
 
 LOG = logging.get_logger(__name__)
@@ -49,3 +50,7 @@ class ApplycalListQAHandler(pqa.QAResultHandler):
         # own QAscore list
         collated = utils.flatten([r.qa.pool for r in result]) 
         result.qa.pool[:] = collated
+
+
+aqua_exporter = aqua.xml_generator_for_metric('%ApplycalFlags', '{:0.3%}')
+aqua.register_aqua_metric(aqua_exporter)

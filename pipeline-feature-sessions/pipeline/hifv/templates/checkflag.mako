@@ -7,5 +7,5 @@ import pipeline.infrastructure.renderer.htmlrenderer as hr
 
 <%block name="title">RFI Flagging</%block>
 
-<p>Flag possible RFI on bandpass calibrator using rflag.</p>
+<p>Flag possible RFI using rflag and tfcrop; checkflagmode=${result[0].inputs['checkflagmode']}</p>
 

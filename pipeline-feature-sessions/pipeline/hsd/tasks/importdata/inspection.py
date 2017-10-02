@@ -13,7 +13,7 @@ from . import reader
 
 LOG = infrastructure.get_logger(__name__)
 
-class SDMSInspection(object):
+class SDInspection(object):
     def __init__(self, table_name, ms=None):
         self.ms = ms
         self.table_name = table_name
@@ -94,7 +94,7 @@ class SDMSInspection(object):
         time_group_list = grouping_result['TIMEGRP_LIST']
         #datatable.putkeyword('TIMEGAP_S', time_gap[0])
         #datatable.putkeyword('TIMEGAP_L', time_gap[1])
-        for (group_id, member_list) in reduction_group.items():
+        for (group_id, member_list) in reduction_group.iteritems():
             for member in member_list:
                 ms = member.ms
                 ant = member.antenna_id
@@ -254,7 +254,7 @@ class SDMSInspection(object):
         LOG.debug('TIMEGRP: starting ID is %s'%(timegrp_id))
 
         ms = self.ms
-        for (ant,vant) in by_antenna.items():
+        for (ant,vant) in by_antenna.iteritems():
             LOG.debug('Start ant %s'%(ant))
             pattern_dict = {}
             #ms = ms_ant_map[ant]
@@ -264,7 +264,7 @@ class SDMSInspection(object):
                 timegap[i][ant] = {}
             posgrp_list[ant] = {}
             timegrp_list[ant] = {}
-            for (spw,vspw) in by_spw.items():
+            for (spw,vspw) in by_spw.iteritems():
                 LOG.debug('Start spw %s'%(spw))
                 try:
                     spw_domain = ms.get_spectral_window(spw_id=spw)
@@ -280,14 +280,14 @@ class SDMSInspection(object):
                 r_combine = radius
                 r_allowance = qa.mul(radius, 0.1)
                 
-                for (field_id,vfield) in by_field.items():
+                for (field_id,vfield) in by_field.iteritems():
                     pattern_dict[spw][field_id] = None
                     for i in (0,1):
                         timegap[i][ant][spw][field_id] = None
                     posgrp_list[ant][spw][field_id] = []
                     timegrp_list[ant][spw][field_id] = None
                     
-                    #for (pol,vpol) in self.by_pol.items():
+                    #for (pol,vpol) in self.by_pol.iteritems():
                     id_list = numpy.fromiter(vant & vspw & vfield, dtype=numpy.int32)
                     if len(id_list) == 0:
                         continue
@@ -324,7 +324,7 @@ class SDMSInspection(object):
                     #posgrp_list[ant][spw][pol] = []
                     LOG.debug('pos_dict = %s'%(pos_dict))
                     LOG.debug('last_ra = %s last_dec = %s'%(last_ra, last_dec))
-                    for (k,v) in pos_dict.items():
+                    for (k,v) in pos_dict.iteritems():
                         if v[0] == -1:
                             continue
                         LOG.debug('POSGRP_REP: add %s as a representative of group %s'%(id_list[v[0]], posgrp_id))
@@ -474,7 +474,7 @@ class SDMSInspection(object):
     
     def __find_match_by_name(self, spw_name, field_name, group_names):
         match = False
-        for (group_key,names) in group_names.items():
+        for (group_key,names) in group_names.iteritems():
             group_spw_name = names[0]
             group_field_name = names[1]
             if (group_spw_name==''): 
@@ -489,7 +489,7 @@ class SDMSInspection(object):
             raise ValueError, "overlap fraction should be between 0.0 and 1.0"
         LOG.warn("Creating reduction group by frequency overlap. This may not be proper if observation dates extend over long period.")
         match = False
-        for (group_key,group_desc) in reduction_group.items():
+        for (group_key,group_desc) in reduction_group.iteritems():
             group_field_name = group_desc.field
             if field_name is not None and group_field_name != field_name:
                 continue 

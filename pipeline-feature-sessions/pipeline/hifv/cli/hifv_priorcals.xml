@@ -20,7 +20,7 @@
     </param>
 
     <param type="any" name="swpow_spw" subparam="true">
-        <description>Spectral-window/frequency/channel: '' ==&gt; all, spw="0:17~19"</description>
+        <description>Spectral-window(s) for plotting: "" ==>all, spw="6,14"</description>
         <any type="variant" limittypes="string stringArray" />
         <value type="string" />
     </param>
@@ -88,7 +88,7 @@ vis -- List of visisbility  data files. These may be ASDMs, tar files of ASDMs,
    example: vis=['X227.ms', 'asdms.tar.gz']
 
 
-
+swpow_spw -- Spectral-window(s) for plotting: "" ==>all, spw="6,14"
 
 pipelinemode -- The pipeline operating mode. In 'automatic' mode the pipeline
    determines the values of all context defined pipeline inputs

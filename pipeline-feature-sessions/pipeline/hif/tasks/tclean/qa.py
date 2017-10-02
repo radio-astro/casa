@@ -37,17 +37,21 @@ class TcleanQAHandler(pqa.QAResultHandler):
         else:
             qaTool = casac.quanta()
             try:
-                # The threshold applies to peaks in the residual. To compare to the
-                # measured RMS, one needs to translate peak to RMS by about a
-                # factor 4.0.
-                rms_score = imageScorer(result.image_rms / qaTool.convert(result.threshold, 'Jy')['value'] * 4.0)
+                # For the score we compare the image RMS with the DR corrected
+                # sensitivity as an estimate of the expected RMS.
+                rms_score = imageScorer(result.image_rms / result.dr_corrected_sensitivity)
             except Exception as e:
                 LOG.warning('Exception scoring imaging result by RMS: %s. Setting score to -0.1.' % (e))
                 rms_score = -0.1
             if (numpy.isnan(rms_score)):
                 result.qa.pool[:] = [pqa.QAScore(0.0, longmsg='Cleaning diverged, RMS is NaN. Field: %s Intent: %s SPW: %s' % (result.inputs['field'], result.intent, resultspw), shortmsg='RMS is NaN')]
             else:
-                result.qa.pool[:] = [pqa.QAScore(rms_score, longmsg='RMS outside mask vs. threshold. Field: %s Intent: %s SPW: %s' % (result.inputs['field'], result.intent, result.spw), shortmsg='RMS vs. threshold')]
+                if rms_score > 0.66:
+                    result.qa.pool[:] = [pqa.QAScore(rms_score, longmsg='RMS vs. DR corrected sensitivity. Field: %s Intent: %s SPW: %s' % (result.inputs['field'], result.intent, result.spw), shortmsg='RMS vs. sensitivity')]
+                else:
+                    # The level of 2.7 comes from the Erf scorer limits of 1 and 5.
+                    # The level needs to be adjusted if these limits are modified.
+                    result.qa.pool[:] = [pqa.QAScore(rms_score, longmsg='Observed RMS noise exceeds DR corrected sensitivity by more than 2.7. Field: %s Intent: %s SPW: %s' % (result.inputs['field'], result.intent, result.spw), shortmsg='RMS vs. sensitivity')]
 
             # Check source score
             #    Be careful about the source name vs field name issue

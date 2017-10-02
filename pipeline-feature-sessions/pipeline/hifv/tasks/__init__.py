@@ -18,6 +18,7 @@ from .hanning import Hanning
 from .plotsummary import PlotSummary
 from .finalcals import Finalcals
 from .fluxscale import Fluxboot
+from .fluxscale import Fluxboot2
 from .finalcals import Applycals
 from .flagging import Targetflag
 from .tecmaps import TecMaps
@@ -25,3 +26,5 @@ from .statwt import Statwt
 from .restoredata import VLARestoreData
 from .circfeedpolcal import Circfeedpolcal
 from .flagging import Flagcal
+from .pbcor import Pbcor
+from .exportvlassdata import Exportvlassdata

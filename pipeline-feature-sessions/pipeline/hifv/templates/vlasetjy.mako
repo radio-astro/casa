@@ -128,7 +128,8 @@ $(document).ready(function(){
 
 <%self:plot_group plot_dict="${amp_vs_uv_plots}"
 				  url_fn="${lambda ms: 'noop'}"
-				  plot_accessor="${lambda ms_plots: ms_plots.items()}">
+                  break_rows_by='intent'
+                  sort_row_by='baseband,spw'>
 	<%def name="title()">
 		Model amplitude vs UV distance
 	</%def>

@@ -256,6 +256,7 @@ class UVcontFit(basetask.StandardTaskTemplate):
                                for spw_id in source_cranges
                                if source_cranges[spw_id] not in ['', 'NONE']]
                 spwstr = ','.join(spw_cranges)
+                spwstr = spwstr.replace(':ALL', '')
                 if not spwstr:
                     continue
 

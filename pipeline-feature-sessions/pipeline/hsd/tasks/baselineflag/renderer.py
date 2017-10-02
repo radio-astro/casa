@@ -46,13 +46,13 @@ def accumulate_flag_per_source_spw(results):
         before, after = r.outcome['flagdata_summary']
         if not before['name']=='before' or not after['name']=='after':
             raise RuntimeError, "Got unexpected flag summary"
-        for field, fieldflag in after.items():
+        for field, fieldflag in after.iteritems():
             if not isinstance(fieldflag, dict) or not fieldflag.has_key('spw'):
                 continue
             if not accum_flag.has_key(field):
                 accum_flag[field] = {}
             spwflag = fieldflag['spw']
-            for spw, flagval in spwflag.items():
+            for spw, flagval in spwflag.iteritems():
                 if not accum_flag[field].has_key(spw):
                     accum_flag[field][spw] = dict(before=0, additional=0, after=0, total=0)
                 # sum up incremental flags
@@ -65,8 +65,8 @@ def accumulate_flag_per_source_spw(results):
 def make_summary_table(flagdict):
     # will hold all the flag summary table rows for the results
     rows = []
-    for field, flagperspw in flagdict.items():
-        for spw, flagval in flagperspw.items():
+    for field, flagperspw in flagdict.iteritems():
+        for spw, flagval in flagperspw.iteritems():
             frac_before = flagval['before']/flagval['total']
             frac_total = flagval['after']/flagval['total']
             frac_additional = (flagval['after']-flagval['before'])/flagval['total']

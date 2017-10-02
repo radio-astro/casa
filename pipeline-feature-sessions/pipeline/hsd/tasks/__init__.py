@@ -2,12 +2,12 @@ from __future__ import absolute_import
 
 from .importdata import SDImportData
 from .flagging import FlagDeterALMASingleDish
-from .skycal import SDMSSkyCal
+from .skycal import SDSkyCal
 from .k2jycal import SDK2JyCal
-from .applycal import SDMSApplycal
-from .baselineflag import SDMSBLFlag
-from .baseline import SDMSBaseline
-from .imaging import SDMSImaging
-from .exportdata import SDMSExportData
+from .applycal import SDApplycal
+from .baselineflag import SDBLFlag
+from .baseline import SDBaseline
+from .imaging import SDImaging
+from .exportdata import SDExportData
 from .tsysflag import Tsysflag as SDTsysflag
 from .restoredata import SDRestoreData

@@ -1,8 +1,5 @@
 import sys
 
-from taskinit import casalog
-
-#import pipeline.cli.utils as utils
 import pipeline.h.cli.utils as utils
 
 
@@ -13,7 +10,7 @@ def hsd_exportdata(pprfile=None,targetimages=None, products_dir=None,
     # constructor
     all_inputs = vars()
 
-    task_name = 'SDMSExportData'
+    task_name = 'SDExportData'
     
     ##########################################################################
     #                                                                        #

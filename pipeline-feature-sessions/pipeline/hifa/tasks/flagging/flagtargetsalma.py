@@ -65,7 +65,7 @@ class FlagTargetsALMAInputs(basetask.StandardInputs):
             return self._handle_multiple_vis('inpfile')
 
         vis_root = os.path.splitext(self.vis)[0].split('_target')[0]
-        return os.path.join(self.output_dir, vis_root + '_flagtargetscmds.txt')
+        return os.path.join(self.output_dir, vis_root + '.flagtargetscmds.txt')
 
 
     @property
@@ -75,7 +75,7 @@ class FlagTargetsALMAInputs(basetask.StandardInputs):
 
         if not self._filetemplate:
             vis_root = os.path.splitext(self.vis)[0].split('_target')[0]
-            return vis_root + '_flagtargetstemplate.txt'
+            return vis_root + '.flagtargetstemplate.txt'
 
         if type(self._filetemplate) is types.ListType:
             idx = self._my_vislist.index(self.vis)

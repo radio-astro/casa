@@ -4,14 +4,14 @@ Created on 28 Apr 2017
 @author: Vincent Geers (UKATC)
 """
 import collections
-import copy
-import os
+
 
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.renderer.basetemplates as basetemplates
 from pipeline.hif.tasks.correctedampflag.renderer import T2_4MDetailsCorrectedampflagRenderer
 from pipeline.hifa.tasks.bandpass.renderer import T2_4MDetailsBandpassRenderer
 from pipeline.infrastructure import basetask
+from pipeline.hifa.tasks.gfluxscaleflag.renderer import get_plot_dicts
 
 LOG = logging.get_logger(__name__)
 
@@ -38,6 +38,10 @@ class T2_4MDetailsBandpassflagRenderer(basetemplates.T2_4MDetailsDefaultRenderer
 
     def update_mako_context(self, mako_context, pipeline_context, results):
 
+        # Initialize items that are to be exported to the
+        # mako context
+        updated_refants = {}
+
         #
         # Get flagging reports, summaries
         #
@@ -59,71 +63,26 @@ class T2_4MDetailsBandpassflagRenderer(basetemplates.T2_4MDetailsDefaultRenderer
         bpresults.stage_number = results.stage_number
         self.bprenderer.update_mako_context(mako_context, pipeline_context, bpresults)
 
-        plot_dict = {
-            'time_plots': get_plot_dicts(pipeline_context, results, 'time'),
-            'uvdist_plots': get_plot_dicts(pipeline_context, results, 'uvdist')
-        }
-        mako_context.update(plot_dict)
+        #
+        # Get diagnostic plots.
+        #
+        time_plots = get_plot_dicts(pipeline_context, results, 'time')
+        uvdist_plots = get_plot_dicts(pipeline_context, results, 'uvdist')
 
+        #
+        # Check for updated reference antenna lists.
+        #
+        for result in results:
+            vis = result.vis
+            # If the reference antenna list was updated, retrieve new refant
+            # list.
+            if result.refants_to_remove or result.refants_to_demote:
+                ms = pipeline_context.observing_run.get_ms(name=vis)
+                updated_refants[vis] = ms.reference_antenna
 
-def get_plot_dicts(pipeline_context, results, plot_type):
-    """
-    Create the bandpass flagging diagnostic plots for the given x axis.
-
-    :param pipeline_context: pipeline context
-    :param results: results to create plots for
-    :param plot_type: 'time' or 'uvdist'
-    :return:
-    """
-    # plots will be moved to this location
-    plot_dest_dir = os.path.join(pipeline_context.report_dir, 'stage%s' % results.stage_number)
-
-    d = collections.OrderedDict()
-
-    for result in results:
-        vis = os.path.basename(result.inputs['vis'])
-        # ordereddict as apriorical->before->after ordering is important
-        d[vis] = collections.OrderedDict()
-
-        for key in ['apriorical', 'before', 'after']:
-            if key in result.plots:
-                plots = result.plots[key][plot_type]
-                relocated = relocate_plots(plots, plot_dest_dir)
-                # the weblog needs to identify each plot's associated plot type
-                for p in relocated:
-                    p.parameters['type'] = key
-                d[vis][key] = relocated
-
-    return d
-
-
-def relocate_plots(plots, dest_dir):
-    """
-    Relocate a list of plots, returning a list of Plot objects that reflect
-    the new location.
-
-    :param plots: list of Plot objects
-    :param dest_dir: location to move plots to
-    :return: list of Plot objects
-    """
-    # create a copy so that we do not alter the result, which we'd like to
-    # keep in its original state
-    plot_copies = copy.deepcopy(plots)
-
-    if plot_copies and not os.path.exists(dest_dir):
-        os.makedirs(dest_dir)
-
-    # move PNGs to destination directory and modify Plot path to reflect the
-    # new location
-    for plot in plot_copies:
-        src = plot.abspath
-        dst = os.path.join(dest_dir, plot.basename)
-
-        # we always need to modify the plot for rerender=True mode
-        plot.abspath = dst
-
-        # .. but we should only attempt to move the file if it exists
-        if os.path.exists(src):
-            os.rename(src, dst)
-
-    return plot_copies
+        # Update the mako context.
+        mako_context.update({
+            'time_plots': time_plots,
+            'uvdist_plots': uvdist_plots,
+            'updated_refants': updated_refants
+        })

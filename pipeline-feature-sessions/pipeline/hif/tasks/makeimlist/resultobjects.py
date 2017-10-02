@@ -10,13 +10,18 @@ class MakeImListResult(basetask.Results):
     def __init__(self):
         super(MakeImListResult, self).__init__()
         self.targets = []
+        self.clean_list_info = {}
         self._max_num_targets = 0
 
     def add_target(self, target):
         self.targets.append(target)
 
+    def set_info(self, info):
+        self.clean_list_info = info
+
     def merge_with_context(self, context):
         context.clean_list_pending = copy.deepcopy(self.targets)
+        context.clean_list_info = self.clean_list_info
         context.contfile = self.contfile
         context.linesfile = self.linesfile
 

@@ -20,6 +20,7 @@ CasaTaskDict = {
     'h_restoredata': 'RestoreData',
     'h_tsyscal': 'Tsyscal',
     # Interferometry tasks ---------------------------------------------------
+    'hif_makecutoutimages': 'Makecutoutimages',
     'hif_makermsimages': 'Makermsimages',
     'hif_transformimagedata': 'Transformimagedata',
     'hif_editimlist': 'Editimlist',
@@ -48,15 +49,15 @@ CasaTaskDict = {
     'hif_uvcontfit': 'UVcontFit',
     'hif_uvcontsub': 'UVcontSub',
     # Single dish tasks ------------------------------------------------------
-    'hsd_applycal': 'SDMSApplycal',
-    'hsd_baseline': 'SDMSBaseline',
-    'hsd_blflag': 'SDMSBLFlag',
-    'hsd_exportdata': 'SDMSExportData',
+    'hsd_applycal': 'SDApplycal',
+    'hsd_baseline': 'SDBaseline',
+    'hsd_blflag': 'SDBLFlag',
+    'hsd_exportdata': 'SDExportData',
     'hsd_flagdata': 'FlagDeterALMASingleDish',
-    'hsd_imaging': 'SDMSImaging',
+    'hsd_imaging': 'SDImaging',
     'hsd_importdata': 'SDImportData',
     'hsd_k2jycal': 'SDK2JyCal',
-    'hsd_skycal': 'SDMSSkyCal',
+    'hsd_skycal': 'SDSkyCal',
     'hsd_tsysflag': 'SDTsysflag',
     'hsd_restoredata': 'SDRestoreData',
     # ALMA interferometry tasks ---------------------------------------------
@@ -72,6 +73,8 @@ CasaTaskDict = {
     'hifa_fluxdb': 'Fluxdb',
     'hifa_gaincalsnr': 'GaincalSnr',
     'hifa_gfluxscale': 'GcorFluxscale',
+    'hifa_gfluxscaleflag': 'Gfluxscaleflag',
+    'hifa_imageprecheck': 'ImagePreCheck',
     'hifa_linpolcal': 'Linpolcal',
     'hifa_restoredata': 'ALMARestoreData',
     'hifa_spwphaseup': 'SpwPhaseup',
@@ -80,6 +83,8 @@ CasaTaskDict = {
     'hifa_wvrgcal': 'Wvrgcal',
     'hifa_wvrgcalflag': 'Wvrgcalflag',
     # VLA tasks -----------------------------------------------------------------
+    'hifv_exportvlassdata': 'Exportvlassdata',
+    'hifv_pbcor': 'Pbcor',
     'hifv_flagcal': 'Flagcal',
     'hifv_tecmaps': 'TecMaps',
     'hifv_circfeedpolcal': 'Circfeedpolcal',
@@ -95,6 +100,7 @@ CasaTaskDict = {
     'hifv_semiFinalBPdcals': 'semiFinalBPdcals',
     'hifv_solint': 'Solint',
     'hifv_fluxboot': 'Fluxboot',
+    'hifv_fluxboot2': 'Fluxboot2',
     'hifv_finalcals': 'Finalcals',
     'hifv_applycals': 'Applycals',
     'hifv_targetflag': 'Targetflag',
@@ -123,6 +129,8 @@ classToCASATask = {
     hifa_tasks.Fluxdb                 : 'hifa_fluxdb',
     hifa_tasks.GaincalSnr             : 'hifa_gaincalsnr',
     hifa_tasks.GcorFluxscale          : 'hifa_gfluxscale',
+    hifa_tasks.Gfluxscaleflag         : 'hifa_gfluxscaleflag',
+    hifa_tasks.ImagePreCheck          : 'hifa_imageprecheck',
     hifa_tasks.Linpolcal              : 'hifa_linpolcal',
     hifa_tasks.ALMARestoreData        : 'hifa_restoredata',
     hifa_tasks.SpwPhaseup             : 'hifa_spwphaseup',
@@ -142,6 +150,7 @@ classToCASATask = {
     hif_tasks.FindCont                : 'hif_findcont',
     hif_tasks.Flagcorrected           : 'hif_flagcorrected',
     hif_tasks.Linfeedpolcal           : 'hif_linfeedpolcal',
+    hif_tasks.Makecutoutimages        : 'hif_makecutoutimages',
     hif_tasks.Makermsimages           : 'hif_makermsimages',
     hif_tasks.Rawflagchans            : 'hif_rawflagchans',
     hif_tasks.Fluxcal                 : 'hif_fluxcal',
@@ -161,19 +170,21 @@ classToCASATask = {
     hif_tasks.UVcontFit               : 'hif_uvcontfit',
     hif_tasks.UVcontSub               : 'hif_uvcontsub',
     # Single dish tasks ------------------------------------------------------
-    hsd_tasks.SDMSApplycal            : 'hsd_applycal',
-    hsd_tasks.SDMSBaseline            : 'hsd_baseline',
-    hsd_tasks.SDMSBLFlag              : 'hsd_blflag',
-    hsd_tasks.SDMSExportData          : 'hsd_exportdata',
+    hsd_tasks.SDApplycal            : 'hsd_applycal',
+    hsd_tasks.SDBaseline            : 'hsd_baseline',
+    hsd_tasks.SDBLFlag              : 'hsd_blflag',
+    hsd_tasks.SDExportData          : 'hsd_exportdata',
     hsd_tasks.FlagDeterALMASingleDish : 'hsd_flagdata',
-    hsd_tasks.SDMSImaging             : 'hsd_imaging',
+    hsd_tasks.SDImaging             : 'hsd_imaging',
     hsd_tasks.SDImportData            : 'hsd_importdata',
     hsd_tasks.SDK2JyCal               : 'hsd_k2jycal',
-    hsd_tasks.SDMSSkyCal              : 'hsd_skycal',
+    hsd_tasks.SDSkyCal              : 'hsd_skycal',
     hsd_tasks.SDTsysflag              : 'hsd_tsysflag',
     hsd_tasks.SDRestoreData       : 'hsd_restoredata',
     # VLA tasks ----------------------------------------------------------------
+    hifv_tasks.Exportvlassdata         : 'hifv_exportvlassdata',
     hifv_tasks.Flagcal                : 'hifv_flagcal',
+    hifv_tasks.Pbcor                  : 'hifv_pbcor',
     hifv_tasks.TecMaps                : 'hifv_tecmaps',
     hifv_tasks.Circfeedpolcal         : 'hifv_circfeedpolcal',
     hifv_tasks.VLAImportData          : 'hifv_importdata',
@@ -187,7 +198,8 @@ classToCASATask = {
     hifv_tasks.Checkflag              : 'hifv_checkflag',
     hifv_tasks.semiFinalBPdcals       : 'hifv_semiFinalBPdcals',
     hifv_tasks.Solint                 : 'hifv_solint',
-    hifv_tasks.Fluxboot               : 'hifv_fluxboot', 
+    hifv_tasks.Fluxboot               : 'hifv_fluxboot',
+    hifv_tasks.Fluxboot2              : 'hifv_fluxboot2',
     hifv_tasks.Finalcals              : 'hifv_finalcals',
     hifv_tasks.Applycals              : 'hifv_applycals',
     hifv_tasks.Targetflag             : 'hifv_targetflag',
@@ -223,7 +235,7 @@ CASA_COMMANDS_PROLOGUE = (
 
 TASK_COMMENTS = {
     (h_tasks.ImportData,
-     hifa_tasks.ALMAImportData, 
+     hifa_tasks.ALMAImportData,
      hifv_tasks.VLAImportData,
      hsd_tasks.SDImportData,): (
         'If required, ASDMs are converted to measurement sets.'
@@ -239,11 +251,15 @@ TASK_COMMENTS = {
         'calibrator before the bandpass is calculated.'
     ),
     (hifa_tasks.ALMABandpassflag,): (
-        'The spectral response of each antenna is calibrated. A short-solint '
-        'phase gain is calculated to remove decorrelation of the bandpass '
-        'calibrator before the bandpass is calculated. Outliers are flagged '
-        'based on a comparison of the calibrated (corrected) amplitudes with '
-        'the model amplitudes for the bandpass calibrator source.'
+        'This task performs a preliminary bandpass solution and applies it, '
+        'then calls hif_correctedampflag to evaluate the flagging heuristics, '
+        'looking for outlier visibility points by statistically examining '
+        'the scalar difference of the corrected amplitudes minus model '
+        'amplitudes, flagging those outliers, and then deriving a final '
+        'bandpass solution (if any flags were generated). The philosophy is '
+        'that only outlier data points that have remained outliers after '
+        'calibration will be flagged. Note that the phase of the data is not '
+        'assessed.'
     ),
     (hifa_tasks.BpSolint,): (
         'Compute the best per spw bandpass solution intervals.'
@@ -297,10 +313,10 @@ TASK_COMMENTS = {
         'solution.'
     ),
     (hif_tasks.Correctedampflag,): (
-        'This task identifies baselines and antennas with a significant '
-        'fraction of outlier integrations, based on a comparison of the '
-        'calibrated (corrected) amplitudes with the model amplitudes for one '
-        'or more specified calibrator sources.'
+        'This task identifies, for one or more specified calibrator source '
+        'intents, baselines and antennas with a significant fraction of '
+        'outlier integrations, by statistically examining the scalar '
+        'difference of the corrected amplitudes minus model amplitudes.'
     ),
     (hif_tasks.Setjy,): (
         'If the amplitude calibrator is a resolved solar system source, this '
@@ -321,10 +337,17 @@ TASK_COMMENTS = {
         'The absolute flux calibration is transferred to secondary calibrator '
         'sources.'
     ),
+    (hifa_tasks.Gfluxscaleflag,): (
+        'This task calls hif_correctedampflag to evaluate flagging heuristics '
+        'on the phase calibrator and flux calibrator, looking for outlier '
+        'visibility points by statistically examining the scalar difference '
+        'of corrected amplitudes minus model amplitudes, and flagging those '
+        'outliers.'
+    ),
     (hifa_tasks.TimeGaincal,): (
         'Time dependent gain calibrations are computed. '
     ),
-    (h_tasks.Applycal, hif_tasks.IFApplycal, hsd_tasks.SDMSApplycal): (
+    (h_tasks.Applycal, hif_tasks.IFApplycal, hsd_tasks.SDApplycal): (
         'Calibrations are applied to the data. Final flagging summaries '
         'are computed'
     ),
@@ -343,27 +366,27 @@ TASK_COMMENTS = {
     ),
     (h_tasks.ExportData,
      hifa_tasks.ALMAExportData,
-     hsd_tasks.SDMSExportData): (
+     hsd_tasks.SDExportData): (
         'The output data products are computed. '
     ),
     # Single Dish Tasks
-    (hsd_tasks.SDMSSkyCal,): (
+    (hsd_tasks.SDSkyCal,): (
         'Generates sky calibration table according to calibration '
         'strategy. '
     ),
-    (hsd_tasks.SDMSBaseline,): (
+    (hsd_tasks.SDBaseline,): (
         'Subtracts spectral baseline by least-square fitting with '
         'N-sigma clipping. Spectral lines are automatically detected '
         'and examined to determine the region that is masked to protect '
         'these features from the fit. \n'
         '' + SILENT_TASK_COMMENT
     ),
-    (hsd_tasks.SDMSBLFlag,): (
+    (hsd_tasks.SDBLFlag,): (
         'Perform row-based flagging based on noise level and quality of '
         'spectral baseline subtraction. \n'
         '' + SILENT_TASK_COMMENT
     ),
-    (hsd_tasks.SDMSImaging,): (
+    (hsd_tasks.SDImaging,): (
         'Perform single dish imaging.'
     ),
     (hsd_tasks.SDK2JyCal,): (

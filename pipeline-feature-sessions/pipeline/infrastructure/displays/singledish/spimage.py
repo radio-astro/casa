@@ -22,7 +22,7 @@ class SDSpectralImageDisplay(SDImageDisplay):
         pl.figure(self.MATPLOTLIB_FIGURE_ID)
         if ShowPlot: pl.ioff()
         
-        self.init()
+#         self.init()
         
         plot_list = []
         t0 = time.time()

@@ -6,6 +6,7 @@ import pipeline.infrastructure.filenamer as filenamer
 import pipeline.infrastructure.displays.singledish as displays
 
 from ..common import renderer as sdsharedrenderer
+from ..common import compress
 
 LOG = logging.get_logger(__name__)
 
@@ -33,13 +34,13 @@ class T2_4MDetailsSingleDishBaselineRenderer(basetemplates.T2_4MDetailsDefaultRe
         plot_cover = {} # key is field name, subkeys are 'title', 'cover_plots'
         # Render stage details pages
         details_title = ["R.A. vs Dec."]
-        for (name, _plots) in plot_group.items():
+        for (name, _plots) in plot_group.iteritems():
             perfield_plots = self._plots_per_field(_plots)
             if name in details_title:
                 renderer = SingleDishClusterPlotsRenderer(context, results, name, _plots)
                 with renderer.get_file() as fileobj:
                     fileobj.write(renderer.render())
-                for (field, pfplots) in perfield_plots.items():
+                for (field, pfplots) in perfield_plots.iteritems():
                     group_desc = {'title': name}
                     group_desc['html'] = os.path.basename(renderer.path)
                     if not plot_detail.has_key(field):
@@ -47,7 +48,7 @@ class T2_4MDetailsSingleDishBaselineRenderer(basetemplates.T2_4MDetailsDefaultRe
                     group_desc['cover_plots'] = self._get_a_plot_per_spw(pfplots)
                     plot_detail[field].append(group_desc)
             else:
-                for (field, pfplots) in perfield_plots.items():
+                for (field, pfplots) in perfield_plots.iteritems():
                     group_desc = {'title': name}
                     group_desc['html'] = os.path.basename(renderer.path)
                     if not plot_cover.has_key(field):
@@ -65,7 +66,11 @@ class T2_4MDetailsSingleDishBaselineRenderer(basetemplates.T2_4MDetailsDefaultRe
             plot_list = self._plots_per_field_with_type(sparsemap_plots, maptype)
             summary = self._summary_plots(plot_list)
             subpage = {}
-            flattened = [plot for inner in plot_list.values() for plot in inner]
+            #flattened = [plot for inner in plot_list.values() for plot in inner]
+            flattened = compress.CompressedList()
+            for inner in plot_list.values():
+                for plot in inner:
+                    flattened.append(plot)
             plot_title = 'Sparse Profile Map %s Baseline Subtraction'%(maptype.lower())
             renderer = basetemplates.JsonPlotRenderer('generic_x_vs_y_ant_field_spw_pol_plots.mako',
                                                       context,
@@ -76,7 +81,7 @@ class T2_4MDetailsSingleDishBaselineRenderer(basetemplates.T2_4MDetailsDefaultRe
             with renderer.get_file() as fileobj:
                     fileobj.write(renderer.render())
             
-            for (name, _plots) in plot_list.items():
+            for name in plot_list:
                 subpage[name] = os.path.basename(renderer.path)
             ctx.update({'sparsemap_subpage_%s'%(maptype.lower()): subpage,
                         'sparsemap_%s'%(maptype.lower()): summary})
@@ -110,25 +115,35 @@ class T2_4MDetailsSingleDishBaselineRenderer(basetemplates.T2_4MDetailsDefaultRe
     
     def _plots_per_field_with_type(self, plots, type_string):
         plot_group = {}
-        for p in plots:
+        for x in plots:
+            if isinstance(x, compress.CompressedObj):
+                p = x.decompress()
+            else:
+                p = x
             if p.parameters['type'].find(type_string) != -1:
                 key = p.field
                 if plot_group.has_key(key):
-                    plot_group[key].append(p)
+                    plot_group[key].append(x)
                 else:
-                    plot_group[key] = [p]
+                    plot_group[key] = [x]
+            del p
         return plot_group
 
     def _summary_plots(self, plot_group):
         summary_plots = {}
-        for (field_name, plots) in plot_group.items():
+        for (field_name, plots) in plot_group.iteritems():
             spw_list = []
-            summary_plots[field_name]= []
-            for plot in plots:
+            summary_plots[field_name]= compress.CompressedList()
+            for xplot in plots:
+                if isinstance(xplot, compress.CompressedObj):
+                    plot = xplot.decompress()
+                else:
+                    plot = xplot
                 spw = plot.parameters['spw']
                 if spw not in spw_list:
                     spw_list.append(spw)
-                    summary_plots[field_name].append(plot)
+                    summary_plots[field_name].append(xplot)
+                del plot
         return summary_plots
     
 class SingleDishClusterPlotsRenderer(basetemplates.JsonPlotRenderer):

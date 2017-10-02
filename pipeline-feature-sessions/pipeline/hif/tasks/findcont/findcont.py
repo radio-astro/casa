@@ -52,6 +52,12 @@ class FindCont(basetask.StandardTaskTemplate):
         inputs = self.inputs
         context = self.inputs.context
 
+        # Check for size mitigation errors.
+        if inputs.context.size_mitigation_parameters.has_key('status'):
+            if inputs.context.size_mitigation_parameters['status'] == 'ERROR':
+                LOG.error('Size mitigation had failed. Can not run continuum finding.')
+                return FindContResult({}, [], 0, 0)
+
         qaTool = casatools.quanta
 
         # make sure inputs.vis is a list, even it is one that contains a
@@ -106,7 +112,7 @@ class FindCont(basetask.StandardTaskTemplate):
                     # To avoid noisy edge channels, use only the LSRK frequency
                     # intersection and skip one channel on either end.
                     # Use only the current spw ID here !
-                    if0, if1, channel_width = image_heuristics.lsrk_freq_intersection(inputs.vis, target['field'], spwid)
+                    if0, if1, channel_width = image_heuristics.lsrk_freq_intersection(vislist, target['field'], spwid)
                     if (if0 == -1) or (if1 == -1):
                         LOG.error('No LSRK frequency intersect among selected MSs for Field %s SPW %s' % (target['field'], spwid))
                         cont_ranges['fields'][source_name][spwid] = ['NONE']
@@ -188,7 +194,7 @@ class FindCont(basetask.StandardTaskTemplate):
                     self._executor.execute(job)
 
                     # Try detecting continuum frequency ranges
-                    singleContinuum = any(['Single_Continuum' in context.observing_run.measurement_sets[0].get_spectral_window(spwid).transitions])
+                    singleContinuum = any(['Single_Continuum' in transition for transition in context.observing_run.measurement_sets[0].get_spectral_window(spwid).transitions])
                     cont_ranges['fields'][source_name][spwid], png = findcont_heuristics.find_continuum('%s.residual' % (findcont_basename), singleContinuum=singleContinuum)
 
                     source_continuum_ranges[spwid] = {

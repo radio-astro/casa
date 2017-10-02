@@ -1,7 +1,5 @@
 import sys
 
-from taskinit import casalog
-
 import pipeline.h.cli.utils as utils
 
 
@@ -13,7 +11,7 @@ def hsd_applycal(vis=None, field=None, intent=None, spw=None, antenna=None,
     # constructor
     all_inputs = vars()
 
-    task_name = 'SDMSApplycal'
+    task_name = 'SDApplycal'
 
     ##########################################################################
     #                                                                        #

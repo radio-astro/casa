@@ -87,8 +87,7 @@ $(document).ready(function() {
 	    <tr>
 	        <th scope="col" rowspan="2">Source</th>
 	        <th scope="col" rowspan="2">Band</th>
-		<th scope="col" rowspan="2">Fitted Spectral Index</th>
-		<th scope="col" rowspan="2">SNR</th>
+		    <th scope="col" rowspan="2">Fitted Spectral Index</th>
 	    </tr>
 
 	</thead>
@@ -98,10 +97,10 @@ $(document).ready(function() {
     
 
 		<tr>
-		        <td>${row['source']}</td>
+		    <td>${row['source']}</td>
 			<td>${row['band']}</td>
-			<td>${row['spix']}</td>
-			<td>${row['SNR']}</td>
+			<td>${'{0:.4f}'.format(float(row['spix']))}+/- ${'{0:.4f}'.format(float(row['spixerr']))}</td>
+
 		</tr>
 
     % endfor
@@ -131,10 +130,10 @@ $(document).ready(function() {
                 % for row in sorted(weblog_results[ms][sourcekey], key=lambda p: float(p['freq'])):
 
 		        <td>${row['freq']}</td>
-			    <td>${row['data']}</td>
-			    <td>${row['error']}</td>
-			    <td>${row['fitteddata']}</td>
-			    <td>${float(row['data']) - float(row['fitteddata'])}</td>
+			    <td>${'{0:.4f}'.format(float(row['data']))}</td>
+			    <td>${'{0:.6f}'.format(float(row['error']))}</td>
+			    <td>${'{0:.4f}'.format(float(row['fitteddata']))}</td>
+			    <td>${'{0:.6f}'.format(float(row['data']) - float(row['fitteddata']))}</td>
 		</tr>
                 % endfor
     % endfor

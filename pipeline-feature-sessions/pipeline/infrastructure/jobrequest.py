@@ -1,6 +1,9 @@
 from __future__ import absolute_import
 import copy
+import collections
+import itertools
 import os
+import operator
 import sys
 import types
 
@@ -21,12 +24,16 @@ import gaincal_pg
 import gencal_cli
 import hanningsmooth_cli
 import imdev_cli
+import imhead_cli
 import immath_cli
 import immoments_cli
 import imregrid_pg
 import impbcor_pg
 import importasdm_cli
 import importevla_cli
+import imstat_cli
+import imsubimage_cli
+import initweights_cli
 import listobs_cli
 import mstransform_cli
 import partition_cli
@@ -38,13 +45,13 @@ import plotweather_cli
 import polcal_cli
 import setjy_pg
 import split_cli
-#import split2_cli
+# import split2_cli
 import statwt_cli
 import tclean_pg
 import wvrgcal_cli
 import visstat_cli
 import sdbaseline_cli
-#import sdbaseline_pg
+# import sdbaseline_pg
 import sdcal_cli
 import sdimaging_cli
 
@@ -99,6 +106,14 @@ class JobRequest(object):
                         '%s' % utils.commafy(unexpected_kw, quotes=False))
             map(lambda key: kw.pop(key), unexpected_kw)
 
+        defaulted = {a: argdefs[a] for a in argnames[len(args):] if a not in kw and a is not 'self'}
+        positional = {k: v for k,v in zip(argnames, args)}
+
+        if True:
+            kw = self._alphasort_dict(kw)
+            positional = self._alphasort_dict(positional)
+            defaulted = self._alphasort_dict(defaulted)
+
         self.args = args
         self.kw = kw
 
@@ -106,12 +121,42 @@ class JobRequest(object):
             arg, val = arg_val
             return '%s=%r' % (arg, val)
 
-        self._positional = map(format_arg_value, zip(argnames, args))
-        self._defaulted = [format_arg_value((a, argdefs[a]))
-                           for a in argnames[len(args):]
-                           if a not in kw and a is not 'self']
         self._nameless = map(repr, args[argcount:])
-        self._keyword = map(format_arg_value, kw.items())
+        self._positional = map(format_arg_value, positional.iteritems())
+        self._defaulted = map(format_arg_value, defaulted.iteritems())
+        self._keyword = map(format_arg_value, kw.iteritems())
+
+    def _alphasort_dict(self, unsorted):
+        d = collections.OrderedDict()
+
+        m = {
+            'asis': ' ',
+            'spw': ',',
+            'field': ',',
+            'intent': ','
+        }
+
+        for k, v in sorted(unsorted.items()):
+            if k == 'inpfile' and type(v) == list:
+                # get the indices of commands that are not summaries.
+                apply_cmd_idxs = [idx for idx, val in enumerate(v) if "mode='summary'" not in val]
+
+                # group the indices into consecutive ranges, i.e., between
+                # summaries. Commands within these ranges can be sorted.
+                for _, g in itertools.groupby(enumerate(apply_cmd_idxs), lambda (i, x): i - x):
+                    idxs = map(operator.itemgetter(1), g)
+                    start_idx = idxs[0]
+                    end_idx = idxs[-1] + 1
+                    # print('Sorting indices {!s}:{!s}'.format(start_idx, end_idx))
+                    v[start_idx:end_idx] = sorted(v[start_idx:end_idx], key=utils.natural_sort)
+
+            for attr_name, separator in m.iteritems():
+                if k == attr_name and type(v) == str and separator in v:
+                    v = separator.join(sorted(v.split(separator)))
+
+            d[k] = v
+
+        return d
 
     def execute(self, dry_run=False, verbose=False):
         """
@@ -336,6 +381,9 @@ class CASATaskJobGenerator(object):
     def imdev(self, *v, **k):
         return self._get_job(imdev_cli.imdev_cli, *v, **k)
 
+    def imhead(self, *v, **k):
+        return self._get_job(imhead_cli.imhead_cli, *v, **k)
+
     def immath(self, *v, **k):
         return self._get_job(immath_cli.immath_cli, *v, **k)
 
@@ -353,6 +401,15 @@ class CASATaskJobGenerator(object):
 
     def importevla(self, *v, **k):
         return self._get_job(importevla_cli.importevla_cli, *v, **k)
+
+    def imstat(self, *v, **k):
+        return self._get_job(imstat_cli.imstat_cli, *v, **k)
+
+    def imsubimage(self, *v, **k):
+        return self._get_job(imsubimage_cli.imsubimage_cli, *v, **k)
+
+    def initweights(self, *v, **k):
+        return self._get_job(initweights_cli.initweights_cli, *v, **k)
 
     def listobs(self, *v, **k):
         return self._get_job(listobs_cli.listobs_cli, *v, **k)
@@ -387,7 +444,7 @@ class CASATaskJobGenerator(object):
     def split(self, *v, **k):
         return self._get_job(split_cli.split_cli, *v, **k)
 
-    #def split2(self, *v, **k):
+    # def split2(self, *v, **k):
     #    return self._get_job(split2_cli.split2_cli, *v, **k)
 
     def statwt(self, *v, **k):
@@ -409,13 +466,13 @@ class CASATaskJobGenerator(object):
 
     def sdimaging(self, *v, **k):
         return self._get_job(sdimaging_cli.sdimaging_cli, *v, **k)
-    
+
     def sdcal(self, *v, **k):
         return self._get_job(sdcal_cli.sdcal_cli, *v, **k)
-    
+
     def sdbaseline(self, *v, **k):
         return self._get_job(sdbaseline_cli.sdbaseline_cli, *v, **k)
-        #return self._get_job(sdbaseline_pg.sdbaseline_pg, *v, **k)
+        # return self._get_job(sdbaseline_pg.sdbaseline_pg, *v, **k)
 
     def _get_job(self, task, *v, **k):
         job = JobRequest(task, *v, **k)
@@ -424,3 +481,44 @@ class CASATaskJobGenerator(object):
 
 
 casa_tasks = CASATaskJobGenerator()
+
+
+
+# v = ["spw='10:0~2;123~127' reason='edges'",
+#      "spw='8:0~2;123~127' reason='edges'",
+#      "mode='summary' name='before'",
+#      "spw='10:0~2;123~127' reason='edges'",
+#      "spw='8:0~2;123~127' reason='edges'",
+#      "spw='12:0~5;122~127' reason='edges'",
+#      "spw='12:0~5;122~127' reason='edges'",
+#      "spw='10:0~6;122~127' reason='edges'",
+#      "spw='10:0~2;123~127' reason='edges'",
+#      "spw='14:0~3;121~127' reason='edges'",
+#      "spw='12:0~5;122~127' reason='edges'",
+#      "spw='14:0~3;122~127' reason='edges'",
+#      "spw='14:0~3;122~127' reason='edges'",
+#      "spw='8:0~3;122~127' reason='edges'",
+#      "spw='8:0~3;123~127' reason='edges'",
+#      "mode='summary' name='after'",
+#      "spw='14:0~3;121~127' reason='edges'",
+#      "spw='12:0~5;122~127' reason='edges'",
+#      "spw='14:0~3;122~127' reason='edges'",
+#      "spw='14:0~3;122~127' reason='edges'",
+#      "spw='8:0~3;122~127' reason='edges'",
+#      "spw='8:0~3;123~127' reason='edges'",
+#      "mode='summary' name='after'",
+#      ]
+#
+# # get the indices of commands that are not summaries.
+# apply_cmd_idxs = [idx for idx, val in enumerate(v) if "mode='summary'" not in val]
+#
+# # group the indices into consecutive ranges, i.e., between
+# # summaries. Commands within these ranges can be sorted.
+# for _, g in itertools.groupby(enumerate(apply_cmd_idxs), lambda (i, x): i - x):
+#     idxs = map(operator.itemgetter(1), g)
+#     start_idx = idxs[0]
+#     end_idx = idxs[-1] + 1
+#     print('Sorting indices {!s}:{!s}'.format(start_idx, end_idx))
+#     v[start_idx:end_idx] = sorted(v[start_idx:end_idx], key=pipeline.infrastructure.utils.natural_sort)
+#
+# print('\n'.join(v))

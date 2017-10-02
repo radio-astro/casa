@@ -20,13 +20,14 @@ class ManualMaskThresholdSequence(BaseCleanSequence):
         self.gridder = gridder
         self.threshold = threshold
         self.sensitivity = sensitivity
+        self.dr_corrected_sensitivity = sensitivity
         self.channel_rms_factor = channel_rms_factor
         self.niter = niter
         self.iter = None
         self.result = BoxResult()
         self.sidelobe_ratio = -1
 
-    def iteration(self, new_cleanmask, pblimit_image=-1, pblimit_cleanmask=-1, spw=None, frequency_selection=None):
+    def iteration(self, new_cleanmask, pblimit_image=-1, pblimit_cleanmask=-1, spw=None, frequency_selection=None, keep_iterating=None):
 
         if self.iter is None:
             raise Exception, 'no data for iteration'

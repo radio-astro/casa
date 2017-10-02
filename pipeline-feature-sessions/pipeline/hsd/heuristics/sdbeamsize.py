@@ -35,7 +35,7 @@ class AntennaDiameter(api.Heuristic):
         name: antenna name
         """
         d = None
-        for (key,item) in ANTENNA_LIST.items():
+        for (key,item) in ANTENNA_LIST.iteritems():
             if re.match(key, name) is not None:
                 #print 'matched %s'%(key)
                 d = item

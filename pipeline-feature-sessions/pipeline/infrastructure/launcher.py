@@ -115,6 +115,8 @@ class Context(object):
         self.callibrary = callibrary.CalLibrary(self)
         self.calimlist = imagelibrary.ImageLibrary()
         self.sciimlist = imagelibrary.ImageLibrary()
+        self.rmsimlist = imagelibrary.ImageLibrary()
+        self.subimlist = imagelibrary.ImageLibrary()
 
         self.project_summary = project.ProjectSummary()
         self.project_structure = project.ProjectStructure()
@@ -129,6 +131,10 @@ class Context(object):
         self.contfile = None
         self.linesfile = None
         self.size_mitigation_parameters = {}
+        self.imaging_parameters = {}
+        self.clean_list_pending = []
+        self.clean_list_info = {}
+        self.sensitivities = []
 
         LOG.trace('Creating report directory \'%s\'' % self.report_dir)
         utils.mkdir_p(self.report_dir)

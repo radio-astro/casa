@@ -21,64 +21,70 @@ LOG = infrastructure.get_logger(__name__)
 
 class ImageParamsHeuristicsALMA(ImageParamsHeuristics):
 
-    def __init__(self, vislist, spw, observing_run, imagename_prefix='', science_goals=None, contfile=None, linesfile=None):
-        ImageParamsHeuristics.__init__(self, vislist, spw, observing_run, imagename_prefix, science_goals, contfile, linesfile)
+    def __init__(self, vislist, spw, observing_run, imagename_prefix='', proj_params=None, contfile=None, linesfile=None):
+        ImageParamsHeuristics.__init__(self, vislist, spw, observing_run, imagename_prefix, proj_params, contfile, linesfile)
         self.imaging_mode = 'ALMA'
 
-    def robust(self, spw):
+    def robust(self, beam):
 
-        '''Adjustment of robust parameter based on desired resolutions.'''
+        '''Adjustment of robust parameter based on desired resolutions.
+           beam is the synthesized beam.'''
 
-        return 0.5
-
-        # Check if there is a non-zero min/max angular resolution
         cqa = casatools.quanta
-        minAcceptableAngResolution = cqa.convert(self.science_goals.min_angular_resolution, 'rad')['value']
-        maxAcceptableAngResolution = cqa.convert(self.science_goals.max_angular_resolution, 'rad')['value']
-        if (minAcceptableAngResolution == 0.0) or (maxAcceptableAngResolution == 0.0):
-            desired_angular_resolution = cqa.convert(self.science_goals.desired_angular_resolution, 'rad')['value']
-            if (desired_angular_resolution != 0.0):
-                minAcceptableAngResolution = 0.8 * desired_angular_resolution
-                maxAcceptableAngResolution = 1.2 * desired_angular_resolution
-            else:
-                science_goals = self.observing_run.get_measurement_sets()[0].science_goals
-                minAcceptableAngResolution = cqa.convert(science_goals['minAcceptableAngResolution'], 'rad')['value']
-                maxAcceptableAngResolution = cqa.convert(science_goals['maxAcceptableAngResolution'], 'rad')['value']
-                if (minAcceptableAngResolution == 0.0) or (maxAcceptableAngResolution == 0.0):
-                    LOG.info('No value for desired angular resolution. Setting "robust" parameter to 0.5.')
-                    return 0.5
 
-        # Get maximum baseline length in metres
-        bmax = 0.0
-        for ms in self.observing_run.get_measurement_sets():
-            if (ms.antenna_array.max_baseline.length.to_units(measures.DistanceUnits.METRE) > bmax):
-                bmax = float(ms.antenna_array.max_baseline.length.to_units(measures.DistanceUnits.METRE))
+        repr_target, repr_source, repr_spw, reprBW_mode, real_repr_target, minAcceptableAngResolution, maxAcceptableAngResolution = self.representative_target()
 
-        if (bmax == 0.0):
-            LOG.warning('Bmax is zero. Setting "robust" parameter to 0.5.')
+        # Only apply the robust heuristic if a representative source is defined
+        if not real_repr_target:
+            LOG.info('ALMA robust heuristics: No representative target found. Using robust=0.5')
             return 0.5
 
-        # Get spw center wavelength
+        try:
+            native_resolution = math.sqrt(cqa.getvalue(cqa.convert(beam['major'], 'arcsec')) * cqa.getvalue(cqa.convert(beam['minor'], 'arcsec')))
+        except Exception as e:
+            LOG.error('Cannot calculate native resolution: %s. Using robust=0.5' % (e))
+            return 0.5
 
-        # get the spw from the first vis set, assume all others the same for now
-        ms = self.observing_run.get_ms(name=self.vislist[0])
-        spw = ms.get_spectral_window(spw)
-
-        centre_frequency = float(spw.centre_frequency.to_units(measures.FrequencyUnits.HERTZ))
-        centre_lambda = cqa.constants('c')['value'] / centre_frequency
-
-        # Smallest spatial scale
-        # TODO: Use actual beam sizes from CASA ?
-        native_resolution = 1.2 * centre_lambda / bmax
-
-        if (native_resolution > maxAcceptableAngResolution):
+        if native_resolution > cqa.getvalue(cqa.convert(maxAcceptableAngResolution, 'arcsec')):
             robust = -0.5
-        elif (native_resolution < minAcceptableAngResolution):
-            robust = 1.0
+        elif native_resolution < cqa.getvalue(cqa.convert(minAcceptableAngResolution, 'arcsec')):
+            robust = 2.0
         else:
             robust = 0.5
 
         return robust
+
+    def uvtaper(self, beam_natural):
+
+        '''Adjustment of uvtaper parameter based on desired resolution.'''
+
+        if (beam_natural is None):
+            return []
+
+        cqa = casatools.quanta
+
+        repr_target, repr_source, repr_spw, reprBW_mode, real_repr_target, minAcceptableAngResolution, maxAcceptableAngResolution = self.representative_target()
+
+        if not real_repr_target:
+            LOG.info('ALMA uvtaper heuristics: No representative target found. Using uvtaper=[]')
+            return []
+
+        try:
+            beam_natural_v = math.sqrt(cqa.getvalue(cqa.convert(beam_natural['major'], 'arcsec')) * cqa.getvalue(cqa.convert(beam_natural['minor'], 'arcsec')))
+        except Exception as e:
+            LOG.error('Cannot get natural beam size: %s. Using uvtaper=[]' % (e))
+            return []
+
+        minAR_v = cqa.getvalue(cqa.convert(minAcceptableAngResolution, 'arcsec'))
+        maxAR_v = cqa.getvalue(cqa.convert(maxAcceptableAngResolution, 'arcsec'))
+
+        if beam_natural_v < 1.1 * maxAR_v:
+            beam_taper = math.sqrt(maxAR_v ** 2 - beam_natural_v ** 2)
+            uvtaper = ['%.3garcsec' % (beam_taper)]
+        else:
+            uvtaper = []
+
+        return uvtaper
 
     def dr_correction(self, threshold, dirty_dynamic_range, residual_max, intent, tlimit):
 
@@ -132,13 +138,23 @@ class ImageParamsHeuristicsALMA(ImageParamsHeuristics):
             # and some maximum expected dynamic range (EDR) values.
             if (diameter == 12.0):
                 maxCalEDR = 1000.0
+                veryHighCalEDR = 3000.0  # use shallower slope above this value
+                LOG.info('DR heuristic: Applying maxCalEDR=%s, veryHighCalEDR=%s' % (maxCalEDR, veryHighCalEDR))
+                matchPoint = veryHighCalEDR/maxCalEDR - 1  # will be 2 for 3000/1000
+                highDR = tlimit * residual_max / maxCalEDR / old_threshold  # will use this value up to 3000
+                veryHighDR = matchPoint + tlimit * residual_max / veryHighCalEDR / old_threshold  # will use this value above 3000
+                n_dr = max(1.0, min(highDR, veryHighDR))
+                LOG.info('DR heuristic: Calculating N_DR as max of (1.0, min of (%f, %f)) = %f' % (highDR, veryHighDR, n_dr))
+                new_threshold = old_threshold * n_dr
             else:
                 maxCalEDR = 200.0
-            LOG.info('DR heuristic: Applying maxCalEDR=%s' % (maxCalEDR))
-            new_threshold = max(old_threshold, residual_max / maxCalEDR * tlimit)
-            maxEDR_used = True
+                LOG.info('DR heuristic: Applying maxCalEDR=%s' % (maxCalEDR))
+                new_threshold = max(old_threshold, residual_max / maxCalEDR * tlimit)
 
-        if (new_threshold != old_threshold):
+            if new_threshold != old_threshold:
+                maxEDR_used = True
+
+        if new_threshold != old_threshold:
             LOG.info('DR heuristic: Modified threshold from %s Jy to %s Jy based on dirty dynamic range calculated from dirty peak / final theoretical sensitivity: %.1f' % (old_threshold, new_threshold, dirty_dynamic_range))
             DR_correction_factor = new_threshold / old_threshold
 
@@ -158,6 +174,10 @@ class ImageParamsHeuristicsALMA(ImageParamsHeuristics):
         loop_gain = 0.1
         # TODO: Replace with actual pixel counting rather than assumption about geometry
         r_mask = 0.45 * max(imsize[0], imsize[1]) * qaTool.convert(cell[0], 'arcsec')['value']
+        # TODO: Pass synthesized beam size explicitly rather than assuming a
+        #       certain ratio of beam to cell size (which can be different
+        #       if the product size is being mitigated or if a different
+        #       imaging_mode uses different heuristics).
         beam = qaTool.convert(cell[0], 'arcsec')['value'] * 5.0
         new_niter_f = int(kappa / loop_gain * (r_mask / beam) ** 2 * residual_max / threshold_value)
         new_niter = int(round(new_niter_f, -int(np.log10(new_niter_f))))
@@ -166,27 +186,75 @@ class ImageParamsHeuristicsALMA(ImageParamsHeuristics):
 
         return new_niter
 
-    def get_autobox_params(self):
+    def get_autobox_params(self, intent, specmode):
 
         '''Default auto-boxing parameters for ALMA main array and ACA.'''
 
-        min_diameter = 1.e9
-        for msname in self.vislist:
-            min_diameter = min(min_diameter, min([antenna.diameter for antenna in self.observing_run.get_ms(msname).antennas]))
-        if min_diameter == 7.0:
-            sidelobethreshold = 2.0
-            noisethreshold = 3.0
-            lownoisethreshold = 2.5
-            minbeamfrac = 0.2
-        elif min_diameter == 12.0:
-            sidelobethreshold = 3.0
-            noisethreshold = 5.0
-            lownoisethreshold = 1.5
-            minbeamfrac = 0.3
-        else:
-            sidelobethreshold = None
-            noisethreshold = None
-            lownoisethreshold = None
-            minbeamfrac = None
+        # Start with generic defaults
+        sidelobethreshold = None
+        noisethreshold = None
+        lownoisethreshold = None
+        minbeamfrac = None
+        growiterations = None
 
-        return sidelobethreshold, noisethreshold, lownoisethreshold, minbeamfrac
+        min_diameter = 1.e9
+        repBaselineLengths = []
+        for msname in self.vislist:
+            ms_do = self.observing_run.get_ms(msname)
+            min_diameter = min(min_diameter, min([antenna.diameter for antenna in ms_do.antennas]))
+            repBaselineLengths.append(np.percentile([float(baseline.length.to_units(measures.DistanceUnits.METRE)) for baseline in ms_do.antenna_array.baselines], 75.))
+        repBaselineLength = np.median(repBaselineLengths)
+        LOG.info('autobox heuristic: Representative baseline length is %.1f meter' % (repBaselineLength)) 
+
+        if ('TARGET' in intent) or ('CHECK' in intent):
+            if min_diameter == 12.0:
+                if repBaselineLength < 300:
+                    sidelobethreshold = 2.0
+                    noisethreshold = 4.25
+                    lownoisethreshold = 1.5
+                    minbeamfrac = 0.3
+                    if specmode == 'cube':
+                        negativethreshold = 15.0
+                        growiterations = 50
+                    else:
+                        negativethreshold = 0.0
+                        growiterations = 75
+                else:
+                    sidelobethreshold = 3.0
+                    noisethreshold = 5.0
+                    lownoisethreshold = 1.5
+                    minbeamfrac = 0.3
+                    if specmode == 'cube':
+                        negativethreshold = 7.0
+                        growiterations = 50
+                    else:
+                        negativethreshold = 0.0
+                        growiterations = 75
+            elif min_diameter == 7.0:
+                sidelobethreshold = 1.25
+                noisethreshold = 5.0
+                lownoisethreshold = 2.0
+                minbeamfrac = 0.1
+                growiterations = 75
+                negativethreshold = 0.0
+        else:
+            if min_diameter == 12.0:
+                sidelobethreshold = 2.0
+                noisethreshold = 7.0
+                lownoisethreshold = 3.0
+                minbeamfrac = 0.1
+                growiterations = 75
+                negativethreshold = 0.0
+            elif min_diameter == 7.0:
+                sidelobethreshold = 1.5
+                noisethreshold = 6.0
+                lownoisethreshold = 2.0
+                minbeamfrac = 0.1
+                growiterations = 75
+                negativethreshold = 0.0
+
+        return sidelobethreshold, noisethreshold, lownoisethreshold, negativethreshold, minbeamfrac, growiterations
+
+    def warn_missing_cont_ranges(self):
+
+        return True

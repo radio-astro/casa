@@ -4,6 +4,7 @@ import os
 import numpy
 import time
 import copy
+import itertools
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.utils as utils
@@ -56,7 +57,7 @@ class SDBLFlagSummary(object):
         #userFlag = self.userFlag
 
         LOG.debug('Members to be processed in worker class:')
-        for (m,a,f,s,p) in zip(ms_list, antid_list, fieldid_list, spwid_list, pols_list):
+        for (m,a,f,s,p) in itertools.izip(ms_list, antid_list, fieldid_list, spwid_list, pols_list):
             LOG.debug('\t%s: Antenna %s Field %d Spw %d Pol %s'%(m.basename,a,f,s,p))
         
         # output directory
@@ -69,7 +70,7 @@ class SDBLFlagSummary(object):
 
         flagSummary = []
         # loop over members (practically, per antenna loop in an MS)
-        for (msobj,antid,fieldid,spwid,pollist) in zip(ms_list, antid_list, fieldid_list, spwid_list, pols_list):
+        for (msobj,antid,fieldid,spwid,pollist) in itertools.izip(ms_list, antid_list, fieldid_list, spwid_list, pols_list):
             LOG.debug('Performing flagging for %s Antenna %d Field %d Spw %d'%(msobj.basename,antid,fieldid,spwid))
             filename_in = msobj.name
             ant_name = msobj.get_antenna(antid)[0].name

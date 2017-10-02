@@ -45,13 +45,13 @@
 	    </equals>
 	    <equals type="string" value="interactive">
                 <default param="vis"><value type="stringArray"></value></default>
-                <default param="checkflagmode"><value type="stringArray"></value></default>
+                <default param="checkflagmode"><value type="string"></value></default>
 		<default param="dryrun"><value type="bool">False</value></default>
 		<default param="acceptresults"><value type="bool">True</value></default>
 	    </equals>
 	    <equals type="string" value="getinputs">
                 <default param="vis"><value type="stringArray"></value></default>
-                <default param="checkflagmode"><value type="stringArray"></value></default>
+                <default param="checkflagmode"><value type="string"></value></default>
 	    </equals>
 	</when>
     </constraints>
@@ -82,7 +82,25 @@ vis -- List of visisbility  data files. These may be ASDMs, tar files of ASDMs,
    example: vis=['X227.ms', 'asdms.tar.gz']
 
 
-checkflagmode -- use string 'semi' after hifv_semiFinalBPdcals()
+checkflagmode -- blank string default use of rflag on bandpass and delay calibrators
+              -- use string 'semi' after hifv_semiFinalBPdcals() for executing rflag on calibrators
+              -- use string 'bpd', for the bandpass and delay calibrators:
+                   execute rflag on all calibrated cross-hand corrected data;
+                       extend flags to all correlations
+                   execute rflag on all calibrated parallel-hand residual data;
+                       extend flags to all correlations
+                   execute tfcrop on all calibrated cross-hand corrected data,
+                       per visibility; extend flags to all correlations
+                   execute tfcrop on all calibrated parallel-hand corrected data,
+                       per visibility; extend flags to all correlations
+              -- use string 'allcals', for all the other calibrators, with delays and BPcal applied:
+                       similar procedure as 'bpd' mode, but uses corrected data throughout
+              -- use string 'target', for the target data:
+                       similar procedure as 'allcals' mode, but with a higher SNR cutoff
+                       for rflag to avoid flagging data due to source structure, and
+                       with an additional series of tfcrop executions to make up for
+                       the higher SNR cutoff in rflag
+
 
 pipelinemode -- The pipeline operating mode. In 'automatic' mode the pipeline
    determines the values of all context defined pipeline inputs

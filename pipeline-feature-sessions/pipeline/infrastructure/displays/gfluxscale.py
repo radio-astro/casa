@@ -17,10 +17,12 @@ class GFluxscaleSummaryChart(setjy.BasebandSummaryChart):
         
         try:
             with casatools.MSReader(calto.vis) as msfile:
-                uvrangeplot = msfile.range(['uvdist'])
+                # Numpy arrays must be converted to standard Python primitives, otherwise
+                # the contained values cause problems with the underlying SWIG wrappers.
+                uvrangeplot = msfile.range(['uvdist'])['uvdist'].tolist()
         except:
             LOG.warn("Unable to obtain plotting ranges for gfluxscale uvdist.")
-            uvrangeplot["uvdist"] = numpy.array([0,0])
+            uvrangeplot = [0, 0]
         
         # Get amp min/max   for vertical axis
         # Visstat call removed for 4.2.2 release
@@ -56,7 +58,7 @@ class GFluxscaleSummaryChart(setjy.BasebandSummaryChart):
             'avgchannel': '9000',
             'antenna': ant,
             'uvrange': uvrange,  # Specified in hifa_gfluxscale task inputs
-            'plotrange': [uvrangeplot['uvdist'][0], uvrangeplot['uvdist'][1], pltmin, pltmax],
+            'plotrange': [uvrangeplot[0], uvrangeplot[1], pltmin, pltmax],
             'coloraxis': 'spw',
             'overwrite': True
         }

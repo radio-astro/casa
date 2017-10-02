@@ -12,7 +12,7 @@ def hsd_skycal(calmode=None, fraction=None, noff=None,
     # constructor
     all_inputs = vars()
 
-    task_name = 'SDMSSkyCal'
+    task_name = 'SDSkyCal'
     
     ##########################################################################
     #                                                                        #

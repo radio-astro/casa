@@ -47,7 +47,7 @@ class K2JyHistDisplay(object):
         if type(self.factors) in [dict, collections.defaultdict]:
             labels = []
             factors = []
-            for lab, spw_factors in self.factors.items():
+            for lab, spw_factors in self.factors.iteritems():
                 dummy, f = collect_dict_values(spw_factors)
                 factors.append(f)
                 labels.append(lab)

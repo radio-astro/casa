@@ -33,13 +33,14 @@ class FlagDeterALMASingleDishInputs(flagdeterbase.FlagDeterBaseInputs):
 
     #New property for QA0 flags
     qa0 = basetask.property_with_default('qa0', True)
+    qa2 = basetask.property_with_default('qa2', True)
 
     @basetask.log_equivalent_CASA_call
     def __init__(self, context, vis=None, output_dir=None, flagbackup=None,
                  autocorr=None, shadow=None, scan=None, scannumber=None,
                  intents=None, edgespw=None, fracspw=None, fracspwfps=None, online=None,
                  fileonline=None, template=None, filetemplate=None, hm_tbuff=None, tbuff=None, 
-                 qa0=None):
+                 qa0=None, qa2=None):
 
         # Initialize the public member variables of the inherited class
         # FlagDeterBaseInputs()
@@ -54,6 +55,7 @@ class FlagDeterALMASingleDishInputs(flagdeterbase.FlagDeterBaseInputs):
 
         self.fracspwfps = fracspwfps
         self.qa0 = qa0
+        self.qa2 = qa2
 
     # autocorr parameter must be overridden since its default 
     # value must be False
@@ -132,21 +134,22 @@ class FlagDeterALMASingleDishResults(flagdeterbase.FlagDeterBaseResults):
         datatable.exportdata(minimal=False)
         
         # regenerate pointing plots
-        LOG.info('Regenerate pointing plots to update flag information')
-        for antenna in msobj.antennas:
-            for (target, reference) in msobj.calibration_strategy['field_strategy'].items():
-                LOG.debug('target field id %s / reference field id %s'%(target,reference))
-                task = drawpointing.SingleDishPointingChart(context, msobj, antenna, 
-                                                            target_field_id=target,
-                                                            reference_field_id=reference,
-                                                            target_only=True)
-                task.plot(revise_plot=True)
-                task = drawpointing.SingleDishPointingChart(context, msobj, antenna, 
-                                                            target_field_id=target,
-                                                            reference_field_id=reference,
-                                                            target_only=False)
-                task.plot(revise_plot=True)
-        
+        if not basetask.DISABLE_WEBLOG:
+            LOG.info('Regenerate pointing plots to update flag information')
+            for antenna in msobj.antennas:
+                for (target, reference) in msobj.calibration_strategy['field_strategy'].iteritems():
+                    LOG.debug('target field id %s / reference field id %s'%(target,reference))
+                    task = drawpointing.SingleDishPointingChart(context, msobj, antenna, 
+                                                                target_field_id=target,
+                                                                reference_field_id=reference,
+                                                                target_only=True)
+                    task.plot(revise_plot=True)
+                    task = drawpointing.SingleDishPointingChart(context, msobj, antenna, 
+                                                                target_field_id=target,
+                                                                reference_field_id=reference,
+                                                                target_only=False)
+                    task.plot(revise_plot=True)
+            
 
 
 class FlagDeterALMASingleDish(flagdeterbase.FlagDeterBase):

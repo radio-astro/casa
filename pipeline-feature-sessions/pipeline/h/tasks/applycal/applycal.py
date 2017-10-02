@@ -195,7 +195,7 @@ class Applycal(basetask.StandardTaskTemplate):
         merged = callibrary.fix_cycle0_data_selection(inputs.context, merged)
 
         jobs = []
-        for calto, calfroms in merged.iteritems():
+        for calto, calfroms in sorted(merged.iteritems()):
             # if there's nothing to apply for this data selection, continue
             if not calfroms:
                 continue

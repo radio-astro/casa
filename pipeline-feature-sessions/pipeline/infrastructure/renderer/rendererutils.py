@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 
 import cgi
+import itertools
 
 import numpy as np
 
@@ -201,7 +202,53 @@ def get_plot_command_markup(ctx, command):
 
 
 def format_shortmsg(pqascore):
-    if pqascore.score >= SCORE_THRESHOLD_SUBOPTIMAL:
+    if pqascore.score > SCORE_THRESHOLD_SUBOPTIMAL:
         return ''
     else:
         return pqascore.shortmsg
+
+
+def sort_row_by(row, axes):
+    # build primary, secondary, tertiary, etc. axis sorting functions
+    def f(axis):
+        def g(plot):
+            return plot.parameters.get(axis, '')
+        return g
+
+    # create a parameter getter for each axis
+    accessors = [f(axis) for axis in axes.split(',')]
+
+    # sort plots in row, using a generated tuple (p1, p2, p3, ...) for
+    # secondary sort
+    return sorted(row, key=lambda plot: tuple([fn(plot) for fn in accessors]))
+
+
+def group_plots(data, axes):
+    # build primary, secondary, tertiary, etc. axis sorting functions
+    def f(axis):
+        def g(plot):
+            return plot.parameters.get(axis)
+        return g
+
+    keyfuncs = [f(axis) for axis in axes.split(',')]
+    return _build_rows([], data, keyfuncs)
+
+
+def _build_rows(rows, data, keyfuncs):
+    # if this is a leaf, i.e., we are in the lowest level grouping and there's
+    # nothing further to group by, add a new row
+    if not keyfuncs:
+        rows.append(data)
+        return
+
+    # otherwise, this is not the final sorting axis and so proceed to group
+    # the results starting with the first (or next) axis...
+    keyfunc = keyfuncs[0]
+    data = sorted(data, key=keyfunc)
+    for group_value, items_with_value_generator in itertools.groupby(data, keyfunc):
+        # convert to list so we don't exhaust the generator
+        items_with_value = list(items_with_value_generator)
+        # ... , creating sub-groups for each group as we go
+        _build_rows(rows, items_with_value, keyfuncs[1:])
+
+    return rows

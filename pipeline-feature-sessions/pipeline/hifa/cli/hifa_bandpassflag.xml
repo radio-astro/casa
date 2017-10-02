@@ -7,12 +7,30 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <task type="function" name="hifa_bandpassflag" category="pipeline">
 
-<shortdescription>Compute bandpass calibration solutions with flagging</shortdescription>
+<shortdescription>Compute bandpass calibration with flagging</shortdescription>
 
 <description>
-Compute amplitude and phase as a function of frequency for each spectral
-window in each measurement set, and flag outliers in corrected - model
-amplitudes for bandpass calibrator.
+    This task performs a preliminary bandpass solution and applies it, then
+    computes the flagging heuristics by calling hif_correctedampflag which
+    looks for outlier visibility points by statistically examining the scalar
+    difference of the corrected amplitudes minus model amplitudes, flags those
+    outliers, then derives a final bandpass solution (if any flags were
+    generated). The philosophy is that only outlier data points that have
+    remained outliers after calibration will be flagged. Note that the phase of
+    the data is not assessed.
+
+    In further detail, the workflow is as follows: an a priori calibration is
+    applied using pre-existing caltables in the calibration state, a
+    preliminary bandpass solution and amplitude gaincal solution is solved and
+    applied, the flagging heuristics are run and any outliers are flagged, a
+    final bandpass solution is solved (if necessary) and the name "final" is
+    appended to this caltable. Plots are generated at three points in this
+    workflow: after a priori calibration, after bandpass calibration but before
+    flagging heuristics are run, and after flagging heuristics have been run
+    and applied. If no points were flagged, the "after" plots are not
+    generated or displayed. The score for this stage is a simple combination
+    (multiplication) of the standard data flagging score (depending on the
+    fraction of data flagged) and the score for the bandpass solution.
 </description>
 
 <input>
@@ -138,42 +156,42 @@ amplitudes for bandpass calibrator.
         <value type="bool">True</value>
     </param>
 
-    <param type="string" name="antnegsig" subparam="true">
+    <param type="double" name="antnegsig" subparam="true">
         <description>Lower sigma threshold for identifying outliers as a result of bad antennas within individual timestamps</description>
-        <value>6.5</value>
+        <value>4.0</value>
     </param>
 
-    <param type="string" name="antpossig" subparam="true">
+    <param type="double" name="antpossig" subparam="true">
         <description>Upper sigma threshold for identifying outliers as a result of bad antennas within individual timestamps</description>
-        <value>5.8</value>
+        <value>4.6</value>
     </param>
 
-    <param type="string" name="tmantint" subparam="true">
+    <param type="double" name="tmantint" subparam="true">
         <description>Threshold for maximum fraction of timestamps that are allowed to contain outliers</description>
-        <value>0.06</value>
+        <value>0.063</value>
     </param>
 
-    <param type="string" name="tmint" subparam="true">
+    <param type="double" name="tmint" subparam="true">
         <description>Initial threshold for maximum fraction of "outlier timestamps" over "total timestamps" that a baseline may be a part of</description>
-        <value>0.09</value>
+        <value>0.085</value>
     </param>
 
-    <param type="string" name="tmbl" subparam="true">
-        <description>Initial threshold for maximum fraction of "bad baselines" over "all timestamps" that an antenna may be a part of</description>
+    <param type="double" name="tmbl" subparam="true">
+        <description>Initial threshold for maximum fraction of "bad baselines" over "all baselines" that an antenna may be a part of</description>
         <value>0.175</value>
     </param>
 
-    <param type="string" name="antblnegsig" subparam="true">
+    <param type="double" name="antblnegsig" subparam="true">
         <description>Lower sigma threshold for identifying outliers as a result of "bad baselines" and/or "bad antennas" within baselines (across all timestamps)</description>
-        <value>3.7</value>
+        <value>3.4</value>
     </param>
 
-    <param type="string" name="antblpossig" subparam="true">
+    <param type="double" name="antblpossig" subparam="true">
         <description>Upper sigma threshold for identifying outliers as a result of "bad baselines" and/or "bad antennas" within baselines (across all timestamps)</description>
-        <value>3.0</value>
+        <value>3.2</value>
     </param>
 
-    <param type="string" name="relaxed_factor" subparam="true">
+    <param type="double" name="relaxed_factor" subparam="true">
         <description>Relaxed value to set the threshold scaling factor to under certain conditions (see task description)</description>
         <value>2.0</value>
     </param>
@@ -242,14 +260,14 @@ amplitudes for bandpass calibrator.
                 <default param="combine"><value type="string"></value>scan</default>
                 <default param="refant"><value type="string"></value></default>
                 <default param="solnorm"><value type="bool">True</value></default>
-                <default param="antnegsig"><value>6.5</value></default>
-                <default param="antpossig"><value>5.8</value></default>
-                <default param="tmantint"><value>0.06</value></default>
-                <default param="tmint"><value>0.09</value></default>
-                <default param="tmbl"><value>0.175</value></default>
-                <default param="antblnegsig"><value>3.7</value></default>
-                <default param="antblpossig"><value>3.0</value></default>
-                <default param="relaxed_factor"><value>2.0</value></default>
+                <default param="antnegsig"><value type="double">4.0</value></default>
+                <default param="antpossig"><value type="double">4.6</value></default>
+                <default param="tmantint"><value type="double">0.063</value></default>
+                <default param="tmint"><value type="double">0.085</value></default>
+                <default param="tmbl"><value type="double">0.175</value></default>
+                <default param="antblnegsig"><value type="double">3.4</value></default>
+                <default param="antblpossig"><value type="double">3.2</value></default>
+                <default param="relaxed_factor"><value type="double">2.0</value></default>
                 <default param="dryrun"><value type="bool">False</value></default>
                 <default param="acceptresults"><value type="bool">True</value></default>
             </equals>
@@ -269,8 +287,6 @@ amplitudes for bandpass calibrator.
 </output>
 
 <example>
-
-TBD
 
 Keyword arguments:
 
@@ -316,9 +332,8 @@ hm_bandpass -- The bandpass solution heuristics. The options are 'snr'
     the user defined parameters for all spws).
 
 solint --  Time and channel solution intervals in CASA syntax.
-    default: 'inf' Used for hm_bandpass='fixed', and as a default
-    for the 'snr' and 'smoothed' options.
-    default: 'inf,7.8125MHz'
+    default: 'inf,7.8125MHz' for hm_bandpass='fixed'
+             'inf' for hm_bandpass='snr' or 'smoothed'
     example: solint='inf,10ch', solint='inf'
 
 maxchannels --  The bandpass solution smoothing factor in channels. The
@@ -358,7 +373,7 @@ minsnr -- Solutions below this SNR are rejected. Used for hm_bandtype=
 ---- pipeline context defined parameter arguments which can be set only in
 'interactive mode'
 
-vis -- The list of input measurement sets. Defaults to the list of measurment
+vis -- The list of input measurement sets. Defaults to the list of measurement
     sets specified in the pipeline context.
     default: ''
     example: ['M51.ms']
@@ -369,18 +384,19 @@ caltable -- The list of output calibration tables. Defaults to the standard
     example: ['M51.bcal']
 
 field -- The list of field names or field ids for which bandpasses are
-    computed. Defaults to all fields.
+    computed. If undefined (default), it will select all fields.
     default: ''
     example: '3C279', '3C279, M82'
 
 intent -- A string containing a comma delimited list of intents against
-    which the the selected fields are matched.  Defaults to all data
-    with bandpass intent.
+    which the selected fields are matched. If undefined (default), it
+    will select all data with the BANDPASS intent.
     default: ''
     example: '*PHASE*'
 
 spw -- The list of spectral windows and channels for which bandpasses are
-    computed. Defaults to all science spectral windows.
+    computed. If undefined (default), it will select all science spectral
+    windows.
     default: ''
     example: '11,13,15,17'
 
@@ -395,33 +411,33 @@ solnorm -- Normalise the bandpass solutions
 
 antnegsig -- Lower sigma threshold for identifying outliers as a result of bad
     antennas within individual timestamps.
-    default: 6.5
+    default: 4.0
 
 antpossig -- Upper sigma threshold for identifying outliers as a result of bad
     antennas within individual timestamps.
-    default: 5.8
+    default: 4.6
 
 tmantint -- Threshold for maximum fraction of timestamps that are allowed to
     contain outliers.
-    default: 0.06
+    default: 0.063
 
 tmint -- Initial threshold for maximum fraction of "outlier timestamps" over
     "total timestamps" that a baseline may be a part of.
-    default: 0.09
+    default: 0.085
 
 tmbl -- Initial threshold for maximum fraction of "bad baselines" over "all
-    timestamps" that an antenna may be a part of.
+    baselines" that an antenna may be a part of.
     default: 0.175
 
 antblnegsig -- Lower sigma threshold for identifying outliers as a result of
     "bad baselines" and/or "bad antennas" within baselines, across all
     timestamps.
-    default: 3.7
+    default: 3.4
 
 antblpossig -- Upper sigma threshold for identifying outliers as a result of
     "bad baselines" and/or "bad antennas" within baselines, across all
     timestamps.
-    default: 3.0
+    default: 3.2
 
 relaxed_factor -- Relaxed value to set the threshold scaling factor to under
     certain conditions (see task description).
@@ -436,14 +452,20 @@ acceptresults -- Add the results of the task to the pipeline context (True) or
    reject them (False).
    default: True
 
+
 Output:
 
 results -- If pipeline mode is 'getinputs' then None is returned. Otherwise
     the results object for the pipeline task is returned.
 
-Description:
 
-TBD
+Examples:
+
+1. run with recommended settings to create bandpass solution with flagging
+    using recommended thresholds:
+
+    hifa_bandpassflag()
+
 
 </example>
 

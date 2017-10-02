@@ -19,6 +19,7 @@ import pipeline.domain.measures as measures
 			    <thead>
 			        <tr>
 			            <th scope="col" rowspan="2">ID</th>
+			            <th scope="col" rowspan="2">Type</th>
 			            <th scope="col" colspan="3">Frequency ${'(%s)' % (ms.get_spectral_windows()[0].frame)}</th>
 			            <th scope="col" rowspan="2">Bandwidth ${'(%s)' % (ms.get_spectral_windows()[0].frame)}</th>
 			            <th scope="col" rowspan="2">Transitions</th>
@@ -46,11 +47,12 @@ import pipeline.domain.measures as measures
 					% for spw in ms.get_spectral_windows(science_windows_only=True):
 					<tr>
 					  <td>${spw.id}</td>
+					  <td>${spw.type}</td>
 					  <td>${str(spw.min_frequency)}</td>
 					  <td>${str(spw.centre_frequency)}</td>
 					  <td>${str(spw.max_frequency)}</td>
 					  <td>${str(spw.bandwidth)}</td>
-					  <td>${','.join(spw.transitions)}</td>
+					  <td>${', '.join(spw.transitions)}</td>
 					  <td>${spw.num_channels}</td>
 					  <td>${spw.channels[0].getWidth()}</td>
 					  <td>${str(measures.LinearVelocity(299792458 * spw.channels[0].getWidth().to_units(measures.FrequencyUnits.HERTZ) / spw.centre_frequency.to_units(measures.FrequencyUnits.HERTZ), measures.LinearVelocityUnits.METRES_PER_SECOND))}</td>
@@ -80,6 +82,7 @@ import pipeline.domain.measures as measures
 			    <thead>
 			        <tr>
 			            <th scope="col" rowspan="2">ID</th>
+			            <th scope="col" rowspan="2">Type</th>
 			            <th scope="col" colspan="3">Frequency ${'(%s)' % (ms.get_spectral_windows()[0].frame)}</th>
 			            <th scope="col" rowspan="2">Bandwidth ${'(%s)' % (ms.get_spectral_windows()[0].frame)}</th>
 			            <th scope="col" rowspan="2">Transitions</th>
@@ -108,6 +111,7 @@ import pipeline.domain.measures as measures
 					% for spw in ms.get_spectral_windows(science_windows_only=False):
 					<tr>
 						<td>${spw.id}</td>
+						<td>${spw.type}</td>
 						<td>${str(spw.min_frequency)}</td>
 						<td>${str(spw.centre_frequency)}</td>
 						<td>${str(spw.max_frequency)}</td>
