@@ -10,8 +10,6 @@ import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 from pipeline.h.tasks.common import arrayflaggerbase
 from pipeline.h.tasks.common import flaggableviewresults
-from pipeline.infrastructure import casa_tasks
-
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -963,7 +961,7 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
         
         # If flags were found...
         if len(flags) > 0:
-            
+
             # If newflags were found on last iteration loop, we need to still
             # set these.
             if len(newflags) > 0:
@@ -999,11 +997,9 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
                 
                 # If datatask needs to be iterated, then the "before" summary has
                 # already been done, and the flags have already been set, so only
-                # need to do an "after" summary
+                # need to do an "after" summary.
                 if inputs.iter_datatask is True:
-                    summary_job = casa_tasks.flagdata(
-                        vis=inputs.flagsettertask.inputs.table, mode='summary')
-                    stats_after = self._executor.execute(summary_job)
+                    _, stats_after = self.set_flags([], summarize_after=True)
                 # If the datatask did not need to be iterated, then no flags
                 # were set yet and no "before" summary was performed yet, 
                 # so set all flags and include both "before" and "after" summary.
@@ -1023,10 +1019,8 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
         else:
             # Run a single flagging summary and use the result as both the "before" 
             # and "after" summary.
-            summary_job = casa_tasks.flagdata(
-                vis=inputs.flagsettertask.inputs.table, mode='summary')
-            stats_before = self._executor.execute(summary_job)
-            stats_after = copy.deepcopy(stats_before)        
+            stats_before, _ = self.set_flags(flags, summarize_before=True)
+            stats_after = copy.deepcopy(stats_before)
         
         # Store in the final result the name of the measurement set or caltable to 
         # which any potentially found flags would need to be applied to
@@ -2062,8 +2056,7 @@ class VectorFlagger(basetask.StandardTaskTemplate):
                 # already been done, and the flags have already been set, so only
                 # need to do an "after" summary
                 if inputs.iter_datatask is True:
-                    summary_job = casa_tasks.flagdata(vis=inputs.flagsettertask.inputs.table, mode='summary')
-                    stats_after = self._executor.execute(summary_job)
+                    _, stats_after = self.set_flags([], summarize_after=True)
                 # If the datatask did not need to be iterated, then no flags
                 # were set yet and no "before" summary was performed yet, 
                 # so set all flags and include both "before" and "after" summary.
@@ -2079,9 +2072,8 @@ class VectorFlagger(basetask.StandardTaskTemplate):
         else:
             # Run a single flagging summary and use the result as both the "before" 
             # and "after" summary.
-            summary_job = casa_tasks.flagdata(vis=inputs.flagsettertask.inputs.table, mode='summary')
-            stats_before = self._executor.execute(summary_job)
-            stats_after = copy.deepcopy(stats_before)        
+            stats_before, _ = self.set_flags(flags, summarize_before=True)
+            stats_after = copy.deepcopy(stats_before)
         
         # Store in the final result the name of the measurement set or caltable to 
         # which any potentially found flags would need to be applied to
