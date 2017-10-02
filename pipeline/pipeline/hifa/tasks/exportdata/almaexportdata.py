@@ -7,7 +7,8 @@ import glob
 import tarfile
 
 from . import almaifaqua
-from . import manifest
+#from . import manifest
+import pipeline.h.tasks.common.manifest as manifest 
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
@@ -230,7 +231,8 @@ class ALMAExportData(exportdata.ExportData):
 
     def _add_to_manifest(self, manifest_file, aux_fproducts, aux_caltablesdict, aux_calapplysdict, aqua_report):
 
-        pipemanifest = manifest.ALMAIfPipelineManifest('')
+        #pipemanifest = manifest.ALMAIfPipelineManifest('')
+        pipemanifest = manifest.PipelineManifest('')
         pipemanifest.import_xml(manifest_file)
         ouss = pipemanifest.get_ous()
 
