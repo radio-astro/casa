@@ -4,11 +4,9 @@ from .antpos import Antpos
 from .applycal import IFApplycal, HpcIFApplycal
 from .atmflag import Atmflag
 from .bandpass import BandpassMode, ChannelBandpass, PhcorBandpass
-from .bpflagchans import Bandpassflagchans
 from .correctedampflag import Correctedampflag
 from .checkproductsize import CheckProductSize
 from .findcont import FindCont
-from .flagcorrected import Flagcorrected
 from .fluxscale import Fluxcal
 from .fluxscale import Fluxscale
 from .fluxscale import NormaliseFlux

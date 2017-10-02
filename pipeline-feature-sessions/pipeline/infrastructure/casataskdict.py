@@ -29,12 +29,10 @@ CasaTaskDict = {
     'hif_atmflag': 'Atmflag',
     'hif_applycal': 'IFApplycal',
     'hif_bandpass': 'Bandpass',
-    'hif_bpflagchans': 'Bandpassflagchans',
     'hif_correctedampflag': 'Correctedampflag',
     'hif_checkproductsize': 'CheckProductSize',
     'hif_rawflagchans': 'Rawflagchans',
     'hif_findcont': 'FindCont',
-    'hif_flagcorrected': 'Flagcorrected',
     'hif_gaincal': 'Gaincal',
     'hif_gainflag': 'Gainflag',
     'hif_lowgainflag': 'Lowgainflag',
@@ -144,11 +142,9 @@ classToCASATask = {
     hif_tasks.IFApplycal              : 'hif_applycal',    
     hif_tasks.Atmflag                 : 'hif_atmflag',
     hif_tasks.Bandpass                : 'hif_bandpass',
-    hif_tasks.Bandpassflagchans       : 'hif_bpflagchans',
     hif_tasks.Correctedampflag        : 'hif_correctedampflag',
     hif_tasks.CheckProductSize        : 'hif_checkproductsize',
     hif_tasks.FindCont                : 'hif_findcont',
-    hif_tasks.Flagcorrected           : 'hif_flagcorrected',
     hif_tasks.Linfeedpolcal           : 'hif_linfeedpolcal',
     hif_tasks.Makecutoutimages        : 'hif_makecutoutimages',
     hif_tasks.Makermsimages           : 'hif_makermsimages',
@@ -328,11 +324,6 @@ TASK_COMMENTS = {
         'phase gain is calculated to remove decorrelation of the bandpass '
         'calibrator before the bandpass is calculated.'
     ),
-    (hif_tasks.Bandpassflagchans,): (
-        'Very sharp features (e.g. the cores of strong atmospheric lines, '
-        'and rare instrumental artifacts) in the bandpass solution are '
-        'flagged.'
-    ),  
     (hifa_tasks.GcorFluxscale,): (
         'The absolute flux calibration is transferred to secondary calibrator '
         'sources.'
