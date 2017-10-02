@@ -178,8 +178,27 @@ class T2_4MDetailsplotsummaryRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
                 if vis_plots and (('POLANGLE' in m.intents) or ('POLLEAKAGE' in m.intents)):
                     use_pol_plots = True
 
+        amp_vs_freq_polarization_plots = utils.OrderedDefaultdict(list)
+        for intents, correlation in [(['POLANGLE'], 'RL,LR'), (['POLLEAKAGE'], 'RL,LR'),
+                                     (['PHASE'], 'RL,LR'), (['BANDPASS'], 'RL,LR')]:
+            plots = self.create_plots(context,
+                                      result,
+                                      applycal.AmpVsFrequencyPerBasebandSummaryChart,
+                                      intents, correlation=correlation, coloraxis='corr', avgtime='1e8',
+                                      avgbaseline=True, avgantenna=False, plotrange=[0, 0, -180, 180])
 
+            use_pol_plots = False
+            for vis, vis_plots in plots.items():
+                vis_plots_mod = []
+                for p in vis_plots:
+                    p.parameters['intent_idx'] = pol_intent_sort_order[','.join(p.parameters['intent'])]
+                    field = m.get_fields(p.parameters['field'])[0]
+                    p.parameters['fieldid'] = field.id
+                    vis_plots_mod.append(p)
 
+                amp_vs_freq_polarization_plots[vis].extend(vis_plots_mod)
+                if vis_plots and (('POLANGLE' in m.intents) or ('POLLEAKAGE' in m.intents)):
+                    use_pol_plots = True
 
         # Removed for CAS-8737
         ##amp_vs_uv_summary_plots = self.create_plots(context,
@@ -248,6 +267,7 @@ class T2_4MDetailsplotsummaryRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
                     # 'phase_vs_time_plots' : phase_vs_time_summary_plots,
                     'science_amp_vs_freq_plots': science_amp_vs_freq_summary_plots,
                     'phase_vs_freq_polarization_plots': phase_vs_freq_polarization_plots,
+                    'amp_vs_freq_polarization_plots': amp_vs_freq_polarization_plots,
                     'use_pol_plots' : use_pol_plots,
                     # 'science_phase_vs_freq_plots' : science_phase_vs_freq_summary_plots,
                     # 'science_amp_vs_uv_plots' : science_amp_vs_uv_summary_plots,

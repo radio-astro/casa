@@ -559,4 +559,49 @@ def space_comma(s):
 
 </%self:plot_group>
 
+
+
+
+<%self:plot_group plot_dict="${amp_vs_freq_polarization_plots}"
+				  url_fn="${lambda x: 'amp_vs_freq_polarization_%s.html' % sanitise(x)}"
+				  data_field="${True}"
+				  data_spw="${True}"
+                  break_rows_by=""
+                  sort_row_by="intent_idx,field,baseband,spw">
+
+	<%def name="title()">
+		Calibrated amplitude vs frequency, intent='POLANGLE, POLLEAKAGE, BANDPASS, PHASE'
+	</%def>
+
+	<%def name="preamble()">
+		Plots of calibrated amp vs frequency for all antennas and
+		correlation='RL,LR', intent=POLANGLE, POLLEAKAGE, BANDPASS and PHASE.
+	</%def>
+
+
+	<%def name="mouseover(plot)">Click to show amp vs frequency for baseband ${utils.commafy(plot.parameters['receiver'], False)}</%def>
+
+	<%def name="fancybox_caption(plot)">
+		Receiver bands: ${utils.commafy(plot.parameters['receiver'], False)} (spw ${plot.parameters['spw']})<br>
+		Intents: ${utils.commafy(plot.parameters['intent'], False)}<br>
+		Fields: ${cgi.escape(plot.parameters['field'], True)}
+	</%def>
+
+	<%def name="caption_title(plot)">
+		Receiver bands: ${utils.commafy(plot.parameters['receiver'], False)}
+	</%def>
+
+	<%def name="caption_subtitle(plot)">
+		${spws_for_baseband(plot)}
+	</%def>
+
+	<%def name="caption_text(plot, intent)">
+		${intent.capitalize()} calibrator:
+		${utils.commafy(utils.safe_split(plot.parameters['field']), quotes=False)}.
+	</%def>
+
+</%self:plot_group>
+
+
+
 %endif
