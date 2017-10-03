@@ -50,9 +50,12 @@ class ApplycalsInputs(applycal.IFApplycalInputs):
         return d
 
 
-class Applycals(basetask.StandardTaskTemplate):
+class Applycals(applycal.IFApplycal):
     Inputs = ApplycalsInputs
-    
+
+    ### Note this is a temporary workaround ###
+    antenna_to_apply = '*&*'
+
     def prepare(self):
         
         # Run applycal
@@ -91,7 +94,8 @@ class Applycals(basetask.StandardTaskTemplate):
             # 20170406 TN
             # flagdata task arguments are indirectly given so that sd applycal task is
             # able to edit them
-            flagdata_summary_job = casa_tasks.flagdata(**self._get_flagsum_arg(vis=inputs.vis))
+            summary_args = dict(vis=inputs.vis, mode='summary')
+            flagdata_summary_job = casa_tasks.flagdata(**self._get_flagsum_arg(summary_args))
             stats_before = self._executor.execute(flagdata_summary_job)
             stats_before['name'] = 'before'
 

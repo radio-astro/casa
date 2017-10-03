@@ -227,7 +227,7 @@ class Applycal(basetask.StandardTaskTemplate):
             # flagdata task arguments are indirectly given so that sd applycal task is
             # able to edit them
             summary_args = dict(vis=inputs.vis, mode='summary')
-            self._get_flagsum_arg(summary_args)
+            summary_args = self._get_flagsum_arg(summary_args)
             # schedule a flagdata summary jobs either side of the applycal jobs
             jobs.insert(0, casa_tasks.flagdata(name='before', **summary_args))
             jobs.append(casa_tasks.flagdata(name='applycal', **summary_args))
