@@ -2,6 +2,7 @@ from __future__ import absolute_import
 import os
 import glob
 import math
+import ast
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
@@ -164,10 +165,18 @@ class Makecutoutimages(basetask.StandardTaskTemplate):
         if trcy > imsize[1]: trcy = imsize[1] - 1
 
         if (inputs.offsetblc and inputs.offsettrc):
-            fld_subim_sizeXblc = int(3600.0 * (inputs.offsetblc[0] / 3600.0 + buffer) / xcellsize)
-            fld_subim_sizeYblc = int(3600.0 * (inputs.offsetblc[1] / 3600.0 + buffer) / ycellsize)
-            fld_subim_sizeXtrc = int(3600.0 * (inputs.offsettrc[0] / 3600.0 + buffer) / xcellsize)
-            fld_subim_sizeYtrc = int(3600.0 * (inputs.offsettrc[1] / 3600.0 + buffer) / ycellsize)
+            offsetblc = inputs.offsetblc
+            offsettrc = inputs.offsettrc
+
+            if type(offsetblc) is str:
+                offsetblc = ast.literal_eval(offsetblc)
+            if type(offsettrc) is str:
+                offsettrc = ast.literal_eval(offsettrc)
+
+            fld_subim_sizeXblc = int(3600.0 * (offsetblc[0] / 3600.0 + buffer) / xcellsize)
+            fld_subim_sizeYblc = int(3600.0 * (offsetblc[1] / 3600.0 + buffer) / ycellsize)
+            fld_subim_sizeXtrc = int(3600.0 * (offsettrc[0] / 3600.0 + buffer) / xcellsize)
+            fld_subim_sizeYtrc = int(3600.0 * (offsettrc[1] / 3600.0 + buffer) / ycellsize)
 
             blcx = imsize[0] / 2 - (fld_subim_sizeXblc)
             blcy = imsize[1] / 2 - (fld_subim_sizeYblc)
@@ -180,7 +189,7 @@ class Makecutoutimages(basetask.StandardTaskTemplate):
             if trcy > imsize[1]: trcy = imsize[1] - 1
 
             LOG.info("Using user defined offsets in arcseconds of: blc:({!s}), trc:({!s})".format(
-                ','.join([str(i) for i in inputs.offsetblc]),','.join([str(i) for i in inputs.offsettrc])))
+                ','.join([str(i) for i in offsetblc]),','.join([str(i) for i in offsettrc])))
 
         fld_subim = str(blcx) + ',' + str(blcy) + ',' + str(trcx) + ',' + str(trcy)
         LOG.info('Using field subimage blc,trc of {!s},{!s}, {!s},{!s}, which includes a buffer of {!s} arcminutes.'.format(blcx,blcy,trcx,trcy,buffer*60))
