@@ -6,8 +6,11 @@ import types
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.mpihelpers as mpihelpers
+import pipeline.infrastructure.renderer.weblog as weblog
+
 from ..tclean import Tclean
 from ..tclean.resultobjects import TcleanResult
+from ..tclean.renderer import T2_4MDetailsTcleanRenderer
 from .resultobjects import MakeImagesResult
 
 LOG = infrastructure.get_logger(__name__)
@@ -105,6 +108,14 @@ class MakeImages(basetask.StandardTaskTemplate):
         return result
 
     def analyse(self, result):
+        # if this is VLASS data, use a different weblog template
+        # NB: we only check the first entry in the clean list and assume any that follow
+        #     will also be VLASS
+        if 'VLASS' in self.inputs.context.clean_list_pending[0]['heuristics'].imaging_mode:
+            weblog.add_renderer(MakeImages,
+                                T2_4MDetailsTcleanRenderer(description='Calculate clean products',
+                                                           uri='vlass_tclean.mako'),
+                                group_by=weblog.UNGROUPED)
         return result
 
 
