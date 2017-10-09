@@ -14,18 +14,18 @@ LOG = logging.get_logger(__name__)
 
 class WvrgcalflagQAHandler(pqa.QAResultHandler):    
     """
-    QA handler for an uncontained WvrgcalflagResult.
+    QA handler for an uncontained WvrgcalflagResults.
     """
-    result_cls = resultobjects.WvrgcalflagResult
+    result_cls = resultobjects.WvrgcalflagResults
     child_cls = None
 
     def handle(self, context, result):
         ms_name = os.path.basename(result.inputs['vis'])
 
         try:
-            wvr_score = result.qa_wvr.overall_score
+            wvr_score = result.flaggerresult.dataresult.qa_wvr.overall_score
             if wvr_score is not None:
-                score_object = qacalc.score_wvrgcal(ms_name, result.qa_wvr.overall_score)
+                score_object = qacalc.score_wvrgcal(ms_name, result.flaggerresult.dataresult.qa_wvr.overall_score)
                 new_origin = pqa.QAOrigin(
                     metric_name='PhaseRmsRatio',
                     metric_score=score_object.origin.metric_score,
@@ -52,7 +52,7 @@ class WvrgcalflagListQAHandler(pqa.QAResultHandler):
     QA handler for a list containing WvrgcalflagResults.
     """
     result_cls = list
-    child_cls = resultobjects.WvrgcalflagResult
+    child_cls = resultobjects.WvrgcalflagResults
 
     def handle(self, context, result):
         # collate the QAScores from each child result, pulling them into our

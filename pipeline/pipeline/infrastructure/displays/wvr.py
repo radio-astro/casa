@@ -28,10 +28,8 @@ class WVRScoreFinder(object):
         antenna_id = antenna.id
         
         spw_viewlist = [viewlist for viewlist in self._delegate.view.values() 
-                        if viewlist[0].spw==spw_id]
-        #assert len(spw_viewlist) is 1, ('Unexpected number of views for spw '
-                                        #'%s. Expected %s but got '
-                                        #'%s' % (spw_id, 1, len(spw_viewlist)))
+                        if viewlist[0].spw == spw_id]
+
         if len(spw_viewlist) <= 0:
             return 0.0
 
@@ -82,7 +80,7 @@ class WVRPhaseVsBaselineChart(object):
         self._caltables_loaded = True
 
     def _get_plot_intents(self):
-        return set(self.result.inputs['qa_intent'].split(','))
+        return set(self.result.dataresult.inputs['qa_intent'].split(','))
     
     def _get_plot_scans(self):
         plot_intents = self._get_plot_intents()
@@ -93,18 +91,18 @@ class WVRPhaseVsBaselineChart(object):
         """
         Get the plot symbol and colour for this polarization and bandtype.
         """
-        d = {'BEFORE' : {'L' : ('-', 'orange', 0.3),
-                         'R' : ('--', 'sandybrown', 0.3),
-                         'X' : ('^', 'lightslategray', 0.3),
-                         'Y' : ('o', 'lightslategray', 0.3),
-                         'XX' : ('^', 'lightslategray', 0.3),
-                         'YY' : ('o', 'lightslategray', 0.3)},
-             'AFTER' : {'L' : ('-', 'green', 0.6),
-                        'R' : ('-', 'red', 0.6),
-                        'X' : ('^', 'green', 0.6),
-                        'Y' : ('o', 'red', 0.6),
-                        'XX' : ('^', 'green', 0.6),
-                        'YY' : ('o', 'red', 0.6)}}
+        d = {'BEFORE': {'L': ('-', 'orange', 0.3),
+                        'R': ('--', 'sandybrown', 0.3),
+                        'X': ('^', 'lightslategray', 0.3),
+                        'Y': ('o', 'lightslategray', 0.3),
+                        'XX': ('^', 'lightslategray', 0.3),
+                        'YY': ('o', 'lightslategray', 0.3)},
+             'AFTER': {'L': ('-', 'green', 0.6),
+                       'R': ('-', 'red', 0.6),
+                       'X': ('^', 'green', 0.6),
+                       'Y': ('o', 'red', 0.6),
+                       'XX': ('^', 'green', 0.6),
+                       'YY': ('o', 'red', 0.6)}}
     
         return d.get(state, {}).get(pol, ('x', 'grey'))
 
@@ -114,23 +112,23 @@ class WVRPhaseVsBaselineChart(object):
         self.ms = context.observing_run.get_ms(result.inputs['vis'])
         self._caltables_loaded = False
 
-        nowvr_gaintables = set([c.gaintable for c in result.nowvr_result.pool])
+        nowvr_gaintables = set([c.gaintable for c in result.dataresult.nowvr_result.pool])
         assert len(nowvr_gaintables) is 1, ('Unexpected number of pre-WVR phase-up'
                                             'gaintables: %s' % nowvr_gaintables) 
 
         nowvr_gaintable = nowvr_gaintables.pop()
-        wvr_gaintable = result.qa_wvr.gaintable_wvr
+        wvr_gaintable = result.dataresult.qa_wvr.gaintable_wvr
         LOG.debug('Gaintables for WVR plots:\n'
                   'No WVR: %s\tWith WVR: %s' % (nowvr_gaintable, wvr_gaintable))    
 
         self._table_before = nowvr_gaintable
         self._table_after = wvr_gaintable
         
-        self._score_retriever = WVRScoreFinder(result)
+        self._score_retriever = WVRScoreFinder(result.viewresult)
 
         self._wrappers = []
 
-        refant_name = result.nowvr_result.inputs['refant'].split(',')[0]
+        refant_name = result.dataresult.nowvr_result.inputs['refant'].split(',')[0]
         self._refant = self.ms.get_antenna(refant_name)[0]        
 
     def get_data_object(self, data, corr_id):
@@ -376,12 +374,12 @@ class WVRPhaseVsBaselineChart(object):
         # CASA is using an old matplotlib, so we can't specify fontsize as
         # a property
         try:
-            ax2.legend(plots, legend, prop={'size':10}, numpoints=1,
+            ax2.legend(plots, legend, prop={'size': 10}, numpoints=1,
                        loc='upper center', bbox_to_anchor=(0.5, -0.12),
                        frameon=False, ncol=len(legend))
         except TypeError:
             # old matplotlib doesn't expect frameon either
-            l = ax2.legend(plots, legend, prop={'size':10}, numpoints=1,
+            l = ax2.legend(plots, legend, prop={'size': 10}, numpoints=1,
                            loc='upper center', bbox_to_anchor=(0.5, -0.12),
                            ncol=len(legend))
             l.draw_frame(False)
@@ -468,7 +466,6 @@ class WVRPhaseVsBaselineChart(object):
         return None
 
 
-
 class WVRPhaseOffsetPlotHelper(phaseoffset.PhaseOffsetPlotHelper):
     def __init__(self, context, result, plot_per_antenna=True):
         calapp = result.pool[0]
@@ -495,12 +492,14 @@ class WVRPhaseOffsetPlotHelper(phaseoffset.PhaseOffsetPlotHelper):
 
 class WVRPhaseOffsetPlot(phaseoffset.PhaseOffsetPlot):
     def __init__(self, context, result):
-        vis = os.path.basename(result.pool[0].vis)
+        vis = os.path.basename(result.dataresult.pool[0].vis)
         ms = context.observing_run.get_ms(vis)
-        plothelper = WVRPhaseOffsetPlotHelper(context, result)        
-        scan_intent = result.inputs['qa_intent']
+        plothelper = WVRPhaseOffsetPlotHelper(context, result.dataresult)
+        scan_intent = result.dataresult.inputs['qa_intent']
+        score_retriever = WVRScoreFinder(result.viewresult)
 
-        super(WVRPhaseOffsetPlot, self).__init__(context, ms, plothelper, scan_intent=scan_intent, score_retriever=WVRScoreFinder(result))
+        super(WVRPhaseOffsetPlot, self).__init__(
+            context, ms, plothelper, scan_intent=scan_intent, score_retriever=score_retriever)
 
 
 class WVRPhaseOffsetSummaryPlotHelper(WVRPhaseOffsetPlotHelper):
@@ -510,9 +509,11 @@ class WVRPhaseOffsetSummaryPlotHelper(WVRPhaseOffsetPlotHelper):
 
 class WVRPhaseOffsetSummaryPlot(phaseoffset.PhaseOffsetPlot):
     def __init__(self, context, result):
-        vis = os.path.basename(result.pool[0].vis)
+        vis = os.path.basename(result.dataresult.pool[0].vis)
         ms = context.observing_run.get_ms(vis)
-        plothelper = WVRPhaseOffsetSummaryPlotHelper(context, result)        
-        scan_intent = result.inputs['qa_intent']
+        plothelper = WVRPhaseOffsetSummaryPlotHelper(context, result.dataresult)
+        scan_intent = result.dataresult.inputs['qa_intent']
+        score_retriever = WVRScoreFinder(result.viewresult)
 
-        super(WVRPhaseOffsetSummaryPlot, self).__init__(context, ms, plothelper, scan_intent=scan_intent, score_retriever=WVRScoreFinder(result))
+        super(WVRPhaseOffsetSummaryPlot, self).__init__(
+            context, ms, plothelper, scan_intent=scan_intent, score_retriever=score_retriever)

@@ -62,47 +62,47 @@ class T2_4MDetailsWvrgcalflagRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
             ms = context.observing_run.get_ms(vis)
 
             # if there's no WVR data, the pool will be empty
-            if not result.pool:
+            if not result.flaggerresult.dataresult.pool:
                 # check if this MS is all 7m data. 
                 if all([a for a in ms.antennas if a.diameter != 12.0]):
                     ms_non12.append(os.path.basename(vis))
                 continue
 
-            applications.extend(self.get_wvr_applications(result))
+            applications.extend(self.get_wvr_applications(result.flaggerresult.dataresult))
             try:
-                wvrinfos[vis] = result.wvr_infos
+                wvrinfos[vis] = result.flaggerresult.dataresult.wvr_infos
             except AttributeError:
                 pass
 
             # collect flagging metric plots from result
-            if result.qa_wvr.view:
+            if result.flaggerresult.dataresult.qa_wvr.view:
                 plotter = image.ImageDisplay()
-                plots = plotter.plot(context, result.qa_wvr, reportdir=plots_dir, 
+                plots = plotter.plot(context, result.flaggerresult.dataresult.qa_wvr, reportdir=plots_dir,
                                      prefix='qa', change='WVR')
                 # sort plots by spw
                 metric_plots[vis] = sorted(plots, key=lambda plot: int(plot.parameters['spw']))
 
-            if result.view:
+            if result.flaggerresult.view:
                 flag_plotter = image.ImageDisplay()
-                plots = flag_plotter.plot(context, result, reportdir=plots_dir, 
+                plots = flag_plotter.plot(context, result.flaggerresult, reportdir=plots_dir,
                                           prefix='flag', change='Flagging')
                 # sort plots by spw
                 flag_plots[vis] = sorted(plots, key=lambda plot: int(plot.parameters['spw']))
 
-            if result.nowvr_result:
+            if result.flaggerresult.dataresult.qa_wvr.nowvr_result:
                 # generate the phase offset summary plots
-                phase_offset_summary_plotter = wvr.WVRPhaseOffsetSummaryPlot(context, result)
+                phase_offset_summary_plotter = wvr.WVRPhaseOffsetSummaryPlot(context, result.flaggerresult)
                 phase_offset_summary_plots[vis] = phase_offset_summary_plotter.plot()
                 
                 # generate the per-antenna phase offset plots
-                phase_offset_plotter = wvr.WVRPhaseOffsetPlot(context, result)
+                phase_offset_plotter = wvr.WVRPhaseOffsetPlot(context, result.flaggerresult)
                 phase_offset_detail_plots[vis] = phase_offset_plotter.plot()
 
-                baseline_plotter = wvr.WVRPhaseVsBaselineChart(context, result)
+                baseline_plotter = wvr.WVRPhaseVsBaselineChart(context, result.flaggerresult)
                 baseline_detail_plots[vis] = baseline_plotter.plot()
 
                 # get the first scan for the QA intent(s)
-                qa_intent = set(result.inputs['qa_intent'].split(','))
+                qa_intent = set(result.flaggerresult.dataresult.inputs['qa_intent'].split(','))
                 qa_scan = sorted([scan.id for scan in ms.scans 
                                   if not qa_intent.isdisjoint(scan.intents)])[0]
                 # scan parameter on plot is comma-separated string 

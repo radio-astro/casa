@@ -16,7 +16,7 @@ class WvrgcalResult(basetask.Results):
     def __init__(self, vis, final=None, pool=None, preceding=None,
                  wvrflag=None):
         """
-        Construct and return a new WvrgcalflagResult.
+        Construct and return a new WvrgcalResult.
         """
         super(WvrgcalResult, self).__init__()
 

@@ -817,12 +817,16 @@ class MatrixFlaggerInputs(basetask.StandardInputs):
 
 class MatrixFlaggerResults(basetask.Results,
                            flaggableviewresults.FlaggableViewResults):
-    def __init__(self):
+    def __init__(self, vis=None):
         """
         Construct and return a new MatrixFlaggerResults.
         """
         basetask.Results.__init__(self)
         flaggableviewresults.FlaggableViewResults.__init__(self)
+
+        self.vis = vis
+        self.dataresult = None
+        self.viewresult = None
 
     def merge_with_context(self, context):
         pass
@@ -858,7 +862,7 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
         inputs = self.inputs
 
         # Initialize result.
-        result = MatrixFlaggerResults()
+        result = MatrixFlaggerResults(vis=inputs.vis)
 
         # Expand flag commands to larger scope, if requested, by removing
         # selection in specified fields
@@ -880,6 +884,8 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
         newflags = []
         counter = 1
         include_before = True
+        dataresult = None
+        viewresult = None
 
         # Start iterative flagging
         while counter <= inputs.niter:
@@ -966,22 +972,29 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
             # set these.
             if len(newflags) > 0:
                 
-                # If datatask needs to be iterated, and max number of
-                # iterations is not 1, then the "before" summary has already
-                # been done, so only need to set the new flags and do "after"
-                # summary
-                if inputs.iter_datatask is True and inputs.niter != 1:
-                    
-                    # Set flags, and include "after" summary
-                    _, stats_after = self.set_flags(newflags,
-                                                    summarize_after=True)
+                # If datatask needs to be iterated...
+                if inputs.iter_datatask is True:
 
-                    # With new flags set, re-run the data task
+                    # First set the new flags that were found on the last
+                    # iteration. If the "before" summary was not yet created,
+                    # then include this here; always include the "after"
+                    # summary.
+                    if include_before:
+                        # Set flags, and include "before" and "after" summary.
+                        stats_before, stats_after = self.set_flags(
+                            newflags, summarize_before=True,
+                            summarize_after=True)
+                    else:
+                        # Set flags, and include "after" summary
+                        _, stats_after = self.set_flags(
+                            newflags, summarize_after=True)
+
+                    # After setting the latest flags, re-run the data task.
                     dataresult = self._executor.execute(inputs.datatask)
                                  
                 # If the datatask did not need to be iterated, then no flags
-                # were set yet and no "before" summary was performed yet, 
-                # so set all flags and include both "before" and "after" summary.
+                # were set yet and no "before" summary was performed yet, so
+                # set all flags and include both "before" and "after" summary.
                 else:
                     stats_before, stats_after = self.set_flags(
                         flags, summarize_before=True, summarize_after=True)
@@ -991,10 +1004,11 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
 
                 # Import the post-flagging view into the final result
                 result.importfrom(viewresult)
-                
-            # If no newflags were found on last iteration loop
+
+            # If flags were found, but no newflags were found on last iteration
+            # then the dataresult is already up-to-date, and all that is needed
+            # is to ensure the flags are set, and that summaries are created.
             else:
-                
                 # If datatask needs to be iterated, then the "before" summary has
                 # already been done, and the flags have already been set, so only
                 # need to do an "after" summary.
@@ -1022,10 +1036,15 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
             stats_before, _ = self.set_flags(flags, summarize_before=True)
             stats_after = copy.deepcopy(stats_before)
         
-        # Store in the final result the name of the measurement set or caltable to 
-        # which any potentially found flags would need to be applied to
+        # Store in the final result the name of the measurement set or caltable
+        # to which any potentially found flags would need to be applied to.
         result.table = inputs.flagsettertask.inputs.table
-        
+
+        # Store in the final result the final data task result and the final
+        # view task result.
+        result.dataresult = dataresult
+        result.viewresult = viewresult
+
         # Store the flagging summaries in the final result
         result.summaries = [stats_before, stats_after]
 
@@ -1055,49 +1074,53 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
         return newflags, newflags_reason
 
     def set_flags(self, flags, summarize_before=False, summarize_after=False):
-        # Initialize flagging summaries
-        stats_before = []
-        stats_after = []
+        # Initialize flag commands.
         allflagcmds = []
 
-        # Add the "before" summary to the flagging commands
+        # Add the "before" summary to the flagging commands.
         if summarize_before:
             allflagcmds = ["mode='summary' name='before'"]
         
-        # Add the flagging commands
+        # Add the flagging commands.
         allflagcmds.extend(flags)
         
-        # Add the "before" summary to the flagging commands
+        # Add the "before" summary to the flagging commands.
         if summarize_after:
             allflagcmds.append("mode='summary' name='after'")
         
-        # Update flag setting task with all flagging commands
+        # Update flag setting task with all flagging commands.
         self.inputs.flagsettertask.flags_to_set(allflagcmds)
         
         # Run flag setting task
         flagsetterresult = self._executor.execute(self.inputs.flagsettertask)
 
-        # Initialize "before" and/or "after" summaries, if necessary
-        if summarize_before:
-            stats_before = {}
-        if summarize_after:
-            stats_after = {}
+        # Initialize "before" and/or "after" summaries.
+        stats_before = {}
+        stats_after = {}
 
-        # Extract "before" and/or "after" summary
-        if all(['report' in k for k in flagsetterresult.results[0].keys()]):
-            # Go through dictionary of reports...
-            for report in flagsetterresult.results[0].keys():
-                if flagsetterresult.results[0][report]['name'] == 'before':
-                    stats_before = flagsetterresult.results[0][report]
-                if flagsetterresult.results[0][report]['name'] == 'after':
-                    stats_after = flagsetterresult.results[0][report]
+        # If the flagsetter returned results from the CASA flag data task,
+        # then proceed to extract "before" and/or "after" flagging summaries.
+        if flagsetterresult.results:
+            if all(['report' in k for k in flagsetterresult.results[0].keys()]):
+                # Go through dictionary of reports.
+                for report in flagsetterresult.results[0].keys():
+                    if flagsetterresult.results[0][report]['name'] == 'before':
+                        stats_before = flagsetterresult.results[0][report]
+                    if flagsetterresult.results[0][report]['name'] == 'after':
+                        stats_after = flagsetterresult.results[0][report]
+            else:
+                # Go through single report.
+                if flagsetterresult.results[0]['name'] == 'before':
+                    stats_before = flagsetterresult.results[0]
+                if flagsetterresult.results[0]['name'] == 'after':
+                    stats_after = flagsetterresult.results[0]
+        # In the alternate case, where no "real" flagsetter results were
+        # returned (e.g. by WvrgcalFlagSetter), then there will have been no
+        # real flagging summaries created, in which case empty dictionaries
+        # are returned as empty summaries.
         else:
-            # Go through single report.
-            if flagsetterresult.results[0]['name'] == 'before':
-                stats_before = flagsetterresult.results[0]
-            if flagsetterresult.results[0]['name'] == 'after':
-                stats_after = flagsetterresult.results[0]
-        
+            pass
+
         return stats_before, stats_after
 
     @staticmethod
@@ -1912,12 +1935,16 @@ class VectorFlaggerInputs(basetask.StandardInputs):
 
 class VectorFlaggerResults(basetask.Results,
                            flaggableviewresults.FlaggableViewResults):
-    def __init__(self):
+    def __init__(self, vis=None):
         """
         Construct and return a new VectorFlaggerResults.
         """
         basetask.Results.__init__(self)
         flaggableviewresults.FlaggableViewResults.__init__(self)
+
+        self.vis = vis
+        self.dataresult = None
+        self.viewresult = None
 
     def merge_with_context(self, context):
         pass
@@ -1948,6 +1975,8 @@ class VectorFlagger(basetask.StandardTaskTemplate):
         newflags = []
         counter = 1
         include_before = True
+        dataresult = None
+        viewresult = None
 
         # Start iterative flagging
         while counter <= inputs.niter:
@@ -2011,6 +2040,7 @@ class VectorFlagger(basetask.StandardTaskTemplate):
                 counter += 1
             else:
                 # If no view could be created, exit the iteration
+                LOG.warning('No flagging view was created!')
                 break
 
         # Create final set of flags by removing duplicates from our accumulated flags
@@ -2023,25 +2053,32 @@ class VectorFlagger(basetask.StandardTaskTemplate):
             # these.
             if len(newflags) > 0:
                 
-                # If datatask needs to be iterated, and max number of iterations is
-                # not 1, then the "before" summary has already been done, so only 
-                # need to set flags and do "after" summary
-                if inputs.iter_datatask is True and inputs.niter != 1:
-                    
-                    # Set flags, and include "after" summary
-                    _, stats_after = self.set_flags(newflags,
-                                                    summarize_after=True)
+                # If datatask needs to be iterated...
+                if inputs.iter_datatask is True:
 
-                    # With new flags set, re-run the data task
+                    # First set the new flags that were found on the last
+                    # iteration. If the "before" summary was not yet created,
+                    # then include this here; always include the "after"
+                    # summary.
+                    if include_before:
+                        # Set flags, and include "before" and "after" summary.
+                        stats_before, stats_after = self.set_flags(
+                            newflags, summarize_before=True,
+                            summarize_after=True)
+                    else:
+                        # Set flags, and include "after" summary
+                        _, stats_after = self.set_flags(
+                            newflags, summarize_after=True)
+
+                    # After setting the latest flags, re-run the data task.
                     dataresult = self._executor.execute(inputs.datatask)
-                                 
+
                 # If the datatask did not need to be iterated, then no flags
-                # were set yet and no "before" summary was performed yet, 
-                # so set all flags and include both "before" and "after" summary.
+                # were set yet and no "before" summary was performed yet, so
+                # set all flags and include both "before" and "after" summary.
                 else:
-                    stats_before, stats_after = self.set_flags(flags, 
-                                                               summarize_before=True, 
-                                                               summarize_after=True)
+                    stats_before, stats_after = self.set_flags(
+                        flags, summarize_before=True, summarize_after=True)
                 
                 # Create final post-flagging view                
                 viewresult = inputs.viewtask(dataresult)
@@ -2049,21 +2086,22 @@ class VectorFlagger(basetask.StandardTaskTemplate):
                 # Import the post-flagging view into the final result
                 result.importfrom(viewresult)
                 
-            # If no newflags were found on last iteration loop
+            # If flags were found, but no newflags were found on last iteration
+            # then the dataresult is already up-to-date, and all that is needed
+            # is to ensure the flags are set, and that summaries are created.
             else:
                 
                 # If datatask needs to be iterated, then the "before" summary has
                 # already been done, and the flags have already been set, so only
-                # need to do an "after" summary
+                # need to do an "after" summary.
                 if inputs.iter_datatask is True:
                     _, stats_after = self.set_flags([], summarize_after=True)
                 # If the datatask did not need to be iterated, then no flags
                 # were set yet and no "before" summary was performed yet, 
                 # so set all flags and include both "before" and "after" summary.
                 else:
-                    stats_before, stats_after = self.set_flags(flags, 
-                                                               summarize_before=True, 
-                                                               summarize_after=True)
+                    stats_before, stats_after = self.set_flags(
+                        flags, summarize_before=True, summarize_after=True)
             
             # Store the final set of flags in the final result
             result.addflags(flags)
@@ -2075,10 +2113,15 @@ class VectorFlagger(basetask.StandardTaskTemplate):
             stats_before, _ = self.set_flags(flags, summarize_before=True)
             stats_after = copy.deepcopy(stats_before)
         
-        # Store in the final result the name of the measurement set or caltable to 
-        # which any potentially found flags would need to be applied to
+        # Store in the final result the name of the measurement set or caltable
+        # to which any potentially found flags would need to be applied to.
         result.table = inputs.flagsettertask.inputs.table
-        
+
+        # Store in the final result the final data task result and the final
+        # view task result.
+        result.dataresult = dataresult
+        result.viewresult = viewresult
+
         # Store the flagging summaries in the final result
         result.summaries = [stats_before, stats_after]
 
@@ -2103,8 +2146,6 @@ class VectorFlagger(basetask.StandardTaskTemplate):
     
     def set_flags(self, flags, summarize_before=False, summarize_after=False):
         # Initialize flagging summaries
-        stats_before = []
-        stats_after = []
         allflagcmds = []
 
         # Add the "before" summary to the flagging commands
@@ -2124,27 +2165,33 @@ class VectorFlagger(basetask.StandardTaskTemplate):
         # Run flag setting task
         flagsetterresult = self._executor.execute(self.inputs.flagsettertask)
 
-        # Initialize "before" and/or "after" summaries, if necessary
-        if summarize_before:
-            stats_before = {}
-        if summarize_after:
-            stats_after = {}
+        # Initialize "before" and/or "after" summaries.
+        stats_before = {}
+        stats_after = {}
 
-        # Extract "before" and/or "after" summary
-        if all(['report' in k for k in flagsetterresult.results[0].keys()]):
-            # Go through dictionary of reports...
-            for report in flagsetterresult.results[0].keys():
-                if flagsetterresult.results[0][report]['name'] == 'before':
-                    stats_before = flagsetterresult.results[0][report]
-                if flagsetterresult.results[0][report]['name'] == 'after':
-                    stats_after = flagsetterresult.results[0][report]
+        # If the flagsetter returned results from the CASA flag data task,
+        # then proceed to extract "before" and/or "after" flagging summaries.
+        if flagsetterresult.results:
+            if all(['report' in k for k in flagsetterresult.results[0].keys()]):
+                # Go through dictionary of reports...
+                for report in flagsetterresult.results[0].keys():
+                    if flagsetterresult.results[0][report]['name'] == 'before':
+                        stats_before = flagsetterresult.results[0][report]
+                    if flagsetterresult.results[0][report]['name'] == 'after':
+                        stats_after = flagsetterresult.results[0][report]
+            else:
+                # Go through single report.
+                if flagsetterresult.results[0]['name'] == 'before':
+                    stats_before = flagsetterresult.results[0]
+                if flagsetterresult.results[0]['name'] == 'after':
+                    stats_after = flagsetterresult.results[0]
+        # In the alternate case, where no "real" flagsetter results were
+        # returned (e.g. by WvrgcalFlagSetter), then there will have been no
+        # real flagging summaries created, in which case empty dictionaries
+        # are returned as empty summaries.
         else:
-            # Go through single report.
-            if flagsetterresult.results[0]['name'] == 'before':
-                stats_before = flagsetterresult.results[0]
-            if flagsetterresult.results[0]['name'] == 'after':
-                stats_after = flagsetterresult.results[0]
-        
+            pass
+
         return stats_before, stats_after
 
     @staticmethod

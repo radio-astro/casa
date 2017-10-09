@@ -1,23 +1,51 @@
 from __future__ import absolute_import
 
+import os
+
+import pipeline.infrastructure as infrastructure
+import pipeline.infrastructure.basetask as basetask
 from pipeline.h.tasks.common import flaggableviewresults
-from ..wvrgcal import resultobjects as wvrgcalresults
+
+LOG = infrastructure.get_logger(__name__)
 
 
-class WvrgcalflagResult(wvrgcalresults.WvrgcalResult,
-                        flaggableviewresults.FlaggableViewResults):
+class WvrgcalflagResults(basetask.Results):
 
-    def __init__(self, vis, final=None, pool=None, preceding=None,
-                 wvrflag=None):
-        if final is None:
-            final = []
-        if pool is None:
-            pool = []
-        if preceding is None:
-            preceding = []
-        if wvrflag is None:
-            wvrflag = []
+    def __init__(self, vis, flaggerresult=None):
+        """
+        Construct and return a new WvrgcalflagResults.
+        """
+        super(WvrgcalflagResults, self).__init__()
 
-        wvrgcalresults.WvrgcalResult.__init__(self, vis, final, pool,
-                                              preceding, wvrflag)
-        flaggableviewresults.FlaggableViewResults.__init__(self)
+        self.vis = vis
+        self.flaggerresult = flaggerresult
+
+    def merge_with_context(self, context):
+        # The results from the data task (Wvrgcal) are the only items to
+        # consider for acceptance into the context:
+        if not self.flaggerresult.dataresult:
+            LOG.info("No results from Wvrgcal, nothing to merge.")
+        else:
+            self.flaggerresult.dataresult.merge_with_context(context)
+
+    def __repr__(self):
+        s = 'WvrgcalflagResults:\n'
+        if self.flaggerresult.dataresult:
+            for calapplication in self.flaggerresult.dataresult.final:
+                s += '\tBest caltable for {} is {}\n'.format(
+                    os.path.basename(self.vis),
+                    calapplication.gaintable)
+        else:
+            s += '\tNo caltable available for {}\n'.format(
+                os.path.basename(self.vis))
+        return s
+
+
+class WvrgcalflagViewResults(flaggableviewresults.FlaggableViewResults):
+
+    def __init__(self, vis):
+        """
+        Construct and return a new WvrgcalflagViewResults.
+        """
+        super(WvrgcalflagViewResults, self).__init__()
+        self.vis = vis
