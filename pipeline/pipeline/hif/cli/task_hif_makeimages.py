@@ -10,7 +10,7 @@ def hif_makeimages(vis=None, target_list=None, weighting=None,
                    hm_lownoisethreshold=None, hm_negativethreshold=None,
                    hm_minbeamfrac=None, hm_growiterations=None,
                    hm_cleaning=None, tlimit=None, masklimit=None,
-                   maxncleans=None, cleancontranges=None, subcontms=None, parallel=None,
+                   maxncleans=None, cleancontranges=None, parallel=None,
                    pipelinemode=None, dryrun=None, acceptresults=None):
 
     # create a dictionary containing all the arguments given in the
