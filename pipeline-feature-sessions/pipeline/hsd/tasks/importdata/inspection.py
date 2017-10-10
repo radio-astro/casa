@@ -227,7 +227,7 @@ class SDInspection(object):
         merge_heuristic2 = heuristics.MergeGapTables2()
         ra = numpy.asarray(datatable.getcol('RA'))
         dec = numpy.asarray(datatable.getcol('DEC'))
-        row = numpy.asarray(datatable.getcol('ROW'))
+#         row = numpy.asarray(datatable.getcol('ROW'))
         elapsed = numpy.asarray(datatable.getcol('ELAPSED'))
         beam = numpy.asarray(datatable.getcol('BEAM'))
         posgrp = numpy.zeros(datatable.nrow, dtype=numpy.int32) - 1
@@ -293,7 +293,7 @@ class SDInspection(object):
                         continue
                     id_list.sort()
                     LOG.debug('id_list=%s'%(id_list))
-                    row_sel = numpy.take(row, id_list)
+#                     row_sel = numpy.take(row, id_list)
                     ra_sel = numpy.take(ra, id_list)
                     dec_sel = numpy.take(dec, id_list)
                     time_sel = numpy.take(elapsed, id_list)
@@ -329,8 +329,8 @@ class SDInspection(object):
                             continue
                         LOG.debug('POSGRP_REP: add %s as a representative of group %s'%(id_list[v[0]], posgrp_id))
                         posgrp_rep[int(posgrp_id)] = int(id_list[v[0]])
-                        for id in v:
-                            _id = id_list[id]
+                        for i in v:
+                            _id = id_list[i]
                             posgrp[_id] = posgrp_id
                         posgrp_list[ant][spw][field_id].append(posgrp_id)
                         posgrp_id += 1
@@ -355,8 +355,8 @@ class SDInspection(object):
                     for idx in (0,1):
                         table = merge_table[idx]
                         for item in table:
-                            for id in item:
-                                timegrp[idx][id_list[id]] = timegrp_id[idx]
+                            for i in item:
+                                timegrp[idx][id_list[i]] = timegrp_id[idx]
                             grp_list[key[idx]].append(timegrp_id[idx])
                             timegrp_id[idx] = timegrp_id[idx] + 1
                         gap = merge_gap[idx]
@@ -440,8 +440,8 @@ class SDInspection(object):
             for reference in reference_fields:
                 reference_name = reference.name
                 LOG.debug('reference name: \'%s\''%(reference_name))
-                tpattern = '^%s_[0-9]$'%(target_name)
-                rpattern = '^%s_[0-9]$'%(reference_name)
+#                 tpattern = '^%s_[0-9]$'%(target_name)
+#                 rpattern = '^%s_[0-9]$'%(reference_name)
                 if target_name == reference_name:
                     field_map[target.id] = reference.id
                 elif match_field_name(reference_name, target_name):
@@ -505,20 +505,34 @@ class SDInspection(object):
         return match    
     
 def match_field_name(name1, name2):
+    """
+    Returns True if two (field) names match search patterns, i.e.,
+    either (name2 == name1 + pattern) or (name1 == name2 + pattern).
+    Otherwise, returns False.
+    Note the method returns False for the exact match, i.e., name1 == name2.
+    """
     trim_name = lambda s : s[1:-1] if s.startswith('"') and s.endswith('"') else s
     name1 = trim_name(name1)
     name2 = trim_name(name2)
     pos1 = name1.find(name2)
     pos2 = name2.find(name1)
-    pattern = '^_[0-9]+$'
-    is_match = lambda s: re.match(pattern, s) is not None
-    if pos1 == 0:
+    # extract sufix part of field name
+    if pos1 == 0 and len(name1) > len(name2):
         # name1 looks like name2 + suffix, try pattern matching for suffix 
         suffix = name1[len(name2):]
-        return is_match(suffix)
-    elif pos2 == 0:
+    elif pos2 == 0 and len(name1) < len(name2):
         # name2 looks like name1 + suffix, try pattern matching for suffix
         suffix = name2[len(name1):]
-        return is_match(suffix)
-    
+    else: # field names do not match
+        return False
+    # Check if the field name matches to pattern
+    off_pattern = '^_OFF_[0-9]+$'
+    old_pattern = '^_[0-9]+$' # old and unofficial field name pattern
+    for pattern in (off_pattern, old_pattern):
+#         is_match = lambda s: re.match(pattern, s) is not None
+        if re.match(pattern, suffix) is not None:
+            if pattern == old_pattern:
+                LOG.warn("OFF source field identified using old field name heuristics. You may want to review field mapping carefully.")
+            return True
+
     return False
