@@ -7,9 +7,7 @@ from .bandpass import BandpassMode, ChannelBandpass, PhcorBandpass
 from .correctedampflag import Correctedampflag
 from .checkproductsize import CheckProductSize
 from .findcont import FindCont
-from .fluxscale import Fluxcal
 from .fluxscale import Fluxscale
-from .fluxscale import NormaliseFlux
 from .gaincal import GaincalMode, GTypeGaincal, GSplineGaincal, KTypeGaincal
 from .gainflag import Gainflag
 from .lowgainflag import Lowgainflag

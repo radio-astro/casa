@@ -39,7 +39,7 @@ class TcleanInputs(cleanbase.CleanBaseInputs):
                  hm_minbeamfrac=None, hm_growiterations=None,
                  hm_cleaning=None, mask=None,
                  niter=None, threshold=None, tlimit=None, masklimit=None,
-                 maxncleans=None, cleancontranges=None, subcontms=None,
+                 maxncleans=None, cleancontranges=None,
                  parallel=None,
                  # Extra parameters not in the CLI task interface
                  uvtaper=None, scales=None, nsigma=None,
@@ -82,7 +82,6 @@ class TcleanInputs(cleanbase.CleanBaseInputs):
     masklimit = basetask.property_with_default('masklimit', 4.0)
     tlimit = basetask.property_with_default('tlimit', 2.0)
     cleancontranges = basetask.property_with_default('cleancontranges', False)
-    subcontms = basetask.property_with_default('subcontms', False)
 
     @property
     def imagename(self):
@@ -514,39 +513,6 @@ class Tclean(cleanbase.CleanBase):
         context = self.inputs.context
         inputs = self.inputs
 
-        # Check if a matching 'cont' image exists for continuum subtraction.
-        # NOTE: For Cycle 3 we use 'mfs' images due to possible
-        #       inaccuracies in the nterms=2 cont images.
-        #       If 'cont' images are going to be used, then the
-        #       startmodel parameter must be a list with
-        #       ['<name>.model.tt0', '<name>.model.tt1'].
-        # NOTE: For Cycle 4 we will implement uv continuum subtraction
-        #       Leave this code in place as a reminder for the future
-        #       when the pipeline may opt to choose between them
-        #cont_image_name = ''
-        #if (('TARGET' in inputs.intent) and (inputs.specmode == 'cube')):
-            #imlist = self.inputs.context.sciimlist.get_imlist()
-            #for iminfo in imlist[::-1]:
-                #if ((iminfo['sourcetype'] == 'TARGET') and \
-                    #(iminfo['sourcename'] == inputs.field) and \
-                    #(iminfo['specmode'] == 'mfs') and \
-                    #(inputs.spw in iminfo['spwlist'].split(','))):
-                    #cont_image_name = iminfo['imagename'][:iminfo['imagename'].rfind('.image')]
-                    #cont_image_name = cont_image_name.replace('.pbcor', '.model')
-                    #break
-
-            #if (cont_image_name != ''):
-                #LOG.info('Using %s for continuum subtraction.' % (os.path.basename(cont_image_name)))
-            #else:
-                #LOG.warning('Could not find any matching continuum image. Skipping continuum subtraction.')
-
-        # Do continuum subtraction for target cubes
-        # NOTE: This currently needs to be done as a separate step.
-        #       In the future the subtraction will be handled
-        #       on-the-fly in tclean.
-        #if (cont_image_name != ''):
-            #self._do_continuum(cont_image_name = cont_image_name, mode = 'sub')
-
         # Compute the dirty image
         LOG.info('Compute the dirty image')
         iter = 0
@@ -742,13 +708,6 @@ class Tclean(cleanbase.CleanBase):
             # Up the iteration counter
             iter += 1
 
-        # Re-add continuum so that the MS is unchanged afterwards.
-        #if (cont_image_name != ''):
-            #if (inputs.subcontms == False):
-                #self._do_continuum(cont_image_name = cont_image_name, mode = 'add')
-            #else:
-                #LOG.warn('Not re-adding continuum model. MS is modified !')
-
         # If specmode is "cube", create from the non-pbcorrected cube
         # after continuum subtraction an image of the moment 0 / 8 integrated
         # intensity for the line-free channels.
@@ -756,88 +715,6 @@ class Tclean(cleanbase.CleanBase):
             self._calc_mom0_8_fc(result)
 
         return result
-
-    def _do_continuum(self, cont_image_name, mode):
-        """
-        Add/Subtract continuum model.
-        """
-
-        context = self.inputs.context
-        inputs = self.inputs
-
-        LOG.info('Predict continuum model.')
-
-        # Set the data column
-        #   This routine is not used for Cycle 4. This is a reminder to
-        #   consider the datacolumn default when making future modifications
-        targetmslist = [vis for vis in inputs.vis if context.observing_run.get_ms(name=vis).is_imaging_ms]
-        if len(targetmslist) > 0:
-            datacolumn = 'data'
-        else:
-            datacolumn = 'corrected'
-
-        # Predict continuum model
-        job = casa_tasks.tclean(vis=inputs.vis, imagename='%s.I.cont_%s_pred' %
-                (os.path.basename(inputs.imagename), mode),
-                datacolumn=datacolumn,
-                spw=inputs.spw,
-                intent='*TARGET*',
-                scan='', specmode='mfs', gridder=inputs.gridder,
-                pblimit=self.pblimit_image, niter=0,
-                threshold='0.0mJy', deconvolver=inputs.deconvolver,
-                uvtaper=inputs.uvtaper,
-                nterms=inputs.nterms,
-                cycleniter=inputs.cycleniter,
-                cyclefactor=inputs.cyclefactor,
-                scales=inputs.scales,
-                interactive=False, outframe=inputs.outframe, nchan=inputs.nchan,
-                start=inputs.start, width=inputs.width, imsize=inputs.imsize,
-                cell=inputs.cell, phasecenter=inputs.phasecenter,
-                stokes=inputs.stokes,
-                weighting=inputs.weighting,
-                robust=inputs.robust,
-                npixels=inputs.npixels,
-                restoringbeam=inputs.restoringbeam, uvrange=inputs.uvrange,
-                mask='', startmodel=cont_image_name,
-                savemodel='modelcolumn',
-                parallel=False)
-        self._executor.execute(job)
-
-        # Add/subtract continuum model
-        if mode == 'sub':
-            LOG.info('Subtract continuum model.')
-        else:
-            LOG.info('Add continuum model.')
-        # Need to use MS tool to get the proper data selection.
-        # The uvsub task does not provide this.
-        cms = casatools.ms
-        for vis in inputs.vis:
-            ms_info = context.observing_run.get_ms(vis)
-
-            field_ids = []
-            field_infos = ms_info.get_fields()
-            for i in xrange(len(field_infos)):
-                if ((field_infos[i].name == inputs.field) and ('TARGET' in field_infos[i].intents)):
-                    field_ids.append(str(i))
-            field_ids = reduce(lambda x, y: '%s,%s' % (x, y), field_ids)
-
-            scan_numbers = []
-            for scan_info in ms_info.scans:
-                if ((inputs.field in [f.name for f in scan_info.fields]) and ('TARGET' in scan_info.intents)):
-                    scan_numbers.append(scan_info.id)
-            scan_numbers = reduce(lambda x, y: '%s,%s' % (x, y), scan_numbers)
-
-            if mode == 'sub':
-                LOG.info('Subtracting continuum for %s.' % (os.path.basename(vis)))
-            else:
-                LOG.info('Adding continuum for %s.' % (os.path.basename(vis)))
-            cms.open(vis, nomodify=False)
-            cms.msselect({'field': field_ids, 'scan': scan_numbers, 'spw': inputs.spw})
-            if mode == 'sub':
-                cms.uvsub()
-            else:
-                cms.uvsub(reverse=True)
-            cms.close()
 
     def _do_clean(self, iter, stokes, cleanmask, niter, threshold, sensitivity, result):
         """

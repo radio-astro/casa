@@ -7,8 +7,6 @@ import types
 from math import sqrt
 
 import casadef
-#from recipes import makepb
-from . import makepb
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
@@ -23,7 +21,6 @@ from .resultobjects import TcleanResult
 LOG = infrastructure.get_logger(__name__)
 
 # The basic clean tasks classes. Clean performs a single clean run.
-
 
 class CleanBaseInputs(basetask.StandardInputs):
     @basetask.log_equivalent_CASA_call
@@ -238,22 +235,6 @@ class CleanBase(basetask.StandardTaskTemplate):
             inputs.imagename, inputs.stokes, iter)
         mask_name = '%s.%s.iter%s.mask' % (
             inputs.imagename, inputs.stokes, iter)
-
-        #if (inputs.specmode == 'cube'):
-            # Estimate memory usage and adjust chanchunks parameter to avoid
-            # exceeding the available memory.
-        #    mem_bytes = os.sysconf('SC_PAGE_SIZE') * os.sysconf('SC_PHYS_PAGES')
-        #    mem_usable_bytes = 0.8 * mem_bytes
-        #    if (inputs.nchan != -1):
-        #        cube_bytes = inputs.imsize[0] * inputs.imsize[1] * inputs.nchan * 4
-        #    else:
-        #        ms = context.observing_run.get_ms(name=inputs.vis[0])
-        #        spw_info = ms.get_spectral_window(spwid)
-        #        cube_bytes = inputs.imsize[0] * inputs.imsize[1] * spw_info.num_channels * 4
-        #    tclean_bytes = 9 * cube_bytes
-        #    chanchunks = int(tclean_bytes / mem_usable_bytes) + 1
-        #else:
-        #    chanchunks = 1
 
         # Starting with CASA 4.7.79 tclean can calculate chanchunks automatically.
         chanchunks = -1

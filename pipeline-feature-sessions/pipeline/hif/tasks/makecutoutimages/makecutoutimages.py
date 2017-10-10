@@ -2,6 +2,7 @@ from __future__ import absolute_import
 import os
 import glob
 import math
+import ast
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
@@ -129,25 +130,25 @@ class Makecutoutimages(basetask.StandardTaskTemplate):
         # Get image header
         imhead_dict = self._do_imhead(imagename)
 
+
+        # Read in image size from header
         imsizex = math.fabs(imhead_dict['refpix'][0]*imhead_dict['incr'][0]*(180.0/math.pi)*2)  # degrees
         imsizey = math.fabs(imhead_dict['refpix'][1]*imhead_dict['incr'][1]*(180.0/math.pi)*2)  # degrees
+
         imageSizeX = 1.0  # degrees:  size of cutout
         imageSizeY = 1.0  # degrees:  size of cutout
 
-        # For testing of small images, if less than 2 deg, make a half image size cutout
-        if imsizex < 2.0:
-            imageSizeX = 0.5 * imsizex
-            imageSizeY = 0.5 * imsizey
+        # If less than or equal to 1 deg + 2 arcminute buffer, use the image size and no buffer
+        buffer = 2.0 / 60.0   # Units of degrees
+        if imsizex <= (1.0 + buffer):
+            imageSizeX = imsizex
+            imageSizeY = imsizey
+            buffer = 0.0
 
-        imsize = [3600.0*imsizex, 3600.0*imsizey]
+        imsize = [imhead_dict['shape'][0], imhead_dict['shape'][1]]  # pixels
 
         xcellsize = 3600.0 * (180.0 / math.pi) * math.fabs(imhead_dict['incr'][0])
         ycellsize = 3600.0 * (180.0 / math.pi) * math.fabs(imhead_dict['incr'][1])
-
-        buffer = 2.0 / 60.0
-
-        if imsizex < 2.0:
-            buffer = 10.0 / 3600.0
 
         fld_subim_sizeX = int(3600.0 * (imageSizeX + buffer) / xcellsize)   # Cutout size with buffer in pixels
         fld_subim_sizeY = int(3600.0 * (imageSizeY + buffer) / ycellsize)   # Cutout size with buffer in pixels
@@ -158,22 +159,40 @@ class Makecutoutimages(basetask.StandardTaskTemplate):
         trcx = imsize[0] / 2 + (fld_subim_sizeX / 2) + 1
         trcy = imsize[1] / 2 + (fld_subim_sizeY / 2) + 1
 
+        if blcx < 0.0: blcx = 0
+        if blcy < 0.0: blcy = 0
+        if trcx > imsize[0]: trcx = imsize[0] - 1
+        if trcy > imsize[1]: trcy = imsize[1] - 1
+
         if (inputs.offsetblc and inputs.offsettrc):
-            fld_subim_sizeXblc = int(3600.0 * (inputs.offsetblc[0] / 3600.0 + buffer) / xcellsize)
-            fld_subim_sizeYblc = int(3600.0 * (inputs.offsetblc[1] / 3600.0 + buffer) / ycellsize)
-            fld_subim_sizeXtrc = int(3600.0 * (inputs.offsettrc[0] / 3600.0 + buffer) / xcellsize)
-            fld_subim_sizeYtrc = int(3600.0 * (inputs.offsettrc[1] / 3600.0 + buffer) / ycellsize)
+            offsetblc = inputs.offsetblc
+            offsettrc = inputs.offsettrc
+
+            if type(offsetblc) is str:
+                offsetblc = ast.literal_eval(offsetblc)
+            if type(offsettrc) is str:
+                offsettrc = ast.literal_eval(offsettrc)
+
+            fld_subim_sizeXblc = int(3600.0 * (offsetblc[0] / 3600.0 + buffer) / xcellsize)
+            fld_subim_sizeYblc = int(3600.0 * (offsetblc[1] / 3600.0 + buffer) / ycellsize)
+            fld_subim_sizeXtrc = int(3600.0 * (offsettrc[0] / 3600.0 + buffer) / xcellsize)
+            fld_subim_sizeYtrc = int(3600.0 * (offsettrc[1] / 3600.0 + buffer) / ycellsize)
 
             blcx = imsize[0] / 2 - (fld_subim_sizeXblc)
             blcy = imsize[1] / 2 - (fld_subim_sizeYblc)
             trcx = imsize[0] / 2 + (fld_subim_sizeXtrc) + 1
             trcy = imsize[1] / 2 + (fld_subim_sizeYtrc) + 1
 
-            LOG.info("Using offsets: blc:({!s}), trc:({!s})".format(
-                ','.join([str(i) for i in inputs.offsetblc]),','.join([str(i) for i in inputs.offsettrc])))
+            if blcx < 0.0: blcx = 0
+            if blcy < 0.0: blcy = 0
+            if trcx > imsize[0]: trcx = imsize[0] - 1
+            if trcy > imsize[1]: trcy = imsize[1] - 1
+
+            LOG.info("Using user defined offsets in arcseconds of: blc:({!s}), trc:({!s})".format(
+                ','.join([str(i) for i in offsetblc]),','.join([str(i) for i in offsettrc])))
 
         fld_subim = str(blcx) + ',' + str(blcy) + ',' + str(trcx) + ',' + str(trcy)
-        LOG.info('Using field subimage blc,trc of {!s},{!s}, {!s},{!s}'.format(blcx,blcy,trcx,trcy))
+        LOG.info('Using field subimage blc,trc of {!s},{!s}, {!s},{!s}, which includes a buffer of {!s} arcminutes.'.format(blcx,blcy,trcx,trcy,buffer*60))
 
         # imsubimage(imagename=clnpbcor, outfile=clnpbcor + '.subim', box=fld_subim)
 

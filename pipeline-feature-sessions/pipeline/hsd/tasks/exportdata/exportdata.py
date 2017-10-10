@@ -28,25 +28,23 @@ import shutil
 
 from . import almasdaqua
 from pipeline.h.tasks.exportdata.aqua import export_to_disk as aqua_export_to_disk
+import pipeline.h.tasks.common.manifest as manifest
 
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.sdfilenamer as filenamer
-#import pipeline.hif.tasks.exportdata.exportdata as hif_exportdata
-import pipeline.h.tasks.exportdata.exportdata as h_exportdata
-import pipeline.hifa.tasks.exportdata.almaexportdata as almaexportdata
-#from . import manifest
+import pipeline.h.tasks.exportdata.exportdata as exportdata
 
 # the logger for this module
 LOG = infrastructure.get_logger(__name__)
 
 
 # Inputs class must be separated per task class even if it's effectively the same
-class SDExportDataInputs(h_exportdata.ExportDataInputs):
+class SDExportDataInputs(exportdata.ExportDataInputs):
     pass
 
 
-class SDExportData(almaexportdata.ALMAExportData):
+class SDExportData(exportdata.ExportData):
     """
     SDExportData is the base class for exporting data to the products
     subdirectory. It performs the following operations:
@@ -64,7 +62,7 @@ class SDExportData(almaexportdata.ALMAExportData):
     # only difference is to use self._make_lists instead of ExportData._make_lists
     def prepare(self):
 
-        results = h_exportdata.ExportData.prepare(self)
+        results = super(SDExportData, self).prepare()
 
         oussid = self.get_oussid(self.inputs.context)
 
@@ -374,7 +372,7 @@ class SDExportData(almaexportdata.ALMAExportData):
             if filename.endswith('.ms'):
                 filename, filext = os.path.splitext(filename)
             tmpvislist.append(filename)
-        task_string = "    hsd_restoredata (vis=%s, session=%s, ocorr_mode='%s')" % (tmpvislist, session_list, ocorr_mode)
+        task_string = "    hsd_restoredata(vis=%s, session=%s, ocorr_mode='%s')" % (tmpvislist, session_list, ocorr_mode)
 
 
         template = '''__rethrow_casa_exceptions = True
@@ -423,4 +421,34 @@ finally:
         LOG.info('Copying AQUA report %s to %s' % (aqua_file, out_aqua_file))
         shutil.copy(aqua_file, out_aqua_file)
         return os.path.basename(out_aqua_file)
-        
+
+###########################################################
+### NOTICE This method duplicates one in 
+### hifa/tasks/almaexportdata.py
+### to avoid dependency to hifa module.
+### See discussion at CAS-10726.
+###########################################################
+    def _add_to_manifest(self, manifest_file, aux_fproducts, aux_caltablesdict, aux_calapplysdict, aqua_report):
+
+        #pipemanifest = manifest.ALMAIfPipelineManifest('')
+        pipemanifest = manifest.PipelineManifest('')
+        pipemanifest.import_xml(manifest_file)
+        ouss = pipemanifest.get_ous()
+
+        if aqua_report:
+            pipemanifest.add_aqua_report(ouss, os.path.basename(aqua_report))
+
+        if aux_fproducts:
+            # Add auxliary data products file
+            pipemanifest.add_aux_products_file (ouss, os.path.basename(aux_fproducts))
+
+        # Add the auxiliary caltables
+        if aux_caltablesdict:
+            for session_name in aux_caltablesdict:
+                session = pipemanifest.get_session(ouss, session_name)
+                pipemanifest.add_auxcaltables(session, aux_caltablesdict[session_name][1])
+                for vis_name in aux_caltablesdict[session_name][0]:
+                    pipemanifest.add_auxasdm (session, vis_name, aux_calapplysdict[vis_name])
+
+        pipemanifest.write(manifest_file)
+###########################################################        

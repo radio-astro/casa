@@ -7,7 +7,8 @@ import glob
 import tarfile
 
 from . import almaifaqua
-from . import manifest
+#from . import manifest
+import pipeline.h.tasks.common.manifest as manifest 
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
@@ -201,7 +202,62 @@ class ALMAExportData(exportdata.ExportData):
 
         return tarfilename
 
-    def _export_aqua_report(self, context, oussid, aquareport_name, products_dir):
+
+    def _export_casa_restore_script (self, context, script_name, products_dir, oussid, vislist, session_list):
+
+        """
+        Save the CASA restore scropt.
+        """
+
+        # Generate the file list
+
+        # Get the output file name
+        ps = context.project_structure
+        if ps is None:
+            script_file = os.path.join (context.report_dir, script_name)
+            out_script_file = os.path.join (products_dir, script_name)
+        elif ps.ousstatus_entity_id == 'unknown':
+            script_file = os.path.join (context.report_dir, script_name)
+            out_script_file = os.path.join (products_dir, script_name)
+        else:
+            script_file = os.path.join (context.report_dir, script_name)
+            out_script_file = os.path.join (products_dir, oussid + '.' + script_name)
+
+        LOG.info('Creating casa restore script %s' %  (script_file))
+
+        # This is hardcoded.
+        tmpvislist=[]
+
+        #ALMA default
+        ocorr_mode = 'ca'
+
+        for vis in vislist:
+            filename = os.path.basename(vis)
+            if filename.endswith('.ms'):
+                filename, filext = os.path.splitext(filename)
+            tmpvislist.append(filename)
+        task_string = "    hifa_restoredata (vis=%s, session=%s, ocorr_mode='%s')" % (tmpvislist, session_list, ocorr_mode)
+
+
+        template = '''__rethrow_casa_exceptions = True
+h_init()
+try:
+%s
+finally:
+    h_save()
+''' % task_string
+
+        with open (script_file, 'w') as casa_restore_file:
+            casa_restore_file.write(template)
+
+        LOG.info('Copying casa restore script %s to %s' % \
+                 (script_file, out_script_file))
+        if not self._executor._dry_run:
+            shutil.copy (script_file, out_script_file)
+
+        return os.path.basename (out_script_file)
+
+    def _export_aqua_report (self, context, oussid, aquareport_name, products_dir):
         """
         Save the AQUA report.
         """
@@ -230,7 +286,8 @@ class ALMAExportData(exportdata.ExportData):
 
     def _add_to_manifest(self, manifest_file, aux_fproducts, aux_caltablesdict, aux_calapplysdict, aqua_report):
 
-        pipemanifest = manifest.ALMAIfPipelineManifest('')
+        #pipemanifest = manifest.ALMAIfPipelineManifest('')
+        pipemanifest = manifest.PipelineManifest('')
         pipemanifest.import_xml(manifest_file)
         ouss = pipemanifest.get_ous()
 

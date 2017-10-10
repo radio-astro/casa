@@ -6,7 +6,8 @@ import pipeline.infrastructure.renderer.weblog as weblog
 from .timegaincal import TimeGaincal
 
 from . import qa
-from pipeline.hif.tasks.gaincal import renderer
+from . import renderer
+#from pipeline.hif.tasks.gaincal import renderer
 
 pipelineqa.registry.add_handler(qa.TimegaincalQAHandler())
 pipelineqa.registry.add_handler(qa.TimegaincalListQAHandler())

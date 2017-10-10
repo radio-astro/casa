@@ -149,7 +149,6 @@ classToCASATask = {
     hif_tasks.Makecutoutimages        : 'hif_makecutoutimages',
     hif_tasks.Makermsimages           : 'hif_makermsimages',
     hif_tasks.Rawflagchans            : 'hif_rawflagchans',
-    hif_tasks.Fluxcal                 : 'hif_fluxcal',
     hif_tasks.Fluxscale               : 'hif_fluxscale',
     hif_tasks.Gaincal                 : 'hif_gaincal',
     hif_tasks.Gainflag                : 'hif_gainflag',
