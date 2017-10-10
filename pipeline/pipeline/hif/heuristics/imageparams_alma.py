@@ -258,3 +258,7 @@ class ImageParamsHeuristicsALMA(ImageParamsHeuristics):
     def warn_missing_cont_ranges(self):
 
         return True
+
+    def nterms(self):
+
+        return 2

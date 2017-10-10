@@ -1318,25 +1318,23 @@ class ImageParamsHeuristics(object):
 
         return sidelobethreshold, noisethreshold, lownoisethreshold, negativethreshold, minbeamfrac, growiterations
 
-    def cyclefactor(self):
+    def nterms(self):
         return None
 
+    def cyclefactor(self):
+        return None
 
     def cycleniter(self):
         return None
 
-
     def scales(self):
         return None
-
 
     def uvtaper(self, beam_natural=None):
         return None
 
-
     def uvrange(self):
         return None
-
 
     def reffreq(self):
         return None

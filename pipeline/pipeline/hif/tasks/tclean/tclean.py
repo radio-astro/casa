@@ -247,10 +247,8 @@ class Tclean(cleanbase.CleanBase):
             inputs.deconvolver = self.image_heuristics.deconvolver(inputs.specmode, inputs.spw)
 
         # Determine nterms
-        if inputs.nterms in ('', None):
-            if inputs.deconvolver == 'mtmfs':
-                # ALMA heuristics (TODO: move to heuristics class)
-                inputs.nterms = 2
+        if (inputs.nterms in ('', None)) and (inputs.deconvolver == 'mtmfs'):
+            inputs.nterms = self.image_heuristics.nterms()
 
         # Determine the phase center
         if inputs.phasecenter in ('', None):
