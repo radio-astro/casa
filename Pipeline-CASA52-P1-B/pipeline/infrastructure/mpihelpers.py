@@ -5,6 +5,7 @@ try:
     import cPickle as pickle
 except:
     import pickle
+import tempfile
 import types
 
 from mpi4casa.MPICommandClient import MPICommandClient
@@ -36,9 +37,7 @@ class AsyncTask(object):
         The referenced task will be immediately queued for asynchronous
         execution on an MPI server upon creation of an object.
 
-        :param task_cls: the class of a pipeline task
-        :param task_args: a dict of arguments to be given to the task Inputs
-        :param context_path: the path to the pickled context
+        :param executable: the TierN executable class to run
         :return: an AsyncTask object
         """
         self.__pid = mpiclient.push_command_request(
@@ -126,20 +125,43 @@ class Tier0PipelineTask(Tier1Executable):
         :param context_path: the filesystem path to the pickled Context
         """
         self.__task_cls = task_cls
-        self.__task_args = task_args
         self.__context_path = context_path
 
-    def get_executable(self):
-        with open(self.__context_path, 'rb') as context_file:
-            context = pickle.load(context_file)
-        inputs = self.__task_cls.Inputs(context, **self.__task_args)
-        task = self.__task_cls(inputs)
+        # Assume that the path to the context pickle is safe to write the task
+        # argument pickle too
+        context_dir = os.path.dirname(context_path)
+        # Use the tempfile module to generate a unique temporary filename,
+        # which we use as the output path for our pickled context
+        tmpfile = tempfile.NamedTemporaryFile(suffix='.task_args', dir=context_dir, delete=True)
+        self.__task_args_path = tmpfile.name
+        tmpfile.close()
 
-        return lambda: task.execute(dry_run=False)
+        # write task args object to pickle
+        with open(self.__task_args_path, 'wb') as pickle_file:
+            LOG.info('Saving task arguments to {!s}'.format(self.__task_args_path))
+            pickle.dump(task_args, pickle_file, protocol=-1)
+
+    def get_executable(self):
+        # the constructor runs on the MPI server, this runs on the MPI client
+        try:
+            with open(self.__context_path, 'rb') as context_file:
+                context = pickle.load(context_file)
+
+            with open(self.__task_args_path, 'rb') as task_args_file:
+                task_args = pickle.load(task_args_file)
+
+            inputs = self.__task_cls.Inputs(context, **task_args)
+            task = self.__task_cls(inputs)
+
+            return lambda: task.execute(dry_run=False)
+
+        finally:
+            if self.__task_args_path and os.path.exists(self.__task_args_path):
+                os.unlink(self.__task_args_path)
 
     def __str__(self):
         return 'Tier0PipelineTask(%s, %s, %s)' % (self.__task_cls,
-                                                  self.__task_args,
+                                                  self.__task_args_path,
                                                   self.__context_path)
 
 
