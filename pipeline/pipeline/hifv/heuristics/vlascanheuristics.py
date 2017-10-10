@@ -1118,7 +1118,7 @@ class VLAScanHeuristics(object):
                 self.bandpass_field_select_string == ''):
                 # Default to using the flux scan for bandpass
                 self.bandpass_scan_select_string  = self.flux_scan_select_string
-                self.bandpass_field_select_string = self.flux_scan_select_string
+                self.bandpass_field_select_string = self.flux_field_select_string
 
             # Delay Cal Intent
             self.delay_scan_select_string = \
