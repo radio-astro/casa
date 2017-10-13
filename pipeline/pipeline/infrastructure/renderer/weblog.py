@@ -160,7 +160,7 @@ def get_renderer(cls, context):
     :return: registered renderer class, or KeyError if no renderer was registered
     """
     if cls in _SPECIFIC_RENDERER_MAP:
-        select_fn = _SPECIFIC_RENDERER_MAP[cls]
+        select_fn = _SELECTOR_FN_MAP[cls]
         key = select_fn(context)
         if key in _SPECIFIC_RENDERER_MAP:
             return _SPECIFIC_RENDERER_MAP[key]
