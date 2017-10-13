@@ -162,8 +162,8 @@ def get_renderer(cls, context):
     if cls in _SPECIFIC_RENDERER_MAP:
         select_fn = _SELECTOR_FN_MAP[cls]
         key = select_fn(context)
-        if key in _SPECIFIC_RENDERER_MAP:
-            return _SPECIFIC_RENDERER_MAP[key]
+        if key in _SPECIFIC_RENDERER_MAP[cls]:
+            return _SPECIFIC_RENDERER_MAP[cls][key]
 
     # either not a specific renderer or key not found, so return universal
     # renderer for that task
