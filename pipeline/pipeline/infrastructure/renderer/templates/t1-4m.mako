@@ -37,7 +37,7 @@ $(document).ready(function() {
 		% for result in results:
         <% qascore = scores[result.stage_number] %>
 		<tr>
-            <td>${rendererutils.get_symbol_badge(result)} <a href="t2-4m.html?sidebar=sidebar_stage${result.stage_number}">${hr.get_task_description(result)}</a><span
+            <td>${rendererutils.get_symbol_badge(result)} <a href="t2-4m.html?sidebar=sidebar_stage${result.stage_number}">${hr.get_task_description(result, pcontext)}</a><span
                     class="pull-right">${rendererutils.format_shortmsg(qascore)}</span></td>
             <td>
                 <div class="progress" style="margin-bottom:0px;">

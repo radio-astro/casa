@@ -32,9 +32,9 @@ from . import weblog
 LOG = infrastructure.get_logger(__name__)
 
 
-def get_task_description(result_obj):
+def get_task_description(result_obj, context):
     if not isinstance(result_obj, (list, basetask.ResultsList)):
-        return get_task_description([result_obj, ])
+        return get_task_description([result_obj, ], context)
 
     if len(result_obj) is 0:
         msg = 'Cannot get description for zero-length results list'
@@ -63,7 +63,7 @@ def get_task_description(result_obj):
 
     if not description:
         try:
-            renderer = weblog.get_renderer(task_cls)
+            renderer = weblog.get_renderer(task_cls, context)
         except KeyError:
             LOG.error('No renderer registered for task %s'.format(task_cls.__name__))
             raise
@@ -463,7 +463,7 @@ class T1_3MRenderer(RendererBase):
                                                           results_list,
                                                           'Warning'))
             
-            if 'applycal' in get_task_description(result):
+            if 'applycal' in get_task_description(result, context):
                 try:
                     for resultitem in result:
                         vis = os.path.basename(resultitem.inputs['vis'])
@@ -1402,7 +1402,7 @@ class T2_4MDetailsRenderer(object):
             # find the renderer appropriate to the task..
             task = task_result[0].task
             try:
-                renderer = weblog.get_renderer(task)
+                renderer = weblog.get_renderer(task, context)
             except KeyError:
                 LOG.warning('No renderer was registered for task %s'.format(task.__name__))
                 renderer = cls._default_renderer
@@ -1452,7 +1452,7 @@ class T2_4MDetailsRenderer(object):
         LOG.trace('Path for %s is %s', result.__class__.__name__, path)
         force_rerender = getattr(renderer, 'always_rerender', False)
         debug_cls = renderer.__class__ in DEBUG_CLASSES
-        force_rerender = force_rerender or debug_cls
+        force_rerender = force_rerender or debug_cls # or result.stage_number in (9,)
 
         if force_rerender:
             LOG.trace('Forcing rerendering for %s', renderer.__class__.__name__)
