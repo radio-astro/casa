@@ -167,6 +167,7 @@ class Makecutoutimages(basetask.StandardTaskTemplate):
         if (inputs.offsetblc and inputs.offsettrc):
             offsetblc = inputs.offsetblc
             offsettrc = inputs.offsettrc
+            buffer = 0.0
 
             if type(offsetblc) is str:
                 offsetblc = ast.literal_eval(offsetblc)
