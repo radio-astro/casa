@@ -19,6 +19,11 @@
 	<value>2MHz</value>
     </param>
 
+    <param type="string" name="refantignore">
+	<description>String list of antennas to ignore</description>
+	<value></value>
+    </param>
+
 
     <param type="string" name="pipelinemode">
 	<description>The pipeline operating mode</description>
@@ -46,9 +51,10 @@
 	    </equals>
 	    <equals type="string" value="interactive">
                 <default param="vis"><value type="stringArray"></value></default>
-
-		<default param="dryrun"><value type="bool">False</value></default>
-		<default param="acceptresults"><value type="bool">True</value></default>
+                <default param="dryrun"><value type="bool">False</value></default>
+                <default param="acceptresults"><value type="bool">True</value></default>
+                <default param="Dterm_solint"><value type="string"></value></default>
+                <default param="refantignore"><value type="string"></value></default>
 	    </equals>
 	    <equals type="string" value="getinputs">
                 <default param="vis"><value type="stringArray"></value></default>
@@ -84,6 +90,10 @@ vis -- List of visisbility  data files. These may be ASDMs, tar files of ASDMs,
 
 Dterms_solint -- D-terms spectral averaging
     default: 2MHz
+
+refantignore -- string list to be ignored as reference antennas.
+    default: ''
+    Example:  refantignore='ea02,ea03'
 
 pipelinemode -- The pipeline operating mode. In 'automatic' mode the pipeline
    determines the values of all context defined pipeline inputs
