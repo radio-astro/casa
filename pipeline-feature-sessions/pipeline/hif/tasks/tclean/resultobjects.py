@@ -5,7 +5,7 @@ import os.path
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
-import pipeline.infrastructure.displays as displays
+import pipeline.infrastructure.displays.sky as sky
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -81,7 +81,7 @@ class TcleanResult(basetask.Results):
         iters = self.iterations.keys()
         iters.sort()
         image = self.iterations[iters[-1]].get('image', None)
-        imageplot = displays.sky.plotfilename(image=image,
+        imageplot = sky.plotfilename(image=image,
           reportdir=self.plotdir)
         return imageplot
 

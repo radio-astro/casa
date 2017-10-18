@@ -1,18 +1,17 @@
 import collections
-import os
 import itertools
 import operator
+import os
 
+import pipeline.domain.measures as measures
+import pipeline.h.tasks.applycal.renderer as applycal_renderer
+import display as plotsummarydisplay
+import pipeline.infrastructure
+import pipeline.infrastructure.displays.applycal as applycal
+import pipeline.infrastructure.filenamer as filenamer
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.renderer.basetemplates as basetemplates
-import pipeline.infrastructure.displays.vla.plotsummarydisplay as plotsummarydisplay
-
-import pipeline.infrastructure
-import pipeline.domain.measures as measures
 import pipeline.infrastructure.utils as utils
-import pipeline.infrastructure.filenamer as filenamer
-import pipeline.infrastructure.displays.applycal as applycal
-import pipeline.h.tasks.applycal.renderer as applycal_renderer
 
 LOG = logging.get_logger(__name__)
 

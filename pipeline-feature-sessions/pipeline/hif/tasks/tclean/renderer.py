@@ -11,7 +11,7 @@ import string
 import numpy
 
 import pipeline.infrastructure.casatools as casatools
-import pipeline.infrastructure.displays.tclean as tclean
+from . import display
 import pipeline.infrastructure.filenamer as filenamer
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.renderer.basetemplates as basetemplates
@@ -86,7 +86,7 @@ class T2_4MDetailsTcleanRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
             # cache image statistics while we have them in scope.
             image_rms = stats.get('rms')[0]
             image_max = stats.get('max')[0]
-            image_stats[image_path] = tclean.ImageStats(rms=image_rms, max=image_max)
+            image_stats[image_path] = display.ImageStats(rms=image_rms, max=image_max)
 
             spw = info.get('spw', None)
             if 'field' in info:
@@ -307,7 +307,7 @@ class T2_4MDetailsTcleanRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
             )
             image_rows.append(row)
 
-        plotter = tclean.CleanSummary(context, makeimages_result, image_stats)
+        plotter = display.CleanSummary(context, makeimages_result, image_stats)
         plots = plotter.plot()
 
         plots_dict = make_plot_dict(plots)

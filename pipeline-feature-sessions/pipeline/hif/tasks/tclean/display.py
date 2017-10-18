@@ -5,7 +5,7 @@ import copy
 import matplotlib
 
 import pipeline.infrastructure as infrastructure
-import pipeline.infrastructure.displays as displays
+import pipeline.infrastructure.displays.sky as sky
 import pipeline.infrastructure.casatools as casatools
 
 LOG = infrastructure.get_logger(__name__)
@@ -44,12 +44,12 @@ class CleanSummary(object):
             extension = '.tt0' if r.multiterm else ''
 
             # psf map
-            plot_wrappers.append(displays.SkyDisplay().plot(self.context, r.psf + extension,
+            plot_wrappers.append(sky.SkyDisplay().plot(self.context, r.psf + extension,
                                                             reportdir=stage_dir, intent=r.intent,
                                                             collapseFunction='mean'))
 
             # flux map
-            plot_wrappers.append(displays.SkyDisplay().plot(self.context,
+            plot_wrappers.append(sky.SkyDisplay().plot(self.context,
                                                             r.flux + extension, reportdir=stage_dir, intent=r.intent,
                                                             collapseFunction='mean'))
 
@@ -61,7 +61,7 @@ class CleanSummary(object):
                     # PB corrected
                     image_path = iteration['image'].replace('.image', '.image%s' % (extension))
                     plot_wrappers.append(
-                        displays.SkyDisplay().plot(self.context, image_path, reportdir=stage_dir, intent=r.intent,
+                        sky.SkyDisplay().plot(self.context, image_path, reportdir=stage_dir, intent=r.intent,
                                                    collapseFunction=collapse_function))
 
                     # Non PB corrected
@@ -89,24 +89,24 @@ class CleanSummary(object):
                         }
 
                     plot_wrappers.append(
-                        displays.SkyDisplay().plot(self.context, image_path, reportdir=stage_dir, intent=r.intent,
+                        sky.SkyDisplay().plot(self.context, image_path, reportdir=stage_dir, intent=r.intent,
                                                    collapseFunction=collapse_function, **extra_args))
 
                 # residual for this iteration
                 plot_wrappers.append(
-                    displays.SkyDisplay().plot(self.context, iteration['residual'] + extension, reportdir=stage_dir,
+                    sky.SkyDisplay().plot(self.context, iteration['residual'] + extension, reportdir=stage_dir,
                                                intent=r.intent))
 
                 # model for this iteration (currently only last but allow for others in future)
                 if 'model' in iteration and os.path.exists(iteration['model'] + extension):
                     plot_wrappers.append(
-                        displays.SkyDisplay().plot(self.context, iteration['model'] + extension, reportdir=stage_dir,
+                        sky.SkyDisplay().plot(self.context, iteration['model'] + extension, reportdir=stage_dir,
                                                    intent=r.intent, **{'cmap': copy.deepcopy(matplotlib.cm.seismic)}))
 
                 # MOM0_FC for this iteration (currently only last but allow for others in future).
                 if 'mom0_fc' in iteration and os.path.exists(iteration['mom0_fc'] + extension):
                     plot_wrappers.append(
-                        displays.SkyDisplay().plot(self.context, iteration['mom0_fc'] + extension, reportdir=stage_dir,
+                        sky.SkyDisplay().plot(self.context, iteration['mom0_fc'] + extension, reportdir=stage_dir,
                                                    intent=r.intent))
 
                 # MOM8_FC for this iteration (currently only last but allow for others in future).
@@ -134,14 +134,14 @@ class CleanSummary(object):
                     }
 
                     plot_wrappers.append(
-                        displays.SkyDisplay().plot(self.context, iteration['mom8_fc'] + extension, reportdir=stage_dir,
+                        sky.SkyDisplay().plot(self.context, iteration['mom8_fc'] + extension, reportdir=stage_dir,
                                                    intent=r.intent, **extra_args))
 
                 # cleanmask for this iteration - not for iter 0
                 if i > 0:
                     collapse_function = 'max' if (('cube' in iteration['cleanmask']) or ('repBW' in iteration['cleanmask'])) else 'mean'
                     plot_wrappers.append(
-                        displays.SkyDisplay().plot(self.context, iteration['cleanmask'], reportdir=stage_dir,
+                        sky.SkyDisplay().plot(self.context, iteration['cleanmask'], reportdir=stage_dir,
                                                    intent=r.intent, collapseFunction=collapse_function))
 
         return [p for p in plot_wrappers if p is not None]
