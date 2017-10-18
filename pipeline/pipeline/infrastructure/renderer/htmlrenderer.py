@@ -63,7 +63,9 @@ def get_task_description(result_obj, context):
 
     if not description:
         try:
-            renderer = weblog.get_renderer(task_cls, context)
+            # taking index 0 should be safe as entry to function ensures
+            # result_obj is a list
+            renderer = weblog.get_renderer(task_cls, context, result_obj[0])
         except KeyError:
             LOG.error('No renderer registered for task %s'.format(task_cls.__name__))
             raise
@@ -1402,7 +1404,7 @@ class T2_4MDetailsRenderer(object):
             # find the renderer appropriate to the task..
             task = task_result[0].task
             try:
-                renderer = weblog.get_renderer(task, context)
+                renderer = weblog.get_renderer(task, context, task_result)
             except KeyError:
                 LOG.warning('No renderer was registered for task %s'.format(task.__name__))
                 renderer = cls._default_renderer

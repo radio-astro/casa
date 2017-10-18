@@ -148,7 +148,7 @@ def add_renderer(task_cls, renderer, group_by=None, key_fn=None, key=None):
         RENDER_BY_SESSION.add(task_cls.__name__)
 
 
-def get_renderer(cls, context):
+def get_renderer(cls, context, result):
     """
     Get the registered renderer for a class.
 
@@ -157,11 +157,12 @@ def get_renderer(cls, context):
 
     :param cls:  the class to look up
     :param context: pipeline context
+    :param result: pipeline task result
     :return: registered renderer class, or KeyError if no renderer was registered
     """
     if cls in _SPECIFIC_RENDERER_MAP:
         select_fn = _SELECTOR_FN_MAP[cls]
-        key = select_fn(context)
+        key = select_fn(context, result)
         if key in _SPECIFIC_RENDERER_MAP[cls]:
             return _SPECIFIC_RENDERER_MAP[cls][key]
 
