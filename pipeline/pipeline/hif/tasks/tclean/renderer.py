@@ -25,7 +25,7 @@ ImageRow = collections.namedtuple('ImageInfo', (
     'field spw pol frequency_label frequency beam beam_pa sensitivity '
     'cleaning_threshold residual_ratio non_pbcor_label non_pbcor pbcor score '
     'fractional_bw_label fractional_bw aggregate_bw_label aggregate_bw '
-    'image_file nchan plot qa_url'))
+    'image_file nchan plot qa_url iterdone'))
 
 
 class T2_4MDetailsTcleanRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
@@ -180,6 +180,14 @@ class T2_4MDetailsTcleanRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                     row_sensitivity += '<br>max: %.2g %s (field: %s)' % (r.max_sensitivity, brightness_unit, r.max_field_id)
 
             #
+            # clean iterations, for VLASS
+            #
+            if 'VLASS' in r.imaging_mode:
+                row_iterdone = r.tclean_iterdone
+            else:
+                row_iterdone = None
+
+            #
             # cleaning threshold cell
             #
             if 'VLASS' in r.imaging_mode:
@@ -303,7 +311,8 @@ class T2_4MDetailsTcleanRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                 image_file=image_name.replace('.pbcor', ''),
                 nchan=nchan,
                 plot=None,
-                qa_url=None
+                qa_url=None,
+                iterdone=row_iterdone
             )
             image_rows.append(row)
 

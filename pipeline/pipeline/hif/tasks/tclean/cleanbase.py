@@ -412,6 +412,7 @@ class CleanBase(basetask.StandardTaskTemplate):
                 LOG.warning('tclean reached niter limit of %d for %s / spw%s !' % (tclean_niter, utils.dequote(inputs.field), inputs.spw))
 
             result.set_tclean_stopcode(tclean_stopcode)
+            result.set_tclean_iterdone(tclean_iterdone)
 
             if (tclean_stopcode == 5):
                 result.error = CleanBaseError('tclean stopped to prevent divergence. Field: %s SPW: %s' % (inputs.field, inputs.spw), 'tclean stopped to prevent divergence.')

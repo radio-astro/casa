@@ -145,11 +145,6 @@ except:
                 </tr>
 
                 <tr>
-                    <th>final theoretical sensitivity</th>
-                    <td>${row.sensitivity}</td>
-                </tr>
-
-                <tr>
                     <th>cleaning threshold</th>
                     <td>${row.cleaning_threshold}</td>
                 </tr>
@@ -180,6 +175,11 @@ except:
                     <td>${row.aggregate_bw}</td>
                 </tr>
                 % endif
+
+                <tr>
+                    <th>clean iterations</th>
+                    <td>${row.iterdone}</td>
+                </tr>
 
                 <tr>
                     <th>score</th>
