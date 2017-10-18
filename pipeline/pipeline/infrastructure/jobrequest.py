@@ -143,6 +143,29 @@ def alphasort(argument):
     return FunctionArg(name, value)
 
 
+_uuid_regex = re.compile('[a-f0-9]{8}-?[a-f0-9]{4}-?4[a-f0-9]{3}-?[89ab][a-f0-9]{3}-?[a-f0-9]{12}', re.I)
+
+
+def UUID_to_underscore(argument):
+    """
+    Return an argument with UUIDs converted to underscores.
+
+    :param argument: the FunctionArg or NamelessArg to sort
+    :return: a value-sorted argument
+    """
+    if isinstance(argument, NamelessArg):
+        return argument
+    if not isinstance(argument.value, str):
+        return argument
+
+    # deepcopy as we sort in place and don't want to modify the original
+    argument = copy.deepcopy(argument)
+
+    value = _uuid_regex.sub('<UUID>', argument.value)
+
+    return FunctionArg(argument.name, value)
+
+
 def truncate_paths(arg):
     # Path arguments are kw args with specific identifiers. Exit early if this
     # is not a path argument
@@ -251,6 +274,7 @@ class JobRequest(object):
         processed = [truncate_paths(arg) for arg in args]
         if sort_args:
             processed = [alphasort(arg) for arg in processed]
+            processed = [UUID_to_underscore(arg) for arg in processed]
 
         string_args = [str(arg) for arg in processed]
         return '{!s}({!s})'.format(self.fn.__name__, ', '.join(string_args))
