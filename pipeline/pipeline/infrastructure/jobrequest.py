@@ -1,6 +1,10 @@
 from __future__ import absolute_import
 import copy
+import itertools
+import operator
 import os
+import platform
+import re
 import sys
 import types
 
@@ -42,26 +46,120 @@ import plotweather_cli
 import polcal_cli
 import setjy_cli
 import split_cli
-# import split2_cli
 import statwt_cli
 import tclean_pg
 import wvrgcal_cli
 import visstat_cli
 import sdbaseline_cli
-# import sdbaseline_pg
 import sdcal_cli
 import sdimaging_cli
 
-from . import casatools
 from . import logging
-from . import utils
 
 LOG = logging.get_logger(__name__)
+
+# logger for keeping a trace of CASA task and CASA tool calls.
+# The filename incorporates the hostname to keep MPI client files distinct
+CASACALLS_LOG = logging.get_logger('CASACALLS', stream=None, format='%(message)s', addToCasaLog=False,
+                                   filename='casacalls-{!s}.txt'.format(platform.node().split('.')[0]))
 
 # functions to be executed just prior to and immediately after execution of the
 # CASA task, providing a way to collect metrics on task execution.
 PREHOOKS = []
 POSTHOOKS = []
+
+
+class FunctionArg(object):
+    """
+    Class to hold named function or method arguments
+    """
+    def __init__(self, name, value):
+        self.name = name
+        self.value = value
+
+    def __str__(self):
+        return '{!s}={!r}'.format(self.name, self.value)
+
+    def __repr__(self):
+        return 'FunctionArg({!r}, {!r})'.format(self.name, self.value)
+
+
+class NamelessArg(object):
+    """
+    Class to hold unnamed arguments
+    """
+    def __init__(self, value):
+        self.value = value
+
+    def __str__(self):
+        return str(self.value)
+
+    def __repr__(self):
+        return 'NamelessArg({!r})'.format(self.value)
+
+
+def alphasort(argument):
+    """
+    Return an argument with values sorted so that the log record is easier to
+    compare to other pipeline executions.
+
+    :param argument: the FunctionArg or NamelessArg to sort
+    :return: a value-sorted argument
+    """
+    if isinstance(argument, NamelessArg):
+        return argument
+
+    # holds a map of argument name to separators for argument values
+    attrs_and_separators = {
+        'asis': ' ',
+        'spw': ',',
+        'field': ',',
+        'intent': ','
+    }
+
+    # deepcopy as we sort in place and don't want to modify the original
+    argument = copy.deepcopy(argument)
+    name = argument.name
+    value = argument.value
+
+    if name == 'inpfile' and type(value) == list:
+        # get the indices of commands that are not summaries.
+        apply_cmd_idxs = [idx for idx, val in enumerate(value) if "mode='summary'" not in val]
+
+        # group the indices into consecutive ranges, i.e., between
+        # flagdata summaries. Commands within these ranges can be
+        # sorted.
+        for _, g in itertools.groupby(enumerate(apply_cmd_idxs), lambda (i, x): i - x):
+            idxs = map(operator.itemgetter(1), g)
+            start_idx = idxs[0]
+            end_idx = idxs[-1] + 1
+            value[start_idx:end_idx] = sorted(value[start_idx:end_idx], key=natural_sort)
+
+    else:
+        for attr_name, separator in attrs_and_separators.iteritems():
+            if name == attr_name and isinstance(value, str) and separator in value:
+                value = separator.join(sorted(value.split(separator), key=natural_sort))
+
+    return FunctionArg(name, value)
+
+
+def truncate_paths(arg):
+    # Path arguments are kw args with specific identifiers. Exit early if this
+    # is not a path argument
+    if isinstance(arg, NamelessArg):
+        return arg
+    if arg.name not in ('vis', 'caltable', 'gaintable', 'asdm', 'outfile', 'figfile', 'listfile', 'inpfile', 'plotfile',
+                        'fluxtable', 'infile', 'infiles'):
+        return arg
+
+    # wrap value in a tuple so that strings can be interpreted by
+    # the recursive map function
+    basename_value = _recur_map(os.path.basename, (arg.value,))[0]
+    return FunctionArg(arg.name, basename_value)
+
+
+def _recur_map(fn, data):
+    return [type(x) is types.StringType and fn(x) or _recur_map(fn, x) for x in data]
 
 
 class JobRequest(object):
@@ -99,23 +197,18 @@ class JobRequest(object):
         # pipeline variables that the CASA task is not expecting.
         unexpected_kw = [k for k, v in kw.iteritems() if k not in argnames]
         if unexpected_kw:
-            LOG.warning('Removing unexpected keywords from JobRequest: '
-                        '%s' % utils.commafy(unexpected_kw, quotes=False))
+            LOG.warning('Removing unexpected keywords from JobRequest: {!s}'.format(unexpected_kw))
             map(lambda key: kw.pop(key), unexpected_kw)
 
         self.args = args
         self.kw = kw
 
-        def format_arg_value(arg_val):
-            arg, val = arg_val
-            return '%s=%r' % (arg, val)
-
-        self._positional = map(format_arg_value, zip(argnames, args))
-        self._defaulted = [format_arg_value((a, argdefs[a]))
-                           for a in argnames[len(args):]
-                           if a not in kw and a is not 'self']
-        self._nameless = map(repr, args[argcount:])
-        self._keyword = map(format_arg_value, kw.items())
+        self._positional = [FunctionArg(name, arg) for name, arg in zip(argnames, args)]
+        self._defaulted = [FunctionArg(name, argdefs[name])
+                           for name in argnames[len(args):]
+                           if name not in kw and name is not 'self']
+        self._keyword = [FunctionArg(name, kw[name]) for name in argnames if name in kw]
+        self._nameless = [NamelessArg(a) for a in args[argcount:]]
 
     def execute(self, dry_run=False, verbose=False):
         """
@@ -129,52 +222,44 @@ class JobRequest(object):
             explicitly given (default: False)
         :type verbose: boolean
         """
-        msg = self._get_fn_msg(verbose)
+        msg = self._get_fn_msg(verbose, sort_args=False)
         if dry_run:
             sys.stdout.write('Dry run: %s\n' % msg)
-        else:
-            for hook in PREHOOKS:
+            return
+
+        for hook in PREHOOKS:
+            hook(self)
+        LOG.info('Executing %s' % msg)
+
+        # log sorted arguments to facilitate easier comparisons between
+        # pipeline executions
+        sorted_msg = self._get_fn_msg(verbose=False, sort_args=True)
+        CASACALLS_LOG.debug(sorted_msg)
+
+        try:
+            return self.fn(*self.args, **self.kw)
+        finally:
+            for hook in POSTHOOKS:
                 hook(self)
-            LOG.info('Executing %s' % msg)
-            try:
-                return self.fn(*self.args, **self.kw)
-            finally:
-                for hook in POSTHOOKS:
-                    hook(self)
 
-    def _recur_map(self, f, data):
-        return [type(x) is types.StringType and f(x) or self._recur_map(f, x) for x in data]
-
-    def _get_fn_msg(self, verbose=False):
-        kw = dict(self.kw)
-        for path_arg in ('vis', 'caltable', 'gaintable', 'asdm', 'outfile'):
-            if path_arg in kw:
-                # wrap value in a tuple so that strings can be interpreted by
-                # the recursive map function
-                val = (kw[path_arg],)
-                kw[path_arg] = self._recur_map(os.path.basename, val)[0]
-
-        def format_arg_value(arg_val):
-            arg, val = arg_val
-            return '%s=%r' % (arg, val)
-
-        basename_kw = map(format_arg_value, kw.items())
+    def _get_fn_msg(self, verbose=False, sort_args=False):
         if verbose:
-            args = self._positional + self._defaulted + self._nameless \
-                + basename_kw
+            args = self._positional + self._defaulted + self._nameless + self._keyword
         else:
-            args = self._positional + self._nameless + basename_kw
+            args = self._positional + self._nameless + self._keyword
 
-        msg = '%s(%s)' % (self.fn.__name__, ', '.join(args))
-        return msg
+        processed = [truncate_paths(arg) for arg in args]
+        if sort_args:
+            processed = [alphasort(arg) for arg in processed]
+
+        string_args = [str(arg) for arg in processed]
+        return '{!s}({!s})'.format(self.fn.__name__, ', '.join(string_args))
 
     def __repr__(self):
-        return 'JobRequest({0})'.format(str(self))
+        return 'JobRequest({!r}, {!r})'.format(self.args, self.kw)
 
     def __str__(self):
-        args = self._positional + self._nameless + self._keyword
-        call = "%s(%s)" % (self.fn.__name__, ", ".join(args))
-        return '{0}'.format(call)
+        return self._get_fn_msg(verbose=False, sort_args=False)
 
     def hash_code(self, ignore=None):
         """
@@ -255,20 +340,6 @@ class CASATaskJobGenerator(object):
         """
         self._jobs = []
         self._current_job = 0
-
-    def comment(self, comment='', echo_to_screen=True):
-        """
-        Schedule a job that posts the given comment to the CASA log. This may
-        be useful if you wish to explain why a job is being executed.
-
-        :param comment: the comment to post
-        :type comment: string
-        :rtype: :class:`JobRequest`
-        """
-        job = JobRequest(casatools.post_to_log, comment=comment,
-                         echo_to_screen=echo_to_screen)
-        self._jobs.append(job)
-        return job
 
     def flush_jobs(self):
         """
@@ -399,9 +470,6 @@ class CASATaskJobGenerator(object):
     def split(self, *v, **k):
         return self._get_job(split_cli.split_cli, *v, **k)
 
-    # def split2(self, *v, **k):
-    #    return self._get_job(split2_cli.split2_cli, *v, **k)
-
     def statwt(self, *v, **k):
         return self._get_job(statwt_cli.statwt_cli, *v, **k)
 
@@ -436,3 +504,8 @@ class CASATaskJobGenerator(object):
 
 
 casa_tasks = CASATaskJobGenerator()
+
+
+def natural_sort(s, _nsre=re.compile('([0-9]+)')):
+    return [int(text) if text.isdigit() else text.lower()
+            for text in re.split(_nsre, s)]

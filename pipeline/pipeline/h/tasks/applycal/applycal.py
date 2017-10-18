@@ -272,7 +272,8 @@ class Applycal(basetask.StandardTaskTemplate):
         merged = callibrary.fix_cycle0_data_selection(inputs.context, merged)
 
         jobs = []
-        for calto, calfroms in merged.items():
+        # sort for a stable applycal order, to make diffs easier to parse
+        for calto, calfroms in sorted(merged.items()):
             # if there's nothing to apply for this data selection, continue
             if not calfroms:
                 continue
@@ -351,9 +352,9 @@ class Applycal(basetask.StandardTaskTemplate):
                 flagsummary[field.name.strip('"')] = {}
 
             for spwid in spwids:
-                flagline = "spw='" + str(spwid) + "' fieldcnt=True mode='summary' name='AntSpw" + str(spwid).zfill(3)
+                flagline = "spw='{!s}' fieldcnt=True mode='summary' name='AntSpw{:0>3}'".format(spwid, spwid)
                 flagkwargs.append(flagline)
-                
+
             # 20170406 TN
             # Tweak flagkwargs (default is do nothing)
             flagkwargs = self._tweak_flagkwargs(flagkwargs)

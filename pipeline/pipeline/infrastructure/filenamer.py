@@ -161,14 +161,14 @@ class FileNameComponentBuilder(object):
             for spw in spw_inlist:
                 item = spw.split(':')[0]
                 spw_outlist.append(item)
-            self._spectral_window = 'spw' + ','.join(spw_outlist)
+            self._spectral_window = 'spw' + sort_spws(','.join(spw_outlist))
         else:
             self._spectral_window = None
         return self
 
     def spectral_window(self, window):
         if window not in [None, 'None', '']:
-            self._spectral_window = 'spw' + str(window)
+            self._spectral_window = 'spw' + sort_spws(str(window))
         else:
             self._spectral_window = None
         return self
@@ -190,6 +190,13 @@ class FileNameComponentBuilder(object):
     def type(self, type):
         self._type = type
         return self
+
+
+def sort_spws(unsorted):
+    if type(unsorted) != str or ',' not in unsorted:
+        return unsorted
+    vals = unsorted.split(',')
+    return ','.join(sorted(vals))
 
 
 class NamingTemplate(object):

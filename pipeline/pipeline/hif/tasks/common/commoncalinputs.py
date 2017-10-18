@@ -184,18 +184,19 @@ class CommonCalibrationInputs(basetask.StandardInputs,
 
     @property
     def selectdata(self):
-        return self._selectdata
+        return self.antenna != ''
 
-    @selectdata.setter
-    def selectdata(self, value):
-        if value is None:
-            # set selectdata True if antenna is specified so that CASA gaincal
-            # task will check that parameter
-            if self.antenna != '':
-                value = True
-            else:
-                value = False
-        self._selectdata = value
+    # @selectdata.setter
+    # def selectdata(self, value):
+    #     if value in (None, ''):
+    #         # set selectdata True if antenna is specified so that CASA gaincal
+    #         # task will check that parameter
+    #         value = (self.antenna != '')
+    #     else:
+    #         # CASA default
+    #         value = True
+    #
+    #     self._selectdata = value
 
     @property
     def spw(self):
