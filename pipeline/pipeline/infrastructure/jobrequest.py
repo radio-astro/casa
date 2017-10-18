@@ -172,7 +172,7 @@ def truncate_paths(arg):
     if isinstance(arg, NamelessArg):
         return arg
     if arg.name not in ('vis', 'caltable', 'gaintable', 'asdm', 'outfile', 'figfile', 'listfile', 'inpfile', 'plotfile',
-                        'fluxtable', 'infile', 'infiles', 'mask', 'imagename', 'fitsimage'):
+                        'fluxtable', 'infile', 'infiles', 'mask', 'imagename', 'fitsimage', 'outputvis'):
         return arg
 
     # wrap value in a tuple so that strings can be interpreted by
