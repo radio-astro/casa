@@ -284,11 +284,8 @@ class MeasurementSetReader(object):
             ms.sources = SourceTable.get_sources(msmd)
             LOG.info('Populating ms.data_descriptions...')
             ms.data_descriptions = DataDescriptionTable.get_descriptions(msmd, ms)
-
-            # No MSMD functions to help populating pols yet
-            # Likewise for the ASDM_EXECBLOCK table
             LOG.info('Populating ms.polarizations...')
-            ms.polarizations = PolarizationTable.get_polarizations(ms)
+            ms.polarizations = PolarizationTable.get_polarizations(msmd)
             # For now the SBSummary table is ALMA specific
             if 'ALMA' in msmd.observatorynames():
                 sbinfo = SBSummaryTable.get_sbsummary_info(ms, msmd.observatorynames())
@@ -309,6 +306,7 @@ class MeasurementSetReader(object):
                     LOG.info('Populating ms.science_goals ...')
                     ms.science_goals = {'minAcceptableAngResolution': sbinfo[3], 'maxAcceptableAngResolution': sbinfo[4]}
             LOG.info('Populating ms.array_name ...')
+            # No MSMD functions to help populating the ASDM_EXECBLOCK table
             ms.array_name = ExecblockTable.get_execblock_info(ms)
 
             with casatools.MSReader(ms.name) as openms:
@@ -659,42 +657,23 @@ class ExecblockTable(object):
         rows = zip(telescopeNames, configNames)
         return rows
 
+
 class PolarizationTable(object):
     @staticmethod
-    def get_polarizations(ms):
-        # read the polarization table and create the objects
-        polarizations = [PolarizationTable._create_pol_description(*row) 
-                        for row in PolarizationTable._read_table(ms)]
-            
-        return polarizations            
-        
-    @staticmethod
-    def _create_pol_description(id, num_corr, corr_type, corr_product, flag):
-        return domain.Polarization(id, num_corr, corr_type, corr_product, flag)
-    
-    @staticmethod
-    def _read_table(ms):
-        """Read the POLARIZATION table of the given measurement set.
-        """
-        LOG.debug('Analysing POLARIZATION table')
-        ms = _get_ms_name(ms)
-        polarization_table = os.path.join(ms, 'POLARIZATION')        
-        with casatools.TableReader(polarization_table) as table:
-            num_corrs = table.getcol('NUM_CORR')
-            vcorr_types = table.getvarcol('CORR_TYPE')
-            vcorr_products = table.getvarcol('CORR_PRODUCT')
-            flag_rows = table.getcol('FLAG_ROW')
+    def get_polarizations(msmd):
+        pol_ids = sorted(set(msmd.polidfordatadesc()))
 
-            rowids = []
-            corr_types = []
-            corr_products = []
-            for i in range(table.nrows()):
-                rowids.append(i)
-                corr_types.append(vcorr_types['r%s'%(i+1)])
-                corr_products.append(vcorr_products['r%s'%(i+1)])
+        num_corrs = [msmd.ncorrforpol(i) for i in pol_ids]
+        corr_types = [msmd.corrtypesforpol(i) for i in pol_ids]
+        corr_products = [msmd.corrprodsforpol(i) for i in pol_ids]
 
-            rows = zip(rowids, num_corrs, corr_types, corr_products, flag_rows)
-            return rows
+        rows = zip(pol_ids, num_corrs, corr_types, corr_products)
+
+        return [PolarizationTable._create_pol_description(*row) for row in rows]
+
+    @staticmethod
+    def _create_pol_description(id, num_corr, corr_type, corr_product):
+        return domain.Polarization(id, num_corr, corr_type, corr_product)
 
 
 class SourceTable(object):

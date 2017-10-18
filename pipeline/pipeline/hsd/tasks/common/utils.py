@@ -15,7 +15,6 @@ import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.casatools as casatools
 from pipeline.domain.datatable import OnlineFlagIndex
-import pipeline.infrastructure.tablereader as tablereader
 
 _LOG = infrastructure.get_logger(__name__)
 
@@ -663,8 +662,8 @@ def make_spwid_map(srcvis, dstvis):
 
 #@profiler
 def make_polid_map(srcvis, dstvis):
-    src_rows = _read_table(None, tablereader.PolarizationTable, srcvis)
-    dst_rows = _read_table(None, tablereader.PolarizationTable, dstvis)
+    src_rows = _read_polarization_table(srcvis)
+    dst_rows = _read_polarization_table(dstvis)
     for (src_polid, src_numpol, src_poltype, _, _) in src_rows:
         LOG.trace('SRC: POLID %s NPOL %s POLTYPE %s'%(src_polid, src_numpol, src_poltype))
     for (dst_polid, dst_numpol, dst_poltype, _, _) in dst_rows:
@@ -717,3 +716,29 @@ def create_parallel_job(task_cls, task_args, context):
     LOG.debug('Parallel Job: %s'%(task))
     return job
 
+
+def _read_polarization_table(vis):
+    """
+    Read the POLARIZATION table of the given measurement set.
+
+    This function used to be part of tablereader, which has since moved from
+    direct table reading to using the MSMD tool.
+    """
+    LOG.debug('Analysing POLARIZATION table')
+    polarization_table = os.path.join(vis, 'POLARIZATION')
+    with casatools.TableReader(polarization_table) as table:
+        num_corrs = table.getcol('NUM_CORR')
+        vcorr_types = table.getvarcol('CORR_TYPE')
+        vcorr_products = table.getvarcol('CORR_PRODUCT')
+        flag_rows = table.getcol('FLAG_ROW')
+
+        rowids = []
+        corr_types = []
+        corr_products = []
+        for i in range(table.nrows()):
+            rowids.append(i)
+            corr_types.append(vcorr_types['r%s' % (i + 1)])
+            corr_products.append(vcorr_products['r%s' % (i + 1)])
+
+        rows = zip(rowids, num_corrs, corr_types, corr_products, flag_rows)
+        return rows
