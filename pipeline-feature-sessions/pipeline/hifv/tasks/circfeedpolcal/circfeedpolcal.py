@@ -60,11 +60,22 @@ class CircfeedpolcalResults(polarization.PolarizationResults):
 
 class CircfeedpolcalInputs(polarization.PolarizationInputs):
     @basetask.log_equivalent_CASA_call
-    def __init__(self, context, vis=None, Dterm_solint=None):
+    def __init__(self, context, vis=None, Dterm_solint=None, refantignore=None):
         # set the properties to the values given as input arguments
         self._init_properties(vars())
 
     Dterm_solint = basetask.property_with_default('Dterm_solint', '2MHz')
+
+    @property
+    def refantignore(self):
+        return self._refantignore
+
+    @refantignore.setter
+    def refantignore(self, value):
+        if value is None:
+            value = ''
+        self._refantignore = value
+
 
 
 class Circfeedpolcal(polarization.Polarization):
@@ -96,7 +107,8 @@ class Circfeedpolcal(polarization.Polarization):
         m = self.inputs.context.observing_run.get_ms(self.inputs.vis)
         refantfield = self.inputs.context.evla['msinfo'][m.name].calibrator_field_select_string
         refantobj = findrefant.RefAntHeuristics(vis=self.inputs.vis, field=refantfield,
-                                                geometry=True, flagging=True, intent='', spw='')
+                                                geometry=True, flagging=True, intent='', spw='',
+                                                refantignore=self.inputs.refantignore)
         self.RefAntOutput = refantobj.calculate()
 
         # setjy for amplitude/flux calibrator (VLASS 3C286 or 3C48)

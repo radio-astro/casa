@@ -108,7 +108,8 @@ def get_logger(name,
                datefmt='%Y-%m-%d %H:%M:%S',
                stream=sys.stdout, level=None,
                filename=None, filemode='w', filelevel=None,  
-               propagate=False):  
+               propagate=False,
+               addToCasaLog=True):
     """Do basic configuration for the logging system. Similar to 
     logging.basicConfig but the logger ``name`` is configurable and both a 
     file output and a stream output can be created. Returns a logger object. 
@@ -130,7 +131,8 @@ def get_logger(name,
     :param filemode: open ``filename`` with specified filemode ('w' or 'a') 
     :param filelevel: logger level for file logger (default=``level``) 
     :param propagate: propagate message to parent (default=False) 
- 
+    :param addToCasaLog: emit log message to CASA logs too (default=True)
+
     :returns: logging.Logger object 
     """  
     if level is None:
@@ -179,8 +181,9 @@ def get_logger(name,
     if not (filename or stream):  
         logger.addHandler(logutils.NullHandler())  
   
-    if filename:  
-        hdlr = logging.FileHandler(filename, filemode)  
+    if filename:
+        # delay = 1 so that file is not opened until used
+        hdlr = logging.FileHandler(filename, filemode, delay=1)
         if filelevel is None:  
             filelevel = level  
         hdlr.setLevel(filelevel)  
@@ -195,11 +198,13 @@ def get_logger(name,
 
     hdlr = CASALogHandler()
 #     hdlr.setLevel(level)
-    logger.addHandler(hdlr)
+    if addToCasaLog:
+        logger.addHandler(hdlr)
 
     _loggers.append(logger)  
     
     return logger
+
 
 def set_logging_level(logger=None, level='info'):
     level_no = LOGGING_LEVELS.get(level, logging.NOTSET)

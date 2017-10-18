@@ -195,6 +195,7 @@ class Applycal(basetask.StandardTaskTemplate):
         merged = callibrary.fix_cycle0_data_selection(inputs.context, merged)
 
         jobs = []
+        # sort for a stable applycal order, to make diffs easier to parse
         for calto, calfroms in sorted(merged.iteritems()):
             # if there's nothing to apply for this data selection, continue
             if not calfroms:
@@ -216,6 +217,7 @@ class Applycal(basetask.StandardTaskTemplate):
             task_args['calwt'] = calapp.calwt
             task_args['applymode'] = inputs.applymode
 
+            # give subclasses a chance to modify the task arguments
             task_args = self.modify_task_args(task_args)
 
             jobs.append(casa_tasks.applycal(**task_args))
@@ -223,10 +225,8 @@ class Applycal(basetask.StandardTaskTemplate):
         # if requested, schedule additional flagging tasks to determine
         # statistics
         if inputs.flagsum:
-            # 20170406 TN
-            # flagdata task arguments are indirectly given so that sd applycal task is
-            # able to edit them
             summary_args = dict(vis=inputs.vis, mode='summary')
+            # give subclasses a chance to tweak flag summary arguments
             summary_args = self._get_flagsum_arg(summary_args)
             # schedule a flagdata summary jobs either side of the applycal jobs
             jobs.insert(0, casa_tasks.flagdata(name='before', **summary_args))
@@ -239,8 +239,7 @@ class Applycal(basetask.StandardTaskTemplate):
                 flagkwargs = ["spw='{!s}' fieldcnt=True mode='summary' name='AntSpw{:0>3}'".format(spw.id, spw.id)
                               for spw in ms.get_spectral_windows()]
 
-                # 20170406 TN
-                # Tweak flagkwargs (default is do nothing)
+                # give subclasses a change to tweak flag arguments
                 flagkwargs = self._tweak_flagkwargs(flagkwargs)
 
                 jobs.append(casa_tasks.flagdata(vis=inputs.vis, mode='list', inpfile=flagkwargs, flagbackup=False))
@@ -301,6 +300,18 @@ def reshape_flagdata_summary(flagdata_result):
             flagsummary[field_name][report_level]['type'] = report_type
 
     return flagsummary
+
+
+# def limit_fields(flagsummary, ms):
+#     calibrator_fields = ms.get_fields(intent='AMPLITUDE,PHASE,BANDPASS')
+#
+#     target_fields = ms.get_fields(intent='TARGET')
+#     plot_stride = len(target_fields) / 30 + 1
+#     targetfields = target_fields[::plot_stride]
+#
+#     fields_to_plot = calibrator_fields + targetfields
+#
+#     return {k: v for k, v in flagsummary.iteritems() if k in fields_to_plot}
 
 
 class HpcApplycalInputs(ApplycalInputs):

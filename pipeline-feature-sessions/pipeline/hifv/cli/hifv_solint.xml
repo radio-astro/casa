@@ -39,9 +39,10 @@
 	<value>True</value>
     </param>
 
-    <param type="string" name="limit_short_solint">
+    <param type="any" name="limit_short_solint">
 	<description>Limiting solint value</description>
-	<value></value>
+    <any type="variant"/>
+	<value type="string"></value>
     </param>
 
     <param type="string" name="refantignore">
@@ -91,7 +92,8 @@ vis -- List of visisbility  data files. These may be ASDMs, tar files of ASDMs,
    default: []
    example: vis=['X227.ms', 'asdms.tar.gz']
 
-limit_short_solint -- string keyword argument in units of seconds to limit the short solution interval.
+limit_short_solint -- keyword argument in units of seconds to limit the short solution interval.
+    Can be a string or float numerica value in units of seconds of '0.45' or 0.45.
     Can be set to a string value of 'int'.
     default: ''
 

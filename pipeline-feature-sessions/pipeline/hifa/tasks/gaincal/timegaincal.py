@@ -155,7 +155,7 @@ class TimeGaincalInputs(gaincalmode.GaincalModeInputs):
         self._targetminsnr = value
 
 
-class TimeGaincal(gaincalworker.GaincalWorker):
+class TimeGaincal(basetask.StandardTaskTemplate):
     Inputs = TimeGaincalInputs
 
     def prepare(self, **parameters):

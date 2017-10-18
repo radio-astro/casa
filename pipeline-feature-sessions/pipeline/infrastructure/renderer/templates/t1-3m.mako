@@ -8,7 +8,7 @@ import pipeline.extern.asizeof as asizeof
 import pipeline.infrastructure.logging as logging
 import math
 
-def get_lowest_scoring_results(topic):
+def get_lowest_scoring_results(topic, context):
 	all_results_lists = topic.results_by_type.values()
 	if not all_results_lists:
 		return ('No tasks in this topic', pipelineqa.QAScore(None, '', ''))
@@ -27,7 +27,7 @@ def get_lowest_scoring_results(topic):
 	minresult = min(min_scoring_results, 
 				    key=lambda result:result.qa.representative.score)
 	anchor = '<a href="t2-4m.html?sidebar=sidebar_stage%s">%s</a>' % (minresult.stage_number, 
-												                      hr.get_task_description(minresult))
+												                      hr.get_task_description(minresult, context))
 	return (anchor,
 			minresult.qa.representative)
 
@@ -151,7 +151,7 @@ def flagcolortable(flagpct):
 	</thead>
 	<tbody>
 		% for _, topic in registry.get_topics().items():
-		<% (task_description, pqascore) = get_lowest_scoring_results(topic) %> 
+		<% (task_description, pqascore) = get_lowest_scoring_results(topic, pcontext) %>
 			% if not task_description == 'No tasks in this topic':
 			<tr>
 				<td><a href="${topic.url}">${topic.description}</a></td>

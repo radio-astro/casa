@@ -3,8 +3,6 @@ import os
 import shutil
 import string
 
-from . import utils as utils
-
 _valid_chars = "_.-+%s%s" % (string.ascii_letters, string.digits)
 
 _known_intents = {
@@ -193,11 +191,12 @@ class FileNameComponentBuilder(object):
         self._type = type
         return self
 
+
 def sort_spws(unsorted):
     if type(unsorted) != str or ',' not in unsorted:
         return unsorted
     vals = unsorted.split(',')
-    return ','.join(sorted(vals, key=utils.natural_sort))
+    return ','.join(sorted(vals))
 
 
 class NamingTemplate(object):
