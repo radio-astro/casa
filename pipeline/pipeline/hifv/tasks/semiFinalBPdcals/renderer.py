@@ -1,13 +1,11 @@
-import collections
-import os
 import contextlib
-import pipeline.infrastructure.renderer.weblog as weblog
+import os
 
-import pipeline.infrastructure.displays.vla.semifinalBPdcalsdisplay as semifinalBPdcalsdisplay
+import display as semifinalBPdcalsdisplay
+import pipeline.infrastructure.filenamer as filenamer
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.renderer.basetemplates as basetemplates
-import pipeline.infrastructure.utils as utils
-import pipeline.infrastructure.filenamer as filenamer
+import pipeline.infrastructure.renderer.weblog as weblog
 
 #import pipeline.infrastructure.renderer.htmlrenderer as hr
 

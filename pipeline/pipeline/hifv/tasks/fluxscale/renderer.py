@@ -1,15 +1,13 @@
 import collections
-import os
 import contextlib
-import pipeline.infrastructure.renderer.weblog as weblog
+import os
 
-import pipeline.infrastructure.displays.vla.testgainsdisplay as testgainsdisplay
-import pipeline.infrastructure.displays.vla.fluxbootdisplay as fluxbootdisplay
+import fluxbootdisplay as fluxbootdisplay
+import testgainsdisplay as testgainsdisplay
+import pipeline.infrastructure.filenamer as filenamer
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.renderer.basetemplates as basetemplates
-import pipeline.infrastructure.utils as utils
-import pipeline.infrastructure.filenamer as filenamer
-import collections
+import pipeline.infrastructure.renderer.weblog as weblog
 
 LOG = logging.get_logger(__name__)
 

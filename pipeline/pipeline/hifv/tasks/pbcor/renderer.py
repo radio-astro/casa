@@ -2,8 +2,8 @@ import os
 
 import numpy
 
+import display as pbcorimages
 import pipeline.infrastructure.casatools as casatools
-import pipeline.infrastructure.displays.vla.pbcorimages as pbcorimages
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.renderer.basetemplates as basetemplates
 

@@ -4,16 +4,15 @@ Created on 24 Oct 2014
 @author: brk
 '''
 
-import os
 import contextlib
-import pipeline.infrastructure.renderer.weblog as weblog
+import os
 
-import pipeline.infrastructure.displays.vla.opacitiesdisplay as opacitiesdisplay
+import opacitiesdisplay as opacitiesdisplay
+import swpowdisplay as swpowdisplay
+import pipeline.infrastructure.filenamer as filenamer
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.renderer.basetemplates as basetemplates
-import pipeline.infrastructure.utils as utils
-import pipeline.infrastructure.displays.vla.swpowdisplay as swpowdisplay
-import pipeline.infrastructure.filenamer as filenamer
+import pipeline.infrastructure.renderer.weblog as weblog
 
 LOG = logging.get_logger(__name__)
 
