@@ -21,7 +21,7 @@ import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.casataskdict as casataskdict
 import pipeline.infrastructure.displays.summary as summary
-import pipeline.infrastructure.displays.singledish.drawpointing as drawpointing
+import pipeline.infrastructure.displays.pointing as pointing
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.logging as logging
 from pipeline.infrastructure.renderer.templates import resources
@@ -710,7 +710,7 @@ class T2_1DetailsRenderer(object):
             target = field_strategy.keys()[0]
             reference = field_strategy[target]
             LOG.debug('target field id %s / reference field id %s'%(target,reference))
-            task = drawpointing.SingleDishPointingChart(context, ms, antenna, 
+            task = pointing.SingleDishPointingChart(context, ms, antenna, 
                                                         target_field_id=target,
                                                         reference_field_id=reference,
                                                         target_only=True)
@@ -974,12 +974,12 @@ class T2_2_7Renderer(T2_2_XRendererBase):
             for antenna in ms.antennas:
                 for (target, reference) in ms.calibration_strategy['field_strategy'].items():
                     LOG.debug('target field id %s / reference field id %s'%(target,reference))
-                    task = drawpointing.SingleDishPointingChart(context, ms, antenna, 
+                    task = pointing.SingleDishPointingChart(context, ms, antenna, 
                                                                 target_field_id=target,
                                                                 reference_field_id=reference,
                                                                 target_only=True)
                     target_pointings.append(task.plot())
-                    task = drawpointing.SingleDishPointingChart(context, ms, antenna, 
+                    task = pointing.SingleDishPointingChart(context, ms, antenna, 
                                                                 target_field_id=target,
                                                                 reference_field_id=reference,
                                                                 target_only=False)

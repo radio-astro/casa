@@ -12,9 +12,16 @@ import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.utils as utils
 import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.renderer.logger as logger
-from .utils import RADEClabel, RArotation, DECrotation, DDMMSSs, HHMMSSss
-from .common import DPISummary, DPIDetail, SingleDishDisplayInputs, ShowPlot, draw_beam, LightSpeed
+import pipeline.infrastructure.displays.pointing as pointing
+#from ..common.display import RADEClabel, RArotation, DECrotation, DDMMSSs, HHMMSSss
+from ..common.display import DPISummary, DPIDetail, SingleDishDisplayInputs, ShowPlot, LightSpeed
 LOG = infrastructure.get_logger(__name__)
+
+RADEClabel = pointing.RADEClabel
+RArotation = pointing.RArotation
+DECrotation = pointing.DECrotation
+DDMMSSs = pointing.DDMMSSs
+HHMMSSss = pointing.HHMMSSss
 
 class ClusterValidationAxesManager(object):
     def __init__(self, ncluster, nh, nv, aspect_ratio,
@@ -242,7 +249,7 @@ class ClusterPropertyDisplay(ClusterDisplayWorker):
             aspect = 1.0 / scaling
             x_base = cx
             y_base = cy * scaling
-            draw_beam(axes, radius, aspect, x_base, y_base, offset=0)
+            pointing.draw_beam(axes, radius, aspect, x_base, y_base, offset=0)
             pl.text(x_base, y_base, str(cluster_id), fontsize=10, color='red')
             cluster_id += 1
         pl.xlabel('Line Center (Channel)', fontsize=11)

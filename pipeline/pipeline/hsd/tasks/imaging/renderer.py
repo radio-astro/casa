@@ -4,12 +4,12 @@ import collections
 import pipeline.infrastructure.renderer.basetemplates as basetemplates
 import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.logging as logging
-import pipeline.infrastructure.displays.singledish as displays
 import pipeline.infrastructure.utils as utils
 
 from ..common import renderer as sdsharedrenderer
 
 from . import imaging
+from . import display
 
 LOG = logging.get_logger(__name__)
 
@@ -35,7 +35,7 @@ class T2_4MDetailsSingleDishImagingRenderer(basetemplates.T2_4MDetailsDefaultRen
                 ref_ms = context.observing_run.measurement_sets[msid_list[0]]
                 ref_spw = spwid[0]
                 spw_type =  'TP' if imagemode.upper()=='AMPCAL' else ref_ms.spectral_windows[ref_spw].type 
-                task_cls = displays.SDImageDisplayFactory(spw_type)
+                task_cls = display.SDImageDisplayFactory(spw_type)
                 inputs = task_cls.Inputs(context,result=r)
                 task = task_cls(inputs)
                 plots.append(task.plot())

@@ -5,7 +5,8 @@ import shutil
 import pipeline.infrastructure.renderer.basetemplates as basetemplates
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.utils as utils
-import pipeline.infrastructure.displays.singledish as displays
+
+from . import display as display
 
 LOG = logging.get_logger(__name__)
 
@@ -54,7 +55,7 @@ class T2_4MDetailsSingleDishK2JyCalRenderer(basetemplates.T2_4MDetailsDefaultRen
         hist_plots = []
         for spwid, valid_factors in valid_spw_factors.iteritems():
             if len(valid_factors) > 0:
-                task = displays.K2JyHistDisplay(stage_dir, spwid, valid_factors, spw_band[spwid])
+                task = display.K2JyHistDisplay(stage_dir, spwid, valid_factors, spw_band[spwid])
                 hist_plots += task.plot()
         # input Jy/K files
         reffile_copied = None

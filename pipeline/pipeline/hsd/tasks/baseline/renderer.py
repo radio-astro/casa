@@ -3,7 +3,8 @@ import os
 import pipeline.infrastructure.renderer.basetemplates as basetemplates
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.filenamer as filenamer
-import pipeline.infrastructure.displays.singledish as displays
+
+from . import display 
 
 from ..common import renderer as sdsharedrenderer
 from ..common import compress
@@ -24,8 +25,8 @@ class T2_4MDetailsSingleDishBaselineRenderer(basetemplates.T2_4MDetailsDefaultRe
         plots = []
         sparsemap_plots = []
         for r in results:
-            inputs = displays.ClusterDisplay.Inputs(context,result=r)
-            task = displays.ClusterDisplay(inputs)
+            inputs = display.ClusterDisplay.Inputs(context,result=r)
+            task = display.ClusterDisplay(inputs)
             plots.append(task.plot())
             sparsemap_plots.extend(r.outcome['plots'])
 

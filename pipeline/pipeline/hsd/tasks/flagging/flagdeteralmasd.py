@@ -12,7 +12,7 @@ import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.casatools as casatools
 from pipeline.domain import DataTable
 from pipeline.h.tasks.flagging import flagdeterbase
-from pipeline.infrastructure.displays.singledish import drawpointing
+from pipeline.infrastructure.displays import pointing
 
 
 # ------------------------------------------------------------------------------
@@ -139,12 +139,12 @@ class FlagDeterALMASingleDishResults(flagdeterbase.FlagDeterBaseResults):
             for antenna in msobj.antennas:
                 for (target, reference) in msobj.calibration_strategy['field_strategy'].iteritems():
                     LOG.debug('target field id %s / reference field id %s'%(target,reference))
-                    task = drawpointing.SingleDishPointingChart(context, msobj, antenna, 
+                    task = pointing.SingleDishPointingChart(context, msobj, antenna, 
                                                                 target_field_id=target,
                                                                 reference_field_id=reference,
                                                                 target_only=True)
                     task.plot(revise_plot=True)
-                    task = drawpointing.SingleDishPointingChart(context, msobj, antenna, 
+                    task = pointing.SingleDishPointingChart(context, msobj, antenna, 
                                                                 target_field_id=target,
                                                                 reference_field_id=reference,
                                                                 target_only=False)

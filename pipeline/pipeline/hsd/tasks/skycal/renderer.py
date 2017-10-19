@@ -3,8 +3,9 @@ import collections
 
 import pipeline.infrastructure.renderer.basetemplates as basetemplates
 import pipeline.infrastructure.logging as logging
-import pipeline.infrastructure.displays.singledish.skycal as skycal_display
 import pipeline.infrastructure.casatools as casatools
+
+from . import display as skycal_display
 
 LOG = logging.get_logger(__name__)
 

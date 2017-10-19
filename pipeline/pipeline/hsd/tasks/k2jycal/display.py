@@ -6,7 +6,7 @@ import pylab as pl
 import collections
 
 import pipeline.infrastructure.renderer.logger as logger
-from .common import DPISummary
+from ..common.display import DPISummary
 
 class K2JyHistDisplay(object):
     '''
