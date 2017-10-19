@@ -587,15 +587,21 @@ class T2_1DetailsRenderer(object):
     template = 't2-1_details.mako'
 
     @classmethod
-    def get_file(cls, context, session, ms):
-        ms_dir = os.path.join(context.report_dir, 
-                              'session%s' % session.name,
-                              ms.basename)
+    def get_file(cls, filename):
+        ms_dir = os.path.dirname(filename)
+
         if not os.path.exists(ms_dir):
             os.makedirs(ms_dir)
-        filename = os.path.join(ms_dir, cls.output_file)
+
         file_obj = open(filename, 'w')
         return contextlib.closing(file_obj)
+
+    @classmethod
+    def get_filename(cls, context, session, ms):
+        return os.path.join(context.report_dir,
+                            'session%s' % session.name,
+                            ms.basename,
+                            cls.output_file)
 
     @staticmethod
     def write_listobs(context, ms):
@@ -751,7 +757,14 @@ class T2_1DetailsRenderer(object):
     def render(cls, context):
         for session in Session.get_sessions(context):
             for ms in session.mses:
-                with cls.get_file(context, session, ms) as fileobj:
+                filename = cls.get_filename(context, session, ms)
+                # now that the details pages are written per MS rather than having
+                # tabs for each MS, we don't need to write them each time as
+                # importdata will not affect their content.
+                if os.path.exists(filename):
+                    continue
+
+                with cls.get_file(filename) as fileobj:
                     template = weblog.TEMPLATE_LOOKUP.get_template(cls.template)
                     display_context = cls.get_display_context(context, ms)
                     fileobj.write(template.render(**display_context))
@@ -1604,13 +1617,13 @@ class WebLogGenerator(object):
                  T2_3_1MRenderer,      # data set topic
                  T2_3_2MRenderer,      # calibration topic
                  T2_3_3MRenderer,      # flagging topic
-                 # disable unused line finding topic for July 2014 release
-#                  T2_3_4MRenderer,      # line finding topic
+        # disable unused line finding topic for July 2014 release
+        # T2_3_4MRenderer,             # line finding topic
                  T2_3_5MRenderer,      # imaging topic
                  T2_3_6MRenderer,      # miscellaneous topic
                  T2_4MRenderer,        # task tree
                  T2_4MDetailsRenderer, # task details
-                 # some summary renderers are placed last for access to scores
+        # some summary renderers are placed last for access to scores
                  T1_4MRenderer]        # task summary
 
     @staticmethod
