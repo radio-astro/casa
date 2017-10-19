@@ -3,6 +3,7 @@ from __future__ import absolute_import
 import os
 import numpy
 import itertools
+import collections
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
@@ -25,6 +26,9 @@ from ..common import compress
 from ..baseline import baseline
 
 LOG = infrastructure.get_logger(__name__)
+
+SensitivityInfo = collections.namedtuple('SensitivityInfo', 'sensitivity representative frequency_range')
+
 
 class SDImagingInputs(basetask.StandardInputs):
     """
@@ -105,9 +109,9 @@ class SDImagingResultItem(common.SingleDishResults):
     """
     The class to store result of each image.
     """
-    def __init__(self, task=None, success=None, outcome=None, sensitivity=None):
+    def __init__(self, task=None, success=None, outcome=None, sensitivity_info=None):
         super(SDImagingResultItem, self).__init__(task, success, outcome)
-        self.sensitivity = sensitivity
+        self.sensitivity_info = sensitivity_info
         # logrecords attribute is mandatory but not created unless Result is returned by execute.
         self.logrecords = []
 
@@ -118,9 +122,6 @@ class SDImagingResultItem(common.SingleDishResults):
         if self.outcome.has_key('export_results'):
             self.outcome['export_results'].merge_with_context(context)
 
-        # Add sensitivities to context
-        if self.sensitivity is not None:
-            context.sensitivities.append(self.sensitivity)
         # register ImageItem object to context.sciimlist if antenna is COMBINED
         if self.outcome.has_key('image'):
             image_item = self.outcome['image']
@@ -681,24 +682,22 @@ class SDImaging(basetask.StandardTaskTemplate):
                 outcome['assoc_antennas'] = combined_antids
                 outcome['assoc_fields'] = combined_fieldids
                 outcome['assoc_spws'] = combined_spws
-                outcome['image_sensitivity'] = {'frequency_range': stat_freqs, 'rms': image_rms,
-                                                'channel_width': chan_width, 'representative': is_representative_spw}
-#                 outcome['assoc_pols'] = pols
-                sensitivity=None
-                if is_representative_spw:
-                    sensitivity = Sensitivity(array='TP',
-                                              field=source_name,
-                                              spw=str(combined_spws[0]),
-                                              bandwidth=cqa.quantity(chan_width, 'Hz'),
-                                              bwmode='repBW',
-                                              beam=beam, cell=qcell,
-                                              sensitivity=cqa.quantity(image_rms, 'Jy/beam'))
-#                 # to register exported_ms to each scantable instance
-#                 outcome['export_results'] = export_results
+#                 outcome['image_sensitivity'] = {'frequency_range': stat_freqs, 'rms': image_rms,
+#                                                 'channel_width': chan_width, 'representative': is_representative_spw}
+
+                sensitivity = Sensitivity(array='TP',
+                                          field=source_name,
+                                          spw=str(combined_spws[0]),
+                                          bandwidth=cqa.quantity(chan_width, 'Hz'),
+                                          bwmode='repBW',
+                                          beam=beam, cell=qcell,
+                                          sensitivity=cqa.quantity(image_rms, 'Jy/beam'))
+                sensitivity_info = SensitivityInfo(sensitivity, is_representative_spw, stat_freqs)
+
                 result = SDImagingResultItem(task=self.__class__,
                                           success=True,
                                           outcome=outcome,
-                                          sensitivity=sensitivity)
+                                          sensitivity_info=sensitivity_info)
                 result.stage_number = inputs.context.task_counter 
                 
                 results.append(result)

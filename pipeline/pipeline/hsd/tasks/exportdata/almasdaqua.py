@@ -44,8 +44,9 @@ def _hsd_imaging_sensitivity_exporter(stage_results):
     # XML exporter expects this function to return a list of dictionaries
     sensitivities = []
     for result in stage_results:
-        if result.sensitivity is not None:
-            sensitivities.append(result.sensitivity)
+        if result.sensitivity_info is not None \
+        and result.sensitivity_info.representative:
+            sensitivities.append(result.sensitivity_info.sensitivity)
     return sensitivities
 
 aqua.TASK_NAME_TO_SENSITIVITY_EXPORTER['hsd_imaging'] = _hsd_imaging_sensitivity_exporter

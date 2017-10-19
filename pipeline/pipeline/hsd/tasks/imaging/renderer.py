@@ -2,6 +2,7 @@ import os
 import collections
 
 import pipeline.infrastructure.renderer.basetemplates as basetemplates
+import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.displays.singledish as displays
 import pipeline.infrastructure.utils as utils
@@ -22,6 +23,7 @@ class T2_4MDetailsSingleDishImagingRenderer(basetemplates.T2_4MDetailsDefaultRen
                 description=description, always_rerender=always_rerender)
 
     def update_mako_context(self, ctx, context, results):
+        cqa = casatools.quanta
         plots = []
         image_rms = []
         for r in results:
@@ -38,11 +40,13 @@ class T2_4MDetailsSingleDishImagingRenderer(basetemplates.T2_4MDetailsDefaultRen
                 task = task_cls(inputs)
                 plots.append(task.plot())
                 # RMS of combined image
-                if r.outcome.has_key('image_sensitivity'):
-                    rms_info = r.outcome['image_sensitivity']
-                    icon = '<span class="glyphicon glyphicon-ok"></span>' if rms_info['representative'] else ''
-                    tr = ImageRMSTR(image_item.imagename, icon, rms_info['frequency_range'], 
-                                    rms_info['channel_width']*1.e-3, rms_info['rms'])
+                if r.sensitivity_info is not None:
+                    rms_info = r.sensitivity_info
+                    sensitivity = rms_info.sensitivity
+                    icon = '<span class="glyphicon glyphicon-ok"></span>' if rms_info.representative else ''
+                    tr = ImageRMSTR(image_item.imagename, icon, rms_info.frequency_range, 
+                                    cqa.getvalue(cqa.convert(sensitivity['bandwidth'], 'kHz'))[0],
+                                    cqa.getvalue(sensitivity['sensitivity'])[0])
                     image_rms.append(tr)
    
         rms_table = utils.merge_td_columns(image_rms, num_to_merge=0)
