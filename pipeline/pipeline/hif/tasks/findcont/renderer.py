@@ -26,7 +26,7 @@ class T2_4MDetailsFindContRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
     def __init__(self,
                  uri='findcont.mako',
                  description='Detect continuum frequency ranges',
-                 always_rerender=True):
+                 always_rerender=False):
         super(T2_4MDetailsFindContRenderer, self).__init__(uri=uri,
                                                            description=description,
                                                            always_rerender=always_rerender)

@@ -20,7 +20,7 @@ class T2_4MDetailsCheckProductSizeRenderer(basetemplates.T2_4MDetailsDefaultRend
     def __init__(self,
                  uri='checkproductsize.mako',
                  description='Check product size',
-                 always_rerender=True):
+                 always_rerender=False):
         super(T2_4MDetailsCheckProductSizeRenderer, self).__init__(uri=uri,
                                                            description=description,
                                                            always_rerender=always_rerender)
