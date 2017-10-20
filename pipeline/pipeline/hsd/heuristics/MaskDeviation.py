@@ -86,18 +86,18 @@ class MaskDeviation(object):
             with casatools.TableReader(vis) as mytb:
                 colnames = mytb.colnames()
             if 'CORRECTED_DATA' in colnames:
-                colname = 'CORRECTED_DATA'
+                colname = 'corrected_data'
             elif 'FLOAT_DATA' in colnames:
-                colname = 'FLOAT_DATA'
+                colname = 'float_data'
             elif 'DATA' in colnames:
-                colname = 'DATA'
+                colname = 'data'
             else:
                 raise RuntimeError('{} doesn\'t have any data column (CORRECTED, FLOAT, DATA)'.format(os.path.basename(vis)))
             
         with casatools.MSReader(vis) as myms:
             mssel['baseline'] = '%s&&&'%(antenna)
             myms.msselect(mssel)
-            r = myms.getdata([colname, 'FLAG'])
+            r = myms.getdataold([colname, 'flag'])
             npol, nchan, nrow = r['flag'].shape
             self.nrow = npol * nrow
             self.nchan = nchan
