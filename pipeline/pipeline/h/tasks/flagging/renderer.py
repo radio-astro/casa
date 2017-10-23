@@ -7,7 +7,8 @@ Created on 9 Sep 2014
 import os
 import shutil
 
-import pipeline.infrastructure.displays.flagging as flagging
+#import pipeline.infrastructure.displays.flagging as flagging
+import pipeline.h.tasks.common.displays.flagging as flagging
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.renderer.basetemplates as basetemplates
 import pipeline.infrastructure.utils as utils
