@@ -3,7 +3,8 @@ import os
 import shutil
 
 import pipeline.hif.tasks.common.flagging_renderer_utils as fru
-import pipeline.infrastructure.displays.flagging as flagging
+#import pipeline.infrastructure.displays.flagging as flagging
+import pipeline.h.tasks.common.displays.flagging as flagging
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.renderer.basetemplates as basetemplates
 import pipeline.infrastructure.utils as utils
