@@ -749,7 +749,7 @@ class Finalcals(basetask.StandardTaskTemplate):
 
             unique_bands = list(np.unique(bands))
 
-            fieldobject = m.get_fields(source)
+            fieldobject = m.get_fields(source, intent='PHASE')
             fieldid = str(fieldobject[0].id)
 
             for band in unique_bands:
