@@ -1,11 +1,14 @@
 from __future__ import print_function
 import os
 import fileinput
+import shlex
 import setuptools
 from setuptools.command.build_py import build_py
 import subprocess
 
 from contextlib import closing
+
+SVN_REV = subprocess.check_output(shlex.split('svnversion')).strip()
 
 
 class PipelineBuildPyCommand(build_py):
@@ -59,8 +62,8 @@ packages += ['pipeline.infrastructure.renderer.templates.resources.css',
 
 setuptools.setup(
     name='Pipeline',
-    version='0.1',
-    description='Pipeline package',
+    version='5.3',
+    description='CASA pipeline package',
     cmdclass={
         'build_py': PipelineBuildPyCommand,
     },
@@ -71,6 +74,7 @@ setuptools.setup(
     #     'pyparsing',
     #     'sortedcontainers'
     # ],
+    options=dict(egg_info=dict(tag_build="-r" + SVN_REV)),
     packages=packages,
     package_data={'': ['*.css',
                        '*.egg',
