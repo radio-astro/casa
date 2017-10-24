@@ -61,6 +61,7 @@ class TcleanResult(basetask.Results):
         # Temporarily needed until CAS-8576 is fixed
         self._residual_max = 0.0
         self._tclean_stopcode = 0
+        self._tclean_iterdone = 0
         # This should be automatic, but it does not yet work
         self.pipeline_casa_task = 'Tclean'
         # Dummy settings for the weblog renderer
@@ -290,6 +291,13 @@ class TcleanResult(basetask.Results):
 
     def set_tclean_stopcode(self, tclean_stopcode):
         self._tclean_stopcode = tclean_stopcode
+
+    @property
+    def tclean_iterdone(self):
+        return self._tclean_iterdone
+
+    def set_tclean_iterdone(self, tclean_iterdone):
+        self._tclean_iterdone = tclean_iterdone
 
     def __repr__(self):
         repr = 'Tclean:\n'

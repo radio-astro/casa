@@ -444,7 +444,7 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
             plots.extend(plotter.plot())
 
         for plot in plots:
-            plot.parameters['intent'] = 'TARGET'
+            plot.parameters['intent'] = ['TARGET']
 
         if renderer_cls is not None:
             renderer = renderer_cls(context, result, plots)

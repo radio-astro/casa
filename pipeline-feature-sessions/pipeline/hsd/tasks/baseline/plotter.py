@@ -6,12 +6,12 @@ import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.renderer.logger as logger
-import pipeline.infrastructure.displays.singledish.sparsemap as sparsemap
-from pipeline.infrastructure.displays.singledish.utils import sd_polmap
 from pipeline.domain import DataTable
 from ..common import utils 
 from ..common import compress
-from pipeline.infrastructure.displays.singledish import atmutil
+from ..common import atmutil
+from ..common import display
+from ..common.display import sd_polmap
 
 _LOG = infrastructure.get_logger(__name__)
 LOG = utils.OnDemandStringParseLogger(_LOG)
@@ -19,7 +19,7 @@ LOG = utils.OnDemandStringParseLogger(_LOG)
 class PlotterPool(object):
     def __init__(self):
         self.pool = {}
-        self.figure_id = sparsemap.SparseMapAxesManager.MATPLOTLIB_FIGURE_ID()
+        self.figure_id = display.SparseMapAxesManager.MATPLOTLIB_FIGURE_ID()
     
     def create_plotter(self, num_ra, num_dec, num_plane, refpix, refval, increment):
 #         key = (num_ra, num_dec)
@@ -31,12 +31,12 @@ class PlotterPool(object):
 #             fignums = pl.get_fignums()
 #             while self.figure_id in fignums:
 #                 self.figure_id += 1
-#             plotter = sparsemap.SDSparseMapPlotter(nh=num_ra, nv=num_dec, 
+#             plotter = display.SDSparseMapPlotter(nh=num_ra, nv=num_dec, 
 #                                                    step=1, brightnessunit='Jy/beam',
 #                                                    figure_id=self.figure_id)
 #             self.pool[key] = plotter
 #         plotter.setup_labels(refpix, refval, increment)
-        plotter = sparsemap.SDSparseMapPlotter(nh=num_ra, nv=num_dec, 
+        plotter = display.SDSparseMapPlotter(nh=num_ra, nv=num_dec, 
                                                step=1, brightnessunit='Jy/beam',
                                                figure_id=self.figure_id)
         plotter.setup_labels(refpix, refval, increment)
@@ -302,11 +302,11 @@ class BaselineSubtractionPlotManager(object):
         for x in xrange(num_ra):
             for y in xrange(num_dec):
                 prefit = prefit_map_data[x][y]
-                if not numpy.all(prefit == sparsemap.NoDataThreshold):
+                if not numpy.all(prefit == display.NoDataThreshold):
                     postfit = postfit_map_data[x][y]
                     fit_result[x,y] = prefit - postfit
                 else:
-                    fit_result[x,y,::] = sparsemap.NoDataThreshold
+                    fit_result[x,y,::] = display.NoDataThreshold
         
         
         # plot pre-fit spectra
@@ -406,7 +406,7 @@ def analyze_plot_table(ms, ms_id, antid, spwid, polids, grid_table):
 
 # #@utils.profiler
 # def create_plotter(num_ra, num_dec, num_plane, refpix, refval, increment):
-#     plotter = sparsemap.SDSparseMapPlotter(nh=num_ra, nv=num_dec, step=1, brightnessunit='Jy/beam')
+#     plotter = display.SDSparseMapPlotter(nh=num_ra, nv=num_dec, step=1, brightnessunit='Jy/beam')
 #     plotter.setup_labels(refpix, refval, increment)
 #     return plotter
 #     
@@ -435,9 +435,9 @@ def get_data(infile, dtrows, num_ra, num_dec, num_chan, num_pol, rowlist, rowmap
         assert map_data_storage.shape == map_shape
         assert map_data_storage.dtype == float
         map_data = map_data_storage
-        map_data[:] = sparsemap.NoDataThreshold
+        map_data[:] = display.NoDataThreshold
     else:
-        map_data = numpy.zeros((num_ra, num_dec, num_pol, num_chan), dtype=float) + sparsemap.NoDataThreshold
+        map_data = numpy.zeros((num_ra, num_dec, num_pol, num_chan), dtype=float) + display.NoDataThreshold
     if map_mask_storage is not None:
         assert map_mask_storage.shape == map_shape
         assert map_mask_storage.dtype == bool
@@ -578,11 +578,11 @@ def get_lines(datatable, num_ra, rowlist):
 #     for x in xrange(num_ra):
 #         for y in xrange(num_dec):
 #             prefit = prefit_map_data[x][y]
-#             if not numpy.all(prefit == sparsemap.NoDataThreshold):
+#             if not numpy.all(prefit == display.NoDataThreshold):
 #                 postfit = postfit_map_data[x][y]
 #                 fit_result[x,y] = prefit - postfit
 #             else:
-#                 fit_result[x,y,::] = sparsemap.NoDataThreshold
+#                 fit_result[x,y,::] = display.NoDataThreshold
 #     
 #     
 #     # plot pre-fit spectra

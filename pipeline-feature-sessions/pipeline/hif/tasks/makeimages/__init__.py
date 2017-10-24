@@ -15,16 +15,12 @@ qaadapter.registry.register_to_imaging_topic(resultobjects.MakeImagesResult)
 
 
 def _get_imaging_mode(context, result):
-    # NB: we only check the first entry in the clean list and assume any that
-    # follow will also be VLASS
     try:
-        if 'VLASS' in context.clean_list_pending[0]['heuristics'].imaging_mode:
-            # this key should match the key against which the renderer is
-            # registered
+        # check imaging_mode in first tclean result of first makeimages result
+        # NB: we only check the first entry in the clean list and assume any that
+        # follow will also be VLASS
+        if 'VLASS' in result[0].results[0].imaging_mode:
             return 'VLASS'
-        # or alternatively, inspect result, e.g.
-        # if 'VLASS' == result.some_property_indicating_data_type:
-        #     return 'VLASS'
     except IndexError:
         pass
     except KeyError:

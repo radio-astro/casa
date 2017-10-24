@@ -21,7 +21,7 @@ import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.casataskdict as casataskdict
 import pipeline.infrastructure.displays.summary as summary
-import pipeline.infrastructure.displays.singledish.drawpointing as drawpointing
+import pipeline.infrastructure.displays.pointing as pointing
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.logging as logging
 from pipeline.infrastructure.renderer.templates import resources
@@ -594,15 +594,21 @@ class T2_1DetailsRenderer(object):
     template = 't2-1_details.mako'
 
     @classmethod
-    def get_file(cls, context, session, ms):
-        ms_dir = os.path.join(context.report_dir, 
-                              'session%s' % session.name,
-                              ms.basename)
+    def get_file(cls, filename):
+        ms_dir = os.path.dirname(filename)
+
         if not os.path.exists(ms_dir):
             os.makedirs(ms_dir)
-        filename = os.path.join(ms_dir, cls.output_file)
+
         file_obj = open(filename, 'w')
         return contextlib.closing(file_obj)
+
+    @classmethod
+    def get_filename(cls, context, session, ms):
+        return os.path.join(context.report_dir,
+                            'session%s' % session.name,
+                            ms.basename,
+                            cls.output_file)
 
     @staticmethod
     def write_listobs(context, ms):
@@ -717,7 +723,7 @@ class T2_1DetailsRenderer(object):
             target = field_strategy.keys()[0]
             reference = field_strategy[target]
             LOG.debug('target field id %s / reference field id %s'%(target,reference))
-            task = drawpointing.SingleDishPointingChart(context, ms, antenna, 
+            task = pointing.SingleDishPointingChart(context, ms, antenna, 
                                                         target_field_id=target,
                                                         reference_field_id=reference,
                                                         target_only=True)
@@ -758,7 +764,14 @@ class T2_1DetailsRenderer(object):
     def render(cls, context):
         for session in Session.get_sessions(context):
             for ms in session.mses:
-                with cls.get_file(context, session, ms) as fileobj:
+                filename = cls.get_filename(context, session, ms)
+                # now that the details pages are written per MS rather than having
+                # tabs for each MS, we don't need to write them each time as
+                # importdata will not affect their content.
+                if os.path.exists(filename):
+                    continue
+
+                with cls.get_file(filename) as fileobj:
                     template = weblog.TEMPLATE_LOOKUP.get_template(cls.template)
                     display_context = cls.get_display_context(context, ms)
                     fileobj.write(template.render(**display_context))
@@ -981,12 +994,12 @@ class T2_2_7Renderer(T2_2_XRendererBase):
             for antenna in ms.antennas:
                 for (target, reference) in ms.calibration_strategy['field_strategy'].items():
                     LOG.debug('target field id %s / reference field id %s'%(target,reference))
-                    task = drawpointing.SingleDishPointingChart(context, ms, antenna, 
+                    task = pointing.SingleDishPointingChart(context, ms, antenna, 
                                                                 target_field_id=target,
                                                                 reference_field_id=reference,
                                                                 target_only=True)
                     target_pointings.append(task.plot())
-                    task = drawpointing.SingleDishPointingChart(context, ms, antenna, 
+                    task = pointing.SingleDishPointingChart(context, ms, antenna, 
                                                                 target_field_id=target,
                                                                 reference_field_id=reference,
                                                                 target_only=False)
@@ -1611,13 +1624,13 @@ class WebLogGenerator(object):
                  T2_3_1MRenderer,      # data set topic
                  T2_3_2MRenderer,      # calibration topic
                  T2_3_3MRenderer,      # flagging topic
-                 # disable unused line finding topic for July 2014 release
-#                  T2_3_4MRenderer,      # line finding topic
+        # disable unused line finding topic for July 2014 release
+        # T2_3_4MRenderer,             # line finding topic
                  T2_3_5MRenderer,      # imaging topic
                  T2_3_6MRenderer,      # miscellaneous topic
                  T2_4MRenderer,        # task tree
                  T2_4MDetailsRenderer, # task details
-                 # some summary renderers are placed last for access to scores
+        # some summary renderers are placed last for access to scores
                  T1_4MRenderer]        # task summary
 
     @staticmethod

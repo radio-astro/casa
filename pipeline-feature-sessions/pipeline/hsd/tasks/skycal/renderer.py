@@ -2,10 +2,11 @@ import os
 import collections
 
 import pipeline.infrastructure.casatools as casatools
-import pipeline.infrastructure.displays.singledish.skycal as skycal_display
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.renderer.basetemplates as basetemplates
 import pipeline.infrastructure.utils as utils
+
+from . import display as skycal_display
 
 LOG = logging.get_logger(__name__)
 
