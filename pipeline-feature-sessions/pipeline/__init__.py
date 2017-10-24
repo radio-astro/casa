@@ -58,7 +58,7 @@ def show_weblog(context):
         return
 
     index_html = os.path.join(context.report_dir, 't1-1.html')
-    webbrowser.open(index_html)
+    webbrowser.open('file://' + index_html)
 
 
 def initcli():
