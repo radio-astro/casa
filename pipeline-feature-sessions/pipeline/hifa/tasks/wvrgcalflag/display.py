@@ -11,8 +11,8 @@ import numpy
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.renderer.logger as logger
 import pipeline.infrastructure.utils as utils
-from . import common
-from . import phaseoffset
+from pipeline.infrastructure.displays import common
+from pipeline.infrastructure.displays import phaseoffset
 
 LOG = infrastructure.get_logger(__name__)
 

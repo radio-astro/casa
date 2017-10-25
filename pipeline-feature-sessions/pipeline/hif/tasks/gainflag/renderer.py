@@ -5,7 +5,8 @@ Created on 7 Oct 2015
 """
 import os
 
-import pipeline.infrastructure.displays.image as image
+#import pipeline.infrastructure.displays.image as image
+import pipeline.h.tasks.common.displays.image as image
 import pipeline.infrastructure.filenamer as filenamer
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.renderer.basetemplates as basetemplates
