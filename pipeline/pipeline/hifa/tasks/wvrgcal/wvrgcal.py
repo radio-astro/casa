@@ -466,10 +466,21 @@ class Wvrgcal(basetask.StandardTaskTemplate):
             return result
         
         # get the spw for which qa results are needed
-        atmheuristics = atm_heuristic.AtmHeuristics(
-            context=inputs.context, vis=inputs.vis)
+        # If no spw order was specified explicitly, then calculate an order
+        # here; otherwise use the specified order (e.g. calculated during
+        # previous iteration).
         if inputs.qa_spw == '':
-            qa_spw_list = atmheuristics.spwid_rank_by_opacity()
+            atmheuristics = atm_heuristic.AtmHeuristics(
+                context=inputs.context, vis=inputs.vis)
+            # Preferably rank spws by Tsys and bandwidth:
+            qa_spw_list = atmheuristics.spwid_rank_by_tsys_and_bandwidth(qa_intent)
+            # If ranking by Tsys failed (e.g. no Tsys table, or due to
+            # flagging), then fall back to ranking by opacity and bandwidth:
+            if qa_spw_list is None:
+                LOG.info("qa: ranking spws by bandwidth and Tsys failed for "
+                         "{}; will rank by bandwidth and opacity "
+                         "instead.".format(os.path.basename(inputs.vis)))
+                qa_spw_list = atmheuristics.spwid_rank_by_opacity_and_bandwidth()
         else:
             qa_spw_list = inputs.qa_spw.split(',')
         
