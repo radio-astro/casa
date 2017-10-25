@@ -150,6 +150,6 @@ memory_size = _memory_size()
 try:
     # try getting the version from the egg first
     pipeline_revision = pkg_resources.get_distribution('pipeline').version
-except ImportError:
+except:
     # but if not, fall back to the old svn routine
     pipeline_revision = _pipeline_revision()
