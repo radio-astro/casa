@@ -141,9 +141,11 @@ def _pipeline_revision():
     except:
         return 'Unknown'
 
+
 cpu_type = _cpu_type()
 hostname = _hostname()
 host_distribution = _host_distribution()
 logical_cpu_cores = _logical_cpu_cores()
 memory_size = _memory_size()
-pipeline_revision = _pipeline_revision()
+# pipeline_revision = _pipeline_revision()
+pipeline_revision = pkg_resources.get_distribution('pipeline').version
