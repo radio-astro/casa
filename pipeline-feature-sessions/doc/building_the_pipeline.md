@@ -15,12 +15,22 @@ The pipeline can be built and installed like any standard Python module, with
 ```
 $ casa-config --exec python setup.py install
 ```
+If a pipeline egg is already installed, this command will upgrade the 
+pipeline with the new installation. 
 
 To build a pipeline .egg file without installing the egg, execute 
 ```
 $ casa-config --exec python setup.py build
 ```
 The resulting .egg can be found in the dist directory.
+
+### Removing legacy pipeline installation from CASA
+To prevent any possible conflict between legacy pipeline installation and new
+pipeline code, the legacy pipeline installation should be removed from CASA. 
+Execute:
+```
+casa-config --sh-exec rm '$PYTHONHOME/pipeline'
+``` 
 
 ## Developer install
 As a developer, you will quickly grow weary of creating an egg every time you
@@ -37,6 +47,7 @@ $ casa-config --exec python setup.py develop -u
 ```
 
 ###Optional: CASA CLI bindings
+The CASA CLI bindings are always generated and included in a standard install.
 To make the CASA CLI bindings available for a developer install, the CLI 
 bindings need to be written to the src directory. This can be done using the
 `buildmytasks` command, using the _-i_ option to generate the bindings 
