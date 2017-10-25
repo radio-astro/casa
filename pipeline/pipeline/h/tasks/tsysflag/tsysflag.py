@@ -692,7 +692,7 @@ class Tsysflag(basetask.StandardTaskTemplate):
 
         # Get the Tsys spw map by retrieving it from the first tsys CalFrom 
         # that is present in the callibrary. 
-        spwmap = utils.get_calfroms(inputs, 'tsys')[0].spwmap
+        spwmap = utils.get_calfroms(inputs.context, inputs.vis, 'tsys')[0].spwmap
 
         # Construct a callibrary entry, and store in result. This entry was
         # already created and merged into the context by tsyscal, but we

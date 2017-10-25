@@ -375,11 +375,9 @@ def enable_memstats():
     jobrequest.POSTHOOKS.append(get_hook_fn('Memory usage after '))
 
 
-def get_calfroms(inputs, caltypes=None):
+def get_calfroms(context, vis, caltypes=None):
     """
     Get the CalFroms of the requested type from the callibrary.
-
-    This function assumes that 'vis' is a property of the given inputs.
     """
     import pipeline.infrastructure.callibrary as callibrary
     if caltypes is None:
@@ -393,8 +391,8 @@ def get_calfroms(inputs, caltypes=None):
         assert c in callibrary.CalFrom.CALTYPES
 
     # get the CalState for the ms - no field/spw/antenna selection (for now..)
-    calto = callibrary.CalTo(vis=inputs.vis)
-    calstate = inputs.context.callibrary.get_calstate(calto)
+    calto = callibrary.CalTo(vis=vis)
+    calstate = context.callibrary.get_calstate(calto)
 
     try:
         # old dict-based callibrary implementation
