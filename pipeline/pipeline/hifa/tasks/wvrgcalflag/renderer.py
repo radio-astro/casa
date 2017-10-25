@@ -8,11 +8,12 @@ import collections
 import os
 
 import pipeline.infrastructure.displays.image as image
-import pipeline.infrastructure.displays.wvr as wvr
 import pipeline.infrastructure.filenamer as filenamer
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.renderer.basetemplates as basetemplates
 import pipeline.infrastructure.utils as utils
+from pipeline.hifa.tasks.wvrgcalflag import display as display
+
 
 LOG = logging.get_logger(__name__)
 
@@ -91,14 +92,14 @@ class T2_4MDetailsWvrgcalflagRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
 
             if result.flaggerresult.dataresult.qa_wvr.nowvr_result:
                 # generate the phase offset summary plots
-                phase_offset_summary_plotter = wvr.WVRPhaseOffsetSummaryPlot(context, result.flaggerresult)
+                phase_offset_summary_plotter = display.WVRPhaseOffsetSummaryPlot(context, result.flaggerresult)
                 phase_offset_summary_plots[vis] = phase_offset_summary_plotter.plot()
                 
                 # generate the per-antenna phase offset plots
-                phase_offset_plotter = wvr.WVRPhaseOffsetPlot(context, result.flaggerresult)
+                phase_offset_plotter = display.WVRPhaseOffsetPlot(context, result.flaggerresult)
                 phase_offset_detail_plots[vis] = phase_offset_plotter.plot()
 
-                baseline_plotter = wvr.WVRPhaseVsBaselineChart(context, result.flaggerresult)
+                baseline_plotter = display.WVRPhaseVsBaselineChart(context, result.flaggerresult)
                 baseline_detail_plots[vis] = baseline_plotter.plot()
 
                 # get the first scan for the QA intent(s)
