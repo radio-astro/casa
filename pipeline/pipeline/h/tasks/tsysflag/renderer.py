@@ -13,6 +13,8 @@ import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.renderer.basetemplates as basetemplates
 import pipeline.infrastructure.renderer.rendererutils as rendererutils
 import pipeline.infrastructure.utils as utils
+from pipeline.h.tasks.common.displays import slice as slice
+from pipeline.h.tasks.common.displays import image as image
 from pipeline.h.tasks.common import calibrationtableaccess as caltableaccess
 from pipeline.h.tasks.tsyscal import renderer as tsyscalrenderer
 
@@ -308,7 +310,8 @@ class TsysSpectraPlotRenderer(basetemplates.JsonPlotRenderer):
                         median_spectrum = medians.first(median_desc)
                         if median_spectrum.ant is None or median_spectrum.ant[0] == tsysspectrum.ant[0]:
                             # do the plot
-                            plots.extend(displays.SliceDisplay().plot(
+                            #plots.extend(displays.SliceDisplay().plot(
+                            plots.extend(slice.SliceDisplay().plot(
                               context=context, results=tsysspectra,
                               description_to_plot=tsys_desc,
                               overplot_spectrum=median_spectrum,
@@ -352,7 +355,8 @@ def plot_slice_displays(name_of_metric, context, result_for_metric, reportdir):
     :param reportdir: destination directory for plots
     :return: list of Plot objects
     """
-    plotter = displays.slice.SliceDisplay()
+    #plotter = displays.slice.SliceDisplay()
+    plotter = slice.SliceDisplay()
     plots = plotter.plot(context, result_for_metric, reportdir=reportdir, plotbad=False,
                          plot_only_flagged=True, prefix=name_of_metric)
 
@@ -362,7 +366,8 @@ def plot_slice_displays(name_of_metric, context, result_for_metric, reportdir):
 
 
 def plot_image_displays(name_of_metric, context, result_for_metric, reportdir):
-    plotter = displays.image.ImageDisplay()
+    #plotter = displays.image.ImageDisplay()
+    plotter = image.ImageDisplay()
     plots = plotter.plot(context, result_for_metric, reportdir=reportdir, prefix=name_of_metric)
 
     ensure_vis_in_plot_metadata(plots, result_for_metric.inputs['vis'])
@@ -393,7 +398,8 @@ def plot_tsys_spectra(name_of_metric, context, result_for_metric, reportdir):
                     median_spectrum = medians.first(median_desc)
                     if median_spectrum.ant is None or median_spectrum.ant[0] == tsysspectrum.ant[0]:
                         # do the plot
-                        plotter = displays.SliceDisplay()
+                        #plotter = displays.SliceDisplay()
+                        plotter = slice.SliceDisplay()
                         plots.extend(plotter.plot(
                             context=context, results=tsysspectra,
                             description_to_plot=tsys_desc,
