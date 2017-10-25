@@ -70,29 +70,12 @@ def initcli():
             # buildmytasks writes output to packagename.py
             path_to_cli = pkg_resources.resource_filename(abs_package, '{!s}.py'.format(package))
         except ImportError as e:
-            LOG.exception('Import error: {!s}'.format(e))
+            LOG.debug('Import error: {!s}'.format(e))
             LOG.info('No tasks found for package: {!s}'.format(package))
         else:
             execfile(path_to_cli, my_globals)
             LOG.info('Loaded CASA tasks from package: {!s}'.format(package))
 
-
-# def initcli() :
-#     print "Initializing cli..."
-#     mypath = pkg_resources.resource_filename(__name__, '')
-#     hifpath = mypath+"/hif/cli/hif.py"
-#     hpath = mypath+"/h/cli/h.py"
-#     hsdpath = mypath+"/hsd/cli/hsd.py"
-#     hifapath = mypath+"/hifa/cli/hifa.py"
-#     hifvpath = mypath+"/hifv/cli/hifv.py"
-#     myglobals = stack_frame_find()
-#
-#     execfile(hpath, myglobals)
-#     execfile(hifpath, myglobals)
-#     execfile(hsdpath, myglobals)
-#     execfile(hifapath, myglobals)
-#     execfile(hifvpath, myglobals)
-#     #exec('import pipeline.infrastructure.executeppr', myglobals)
 
 revision = environment.pipeline_revision
 
