@@ -749,8 +749,8 @@ class Finalcals(basetask.StandardTaskTemplate):
 
             unique_bands = list(np.unique(bands))
 
-            fieldobject = m.get_fields(source, intent='PHASE')
-            fieldid = str(fieldobject[0].id)
+            fieldobject = m.get_fields(source)
+            fieldid = str([str(f.id) for f in fieldobject if str(f.id) in fluxscale_result.keys()][0])
 
             for band in unique_bands:
                 lfreqs = []
