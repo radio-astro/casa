@@ -159,7 +159,7 @@ class T2_4MDetailsplotsummaryRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
         for intents, correlation in [(['POLANGLE'], 'RL,LR'), (['POLLEAKAGE'], 'RL,LR'),
                                      (['PHASE'], 'RL,LR'), (['BANDPASS'], 'RL,LR')]:
             plots = self.create_plots(context,
-                                      result,
+                                      results_list,
                                       applycal.PhaseVsFrequencyPerBasebandSummaryChart,
                                       intents, correlation=correlation, coloraxis='corr', avgtime='1e8',
                                       avgbaseline=True, avgantenna=False, plotrange=[0, 0, -180, 180])
@@ -181,7 +181,7 @@ class T2_4MDetailsplotsummaryRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
         for intents, correlation in [(['POLANGLE'], 'RL,LR'), (['POLLEAKAGE'], 'RL,LR'),
                                      (['PHASE'], 'RL,LR'), (['BANDPASS'], 'RL,LR')]:
             plots = self.create_plots(context,
-                                      result,
+                                      results_list,
                                       applycal.AmpVsFrequencyPerBasebandSummaryChart,
                                       intents, correlation=correlation, coloraxis='corr', avgtime='1e8',
                                       avgbaseline=True, avgantenna=False, plotrange=[0, 0, -180, 180])
@@ -219,8 +219,8 @@ class T2_4MDetailsplotsummaryRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
          # science_amp_vs_uv_summary_plots,
          uv_max) = self.create_science_plots(context, results_list, correlation=corrstring)
 
-        for result in results_list:
-            if pipeline.infrastructure.generate_detail_plots(result):
+        if pipeline.infrastructure.generate_detail_plots(results_list):
+            for result in results_list:
                 # detail plots. Don't need the return dictionary, but make sure a
                 # renderer is passed so the detail page is written to disk
                 self.create_plots(context,
