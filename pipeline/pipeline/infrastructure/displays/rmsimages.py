@@ -32,4 +32,13 @@ class RmsimagesSummary(object):
                                                             reportdir=stage_dir, intent='',
                                                             collapseFunction='mean'))
 
+            with casatools.ImageReader(rmsimagename) as image:
+                stats = image.statistics(robust=True)
+                self.result.max = stats.get('max')[0]
+                self.result.min = stats.get('min')[0]
+                self.result.mean = stats.get('mean')[0]
+                self.result.median = stats.get('median')[0]
+                self.result.sigma = stats.get('sigma')[0]
+                self.result.MADrms = stats.get('medabsdevmed')[0] * 1.4826  # see CAS-9631
+
         return [p for p in plot_wrappers if p is not None]

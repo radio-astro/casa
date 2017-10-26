@@ -68,4 +68,5 @@ class T2_4MDetailsMakermsimagesRenderer(basetemplates.T2_4MDetailsDefaultRendere
 
         ctx.update({'rmsplots'     : rmsplots,
                     'info_dict' : info_dict,
-                    'dirname'   : weblog_dir})
+                    'dirname'   : weblog_dir,
+                    'plotter'   : plotter})

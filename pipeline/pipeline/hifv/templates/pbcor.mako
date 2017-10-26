@@ -45,7 +45,7 @@ $(document).ready(function() {
 });
 </script>
 
-<p>Primary beam corrected image</p>
+<p>Primary beam corrected images</p>
 
 <table class="table">
         <tr>
