@@ -4,6 +4,7 @@ import os
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.displays as displays
+import pipeline.infrastructure.casatools as casatools
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -30,5 +31,11 @@ class PbcorimagesSummary(object):
             plot_wrappers.append(displays.SkyDisplay().plot(self.context, pbcorimagename,
                                                             reportdir=stage_dir, intent='',
                                                             collapseFunction='mean'))
+
+            with casatools.ImageReader(pbcorimagename) as image:
+                stats = image.statistics(robust=True)
+                self.result.max = stats.get('max')[0]
+                self.result.min = stats.get('min')[0]
+                self.result.sigma = stats.get('sigma')[0]
 
         return [p for p in plot_wrappers if p is not None]
