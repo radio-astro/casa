@@ -15,7 +15,7 @@ LOG = infrastructure.get_logger(__name__)
 
 class UVcontSubInputs(applycal.ApplycalInputs):
     applymode = vdp.VisDependentProperty(default='calflag')
-    flagsum = vdp.VisDependentProperty(default='flagsum')
+    flagsum = vdp.VisDependentProperty(default=False)
     intent = vdp.VisDependentProperty(default='TARGET')
 
     @basetask.log_equivalent_CASA_call
