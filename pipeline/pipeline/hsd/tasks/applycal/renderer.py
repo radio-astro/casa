@@ -11,13 +11,14 @@ import os
 import pipeline.domain.measures as measures
 import pipeline.infrastructure
 import pipeline.infrastructure.casatools as casatools
-import pipeline.infrastructure.displays.applycal as applycal
 import pipeline.infrastructure.filenamer as filenamer
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.renderer.basetemplates as basetemplates
 import pipeline.infrastructure.utils as utils
 #from pipeline.hif.tasks.applycal.renderer import *
 from pipeline.h.tasks.applycal.renderer import *
+
+from pipeline.h.tasks.common.displays import applycal as applycal
 
 LOG = logging.get_logger(__name__)
 
