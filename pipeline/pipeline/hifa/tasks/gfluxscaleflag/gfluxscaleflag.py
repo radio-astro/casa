@@ -11,13 +11,15 @@ import functools
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.callibrary as callibrary
-import pipeline.infrastructure.displays.applycal as applycal_displays
 from pipeline.h.tasks.flagging.flagdatasetter import FlagdataSetter
 from pipeline.hif.tasks import applycal
 from pipeline.hif.tasks import correctedampflag
 from pipeline.hif.tasks import gaincal
 from pipeline.infrastructure import casa_tasks
 from .resultobjects import GfluxscaleflagResults
+
+#import pipeline.infrastructure.displays.applycal as applycal_displays
+from pipeline.h.tasks.common.displays import applycal as applycal_displays
 
 __all__ = [
     'GfluxscaleflagInputs',
