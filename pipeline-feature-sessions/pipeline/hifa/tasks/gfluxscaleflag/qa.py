@@ -6,6 +6,7 @@ Created on 01 Jun 2017
 
 from __future__ import absolute_import
 
+import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.pipelineqa as pqa
 import pipeline.infrastructure.utils as utils
@@ -36,7 +37,7 @@ class GfluxscaleflagListQAHandler(pqa.QAResultHandler):
     """
     QA handler for a list containing GfluxscaleflagResults.
     """
-    result_cls = list
+    result_cls = basetask.ResultsList
     child_cls = resultobjects.GfluxscaleflagResults
 
     def handle(self, context, result):
