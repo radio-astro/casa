@@ -9,10 +9,11 @@ import os
 
 import pipeline.domain.measures as measures
 import pipeline.infrastructure.callibrary as callibrary
-import pipeline.infrastructure.displays.gfluxscale as gfluxscale
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.renderer.basetemplates as basetemplates
 import pipeline.infrastructure.utils as utils
+
+from . import display as gfluxscale
 
 LOG = logging.get_logger(__name__)
 
