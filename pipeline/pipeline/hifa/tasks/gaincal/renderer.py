@@ -11,7 +11,9 @@ import pipeline.infrastructure.filenamer as filenamer
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.renderer.basetemplates as basetemplates
 import pipeline.infrastructure.utils as utils
-import pipeline.infrastructure.displays.gaincal as gaincal_displays
+
+#import pipeline.infrastructure.displays.gaincal as gaincal_displays
+from . import display as gaincal_displays
 
 LOG = logging.get_logger(__name__)
 
