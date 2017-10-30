@@ -1,12 +1,11 @@
-import os
 import contextlib
-import pipeline.infrastructure.renderer.weblog as weblog
+import os
 
-
+import pipeline.hifv.tasks.circfeedpolcal.display as polarization
+import pipeline.infrastructure.filenamer as filenamer
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.renderer.basetemplates as basetemplates
-import pipeline.infrastructure.displays.polarization as polarization
-import pipeline.infrastructure.filenamer as filenamer
+import pipeline.infrastructure.renderer.weblog as weblog
 
 LOG = logging.get_logger(__name__)
 
