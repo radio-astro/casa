@@ -3,8 +3,10 @@ import collections
 import os
 
 import pipeline.infrastructure as infrastructure
-import pipeline.infrastructure.displays as displays
 import pipeline.infrastructure.casatools as casatools
+
+#import pipeline.infrastructure.displays as displays
+from pipeline.h.tasks.common.displays import sky as skye
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -28,7 +30,8 @@ class PbcorimagesSummary(object):
         plot_wrappers = []
 
         for pbcorimagename in self.result.pbcorimagenames:
-            plot_wrappers.append(displays.SkyDisplay().plot(self.context, pbcorimagename,
+            #plot_wrappers.append(displays.SkyDisplay().plot(self.context, pbcorimagename,
+            plot_wrappers.append(sky.SkyDisplay().plot(self.context, pbcorimagename,
                                                             reportdir=stage_dir, intent='',
                                                             collapseFunction='mean'))
 
