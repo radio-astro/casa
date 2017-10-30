@@ -1,7 +1,7 @@
 import contextlib
 import os
 
-import pipeline.hifv.tasks.circfeedpolcal.display as polarization
+import pipeline.infrastructure.displays.polarization as polarization
 import pipeline.infrastructure.filenamer as filenamer
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.renderer.basetemplates as basetemplates
