@@ -9,11 +9,13 @@ import os
 import numpy
 
 import pipeline.infrastructure.casatools as casatools
-import pipeline.infrastructure.displays.tsys as displays
 import pipeline.infrastructure.filenamer as filenamer
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.renderer.basetemplates as basetemplates
 import pipeline.infrastructure.utils as utils
+
+#import pipeline.infrastructure.displays.tsys as displays
+from pipeline.h.tasks.common.displays import tsys as displays
 
 LOG = logging.get_logger(__name__)
 
