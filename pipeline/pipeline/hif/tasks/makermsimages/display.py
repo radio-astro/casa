@@ -3,8 +3,9 @@ import collections
 import os
 
 import pipeline.infrastructure as infrastructure
-import pipeline.infrastructure.displays as displays
 import pipeline.infrastructure.casatools as casatools
+
+from pipeline.infrastructure import displays as displays
 
 LOG = infrastructure.get_logger(__name__)
 
