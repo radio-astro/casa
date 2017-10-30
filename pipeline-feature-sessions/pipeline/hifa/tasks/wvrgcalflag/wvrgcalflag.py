@@ -5,6 +5,7 @@ import inspect
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.logging as logging
+import pipeline.infrastructure.vdp as vdp
 from pipeline.h.tasks.common import commonhelpermethods
 from pipeline.h.tasks.common import viewflaggers
 from pipeline.hifa.tasks import bandpass
@@ -12,100 +13,65 @@ from .resultobjects import WvrgcalflagResults, WvrgcalflagViewResults
 from . import wvrgcalflagsetter
 from ..wvrgcal import wvrgcal
 
+__all__ = [
+    'Wvrgcalflag',
+    'WvrgcalflagInputs'
+]
+
 LOG = infrastructure.get_logger(__name__)
 
 
 class WvrgcalflagInputs(wvrgcal.WvrgcalInputs):
-    
-    @basetask.log_equivalent_CASA_call
-    def __init__(self, context, output_dir=None, vis=None, caltable=None,
-                 offsetstable=None, hm_toffset=None, toffset=None,
-                 segsource=None, hm_tie=None, tie=None, sourceflag=None,
-                 nsol=None, disperse=None, wvrflag=None, hm_smooth=None,
-                 smooth=None, scale=None, maxdistm=None, minnumants=None,
-                 mingoodfrac=None, refant=None, flag_intent=None,
-                 qa_intent=None, qa_bandpass_intent=None,
-                 accept_threshold=None, flag_hi=None, fhi_limit=None,
-                 fhi_minsample=None):
-        self._init_properties(vars())
+    """
+    WvrgcalflagInputs defines the inputs for the Wvrgcalflag pipeline task.
+    """
+    flag_hi = vdp.VisDependentProperty(default=True)
 
-    # qa_intent setter/getter overrides version in WvrgcalInputs with a 
-    # different default 
-    @property
-    def qa_intent(self):
-        if isinstance(self.vis, list):
-            return self._handle_multiple_vis('qa_intent')
-
-        if self._qa_intent is None:
-            value = 'PHASE'
-        else:
-            value = self._qa_intent
-
-        # ensure that qa_intent includes flag_intent otherwise 
-        # the results for flag_intent will not be calculated
-        value_set = set(value.split(','))
-        temp = self.flag_intent
-        value_set.update(temp.split(','))
-        value = ','.join(value_set)
-        return value
-
-    @qa_intent.setter
-    def qa_intent(self, value):
-        self._qa_intent = value
-
-    @property
+    @vdp.VisDependentProperty
     def flag_intent(self):
-        if isinstance(self.vis, list):
-            return self._handle_multiple_vis('flag_intent')
+        bp_inputs = bandpass.ALMAPhcorBandpass.Inputs(context=self.context, vis=self.vis, intent=None)
+        return bp_inputs.intent
 
-        # This is a somewhat complicated way to get the default
-        # intent.
-        if self._flag_intent is None:
-            # default to the intent that would be used for bandpass
-            # calibration
-            bp_inputs = bandpass.ALMAPhcorBandpass.Inputs(
-              context=self.context,
-              vis=self.vis,
-              intent=None)
-            value = bp_inputs.intent
-            return value
+    fhi_limit = vdp.VisDependentProperty(default=10)
+    fhi_minsample = vdp.VisDependentProperty(default=5)
 
-        return self._flag_intent
+    @vdp.VisDependentProperty
+    def qa_intent(self):
+        # Ensure that qa_intent includes flag_intent otherwise the results for
+        # flag_intent will not be calculated.
+        value_set = {'PHASE'}
+        value_set.update(self.flag_intent.split(','))
+        return ','.join(value_set)
 
-    @flag_intent.setter
-    def flag_intent(self, value):
-        self._flag_intent = value
- 
-    # flag high outlier
-    @property
-    def flag_hi(self):
-        return self._flag_hi
+    @qa_intent.convert
+    def qa_intent(self, value):
+        # Ensure that qa_intent includes flag_intent otherwise the results for
+        # flag_intent will not be calculated.
+        value_set = set(value.split(','))
+        value_set.update(self.flag_intent.split(','))
+        return ','.join(value_set)
 
-    @flag_hi.setter
-    def flag_hi(self, value):
-        if value is None:
-            value = True
-        self._flag_hi = value
+    @basetask.log_equivalent_CASA_call
+    def __init__(self, context, output_dir=None, vis=None, caltable=None, offsetstable=None, hm_toffset=None,
+                 toffset=None, segsource=None, hm_tie=None, tie=None, sourceflag=None, nsol=None, disperse=None,
+                 wvrflag=None, hm_smooth=None, smooth=None, scale=None, maxdistm=None, minnumants=None,
+                 mingoodfrac=None, refant=None, flag_intent=None, qa_intent=None, qa_bandpass_intent=None,
+                 accept_threshold=None, flag_hi=None, fhi_limit=None, fhi_minsample=None):
 
-    @property
-    def fhi_limit(self):
-        return self._fhi_limit
+        super(WvrgcalflagInputs, self).__init__(
+            context, output_dir=output_dir, vis=vis, caltable=caltable, offsetstable=offsetstable,
+            hm_toffset=hm_toffset, toffset=toffset, segsource=segsource, hm_tie=hm_tie, tie=tie, sourceflag=sourceflag,
+            nsol=nsol, disperse=disperse, wvrflag=wvrflag, hm_smooth=hm_smooth, smooth=smooth, scale=scale,
+            maxdistm=maxdistm, minnumants=minnumants, mingoodfrac=mingoodfrac, refant=refant, qa_intent=qa_intent,
+            qa_bandpass_intent=qa_bandpass_intent, accept_threshold=accept_threshold)
 
-    @fhi_limit.setter
-    def fhi_limit(self, value):
-        if value is None:
-            value = 10
-        self._fhi_limit = value
+        # solution parameters
+        self.flag_intent = flag_intent
 
-    @property
-    def fhi_minsample(self):
-        return self._fhi_minsample
-
-    @fhi_minsample.setter
-    def fhi_minsample(self, value):
-        if value is None:
-            value = 5
-        self._fhi_minsample = value
+        # flagging parameters
+        self.flag_hi = flag_hi
+        self.fhi_limit = fhi_limit
+        self.fhi_minsample = fhi_minsample
 
 
 class Wvrgcalflag(basetask.StandardTaskTemplate):
@@ -198,28 +164,55 @@ class Wvrgcalflag(basetask.StandardTaskTemplate):
         return result
 
 
-class WvrgcalflagDataInputs(basetask.StandardInputs):
+class WvrgcalflagDataInputs(vdp.StandardInputs):
 
     @basetask.log_equivalent_CASA_call
-    def __init__(self, context, output_dir=None, vis=None, caltable=None,
-                 offsetstable=None, hm_toffset=None, toffset=None,
-                 segsource=None, hm_tie=None, tie=None, sourceflag=None,
-                 nsol=None, disperse=None, wvrflag=None, hm_smooth=None,
-                 smooth=None, scale=None, maxdistm=None, minnumants=None,
-                 mingoodfrac=None, refant=None, qa_intent=None,
-                 qa_bandpass_intent=None):
-        self._init_properties(vars())
+    def __init__(self, context, output_dir=None, vis=None, caltable=None, offsetstable=None, hm_toffset=None,
+                 toffset=None, segsource=None, hm_tie=None, tie=None, sourceflag=None, nsol=None, disperse=None,
+                 wvrflag=None, hm_smooth=None, smooth=None, scale=None, maxdistm=None, minnumants=None,
+                 mingoodfrac=None, refant=None, qa_intent=None, qa_bandpass_intent=None):
+
+        # pipeline inputs
+        self.context = context
+        # vis must be set first, as other properties may depend on it
+        self.vis = vis
+        self.output_dir = output_dir
+
+        # data selection arguments
+        self.caltable = caltable
+        self.offsetstable = offsetstable
+
+        # solution parameters
+        self.hm_toffset = hm_toffset
+        self.toffset = toffset
+        self.segsource = segsource
+        self.hm_tie = hm_tie
+        self.tie = tie
+        self.sourceflag = sourceflag
+        self.nsol = nsol
+        self.disperse = disperse
+        self.wvrflag = wvrflag
+        self.hm_smooth = hm_smooth
+        self.smooth = smooth
+        self.scale = scale
+        self.maxdistm = maxdistm
+        self.minnumants = minnumants
+        self.mingoodfrac = mingoodfrac
+        self.refant = refant
+        self.qa_intent = qa_intent
+        self.qa_bandpass_intent = qa_bandpass_intent
 
     # WvrgcalflagDataInputs is a worker task for Wvrgcalflag and does not need
-    # to define its own defaults for input parameters (set with @property and
-    # setters). However, if not tagged as a property (with @property with a
-    # getter and setter) then input parameters will not show up in the "inputs
-    # as a dictionary" object.
+    # to define its own defaults for input parameters. However, as a result, its
+    # input parameters will not show up in the "inputs as a dictionary" object.
     # The weblog renderer for Wvrgcalflag creates plots based on the result
     # from WvrgcalflagData, and the renderer needs to access attributes from
     # its inputs (expecting a dictionary).
     # To ensure all parameters from WvrgcalflagData show up in its final inputs
     # as a dictionary, we override "as_dict" here.
+
+    # TODO: could this override be removed after initializing all parameters
+    # TODO: as vdp parameters with default = None?
     def as_dict(self):
         skip = ['context', 'ms']
         return {dd_name: dd
