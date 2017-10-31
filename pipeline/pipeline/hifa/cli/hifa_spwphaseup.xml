@@ -252,7 +252,7 @@ combine -- Data axes to combine for solving. Options are  '','scan','spw',field'
     example: combine=''
 
 minblperant -- Minimum number of baselines required per antenna for each solve
-    Antennas with fewer baaselines are excluded from solutions. 
+    Antennas with fewer baselines are excluded from solutions. 
     default: 4
     example: minblperant=2
 
@@ -315,7 +315,7 @@ hif_spwphaseup performs tow functions
       calibrations and computes spectral window map that will be used to
       apply those calibrations
     o computes the per spectral window phase offset table that will be
-      applied to the data to remove mean phase differences beteween
+      applied to the data to remove mean phase differences between
       the spectral windows
 
 If hm_spwmapmode = 'auto' the spectral window map is computed using the
@@ -344,13 +344,13 @@ o for each science spectral window  with bandwidth less than maxbandwidth
     o construct a list of spectral windows with bandwidths greater than
       minfracmaxbw * maxbandwidth
     o select the spectral window in this list whose band center most closely
-      matches the band center of the narr spectral window
-    o prefentially match within the same baseband if samebb is True
+      matches the band center of the narrow spectral window
+    o preferentially match within the same baseband if samebb is True
 
 
 If hm_spwmapmode = 'default' the spw mapping is assumed to be one to one.
 
-Phase offsets per specral window are determined by computing a phase only gain calibration
+Phase offsets per spectral window are determined by computing a phase only gain calibration
 on the selected data, normally the high signal to noise bandpass calibrator observations,
 using the solution interval 'inf'.
 
