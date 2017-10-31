@@ -164,7 +164,7 @@ results -- If pipeline mode is 'getinputs' then None is returned. Otherwise
 
 Description
 
-hif_uvconsub applies the precomputed uv continuum fit tables stored in the
+hif_uvcontsub applies the precomputed uv continuum fit tables stored in the
 pipeline context to the set of visibility files using predetermined field and
 spectral window maps and default values for the interpolation schemes.
 

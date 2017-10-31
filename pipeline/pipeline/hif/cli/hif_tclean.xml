@@ -583,7 +583,7 @@ npixels -- Parameter for 'briggs' and 'briggsabs; weighting
     default: 0
     example: 0
 
-restoringbeam -- Gaussina sestoring beam for clean, \'\' for default
+restoringbeam -- Gaussian restoring beam for clean, \'\' for default
     default: \'\'
     example:
 

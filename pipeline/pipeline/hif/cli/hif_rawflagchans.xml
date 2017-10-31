@@ -143,7 +143,7 @@ For each spectral window the flagging view is a 2d image with axes
 'channel' and 'baseline'. The pixel for each channel,baseline is the 
 time average of the underlying unflagged raw data.
 
-The baseline axis is labelled by numbers of form id1.id2 where id1 and id2
+The baseline axis is labeled by numbers of form id1.id2 where id1 and id2
 are the IDs of the baseline antennas. Both id1 and id2 run over all 
 antenna IDs in the observation. This means that each baseline is shown 
 twice but has the benefit that 'bad' antennas are easily identified by 
@@ -202,14 +202,14 @@ fbq_hilo_limit -- If flag_bad_quadrant is True then channel/baselines
                   quadrant will be flagged.
     default: 8.0
 
-fbq_antenna_frac_limit -- If flag_bad_quarant is True and the fraction
+fbq_antenna_frac_limit -- If flag_bad_quadrant is True and the fraction
                           of suspect channel/baselines in a particular
                           antenna/quadrant exceeds fbq_antenna_frac_limit
                           then all data for that antenna/quadrant will
                           be flagged.
     default: 0.2
 
-fbq_baseline_frac_limit -- If flag_bad_quarant is True and the fraction
+fbq_baseline_frac_limit -- If flag_bad_quadrant is True and the fraction
                            of suspect channel/baselines in a particular
                            baseline/quadrant exceeds fbq_baseline_frac_limit
                            then all data for that baseline/quadrant will
