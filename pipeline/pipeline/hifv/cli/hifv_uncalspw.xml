@@ -77,13 +77,13 @@
 
 
 <example>
-The hifv_uncalspw task does additonal heuristic flagging
+The hifv_uncalspw task does additional heuristic flagging
 
 Keyword arguments:
 
 ---- pipeline parameter arguments which can be set in any pipeline mode
 
-vis -- List of visisbility  data files. These may be ASDMs, tar files of ASDMs,
+vis -- List of visibility  data files. These may be ASDMs, tar files of ASDMs,
    MSs, or tar files of MSs, If ASDM files are specified, they will be
    converted  to MS format.
    default: []
