@@ -8,7 +8,7 @@ import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.callibrary as callibrary
 import pipeline.infrastructure.utils as utils
-from pipeline.h.tasks.common import commonhelpermethods
+from pipeline.h.tasks.common.displays import applycal as applycal_displays
 from pipeline.h.tasks.flagging.flagdatasetter import FlagdataSetter
 from pipeline.hif.tasks import applycal
 from pipeline.hif.tasks import correctedampflag
@@ -17,15 +17,11 @@ from pipeline.hifa.tasks import bandpass
 from pipeline.infrastructure import casa_tasks
 from .resultobjects import BandpassflagResults
 
-#import pipeline.infrastructure.displays.applycal as applycal_displays
-from pipeline.h.tasks.common.displays import applycal as applycal_displays
-
 __all__ = [
     'BandpassflagInputs',
     'BandpassflagResults',
     'Bandpassflag'
 ]
-
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -336,10 +332,6 @@ class Bandpassflag(basetask.StandardTaskTemplate):
         # correctedampflag.
         intents = result.cafresult.inputs['intent'].split(',')
         spwids = map(int, result.cafresult.inputs['spw'].split(','))
-
-        # Get number of antennas.
-        antenna_names, antenna_ids = commonhelpermethods.get_antenna_names(ms)
-        nants = len(antenna_names)
 
         # Create an antenna id-to-name translation dictionary.
         antenna_id_to_name = {ant.id: ant.name
