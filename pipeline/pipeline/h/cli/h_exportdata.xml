@@ -134,7 +134,7 @@ vis -- List of visibility  data files for which flagging and calibration
    example: vis=['X227.ms', 'X228.ms']
 
 session -- List of sessions one per visibility file. Currently defaults
-   to a single virtual session containing al the visibility files in vis. 
+   to a single virtual session containing all the visibility files in vis. 
    In future will default to set of observing sessions defined in the 
    context.
    default: []

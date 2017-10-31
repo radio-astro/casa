@@ -188,12 +188,12 @@ o for each ASDM in the input list
    o a compressed tar file containing the caltables for the parent session,
      e.g. uid___A001_X74_X29.session_3.caltables.tar.gz
 
-h_restore data performs the followinga operations
+h_restore data performs the following operations
 
 o imports the ASDM(s))
 o removes the default MS.flagversions directory created by the filler
 o restores the final MS.flagversions directory stored by the pipeline
-o restores the final set of pipeine flags to the MS
+o restores the final set of pipeline flags to the MS
 o restores the final calibration state of the MS
 o restores the final calibration tables for each MS
 o applies the calibration tables to each MS
