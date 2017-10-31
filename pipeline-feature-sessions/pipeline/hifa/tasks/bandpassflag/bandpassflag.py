@@ -9,6 +9,7 @@ import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.callibrary as callibrary
 import pipeline.infrastructure.displays.applycal as applycal_displays
 import pipeline.infrastructure.utils as utils
+import pipeline.infrastructure.vdp as vdp
 from pipeline.h.tasks.common import commonhelpermethods
 from pipeline.h.tasks.flagging.flagdatasetter import FlagdataSetter
 from pipeline.hif.tasks import applycal
@@ -24,52 +25,56 @@ __all__ = [
     'Bandpassflag'
 ]
 
-
 LOG = infrastructure.get_logger(__name__)
 
 
 class BandpassflagInputs(bandpass.ALMAPhcorBandpass.Inputs):
-    # Lower sigma threshold for identifying outliers as a result of bad
-    # antennas within individual timestamps; equivalent to:
-    # relaxationSigma
-    antnegsig = basetask.property_with_default('antnegsig', 4.0)
-
-    # Upper sigma threshold for identifying outliers as a result of bad
-    # antennas within individual timestamps; equivalent to:
-    # positiveSigmaAntennaBased
-    antpossig = basetask.property_with_default('antpossig', 4.6)
-
-    # Threshold for maximum fraction of timestamps that are allowed
-    # to contain outliers; equivalent to:
-    # checkForAntennaBasedBadIntegrations
-    tmantint = basetask.property_with_default('tmantint', 0.063)
-
-    # Initial threshold for maximum fraction of "outlier timestamps" over
-    # "total timestamps" that a baseline may be a part of; equivalent to:
-    # tooManyIntegrationsFraction
-    tmint = basetask.property_with_default('tmint', 0.085)
-
-    # Initial threshold for maximum fraction of "bad baselines" over "all
-    # baselines" that an antenna may be a part of; equivalent to:
-    # tooManyBaselinesFraction
-    tmbl = basetask.property_with_default('tmbl', 0.175)
-
+    """
+    BandpassflagInputs defines the inputs for the Bandpassflag pipeline task.
+    """
     # Lower sigma threshold for identifying outliers as a result of "bad
     # baselines" and/or "bad antennas" within baselines (across all
     # timestamps); equivalent to:
     # catchNegativeOutliers['scalardiff']
-    antblnegsig = basetask.property_with_default('antblnegsig', 3.4)
+    antblnegsig = vdp.VisDependentProperty(default=3.4)
 
     # Upper sigma threshold for identifying outliers as a result of "bad
     # baselines" and/or "bad antennas" within baselines (across all
     # timestamps); equivalent to:
     # flag_nsigma['scalardiff']
-    antblpossig = basetask.property_with_default('antblpossig', 3.2)
+    antblpossig = vdp.VisDependentProperty(default=3.2)
+
+    # Lower sigma threshold for identifying outliers as a result of bad
+    # antennas within individual timestamps; equivalent to:
+    # relaxationSigma
+    antnegsig = vdp.VisDependentProperty(default=4.0)
+
+    # Upper sigma threshold for identifying outliers as a result of bad
+    # antennas within individual timestamps; equivalent to:
+    # positiveSigmaAntennaBased
+    antpossig = vdp.VisDependentProperty(default=4.6)
 
     # Relaxed value to set the threshold scaling factor to under certain
     # conditions; equivalent to:
     # relaxationFactor
-    relaxed_factor = basetask.property_with_default('relaxed_factor', 2.0)
+    relaxed_factor = vdp.VisDependentProperty(default=2.0)
+
+    # Threshold for maximum fraction of timestamps that are allowed
+    # to contain outliers; equivalent to:
+    # checkForAntennaBasedBadIntegrations
+    tmantint = vdp.VisDependentProperty(default=0.063)
+
+    # Initial threshold for maximum fraction of "bad baselines" over "all
+    # baselines" that an antenna may be a part of; equivalent to:
+    # tooManyBaselinesFraction
+    tmbl = vdp.VisDependentProperty(default=0.175)
+
+    # Initial threshold for maximum fraction of "outlier timestamps" over
+    # "total timestamps" that a baseline may be a part of; equivalent to:
+    # tooManyIntegrationsFraction
+    tmint = vdp.VisDependentProperty(default=0.085)
+
+    # TODO: can uvrange be hidden? (inherited from VdpCommonCalibrationInputs).
 
     @basetask.log_equivalent_CASA_call
     def __init__(self, context, output_dir=None, vis=None, caltable=None, intent=None, field=None, spw=None,
@@ -77,14 +82,14 @@ class BandpassflagInputs(bandpass.ALMAPhcorBandpass.Inputs):
                  hm_bandpass=None, solint=None, maxchannels=None, evenbpints=None, bpsnr=None, bpnsols=None,
                  combine=None, refant=None, minblperant=None, minsnr=None, solnorm=None, antnegsig=None, antpossig=None,
                  tmantint=None, tmint=None, tmbl=None, antblnegsig=None, antblpossig=None, relaxed_factor=None):
+        super(BandpassflagInputs, self).__init__(
+            context, output_dir=output_dir, vis=vis, caltable=caltable, intent=intent, field=field, spw=spw,
+            antenna=antenna, hm_phaseup=hm_phaseup, phaseupsolint=phaseupsolint, phaseupbw=phaseupbw,
+            phaseupsnr=phaseupsnr, phaseupnsols=phaseupnsols, hm_bandpass=hm_bandpass, solint=solint,
+            maxchannels=maxchannels, evenbpints=evenbpints, bpsnr=bpsnr, bpnsols=bpnsols, combine=combine,
+            refant=refant, minblperant=minblperant, minsnr=minsnr, solnorm=solnorm)
 
-        super(BandpassflagInputs, self).__init__(context, output_dir=output_dir, vis=vis, caltable=caltable,
-                                                 intent=intent, field=field, spw=spw, antenna=antenna,
-                                                 hm_phaseup=hm_phaseup, phaseupsolint=phaseupsolint,
-                                                 phaseupbw=phaseupbw, phaseupsnr=phaseupsnr, phaseupnsols=phaseupnsols,
-                                                 hm_bandpass=hm_bandpass, solint=solint, maxchannels=maxchannels,
-                                                 evenbpints=evenbpints, bpsnr=bpsnr, bpnsols=bpnsols, combine=combine,
-                                                 refant=refant, minblperant=minblperant, minsnr=minsnr, solnorm=solnorm)
+        # flagging parameters
         self.antnegsig = antnegsig
         self.antpossig = antpossig
         self.tmantint = tmantint

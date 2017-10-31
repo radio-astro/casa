@@ -10,6 +10,7 @@ import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.utils as utils
+import pipeline.infrastructure.vdp as vdp
 from pipeline.h.tasks.common import commonhelpermethods
 from pipeline.h.tasks.common.arrayflaggerbase import FlagCmd
 from pipeline.h.tasks.flagging.flagdatasetter import FlagdataSetter
@@ -18,169 +19,94 @@ from .resultobjects import CorrectedampflagResults
 LOG = infrastructure.get_logger(__name__)
 
 
-class CorrectedampflagInputs(basetask.StandardInputs):
-    @basetask.log_equivalent_CASA_call
-    def __init__(self, context, output_dir=None, vis=None, intent=None,
-                 field=None, spw=None, antnegsig=None, antpossig=None,
-                 tmantint=None, tmint=None, tmbl=None, antblnegsig=None,
-                 antblpossig=None, relaxed_factor=None):
-        self._init_properties(vars())
-
-    @property
-    def intent(self):
-        if self._intent is not None:
-            return self._intent
-
-        if isinstance(self.vis, list):
-            return self._handle_multiple_vis('intent')
-
-        return 'BANDPASS'
-
-    @intent.setter
-    def intent(self, value):
-        self._intent = value
-
-    @property
-    def field(self):
-        if self._field is not None:
-            return self._field
-
-        if isinstance(self.vis, list):
-            return self._handle_multiple_vis('field')
-
-        # By default, return the fields corresponding to the input
-        # intents.
-        fieldids = [field.name
-                    for field in self.ms.get_fields(intent=self.intent)]
-
-        return ','.join(fieldids)
-
-    @field.setter
-    def field(self, value):
-        self._field = value
-
-    @property
-    def spw(self):
-        if self._spw is not None:
-            return str(self._spw)
-
-        if isinstance(self.vis, list):
-            return self._handle_multiple_vis('spw')
-
-        science_spws = self.ms.get_spectral_windows(
-            science_windows_only=True)
-
-        return ','.join([str(spw.id) for spw in science_spws])
-
-    @spw.setter
-    def spw(self, value):
-        self._spw = value
-
-    # Lower sigma threshold for identifying outliers as a result of bad
-    # antennas within individual timestamps; equivalent to:
-    # relaxationSigma
-    @property
-    def antnegsig(self):
-        return self._antnegsig
-
-    @antnegsig.setter
-    def antnegsig(self, value):
-        if value is None:
-            value = 4.0
-        self._antnegsig = value
-
-    # Upper sigma threshold for identifying outliers as a result of bad
-    # antennas within individual timestamps; equivalent to:
-    # positiveSigmaAntennaBased
-    @property
-    def antpossig(self):
-        return self._antpossig
-
-    @antpossig.setter
-    def antpossig(self, value):
-        if value is None:
-            value = 4.6
-        self._antpossig = value
-
-    # Threshold for maximum fraction of timestamps that are allowed
-    # to contain outliers; equivalent to:
-    # checkForAntennaBasedBadIntegrations
-    @property
-    def tmantint(self):
-        return self._tmantint
-
-    @tmantint.setter
-    def tmantint(self, value):
-        if value is None:
-            value = 0.063
-        self._tmantint = value
-
-    # Initial threshold for maximum fraction of "outlier timestamps" over
-    # "total timestamps" that a baseline may be a part of; equivalent to:
-    # tooManyIntegrationsFraction
-    @property
-    def tmint(self):
-        return self._tmint
-
-    @tmint.setter
-    def tmint(self, value):
-        if value is None:
-            value = 0.085
-        self._tmint = value
-
-    # Initial threshold for maximum fraction of "bad baselines" over "all
-    # baselines" that an antenna may be a part of; equivalent to:
-    # tooManyBaselinesFraction
-    @property
-    def tmbl(self):
-        return self._tmbl
-
-    @tmbl.setter
-    def tmbl(self, value):
-        if value is None:
-            value = 0.175
-        self._tmbl = value
-
+class CorrectedampflagInputs(vdp.StandardInputs):
+    """
+    CorrectedampflagInputs defines the inputs for the Correctedampflag pipeline task.
+    """
     # Lower sigma threshold for identifying outliers as a result of "bad
     # baselines" and/or "bad antennas" within baselines (across all
     # timestamps); equivalent to:
     # catchNegativeOutliers['scalardiff']
-    @property
-    def antblnegsig(self):
-        return self._antblnegsig
-
-    @antblnegsig.setter
-    def antblnegsig(self, value):
-        if value is None:
-            value = 3.4
-        self._antblnegsig = value
+    antblnegsig = vdp.VisDependentProperty(default=3.4)
 
     # Upper sigma threshold for identifying outliers as a result of "bad
     # baselines" and/or "bad antennas" within baselines (across all
     # timestamps); equivalent to:
     # flag_nsigma['scalardiff']
-    @property
-    def antblpossig(self):
-        return self._antblpossig
+    antblpossig = vdp.VisDependentProperty(default=3.2)
 
-    @antblpossig.setter
-    def antblpossig(self, value):
-        if value is None:
-            value = 3.2
-        self._antblpossig = value
+    # Lower sigma threshold for identifying outliers as a result of bad
+    # antennas within individual timestamps; equivalent to:
+    # relaxationSigma
+    antnegsig = vdp.VisDependentProperty(default=4.0)
+
+    # Upper sigma threshold for identifying outliers as a result of bad
+    # antennas within individual timestamps; equivalent to:
+    # positiveSigmaAntennaBased
+    antpossig = vdp.VisDependentProperty(default=4.6)
+
+    @vdp.VisDependentProperty
+    def field(self):
+        # By default, return the fields corresponding to the input
+        # intents.
+        fieldids = [field.name
+                    for field in self.ms.get_fields(intent=self.intent)]
+        return ','.join(fieldids)
+
+    intent = vdp.VisDependentProperty(default='BANDPASS')
 
     # Relaxed value to set the threshold scaling factor to under certain
     # conditions; equivalent to:
     # relaxationFactor
-    @property
-    def relaxed_factor(self):
-        return self._relaxed_factor
+    relaxed_factor = vdp.VisDependentProperty(default=2.0)
 
-    @relaxed_factor.setter
-    def relaxed_factor(self, value):
-        if value is None:
-            value = 2.0
-        self._relaxed_factor = value
+    @vdp.VisDependentProperty
+    def spw(self):
+        science_spws = self.ms.get_spectral_windows(
+            science_windows_only=True)
+        return ','.join([str(spw.id) for spw in science_spws])
+
+    # Threshold for maximum fraction of timestamps that are allowed
+    # to contain outliers; equivalent to:
+    # checkForAntennaBasedBadIntegrations
+    tmantint = vdp.VisDependentProperty(default=0.063)
+
+    # Initial threshold for maximum fraction of "bad baselines" over "all
+    # baselines" that an antenna may be a part of; equivalent to:
+    # tooManyBaselinesFraction
+    tmbl = vdp.VisDependentProperty(default=0.175)
+
+    # Initial threshold for maximum fraction of "outlier timestamps" over
+    # "total timestamps" that a baseline may be a part of; equivalent to:
+    # tooManyIntegrationsFraction
+    tmint = vdp.VisDependentProperty(default=0.085)
+
+    @basetask.log_equivalent_CASA_call
+    def __init__(self, context, output_dir=None, vis=None, intent=None, field=None, spw=None, antnegsig=None,
+                 antpossig=None, tmantint=None, tmint=None, tmbl=None, antblnegsig=None, antblpossig=None,
+                 relaxed_factor=None):
+        super(CorrectedampflagInputs, self).__init__()
+
+        # pipeline inputs
+        self.context = context
+        # vis must be set first, as other properties may depend on it
+        self.vis = vis
+        self.output_dir = output_dir
+
+        # data selection arguments
+        self.field = field
+        self.intent = intent
+        self.spw = spw
+
+        # flagging parameters
+        self.antnegsig = antnegsig
+        self.antpossig = antpossig
+        self.tmantint = tmantint
+        self.tmint = tmint
+        self.tmbl = tmbl
+        self.antblnegsig = antblnegsig
+        self.antblpossig = antblpossig
+        self.relaxed_factor = relaxed_factor
 
 
 class Correctedampflag(basetask.StandardTaskTemplate):
