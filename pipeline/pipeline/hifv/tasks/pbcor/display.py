@@ -5,8 +5,7 @@ import os
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.casatools as casatools
 
-#import pipeline.infrastructure.displays as displays
-from pipeline.h.tasks.common.displays import sky as skye
+from pipeline.h.tasks.common.displays import sky as sky
 
 LOG = infrastructure.get_logger(__name__)
 
