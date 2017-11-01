@@ -132,7 +132,7 @@ pipelinemode -- The pipeline operating mode. In 'automatic' mode the pipeline
 ---- pipeline context defined parameter argument which can be set only in
 'interactive mode'
 
-vis -- List of visibility  data files for which flagging and calibration
+vis -- List of visibility data files for which flagging and calibration
    information will be exported. Defaults to the list maintained in the
    pipeline context.
    default: []
