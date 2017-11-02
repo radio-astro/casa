@@ -29,15 +29,17 @@ class PbcorimagesSummary(object):
         plot_wrappers = []
 
         for pbcorimagename in self.result.pbcorimagenames:
-            #plot_wrappers.append(displays.SkyDisplay().plot(self.context, pbcorimagename,
-            plot_wrappers.append(sky.SkyDisplay().plot(self.context, pbcorimagename,
-                                                            reportdir=stage_dir, intent='',
-                                                            collapseFunction='mean'))
-
-            with casatools.ImageReader(pbcorimagename) as image:
-                stats = image.statistics(robust=True)
-                self.result.max = stats.get('max')[0]
-                self.result.min = stats.get('min')[0]
-                self.result.sigma = stats.get('sigma')[0]
+            if 'residual.pbcor' in pbcorimagename:
+                plot_wrappers.append(sky.SkyDisplay().plot(self.context, pbcorimagename,
+                                                           reportdir=stage_dir, intent='',
+                                                           collapseFunction='mean'))
+                with casatools.ImageReader(pbcorimagename) as image:
+                    self.result.residual_stats = image.statistics(robust=True)
+            else:
+                plot_wrappers.append(sky.SkyDisplay().plot(self.context, pbcorimagename,
+                                                           reportdir=stage_dir, intent='',
+                                                           collapseFunction='mean'))
+                with casatools.ImageReader(pbcorimagename) as image:
+                    self.result.pbcor_stats = image.statistics(robust=True)
 
         return [p for p in plot_wrappers if p is not None]
