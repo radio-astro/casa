@@ -461,7 +461,7 @@ class InputsContainer(object):
         # we return the standard implementation. This is necessary for
         # pickle, which checks for __getnewargs__ and __getstate__.
         if name.startswith('__') and name.endswith('__'):
-            LOG.error('Implement {!s} in InputsContainer'.format(name))
+            # LOG.trace('Implement {!s} in InputsContainer'.format(name))
             return super(InputsContainer, self).__getattr__(name)
 
         if name in dir(self):
