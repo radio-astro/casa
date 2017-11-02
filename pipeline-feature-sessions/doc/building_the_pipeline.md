@@ -18,11 +18,60 @@ $ casa-config --exec python setup.py install
 If a pipeline egg is already installed, this command will upgrade the 
 pipeline with the new installation. 
 
-To build a pipeline .egg file without installing the egg, execute 
+## Temporary install
+To build a pipeline .egg file without installing the egg and hence overwriting
+the CASA default pipeline installation, execute 
 ```
-$ casa-config --exec python setup.py build
+$ casa-config --exec python setup.py bdist_egg
 ```
-The resulting .egg can be found in the dist directory.
+The resulting egg file can be found in the dist directory and added to the
+CASA sys.path in your CASA prelude, e.g.,
+```python
+import sys
+sys.path.insert(0, '/path/to/workspace/dist/Pipeline.egg')
+```
+
+### Switching between pipeline versions
+Developers often have multiple workspaces, each workspace containing a
+different version of the pipeline. Below is an example prelude.py which
+switches between workspaces based on the launch arguments given to CASA, e.g.,
+`casa --trunk` makes the most recent pipeline egg from the _trunk_ workspace 
+available. Edit the workspaces dictionary definition to match your environment. 
+```python
+import os.path
+import sys
+
+workspaces = {
+    'trunk': '~/alma/pipeline/svn/pristine/pipeline',
+    'sessions': '~/alma/pipeline/svn/pristine/pipeline-feature-sessions'
+}
+
+def find_most_recent_egg(directory):
+    # list all the egg files in the directory..
+    files = [f for f in os.listdir(directory) if f.endswith('.egg')]
+
+    # .. and from these matches, create a dict mapping files to their
+    # modification timestamps, ..
+    name_n_timestamp = dict([(f, os.stat(os.path.join(directory,f)).st_mtime)
+                             for f in files])
+
+    # .. then return the file with the most recent timestamp
+    return max(name_n_timestamp, key=name_n_timestamp.get)
+
+for k, workspace_path in workspaces.iteritems():
+    if '--' + k in sys.argv:
+        dist_dir = os.path.join(os.path.expanduser(workspace_path), 'dist')
+        try:
+            egg = find_most_recent_egg(dist_dir)
+        except OSError:
+            msg = 'Error: no pipeline egg found in {!s}\n'.format(dist_dir)
+            sys.stderr.writelines(msg)
+            raise
+        else:
+            msg = 'Adding egg to CASA PYTHONPATH: {!s}\n'.format(egg)
+            sys.stdout.writelines(msg)
+            sys.path.insert(0, egg) 
+```
 
 ### Removing legacy pipeline installation from CASA
 To prevent any possible conflict between legacy pipeline installation and new
@@ -55,4 +104,6 @@ in-place, i.e.,
 ```
 $ casa-config --exec python setup.py buildmytasks -i
 ```
-Take care not to commit the code-generated files to SVN!
+The bindings should be rebuilt whenever you change the interface XML definitions.
+
+__Take care not to commit the code-generated files to SVN!__
