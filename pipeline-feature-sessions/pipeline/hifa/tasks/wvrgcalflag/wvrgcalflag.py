@@ -51,7 +51,6 @@ class WvrgcalflagInputs(wvrgcal.WvrgcalInputs):
         value_set.update(self.flag_intent.split(','))
         return ','.join(value_set)
 
-    @basetask.log_equivalent_CASA_call
     def __init__(self, context, output_dir=None, vis=None, caltable=None, offsetstable=None, hm_toffset=None,
                  toffset=None, segsource=None, hm_tie=None, tie=None, sourceflag=None, nsol=None, disperse=None,
                  wvrflag=None, hm_smooth=None, smooth=None, scale=None, maxdistm=None, minnumants=None,
@@ -166,7 +165,6 @@ class Wvrgcalflag(basetask.StandardTaskTemplate):
 
 class WvrgcalflagDataInputs(vdp.StandardInputs):
 
-    @basetask.log_equivalent_CASA_call
     def __init__(self, context, output_dir=None, vis=None, caltable=None, offsetstable=None, hm_toffset=None,
                  toffset=None, segsource=None, hm_tie=None, tie=None, sourceflag=None, nsol=None, disperse=None,
                  wvrflag=None, hm_smooth=None, smooth=None, scale=None, maxdistm=None, minnumants=None,

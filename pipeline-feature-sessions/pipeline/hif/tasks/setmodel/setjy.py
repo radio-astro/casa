@@ -22,7 +22,6 @@ import pipeline.infrastructure.utils as utils
 LOG = infrastructure.get_logger(__name__)
 
 class SetjyInputs(basetask.StandardInputs):
-    @basetask.log_equivalent_CASA_call
     def __init__(self, context, output_dir=None,
                  # some standard setjy selection parameters
                  vis=None, field=None, intent=None, spw=None,

@@ -15,7 +15,6 @@ LOG = infrastructure.get_logger(__name__)
 
 
 class AtmflagInputs(basetask.StandardInputs):
-    @basetask.log_equivalent_CASA_call
     def __init__(self, context, output_dir=None, vis=None,
                  intent=None, flag_minabs=None, fmin_limit=None,
                  flag_nmedian=None, fnm_lo_limit=None, fnm_hi_limit=None):

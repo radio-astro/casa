@@ -16,8 +16,7 @@ class TsysflagInputs(tsysflag.TsysflagInputs):
     """
     TsysflagInputs defines the inputs for the Tsysflag pipeline task.
     """
-    @basetask.log_equivalent_CASA_call
-    def __init__(self, context, output_dir=None, vis=None, caltable=None, 
+    def __init__(self, context, output_dir=None, vis=None, caltable=None,
                  flag_nmedian=None, fnm_limit=None, fnm_byfield=None,
                  flag_derivative=None, fd_max_limit=None,
                  flag_edgechans=None, fe_edge_limit=None,

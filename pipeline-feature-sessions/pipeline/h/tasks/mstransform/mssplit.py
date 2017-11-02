@@ -20,7 +20,6 @@ LOG = infrastructure.get_logger(__name__)
 
 class MsSplitInputs(basetask.StandardInputs):
 
-    @basetask.log_equivalent_CASA_call
     def __init__(self, context, output_dir=None, vis=None,
         outputvis=None, field=None, intent=None, spw=None,
         datacolumn=None, chanbin=None, timebin=None, replace=None):

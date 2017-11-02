@@ -30,7 +30,6 @@ class SDBaselineInputs(basetask.StandardInputs):
     """
     Inputs for baseline subtraction
     """
-    @basetask.log_equivalent_CASA_call
     def __init__(self, context, infiles=None, antenna=None, spw=None, pol=None, field=None,
                  linewindow=None, edge=None, broadline=None, fitorder=None,
                  fitfunc=None, clusteringalgorithm=None, deviationmask=None):

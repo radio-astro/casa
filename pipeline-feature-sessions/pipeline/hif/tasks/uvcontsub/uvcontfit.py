@@ -23,7 +23,6 @@ LOG = infrastructure.get_logger(__name__)
 
 class UVcontFitInputs(basetask.StandardInputs):
 
-    @basetask.log_equivalent_CASA_call
     def __init__(self, context, output_dir=None, vis=None,
         caltable=None, contfile=None, field=None, intent=None, spw=None,
         combine=None, solint=None, fitorder=None):

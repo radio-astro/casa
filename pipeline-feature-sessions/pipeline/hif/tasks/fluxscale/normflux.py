@@ -18,8 +18,7 @@ LOG = infrastructure.get_logger(__name__)
 
 
 class NormaliseFluxInputs(basetask.StandardInputs):
-    @basetask.log_equivalent_CASA_call
-    def __init__(self, context, vis=None, reference=None, transfer=None, 
+    def __init__(self, context, vis=None, reference=None, transfer=None,
                  refintent=None, transintent=None):
         self.vis = vis
         self.context = context

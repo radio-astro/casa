@@ -220,7 +220,6 @@ def correct_ant_posns (vis_name, print_offsets=False):
 
 
 class PriorcalsInputs(basetask.StandardInputs):
-    @basetask.log_equivalent_CASA_call
     def __init__(self, context, vis=None, tecmaps=None, swpow_spw=None):
         # set the properties to the values given as input arguments
         self._init_properties(vars())

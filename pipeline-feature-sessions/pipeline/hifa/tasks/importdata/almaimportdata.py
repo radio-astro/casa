@@ -20,7 +20,6 @@ class ALMAImportDataInputs(importdata.ImportDataInputs):
                                           'Antenna CalAtmosphere CalWVR ExecBlock Receiver SBSummary Source Station')
     dbservice = basetask.property_with_default('dbservice', True)
 
-    @basetask.log_equivalent_CASA_call
     def __init__(self, context, vis=None, output_dir=None, asis=None, process_caldevice=None, session=None,
                  overwrite=None, nocopy=None, bdfflags=None, lazy=None, save_flagonline=None, dbservice=None,
                  createmms=None, ocorr_mode=None):

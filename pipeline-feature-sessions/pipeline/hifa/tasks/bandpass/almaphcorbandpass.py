@@ -61,7 +61,6 @@ class ALMAPhcorBandpassInputs(bandpassmode.BandpassModeInputs):
     phaseupsolint = vdp.VisDependentProperty(default='int')
     solint = vdp.VisDependentProperty(default='inf')
 
-    @basetask.log_equivalent_CASA_call
     def __init__(self, context, mode=None, hm_phaseup=None, phaseupbw=None, phaseupsolint=None, phaseupsnr=None,
                  phaseupnsols=None, hm_bandpass=None, solint=None, maxchannels=None, evenbpints=None, bpsnr=None,
                  bpnsols=None, **parameters):
@@ -514,7 +513,6 @@ class SessionALMAPhcorBandpassInputs(ALMAPhcorBandpassInputs):
     # use common implementation for parallel inputs argument
     parallel = sessionutils.parallel_inputs_impl()
 
-    @basetask.log_equivalent_CASA_call
     def __init__(self, context, mode=None, hm_phaseup=None, phaseupbw=None, phaseupsolint=None, phaseupsnr=None,
                  phaseupnsols=None, hm_bandpass=None, solint=None, maxchannels=None, evenbpints=None, bpsnr=None,
                  bpnsols=None, parallel=None, **parameters):

@@ -52,7 +52,6 @@ class FlagTargetsALMAInputs(basetask.StandardInputs):
     flagbackup = basetask.property_with_default('flagbackup', False)
     template = basetask.property_with_default('template', True)
 
-    @basetask.log_equivalent_CASA_call
     def __init__(self, context, vis=None, output_dir=None, flagbackup=None,
                  template=None, filetemplate=None):
         # set the properties to the values given as input arguments

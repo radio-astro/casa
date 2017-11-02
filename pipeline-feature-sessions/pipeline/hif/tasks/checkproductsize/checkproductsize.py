@@ -13,7 +13,6 @@ LOG = infrastructure.get_logger(__name__)
 class CheckProductSizeInputs(basetask.StandardInputs):
     parallel = basetask.property_with_default('parallel', 'automatic')
 
-    @basetask.log_equivalent_CASA_call
     def __init__(self, context, output_dir=None, vis=None,
                  maxcubesize=None, maxcubelimit=None, maxproductsize=None, parallel=None):
         self.performanceparameters = project.PerformanceParameters()

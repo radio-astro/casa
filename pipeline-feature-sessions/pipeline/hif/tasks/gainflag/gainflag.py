@@ -24,7 +24,6 @@ LOG = infrastructure.get_logger(__name__)
 
 class GainflagInputs(commoncalinputs.CommonCalibrationInputs):
     
-    @basetask.log_equivalent_CASA_call
     def __init__(self, context, output_dir=None, vis=None, intent=None,
                  spw=None, refant=None, niter=None,
                  flag_mediandeviant=None, fmeddev_limit=None,
@@ -232,7 +231,6 @@ class Gainflag(basetask.StandardTaskTemplate):
 
 class GainflaggerInputs(commoncalinputs.CommonCalibrationInputs):
     
-    @basetask.log_equivalent_CASA_call
     def __init__(self, context, output_dir=None, vis=None, intent=None,
                  spw=None, refant=None, niter=None,
                  flag_maxabs=None, fmax_limit=None,

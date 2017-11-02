@@ -41,7 +41,6 @@ class ExportvlassdataResults(basetask.Results):
 
 
 class ExportvlassdataInputs(exportdata.ExportDataInputs):
-    @basetask.log_equivalent_CASA_call
     def __init__(self, context, output_dir=None, session=None, vis=None, exportmses=None,
                  pprfile=None, calintents=None, calimages=None, targetimages=None,
                  products_dir=None):

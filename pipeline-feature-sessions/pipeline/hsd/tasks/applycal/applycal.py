@@ -18,7 +18,6 @@ class SDApplycalInputs(ApplycalInputs):
     flagdetailedsum = vdp.VisDependentProperty(default=True)
     intent = vdp.VisDependentProperty(default='TARGET')
 
-    @basetask.log_equivalent_CASA_call
     def __init__(self, context, output_dir=None, vis=None, field=None, spw=None, antenna=None, intent=None,
                  opacity=None, parang=None, applymode=None, flagbackup=None, flagsum=None, flagdetailedsum=None):
         super(SDApplycalInputs, self).__init__(context, output_dir=output_dir, vis=vis, field=field, spw=spw,

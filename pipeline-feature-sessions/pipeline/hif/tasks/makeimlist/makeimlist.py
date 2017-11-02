@@ -16,8 +16,7 @@ LOG = infrastructure.get_logger(__name__)
 
 
 class MakeImListInputs(basetask.StandardInputs):
-    @basetask.log_equivalent_CASA_call
-    def __init__(self, context, output_dir=None, vis=None, 
+    def __init__(self, context, output_dir=None, vis=None,
       imagename=None, intent=None, field=None, spw=None, contfile=None,
       linesfile=None, uvrange=None, specmode=None, outframe=None,
       hm_imsize=None, hm_cell=None, calmaxpix=None, phasecenter=None,

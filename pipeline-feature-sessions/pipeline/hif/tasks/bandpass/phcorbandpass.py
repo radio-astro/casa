@@ -22,7 +22,6 @@ class PhcorBandpassInputs(bandpassmode.BandpassModeInputs):
     solint        = basetask.property_with_default('solint', 'inf')
     #maxchannels   = basetask.property_with_default('maxchannels', 240)
     
-    @basetask.log_equivalent_CASA_call
     def __init__(self,
                  # parameters for BandpassModeInputs:
                  context, mode=None,

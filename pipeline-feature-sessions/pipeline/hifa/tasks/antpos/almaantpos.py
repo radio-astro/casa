@@ -14,7 +14,6 @@ class ALMAAntposInputs(antpos.AntposInputs):
     # Force the offset input to be from a file
     hm_antpos  = basetask.property_with_default('hm_antpos', 'file')
 
-    @basetask.log_equivalent_CASA_call
     def __init__(self, context, output_dir=None, vis=None, caltable=None,
                  hm_antpos=None, antposfile=None, antenna=None,
                  offsets=None):

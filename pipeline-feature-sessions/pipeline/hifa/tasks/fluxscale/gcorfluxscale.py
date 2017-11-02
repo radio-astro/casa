@@ -61,7 +61,6 @@ class GcorFluxscaleInputs(fluxscale.FluxscaleInputs):
     solint = vdp.VisDependentProperty(default='inf')
     uvrange = vdp.VisDependentProperty(default='')
 
-    @basetask.log_equivalent_CASA_call
     def __init__(self, context, output_dir=None, vis=None, caltable=None, fluxtable=None, reffile=None, reference=None,
                  transfer=None, refspwmap=None, refintent=None, transintent=None, solint=None, phaseupsolint=None,
                  minsnr=None, refant=None, hm_resolvedcals=None, antenna=None, uvrange=None, peak_fraction=None):
@@ -413,7 +412,6 @@ class SessionGcorFluxscaleInputs(GcorFluxscaleInputs):
     # use common implementation for parallel inputs argument
     parallel = sessionutils.parallel_inputs_impl()
 
-    @basetask.log_equivalent_CASA_call
     def __init__(self, context, output_dir=None, vis=None, caltable=None, fluxtable=None, reffile=None, reference=None,
                  transfer=None, refspwmap=None, refintent=None, transintent=None, solint=None, phaseupsolint=None,
                  minsnr=None, refant=None, hm_resolvedcals=None, antenna=None, uvrange=None, peak_fraction=None,

@@ -34,7 +34,6 @@ class SDImagingInputs(basetask.StandardInputs):
     """
     Inputs for imaging
     """
-    @basetask.log_equivalent_CASA_call
     def __init__(self, context, mode=None, infiles=None, field=None, spw=None):
         super(SDImagingInputs, self).__init__(context, vis=infiles)
 

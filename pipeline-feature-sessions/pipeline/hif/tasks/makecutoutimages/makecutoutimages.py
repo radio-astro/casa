@@ -65,7 +65,6 @@ class MakecutoutimagesResults(basetask.Results):
 
 
 class MakecutoutimagesInputs(basetask.StandardInputs):
-    @basetask.log_equivalent_CASA_call
     def __init__(self, context, vis=None, offsetblc=None, offsettrc=None):
         # set the properties to the values given as input arguments
         self._init_properties(vars())

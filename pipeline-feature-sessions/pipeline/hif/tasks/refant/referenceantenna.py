@@ -61,7 +61,6 @@ class RefAntInputs(vdp.StandardInputs):
         # refant does not use CASA tasks
         raise NotImplementedError
 
-    @basetask.log_equivalent_CASA_call
     def __init__(self, context, vis=None, output_dir=None, field=None, spw=None, intent=None, hm_refant=None,
                  refant=None, geometry=None, flagging=None, refantignore=None):
         self.context = context
@@ -148,7 +147,6 @@ class HpcRefAntInputs(RefAntInputs):
         # that do so
         raise NotImplementedError
 
-    @basetask.log_equivalent_CASA_call
     def __init__(self, context, vis=None, output_dir=None, field=None, spw=None, intent=None, hm_refant=None,
                  refant=None, geometry=None, flagging=None, refantignore=None, parallel=None):
         super(HpcRefAntInputs, self).__init__(context, vis=vis, output_dir=output_dir, field=field, spw=spw,

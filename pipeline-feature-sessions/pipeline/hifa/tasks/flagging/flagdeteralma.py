@@ -21,7 +21,6 @@ class FlagDeterALMAInputs(flagdeterbase.FlagDeterBaseInputs):
     qa0 = basetask.property_with_default('qa0', True)
     qa2 = basetask.property_with_default('qa2', True)
 
-    @basetask.log_equivalent_CASA_call
     def __init__(self, context, vis=None, output_dir=None, flagbackup=None,
                  autocorr=None, shadow=None, scan=None, scannumber=None,
                  intents=None, edgespw=None, fracspw=None, 

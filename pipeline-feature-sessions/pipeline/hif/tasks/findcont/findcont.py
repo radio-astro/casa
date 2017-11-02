@@ -22,7 +22,6 @@ LOG = infrastructure.get_logger(__name__)
 class FindContInputs(basetask.StandardInputs):
     parallel = basetask.property_with_default('parallel', 'automatic')
 
-    @basetask.log_equivalent_CASA_call
     def __init__(self, context, output_dir=None, vis=None, target_list=None,
                  parallel=None):
         self._init_properties(vars())

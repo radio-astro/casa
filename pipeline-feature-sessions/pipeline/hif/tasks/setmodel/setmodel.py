@@ -16,8 +16,7 @@ LOG = infrastructure.get_logger(__name__)
 
 
 class SetModelsInputs(basetask.StandardInputs):
-    @basetask.log_equivalent_CASA_call
-    def __init__(self, context, output_dir=None, vis=None, reference=None, 
+    def __init__(self, context, output_dir=None, vis=None, reference=None,
                  refintent=None, transfer=None, transintent=None,
                  reffile=None, normfluxes=None, scalebychan=None):
         # set the properties to the values given as input arguments

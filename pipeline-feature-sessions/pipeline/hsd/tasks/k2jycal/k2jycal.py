@@ -12,7 +12,6 @@ from . import worker
 LOG = infrastructure.get_logger(__name__)
 
 class SDK2JyCalInputs(basetask.StandardInputs):
-    @basetask.log_equivalent_CASA_call
     def __init__(self, context, output_dir=None, infiles=None, caltable=None,
                  reffile=None):
         vis=infiles

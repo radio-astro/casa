@@ -23,7 +23,6 @@ LOG = infrastructure.get_logger(__name__)
 # The basic clean tasks classes. Clean performs a single clean run.
 
 class CleanBaseInputs(basetask.StandardInputs):
-    @basetask.log_equivalent_CASA_call
     def __init__(self, context, output_dir=None, vis=None, imagename=None, datacolumn=None,
                  intent=None, field=None, spw=None, spwsel=None, uvrange=None, orig_specmode=None, specmode=None,
                  gridder=None, deconvolver=None, uvtaper=None,

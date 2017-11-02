@@ -17,7 +17,6 @@ LOG = infrastructure.get_logger(__name__)
 
 
 class RawflagchansInputs(basetask.StandardInputs):
-    @basetask.log_equivalent_CASA_call
     def __init__(self, context, output_dir=None, vis=None, spw=None,
                  intent=None,
                  flag_hilo=None, fhl_limit=None, fhl_minsample=None,

@@ -66,7 +66,6 @@ class ApplycalInputs(vdp.StandardInputs):
         science_spws = self.ms.get_spectral_windows(with_channels=True)
         return ','.join([str(spw.id) for spw in science_spws])
 
-    @basetask.log_equivalent_CASA_call
     def __init__(self, context, output_dir=None, vis=None, field=None, spw=None, antenna=None, intent=None,
                  opacity=None, parang=None, applymode=None, flagbackup=None, flagsum=None, flagdetailedsum=None):
         super(ApplycalInputs, self).__init__()
@@ -318,7 +317,6 @@ class HpcApplycalInputs(ApplycalInputs):
     # use common implementation for parallel inputs argument
     parallel = sessionutils.parallel_inputs_impl()
 
-    @basetask.log_equivalent_CASA_call
     def __init__(self, context, output_dir=None, vis=None, field=None, spw=None, antenna=None, intent=None,
                  opacity=None, parang=None, applymode=None, flagbackup=None, flagsum=None, flagdetailedsum=None,
                  parallel=None):

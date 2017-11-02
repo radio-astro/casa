@@ -59,7 +59,6 @@ class CircfeedpolcalResults(polarization.PolarizationResults):
 
 
 class CircfeedpolcalInputs(polarization.PolarizationInputs):
-    @basetask.log_equivalent_CASA_call
     def __init__(self, context, vis=None, Dterm_solint=None, refantignore=None):
         # set the properties to the values given as input arguments
         self._init_properties(vars())

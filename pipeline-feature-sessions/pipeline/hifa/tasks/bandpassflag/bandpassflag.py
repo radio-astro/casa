@@ -76,7 +76,6 @@ class BandpassflagInputs(bandpass.ALMAPhcorBandpass.Inputs):
 
     # TODO: can uvrange be hidden? (inherited from VdpCommonCalibrationInputs).
 
-    @basetask.log_equivalent_CASA_call
     def __init__(self, context, output_dir=None, vis=None, caltable=None, intent=None, field=None, spw=None,
                  antenna=None, hm_phaseup=None, phaseupsolint=None, phaseupbw=None, phaseupsnr=None, phaseupnsols=None,
                  hm_bandpass=None, solint=None, maxchannels=None, evenbpints=None, bpsnr=None, bpnsols=None,
