@@ -70,7 +70,7 @@ for k, workspace_path in workspaces.iteritems():
         else:
             msg = 'Adding egg to CASA PYTHONPATH: {!s}\n'.format(egg)
             sys.stdout.writelines(msg)
-            sys.path.insert(0, egg) 
+            sys.path.insert(0, os.path.join(dist_dir, egg)) 
 ```
 
 ### Removing legacy pipeline installation from CASA
