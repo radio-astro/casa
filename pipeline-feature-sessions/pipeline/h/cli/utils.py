@@ -3,9 +3,10 @@ import pprint
 import types
 import gc
 
+import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.api as api
 import pipeline.infrastructure.argmapper as argmapper
-import pipeline.infrastructure as infrastructure
+import pipeline.infrastructure.vdp as vdp
 
 import pipeline.h.cli.cli as cli
 import pipeline.h.heuristics as heuristics
@@ -13,16 +14,20 @@ import pipeline
 
 LOG = infrastructure.get_logger(__name__)
 
+
 def get_context():
     return cli.stack[cli.PIPELINE_NAME].context
+
 
 def get_output_dir():
     context = get_context()
     return context.output_dir
 
+
 def get_ms(vis):
     context = get_context()
     return context.observing_run.get_ms(name=vis)
+
 
 def get_heuristic(arg):
     if issubclass(arg, api.Heuristic):
@@ -52,6 +57,7 @@ def get_heuristic(arg):
         return m()
     
     return heuristics.EchoHeuristic(arg)
+
 
 def execute_task(context, taskname, casa_args, fn_name):
     pipelinemode = casa_args.get('pipelinemode', None)
@@ -89,12 +95,10 @@ def _get_task_inputs(context, taskname, casa_args):
     # converting as necessary.
     task_args = argmapper.convert_args(taskname, casa_args) 
     
-    # get the inputs class for this task
-    inputs_cls = pipeline.tasks.__dict__[taskname].Inputs
-    
-    inputs = inputs_cls(context, **task_args)
+    inputs = vdp.InputsContainer(pipeline.tasks.__dict__[taskname], context, **task_args)
 
     return inputs
+
 
 def _execute_task(taskname, stagename, task_inputs, dry_run):
     # Given the class and CASA name of the stage and the list
@@ -109,6 +113,7 @@ def _execute_task(taskname, stagename, task_inputs, dry_run):
     # Error checking ?
     return task.execute(dry_run=dry_run)
 
+
 def _merge_results(context, results):
     try:
         results.accept(context)
@@ -116,6 +121,7 @@ def _merge_results(context, results):
         LOG.critical('Warning: Check merge to context for %s'
                      '' % results.__class__.__name__)
         raise e    
+
 
 def _print_inputs(taskname, casa_args, task_inputs): 
     task_args = argmapper.convert_args(taskname, casa_args)
