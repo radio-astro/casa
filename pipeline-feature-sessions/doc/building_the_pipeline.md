@@ -38,12 +38,21 @@ switches between workspaces based on the launch arguments given to CASA, e.g.,
 `casa --trunk` makes the most recent pipeline egg from the _trunk_ workspace 
 available. Edit the workspaces dictionary definition to match your environment. 
 ```python
+#
+#  CASA prelude to switch between development environments and eggs
+# 
+# casa --trunk         : puts the 'trunk' workspace directory first on the CASA
+#                        path
+# casa --trunk --egg   : put the most recent egg from the trunk workspace first  
+#                        on the CASA path
 import os.path
 import sys
 
+# edit workspaces to match your environment. The dictionary keys become the 
+# recognised CASA command line arguments.
 workspaces = {
     'trunk': '~/alma/pipeline/svn/pristine/pipeline',
-    'sessions': '~/alma/pipeline/svn/pristine/pipeline-feature-sessions'
+    'sessions': '~/alma/pipeline/svn/pristine/pipeline-feature-sessions',
 }
 
 def find_most_recent_egg(directory):
@@ -52,25 +61,38 @@ def find_most_recent_egg(directory):
 
     # .. and from these matches, create a dict mapping files to their
     # modification timestamps, ..
-    name_n_timestamp = dict([(f, os.stat(os.path.join(directory,f)).st_mtime)
-                             for f in files])
+    name_n_timestamp = dict([(f, os.stat(os.path.join(directory,f)).st_mtime) for f in files])
 
     # .. then return the file with the most recent timestamp
     return max(name_n_timestamp, key=name_n_timestamp.get)
 
+
+def get_egg(path):
+    dist_dir = os.path.join(path, 'dist')
+    try:
+        egg = find_most_recent_egg(dist_dir)
+    except OSError:
+        msg = 'Error: no pipeline egg found in {!s}\n'.format(dist_dir)
+        sys.stderr.writelines(msg)
+        return None
+    else:
+        return os.path.join(dist_dir, egg)
+
+
 for k, workspace_path in workspaces.iteritems():
+    full_path = os.path.expanduser(workspace_path)
     if '--' + k in sys.argv:
-        dist_dir = os.path.join(os.path.expanduser(workspace_path), 'dist')
-        try:
-            egg = find_most_recent_egg(dist_dir)
-        except OSError:
-            msg = 'Error: no pipeline egg found in {!s}\n'.format(dist_dir)
-            sys.stderr.writelines(msg)
-            raise
+        if '--egg' in sys.argv:
+            entry_to_add = get_egg(full_path)
+            entry_type = 'egg'
         else:
-            msg = 'Adding egg to CASA PYTHONPATH: {!s}\n'.format(egg)
+            entry_to_add = full_path
+            entry_type = 'directory'
+        if entry_to_add:
+            msg = 'Adding {!s} to CASA PYTHONPATH: {!s}\n'.format(entry_type, entry_to_add)
             sys.stdout.writelines(msg)
-            sys.path.insert(0, os.path.join(dist_dir, egg)) 
+            sys.path.insert(0, entry_to_add)
+
 ```
 
 ### Removing legacy pipeline installation from CASA
