@@ -35,8 +35,9 @@ sys.path.insert(0, '/path/to/workspace/dist/Pipeline.egg')
 Developers often have multiple workspaces, each workspace containing a
 different version of the pipeline. Below is an example prelude.py which
 switches between workspaces based on the launch arguments given to CASA, e.g.,
-`casa --trunk` makes the most recent pipeline egg from the _trunk_ workspace 
-available. Edit the workspaces dictionary definition to match your environment. 
+`casa --trunk --egg` makes the most recent pipeline egg from the _trunk_ 
+workspace available. Edit the workspaces dictionary definition to match your
+environment. 
 ```python
 #
 #  CASA prelude to switch between development environments and eggs
@@ -95,14 +96,6 @@ for k, workspace_path in workspaces.iteritems():
 
 ```
 
-### Removing legacy pipeline installation from CASA
-To prevent any possible conflict between legacy pipeline installation and new
-pipeline code, the legacy pipeline installation should be removed from CASA. 
-Execute:
-```
-casa-config --sh-exec rm '$PYTHONHOME/pipeline'
-``` 
-
 ## Developer install
 As a developer, you will quickly grow weary of creating an egg every time you
 wish to exercise new code. The pipeline supports developer installations. In
@@ -117,7 +110,7 @@ To uninstall the developer installation, execute
 $ casa-config --exec python setup.py develop -u
 ```
 
-###Optional: CASA CLI bindings
+### Optional: CASA CLI bindings
 The CASA CLI bindings are always generated and included in a standard install.
 To make the CASA CLI bindings available for a developer install, the CLI 
 bindings need to be written to the src directory. This can be done using the
@@ -129,3 +122,11 @@ $ casa-config --exec python setup.py buildmytasks -i
 The bindings should be rebuilt whenever you change the interface XML definitions.
 
 __Take care not to commit the code-generated files to SVN!__
+
+### Optional: removing legacy pipeline installation from CASA
+To prevent any possible conflict between legacy pipeline installation and new
+pipeline code, the legacy pipeline installation should be removed from CASA. 
+Execute:
+```
+casa-config --sh-exec rm '$PYTHONHOME/pipeline'
+``` 
