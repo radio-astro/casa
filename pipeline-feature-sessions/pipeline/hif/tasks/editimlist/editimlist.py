@@ -108,8 +108,7 @@ class Editimlist(basetask.StandardTaskTemplate):
     Inputs = EditimlistInputs
 
     # TODO:  check to see if I should set this to False
-    def is_multi_vis_task(self):
-        return True
+    is_multi_vis_task = True
 
     def prepare(self):
 

@@ -181,8 +181,7 @@ class SDImagingWorkerResults(common.SingleDishResults):
 class SDImagingWorker(basetask.StandardTaskTemplate):
     Inputs = SDImagingWorkerInputs
 
-    def is_multi_vis_task(self):
-        return True
+    is_multi_vis_task = True
 
     def prepare(self):
         inputs = self.inputs

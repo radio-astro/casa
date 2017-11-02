@@ -72,8 +72,7 @@ class SDBLFlagInputs(basetask.StandardInputs):
         """
         Returns MS index in context observing run specified as infiles.
         """
-        ms_names = [ms.name for ms in self.context.observing_run.measurement_sets]
-        return map(ms_names.index, map(os.path.abspath, self.infiles))
+        return self.context.observing_run.measurement_sets.index(self.ms)
 
     @property
     def antenna(self):

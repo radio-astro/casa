@@ -138,9 +138,7 @@ class LinpolcalInputs(commoncalinputs.CommonCalibrationInputs):
 class Linpolcal(basetask.StandardTaskTemplate):
     Inputs = LinpolcalInputs
 
-    def is_multi_vis_task(self):
-        # can only work with one measurement set
-        return False
+    is_multi_vis_task = True
 
     def prepare(self):
         inputs = self.inputs

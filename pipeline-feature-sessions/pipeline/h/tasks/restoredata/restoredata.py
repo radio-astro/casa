@@ -272,8 +272,7 @@ class RestoreData(basetask.StandardTaskTemplate):
     # Override the default behavior for multi-vis tasks
     # Does this interfere with multi-vis behavior of
     # called tasks.
-    def is_multi_vis_task(self):
-        return True
+    is_multi_vis_task = True
 
     def prepare(self):
         """

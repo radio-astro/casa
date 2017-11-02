@@ -62,8 +62,7 @@ api.ImagingMeasurementSetsPreferred.register(CheckProductSizeInputs)
 class CheckProductSize(basetask.StandardTaskTemplate):
     Inputs = CheckProductSizeInputs
 
-    def is_multi_vis_task(self):
-        return True
+    is_multi_vis_task = True
 
     def prepare(self):
         checkproductsize_heuristics = checkproductsize.CheckProductSizeHeuristics(self.inputs)

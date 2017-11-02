@@ -42,6 +42,7 @@ import gc
 import os
 import pkg_resources
 import traceback
+import pipeline.infrastructure.vdp as vdp
 import xml.etree.ElementTree as ElementTree
 
 import pipeline.infrastructure.logging as logging
@@ -122,7 +123,7 @@ def _get_tasks(context, args, procedure):
                 argval = parameter.findtext('Value')
                 task_args[argname] = string_to_val(argval)
 
-        task_inputs = task_class.Inputs(context, **task_args)
+        task_inputs = vdp.InputsContainer(task_class, context, **task_args)
         task = task_class(task_inputs)
         task._hif_call = _as_task_call(task_class, task_args)
         # we yield rather than return so that the context can be updated

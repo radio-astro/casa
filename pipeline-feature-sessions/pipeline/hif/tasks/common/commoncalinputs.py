@@ -229,9 +229,10 @@ class VdpCommonCalibrationInputs(vdp.StandardInputs):
     @antenna.convert
     def antenna(self, value):
         antennas = self.ms.get_antenna(value)
+        # TODO enable this once sessions behaviour has been verified and merged to the main trunk
         # if all antennas are selected, return ''
-        if len(antennas) == len(self.ms.antennas):
-            return ''
+        # if len(antennas) == len(self.ms.antennas):
+        #     return ''
         return utils.find_ranges([a.id for a in antennas])
 
     @vdp.VisDependentProperty

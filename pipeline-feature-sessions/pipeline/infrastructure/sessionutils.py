@@ -301,8 +301,7 @@ class ParallelTemplate(basetask.StandardTaskTemplate):
     def __init__(self, inputs):
         super(ParallelTemplate, self).__init__(inputs)
 
-    def is_multi_vis_task(self):
-        return True
+    is_multi_vis_task = True
 
     def get_result_for_exception(self, vis, result):
         raise NotImplementedError

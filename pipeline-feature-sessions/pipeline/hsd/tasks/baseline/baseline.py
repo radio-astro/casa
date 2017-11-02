@@ -178,8 +178,7 @@ class SDBaseline(basetask.StandardTaskTemplate):
             
             return field_id_list, antenna_id_list, spw_id_list
     
-    def is_multi_vis_task(self):
-        return True
+    is_multi_vis_task = True
     
 #    @memory_profiler.profile
     def prepare(self):

@@ -25,8 +25,7 @@ class SDImageCombineInputs(basetask.StandardInputs):
 class SDImageCombine(basetask.StandardTaskTemplate):
     Inputs = SDImageCombineInputs
     
-    def is_multi_vis_task(self):
-        return True
+    is_multi_vis_task = True
 
     def prepare(self):
         infiles = self.inputs.inimages

@@ -147,8 +147,7 @@ class SDImaging(basetask.StandardTaskTemplate):
     # for linear feed in ALMA. this affects pols passed to gridding module
     required_pols = ['XX', 'YY']
 
-    def is_multi_vis_task(self):
-        return True
+    is_multi_vis_task = True
 
     def prepare(self):
         inputs = self.inputs

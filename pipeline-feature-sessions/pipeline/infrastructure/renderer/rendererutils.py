@@ -224,6 +224,9 @@ def sort_row_by(row, axes):
 
 
 def group_plots(data, axes):
+    if data is None:
+        return []
+
     # build primary, secondary, tertiary, etc. axis sorting functions
     def f(axis):
         def g(plot):

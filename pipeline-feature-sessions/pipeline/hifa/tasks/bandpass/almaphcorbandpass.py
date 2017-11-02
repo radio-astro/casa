@@ -533,8 +533,7 @@ BANDPASS_MISSING = '___BANDPASS_MISSING___'
 class SessionALMAPhcorBandpass(basetask.StandardTaskTemplate):
     Inputs = SessionALMAPhcorBandpassInputs
 
-    def is_multi_vis_task(self):
-        return True
+    is_multi_vis_task = True
 
     def prepare(self):
         inputs = self.inputs

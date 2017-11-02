@@ -66,8 +66,7 @@ class GriddingBase(basetask.StandardTaskTemplate):
             'WeightRMS': True, \
             'WeightTsysExptime': False} 
 
-    def is_multi_vis_task(self):
-        return True
+    is_multi_vis_task = True
 
     def prepare(self):
         start = time.time()

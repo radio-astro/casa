@@ -95,9 +95,9 @@ class Inputs(object):
     Inputs defines the interface used to create a constructor argument for a
     :class:`Task`.    
     """
-    __metaclass__ = abc.ABCMeta
+    # __metaclass__ = abc.ABCMeta
 
-    @abc.abstractmethod
+    # @abc.abstractmethod
     def to_casa_args(self):
         """
         Get this Inputs object as a dictionary of CASA arguments.

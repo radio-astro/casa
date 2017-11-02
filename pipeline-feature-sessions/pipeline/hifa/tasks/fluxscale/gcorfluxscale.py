@@ -437,8 +437,7 @@ class SessionGcorFluxscale(basetask.StandardTaskTemplate):
     def __init__(self, inputs):
         super(SessionGcorFluxscale, self).__init__(inputs)
 
-    def is_multi_vis_task(self):
-        return True
+    is_multi_vis_task = True
 
     def prepare(self):
         inputs = self.inputs

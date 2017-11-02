@@ -277,8 +277,7 @@ api.ImagingMeasurementSetsPreferred.register(MakeImListInputs)
 class MakeImList(basetask.StandardTaskTemplate):
     Inputs = MakeImListInputs
 
-    def is_multi_vis_task(self):
-        return True
+    is_multi_vis_task = True
 
     def prepare(self):
         # this python class will produce a list of images to be calculated.

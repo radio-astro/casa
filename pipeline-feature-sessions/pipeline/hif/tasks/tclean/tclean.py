@@ -186,8 +186,7 @@ api.ImagingMeasurementSetsPreferred.register(TcleanInputs)
 class Tclean(cleanbase.CleanBase):
     Inputs = TcleanInputs
 
-    def is_multi_vis_task(self):
-        return True
+    is_multi_vis_task = True
 
     def copy_products(self, old_pname, new_pname):
         imlist = commands.getoutput('ls -d '+old_pname+'.*')

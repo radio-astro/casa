@@ -135,8 +135,7 @@ class BaselineFitParamConfig(basetask.StandardTaskTemplate):
     def ClipCycle(self):
         return 1
     
-    def is_multi_vis_task(self):
-        return False
+    is_multi_vis_task = False
     
     def prepare(self, datatable=None):
         LOG.debug('Starting BaselineFitParamConfig.prepare')
@@ -465,7 +464,7 @@ class CubicSplineBaselineSubtractionWorker(BaselineSubtractionWorker):
 
 # facade for FitParam
 class BaselineSubtractionInputs(basetask.ModeInputs):
-    _modes = {'spline': CubicSplineBaselineSubtractionWorker, 
+    _modes = {'spline': CubicSplineBaselineSubtractionWorker,
               'cspline': CubicSplineBaselineSubtractionWorker}
 
     def __init__(self, context, fitfunc, **parameters):

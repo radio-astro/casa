@@ -47,8 +47,7 @@ class WeightMS(basetask.StandardTaskTemplate):
             'WeightRMS': True,
             'WeightTsysExpTime': False}
    
-    def is_multi_vis_task(self):
-        return True
+    is_multi_vis_task = True
 
     def prepare(self):
         # for each data

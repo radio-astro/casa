@@ -192,13 +192,16 @@ class Context(object):
             LOG.info('Saving context to \'{0}\''.format(filename))          
             pickle.dump(self, context_file, protocol=-1)
 
-    def __repr__(self):
+    def __str__(self):
         ms_names = [ms.name 
                     for ms in self.observing_run.measurement_sets]
         return ('Context(name=\'{0}\', output_dir=\'{1}\')\n'
                 'Registered measurement sets:\n{2}'
                 ''.format(self.name, self.output_dir,
                           pprint.pformat(ms_names)))
+
+    def __repr__(self):
+        return '<Context(name={!r})>'.format(self.name)
 
     def set_state(self, cls, name, value):
         """

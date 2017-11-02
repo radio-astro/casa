@@ -100,8 +100,7 @@ class NormaliseFluxInputs(basetask.StandardInputs):
 class NormaliseFlux(basetask.StandardTaskTemplate):
     Inputs = NormaliseFluxInputs
 
-    def is_multi_vis_task(self):
-        return True
+    is_multi_vis_task = True
     
     def prepare(self):
         result = commonfluxresults.FluxCalibrationResults()

@@ -72,8 +72,7 @@ class SDBLFlagWorker(basetask.StandardTaskTemplate):
     """
     Inputs = SDBLFlagWorkerInputs
     
-    def is_multi_vis_task(self):
-        return True
+    is_multi_vis_task = True
     
     def _search_datacol(self, table):
         """

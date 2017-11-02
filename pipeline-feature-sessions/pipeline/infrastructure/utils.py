@@ -424,10 +424,7 @@ def pickle_copy(original):
 
 
 def pickle_load(fileobj):
-    unpickled = pickle.load(fileobj)
-    if hasattr(unpickled, 'reconnect_weakrefs'):
-        unpickled.reconnect_weakrefs()
-    return unpickled
+    return pickle.load(fileobj)
 
 
 def gen_hash(o):

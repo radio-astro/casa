@@ -148,8 +148,7 @@ class CleanBaseInputs(basetask.StandardInputs):
 class CleanBase(basetask.StandardTaskTemplate):
     Inputs = CleanBaseInputs
 
-    def is_multi_vis_task(self):
-        return True
+    is_multi_vis_task = True
 
     def prepare(self):
         context = self.inputs.context

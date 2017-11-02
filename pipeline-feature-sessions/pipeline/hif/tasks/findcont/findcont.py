@@ -45,8 +45,7 @@ api.ImagingMeasurementSetsPreferred.register(FindContInputs)
 class FindCont(basetask.StandardTaskTemplate):
     Inputs = FindContInputs
 
-    def is_multi_vis_task(self):
-        return True
+    is_multi_vis_task = True
 
     def prepare(self):
         inputs = self.inputs
