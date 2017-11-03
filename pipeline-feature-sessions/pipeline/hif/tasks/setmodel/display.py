@@ -3,7 +3,8 @@ from __future__ import absolute_import
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.callibrary as callibrary
 import pipeline.infrastructure.utils as utils
-from . import applycal
+#from . import applycal
+from pipeline.h.tasks.common.displays import applycal as applycal
 
 LOG = infrastructure.get_logger(__name__)
 

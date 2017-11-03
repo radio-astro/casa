@@ -10,8 +10,9 @@ import os
 import pipeline.infrastructure.callibrary as callibrary
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.renderer.basetemplates as basetemplates
-import pipeline.infrastructure.displays.setjy as setjy_display
 import pipeline.infrastructure.utils as utils
+#import pipeline.infrastructure.displays.setjy as setjy_display
+from pipeline.hif.tasks.setmodel import display as setjy_display
 
 LOG = logging.get_logger(__name__)
 

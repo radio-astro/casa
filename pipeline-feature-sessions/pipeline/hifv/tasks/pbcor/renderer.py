@@ -66,4 +66,5 @@ class T2_4MDetailsMakepbcorimagesRenderer(basetemplates.T2_4MDetailsDefaultRende
 
         ctx.update({'pbcorplots'     : pbcorplots,
                     'info_dict' : info_dict,
-                    'dirname'   : weblog_dir})
+                    'dirname'   : weblog_dir,
+                    'plotter'   : plotter})

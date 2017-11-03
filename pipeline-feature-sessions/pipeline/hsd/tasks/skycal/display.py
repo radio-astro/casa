@@ -2,10 +2,13 @@ import os
 import re
 
 import pipeline.infrastructure.logging as logging
-import pipeline.infrastructure.displays.bandpass as bandpass
-import pipeline.infrastructure.displays.common as common
 import pipeline.infrastructure.renderer.logger as logger
 from pipeline.infrastructure import casa_tasks
+
+#import pipeline.infrastructure.displays.common as common
+from pipeline.h.tasks.common.displays import common as common
+#import pipeline.infrastructure.displays.bandpass as bandpass
+from pipeline.h.tasks.common.displays import bandpass as bandpass
 
 LOG = logging.get_logger(__name__)
 

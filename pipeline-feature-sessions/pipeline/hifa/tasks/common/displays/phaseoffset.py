@@ -9,7 +9,7 @@ import numpy
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.renderer.logger as logger
 import pipeline.infrastructure.utils as utils
-from . import common
+from pipeline.h.tasks.common.displays import common as common
 
 LOG = infrastructure.get_logger(__name__)
 

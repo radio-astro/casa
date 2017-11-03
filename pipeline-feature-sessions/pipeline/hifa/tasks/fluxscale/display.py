@@ -3,7 +3,8 @@ import numpy
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.casatools as casatools
-from . import setjy as setjy
+#from . import setjy as setjy
+from pipeline.hif.tasks.setmodel import display as setjy
 LOG = infrastructure.get_logger(__name__)
 
 

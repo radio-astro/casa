@@ -1,11 +1,9 @@
-import collections
 import os
 
 import numpy
 
+import display as display
 import pipeline.infrastructure.casatools as casatools
-import pipeline.infrastructure.displays.cutoutimages as cutoutimages
-import pipeline.infrastructure.filenamer as filenamer
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.renderer.basetemplates as basetemplates
 
@@ -61,7 +59,7 @@ class T2_4MDetailsMakecutoutimagesRenderer(basetemplates.T2_4MDetailsDefaultRend
                     beam = image.restoringbeam()
 
             # Make the plots of the rms images
-            plotter = cutoutimages.CutoutimagesSummary(context, r)
+            plotter = display.CutoutimagesSummary(context, r)
             plots = plotter.plot()
             ms = os.path.basename(r.inputs['vis'])
             subplots[ms] = plots

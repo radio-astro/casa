@@ -1,9 +1,14 @@
 from __future__ import absolute_import
 
+import os
+
 import numpy as np
 
 import pipeline.infrastructure as infrastructure
+import pipeline.infrastructure.utils as utils
 import pipeline.infrastructure.casatools as casatools
+from pipeline.domain import measures
+from pipeline.h.tasks.common import calibrationtableaccess as caltableaccess
 from pipeline.h.tasks.common import commonresultobjects
 
 LOG = infrastructure.get_logger(__name__)
@@ -19,6 +24,8 @@ class AtmHeuristics(object):
         self.science_spws = ms.get_spectral_windows(science_windows_only=True)
 
     def _calculate(self):
+        LOG.info("Calculating opacities for {}...".format(os.path.basename(self.vis)))
+
         # get channel information for each spw
         centre_freq = []
         width = []
@@ -54,27 +61,28 @@ class AtmHeuristics(object):
             width_unit = bandwidth.units['symbol']
 
         # canonical atmospheric params
-        P = 563.0
-        H = 20.0
-        T = 273.0
+        pressure = 563.0
+        humidity = 20.0
+        temperature = 273.0
         pwv = 1.0
 
-        tropical = 1
-        midLatitudeSummer = 2
-        midLatitudeWinter = 3
+        # tropical = 1
+        # mid_latitude_summer = 2
+        mid_latitude_winter = 3
 
         fcentre = casatools.quanta.quantity(centre_freq, centre_freq_unit)
         fresolution = casatools.quanta.quantity(resolution, resolution_unit)
         fwidth = casatools.quanta.quantity(width, width_unit)
 
         # setup atm
-        casatools.atmosphere.initAtmProfile(humidity=H, 
-          temperature=casatools.quanta.quantity(T, "K"),
-          altitude=casatools.quanta.quantity(5059, "m"),
-          pressure=casatools.quanta.quantity(P, 'mbar'),
-          atmType=midLatitudeWinter)
-        casatools.atmosphere.initSpectralWindow(len(centre_freq), fcentre,
-          fwidth, fresolution)
+        casatools.atmosphere.initAtmProfile(
+            humidity=humidity,
+            temperature=casatools.quanta.quantity(temperature, "K"),
+            altitude=casatools.quanta.quantity(5059, "m"),
+            pressure=casatools.quanta.quantity(pressure, 'mbar'),
+            atmType=mid_latitude_winter)
+        casatools.atmosphere.initSpectralWindow(
+            len(centre_freq), fcentre, fwidth, fresolution)
         casatools.atmosphere.setUserWH2O(casatools.quanta.quantity(pwv, 'mm'))
 
         self.opacities = {}
@@ -98,19 +106,84 @@ class AtmHeuristics(object):
 
             # calculate opacities
             dry = np.array(casatools.atmosphere.getDryOpacitySpec(band)[1])
-            wet = np.array(casatools.atmosphere.getWetOpacitySpec(band)[1]\
-              ['value'])
+            wet = np.array(casatools.atmosphere.getWetOpacitySpec(band)[1]['value'])
 
             # object containing result
             opacity = commonresultobjects.SpectrumResult(
-              axis=axis,
-              data=wet+dry,
-              datatype='opacity',
-              spw=spw.id)
+                axis=axis,
+                data=wet+dry,
+                datatype='opacity',
+                spw=spw.id)
 
             self.opacities[spw.id] = opacity
 
         self.calculated = True
+
+    def _calculate_median_tsys(self, table, intent):
+
+        # Get the Tsys spw map by retrieving it from the first tsys CalFrom
+        # that is present in the callibrary.
+        spwmap = utils.get_calfroms(self.context, self.vis, 'tsys')[0].spwmap
+
+        # Get list of science spw ids to consider.
+        sci_spwids = np.array([spw.id for spw in self.science_spws])
+        mapped_spwids = np.array([spwmap[spwid] for spwid in sci_spwids])
+
+        # Compute mapping from Tsys spwid to corresponding science spw.
+        tsys_to_sci_spwmap = {spwmap[spwid]: spwid for spwid in sci_spwids}
+
+        # Get field ids to consider, based on intents used for QA.
+        ms = self.context.observing_run.get_ms(name=self.vis)
+        fieldids = [field.id
+                    for field in ms.get_fields(intent=intent)]
+
+        # Initialize dictionary of Tsys measurements per science spw.
+        tsys = {spwid: [] for spwid in sci_spwids}
+
+        # Load the tsys caltable to assess.
+        tsystable = caltableaccess.CalibrationTableDataFiller.getcal(
+            table)
+
+        # Go through each row:
+        for row in tsystable.rows:
+
+            # Get spw for current.
+            row_spwid = row.get('SPECTRAL_WINDOW_ID')
+
+            # Extract info from rows matching the spws and fields (intents) to
+            # consider.
+            if row_spwid in mapped_spwids and row.get('FIELD_ID') in fieldids:
+
+                # Get tsys spectrum and corresponding flags.
+                spec = row.get('FPARAM')
+                flag = row.get('FLAG')
+
+                # Add unflagged tsys measurements to overall list for this spw.
+                tsys[tsys_to_sci_spwmap[row_spwid]].extend(list(spec[np.logical_not(flag)]))
+
+        # Calculate median for each spw.
+        med_tsys = {spwid: np.median(tsys[spwid]) for spwid in sci_spwids}
+
+        return med_tsys
+
+    def spwid_rank_by_frequency(self):
+        """Return the spw id of the science spw with highest centre
+           frequency.
+        """
+        # construction of spw_freqs assumes freqs for all spws have
+        # in same units
+        spw_freqs = [float(spw.centre_frequency.value) for spw in
+                     self.science_spws]
+        spw_ids = [spw.id for spw in self.science_spws]
+
+        result = spw_ids[np.argsort(spw_freqs)[::-1]]
+        result = map(str, result)
+
+        for ispw, spw_id in enumerate(spw_ids):
+            LOG.info('spw: %s median opacity: %s' % (spw_id, spw_freqs[ispw]))
+        LOG.info('spw rank: %s' % result)
+
+        return result
 
     def spwid_rank_by_opacity(self):
         if not self.calculated:
@@ -131,21 +204,75 @@ class AtmHeuristics(object):
 
         return result
 
-    def spwid_rank_by_frequency(self):
-        """Return the spw id of the science spw with highest centre
-           frequency.
-        """
-        # construction of spw_freqs assumes freqs for all spws have
-        # in same units
-        spw_freqs = [float(spw.centre_frequency.value) for spw in 
-          self.science_spws]
-        spw_ids = [spw.id for spw in self.science_spws]
-            
-        result = spw_ids[np.argsort(spw_freqs)[::-1]]
+    # Metric to rank spws by a combination of spw bandwidth (higher is better)
+    # and median opacity (lower is better), see CAS-10407.
+    def spwid_rank_by_opacity_and_bandwidth(self):
+        if not self.calculated:
+            self._calculate()
+
+        metric = np.zeros([len(self.science_spws)])
+        spw_ids = np.array([spw.id for spw in self.science_spws])
+
+        for ispw, spw in enumerate(self.science_spws):
+            metric[ispw] = np.float(np.sqrt(spw.bandwidth.to_units(measures.FrequencyUnits.GIGAHERTZ))) * \
+                           np.exp(-1.0 * np.median(self.opacities[spw.id].data))
+
+        result = spw_ids[np.argsort(metric)[::-1]]
         result = map(str, result)
 
         for ispw, spw_id in enumerate(spw_ids):
-            LOG.info('spw: %s median opacity: %s' % (spw_id, spw_freqs[ispw]))
+            LOG.info('spw: %s => spw score metric: %s' % (spw_id, metric[ispw]))
+        LOG.info('spw rank: %s' % result)
+
+        return result
+
+    # Metric to rank spws by a combination of spw bandwidth (higher is better)
+    # and median Tsys (lower is better), see CAS-10407.
+    def spwid_rank_by_tsys_and_bandwidth(self, intent):
+
+        # Check if Tsys caltable is available for vis.
+        tsystable = None
+        caltables = self.context.callibrary.active.get_caltable(caltypes='tsys')
+        for caltable in caltables:
+            if caltableaccess.CalibrationTableDataFiller._readvis(caltable) in self.vis:
+                tsystable = caltable
+                break
+
+        # If Tsys caltable is available, then calculate the median Tsys,
+        # otherwise return without ranked list.
+        if tsystable:
+            median_tsys = self._calculate_median_tsys(tsystable, intent)
+        else:
+            LOG.info("No unapplied Tsys table found in callibrary for {}; "
+                     "cannot rank spws by Tsys and "
+                     "bandwidth.".format(os.path.basename(self.vis)))
+            return None
+
+        # If no median Tsys could be calculated for any spw (e.g. due to
+        # flagging), then return without ranked list.
+        if not np.any(np.isfinite(median_tsys.values())):
+            LOG.warning("No valid median Tsys values found for spws for {} "
+                        "(too much flagging?); cannot rank spws by Tsys "
+                        "and bandwidth.".format(os.path.basename(self.vis)))
+            return None
+
+        # Initialize the metric, get spwids.
+        metric = np.zeros([len(self.science_spws)])
+        spw_ids = np.array([spw.id for spw in self.science_spws])
+
+        # For each spw, calculate metric: sqrt(bandwidth) / median(Tsys), if
+        # a valid median Tsys is available.
+        for ispw, spw in enumerate(self.science_spws):
+            if np.isfinite(median_tsys[spw.id]):
+                metric[ispw] = np.float(np.sqrt(spw.bandwidth.to_units(measures.FrequencyUnits.MEGAHERTZ))) / \
+                               median_tsys[spw.id]
+
+        # Sort spws by highest to lowest metric; convert to list of strings.
+        result = spw_ids[np.argsort(metric)[::-1]]
+        result = map(str, result)
+
+        for ispw, spw_id in enumerate(spw_ids):
+            LOG.info('spw: %s => spw score metric: %s' % (spw_id, metric[ispw]))
         LOG.info('spw rank: %s' % result)
 
         return result

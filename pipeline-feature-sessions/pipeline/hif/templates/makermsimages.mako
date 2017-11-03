@@ -49,6 +49,33 @@ $(document).ready(function() {
    appropriate to measure the noise level in a Gaussian distribution.
 </p>
 
+<table class="table">
+        <tr>
+            <td><strong>maximum</strong></td>
+            <td>${'%#.4e' % (plotter.result.max)} Jy/beam</td>
+        </tr>
+        <tr>
+            <td><strong>minimum</strong></td>
+            <td>${'%#.4e' % (plotter.result.min)} Jy/beam</td>
+        </tr>
+        <tr>
+            <td><strong>mean</strong></td>
+            <td>${'%#.4e' % (plotter.result.mean)} Jy/beam</td>
+        </tr>
+        <tr>
+            <td><strong>median</strong></td>
+            <td>${'%#.4e' % (plotter.result.median)} Jy/beam</td>
+        </tr>
+        <tr>
+            <td><strong>sigma</strong></td>
+            <td>${'%#.4e' % (plotter.result.sigma)}</td>
+        </tr>
+        <tr>
+            <td><strong>MAD rms</strong></td>
+            <td>${'%#.4e' % (plotter.result.MADrms)}  Jy/beam</td>
+        </tr>
+</table>
+
 <%self:plot_group plot_dict="${rmsplots}"
                                   url_fn="${lambda ms:  'noop'}">
 

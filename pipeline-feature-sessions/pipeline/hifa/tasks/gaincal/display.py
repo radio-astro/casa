@@ -10,8 +10,10 @@ import pipeline.infrastructure.filenamer as filenamer
 import pipeline.infrastructure.renderer.logger as logger
 import pipeline.infrastructure.utils as utils
 from pipeline.infrastructure import casa_tasks
-from . import common
-from . import phaseoffset
+#from . import common
+from pipeline.h.tasks.common.displays import common as common
+#from . import phaseoffset
+from pipeline.hifa.tasks.common.displays import phaseoffset as phaseoffset
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -450,7 +452,7 @@ class GaincalPhaseOffsetPlot(phaseoffset.PhaseOffsetPlot):
         # assume just one caltable - ie one calapp - to plot
         calapp = [c for c in result.final
                   if 'TARGET' in c.intent
-                  and 'p' == utils.get_origin_input_arg(c, 'calmode')][0]
+                  and 'p' == c.origin.inputs['calmode']][0]
         vis = os.path.basename(calapp.vis)
         ms = context.observing_run.get_ms(vis)
         plothelper = GaincalPhaseOffsetPlotHelper(context, result)        
@@ -473,7 +475,7 @@ class GaincalSummaryChart(common.PlotcalSpwComposite):
         # identify the phase-only solution for the target
         selected = [c for c in calapps
                     if (intent in c.intent or c.intent == '') 
-                    and calmode == utils.get_origin_input_arg(c, 'calmode')]
+                    and calmode == c.origin.inputs['calmode']]
 
         assert len(selected) is 1, '%s %s solutions != 1' % (intent, yaxis)
         calapp = selected[0]
@@ -500,7 +502,7 @@ class GaincalDetailChart(common.PlotcalAntSpwComposite):
         # identify the phase-only solution for the target
         selected = [c for c in calapps
                     if (intent in c.intent or c.intent == '') 
-                    and calmode == utils.get_origin_input_arg(c, 'calmode')]
+                    and calmode == c.origin.inputs['calmode']]
 
         assert len(selected) is 1, '%s %s solutions != 1' % (intent, yaxis)
         calapp = selected[0]

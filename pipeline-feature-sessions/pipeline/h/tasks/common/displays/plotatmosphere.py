@@ -4,13 +4,13 @@ import string
 
 import pipeline.extern.adopted as adopted
 import pipeline.infrastructure as infrastructure
-import pipeline.infrastructure.displays.applycal as applycal
+#import pipeline.infrastructure.displays.applycal as applycal
 import pipeline.infrastructure.filenamer as filenamer
 import pipeline.infrastructure.jobrequest as jobrequest
 import pipeline.infrastructure.mpihelpers as mpihelpers
 import pipeline.infrastructure.renderer.logger as logger
 from . import common
-
+from . import applycal
 
 LOG = infrastructure.get_logger(__name__)
 
