@@ -212,11 +212,11 @@ class BaselineFitParamConfig(basetask.StandardTaskTemplate):
         # open blparam file (append mode)
         with open(args['blparam'], 'a') as blparamfileobj:
         
-            for y in xrange(len(member_list)):
-                rows = member_list[y][0]
-                idxs = member_list[y][1]
-            
-                with casatools.TableReader(vis) as tb:
+            with casatools.TableReader(vis) as tb:
+                for y in xrange(len(member_list)):
+                    rows = member_list[y][0]
+                    idxs = member_list[y][1]
+                
                     #spectra = numpy.fromiter((tb.getcell(colname,row)
                     #                          for row in rows), 
                     #                         dtype=numpy.float64)
@@ -234,75 +234,75 @@ class BaselineFitParamConfig(basetask.StandardTaskTemplate):
                                 for row in rows]
     
                     #LOG.trace("Flag Mask = %s" % str(flaglist))
-    
-                spectra[:,:edge[0],:] = 0.0
-                spectra[:,nchan-edge[1]:,:] = 0.0 
-                    
-                # here we assume that masklist is polarization-independent
-                # (this is because that line detection/validation process accumulates 
-                # polarization components together
-                masklist = [datatable.getcell('MASKLIST',idx)
-                            for idx in idxs]
-    #                 masklist = [datatable.getcell('MASKLIST',idxs[i]) + flaglist[i]
-    #                             for i in range(len(idxs))]
-                LOG.debug('DONE {}', y)
-                
-                npol = spectra.shape[1]
-                for pol in xrange(npol):
-                    # fit order determination
-                    polyorder = self.fitorder_heuristic(spectra[:,pol,:], [ list(masklist[i]) + flaglist[i][pol] for i in range(len(idxs))], edge)
-                    #del spectra
-                    if fit_order == 'automatic' and self.MaxPolynomialOrder != 'none':
-                        polyorder = min(polyorder, self.MaxPolynomialOrder)
-                    LOG.debug('time group {} pol {}: fitting order={}',
-                              y,pol,polyorder)
-                    
-                    # calculate fragmentation
-                    (fragment, nwindow, win_polyorder) = fragmentation_heuristic(polyorder, nchan, edge)
         
-                    nrow = len(rows)
-                    LOG.debug('nrow = {}', nrow)
-                    LOG.debug('len(idxs) = {}', len(idxs))
-                
-                    for i in xrange(nrow):
-                        row = rows[i]
-                        idx = idxs[i]
-                        LOG.trace('===== Processing at row = {} =====', row)
-                        #nochange = datatable.getcell('NOCHANGE',idx)
-                        #LOG.trace('row = %s, Flag = %s'%(row, nochange))
-    
-                        # mask lines
-                        maxwidth = 1
-#                       _masklist = masklist[i] 
-                        _masklist = list(masklist[i]) + flaglist[i][pol]
-                        for [chan0, chan1] in _masklist:
-                            if chan1 - chan0 >= maxwidth:
-                                maxwidth = int((chan1 - chan0 + 1) / 1.4)
-                                # allowance in Process3 is 1/5:
-                                #    (1 + 1/5 + 1/5)^(-1) = (5/7)^(-1)
-                                #                         = 7/5 = 1.4
-                        max_polyorder = int((nchan - sum(edge)) / maxwidth + 1)
-                        LOG.trace('Masked Region from previous processes = {}',
-                                  _masklist)
-                        LOG.trace('edge parameters= {}', edge)
-                        LOG.trace('Polynomial order = {}  Max Polynomial order = {}', polyorder, max_polyorder)
-    
-                        # fitting
-                        polyorder = min(polyorder, max_polyorder)
-                        mask_array[:] = base_mask_array
-                        #irow = len(row_list_total)+len(row_list)
-                        #irow = len(index_list_total) + i
-                        irow = row
-                        param = self._calc_baseline_param(irow, pol, polyorder, nchan, 0, edge, _masklist, win_polyorder, fragment, nwindow, mask_array)
-                        # defintion of masklist differs in pipeline and ASAP (masklist = [a, b+1] in pipeline masks a channel range a ~ b-1)
-                        param[BLP.MASK] = [ [start, end-1] for [start, end] in param[BLP.MASK] ]
-                        param[BLP.MASK] = as_maskstring(param[BLP.MASK])
-                        LOG.trace('Row {}: param={}', row,param)
-                        write_blparam(blparamfileobj, param)
+                    spectra[:,:edge[0],:] = 0.0
+                    spectra[:,nchan-edge[1]:,:] = 0.0 
                         
-                    # MS rows contain npol spectra
-                    if pol == 0:
-                        index_list_total.extend(idxs)
+                    # here we assume that masklist is polarization-independent
+                    # (this is because that line detection/validation process accumulates 
+                    # polarization components together
+                    masklist = [datatable.getcell('MASKLIST',idx)
+                                for idx in idxs]
+        #                 masklist = [datatable.getcell('MASKLIST',idxs[i]) + flaglist[i]
+        #                             for i in range(len(idxs))]
+                    LOG.debug('DONE {}', y)
+                    
+                    npol = spectra.shape[1]
+                    for pol in xrange(npol):
+                        # fit order determination
+                        polyorder = self.fitorder_heuristic(spectra[:,pol,:], [ list(masklist[i]) + flaglist[i][pol] for i in range(len(idxs))], edge)
+                        #del spectra
+                        if fit_order == 'automatic' and self.MaxPolynomialOrder != 'none':
+                            polyorder = min(polyorder, self.MaxPolynomialOrder)
+                        LOG.debug('time group {} pol {}: fitting order={}',
+                                  y,pol,polyorder)
+                        
+                        # calculate fragmentation
+                        (fragment, nwindow, win_polyorder) = fragmentation_heuristic(polyorder, nchan, edge)
+            
+                        nrow = len(rows)
+                        LOG.debug('nrow = {}', nrow)
+                        LOG.debug('len(idxs) = {}', len(idxs))
+                    
+                        for i in xrange(nrow):
+                            row = rows[i]
+                            idx = idxs[i]
+                            LOG.trace('===== Processing at row = {} =====', row)
+                            #nochange = datatable.getcell('NOCHANGE',idx)
+                            #LOG.trace('row = %s, Flag = %s'%(row, nochange))
+        
+                            # mask lines
+                            maxwidth = 1
+    #                       _masklist = masklist[i] 
+                            _masklist = list(masklist[i]) + flaglist[i][pol]
+                            for [chan0, chan1] in _masklist:
+                                if chan1 - chan0 >= maxwidth:
+                                    maxwidth = int((chan1 - chan0 + 1) / 1.4)
+                                    # allowance in Process3 is 1/5:
+                                    #    (1 + 1/5 + 1/5)^(-1) = (5/7)^(-1)
+                                    #                         = 7/5 = 1.4
+                            max_polyorder = int((nchan - sum(edge)) / maxwidth + 1)
+                            LOG.trace('Masked Region from previous processes = {}',
+                                      _masklist)
+                            LOG.trace('edge parameters= {}', edge)
+                            LOG.trace('Polynomial order = {}  Max Polynomial order = {}', polyorder, max_polyorder)
+        
+                            # fitting
+                            polyorder = min(polyorder, max_polyorder)
+                            mask_array[:] = base_mask_array
+                            #irow = len(row_list_total)+len(row_list)
+                            #irow = len(index_list_total) + i
+                            irow = row
+                            param = self._calc_baseline_param(irow, pol, polyorder, nchan, 0, edge, _masklist, win_polyorder, fragment, nwindow, mask_array)
+                            # defintion of masklist differs in pipeline and ASAP (masklist = [a, b+1] in pipeline masks a channel range a ~ b-1)
+                            param[BLP.MASK] = [ [start, end-1] for [start, end] in param[BLP.MASK] ]
+                            param[BLP.MASK] = as_maskstring(param[BLP.MASK])
+                            LOG.trace('Row {}: param={}', row,param)
+                            write_blparam(blparamfileobj, param)
+                            
+                        # MS rows contain npol spectra
+                        if pol == 0:
+                            index_list_total.extend(idxs)
 
         outcome = {'blparam': args['blparam'],
                    'bloutput': args['bloutput']}

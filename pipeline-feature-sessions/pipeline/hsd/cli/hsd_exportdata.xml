@@ -132,7 +132,7 @@ it as necessary.
 
 The current version of the task exports the following products
 
-o a FITS imgae for each selected science target source image
+o a FITS image for each selected science target source image
 o a tar file per ASDM containing the final flags version and blparam
 o a tar file containing the file web log
 

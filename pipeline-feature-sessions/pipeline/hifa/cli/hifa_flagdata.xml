@@ -111,7 +111,7 @@
 	</param>
 
 	<param type="bool" name="flagbackup" subparam="true">
-	    <description>Backup prexistings flags before applying new ones</description>
+	    <description>Backup pre-existing flags before applying new ones</description>
 	    <value type="bool">True</value>
 	</param>
 
@@ -219,7 +219,7 @@ autocorr -- Flag autocorrelation data.
 shadow -- Flag shadowed antennas.
     default: True
 
-scan -- Flag a list of specifed scans.
+scan -- Flag a list of specified scans.
     default: True
 
 scannumber -- A string containing a  comma delimited list of scans to be
@@ -261,7 +261,7 @@ hm_tbuff -- The heuristic for computing the default time interval padding parame
     The options are 'halfint' and 'manual'. In 'halfint' mode tbuff is set to
     half the maximum of the median integration time of the science and calibrator target
     observations. The value of 0.048 seconds is subtracted from the lower time limit
-    to accomodate the behavior of the ALMA Control system.
+    to accommodate the behavior of the ALMA Control system.
     default: 'halfint'
 
 tbuff -- The time in seconds used to pad flagging command time intervals if
@@ -314,7 +314,7 @@ Examples
     
     hifa_flagdata()
 
-2. Do basic flagging on a measurement set flaggin additional scans selected
+2. Do basic flagging on a measurement set flagging additional scans selected
    by number as well.
 
     hifa_flagdata(scannumber='13,18')

@@ -160,7 +160,7 @@ Keyword arguments:
 
 ---- pipeline parameter arguments which can be set in any pipeline mode
 
-vis -- List of visisbility  data files. These may be ASDMs, tar files of ASDMs,
+vis -- List of visibility data files. These may be ASDMs, tar files of ASDMs,
    MSs, or tar files of MSs, If ASDM files are specified, they will be
    converted  to MS format.
    default: []
@@ -202,7 +202,7 @@ bdfflags -- Apply BDF flags on line
    default: True
 
 ocorr_mode -- Read in cross- and auto-correlation data(ca), cross-
-   correlation data oonly (co), or autocorrelation data only (ao).
+   correlation data only (co), or autocorrelation data only (ao).
    default: ca
 
 lazy -- Use the lazy filter import
@@ -212,7 +212,7 @@ dbservice -- Use online flux catalog on import
    default: True
 
 ocorr_mode -- Read in cross- and auto-correlation data(ca), cross-
-   correlation data oonly (co), or autocorrelation data only (ao).
+   correlation data only (co), or autocorrelation data only (ao).
    default: ca
 
 createmms -- Create a multi-measurement set ('true') ready for parallel

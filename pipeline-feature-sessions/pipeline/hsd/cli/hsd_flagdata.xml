@@ -112,7 +112,7 @@
 	</param>
 
 	<param type="bool" name="flagbackup" subparam="true">
-	    <description>Backup prexistings flags before applying new ones</description>
+	    <description>Backup pre-existing flags before applying new ones</description>
 	    <value type="bool">False</value>
 	</param>
 
@@ -220,7 +220,7 @@ autocorr -- Flag autocorrelation data.
 shadow -- Flag shadowed antennas.
     default: True
 
-scan -- Flag a list of specifed scans.
+scan -- Flag a list of specified scans.
     default: True
 
 scannumber -- A string containing a  comma delimited list of scans to be
@@ -314,7 +314,7 @@ Examples
     
     hsd_flagdata()
 
-2. Do basic flagging on a measurement set flaggin additional scans selected
+2. Do basic flagging on a measurement set flagging additional scans selected
    by number as well.
 
     hsd_flagdata(scannumber='13,18')

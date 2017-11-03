@@ -341,10 +341,6 @@ class Bandpassflag(basetask.StandardTaskTemplate):
         intents = result.cafresult.inputs['intent'].split(',')
         spwids = map(int, result.cafresult.inputs['spw'].split(','))
 
-        # Get number of antennas.
-        antenna_names, antenna_ids = commonhelpermethods.get_antenna_names(ms)
-        nants = len(antenna_names)
-
         # Create an antenna id-to-name translation dictionary.
         antenna_id_to_name = {ant.id: ant.name
                               for ant in ms.antennas

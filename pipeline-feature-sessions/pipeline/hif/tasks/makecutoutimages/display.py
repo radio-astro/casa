@@ -5,8 +5,10 @@ import os
 import numpy as np
 
 import pipeline.infrastructure as infrastructure
-import pipeline.infrastructure.displays as displays
 import pipeline.infrastructure.casatools as casatools
+
+#import pipeline.infrastructure.displays as displays
+from pipeline.h.tasks.common.displays import sky as sky
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -45,18 +47,21 @@ class CutoutimagesSummary(object):
 
         for subimagename in self.result.subimagenames:
             if '.psf.tt' in subimagename:
-                plot_wrappers.append(displays.SkyDisplay().plot(self.context, subimagename,
+                #plot_wrappers.append(displays.SkyDisplay().plot(self.context, subimagename,
+                plot_wrappers.append(sky.SkyDisplay().plot(self.context, subimagename,
                                                                 reportdir=stage_dir, intent='',
                                                                 collapseFunction='mean',
                                                                 vmin=-0.1, vmax=0.3))
             elif 'image.pbcor.tt0.subim' in subimagename:
-                plot_wrappers.append(displays.SkyDisplay().plot(self.context, subimagename,
+                #plot_wrappers.append(displays.SkyDisplay().plot(self.context, subimagename,
+                plot_wrappers.append(sky.SkyDisplay().plot(self.context, subimagename,
                                                                 reportdir=stage_dir, intent='',
                                                                 collapseFunction='mean',
                                                                 vmin=-5 * self.result.RMSmedian,
                                                                 vmax=20 * self.result.RMSmedian))
             else:
-                plot_wrappers.append(displays.SkyDisplay().plot(self.context, subimagename,
+                #plot_wrappers.append(displays.SkyDisplay().plot(self.context, subimagename,
+                plot_wrappers.append(sky.SkyDisplay().plot(self.context, subimagename,
                                                                 reportdir=stage_dir, intent='',
                                                                 collapseFunction='mean'))
 

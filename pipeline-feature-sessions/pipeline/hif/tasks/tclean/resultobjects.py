@@ -5,7 +5,8 @@ import os.path
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
-import pipeline.infrastructure.displays.sky as sky
+
+from pipeline.h.tasks.common.displays import sky as sky
 
 LOG = infrastructure.get_logger(__name__)
 

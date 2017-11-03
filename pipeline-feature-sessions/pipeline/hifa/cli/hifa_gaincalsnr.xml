@@ -28,7 +28,7 @@ Compute the gain calibration signal to noise ratios required to determine which 
    </param>
 
    <param type="string" name="spw" subparam="true">
-	<description>Set of data selection spectral windowi ids</description>
+	<description>Set of data selection spectral window ids</description>
 	<value></value>
    </param>
 
@@ -52,7 +52,7 @@ Compute the gain calibration signal to noise ratios required to determine which 
    </param>
 
    <param type="double" name="maxfracflagged" subparam="true">
-	<description>The maximum fraction of data flaggeded per antenna (unsupported)</description>
+	<description>The maximum fraction of data flagged per antenna (unsupported)</description>
 	<value>0.90</value>
    </param>
 
@@ -128,9 +128,9 @@ pipelinemode -- The pipeline operating mode. In 'automatic' mode the pipeline
        the task.
        default: 'automatic'.
 
-phasensr -- The required gaincal solution signal to noise
+phasesnr -- The required gaincal solution signal to noise
     default: 25.0
-    example: phaseupsnr = 20.0
+    example: phasesnr = 20.0
 
 bwedgefrac -- The fraction of the bandwidth edges that is flagged
     default: 0.03125
@@ -221,19 +221,19 @@ o The median Tsys value for each atmospheric spw and source combination is
 o The science spw parameters, exposure time(s), and integration time(s) are
   determined.
 
-o The per scan sensitivity and signal to niose estimates are computed per science
+o The per scan sensitivity and signal to noise estimates are computed per science
   spectral window. Nominal Tsys and sensitivity values per receiver band provide by
   the ALMA project are used for this estimate.
 
 o The QA score is based on how many signal to noise estimates greater then the
-  requested singal to noise ration can be computed.
+  requested signal to noise ration can be computed.
 
 
 
 
 Examples
 
-1. Estimate the per scan gaincal solution sensitivies and signal to noise
+1. Estimate the per scan gaincal solution sensitivities and signal to noise
    ratios for all the science spectral windows.
 
 hifa_gaincalsnr()

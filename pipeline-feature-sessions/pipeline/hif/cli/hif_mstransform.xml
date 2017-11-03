@@ -116,7 +116,7 @@ pipelinemode -- The pipeline operating mode. In 'automatic' mode the pipeline
      'interactive mode'
 
 vis -- The list of input measurement sets to be transformed. Defaults to the
-    list of measurement sets specified in the pipeine import data task.
+    list of measurement sets specified in the pipeline import data task.
     default '': Transform all calibration measurement sets in the context. 
     example: 'ngc5921.ms', ['ngc5921a.ms', ngc5921b.ms', 'ngc5921c.ms']
 
@@ -155,7 +155,7 @@ results -- If pipeline mode is 'getinputs' then None is returned. Otherwise
 Description
 
 Create new measurement sets for imaging from the corrected column of the input
-measurmenet set. By default all science target data is copied to the new ms. The new
+measurement set. By default all science target data is copied to the new ms. The new
 measurement set is not re-indexed to the selected data in the new ms will have the
 same source, field, and spw names and ids as it does in the parent ms. 
 

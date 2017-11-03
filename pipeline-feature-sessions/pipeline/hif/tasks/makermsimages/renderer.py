@@ -1,11 +1,9 @@
-import collections
 import os
 
 import numpy
 
+from . import display as rmsimages
 import pipeline.infrastructure.casatools as casatools
-import pipeline.infrastructure.displays.rmsimages as rmsimages
-import pipeline.infrastructure.filenamer as filenamer
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.renderer.basetemplates as basetemplates
 

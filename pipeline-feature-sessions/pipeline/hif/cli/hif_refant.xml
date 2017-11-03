@@ -143,7 +143,7 @@ pipelinemode -- The pipeline operating mode. In 'automatic' mode the pipeline
 
 hm_refant -- The heuristics method or mode for selection the reference
    antenna. The options are 'manual' and 'automatic. In manual
-   mode a user supplied referenence antenna refant is supplied.
+   mode a user supplied reference antenna refant is supplied.
    In 'automatic' mode the antennas are selected automatically.
    default: 'automatic'
 

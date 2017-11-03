@@ -126,7 +126,7 @@ reffile -- Path to a file containing Jy/K factors for science data, which
     session ID, antenna name, frequency and polarization of data in each line of
     the file. Note the observation date is supplementary information and not used 
     for the matching so far. The lines whose antenna name is 'ANONYMOUS' are used 
-    when there is no meaurement for specific antenna in the session. In the above 
+    when there is no measurement for specific antenna in the session. In the above 
     example, if science observation of session 1 contains the antenna PM04, Jy/K 
     factor for ANONYMOUS antenna will be applied since there is no measurement for 
     PM04 in session 1.

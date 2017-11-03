@@ -32,7 +32,7 @@ the meta data associated with the observation.
    </param>
 
    <param type="string" name="spw" subparam="true">
-	<description>Set of data selection spectral windowi ids</description>
+	<description>Set of data selection spectral window ids</description>
 	<value></value>
    </param>
 
@@ -71,7 +71,7 @@ the meta data associated with the observation.
    </param>
 
    <param type="double" name="maxfracflagged" subparam="true">
-	<description>The maximum fraction of data flaggeded per antenna (unsupported)</description>
+	<description>The maximum fraction of data flagged per antenna (unsupported)</description>
 	<value>0.90</value>
    </param>
 
@@ -259,10 +259,10 @@ o Warnings are issued if estimated phaseup gain time solution would contain fewe
 
 o The frequency interval, in MHz and number of channels required to meet the
   bpsnr are computed, along with the per channel sensitivity in mJy and the
-  per channle signal to noise.  Nominal Tsys and sensitivity values per receiver
+  per channel signal to noise.  Nominal Tsys and sensitivity values per receiver
   band provide by the ALMA project are used for this estimate.
 
-o Warnings are issued if estimated bandpass olution would contain fewer than
+o Warnings are issued if estimated bandpass solution would contain fewer than
   minbpnchan solutions
 
 

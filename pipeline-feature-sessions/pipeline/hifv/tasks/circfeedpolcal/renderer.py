@@ -1,12 +1,11 @@
-import os
 import contextlib
-import pipeline.infrastructure.renderer.weblog as weblog
+import os
 
-
+from . import display as polarization
+import pipeline.infrastructure.filenamer as filenamer
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.renderer.basetemplates as basetemplates
-import pipeline.infrastructure.displays.polarization as polarization
-import pipeline.infrastructure.filenamer as filenamer
+import pipeline.infrastructure.renderer.weblog as weblog
 
 LOG = logging.get_logger(__name__)
 
@@ -19,7 +18,7 @@ class VLASubPlotRenderer(object):
         self.result = result
         self.plots = plots
         self.ms = os.path.basename(self.result.inputs['vis'][0])
-        print 'MY MS IS: ' + self.ms
+        # print 'MY MS IS: ' + self.ms
         self.template = template
         self.filename_prefix = filename_prefix
 

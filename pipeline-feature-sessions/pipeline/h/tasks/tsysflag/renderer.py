@@ -7,7 +7,6 @@ import collections
 import functools
 import os
 
-import pipeline.infrastructure.displays as displays
 import pipeline.infrastructure.filenamer as filenamer
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.renderer.basetemplates as basetemplates
@@ -15,6 +14,8 @@ import pipeline.infrastructure.renderer.rendererutils as rendererutils
 import pipeline.infrastructure.utils as utils
 from pipeline.h.tasks.common.displays import slice as slice
 from pipeline.h.tasks.common.displays import image as image
+#import pipeline.infrastructure.displays as displays
+from pipeline.h.tasks.common.displays import tsys as tsys
 from pipeline.h.tasks.common import calibrationtableaccess as caltableaccess
 from pipeline.h.tasks.tsyscal import renderer as tsyscalrenderer
 
@@ -81,13 +82,15 @@ class T2_4MDetailsTsysflagRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                 lastflag = lastflag[-1]
             lastresult = result.components[lastflag]
 
-            plotter = displays.TsysSummaryChart(context, lastresult)
+            #plotter = displays.TsysSummaryChart(context, lastresult)
+            plotter = tsys.TsysSummaryChart(context, lastresult)
             plots = plotter.plot()
             vis = os.path.basename(lastresult.inputs['vis'])
             summary_plots[vis] = plots
 
             # generate per-antenna plots
-            plotter = displays.TsysPerAntennaChart(context, lastresult)
+            #plotter = displays.TsysPerAntennaChart(context, lastresult)
+            plotter = tsys.TsysPerAntennaChart(context, lastresult)
             per_antenna_plots = plotter.plot()
 
             renderer = tsyscalrenderer.TsyscalPlotRenderer(context,

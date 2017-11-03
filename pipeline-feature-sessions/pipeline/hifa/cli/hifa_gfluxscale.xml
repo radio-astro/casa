@@ -36,7 +36,7 @@ Derive the flux density scale from standard calibrators.
     </param>
 
     <param type="intArray" name="refspwmap" subparam="true">
-        <description>Map accross spectral window boundaries</description>
+        <description>Map across spectral window boundaries</description>
         <value></value>
     </param>
 
@@ -195,7 +195,7 @@ antenna -- A comma delimited string specifying the antenna names or ids to be
     default: ''.
     example: 'DV16,DV07,DA12,DA08'  
 
-peak_fraction -- The limiting UV distance from the reference antenna forantennas
+peak_fraction -- The limiting UV distance from the reference antenna for antennas
     to be included in the flux calibration. Defined as the point where the 
     calibrator visibilities have fallen to 'peak_fraction' of the peak value. 
 
@@ -282,7 +282,7 @@ o computing complex amplitude only solutions for all the science spectral
   parameters and the 'transfer' and 'transintent' parameters, the value
   of the 'solint' parameter. 
 
-o transfering the flux scale from the reference calibrators to the transfer
+o transferring the flux scale from the reference calibrators to the transfer
   calibrators using refspwmap for windows without data in the reference
   calibrators
 

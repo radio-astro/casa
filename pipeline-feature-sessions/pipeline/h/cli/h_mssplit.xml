@@ -213,7 +213,7 @@ results -- If pipeline mode is 'getinputs' then None is returned. Otherwise
 Description
 
 Create new measurement sets for imaging from the corrected column of the input
-measurmenet set. By default all science target data is copied to the new ms. The new
+measurement set. By default all science target data is copied to the new ms. The new
 measurement set is not re-indexed to the selected data in the new ms will have the
 same source, field, and spw names and ids as it does in the parent ms. 
 

@@ -14,7 +14,6 @@
 	<value></value>
     </param>
 
-
     <param type="string" name="pipelinemode">
 	<description>The pipeline operating mode</description>
 	<value>automatic</value>
@@ -51,7 +50,6 @@
 	    </equals>
 	</when>
     </constraints>
-
 </input>
 
 <output>
@@ -71,13 +69,11 @@ Keyword arguments:
 
 ---- pipeline parameter arguments which can be set in any pipeline mode
 
-vis -- List of visisbility  data files. These may be ASDMs, tar files of ASDMs,
+vis -- List of visibility data files. These may be ASDMs, tar files of ASDMs,
    MSs, or tar files of MSs, If ASDM files are specified, they will be
    converted  to MS format.
    default: []
    example: vis=['X227.ms', 'asdms.tar.gz']
-
-
 
 pipelinemode -- The pipeline operating mode. In 'automatic' mode the pipeline
    determines the values of all context defined pipeline inputs
@@ -112,8 +108,6 @@ Examples
 1. Basic imageprecheck task
 
    hifa_imageprecheck()
-
-
 </example>
 </task>
 </casaxml>

@@ -211,7 +211,7 @@ combine -- Data axes to combine for solving. Options are  '','scan','spw',field'
     example: combine=''
 
 minblperant -- Minimum number of baselines required per antenna for each solve
-    Antennas with fewer baaselines are excluded from solutions.
+    Antennas with fewer baselines are excluded from solutions.
     default: 4
     example: minblperant=2
 

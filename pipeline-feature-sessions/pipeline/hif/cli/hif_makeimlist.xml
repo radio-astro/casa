@@ -333,7 +333,7 @@ Description
 
 Generate a list of images to be cleaned. By default the list will include
 one image per science target per spw. Calibrator targets can be selected
-by setting appropriate values for itent.
+by setting appropriate values for intent.
 
 By default the output image cellsize is set to the minimum cell size
 consistent with the UV coverage.

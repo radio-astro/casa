@@ -5,8 +5,9 @@ import copy
 import matplotlib
 
 import pipeline.infrastructure as infrastructure
-import pipeline.infrastructure.displays.sky as sky
 import pipeline.infrastructure.casatools as casatools
+
+from pipeline.h.tasks.common.displays import sky as sky
 
 LOG = infrastructure.get_logger(__name__)
 
