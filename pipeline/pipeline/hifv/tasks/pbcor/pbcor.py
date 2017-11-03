@@ -76,13 +76,15 @@ class Pbcor(basetask.StandardTaskTemplate):
                                       outfile=outname, mode='divide', cutoff=-1.0, stretch=False)
             self._executor.execute(task)
             pbcor_list.append(outname)
-            LOG.info("PBCOR image names: " + ','.join(pbcor_list))
+
+            pbcor_list.append(pbname)
 
             outname = imgname+'.residual.pbcor.tt0'
             task = casa_tasks.impbcor(imagename=imgname[:imgname.rfind('.image')]+'.residual.tt0', pbimage=pbname,
                                       outfile=outname, mode='divide', cutoff=-1.0, stretch=False)
             self._executor.execute(task)
             pbcor_list.append(outname)
+
             LOG.info("PBCOR image names: " + ','.join(pbcor_list))
 
         return PbcorResults(pbcorimagenames=pbcor_list)
