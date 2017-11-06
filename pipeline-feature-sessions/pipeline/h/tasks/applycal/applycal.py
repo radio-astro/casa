@@ -3,16 +3,14 @@ from __future__ import absolute_import
 import collections
 import copy
 import os
-import types
 
 import pipeline.infrastructure as infrastructure
-from pipeline.infrastructure import casa_tasks
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.callibrary as callibrary
 import pipeline.infrastructure.sessionutils as sessionutils
 import pipeline.infrastructure.utils as utils
 import pipeline.infrastructure.vdp as vdp
-
+from pipeline.infrastructure import casa_tasks
 from ...heuristics.fieldnames import IntentFieldnames
 
 __all__ = [
@@ -137,7 +135,7 @@ class ApplycalResults(basetask.Results):
     def __repr__(self):
         s = 'ApplycalResults:\n'
         for caltable in self.applied:
-            if type(caltable.gaintable) is types.ListType:
+            if isinstance(caltable.gaintable, list):
                 basenames = [os.path.basename(x) for x in caltable.gaintable]
                 s += '\t{name} applied to {vis} spw #{spw}\n'.format(
                     spw=caltable.spw, vis=os.path.basename(caltable.vis),
