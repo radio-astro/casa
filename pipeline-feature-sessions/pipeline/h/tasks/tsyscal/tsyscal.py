@@ -1,69 +1,61 @@
 from __future__ import absolute_import
 
-import types
-
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.callibrary as callibrary
+import pipeline.infrastructure.vdp as vdp
 from pipeline.h.heuristics import caltable as caltable_heuristic
 from pipeline.h.heuristics.tsysspwmap import tsysspwmap
 from pipeline.infrastructure import casa_tasks
 from . import resultobjects
 
+__all__ = [
+    'Tsyscal',
+    'TsyscalInputs',
+    'TsyscalResults'
+]
+
 LOG = infrastructure.get_logger(__name__)
 
 
-class TsyscalInputs(basetask.StandardInputs):
-    def __init__(self, context, output_dir=None, vis=None, caltable=None,
-                 chantol=None):
-        # set the properties to the values given as input arguments
-        self._init_properties(vars())
+class TsyscalInputs(vdp.StandardInputs):
+    """
+    TsyscalInputs defines the inputs for the Tsyscal pipeline task.
+    """
+    chantol = vdp.VisDependentProperty(default=1)
 
-    @property
+    @vdp.VisDependentProperty
     def caltable(self):
-        # The value of caltable is ms-dependent, so test for multiple
-        # measurement sets and listify the results if necessary 
-        if type(self.vis) is types.ListType:
-            return self._handle_multiple_vis('caltable')
-        
-        # Get the name.
-        if callable(self._caltable):
-            casa_args = self._get_partial_task_args()
-            return self._caltable(output_dir=self.output_dir,
-                                  stage=self.context.stage,
-                                  **casa_args)
-        return self._caltable
-        
-    @caltable.setter
-    def caltable(self, value):
-        if value is None:
-            value = caltable_heuristic.TsysCaltable()
-        self._caltable = value
+        """
+        Get the caltable argument for these inputs.
 
-    @property
-    def caltype(self):
-        return 'tsys'
+        If set to a table-naming heuristic, this should give a sensible name
+        considering the current CASA task arguments.
+        """
+        namer = caltable_heuristic.TsysCaltable()
+        casa_args = self._get_task_args(ignore=('caltable',))
+        return namer.calculate(output_dir=self.output_dir, stage=self.context.stage, **casa_args)
 
-    @property
-    def chantol(self):
-        return self._chantol
-    
-    @chantol.setter
-    def chantol(self, value):
-        if value is None:
-            value = 1
-        self._chantol = value
+    def __init__(self, context, output_dir=None, vis=None, caltable=None, chantol=None):
+        super(TsyscalInputs, self).__init__()
 
-    # Avoids circular dependency on caltable.
-    def _get_partial_task_args(self):
-        return {'vis'     : self.vis, 
-                'caltype' : self.caltype}
+        # pipeline inputs
+        self.context = context
+        # vis must be set first, as other properties may depend on it
+        self.vis = vis
+        self.output_dir = output_dir
+
+        # data selection arguments
+        self.caltable = caltable
+
+        # solution parameters
+        self.chantol = chantol
 
     # Convert to CASA gencal task arguments.
     def to_casa_args(self):
-        return {'vis'      : self.vis,
-                'caltable' : self.caltable,
-                'caltype'  : self.caltype}
+        return {'vis': self.vis,
+                'caltable': self.caltable
+                }
 
 
 class Tsyscal(basetask.StandardTaskTemplate):
@@ -79,18 +71,20 @@ class Tsyscal(basetask.StandardTaskTemplate):
 
         # construct the Tsys cal file
         gencal_args = inputs.to_casa_args()
-        gencal_job = casa_tasks.gencal(**gencal_args)
+        gencal_job = casa_tasks.gencal(caltype='tsys', **gencal_args)
         self._executor.execute(gencal_job)
 
         LOG.todo('tsysspwmap heuristic re-reads measurement set!')
         LOG.todo('tsysspwmap heuristic won\'t handle missing file')
-        nospwmap, spwmap = tsysspwmap(ms=inputs.ms, tsystable=gencal_args['caltable'],
-                            tsysChanTol=inputs.chantol)
+        nospwmap, spwmap = tsysspwmap(
+            ms=inputs.ms, tsystable=gencal_args['caltable'],
+            tsysChanTol=inputs.chantol)
 
         callist = []
         calto = callibrary.CalTo(vis=inputs.vis)
-        calfrom = callibrary.CalFrom(gencal_args['caltable'], caltype='tsys',
-          gainfield='nearest', spwmap=spwmap, interp='linear,linear')
+        calfrom = callibrary.CalFrom(
+            gencal_args['caltable'], caltype='tsys', gainfield='nearest',
+            spwmap=spwmap, interp='linear,linear')
         calapp = callibrary.CalApplication(calto, calfrom, origin)
         callist.append(calapp)
 

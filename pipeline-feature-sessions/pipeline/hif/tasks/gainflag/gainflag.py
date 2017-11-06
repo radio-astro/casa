@@ -5,13 +5,14 @@ from collections import defaultdict
 
 import numpy as np
 
+import pipeline.domain as domain
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
+import pipeline.infrastructure.vdp as vdp
 from pipeline.h.tasks.common import calibrationtableaccess as caltableaccess
 from pipeline.h.tasks.common import commonresultobjects
 from pipeline.h.tasks.common import viewflaggers
 from pipeline.h.tasks.flagging.flagdatasetter import FlagdataSetter
-from pipeline.hif.tasks.common import commoncalinputs
 from .resultobjects import GainflagResults
 from .resultobjects import GainflaggerDataResults
 from .resultobjects import GainflaggerResults
@@ -22,118 +23,77 @@ from .. import gaincal
 LOG = infrastructure.get_logger(__name__)
 
 
-class GainflagInputs(commoncalinputs.CommonCalibrationInputs):
-    
-    def __init__(self, context, output_dir=None, vis=None, intent=None,
-                 spw=None, refant=None, niter=None,
-                 flag_mediandeviant=None, fmeddev_limit=None,
-                 flag_rmsdeviant=None, frmsdev_limit=None,
-                 flag_nrmsdeviant=None, fnrmsdev_limit=None,
-                 metric_order=None):
+class GainflagInputs(vdp.StandardInputs):
+    """
+    GainflagInputs defines the inputs for the Gainflag pipeline task.
+    """
+    flag_mediandeviant = vdp.VisDependentProperty(default=False)
+    flag_nrmsdeviant = vdp.VisDependentProperty(default=True)
+    flag_rmsdeviant = vdp.VisDependentProperty(default=False)
+    fmeddev_limit = vdp.VisDependentProperty(default=3.0)
+    fnrmsdev_limit = vdp.VisDependentProperty(default=6.0)
+    frmsdev_limit = vdp.VisDependentProperty(default=8.0)
 
-        # set the properties to the values given as input arguments
-        self._init_properties(vars())
-        
-    @property
+    @vdp.VisDependentProperty
     def intent(self):
-        if isinstance(self.vis, list):
-            return self._handle_multiple_vis('intent')
+        # default to the intent that would be used for bandpass
+        # calibration
+        bp_inputs = bandpass.PhcorBandpass.Inputs(context=self.context, vis=self.vis, intent=None)
+        return bp_inputs.intent
 
-        if self._intent is None:
-            # default to the intent that would be used for bandpass
-            # calibration
-            bp_inputs = bandpass.PhcorBandpass.Inputs(
-              context=self.context,
-              vis=self.vis,
-              intent=None)
-            value = bp_inputs.intent
-            return value
+    metric_order = vdp.VisDependentProperty(default='mediandeviant, rmsdeviant, nrmsdeviant')
+    niter = vdp.VisDependentProperty(default=1)
 
-        return self._intent
-    
-    @intent.setter
-    def intent(self, value):
-        self._intent = value
-    
-    @property
-    def flag_mediandeviant(self):
-        return self._flag_mediandeviant
+    @vdp.VisDependentProperty
+    def refant(self):
+        LOG.todo('What happens if self.ms is None?')
+        # we cannot find the context value without the measurement set
+        if not self.ms:
+            return None
 
-    @flag_mediandeviant.setter
-    def flag_mediandeviant(self, value):
-        if value is None:
-            value = False
-        self._flag_mediandeviant = value
+        # get the reference antenna for this measurement set
+        ant = self.ms.reference_antenna
+        if isinstance(ant, list):
+            ant = ant[0]
 
-    @property
-    def flag_rmsdeviant(self):
-        return self._flag_rmsdeviant
+        # return the antenna name/id if this is an Antenna domain object
+        if isinstance(ant, domain.Antenna):
+            return getattr(ant, 'name', ant.id)
 
-    @flag_rmsdeviant.setter
-    def flag_rmsdeviant(self, value):
-        if value is None:
-            value = False
-        self._flag_rmsdeviant = value
+        # otherwise return whatever we found. We assume the calling function
+        # knows how to handle an object of this type.
+        return ant
 
-    @property
-    def flag_nrmsdeviant(self):
-        return self._flag_nrmsdeviant
+    @vdp.VisDependentProperty
+    def spw(self):
+        science_spws = self.ms.get_spectral_windows(with_channels=True, science_windows_only=True)
+        return ','.join([str(spw.id) for spw in science_spws])
 
-    @flag_nrmsdeviant.setter
-    def flag_nrmsdeviant(self, value):
-        if value is None:
-            value = True
-        self._flag_nrmsdeviant = value
+    def __init__(self, context, output_dir=None, vis=None, intent=None, spw=None, refant=None, niter=None,
+                 flag_mediandeviant=None, fmeddev_limit=None, flag_rmsdeviant=None, frmsdev_limit=None,
+                 flag_nrmsdeviant=None, fnrmsdev_limit=None, metric_order=None):
+        super(GainflagInputs, self).__init__()
 
-    @property
-    def fmeddev_limit(self):
-        return self._fmeddev_limit
+        # pipeline inputs
+        self.context = context
+        # vis must be set first, as other properties may depend on it
+        self.vis = vis
+        self.output_dir = output_dir
 
-    @fmeddev_limit.setter
-    def fmeddev_limit(self, value):
-        if value is None:
-            value = 3.0
-        self._fmeddev_limit = value
+        # data selection arguments
+        self.intent = intent
+        self.spw = spw
+        self.refant = refant
 
-    @property
-    def frmsdev_limit(self):
-        return self._frmsdev_limit
-
-    @frmsdev_limit.setter
-    def frmsdev_limit(self, value):
-        if value is None:
-            value = 8.0
-        self._frmsdev_limit = value
-
-    @property
-    def fnrmsdev_limit(self):
-        return self._fnrmsdev_limit
-
-    @fnrmsdev_limit.setter
-    def fnrmsdev_limit(self, value):
-        if value is None:
-            value = 6.0
-        self._fnrmsdev_limit = value
-
-    @property
-    def metric_order(self):
-        return self._metric_order
-
-    @metric_order.setter
-    def metric_order(self, value):
-        if value is None:
-            value = 'mediandeviant, rmsdeviant, nrmsdeviant'
-        self._metric_order = value
-    
-    @property
-    def niter(self):
-        return self._niter
-
-    @niter.setter
-    def niter(self, value):
-        if value is None:
-            value = 1
-        self._niter = value
+        # flagging parameters
+        self.flag_mediandeviant = flag_mediandeviant
+        self.fmeddev_limit = fmeddev_limit
+        self.flag_rmsdeviant = flag_rmsdeviant
+        self.frmsdev_limit = frmsdev_limit
+        self.flag_nrmsdeviant = flag_nrmsdeviant
+        self.fnrmsdev_limit = fnrmsdev_limit
+        self.metric_order = metric_order
+        self.niter = niter
 
 
 class Gainflag(basetask.StandardTaskTemplate):
@@ -229,76 +189,66 @@ class Gainflag(basetask.StandardTaskTemplate):
         return result
     
 
-class GainflaggerInputs(commoncalinputs.CommonCalibrationInputs):
-    
-    def __init__(self, context, output_dir=None, vis=None, intent=None,
-                 spw=None, refant=None, niter=None,
-                 flag_maxabs=None, fmax_limit=None,
-                 metric=None, prepend=''):
+class GainflaggerInputs(vdp.StandardInputs):
 
-        # set the properties to the values given as input arguments
-        self._init_properties(vars())
+    flag_maxabs = vdp.VisDependentProperty(default=True)
+    fmax_limit = vdp.VisDependentProperty(default=3.5)
 
-    @property
+    @vdp.VisDependentProperty
     def intent(self):
-        if isinstance(self.vis, list):
-            return self._handle_multiple_vis('intent')
+        # default to the intent that would be used for bandpass
+        # calibration
+        bp_inputs = bandpass.PhcorBandpass.Inputs(context=self.context, vis=self.vis, intent=None)
+        return bp_inputs.intent
 
-        if self._intent is None:
-            # default to the intent that would be used for bandpass
-            # calibration
-            bp_inputs = bandpass.PhcorBandpass.Inputs(
-              context=self.context,
-              vis=self.vis,
-              intent=None)
-            value = bp_inputs.intent
-            return value
+    metric = vdp.VisDependentProperty(default='mediandeviant')
+    niter = vdp.VisDependentProperty(default=1)
+    prepend = vdp.VisDependentProperty(default='')
 
-        return self._intent
-    
-    @intent.setter
-    def intent(self, value):
-        self._intent = value
+    @vdp.VisDependentProperty
+    def refant(self):
+        # we cannot find the context value without the measurement set
+        if not self.ms:
+            return None
 
-    @property
-    def metric(self):
-        if self._metric is None:
-            return 'mediandeviant'
-        return self._metric
+        # get the reference antenna for this measurement set
+        ant = self.ms.reference_antenna
+        if isinstance(ant, list):
+            ant = ant[0]
 
-    @metric.setter
-    def metric(self, value):
-        self._metric = value
+        # return the antenna name/id if this is an Antenna domain object
+        if isinstance(ant, domain.Antenna):
+            return getattr(ant, 'name', ant.id)
 
-    @property
-    def flag_maxabs(self):
-        if self._flag_maxabs is None:
-            return True
-        return self._flag_maxabs
+        # otherwise return whatever we found. We assume the calling function
+        # knows how to handle an object of this type.
+        return ant
 
-    @flag_maxabs.setter
-    def flag_maxabs(self, value):
-        self._flag_maxabs = value
-        
-    @property
-    def fmax_limit(self):
-        if self._fmax_limit is None:
-            return 3.5
-        return self._fmax_limit
+    @vdp.VisDependentProperty
+    def spw(self):
+        science_spws = self.ms.get_spectral_windows(with_channels=True, science_windows_only=True)
+        return ','.join([str(spw.id) for spw in science_spws])
 
-    @fmax_limit.setter
-    def fmax_limit(self, value):
-        self._fmax_limit = value
-        
-    @property
-    def niter(self):
-        return self._niter
+    def __init__(self, context, output_dir=None, vis=None, intent=None, spw=None, refant=None, niter=None,
+                 flag_maxabs=None, fmax_limit=None, metric=None, prepend=None):
 
-    @niter.setter
-    def niter(self, value):
-        if value is None:
-            value = 1
-        self._niter = value
+        # pipeline inputs
+        self.context = context
+        # vis must be set first, as other properties may depend on it
+        self.vis = vis
+        self.output_dir = output_dir
+
+        # data selection arguments
+        self.intent = intent
+        self.spw = spw
+        self.refant = refant
+
+        # flagging parameters
+        self.flag_maxabs = flag_maxabs
+        self.fmax_limit = fmax_limit
+        self.metric = metric
+        self.prepend = prepend
+        self.niter = niter
 
 
 class Gainflagger(basetask.StandardTaskTemplate):
@@ -368,12 +318,21 @@ class Gainflagger(basetask.StandardTaskTemplate):
         return result
 
 
-class GainflaggerDataInputs(basetask.StandardInputs):
+class GainflaggerDataInputs(vdp.StandardInputs):
     
-    def __init__(self, context, output_dir=None, vis=None, intent=None,
-                 spw=None, refant=None):
+    def __init__(self, context, output_dir=None, vis=None, intent=None, spw=None, refant=None):
+        super(GainflaggerDataInputs, self).__init__()
 
-        self._init_properties(vars())
+        # pipeline inputs
+        self.context = context
+        # vis must be set first, as other properties may depend on it
+        self.vis = vis
+        self.output_dir = output_dir
+
+        # data selection arguments
+        self.intent = intent
+        self.spw = spw
+        self.refant = refant
 
 
 class GainflaggerData(basetask.StandardTaskTemplate):

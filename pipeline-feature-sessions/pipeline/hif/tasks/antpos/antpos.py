@@ -2,13 +2,19 @@ from __future__ import absolute_import
 
 import csv
 import os
-import types
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.callibrary as callibrary
+import pipeline.infrastructure.vdp as vdp
 from pipeline.h.heuristics import caltable as acaltable
 from pipeline.infrastructure import casa_tasks
+
+__all__ = [
+    'Antpos',
+    'AntposInputs',
+    'AntposResults'
+]
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -45,83 +51,45 @@ class AntposResults(basetask.Results):
         return s
 
 
-class AntposInputs(basetask.StandardInputs):
-    def __init__(self, context, output_dir=None, vis=None, caltable=None,
-                 hm_antpos=None, antposfile=None, antenna=None, 
-                 offsets=None):
-        # set the properties to the values given as input arguments
-        self._init_properties(vars())
+class AntposInputs(vdp.StandardInputs):
+    """
+    AntposInputs defines the inputs for the Antpos pipeline task.
+    """
+    antenna = vdp.VisDependentProperty(default='')
+    antposfile = vdp.VisDependentProperty(default='antennapos.csv')
+    hm_antpos = vdp.VisDependentProperty(default='manual')
+    offsets = vdp.VisDependentProperty(default=[])
 
-    @property
-    def antenna(self):
-        return self._antenna
-
-    @antenna.setter
-    def antenna(self, value):
-        if value is None:
-            value = ''
-        self._antenna = value
-
-    @property
-    def antposfile(self):
-        if type(self.vis) is types.ListType:
-            return self._handle_multiple_vis('antposfile')
-
-        if self._antposfile is None:
-            return 'antennapos.csv'
-        return self._antposfile
-
-    @antposfile.setter
-    def antposfile(self, value):
-        self._antposfile = value
-
-    @property
+    @vdp.VisDependentProperty
     def caltable(self):
         """
         Get the caltable argument for these inputs.
-        
+
         If set to a table-naming heuristic, this should give a sensible name
         considering the current CASA task arguments.
-        """ 
-        if type(self.vis) is types.ListType:
-            return self._handle_multiple_vis('caltable')
-        
-        if callable(self._caltable):
-            casa_args = self._get_task_args(ignore=('caltable',))
-            return self._caltable(output_dir=self.output_dir,
-                                  stage=self.context.stage,
-                                  **casa_args)
-        return self._caltable
-        
-    @caltable.setter
-    def caltable(self, value):
-        if value is None:
-            value = acaltable.AntposCaltable()
-        self._caltable = value
+        """
+        namer = acaltable.AntposCaltable()
+        casa_args = self._get_task_args(ignore=('caltable',))
+        return namer.calculate(output_dir=self.output_dir, stage=self.context.stage, **casa_args)
 
-    @property
-    def caltype(self):
-        return 'antpos'
+    def __init__(self, context, output_dir=None, vis=None, caltable=None, hm_antpos=None, antposfile=None, antenna=None,
+                 offsets=None):
+        super(AntposInputs, self).__init__()
 
-    @property
-    def hm_antpos(self):
-        return self._hm_antpos
+        # pipeline inputs
+        self.context = context
+        # vis must be set first, as other properties may depend on it
+        self.vis = vis
+        self.output_dir = output_dir
 
-    @hm_antpos.setter
-    def hm_antpos(self, value):
-        if value is None:
-            value = 'manual'
-        self._hm_antpos = value
+        # data selection arguments
+        self.antenna = antenna
+        self.antposfile = antposfile
+        self.caltable = caltable
 
-    @property
-    def offsets(self):
-        return self._offsets
-
-    @offsets.setter
-    def offsets(self, value):
-        if value is None:
-            value = []
-        self._offsets = value
+        # solution parameters
+        self.hm_antpos = hm_antpos
+        self.offsets = offsets
 
     def to_casa_args(self):
         # Get the antenna and offset lists.
@@ -130,17 +98,16 @@ class AntposInputs(basetask.StandardInputs):
             offsets = self.offsets
         elif self.hm_antpos == 'file':
             filename = os.path.join(self.output_dir, self.antposfile)           
-            antenna, offsets = self._read_antpos_csvfile(filename,
-                os.path.basename(self.vis))
+            antenna, offsets = self._read_antpos_csvfile(
+                filename, os.path.basename(self.vis))
         else:
             antenna = ''
             offsets = []
 
-        return {'vis'       : self.vis,
-                'caltable'  : self.caltable,
-                'caltype'   : self.caltype,
-                'antenna'   : antenna,
-                'parameter' : offsets}
+        return {'vis': self.vis,
+                'caltable': self.caltable,
+                'antenna': antenna,
+                'parameter': offsets}
 
     def _read_antpos_txtfile(self, filename):
         """
@@ -149,7 +116,8 @@ class AntposInputs(basetask.StandardInputs):
         # If the input is a list of flagging command file names, call this
         # function recursively.  Otherwise, read in the file and return its
         # contents
-        if type(filename) is types.ListType:
+        # FIXME: missing _add_file method
+        if isinstance(filename, list):
             return ''.join([self._add_file(f) for f in filename])
 
         # This assumes a very simple antenna offsets file format
@@ -170,13 +138,14 @@ class AntposInputs(basetask.StandardInputs):
                 if len(fields) < 4:
                     continue
                 antennas.append(fields[0])
-                parameters.extend([float(fields[1]), float(fields[2]),
-                    float(fields[3])])
+                parameters.extend(
+                    [float(fields[1]), float(fields[2]), float(fields[3])])
 
         # Convert the list to a string since CASA wants it that way?
         return ','.join(antennas), parameters
 
-    def _read_antpos_csvfile (self, filename, msbasename):
+    @staticmethod
+    def _read_antpos_csvfile(filename, msbasename):
         """
         Read and return the contents of a file or list of files.
         """
@@ -209,8 +178,8 @@ class AntposInputs(basetask.StandardInputs):
                 if ms_name != msbasename:
                     continue
                 antennas.append(ant_name)
-                parameters.extend([float(xoffset), float(yoffset),
-                    float(zoffset)])
+                parameters.extend(
+                    [float(xoffset), float(yoffset), float(zoffset)])
 
         # Convert the list to a string since CASA wants it that way?
         return ','.join(antennas), parameters
@@ -223,7 +192,7 @@ class Antpos(basetask.StandardTaskTemplate):
         inputs = self.inputs
 
         gencal_args = inputs.to_casa_args()
-        gencal_job = casa_tasks.gencal(**gencal_args)
+        gencal_job = casa_tasks.gencal(caltype='antpos', **gencal_args)
         if inputs.hm_antpos == 'file' and gencal_args['antenna'] == '':
             LOG.info('No antenna position offsets are defined')
         else:
@@ -241,7 +210,7 @@ class Antpos(basetask.StandardTaskTemplate):
         calapp = callibrary.CalApplication(calto, calfrom)
 
         return AntposResults(pool=[calapp], antenna=gencal_args['antenna'],
-            offsets=gencal_args['parameter'])
+                             offsets=gencal_args['parameter'])
 
     def analyse(self, result):
         # With no best caltable to find, our task is simply to set the one

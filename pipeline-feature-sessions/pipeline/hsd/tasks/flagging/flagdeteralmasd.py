@@ -5,18 +5,17 @@
 from __future__ import absolute_import
 
 import collections
-import types
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.casatools as casatools
+import pipeline.infrastructure.vdp as vdp
 from pipeline.domain import DataTable
 from pipeline.h.tasks.flagging import flagdeterbase
 from pipeline.infrastructure.displays import pointing
 
 
 # ------------------------------------------------------------------------------
-
 # Initialize a logger
 # -------------------
 
@@ -24,100 +23,49 @@ LOG = infrastructure.get_logger(__name__)
 
 # ------------------------------------------------------------------------------
 
+
 class FlagDeterALMASingleDishInputs(flagdeterbase.FlagDeterBaseInputs):
+    """
+    FlagDeterALMASingleDishInputs defines the inputs for the FlagDeterALMASingleDish pipeline task.
+    """
+    autocorr = vdp.VisDependentProperty(default=False)
+    edgespw = vdp.VisDependentProperty(default=True)
+    fracspw = vdp.VisDependentProperty(default='1.875GHz')
+    fracspwfps = vdp.VisDependentProperty(default=0.048387)
 
+    @vdp.VisDependentProperty
+    def intents(self):
+        # return just the unwanted intents that are present in the MS
+        intents_to_flag = {'POINTING', 'FOCUS', 'ATMOSPHERE', 'SIDEBAND',
+                           'UNKNOWN', 'SYSTEM_CONFIGURATION', 'CHECK'}
+        return ','.join(self.ms.intents.intersection(intents_to_flag))
 
-    edgespw = basetask.property_with_default('edgespw', True)
-    fracspw = basetask.property_with_default('fracspw', 0.0625)
-    template = basetask.property_with_default('template', True)
+    template = vdp.VisDependentProperty(default=True)
 
-    #New property for QA0 flags
-    qa0 = basetask.property_with_default('qa0', True)
-    qa2 = basetask.property_with_default('qa2', True)
+    # New property for QA0 / QA2 flags
+    qa0 = vdp.VisDependentProperty(default=True)
+    qa2 = vdp.VisDependentProperty(default=True)
 
-    def __init__(self, context, vis=None, output_dir=None, flagbackup=None,
-                 autocorr=None, shadow=None, scan=None, scannumber=None,
-                 intents=None, edgespw=None, fracspw=None, fracspwfps=None, online=None,
-                 fileonline=None, template=None, filetemplate=None, hm_tbuff=None, tbuff=None, 
-                 qa0=None, qa2=None):
-
-        # Initialize the public member variables of the inherited class
-        # FlagDeterBaseInputs()
-
+    def __init__(self, context, vis=None, output_dir=None, flagbackup=None, autocorr=None, shadow=None, scan=None,
+                 scannumber=None, intents=None, edgespw=None, fracspw=None, fracspwfps=None, online=None,
+                 fileonline=None, template=None, filetemplate=None, hm_tbuff=None, tbuff=None, qa0=None, qa2=None):
         super(FlagDeterALMASingleDishInputs, self).__init__(
-            context, vis=vis, output_dir=output_dir, flagbackup=flagbackup,
-            autocorr=autocorr, shadow=shadow, scan=scan, scannumber=scannumber,
-            intents=intents, edgespw=edgespw, fracspw=fracspw,
-            fracspwfps=fracspwfps, online=online, fileonline=fileonline,
-            template=template, filetemplate=filetemplate, hm_tbuff=hm_tbuff,
+            context, vis=vis, output_dir=output_dir, flagbackup=flagbackup, autocorr=autocorr, shadow=shadow, scan=scan,
+            scannumber=scannumber, intents=intents, edgespw=edgespw, fracspw=fracspw, fracspwfps=fracspwfps,
+            online=online, fileonline=fileonline, template=template, filetemplate=filetemplate, hm_tbuff=hm_tbuff,
             tbuff=tbuff)
 
-        self.fracspwfps = fracspwfps
+        # solution parameters
         self.qa0 = qa0
         self.qa2 = qa2
 
-    # autocorr parameter must be overridden since its default 
-    # value must be False
-    @property
-    def autocorr(self):
-        return self._autocorr
-    
-    @autocorr.setter
-    def autocorr(self, value):
-        if value is None:
-            value = False
-        self._autocorr = value
-
-    # flacspw must be overridden since its default value 
-    # must be '1.875GHz'
-    @property
-    def fracspw(self):
-        return self._fracspw
-    
-    @fracspw.setter
-    def fracspw(self, value):
-        if value is None:
-            value = '1.875GHz'
-        self._fracspw = value
-
-    @property
-    def fracspwfps(self):
-        return self._fracspwfps
-
-    @fracspwfps.setter
-    def fracspwfps(self, value):
-        if value is None:
-            value = 0.048387
-        self._fracspwfps = value
-
-    @property
-    def intents(self):
-        if type(self.vis) is types.ListType:
-            return self._handle_multiple_vis('intents')
-
-        if self._intents is not None:
-            return self._intents
-
-        # return just the unwanted intents that are present in the MS
-        intents_to_flag = set(['POINTING','FOCUS','ATMOSPHERE','SIDEBAND','UNKNOWN', 'SYSTEM_CONFIGURATION', 'CHECK'])
-        return ','.join(self.ms.intents.intersection(intents_to_flag))
-    
-    @intents.setter
-    def intents(self, value):
-        self._intents = value
-
     def to_casa_args(self):
-
         # Initialize the arguments from the inherited
         # FlagDeterBaseInputs() class
-
         task_args = super(FlagDeterALMASingleDishInputs, self).to_casa_args()
 
-
         # Return the tflagdata task arguments
-
         return task_args
-
 
 
 class FlagDeterALMASingleDishResults(flagdeterbase.FlagDeterBaseResults):
@@ -149,7 +97,6 @@ class FlagDeterALMASingleDishResults(flagdeterbase.FlagDeterBaseResults):
                                                                 target_only=False)
                     task.plot(revise_plot=True)
             
-
 
 class FlagDeterALMASingleDish(flagdeterbase.FlagDeterBase):
 
