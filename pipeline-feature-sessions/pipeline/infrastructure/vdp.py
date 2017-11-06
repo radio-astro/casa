@@ -334,16 +334,22 @@ class InputsContainer(object):
             # create an instance for every MS in scope. Unfortunately, some SD
             # tasks use infiles instead of vis so we need to check inputs
             # signatures to see what is allowed.
-            constructor_args = task_cls.Inputs.__init__.func_code.co_varnames
-            if 'vis' in constructor_args:
+            constructor_sig = inspect.getargspec(task_cls.Inputs.__init__)
+            if 'vis' in constructor_sig.args:
                 scope_fn = lambda ms: {'vis': ms.name}
-            elif 'infiles' in constructor_args:
+            elif 'infiles' in constructor_sig.args:
                 scope_fn = lambda ms: {'infiles': ms.name}
             else:
                 scope_fn = lambda ms: {'vis': ms.name}
                 LOG.warn('Miscoded constructor does not accept vis or infiles: {!r}'.format(task_cls.Inputs))
 
-            self._cls_instances = {ms.basename: task_cls.Inputs(context, **scope_fn(ms)) for ms in ms_pool}
+            try:
+                self._cls_instances = {ms.basename: task_cls.Inputs(context, **scope_fn(ms)) for ms in ms_pool}
+            except TypeError:
+                # catch TypeError exceptions from unexpected keyword arguments
+                # so that we can add some more context
+                LOG.error('Error creating {!s}'.format(task_cls.Inputs.__name__))
+                raise
             self._active_instances = self._cls_instances.values()
 
         self._vis = ''
