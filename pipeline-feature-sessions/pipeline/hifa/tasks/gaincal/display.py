@@ -5,15 +5,13 @@ import os
 import matplotlib
 import matplotlib.pyplot as pyplot
 
+import pipeline.h.tasks.common.displays.common as common
+from pipeline.infrastructure import casa_tasks
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.filenamer as filenamer
 import pipeline.infrastructure.renderer.logger as logger
 import pipeline.infrastructure.utils as utils
-from pipeline.infrastructure import casa_tasks
-#from . import common
-from pipeline.h.tasks.common.displays import common as common
-#from . import phaseoffset
-from pipeline.hifa.tasks.common.displays import phaseoffset as phaseoffset
+from ..common.displays import phaseoffset
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -452,7 +450,7 @@ class GaincalPhaseOffsetPlot(phaseoffset.PhaseOffsetPlot):
         # assume just one caltable - ie one calapp - to plot
         calapp = [c for c in result.final
                   if 'TARGET' in c.intent
-                  and 'p' == c.origin.inputs['calmode']][0]
+                  and 'p' == utils.get_origin_input_arg(c, 'calmode')][0]
         vis = os.path.basename(calapp.vis)
         ms = context.observing_run.get_ms(vis)
         plothelper = GaincalPhaseOffsetPlotHelper(context, result)        
@@ -475,7 +473,7 @@ class GaincalSummaryChart(common.PlotcalSpwComposite):
         # identify the phase-only solution for the target
         selected = [c for c in calapps
                     if (intent in c.intent or c.intent == '') 
-                    and calmode == c.origin.inputs['calmode']]
+                    and calmode == utils.get_origin_input_arg(c, 'calmode')]
 
         assert len(selected) is 1, '%s %s solutions != 1' % (intent, yaxis)
         calapp = selected[0]
@@ -502,7 +500,7 @@ class GaincalDetailChart(common.PlotcalAntSpwComposite):
         # identify the phase-only solution for the target
         selected = [c for c in calapps
                     if (intent in c.intent or c.intent == '') 
-                    and calmode == c.origin.inputs['calmode']]
+                    and calmode == utils.get_origin_input_arg(c, 'calmode')]
 
         assert len(selected) is 1, '%s %s solutions != 1' % (intent, yaxis)
         calapp = selected[0]
