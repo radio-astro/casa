@@ -376,7 +376,7 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                                                       [brightest_field.id])
                 amp_vs_uv_summary_plots[vis].extend(plots)
 
-            if pipeline.infrastructure.generate_detail_plots(result):
+            if pipeline.infrastructure.generate_detail_plots(results):
                 scans = ms.get_scans(scan_intent='TARGET')
                 fields = set()
                 for scan in scans:
