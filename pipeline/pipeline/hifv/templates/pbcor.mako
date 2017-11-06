@@ -81,8 +81,8 @@ $(document).ready(function() {
     </tr>
     <tr>
         <td><strong>sigma</strong></td>
-        <td>${'{:.4e}'.format(pbcor_sigma)}</td>
-        <td>${'{:.4e}'.format(residual_sigma)}</td>
+        <td>${'{:.4e}'.format(pbcor_sigma)}  ${pbcor_unit}</td>
+        <td>${'{:.4e}'.format(residual_sigma)} ${residual_unit}</td>
     </tr>
     <tr>
         <td><strong>MAD rms</strong></td>
