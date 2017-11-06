@@ -36,7 +36,6 @@ class WvrgcalInputs(vdp.StandardInputs):
     WvrgcalInputs defines the inputs for the Wvrgcal pipeline task.
     """
     accept_threshold = vdp.VisDependentProperty(default=1.0)
-    # TODO: once possible, convert bandpass_result to be initialized.
     bandpass_result = vdp.VisDependentProperty(default='')
     disperse = vdp.VisDependentProperty(default=False)
     hm_smooth = vdp.VisDependentProperty(default='automatic')
@@ -45,7 +44,6 @@ class WvrgcalInputs(vdp.StandardInputs):
     maxdistm = vdp.VisDependentProperty(default=500.0)
     minnumants = vdp.VisDependentProperty(default=2)
     mingoodfrac = vdp.VisDependentProperty(default=0.8)
-    # TODO: once possible, convert bandpass_result to be initialized.
     nowvr_result = vdp.VisDependentProperty(default='')
     nsol = vdp.VisDependentProperty(default=1)
     # Default for offsetstable is blank, which means the wvrgcal task will not
@@ -71,9 +69,7 @@ class WvrgcalInputs(vdp.StandardInputs):
 
     @wvrflag.convert
     def wvrflag(self, value):
-        if not value:
-            return []
-        elif isinstance(value, str):
+        if isinstance(value, str):
             if value[0] == '[':
                 value = value.translate(None, '[]\'')
             return value.split(',')
@@ -120,14 +116,6 @@ class WvrgcalInputs(vdp.StandardInputs):
         self.accept_threshold = accept_threshold
         self.bandpass_result = bandpass_result
         self.nowvr_result = nowvr_result
-
-    # TODO: ensure that these parameters do not show up in weblog (params are
-    # TODO: not supported by CLI).
-    def to_casa_args(self):
-        casa_args = super(WvrgcalInputs, self).to_casa_args()
-        del casa_args['bandpass_result']
-        del casa_args['nowvr_result']
-        return casa_args
 
 
 class Wvrgcal(basetask.StandardTaskTemplate):
