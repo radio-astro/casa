@@ -58,6 +58,7 @@ class T2_4MDetailsMakecutoutimagesRenderer(basetemplates.T2_4MDetailsDefaultRend
                     stats = image.statistics(robust=False)
                     beam = image.restoringbeam()
 
+            image_size = r.image_size
             # Make the plots of the rms images
             plotter = display.CutoutimagesSummary(context, r)
             plots = plotter.plot()
@@ -67,4 +68,5 @@ class T2_4MDetailsMakecutoutimagesRenderer(basetemplates.T2_4MDetailsDefaultRend
         ctx.update({'subplots'     : subplots,
                     'info_dict' : info_dict,
                     'dirname'   : weblog_dir,
-                    'plotter'   : plotter})
+                    'plotter'   : plotter,
+                    'image_size': image_size})

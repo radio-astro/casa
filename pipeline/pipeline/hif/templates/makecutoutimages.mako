@@ -42,7 +42,7 @@ $(document).ready(function() {
             },
             thumbs: {
                 width: 50,
-                height: 50,
+                height: 50
             }
         }
     });
@@ -76,6 +76,11 @@ $(document).ready(function() {
     pb_max = plotter.result.pb_stats.get('max')[0]
     pb_mean = plotter.result.pb_stats.get('mean')[0]
     pb_median = plotter.result.pb_stats.get('median')[0]
+
+    x_px = image_size.get('pixels_x')
+    y_px = image_size.get('pixels_y')
+    x_arcsec = image_size.get('arcsec_x')
+    y_arcsec = image_size.get('arcsec_y')
 %>
 
 <table style="float: left; margin:0 10px; width: auto;" class="table table-condensed table-bordered table-striped">
@@ -111,8 +116,8 @@ $(document).ready(function() {
   </tr>
   <tr>
     <td style="font-weight:bold; background-color:#ccffff">max/sigma</td>
-    <td>${'{:.4f}'.format(pbcor_max / pbcor_sigma)} ${pbcor_unit}</td>
-    <td>${'{:.4f}'.format(residual_max / residual_sigma)} ${residual_unit}</td>
+    <td>${'{:.4f}'.format(pbcor_max / pbcor_sigma)}</td>
+    <td>${'{:.4f}'.format(residual_max / residual_sigma)}</td>
   </tr>
 </table>
 <table style="float: left; margin:0 10px; width: auto;" class="table table-condensed table-bordered table-striped">
@@ -169,16 +174,24 @@ $(document).ready(function() {
 </table>
 <table style="margin:0 10px; width: auto;" class="table table-condensed table-bordered table-striped">
     <tr>
-        <td><strong>Fraction of pixels with <= 120 &mu;Jy RMS</strong></td>
+        <td style="font-weight:bold; background-color:#ccffcc">Fraction of pixels with <= 120 &mu;Jy RMS</td>
         <td>${'%4.2f &#37;' % (plotter.result.RMSfraction120)}</td>
     </tr>
     <tr>
-        <td><strong>Fraction of pixels with <= 168 &mu;Jy RMS</strong></td>
+        <td style="font-weight:bold; background-color:#ccffcc">Fraction of pixels with <= 168 &mu;Jy RMS</td>
         <td>${'%4.2f &#37;' % (plotter.result.RMSfraction168)}</td>
     </tr>
     <tr>
-        <td><strong>Fraction of pixels with <= 200 &mu;Jy RMS</strong></td>
+        <td style="font-weight:bold; background-color:#ccffcc">Fraction of pixels with <= 200 &mu;Jy RMS</td>
         <td>${'%4.2f &#37;' % (plotter.result.RMSfraction200)}</td>
+    </tr>
+    <tr>
+        <td style="font-weight:bold; background-color:#ccffcc">Image size (x, y)</td>
+        <td>${'{:d}px, {:d}px'.format(x_px, y_px)}</td>
+    </tr>
+    <tr>
+        <td style="font-weight:bold; background-color:#ccffcc">Image size (RA, DEC)</td>
+        <td>${'{:.2f}", {:.2f}"'.format(x_arcsec, y_arcsec)}</td>
     </tr>
 </table>
 
