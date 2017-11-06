@@ -4,7 +4,6 @@ import types
 import pipeline.domain as domain
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
-import pipeline.infrastructure.callibrary as callibrary
 import pipeline.infrastructure.utils as utils
 import pipeline.infrastructure.vdp as vdp
 from pipeline.h.heuristics import fieldnames as fieldnames
@@ -290,3 +289,26 @@ class VdpCommonCalibrationInputs(vdp.StandardInputs):
         return ','.join([str(spw.id) for spw in science_spws])
 
     uvrange = vdp.VisDependentProperty(default='')
+
+    def __init__(self, context, output_dir=None, vis=None, intent=None, field=None, spw=None, refant=None,
+                 antenna=None, minblperant=None, opacity=None, selectdata=None, uvrange=None):
+        super(VdpCommonCalibrationInputs, self).__init__()
+
+        # pipeline inputs
+        self.context = context
+        # vis must be set first, as other properties may depend on it
+        self.vis = vis
+        self.output_dir = output_dir
+
+        # data selection arguments
+        self.intent = intent
+        self.field = field
+        self.spw = spw
+        self.antenna = antenna
+        self.refant = refant
+
+        # solution parameters
+        self.minblperant = minblperant
+        self.opacity = opacity
+        self.selectdata = selectdata
+        self.uvrange = uvrange
