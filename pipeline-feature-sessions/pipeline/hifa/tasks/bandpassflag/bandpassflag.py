@@ -9,7 +9,7 @@ import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.callibrary as callibrary
 import pipeline.infrastructure.utils as utils
 import pipeline.infrastructure.vdp as vdp
-from pipeline.h.tasks.common import commonhelpermethods
+from pipeline.h.tasks.common.displays import applycal as applycal_displays
 from pipeline.h.tasks.flagging.flagdatasetter import FlagdataSetter
 from pipeline.hif.tasks import applycal
 from pipeline.hif.tasks import correctedampflag
@@ -18,8 +18,6 @@ from pipeline.hifa.tasks import bandpass
 from pipeline.infrastructure import casa_tasks
 from .resultobjects import BandpassflagResults
 
-#import pipeline.infrastructure.displays.applycal as applycal_displays
-from pipeline.h.tasks.common.displays import applycal as applycal_displays
 
 __all__ = [
     'BandpassflagInputs',
