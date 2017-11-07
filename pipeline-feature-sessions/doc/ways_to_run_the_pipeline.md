@@ -81,7 +81,7 @@ CASA <1>: context = h_resume(filename='last')
 
 ## Creating and running Pipeline tasks, bypassing CASA task interface
 At the lowest level of abstraction, we can bypass the CASA Pipeline Task interface, and work directly within 
-CASA / Python, by instantiating Pipeline Task Inputs object, using it to instantiate a Pipeline Task object,
+CASA / Python, by instantiating a Pipeline InputsContainer object for the Pipeline Task, using it to instantiate a Pipeline Task object,
 and then running its 'execute' method to get the task result, as shown in this example (assumed to run in a 
 directory where the Pipeline has already been partly run, i.e. a context already exists):
 ```
@@ -91,7 +91,7 @@ CASA <1>: vis='13A-537.sb24066356.eb24324502.56514.05971091435.ms'
 CASA <2>: m = context.observing_run.get_ms(vis)
 CASA <3>: spws=m.get_spectral_windows()
 
-CASA <4>: inputs = pipeline.hifv.tasks.hanning.Hanning.Inputs(context)
+CASA <4>: inputs = pipeline.infrastructure.vdp.InputsContainer(pipeline.hifv.tasks.hanning.Hanning, context)
 CASA <5>: task = pipeline.hifv.tasks.hanning.Hanning(inputs)
 CASA <6>: result = task.execute(dry_run=False)
 CASA <7>: result.accept(context)
@@ -140,7 +140,7 @@ This can be useful to run the Pipeline just up to the stage that you want to deb
 ```
 import pipeline
 context = pipeline.Pipeline(context='last', loglevel='info', plotlevel='default').context
-inputs = pipeline.hifa.tasks.tsysflag.Tsysflag.Inputs(context)
+inputs = pipeline.infrastructure.vdp.InputsContainer(pipeline.hifa.tasks.tsysflag.Tsysflag, context)
 task = pipeline.hifa.tasks.tsysflag.Tsysflag(inputs)
 result = task.execute(dry_run=False)
 result.accept(context)
