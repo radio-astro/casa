@@ -95,6 +95,7 @@ class Makecutoutimages(basetask.StandardTaskTemplate):
         imagenames = [im for im in imagenames if '.subim' not in im]
         subimagenames = []
 
+        subimage_size = None
         for imagename in imagenames:
             if not os.path.exists(imagename + '.subim'):
                 subimagename = imagename + '.subim'
