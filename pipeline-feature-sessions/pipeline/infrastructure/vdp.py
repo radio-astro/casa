@@ -150,7 +150,7 @@ class PipelineInputsMeta(type):
     """
     def __new__(mcls, name, bases, attrs):
         cls = super(PipelineInputsMeta, mcls).__new__(mcls, name, bases, attrs)
-        for attr, obj in attrs.items():
+        for attr, obj in attrs.iteritems():
             if isinstance(obj, VisDependentProperty):
                 obj.__set_name__(cls, attr)
         return cls
@@ -347,7 +347,7 @@ class InputsContainer(object):
                 self._cls_instances = {ms.basename: task_cls.Inputs(context, **scope_fn(ms)) for ms in ms_pool}
             except TypeError:
                 # catch TypeError exceptions from unexpected keyword arguments
-                # so that we can add some more context
+                # so that we can add some more context to the debug message
                 LOG.error('Error creating {!s}'.format(task_cls.Inputs.__name__))
                 raise
             self._active_instances = self._cls_instances.values()
@@ -483,13 +483,15 @@ class InputsContainer(object):
         # private variables, add it to our __dict__ using the standard
         # __setattr__ method
         if name in ('_context', '_task_cls', '_cls_instances', '_active_instances', '_vis', '_initargs', '_multivis'):
-            LOG.trace('Setting {!s}.{!s} = {!r}'.format(self.__class__.__name__, name, val))
+            if LOG.isEnabledFor(logging.TRACE):
+                LOG.trace('Setting {!s}.{!s} = {!r}'.format(self.__class__.__name__, name, val))
             return super(InputsContainer, self).__setattr__(name, val)
 
         # check whether this class has a getter/setter by this name. If so,
         # allow the write to __dict__
         if name in ('vis',):
-            LOG.trace('Getter/setter found: setting {!s}.{!s} = {!r}'.format(self.__class__.__name__, name, val))
+            if LOG.isEnabledFor(logging.TRACE):
+                LOG.trace('Getter/setter found: setting {!s}.{!s} = {!r}'.format(self.__class__.__name__, name, val))
             return super(InputsContainer, self).__setattr__(name, val)
 
         if not isinstance(val, (list, tuple)):
@@ -504,7 +506,8 @@ class InputsContainer(object):
                 if user_arg != VisDependentProperty.NULL:
                     user_arg = prop.fconvert(inputs, user_arg)
 
-            LOG.trace('Setting {!s}.{!s} = {!r}'.format(inputs.__class__.__name__, name, user_arg))
+            if LOG.isEnabledFor(logging.TRACE):
+                LOG.trace('Setting {!s}.{!s} = {!r}'.format(inputs.__class__.__name__, name, user_arg))
             setattr(inputs, name, user_arg)
 
     def __repr__(self):
@@ -600,7 +603,7 @@ class StandardInputs(api.Inputs):
 
     #- vis-dependent properties ----------------------------------------------
 
-    @VisDependentProperty(readonly=True)
+    @VisDependentProperty(readonly=True, hidden=True)
     def ms(self):
         """
         Return the MeasurementSet for the current value of vis.
@@ -687,8 +690,6 @@ class StandardInputs(api.Inputs):
 
 
 class ModeInputs(api.Inputs):
-    __metaclass__ = PipelineInputsMeta
-
     """
     ModeInputs is a facade for Inputs of a common task type, allowing the user
     to switch between task implementations by changing the 'mode' parameter.
@@ -697,6 +698,8 @@ class ModeInputs(api.Inputs):
     key/value pairs, each pair mapping the mode name key to the task class
     value.
     """
+    __metaclass__ = PipelineInputsMeta
+
     _modes = {}
 
     def __init__(self, context, mode=None, **parameters):
@@ -841,29 +844,6 @@ class ModeInputs(api.Inputs):
 
 
 # module utility functions ---------------------------------------------------
-
-
-def get_properties_of_type(instance, t):
-    """
-    Get properties of this instance that are of the given type.
-        
-    Returns (property name, type instance) tuples.
-    """
-    cls = instance.__class__
-    return [(name, getattr(cls, name)) for name in dir(cls)
-            if isinstance(getattr(cls, name), t)]
-
-
-def get_vis_dependent_properties(instance):
-    """
-    Get all VisDependentProperty properties of this instance.
-    
-    Remember that the returned VisDependentProperties will contain the state for
-    other instances too!
-        
-    Returns (property name, type instance) tuples.
-    """
-    return get_properties_of_type(instance, VisDependentProperty)
 
 
 def all_unique(o):
