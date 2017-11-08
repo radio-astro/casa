@@ -68,7 +68,7 @@ $(document).ready(function() {
         </tr>
         <tr>
             <td><strong>sigma</strong></td>
-            <td>${'%#.4e' % (plotter.result.sigma)}</td>
+            <td>${'%#.4e' % (plotter.result.sigma)} Jy/beam</td>
         </tr>
         <tr>
             <td><strong>MAD rms</strong></td>

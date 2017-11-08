@@ -308,7 +308,7 @@ class testBPdcals(basetask.StandardTaskTemplate):
                                             ktypecaltable=ktypecaltable, bpdgain_touse=bpdgain_touse, solint='inf', append=False)
             self._executor.execute(bandpass_job)
 
-            AllCalTables = list(self.inputs.context.callibrary.active.get_caltable())
+            AllCalTables = sorted(self.inputs.context.callibrary.active.get_caltable())
             AllCalTables.append(ktypecaltable)
             AllCalTables.append(bpdgain_touse)
             AllCalTables.append(bpcaltable)
@@ -392,7 +392,7 @@ class testBPdcals(basetask.StandardTaskTemplate):
                                 'calmode'     : 'p',
                                 'append'      : False,
                                 'docallib'    : False,
-                                'gaintable'   : list(self.inputs.context.callibrary.active.get_caltable()),
+                                'gaintable'   : sorted(self.inputs.context.callibrary.active.get_caltable()),
                                 'gainfield'   : [''],
                                 'interp'      : [''],
                                 'spwmap'      : [],
@@ -438,7 +438,7 @@ class testBPdcals(basetask.StandardTaskTemplate):
             intent = '')
         '''
 
-        GainTables = list(self.inputs.context.callibrary.active.get_caltable())
+        GainTables = sorted(self.inputs.context.callibrary.active.get_caltable())
         GainTables.append(addcaltable)
 
         delaycal_task_args = {'vis'         :self.inputs.vis,
@@ -536,7 +536,7 @@ class testBPdcals(basetask.StandardTaskTemplate):
             combine = 'scan',
             intent = '')
 
-        GainTables = list(self.inputs.context.callibrary.active.get_caltable())
+        GainTables = sorted(self.inputs.context.callibrary.active.get_caltable())
         GainTables.append(addcaltable)
 
         bpdgains_task_args = {'vis'         :self.inputs.vis,
@@ -579,7 +579,7 @@ class testBPdcals(basetask.StandardTaskTemplate):
         m = self.inputs.context.observing_run.get_ms(self.inputs.vis)
         testgainscans = context.evla['msinfo'][m.name].testgainscans
 
-        AllCalTables = list(self.inputs.context.callibrary.active.get_caltable())
+        AllCalTables = sorted(self.inputs.context.callibrary.active.get_caltable())
         AllCalTables.append(ktypecaltable)
         AllCalTables.append(bpdgain_touse)
         AllCalTables.append(bpcaltable)

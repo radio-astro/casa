@@ -65,6 +65,57 @@ class SDBLFlagWorkerResults(common.SingleDishResults):
         return ''
 
 
+class BLFlagTableContainer(object):
+    def __init__(self):
+        self.tb1, self.tb2 = gentools(['tb', 'tb'])
+        self._init()
+
+    def __get_ms_attr(self, attr):
+        if self.ms is None:
+            return None
+        else:
+            return getattr(self.ms, attr)
+
+    @property
+    def calvis(self):
+        return self.__get_ms_attr('name')
+
+    @property
+    def blvis(self):
+        return self.__get_ms_attr('work_data')
+
+    @property
+    def is_baselined(self):
+        return getattr(self, '_is_baselined', self.ms is not None and (self.calvis != self.blvis))
+
+    @is_baselined.setter
+    def is_baselined(self, value):
+        self._is_baselined = value
+
+    def _init(self):
+        self.ms = None
+
+    def close(self):
+        if self.ms is not None:
+            self.tb1.close()
+
+            if self.is_baselined:
+                self.tb2.close()
+
+            self._init()
+
+    def open(self, ms, nomodify=False):
+        if self.ms is None or self.ms != ms:
+            self.close()
+
+            self.ms = ms
+
+            self.tb1.open(self.calvis, nomodify=nomodify)
+
+            if self.is_baselined:
+                self.tb2.open(self.blvis, nomodify=nomodify)
+
+
 class SDBLFlagWorker(basetask.StandardTaskTemplate):
     """
     The worker class of single dish flagging task.
@@ -89,9 +140,18 @@ class SDBLFlagWorker(basetask.StandardTaskTemplate):
                 break
         return col_found
             
-    
-#     def execute(self, dry_run=True):
+
     def prepare(self):
+        container = BLFlagTableContainer()
+
+        try:
+            results = self._prepare(container)
+        finally:
+            container.close()
+
+        return results
+
+    def _prepare(self, container):
         """
         Invoke single dish flagging based on statistics of spectra.
         Iterates over antenna and polarization for a certain spw ID
@@ -136,6 +196,7 @@ class SDBLFlagWorker(basetask.StandardTaskTemplate):
         # loop over members (practically, per antenna loop in an MS)
         for (msobj,antid,fieldid,spwid,pollist) in itertools.izip(ms_list, antid_list, fieldid_list, spwid_list, pols_list):
             LOG.debug('Performing flag for %s Antenna %d Field %d Spw %d'%(msobj.basename,antid,fieldid,spwid))
+
             filename_in = msobj.name
             filename_out = msobj.work_data
             
@@ -159,6 +220,11 @@ class SDBLFlagWorker(basetask.StandardTaskTemplate):
             flagRule_local = copy.deepcopy(flagRule)
             # Set is_baselined flag when processing not yet baselined data.
             is_baselined = (_get_iteration(context.observing_run.ms_reduction_group,msobj,antid, fieldid,spwid) > 0)
+
+            # open table via container
+            container.is_baselined = is_baselined
+            container.open(msobj)
+
             if not is_baselined:
                 LOG.debug("No baseline subtraction operated to data. Skipping flag by post fit spectra.")
                 # Reset MASKLIST for the non-baselined DataTable
@@ -168,7 +234,7 @@ class SDBLFlagWorker(basetask.StandardTaskTemplate):
                 flagRule_local['RunMeanPostFitFlag']['isActive'] = False
                 flagRule_local['RmsExpectedPostFitFlag']['isActive'] = False
             elif rowmap is None:
-                rowmap = sdutils.make_row_map_for_baselined_ms(msobj)
+                rowmap = sdutils.make_row_map_for_baselined_ms(msobj, container)
             LOG.debug("FLAGRULE = %s" % str(flagRule_local))
             
             for pol in pollist:
@@ -177,7 +243,7 @@ class SDBLFlagWorker(basetask.StandardTaskTemplate):
                 polid = ddobj.get_polarization_id(pol)
                 # Calculate Standard Deviation and Diff from running mean
                 t0 = time.time()
-                dt_idx, tmpdata, _ = self.calcStatistics(datatable, msobj, nchan, nmean,
+                dt_idx, tmpdata, _ = self.calcStatistics(datatable, container, nchan, nmean,
                                                          TimeTable, polid, edge,
                                                          is_baselined, rowmap, deviation_mask)
                 t1 = time.time()
@@ -239,9 +305,9 @@ class SDBLFlagWorker(basetask.StandardTaskTemplate):
     def analyse(self, result):
         return result
 
-    def calcStatistics(self, DataTable, msobj, NCHAN, Nmean, TimeTable, polid, edge, is_baselined, rowmap, deviation_mask=None):
-        DataIn = msobj.name
-        DataOut = msobj.work_data
+    def calcStatistics(self, DataTable, container, NCHAN, Nmean, TimeTable, polid, edge, is_baselined, rowmap, deviation_mask=None):
+        DataIn = container.calvis
+        DataOut = container.blvis
         # Calculate Standard Deviation and Diff from running mean
         NROW = len([ series for series in utils.flatten(TimeTable) ])/2
         # parse edge
@@ -257,13 +323,15 @@ class SDBLFlagWorker(basetask.StandardTaskTemplate):
 
         LOG.info('Standard deviation and diff calculation Start')
 
-        tbIn, tbOut = gentools(['tb','tb'])
-        tbIn.open(DataIn)
+        #tbIn, tbOut = gentools(['tb','tb'])
+        tbIn = container.tb1
+        tbOut = container.tb2
+        #tbIn.open(DataIn)
         datacolIn = self._search_datacol(tbIn)
         if not datacolIn:
             raise RuntimeError, 'Could not find any data column in %s' % DataIn
         if is_baselined:
-            tbOut.open(DataOut)
+            #tbOut.open(DataOut)
             datacolOut = self._search_datacol(tbOut)
             if not datacolOut:
                 raise RuntimeError, 'Could not find any data column in %s' % DataOut
@@ -465,8 +533,8 @@ class SDBLFlagWorker(basetask.StandardTaskTemplate):
                 num_masked_array[output_serial_index] = Nmask
             del SpIn, SpOut
             output_array_index += nrow
-        tbIn.close()
-        tbOut.close()
+        #tbIn.close()
+        #tbOut.close()
         return datatable_index, statistics_array, num_masked_array
 
     def _calculate_masked_stddev(self, data, mask):

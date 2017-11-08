@@ -455,9 +455,8 @@ def get_data(infile, dtrows, num_ra, num_dec, num_chan, num_pol, rowlist, rowmap
             if name in tb.colnames():
                 colname = name
                 break
-    assert colname is not None
+        assert colname is not None
         
-    with casatools.TableReader(infile) as tb:
         for d in rowlist:
             ix = num_ra - 1 - d['RAID']
             iy = d['DECID']

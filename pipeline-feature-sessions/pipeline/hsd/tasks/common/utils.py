@@ -357,7 +357,7 @@ class EchoDictionary(dict):
     def __getitem__(self, x):
         return x
     
-def make_row_map_for_baselined_ms(ms):
+def make_row_map_for_baselined_ms(ms, table_container=None):
     """
     Make row mapping between calibrated MS and baselined MS.
     Return value is a dictionary whose key is row number for calibrated MS and 
@@ -368,11 +368,16 @@ def make_row_map_for_baselined_ms(ms):
     returns: row mapping dictionary
     """
     work_data = ms.work_data
+    src_tb = None
+    derived_tb = None
+    if table_container is not None:
+        src_tb = table_container.tb1
+        derived_tb = table_container.tb2
     
-    return make_row_map(ms, work_data)
+    return make_row_map(ms, work_data, src_tb, derived_tb)
 
 #@profiler
-def make_row_map(src_ms, derived_vis):
+def make_row_map(src_ms, derived_vis, src_tb=None, derived_tb=None):
     """
     Make row mapping between source MS and associating MS
      
@@ -441,8 +446,33 @@ def make_row_map(src_ms, derived_vis):
     is_unique_observation_id = nrow_obs0 == 1
     is_unique_processor_id = nrow_proc0 == 1
         
-    with casatools.TableReader(vis0) as tb:
-        tsel = tb.query(taql)
+    if src_tb is None:
+        with casatools.TableReader(vis0) as tb:
+            tsel = tb.query(taql)
+            try:
+                if is_unique_observation_id:
+                    observation_id_list0 = None
+                    observation_id_set = set([0])
+                else:
+                    observation_id_list0 = tsel.getcol('OBSERVATION_ID')
+                    observation_id_set = set(observation_id_list0)
+                if is_unique_processor_id:
+                    processor_id_list0 = None
+                    processor_id_set = set([0])
+                else:
+                    processor_id_list0 = tsel.getcol('PROCESSOR_ID')
+                    processor_id_set = set(processor_id_list0)
+                scan_number_list0 = tsel.getcol('SCAN_NUMBER')
+                field_id_list0 = tsel.getcol('FIELD_ID')
+                antenna1_list0 = tsel.getcol('ANTENNA1')
+                state_id_list0 = tsel.getcol('STATE_ID')
+                data_desc_id_list0 = tsel.getcol('DATA_DESC_ID')
+                time_list0 = tsel.getcol('TIME')
+                rownumber_list0 = tsel.rownumbers()
+            finally:
+                tsel.close()
+    else:
+        tsel = src_tb.query(taql)
         try:
             if is_unique_observation_id:
                 observation_id_list0 = None
@@ -466,8 +496,29 @@ def make_row_map(src_ms, derived_vis):
         finally:
             tsel.close()
      
-    with casatools.TableReader(vis1) as tb:
-        tsel = tb.query(taql)
+    if derived_tb is None:
+        with casatools.TableReader(vis1) as tb:
+            tsel = tb.query(taql)
+            try:
+                if is_unique_observation_id:
+                    observation_id_list1 = None
+                else:
+                    observation_id_list1 = tsel.getcol('OBSERVATION_ID')
+                if is_unique_processor_id:
+                    processor_id_list1 = None
+                else:
+                    processor_id_list1 = tsel.getcol('PROCESSOR_ID')
+                scan_number_list1 = tsel.getcol('SCAN_NUMBER')
+                field_id_list1 = tsel.getcol('FIELD_ID')
+                antenna1_list1 = tsel.getcol('ANTENNA1')
+                state_id_list1 = tsel.getcol('STATE_ID')
+                data_desc_id_list1 = tsel.getcol('DATA_DESC_ID')
+                time_list1 = tsel.getcol('TIME')
+                rownumber_list1 = tsel.rownumbers()
+            finally:
+                tsel.close()
+    else:
+        tsel = derived_tb.query(taql)
         try:
             if is_unique_observation_id:
                 observation_id_list1 = None

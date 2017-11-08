@@ -35,11 +35,15 @@ class PbcorimagesSummary(object):
                                                            collapseFunction='mean'))
                 with casatools.ImageReader(pbcorimagename) as image:
                     self.result.residual_stats = image.statistics(robust=True)
-            else:
+            elif 'image.pbcor.tt' in pbcorimagename:
                 plot_wrappers.append(sky.SkyDisplay().plot(self.context, pbcorimagename,
                                                            reportdir=stage_dir, intent='',
                                                            collapseFunction='mean'))
                 with casatools.ImageReader(pbcorimagename) as image:
                     self.result.pbcor_stats = image.statistics(robust=True)
+            else:
+                plot_wrappers.append(sky.SkyDisplay().plot(self.context, pbcorimagename,
+                                                           reportdir=stage_dir, intent='',
+                                                           collapseFunction='mean'))
 
         return [p for p in plot_wrappers if p is not None]

@@ -174,7 +174,7 @@ class semiFinalBPdcals(basetask.StandardTaskTemplate):
                                             ktypecaltable=ktypecaltable, bpdgain_touse=bpdgain_touse, solint='inf', append=False)
             self._executor.execute(bandpass_job)
 
-            AllCalTables = list(self.inputs.context.callibrary.active.get_caltable())
+            AllCalTables = sorted(self.inputs.context.callibrary.active.get_caltable())
             AllCalTables.append(ktypecaltable)
             # AllCalTables.append(bpdgain_touse)
             AllCalTables.append(bpcaltable)
@@ -263,7 +263,7 @@ class semiFinalBPdcals(basetask.StandardTaskTemplate):
                                 'calmode'     : 'p',
                                 'append'      : False,
                                 'docallib'    : False,
-                                'gaintable'   : list(self.inputs.context.callibrary.active.get_caltable()),
+                                'gaintable'   : sorted(self.inputs.context.callibrary.active.get_caltable()),
                                 'gainfield'   : [''],
                                 'interp'      : [''],
                                 'spwmap'      : [],
@@ -306,7 +306,7 @@ class semiFinalBPdcals(basetask.StandardTaskTemplate):
             combine = 'scan',
             intent = '')
 
-        GainTables = list(self.inputs.context.callibrary.active.get_caltable())
+        GainTables = sorted(self.inputs.context.callibrary.active.get_caltable())
         GainTables.append(addcaltable)
 
         delaycal_task_args = {'vis'         :self.inputs.vis,
@@ -396,7 +396,7 @@ class semiFinalBPdcals(basetask.StandardTaskTemplate):
             intent = '',
             append=False)
 
-        GainTables = list(self.inputs.context.callibrary.active.get_caltable())
+        GainTables = sorted(self.inputs.context.callibrary.active.get_caltable())
         GainTables.append(addcaltable)
 
         bpdgains_task_args = {'vis'         :self.inputs.vis,
@@ -441,7 +441,7 @@ class semiFinalBPdcals(basetask.StandardTaskTemplate):
         
         LOG.info("Applying semi-final delay and BP calibrations to all calibrators")
 
-        AllCalTables = list(self.inputs.context.callibrary.active.get_caltable())
+        AllCalTables = sorted(self.inputs.context.callibrary.active.get_caltable())
         AllCalTables.append(ktypecaltable)
         #AllCalTables.append(bpdgain_touse)
         AllCalTables.append(bpcaltable)

@@ -90,11 +90,13 @@ class EditimlistInputs(basetask.StandardInputs):
                             'robust', 'uvtaper', 'niter', 'cyclefactor', 'cycleniter', 'mask',
                             'search_radius_arcsec', 'threshold', 'imaging_mode', 'reffreq',
                             'editmode', 'threshold_nsigma', 'sensitivity', 'conjbeams')
+
         self.keys_to_change = []
         for key in keys_to_consider:
             # print key, eval(key)
             if self.__dict__[key] is not None:
                 self.keys_to_change.append(key)
+
 
 # tell the infrastructure to give us mstransformed data when possible by
 # registering our preference for imaging measurement sets

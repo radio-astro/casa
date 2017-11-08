@@ -97,7 +97,7 @@ class MaskDeviation(object):
         with casatools.MSReader(vis) as myms:
             mssel['baseline'] = '%s&&&'%(antenna)
             myms.msselect(mssel)
-            r = myms.getdataold([colname, 'flag'])
+            r = myms.getdata([colname, 'flag'])
             npol, nchan, nrow = r['flag'].shape
             self.nrow = npol * nrow
             self.nchan = nchan
