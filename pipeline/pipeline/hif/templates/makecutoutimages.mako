@@ -87,7 +87,7 @@ $(document).ready(function() {
   <tr style="font-weight:bold; background-color:#ccffff">
     <td></td>
     <td>pbcor restored</td>
-    <td>residual</td>
+    <td>pbcor residual</td>
   </tr>
   <tr>
     <td style="font-weight:bold; background-color:#ccffff">max</td>

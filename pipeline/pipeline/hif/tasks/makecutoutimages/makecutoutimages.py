@@ -86,7 +86,7 @@ class Makecutoutimages(basetask.StandardTaskTemplate):
         for imageitem in imlist:
             imagenames.extend(glob.glob(imageitem['imagename'].replace('.image', '.image.pbcor') + '*'))
             imagenames.extend(glob.glob(imageitem['imagename'].replace('.image', '.psf') + '*'))
-            imagenames.extend(glob.glob(imageitem['imagename'].replace('.image', '.residual') + '*'))
+            imagenames.extend(glob.glob(imageitem['imagename'].replace('.image', '.image.residual.pbcor') + '*'))
             imagenames.extend(glob.glob(imageitem['imagename'].replace('.image', '.pb') + '*'))
 
         # tt0 images only

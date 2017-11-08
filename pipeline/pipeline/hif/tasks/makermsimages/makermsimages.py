@@ -93,7 +93,7 @@ class Makermsimages(basetask.StandardTaskTemplate):
         rmsimagenames = []
 
         for imagename in imagenames:
-            if not os.path.exists(imagename + '.rms'):
+            if not os.path.exists(imagename + '.rms') and 'residual' not in imagename:
                 rmsimagename = imagename + '.rms'
                 LOG.info("Imagename: " + rmsimagename)
                 taskresult = self._do_imdev(imagename)

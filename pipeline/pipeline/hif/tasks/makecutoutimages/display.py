@@ -62,7 +62,7 @@ class CutoutimagesSummary(object):
                     # get fraction of pixels <= 200 micro Jy VLASS technical requirement.  ignore 0 (masked) values.
                     self.result.RMSfraction200 = (np.count_nonzero((arr != 0) & (arr <= 200e-6)) /
                                                   float(arr.size)) * 100
-            elif 'residual.tt' in subimagename:
+            elif 'residual.pbcor.tt' in subimagename and not subimagename.endswith('.rms'):
                 plot_wrappers.append(sky.SkyDisplay().plot(self.context, subimagename,
                                                            reportdir=stage_dir, intent='',
                                                            collapseFunction='mean'))
