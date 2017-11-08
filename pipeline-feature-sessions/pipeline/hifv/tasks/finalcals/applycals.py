@@ -24,10 +24,10 @@ class ApplycalsInputs(applycal.IFApplycalInputs):
                  # data selection arguments
                  field=None, spw=None, antenna=None, intent=None,
                  # preapply calibrations
-                 opacity=None, parang=None, applymode=None, calwt=None,
+                 parang=None, applymode=None, calwt=None,
                  flagbackup=None, flagsum=None, flagdetailedsum=None, gainmap=None):
         super(ApplycalsInputs, self).__init__(context, output_dir=output_dir, vis=vis, field=field, spw=spw,
-                                              antenna=antenna, intent=intent, opacity=opacity, parang=parang,
+                                              antenna=antenna, intent=intent, parang=parang,
                                               applymode=applymode, flagbackup=flagbackup, flagsum=flagsum,
                                               flagdetailedsum=flagdetailedsum)
         self.calwt = calwt
