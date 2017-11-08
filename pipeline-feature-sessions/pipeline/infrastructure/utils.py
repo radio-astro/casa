@@ -474,15 +474,20 @@ def range_to_list(arg):
     return list(atoms.parseString(str(arg)))
 
 
-def collect_properties(instance, ignore=[]):
+def collect_properties(instance, ignore=None):
     """
     Return the public properties of an object as a dictionary
     """
+    if ignore is None:
+        ignore = []
     skip = ['context', 'ms']
     skip.extend(ignore)
     properties = {}
     for dd_name, dd in inspect.getmembers(instance.__class__, inspect.isdatadescriptor):
         if dd_name.startswith('_') or dd_name in skip:
+            continue
+        # Hidden VDP properties should not be included
+        if getattr(dd, 'hidden', False) is True:
             continue
         try:
             properties[dd_name] = getattr(instance, dd_name)
