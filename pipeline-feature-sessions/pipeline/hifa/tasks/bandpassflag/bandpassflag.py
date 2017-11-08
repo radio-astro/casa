@@ -17,6 +17,7 @@ from pipeline.hif.tasks import gaincal
 from pipeline.hifa.tasks import bandpass
 from pipeline.infrastructure import casa_tasks
 from .resultobjects import BandpassflagResults
+from ..bandpass.almaphcorbandpass import ALMAPhcorBandpassInputs
 
 
 __all__ = [
@@ -28,7 +29,7 @@ __all__ = [
 LOG = infrastructure.get_logger(__name__)
 
 
-class BandpassflagInputs(bandpass.ALMAPhcorBandpass.Inputs):
+class BandpassflagInputs(ALMAPhcorBandpassInputs):
     """
     BandpassflagInputs defines the inputs for the Bandpassflag pipeline task.
     """
@@ -74,8 +75,6 @@ class BandpassflagInputs(bandpass.ALMAPhcorBandpass.Inputs):
     # tooManyIntegrationsFraction
     tmint = vdp.VisDependentProperty(default=0.085)
 
-    # TODO: can uvrange be hidden? (inherited from VdpCommonCalibrationInputs).
-
     def __init__(self, context, output_dir=None, vis=None, caltable=None, intent=None, field=None, spw=None,
                  antenna=None, hm_phaseup=None, phaseupsolint=None, phaseupbw=None, phaseupsnr=None, phaseupnsols=None,
                  hm_bandpass=None, solint=None, maxchannels=None, evenbpints=None, bpsnr=None, bpnsols=None,
@@ -97,6 +96,13 @@ class BandpassflagInputs(bandpass.ALMAPhcorBandpass.Inputs):
         self.antblnegsig = antblnegsig
         self.antblpossig = antblpossig
         self.relaxed_factor = relaxed_factor
+
+    def as_dict(self):
+        # temporary workaround to hide uvrange from Input Parameters accordion
+        d = super(BandpassflagInputs, self).as_dict()
+        if 'uvrange' in d:
+            del d['uvrange']
+        return d
 
 
 class Bandpassflag(basetask.StandardTaskTemplate):
