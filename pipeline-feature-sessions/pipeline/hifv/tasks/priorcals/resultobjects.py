@@ -21,9 +21,9 @@ class PriorcalsResults(basetask.Results):
         super(PriorcalsResults, self).__init__()
         
         self.vis = None
-        self.pool = pool[:]
-        self.final = final[:]
-        self.preceding = preceding[:]
+        self.pool = pool
+        self.final = final
+        self.preceding = preceding
         self.error = set()
 
         self.gc_result = gc_result

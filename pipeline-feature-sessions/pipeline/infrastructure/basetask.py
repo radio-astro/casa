@@ -21,7 +21,6 @@ import types
 import uuid
 
 from . import api
-from . import argmapper
 from . import casatools
 from . import filenamer
 from . import jobrequest
@@ -31,7 +30,6 @@ from . import pipelineqa
 from . import project
 from . import utils
 from . import vdp
-import pipeline.extern.decorator as decorator
 
 LOG = logging.get_logger(__name__)
 
@@ -692,7 +690,7 @@ class Results(api.Results):
             # cannot import at initial import time due to cyclic dependency
             import pipeline.infrastructure.renderer.htmlrenderer as htmlrenderer
             htmlrenderer.WebLogGenerator.render(context)
-            
+
     def _check_for_remerge(self, context):
         """
         Check whether this result has already been added to the given context. 
@@ -1069,6 +1067,10 @@ class StandardTaskTemplate(api.Task):
             container = self.inputs
 
             LOG.info('Equivalent CASA call: %s', container._pipeline_casa_task)
+
+            LOG.todo('remove subtask_counter hack')
+            if self.__class__.__name__ == 'Priorcals':
+                container._context.subtask_counter += 1
 
             results = ResultsList()
 

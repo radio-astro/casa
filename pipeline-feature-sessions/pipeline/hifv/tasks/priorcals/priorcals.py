@@ -310,7 +310,6 @@ class Priorcals(basetask.StandardTaskTemplate):
 
     def _do_antpos(self):
         """Run hif_antpos to correct for antenna positions"""
-
         inputs = Antpos.Inputs(self.inputs.context, output_dir='')
         task = Antpos(inputs)
         result = self._executor.execute(task)

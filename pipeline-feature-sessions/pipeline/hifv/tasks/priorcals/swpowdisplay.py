@@ -14,7 +14,7 @@ class swpowSummaryChart(object):
         self.context = context
         self.result = result
         self.ms = context.observing_run.get_ms(result.inputs['vis'])
-        self.caltable = result.sw_result[0].final[0].gaintable
+        self.caltable = result.sw_result.final[0].gaintable
 
     def plot(self):
         ##science_spws = self.ms.get_spectral_windows(science_windows_only=True)
@@ -70,7 +70,7 @@ class swpowPerAntennaChart(object):
         self.ms = context.observing_run.get_ms(result.inputs['vis'])
         ms = self.ms
         self.yaxis = yaxis
-        self.caltable = result.sw_result[0].final[0].gaintable
+        self.caltable = result.sw_result.final[0].gaintable
 
 
         self.json = {}
@@ -118,9 +118,9 @@ class swpowPerAntennaChart(object):
 
             if not os.path.exists(figfile):
                 try:
-                    LOG.info("Switched Power Plot, using antenna={!s} and spw={!s}".format(antPlot,self.result.sw_result[0].spw))
+                    LOG.info("Switched Power Plot, using antenna={!s} and spw={!s}".format(antPlot,self.result.sw_result.spw))
                     casa.plotcal(caltable=self.caltable, xaxis='time', yaxis=self.yaxis, poln='', field='',
-                                 antenna=antPlot, spw=self.result.sw_result[0].spw, timerange='', subplot=111, overplot=False, clearpanel='Auto',
+                                 antenna=antPlot, spw=self.result.sw_result.spw, timerange='', subplot=111, overplot=False, clearpanel='Auto',
                                  iteration='antenna', plotrange=plotrange, showflags=False, plotsymbol='o',
                                  plotcolor='blue', markersize=5.0, fontsize=10.0, showgui=False, figfile=figfile)
                     # plots.append(figfile)
