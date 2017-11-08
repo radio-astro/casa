@@ -18,11 +18,27 @@ import commands
 import time
 import string
 import re
+import collections
+
+mapper = collections.defaultdict(lambda x: '', 
+                                 h='generic',
+                                 hif='generic interferometric',
+                                 hifa='ALMA-specific interferometric',
+                                 hifv='VLA-specific interferometric',
+                                 hsd='single-dish')
+    
+def get_task_description(prefix):
+    modifier = mapper[prefix]
+    if len(modifier) == 0:
+        return 'tasks'
+    else:
+        return '{0} tasks'.format(modifier)
 
 class taskutil( object ):
-    def __init__( self, dirname='', title='' ):
+    def __init__( self, dirname='', title='', prefix=None ):
         self.taskdir=dirname
         self.title=title
+        self.prefix = prefix
         self.tasks=[]
         
     def createtasklist( self ):
@@ -165,7 +181,7 @@ class taskutil( object ):
         tasklist=self.gettasklist()
         f=open( outdir+'/'+htmlfile, 'w' )
         print >> f, '<HTML><BODY>'
-        print >> f, '<H1>Summary of tasks and parameters</H1>'
+        print >> f, '<H1>Summary of {0} and parameters</H1>'.format(get_task_description(self.prefix))
         print >> f, '<HR>'
         for i in xrange(len(tasklist)):
             print >> f, '<H3><A NAME="%s">%s</A></H3>'%(tasklist[i],tasklist[i])
@@ -219,8 +235,7 @@ class taskutil( object ):
 
 class taskutil2( taskutil ):
     def __init__( self, dirname='', title='', prefix=None ):
-        super(taskutil2,self).__init__( dirname=dirname, title=title )
-        self.prefix = prefix
+        super(taskutil2,self).__init__( dirname=dirname, title=title, prefix=prefix )
 
     def createtasklist( self ):
         s=commands.getoutput('ls '+self.taskdir+'/*.xml')
@@ -323,10 +338,13 @@ class hetaskutil2( hetaskutil ):
 class hetaskutil3( hetaskutil ):
     def __init__( self, dirname='', cli='' ):
         super(hetaskutil3,self).__init__(dirname=dirname)
-        self.addmodule('h', 'Common')
+        self.addmodule('h', 'Generic')
         self.addmodule('hifa', 'Interferometry ALMA')
-        self.addmodule('hifv', 'Interferometry EVLA')
-        self.addmodule('hif', 'Interferometry Common')
+        self.addmodule('hifv', 'Interferometry VLA')
+        self.addmodule('hif', 'Interferometry Generic')
+        # TODO: should be uncommented when NRO specific tasks are available
+        #self.addmodule('hsd', 'Single-dish ALMA')
+        #self.addmodule('hsdn', 'Single-dish NRO')
 
 def create( dirname='/home/nakazato/ALMA/PIPELINE/Heuristics/src/heuristics' ):
     het=hetaskutil( dirname=dirname )
