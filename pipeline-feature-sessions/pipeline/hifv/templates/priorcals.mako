@@ -16,7 +16,7 @@ using the CASA task <b>gencal</b>.</p>
 	Gain curve table written to:
 	
 	%for single_result in result:
-	    <p><b>${single_result.gc_result.inputs['caltable']}</b></p>
+	    <p><b>${os.path.basename(single_result.gc_result.inputs['caltable'])}</b></p>
         %endfor
 
 
@@ -31,7 +31,7 @@ using the CASA task <b>gencal</b>.</p>
                 Opacities written to:
                 
                 %for single_result in result:
-                        <p><b>${single_result.oc_result.inputs['caltable']}</b></p>
+                        <p><b>${os.path.basename(single_result.oc_result.inputs['caltable'])}</b></p>
                 %endfor
                 
                 <p>
@@ -86,7 +86,7 @@ using the CASA task <b>gencal</b>.</p>
                 <b>No antenna position corrections to apply.</b>
             % else:
                 Antenna position corrections written to:
-                <p><b>${single_result.antpos_result.final[0].gaintable}</b></p>
+                <p><b>${os.path.basename(single_result.antpos_result.final[0].gaintable)}</b></p>
                 <table class="table table-bordered table-striped table-condensed"
 	                   summary="Summary of gencal opacities">
 	               <caption>Antenna Position Corrections</caption>
@@ -116,7 +116,7 @@ using the CASA task <b>gencal</b>.</p>
 	Requantizer gains written to:
 	
 	%for single_result in result:
-	    <p><b>${single_result.rq_result.inputs['caltable']}</b></p>
+	    <p><b>${os.path.basename(single_result.rq_result.inputs['caltable'])}</b></p>
     %endfor
 
 
@@ -126,7 +126,7 @@ using the CASA task <b>gencal</b>.</p>
 	    TEC Caltable written to:
 
 	    %for single_result in result:
-	        <p><b>${single_result.tecmaps_result.inputs['caltable']}</b></p>
+	        <p><b>${os.path.basename(single_result.tecmaps_result.inputs['caltable'])}</b></p>
         %endfor
         <br>
         TEC Images written to:
@@ -144,7 +144,7 @@ using the CASA task <b>gencal</b>.</p>
         <h2>Switched Power plots</h2>
         Switched Power table written to:
         %for single_result in result:
-	        <p><b>${single_result.sw_result.inputs['caltable']}</b></p>
+	        <p><b>${os.path.basename(single_result.sw_result.inputs['caltable'])}</b></p>
         %endfor
         This table is NOT applied or added to the pipeline context callibrary.
 
