@@ -55,7 +55,7 @@ class WvrgcalInputs(vdp.StandardInputs):
     # intent.
     qa_bandpass_intent = vdp.VisDependentProperty(default='')
     qa_intent = vdp.VisDependentProperty(default='')
-    qa_spw = vdp.VisDependentProperty(default='')
+    qa_spw = vdp.VisDependentProperty(default='', hidden=True)
     scale = vdp.VisDependentProperty(default=1.0)
     segsource = vdp.VisDependentProperty(default=True)
     smooth = vdp.VisDependentProperty(default='')
