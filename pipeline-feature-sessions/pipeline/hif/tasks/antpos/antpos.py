@@ -58,7 +58,10 @@ class AntposInputs(vdp.StandardInputs):
     antenna = vdp.VisDependentProperty(default='')
     antposfile = vdp.VisDependentProperty(default='antennapos.csv')
     hm_antpos = vdp.VisDependentProperty(default='manual')
-    offsets = vdp.VisDependentProperty(default=[])
+
+    @vdp.VisDependentProperty
+    def offsets(self):
+        return []
 
     @vdp.VisDependentProperty
     def caltable(self):
