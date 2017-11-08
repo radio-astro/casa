@@ -59,8 +59,15 @@ class WvrgcalInputs(vdp.StandardInputs):
     scale = vdp.VisDependentProperty(default=1.0)
     segsource = vdp.VisDependentProperty(default=True)
     smooth = vdp.VisDependentProperty(default='')
-    sourceflag = vdp.VisDependentProperty(default=[])
-    tie = vdp.VisDependentProperty(default=[])
+
+    @vdp.VisDependentProperty
+    def sourceflag(self):
+        return []
+
+    @vdp.VisDependentProperty
+    def tie(self):
+        return []
+
     toffset = vdp.VisDependentProperty(default=0)
 
     @vdp.VisDependentProperty

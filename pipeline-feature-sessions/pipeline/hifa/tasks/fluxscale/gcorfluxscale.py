@@ -57,7 +57,10 @@ class GcorFluxscaleInputs(fluxscale.FluxscaleInputs):
     def reffile(self):
         return os.path.join(self.context.output_dir, 'flux.csv')
 
-    refspwmap = vdp.VisDependentProperty(default=[])
+    @vdp.VisDependentProperty
+    def refspwmap(self):
+        return []
+
     solint = vdp.VisDependentProperty(default='inf')
     uvrange = vdp.VisDependentProperty(default='')
 
