@@ -112,7 +112,7 @@ def do_bandpass(vis, caltable, context=None, RefAntOutput=None, spw=None, ktypec
     #minBL_for_cal = max(3,int(len(m.antennas)/2.0))
     minBL_for_cal = m.vla_minbaselineforcal()
 
-    BPGainTables = list(context.callibrary.active.get_caltable())
+    BPGainTables = sorted(context.callibrary.active.get_caltable())
     BPGainTables.append(ktypecaltable)
     BPGainTables.append(bpdgain_touse)
 
