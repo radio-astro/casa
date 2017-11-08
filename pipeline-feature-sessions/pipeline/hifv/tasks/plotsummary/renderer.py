@@ -374,7 +374,7 @@ class T2_4MDetailsplotsummaryRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
                 amp_vs_uv_summary_plots[vis][source_id] = plots
             '''
 
-            if pipeline.infrastructure.generate_detail_plots(result):
+            if pipeline.infrastructure.generate_detail_plots(results):
                 LOG.info("RENDERER_DETAIL_INFORMATION")
                 scans = ms.get_scans(scan_intent='TARGET')
                 fields = set()
