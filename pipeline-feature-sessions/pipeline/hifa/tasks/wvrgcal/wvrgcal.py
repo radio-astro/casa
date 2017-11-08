@@ -36,7 +36,7 @@ class WvrgcalInputs(vdp.StandardInputs):
     WvrgcalInputs defines the inputs for the Wvrgcal pipeline task.
     """
     accept_threshold = vdp.VisDependentProperty(default=1.0)
-    bandpass_result = vdp.VisDependentProperty(default='')
+    bandpass_result = vdp.VisDependentProperty(default='', hidden=True)
     disperse = vdp.VisDependentProperty(default=False)
     hm_smooth = vdp.VisDependentProperty(default='automatic')
     hm_tie = vdp.VisDependentProperty(default='automatic')
@@ -44,7 +44,7 @@ class WvrgcalInputs(vdp.StandardInputs):
     maxdistm = vdp.VisDependentProperty(default=500.0)
     minnumants = vdp.VisDependentProperty(default=2)
     mingoodfrac = vdp.VisDependentProperty(default=0.8)
-    nowvr_result = vdp.VisDependentProperty(default='')
+    nowvr_result = vdp.VisDependentProperty(default='', hidden=True)
     nsol = vdp.VisDependentProperty(default=1)
     # Default for offsetstable is blank, which means the wvrgcal task will not
     # apply any offsets.
