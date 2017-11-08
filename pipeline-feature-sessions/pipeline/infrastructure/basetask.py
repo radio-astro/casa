@@ -1004,6 +1004,9 @@ class StandardTaskTemplate(api.Task):
             if handler:
                 logging.remove_handler(handler)
 
+            # delete the executor so that the pickled context can be released
+            self._executor = None
+
     def _handle_multiple_vis(self, dry_run, **parameters):
         """
         Handle a single task invoked for multiple measurement sets.
