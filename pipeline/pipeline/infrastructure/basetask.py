@@ -837,7 +837,19 @@ class Results(api.Results):
             # cannot import at initial import time due to cyclic dependency
             import pipeline.infrastructure.renderer.htmlrenderer as htmlrenderer
             htmlrenderer.WebLogGenerator.render(context)
-            
+
+        if task_completed and LOG.isEnabledFor(logging.DEBUG):
+            basename = 'context-stage%s.pickle' % self.stage_number
+            path = os.path.join(context.output_dir,
+                                context.name,
+                                'saved_state',
+                                basename)
+
+            utils.mkdir_p(os.path.dirname(path))
+            with open(path, 'wb') as outfile:
+                pickle.dump(result, outfile, -1)
+
+
     def _check_for_remerge(self, context):
         """
         Check whether this result has already been added to the given context. 
