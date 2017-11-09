@@ -5,7 +5,6 @@ import os
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.casatools as casatools
 
-#from pipeline.infrastructure import displays as displays
 from pipeline.h.tasks.common.displays import sky as sky
 
 LOG = infrastructure.get_logger(__name__)
@@ -30,10 +29,9 @@ class RmsimagesSummary(object):
         plot_wrappers = []
 
         for rmsimagename in self.result.rmsimagenames:
-            #plot_wrappers.append(displays.SkyDisplay().plot(self.context, rmsimagename,
             plot_wrappers.append(sky.SkyDisplay().plot(self.context, rmsimagename,
-                                                            reportdir=stage_dir, intent='',
-                                                            collapseFunction='mean'))
+                                                       reportdir=stage_dir, intent='',
+                                                       collapseFunction='mean'))
 
             with casatools.ImageReader(rmsimagename) as image:
                 stats = image.statistics(robust=True)

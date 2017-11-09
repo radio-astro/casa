@@ -2,12 +2,10 @@ from __future__ import absolute_import
 import os
 import glob
 
-
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 from pipeline.infrastructure import casa_tasks
 import pipeline.infrastructure.imagelibrary as imagelibrary
-
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -26,7 +24,6 @@ class MakermsimagesResults(basetask.Results):
             rmsimagelist = []
         if rmsimagenames is None:
             rmsimagenames = []
-
 
         self.pool = pool[:]
         self.final = final[:]
@@ -50,21 +47,18 @@ class MakermsimagesResults(basetask.Results):
         for rmsitem in self.rmsimagelist:
             try:
                 imageitem = imagelibrary.ImageItem(
-                  imagename=rmsitem['imagename'] + '.rms', sourcename=rmsitem['sourcename'],
-                  spwlist=rmsitem['spwlist'], specmode=rmsitem['specmode'],
-                  sourcetype=rmsitem['sourcetype'],
-                  multiterm=rmsitem['multiterm'],
-                  imageplot=rmsitem['imageplot'])
+                    spwlist=rmsitem['spwlist'], specmode=rmsitem['specmode'],
+                    sourcetype=rmsitem['sourcetype'],
+                    multiterm=rmsitem['multiterm'],
+                    imageplot=rmsitem['imageplot'])
                 context.rmsimlist.add_item(imageitem)
                 if 'TARGET' in rmsitem['sourcetype']:
-                    print 'ADDED IMAGE ITEM'
+                    print('ADDED IMAGE ITEM')
                     context.rmsimlist.add_item(imageitem)
             except:
                 pass
 
     def __repr__(self):
-        #return 'MakermsimagesResults:\n\t{0}'.format(
-        #    '\n\t'.join([ms.name for ms in self.mses]))
         return 'MakermsimagesResults:'
 
 
@@ -96,7 +90,7 @@ class Makermsimages(basetask.StandardTaskTemplate):
             if not os.path.exists(imagename + '.rms') and 'residual' not in imagename:
                 rmsimagename = imagename + '.rms'
                 LOG.info("Imagename: " + rmsimagename)
-                taskresult = self._do_imdev(imagename)
+                _ = self._do_imdev(imagename)
                 rmsimagenames.append(rmsimagename)
 
         LOG.info("RMS IMAGE NAMES:" + ','.join(rmsimagenames))
@@ -109,24 +103,24 @@ class Makermsimages(basetask.StandardTaskTemplate):
     def _do_imdev(self, imagename):
 
         # Quicklook parameters
-        imdevparams = {'imagename' : imagename,
-                       'outfile'   : imagename + '.rms',
-                       'region'    : "",
-                       'box'       : "",
-                       'chans'     : "",
-                       'stokes'    : "",
-                       'mask'      : "",
-                       'overwrite' : True,
-                       'stretch'   : False,
-                       'grid'      : [10, 10],
-                       'anchor'    : "ref",
-                       'xlength'   : "60arcsec",
-                       'ylength'   : "60arcsec",
-                       'interp'    : "cubic",
-                       'stattype'  : "xmadm",
-                       'statalg'   : "chauvenet",
-                       'zscore'    : -1,
-                       'maxiter'   : -1
+        imdevparams = {'imagename': imagename,
+                       'outfile': imagename + '.rms',
+                       'region': "",
+                       'box': "",
+                       'chans': "",
+                       'stokes': "",
+                       'mask': "",
+                       'overwrite': True,
+                       'stretch': False,
+                       'grid': [10, 10],
+                       'anchor': "ref",
+                       'xlength': "60arcsec",
+                       'ylength': "60arcsec",
+                       'interp': "cubic",
+                       'stattype': "xmadm",
+                       'statalg': "chauvenet",
+                       'zscore': -1,
+                       'maxiter': -1
                        }
 
         task = casa_tasks.imdev(**imdevparams)

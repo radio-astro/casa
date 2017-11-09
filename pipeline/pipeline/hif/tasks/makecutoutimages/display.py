@@ -19,7 +19,6 @@ class CutoutimagesSummary(object):
     def __init__(self, context, result):
         self.context = context
         self.result = result
-        # self.image_stats = image_stats
 
     def plot(self):
         stage_dir = os.path.join(self.context.report_dir,
@@ -71,8 +70,8 @@ class CutoutimagesSummary(object):
 
             elif 'pb.tt' in subimagename:
                 plot_wrappers.append(sky.SkyDisplay().plot(self.context, subimagename,
-                                           reportdir=stage_dir, intent='',
-                                           collapseFunction='mean'))
+                                                           reportdir=stage_dir, intent='',
+                                                           collapseFunction='mean'))
                 with casatools.ImageReader(subimagename) as image:
                     self.result.pb_stats = image.statistics(robust=True)
 
