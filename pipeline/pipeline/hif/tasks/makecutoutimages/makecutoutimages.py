@@ -47,12 +47,11 @@ class MakecutoutimagesResults(basetask.Results):
         for subitem in self.subimagelist:
             try:
                 imageitem = imagelibrary.ImageItem(
-                  imagename=subitem['imagename'] + '.subim', sourcename=subitem['sourcename'],
-                  spwlist=subitem['spwlist'], specmode=subitem['specmode'],
-                  sourcetype=subitem['sourcetype'],
-                  multiterm=subitem['multiterm'],
-                  imageplot=subitem['imageplot'])
-                context.subimlist.add_item(imageitem)
+                    imagename=subitem['imagename'] + '.subim', sourcename=subitem['sourcename'],
+                    spwlist=subitem['spwlist'], specmode=subitem['specmode'],
+                    sourcetype=subitem['sourcetype'],
+                    multiterm=subitem['multiterm'],
+                    imageplot=subitem['imageplot'])
                 if 'TARGET' in subitem['sourcetype']:
                     print('ADDED IMAGE ITEM')
                     context.subimlist.add_item(imageitem)

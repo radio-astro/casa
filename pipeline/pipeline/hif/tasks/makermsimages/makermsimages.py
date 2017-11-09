@@ -52,7 +52,6 @@ class MakermsimagesResults(basetask.Results):
                     sourcetype=rmsitem['sourcetype'],
                     multiterm=rmsitem['multiterm'],
                     imageplot=rmsitem['imageplot'])
-                context.rmsimlist.add_item(imageitem)
                 if 'TARGET' in rmsitem['sourcetype']:
                     print('ADDED IMAGE ITEM')
                     context.rmsimlist.add_item(imageitem)
