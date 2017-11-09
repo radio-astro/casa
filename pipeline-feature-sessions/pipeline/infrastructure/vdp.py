@@ -496,18 +496,26 @@ class InputsContainer(object):
 
         if not isinstance(val, (list, tuple)):
             val = [val] * len(self._active_instances)
-        null_markers = [VisDependentProperty.NULL.convert(v) for v in val]
 
-        for inputs, user_arg in zip(self._active_instances, null_markers):
-            prop = getattr(inputs.__class__, name)
+        for inputs, user_arg in zip(self._active_instances, val):
+            # some properties may be instance values and not data descriptors
+            # on the class, hence the None default
+            prop = getattr(inputs.__class__, name, None)
 
-            # convert property if it's not null
-            if getattr(prop, 'fconvert', None) is not None:
-                if user_arg != VisDependentProperty.NULL:
-                    user_arg = prop.fconvert(inputs, user_arg)
+            # convert null equivalent values to NULL marker. Only VDP knows
+            # how to handle these, so ensure the property is of the
+            # appropriate type before conversion.
+            if isinstance(prop, VisDependentProperty):
+                null_marker = VisDependentProperty.NULL.convert(user_arg)
+
+                # convert property if it's not null
+                if getattr(prop, 'fconvert', None) is not None:
+                    if null_marker != VisDependentProperty.NULL:
+                        user_arg = prop.fconvert(inputs, user_arg)
 
             if LOG.isEnabledFor(logging.TRACE):
                 LOG.trace('Setting {!s}.{!s} = {!r}'.format(inputs.__class__.__name__, name, user_arg))
+
             setattr(inputs, name, user_arg)
 
     def __repr__(self):
