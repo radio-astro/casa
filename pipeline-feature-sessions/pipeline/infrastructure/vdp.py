@@ -414,16 +414,17 @@ class InputsContainer(object):
 
     @vis.setter
     def vis(self, vis):
-        # reset to all MSes if the input arg signals a reset
-        if VisDependentProperty.NULL.convert(vis) == VisDependentProperty.NULL:
-            vis = self._cls_instances.keys()
-
         # for multivis tasks, all we should do is set vis on the contained
         # inputs. As there only ever one active inputs instance, nothing
         # further processing is required so we can exit.
         if self._multivis:
             setattr(self._active_instances[0], 'vis', vis)
             return
+
+        # reset to all MSes if the input arg signals a reset, which expands
+        # task scope to all MSes
+        if VisDependentProperty.NULL.convert(vis) == VisDependentProperty.NULL:
+            vis = self._cls_instances.keys()
 
         # the key for inputs instances is the basename vis
         basenames = [os.path.basename(v) for v in vis]
