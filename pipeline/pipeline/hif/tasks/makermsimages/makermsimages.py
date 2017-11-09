@@ -47,6 +47,7 @@ class MakermsimagesResults(basetask.Results):
         for rmsitem in self.rmsimagelist:
             try:
                 imageitem = imagelibrary.ImageItem(
+                    imagename=rmsitem['imagename'] + '.rms', sourcename=rmsitem['sourcename'],
                     spwlist=rmsitem['spwlist'], specmode=rmsitem['specmode'],
                     sourcetype=rmsitem['sourcetype'],
                     multiterm=rmsitem['multiterm'],
