@@ -65,7 +65,7 @@ class ApplycalInputs(vdp.StandardInputs):
         return ','.join([str(spw.id) for spw in science_spws])
 
     def __init__(self, context, output_dir=None, vis=None, field=None, spw=None, antenna=None, intent=None,
-                 parang=None, applymode=None, flagbackup=None, flagsum=None, flagdetailedsum=None):
+                 opacity=None, parang=None, applymode=None, flagbackup=None, flagsum=None, flagdetailedsum=None):
         super(ApplycalInputs, self).__init__()
 
         # pipeline inputs
@@ -81,6 +81,7 @@ class ApplycalInputs(vdp.StandardInputs):
         self.intent = intent
 
         # solution parameters
+        self.opacity = opacity
         self.parang = parang
         self.applymode = applymode
         self.flagbackup = flagbackup
