@@ -18,13 +18,11 @@ class UVcontSubInputs(applycal.ApplycalInputs):
     flagsum = vdp.VisDependentProperty(default=False)
     intent = vdp.VisDependentProperty(default='TARGET')
 
-    def __init__(self, context, output_dir=None, vis=None, field=None, spw=None, antenna=None, intent=None,
-                 opacity=None, parang=None, applymode=None, flagbackup=None, flagsum=None, flagdetailedsum=None):
+    def __init__(self, context, output_dir=None, vis=None, field=None, spw=None, antenna=None, intent=None, parang=None,
+                 applymode=None, flagbackup=None, flagsum=None, flagdetailedsum=None):
         super(UVcontSubInputs, self).__init__(context, output_dir=output_dir, vis=vis, field=field, spw=spw,
-                                              antenna=antenna, intent=intent, opacity=opacity, parang=parang,
-                                              applymode=applymode, flagbackup=flagbackup, flagsum=flagsum,
-                                              flagdetailedsum=flagdetailedsum)
-
+                                              antenna=antenna, intent=intent, parang=parang, applymode=applymode,
+                                              flagbackup=flagbackup, flagsum=flagsum, flagdetailedsum=flagdetailedsum)
 
 # Register this as an imaging MS(s) preferred task
 api.ImagingMeasurementSetsPreferred.register(UVcontSubInputs)
