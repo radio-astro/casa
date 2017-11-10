@@ -314,13 +314,11 @@ class HpcApplycalInputs(ApplycalInputs):
     # use common implementation for parallel inputs argument
     parallel = sessionutils.parallel_inputs_impl()
 
-    def __init__(self, context, output_dir=None, vis=None, field=None, spw=None, antenna=None, intent=None,
-                 opacity=None, parang=None, applymode=None, flagbackup=None, flagsum=None, flagdetailedsum=None,
-                 parallel=None):
+    def __init__(self, context, output_dir=None, vis=None, field=None, spw=None, antenna=None, intent=None, parang=None,
+                 applymode=None, flagbackup=None, flagsum=None, flagdetailedsum=None, parallel=None):
         super(HpcApplycalInputs, self).__init__(context, output_dir=output_dir, vis=vis, field=field, spw=spw,
-                                                antenna=antenna, intent=intent, opacity=opacity, parang=parang,
-                                                applymode=applymode, flagbackup=flagbackup, flagsum=flagsum,
-                                                flagdetailedsum=flagdetailedsum)
+                                                antenna=antenna, intent=intent, parang=parang, applymode=applymode,
+                                                flagbackup=flagbackup, flagsum=flagsum, flagdetailedsum=flagdetailedsum)
         self.parallel = parallel
 
 
