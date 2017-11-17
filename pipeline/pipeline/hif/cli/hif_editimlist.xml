@@ -118,10 +118,22 @@
                 <value/>
             </param>
 
-            <param type="string" name="robust">
-                <description>Set the Briggs robustness factor for weighting.</description>
-                <value/>
+            <param type="double" name="robust" subparam="true">
+                <shortdescription>Robustness parameter</shortdescription>
+                <description>Robustness parameter for Briggs weighting.
+
+                    robust = -2.0 maps to uniform weighting.
+                    robust = +2.0 maps to natural weighting.
+                    (robust=0.5 is equivalent to robust=0.0 in AIPS IMAGR.)
+
+                </description>
+                <value type="double">1.0</value>
+                <allowed kind="range">
+                    <value range="min">-2.0</value>
+                    <value range="max">2.0</value>
+                </allowed>
             </param>
+
 
             <param type="string" name="scales">
                 <description>The scales for multi-scale imaging.</description>
