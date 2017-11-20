@@ -1,9 +1,10 @@
 from __future__ import absolute_import
 
-import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure as infrastructure
+import pipeline.infrastructure.basetask as basetask
 
-from pipeline.hif.tasks import applycal
+
+from ..finalcals import applycals
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -51,7 +52,7 @@ class PlotSummary(basetask.StandardTaskTemplate):
 
     def _do_plotsummary(self):
 
-        applycal_inputs = applycal.IFApplycal.Inputs(self.inputs.context,
+        applycal_inputs = applycals.ApplycalsInputs(self.inputs.context,
                                                      vis=self.inputs.vis,
                                                      field='',
                                                      spw='',
@@ -59,7 +60,7 @@ class PlotSummary(basetask.StandardTaskTemplate):
                                                      flagbackup=False,
                                                      calwt=False, flagsum=False, flagdetailedsum=False)
 
-        applycal_task = applycal.IFApplycal(applycal_inputs)
+        applycal_task = applycals.Applycals(applycal_inputs)
 
         result = applycal_task.execute(dry_run=True)
 
