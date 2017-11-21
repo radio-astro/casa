@@ -115,7 +115,8 @@ class Editimlist(basetask.StandardTaskTemplate):
 
         # this python class will produce a list of images to be calculated.
         inp = self.inputs
-        inpdict = inp.__dict__
+        inpdict = inp._initargs
+        LOG.debug(inp._initargs)
 
         # if a file is given, read whatever parameters are defined in the file
         if inp.parameter_file:
@@ -144,7 +145,7 @@ class Editimlist(basetask.StandardTaskTemplate):
         result = EditimlistResult()
 
         # will default to adding a new image list entry
-        inpdict['editmode'] = 'add' if not inpdict['editmode'] else inpdict['editmode']
+        inpdict.setdefault('editmode', 'add')
 
         # TODO think about how to handle multiple MSs
         # we use the ms to change field ids to fieldnames, if needed

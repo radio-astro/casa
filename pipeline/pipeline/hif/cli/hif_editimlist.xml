@@ -36,9 +36,9 @@
                 <value/>
             </param>
 
-            <param type="string" name="cycleniter">
+            <param type="int" name="cycleniter">
                 <description>Controls max number of minor cycle iterations in a single major cycle.</description>
-                <value/>
+                <value type="int">500</value>
             </param>
 
             <param type="string" name="deconvolver">
@@ -92,9 +92,9 @@
                 <value/>
             </param>
 
-            <param type="string" name="niter">
+            <param type="int" name="niter">
                 <description>Maximum number of clean iterations</description>
-                <value/>
+                <value type="int">20000</value>
             </param>
 
             <param type="int" name="nterms">
@@ -161,10 +161,20 @@
                 <value/>
             </param>
 
+        <param type="double" name="sensitivity">
+            <description/>
+            <value type="double">0.0</value>
+        </param>
+
 	    <param type="string" name="threshold">
 	        <description/>
                 <value/>
 	    </param>
+
+        <param type="double" name="threshold_nsigma">
+            <description/>
+            <value type="double">4.0</value>
+        </param>
 
             <param type="string" name="uvtaper">
                 <description>Used to set a uv-taper during clean.</description>
