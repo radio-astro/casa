@@ -40,19 +40,21 @@ class T2_4MDetailsSpwPhaseupRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
             applications.extend(self.get_gaincal_applications(context, result.phaseup_result, ms))
 
         ctx.update({
-            'spwmaps'     : spwmaps,
+            'spwmaps': spwmaps,
             'applications': applications
         })
 
     def get_gaincal_applications(self, context, result, ms):
         applications = []
-        
-        calmode_map = {'p':'Phase only',
-                       'a':'Amplitude only',
-                       'ap':'Phase and amplitude'}
+
+        calmode_map = {
+            'p': 'Phase only',
+            'a': 'Amplitude only',
+            'ap': 'Phase and amplitude'
+        }
         
         for calapp in result.final:
-            solint = calapp.origin.inputs['solint']
+            solint = utils.get_origin_input_arg(calapp, 'solint')
 
             if solint == 'inf':
                 solint = 'Infinite'
@@ -72,7 +74,8 @@ class T2_4MDetailsSpwPhaseupRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
             if to_intent == '':
                 to_intent = 'ALL'
 
-            calmode = calapp.origin.inputs['calmode']
+            calmode = utils.get_origin_input_arg(calapp, 'calmode')
+
             calmode = calmode_map.get(calmode, calmode)
             a = SpwPhaseupApplication(ms.basename, gaintable, solint, calmode,
                                    to_intent, spw)

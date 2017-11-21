@@ -22,7 +22,6 @@ import pipeline.infrastructure.utils as utils
 LOG = infrastructure.get_logger(__name__)
 
 class SetjyInputs(basetask.StandardInputs):
-    @basetask.log_equivalent_CASA_call
     def __init__(self, context, output_dir=None,
                  # some standard setjy selection parameters
                  vis=None, field=None, intent=None, spw=None,
@@ -132,7 +131,7 @@ class SetjyInputs(basetask.StandardInputs):
 
         # Warning if reference file was specified but not found.
         if not os.path.exists(self.reffile) and self.reffile not in ('', None):
-            LOG.warning('Flux reference file \'%s\' not found')
+            LOG.warning('Flux reference file not found: {!s}'.format(self.reffile))
 
         # Get the spectral window IDs for the spws specified by the inputs
         spws = self.ms.get_spectral_windows(self.spw)

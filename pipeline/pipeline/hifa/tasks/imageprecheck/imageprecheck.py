@@ -56,7 +56,6 @@ class ImagePreCheckResults(basetask.Results):
 
 
 class ImagePreCheckInputs(basetask.StandardInputs):
-    @basetask.log_equivalent_CASA_call
     def __init__(self, context, vis=None):
         # set the properties to the values given as input arguments
         self._init_properties(vars())
@@ -65,8 +64,7 @@ class ImagePreCheckInputs(basetask.StandardInputs):
 class ImagePreCheck(basetask.StandardTaskTemplate):
     Inputs = ImagePreCheckInputs
 
-    def is_multi_vis_task(self):
-        return True
+    is_multi_vis_task = True
 
     def prepare(self):
 
@@ -89,7 +87,7 @@ class ImagePreCheck(basetask.StandardTaskTemplate):
 
         repr_field = list(image_heuristics.field_intent_list('TARGET', repr_source))[0][0]
 
-        repr_ms = self.inputs.context.observing_run.get_ms(inputs.vis[0])
+        repr_ms = self.inputs.ms[0]
 
         # Get the array
         diameter = min([a.diameter for a in repr_ms.antennas])

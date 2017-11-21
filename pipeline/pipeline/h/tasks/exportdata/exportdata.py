@@ -112,7 +112,6 @@ class ExportDataInputs(basetask.StandardInputs):
 
      """
 
-    @basetask.log_equivalent_CASA_call
     def __init__(self, context, output_dir=None, session=None, vis=None, exportmses=None,
                  pprfile=None, calintents=None, calimages=None, targetimages=None,
                  products_dir=None ):
@@ -275,8 +274,7 @@ class ExportData(basetask.StandardTaskTemplate):
     Inputs = ExportDataInputs
 
     # Override the default behavior for multi-vis tasks
-    def is_multi_vis_task(self):
-        return True
+    is_multi_vis_task = True
 
     def prepare(self):
         """

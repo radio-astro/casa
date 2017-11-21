@@ -35,7 +35,6 @@ class SpwPhaseupInputs(gaincalmode.GaincalModeInputs):
     minfracmaxbw = basetask.property_with_default('minfracmaxbw', 0.8)
     samebb = basetask.property_with_default('samebb', True)
 
-    @basetask.log_equivalent_CASA_call
     def __init__(self, context, mode=None, caltable=None, intent=None, hm_spwmapmode=None,
         phasesnr=None, bwedgefrac=None, hm_nantennas=None, maxfracflagged=None,
         maxnarrowbw=None, minfracmaxbw=None, samebb=None, **parameters):

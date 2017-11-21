@@ -59,9 +59,13 @@ class CalApplication(object):
 
     def __init__(self, calto, calfrom, origin=None):
         self.calto = calto
-        if type(calfrom) is not types.ListType:
+
+        if not isinstance(calfrom, list):
             calfrom = [calfrom]
         self.calfrom = calfrom
+
+        if not isinstance(origin, list):
+            origin = [origin]
         self.origin = origin
 
     @staticmethod
@@ -1507,16 +1511,23 @@ def expand_calstate(calstate):
     # step 2: consolidate entries with identical calibrations
     consolidated = consolidate_calibrations(unmerged)
 
-    # step 3: convert integer ranges in data selection to friendlier CASA range
+    # step 3: take the list of (CalToArgs, [CalFrom]) tuples, taking any
+    # CalToArgs whose vis property targets multiple MSes and dividing them
+    # into n entries each targeting a single MS. This keeps the export data
+    # format more readable as each entry targets a single measurement set.
+    per_ms = [(CalToArgs({vis}, *cta[1:]), calfroms)
+              for cta, calfroms in consolidated for vis in cta.vis]
+
+    # step 4: convert integer ranges in data selection to friendlier CASA range
     # syntax, e.g.  [1,2,3,4,6,8] => ['1~4','6','8']
     casa_format = [(CalToArgs(vis=calto_args.vis,
                               antenna=sequence_to_casa_range(calto_args.antenna),
                               spw=sequence_to_casa_range(calto_args.spw),
                               field=calto_args.field,
                               intent=calto_args.intent), calfroms)
-                   for calto_args, calfroms in consolidated]
+                   for calto_args, calfroms in per_ms]
 
-    # step 4: convert each iterable argument to a comma-separated string
+    # step 5: convert each iterable argument to a comma-separated string
     return [(CalToArgs(*[safe_join(arg) for arg in calto_args]), calfroms)
             for calto_args, calfroms in casa_format]
 

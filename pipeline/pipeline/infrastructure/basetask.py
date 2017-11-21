@@ -21,10 +21,7 @@ import types
 import uuid
 
 from . import api
-from . import adapters
-from . import argmapper
 from . import casatools
-from . import callibrary
 from . import filenamer
 from . import jobrequest
 from . import launcher
@@ -33,7 +30,6 @@ from . import pipelineqa
 from . import project
 from . import utils
 from . import vdp
-import pipeline.extern.decorator as decorator
 
 LOG = logging.get_logger(__name__)
 
@@ -68,7 +64,10 @@ def result_finaliser(method):
     def finalise_pipeline_result(self, *args, **kw):
         result = method(self, *args, **kw)
 
-        if result is not None:
+        if isinstance(result, ResultsList) and len(result) == 0:
+            return result
+
+        elif result is not None:
             inputs = self.inputs
             result.inputs = inputs.as_dict()
             result.stage_number = inputs.context.task_counter
@@ -103,125 +102,16 @@ def capture_log(method):
             except:
                 LOG.trace('Could not set casalog property on result of type '
                           '%s' % result.__class__)
+
+        # To save space in the pickle, delete any inner CASA logs. The web
+        # log will only write the outer CASA log to disk
+        if isinstance(result, collections.Iterable):
+            for r in result:
+                if hasattr(r, 'casalog'):
+                    del r.casalog
+
         return result
     return capture
-
-
-def log_equivalent_CASA_call(func):
-    """
-    Create a signature-preserving decorator for recording equivalent CASA task
-    calls.
-    """
-    return decorator.decorator(_record_constructor_args, func)
-
-
-def _record_constructor_args(func, *args, **kwargs):
-    """
-    Inputs decorator to calculate the equivalent CASA task interface call and
-    record it to a file.
-
-    We want to create a 'script' of equivalent CASA task interface calls for
-    both PPR runs and interactive session. The CASA task interface itself is 
-    bypassed by the PPR (i.e. it creates and calls the Python implementation
-    directly) and when the Python classes are instantiated directly (see
-    recipereducer), so we need to reverse map both the Python class and 
-    arguments to the equivalent task interface call.
-
-    We do this by recording the creation of each Inputs class. Inputs created
-    when a task is not running must have been created via executeppr or via
-    the task interface. In these two execution environments the inputs will
-    not be subject to change, so we can inspect what was passed to the 
-    constructor and convert this to the equivalent CASA call.
-    
-    This decorator should be attached to Inputs.__init__.
-    
-    Note: this would be much, much simpler if we simply record execution from
-    executeppr or from the cli module, leaving recipereducer as an unhandled
-    case. It will become much easier to handle all three use cases once the
-    VisDependentProperty is merged, as it knows what properties have been set
-    per Inputs.
-    """
-    func(*args, **kwargs)
-
-    # result finaliser decorates Task.execute(), adding the inputs to the 
-    # Result. WVR creates another Inputs as an Inputs property, but we do not
-    # want to record creation of this created-inside-a-property class. 
-    # check the stack for results_finaliser rather than execute, otherwise
-    # we'd wrongly think that no task was executing when in reality execution
-    # was just coming out of the result finaliser decorator.
-    frames = [frame_obj for (frame_obj, _, _, _, _, _) in inspect.stack()
-              if frame_obj.f_code.co_name == 'finalise_pipeline_result'
-              and frame_obj.f_code.co_filename.endswith('pipeline/infrastructure/basetask.py')]
-    frame_count = len(frames)
-    LOG.trace('Stack depth: %s', frame_count)
-
-    # task depth of 0 means we've not yet entered task.execute()
-    if frame_count is not 0:
-        return
-
-    # populate a dictionary with call arguments mapped as {name:val}
-    call_args = inspect.getcallargs(func, *args, **kwargs)
-    
-    # Map the Inputs class to the hif* equivalent. Note that
-    # classToCASATask maps Task classes, not Inputs classes, to their hif
-    # equivalent. However, Task.Inputs *does* point to an Inputs class so
-    # we can compare self against that.
-    import pipeline.infrastructure.casataskdict as ctd
-    self = call_args['self']
-    casa_tasks = [casa_cls for task_cls, casa_cls in ctd.classToCASATask.items()
-                  if task_cls.Inputs is self.__class__]
-#     LOG.trace('Equivalent CASA tasks for %s: %s', func.im_class.__name__, casa_tasks)
-#     LOG.trace('Constructor arguments: %s', call_args)
-    
-    if len(casa_tasks) is not 1:
-        return
-
-#         assert len(casa_tasks) is 1, \
-#                 'Got %s CASA task names for %s' % (len(casa_tasks), 
-#                                                    klass.__name__)
-
-    # ModeInputs classes collect all arguments into a kwargs dict called
-    # parameters. This dict needs to be unpacked.
-    if isinstance(self, (ModeInputs, vdp.ModeInputs)) and 'parameters' in call_args:
-        parameters = call_args['parameters']
-        del call_args['parameters']
-        call_args.update(parameters.items())
-
-    # map Python Inputs arguments back to their CASA equivalent
-    remapped = argmapper.inputs_to_casa(self, call_args)
-
-    # CAS-6299. Extra request from Liz:
-    #
-    # "the full directory path of the ASDM location is given from the Pipeline
-    # observatory run, so a PI/DRMs would have to edit this. Could it be 
-    # replaced just by the name of the ASDM/ASDMs?"
-    #
-    # this means we have to take the basename of the vis argument for the
-    # importdata calls
-    if '_importdata' in casa_tasks[0]:
-        if 'vis' in remapped:
-            key = 'vis'
-        else:
-            key = 'infiles'
-        remove_slash = lambda x: x.rstrip('/')
-        if isinstance(remapped[key], str):
-            remapped[key] = os.path.basename(remove_slash(remapped[key]))
-        else:
-            remapped[key] = [os.path.basename(remove_slash(v)) for v in remapped[key]]
-
-    task_args = ['%s=%r' % (k,v) for k,v in remapped.items()
-                 if k not in ['self', 'context']
-                 and v is not None]
-    
-    # work around CASA problem with globals when no arguments are specified
-    if not task_args:
-        task_args = ['pipelinemode="automatic"']
-
-    casa_call = '%s(%s)' % (casa_tasks[0], ', '.join(task_args))
-    LOG.info('Equivalent CASA call: %s', casa_call)
-
-    # attach the casa task to the inputs
-    self._pipeline_casa_task = casa_call
 
 
 class MandatoryInputsMixin(object):
@@ -256,7 +146,11 @@ class MandatoryInputsMixin(object):
         """
         if type(self.vis) is types.ListType:
             return self._handle_multiple_vis('ms')
-        return self.context.observing_run.get_ms(name=self.vis)
+        try:
+            return self.context.observing_run.get_ms(name=self.vis)
+        except KeyError as e:
+            LOG.warn('No measurement set found for {!s}'.format(self.vis))
+            return None
 
     @property
     def vis(self):
@@ -270,13 +164,13 @@ class MandatoryInputsMixin(object):
         if self._vis is not None:
             return self._vis
 
-        imaging_preferred = get_imaging_preferred(self)
+        imaging_preferred = get_imaging_preferred(self.__class__)
         return [ms.name for ms in self.context.observing_run.get_measurement_sets(imaging_preferred=imaging_preferred)]
 
     @vis.setter    
     def vis(self, value):
         if value is None:
-            imaging_preferred = get_imaging_preferred(self)
+            imaging_preferred = get_imaging_preferred(self.__class__)
             vislist = [ms.name for ms in
                        self.context.observing_run.get_measurement_sets(imaging_preferred=imaging_preferred)]
         else:
@@ -310,16 +204,8 @@ class MandatoryInputsMixin(object):
         self._output_dir = value
 
 
-class ImagingMeasurementSetsPreferred(object):
-    """
-    Class used to register Inputs classes that prefer to see post-mstransform
-    data when available.
-    """
-    __metaclass__ = abc.ABCMeta
-
-
 def get_imaging_preferred(inputs):
-    return isinstance(inputs, ImagingMeasurementSetsPreferred)
+    return issubclass(inputs, api.ImagingMeasurementSetsPreferred)
 
 
 class OnTheFlyCalibrationMixin(object):
@@ -333,61 +219,6 @@ class OnTheFlyCalibrationMixin(object):
     Getting and setting any of these on-the-fly parameters will then use the
     shared functionality defined here. 
     """
-    
-    @property
-    def calto(self):
-        if type(self.vis) is types.ListType:
-            return self._handle_multiple_vis('calto')
-        
-        return callibrary.CalTo(vis=self.vis,
-                                field=self.field, 
-                                spw=self.spw,
-                                intent=self.intent,
-                                antenna=self.antenna)
-
-    @property
-    def calstate(self):
-        if type(self.vis) is types.ListType:
-            return self._handle_multiple_vis('calstate')
-        
-        return self.context.callibrary.get_calstate(self.calto, 
-                                                    ignore=['calwt',])
-
-    @property
-    def gaincurve(self):
-        """
-        Get the value of gaincurve. 
-        
-        Unless overridden, the measurement set will be examined to determine
-        the appropriate value.
-        """
-        # gaincurve is ms-dependent. Return a list of gaincurve results if vis
-        # refers to multiple measurement sets.
-        if type(self.vis) is types.ListType:
-            return self._handle_multiple_vis('gaincurve')
-
-        # call the heuristic to determine the correct value of gaincurve -
-        # unless the user has overridden the heuristic with a fixed value.
-        if callable(self._gaincurve) and self.ms:
-            adapted = adapters.GaincurveAdapter(self._gaincurve)
-            return adapted(self.ms)
-        return self._gaincurve
-
-    @gaincurve.setter
-    def gaincurve(self, value):
-        """
-        Set the value of gaincurve.
-        
-        Setting gaincurve to None allows the pipeline to determine the 
-        appropriate value.
-        """
-        if value not in (None, True, False):
-            raise TypeError, 'gaincurve must be one of None, True or False'
-        if value is None:
-            import pipeline.hif
-            value = pipeline.hif.heuristics.Gaincurve()
-        self._gaincurve = value
-
     @property
     def opacity(self):
         return self._opacity
@@ -408,6 +239,14 @@ class StandardInputs(api.Inputs, MandatoryInputsMixin):
     allows tasks to manipulate these Inputs objects more easily.
     """
     __metaclass__ = abc.ABCMeta
+
+    def __init__(self, context, vis=None, output_dir=None):
+        super(StandardInputs, self).__init__()
+
+        # set MandatoryInputs properties
+        self.context = context
+        self.vis = vis
+        self.output_dir = output_dir
 
     def _init_properties(self, properties=None, kw_ignore=None):
         """
@@ -693,7 +532,17 @@ class ModeInputs(api.Inputs):
 
 class ModeTask(api.Task):
     def __init__(self, inputs):
-        super(ModeTask, self).__init__(inputs)
+        super(ModeTask, self).__init__()
+
+        # complain if we were given the wrong type of inputs
+        if not isinstance(inputs, self.Inputs):
+            msg = '{0} requires inputs of type {1} but got {2}.'.format(
+                self.__class__.__name__,
+                self.Inputs.__name__,
+                inputs.__class__.__name__)
+            raise TypeError(msg)
+
+        self.inputs = inputs
         self._delegate = inputs.get_task()
 
     def execute(self, dry_run=True, **parameters):
@@ -786,7 +635,7 @@ class Results(api.Results):
         LOG.debug('Null implementation of merge_with_context used for %s'
                   '' % self.__class__.__name__)
 
-    def accept(self, context=None, **other_parameters):
+    def accept(self, context=None):
         """
         Accept these results, registering objects with the context and incrementing
         stage counters as necessary in preparation for the next task.
@@ -794,14 +643,14 @@ class Results(api.Results):
         if context is None:
             # context will be none when called from a CASA interactive 
             # session. When this happens, we need to locate the global context
-            # from the             
+            # from the stack
             import pipeline.h.cli.utils
             context = pipeline.h.cli.utils.get_context()
 
         self._check_for_remerge(context)
 
         # execute our template function
-        self.merge_with_context(context, **other_parameters)
+        self.merge_with_context(context)
 
         # find whether this result is being accepted as part of a task 
         # execution or whether it's being accepted after task completion
@@ -944,16 +793,41 @@ class ResultsProxy(object):
         delattr(result, 'casalog')
 
 
-class ResultsList(Results, list):
-    def __init__(self):
+class ResultsList(Results):
+    def __init__(self, results=None):
         super(ResultsList, self).__init__()
+        self.__results = []
+        if results:
+            self.__results.extend(results)
+
+    def __getitem__(self, item):
+        return self.__results[item]
+
+    def __iter__(self):
+        return self.__results.__iter__()
+
+    def __len__(self):
+        return len(self.__results)
+
+    def __str__(self):
+        return 'ResultsList({!s})'.format(str(self.__results))
+
+    def __repr__(self):
+        return 'ResultsList({!s})'.format(repr(self.__results))
+
+    def append(self, other):
+        self.__results.append(other)
+
+    def accept(self, context=None):
+        return super(ResultsList, self).accept(context)
+
+    def extend(self, other):
+        for o in other:
+            self.append(o)
 
     def merge_with_context(self, context):
-        for result in self:
+        for result in self.__results:
             result.merge_with_context(context)
-    
-    def accept(self, context):
-        return super(ResultsList, self).accept(context)
 
 
 class StandardTaskTemplate(api.Task):
@@ -991,10 +865,29 @@ class StandardTaskTemplate(api.Task):
     HeadTail = collections.namedtuple('HeadTail', ('head', 'tail'))
 
     def __init__(self, inputs):
-        super(StandardTaskTemplate, self).__init__(inputs)
+        """
+        Create a new Task with an initial state based on the given inputs.
 
-    def is_multi_vis_task(self):
-        return False
+        :param Inputs inputs: inputs required for this Task.
+        """
+        super(StandardTaskTemplate, self).__init__()
+
+        # complain if we were given the wrong type of inputs
+        if isinstance(inputs, vdp.InputsContainer):
+            error = (inputs._task_cls.Inputs != self.Inputs)
+        else:
+            error = not isinstance(inputs, self.Inputs)
+
+        if error:
+            msg = '{0} requires inputs of type {1} but got {2}.'.format(
+                self.__class__.__name__,
+                self.Inputs.__name__,
+                inputs.__class__.__name__)
+            raise TypeError(msg)
+
+        self.inputs = inputs
+
+    is_multi_vis_task = False
 
     @abc.abstractmethod
     def prepare(self, **parameters):
@@ -1072,9 +965,9 @@ class StandardTaskTemplate(api.Task):
             # if this task does not handle multiple input mses but was 
             # invoked with multiple mses in its inputs, call our utility
             # function to invoke the task once per ms.
-            if (self.is_multi_vis_task() is False 
-                    and type(self.inputs.vis) is types.ListType):
-                return self._handle_multiple_vis(dry_run, **parameters)
+            if not self.is_multi_vis_task:
+                if isinstance(self.inputs, vdp.InputsContainer) or isinstance(self.inputs.vis, list):
+                    return self._handle_multiple_vis(dry_run, **parameters)
 
             # We should not pass unused parameters to prepare(), so first
             # inspect the signature to find the names the arguments and then
@@ -1092,11 +985,11 @@ class StandardTaskTemplate(api.Task):
             # get our result
             result = self.prepare(**prepare_parameters)
 
-            # tag the result with the class of the originating task
-            result.task = self.__class__
-
             # analyse them..
             result = self.analyse(result)
+
+            # tag the result with the class of the originating task
+            result.task = self.__class__
 
             # add the log records to the result
             result.logrecords = handler.buffer[:]
@@ -1119,6 +1012,9 @@ class StandardTaskTemplate(api.Task):
             if handler:
                 logging.remove_handler(handler)
 
+            # delete the executor so that the pickled context can be released
+            self._executor = None
+
     def _handle_multiple_vis(self, dry_run, **parameters):
         """
         Handle a single task invoked for multiple measurement sets.
@@ -1131,7 +1027,7 @@ class StandardTaskTemplate(api.Task):
         (unless overridden) is handled by the template task instead.
 
         If the task wants to handle the multiple measurement sets
-        itself it should override is_multi_vis_task().
+        itself it should override is_multi_vis_task.
         """
         # The following code loops through the MSes specified in vis, 
         # executing the task for the first value (head) and then appending the
@@ -1178,29 +1074,42 @@ class StandardTaskTemplate(api.Task):
 
             results.extend(self.execute(dry_run=dry_run, **parameters))
 
-        else:
-            assert isinstance(self.inputs, (vdp.StandardInputs, vdp.ModeInputs))
-            self.inputs.vis = head
+        elif isinstance(self.inputs, vdp.InputsContainer):
+            container = self.inputs
+
+            LOG.info('Equivalent CASA call: %s', container._pipeline_casa_task)
+
+            LOG.todo('remove subtask_counter hack')
+            if self.__class__.__name__ == 'Priorcals':
+                container._context.subtask_counter += 1
+
             results = ResultsList()
-            results.append(self.execute(dry_run=dry_run, **parameters))
 
-            self.inputs.vis = tail
-            tail_result = self.execute(dry_run=dry_run, **parameters)
-            if type(results) is types.ListType:
-                results.extend(tail_result)
-            else:
-                results.append(tail_result)
+            try:
+                for inputs in container:
+                    self.inputs = inputs
+                    single_result = self.execute(dry_run=dry_run, **parameters)
 
-        # Delete the capture log for subtasks as the log will be attached to the
-        # outer ResultList.
-        for r in results:
-            if hasattr(r, 'casalog'):
-                del r.casalog
+                    if isinstance(single_result, ResultsList):
+                        results.extend(single_result)
+                    else:
+                        results.append(single_result)
+
+                    # TODO remove hack for parity with trunk once merged
+                    LOG.todo('remove subtask_counter hack for parity with trunk once merged')
+                    inputs.context.subtask_counter += 1
+                return results
+            finally:
+                self.inputs = container
 
         return results
 
-    def _get_handled_headtails(self, names=[]):
+    def _get_handled_headtails(self, names=None):
         handled = collections.OrderedDict()
+
+        if names is None:
+            # no names to get so return empty dict
+            return handled
 
         for name in names:
             if hasattr(self.inputs, name):
@@ -1223,7 +1132,7 @@ class Executor(object):
                                      context.logs['casa_commands'])
 
     @capture_log
-    def execute(self, job, merge=False):
+    def execute(self, job, merge=False, **kwargs):
         """
         Execute the given job or subtask, returning its output.
         
@@ -1234,7 +1143,7 @@ class Executor(object):
         :rtype: :class:`~pipeline.api.Result`
         """
         # execute the job, capturing its results object                
-        result = job.execute(dry_run=self._dry_run)
+        result = job.execute(dry_run=self._dry_run, *kwargs)
 
         if self._dry_run:
             return result

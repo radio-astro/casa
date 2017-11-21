@@ -18,6 +18,7 @@ from pipeline.infrastructure.casataskdict import CasaTaskDict
 import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.project as project
 import pipeline.infrastructure.utils as utils
+import pipeline.infrastructure.vdp as vdp
 import argmapper
 
 # Make sure CASA exceptions are rethrown
@@ -259,7 +260,7 @@ def executeppr (pprXmlFile, importonly=True, breakpoint='breakpoint',
 	    
 	    remapped_args = argmapper.convert_args(taskname, task_args,
 	        convert_nulls=False)
-	    inputs = cInputs (context, **remapped_args)
+	    inputs = vdp.InputsContainer(pipeline.tasks.__dict__[taskname], context, **remapped_args)
 	    cTask = pipeline.tasks.__dict__[taskname]
 	    task = cTask(inputs)
 	    results = task.execute (dry_run=False)

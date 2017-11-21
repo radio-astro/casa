@@ -31,7 +31,6 @@ class FlagcalResults(basetask.Results):
 
 
 class FlagcalInputs(basetask.StandardInputs):
-    @basetask.log_equivalent_CASA_call
     def __init__(self, context, vis=None, caltable=None, clipminmax=None):
         # set the properties to the values given as input arguments
         self._init_properties(vars())

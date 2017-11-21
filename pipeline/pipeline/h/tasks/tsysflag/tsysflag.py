@@ -9,6 +9,7 @@ import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.callibrary as callibrary
 import pipeline.infrastructure.utils as utils
+import pipeline.infrastructure.vdp as vdp
 from pipeline.h.heuristics.tsysnormalize import tsysNormalize
 from pipeline.h.tasks.common import calibrationtableaccess as caltableaccess
 from pipeline.h.tasks.common import commonhelpermethods
@@ -17,11 +18,53 @@ from pipeline.h.tasks.common import viewflaggers
 from pipeline.h.tasks.flagging.flagdatasetter import FlagdataSetter
 from .resultobjects import TsysflagResults, TsysflagspectraResults, TsysflagDataResults, TsysflagViewResults
 
+__all__ = [
+    'Tsysflag',
+    'TsysflagInputs'
+]
+
 LOG = infrastructure.get_logger(__name__)
 
 
-class TsysflagInputs(basetask.StandardInputs):
-    @basetask.log_equivalent_CASA_call
+class TsysflagInputs(vdp.StandardInputs):
+    """
+    TsysflagInputs defines the inputs for the Tsysflag pipeline task.
+    """
+    @vdp.VisDependentProperty
+    def caltable(self):
+        caltables = self.context.callibrary.active.get_caltable(
+            caltypes='tsys')
+
+        # return just the tsys table that matches the vis being handled
+        result = None
+        for name in caltables:
+            # Get the tsys table name
+            tsystable_vis = \
+                caltableaccess.CalibrationTableDataFiller._readvis(name)
+            if tsystable_vis in self.vis:
+                result = name
+                break
+
+        return result
+
+    flag_nmedian = vdp.VisDependentProperty(default=True)
+    fnm_limit = vdp.VisDependentProperty(default=2.0)
+    fnm_byfield = vdp.VisDependentProperty(default=False)
+    flag_derivative = vdp.VisDependentProperty(default=True)
+    fd_max_limit = vdp.VisDependentProperty(default=5)
+    flag_edgechans = vdp.VisDependentProperty(default=True)
+    fe_edge_limit = vdp.VisDependentProperty(default=3.0)
+    flag_fieldshape = vdp.VisDependentProperty(default=True)
+    ff_refintent = vdp.VisDependentProperty(default='BANDPASS')
+    ff_max_limit = vdp.VisDependentProperty(default=5)
+    flag_birdies = vdp.VisDependentProperty(default=True)
+    fb_sharps_limit = vdp.VisDependentProperty(default=0.05)
+    flag_toomany = vdp.VisDependentProperty(default=True)
+    tmf1_limit = vdp.VisDependentProperty(default=0.666)
+    tmef1_limit = vdp.VisDependentProperty(default=0.666)
+    metric_order = vdp.VisDependentProperty(default='nmedian, derivative, edgechans, fieldshape, birdies, toomany')
+    normalize_tsys = vdp.VisDependentProperty(default=False)
+
     def __init__(self, context, output_dir=None, vis=None, caltable=None,
                  flag_nmedian=None, fnm_limit=None, fnm_byfield=None,
                  flag_derivative=None, fd_max_limit=None,
@@ -30,203 +73,38 @@ class TsysflagInputs(basetask.StandardInputs):
                  flag_birdies=None, fb_sharps_limit=None,
                  flag_toomany=None, tmf1_limit=None, tmef1_limit=None,
                  metric_order=None, normalize_tsys=None):
+        super(TsysflagInputs, self).__init__()
 
-        # set the properties to the values given as input arguments
-        self._init_properties(vars())
+        # pipeline inputs
+        self.context = context
+        # vis must be set first, as other properties may depend on it
+        self.vis = vis
+        self.output_dir = output_dir
 
-    @property
-    def caltable(self):
-        if self._caltable is None:
-            caltables = self.context.callibrary.active.get_caltable(
-              caltypes='tsys')
+        # data selection arguments
+        self.caltable = caltable
 
-            # return just the tsys table that matches the vis being handled
-            result = None
-            for name in caltables:
-                # Get the tsys table name
-                tsystable_vis = \
-                  caltableaccess.CalibrationTableDataFiller._readvis(name)
-                if tsystable_vis in self.vis:
-                    result = name
-                    break
+        # solution parameters
+        self.normalize_tsys = normalize_tsys
 
-            return result
-
-        return self._caltable
-
-    @caltable.setter
-    def caltable(self, value):
-        self._caltable = value
-
-    @property
-    def flag_nmedian(self):
-        return self._flag_nmedian
-
-    @flag_nmedian.setter
-    def flag_nmedian(self, value):
-        if value is None:
-            value = True
-        self._flag_nmedian = value
- 
-    @property
-    def fnm_limit(self):
-        return self._fnm_limit
-
-    @fnm_limit.setter
-    def fnm_limit(self, value):
-        if value is None:
-            value = 2.0
-        self._fnm_limit = value
-
-    @property
-    def fnm_byfield(self):
-        return self._fnm_byfield
-
-    @fnm_byfield.setter
-    def fnm_byfield(self, value):
-        if value is None:
-            value = False
-        self._fnm_byfield = value
-
-    @property
-    def flag_derivative(self):
-        return self._flag_derivative
-
-    @flag_derivative.setter
-    def flag_derivative(self, value):
-        if value is None:
-            value = True
-        self._flag_derivative = value
-
-    @property
-    def fd_max_limit(self):
-        return self._fd_max_limit
-
-    @fd_max_limit.setter
-    def fd_max_limit(self, value):
-        if value is None:
-            value = 5
-        self._fd_max_limit = value
-
-    @property
-    def flag_edgechans(self):
-        return self._flag_edgechans
-
-    @flag_edgechans.setter
-    def flag_edgechans(self, value):
-        if value is None:
-            value = True
-        self._flag_edgechans = value
-
-    @property
-    def fe_edge_limit(self):
-        return self._fe_edge_limit
-
-    @fe_edge_limit.setter
-    def fe_edge_limit(self, value):
-        if value is None:
-            value = 3.0
-        self._fe_edge_limit = value
-
-    @property
-    def flag_fieldshape(self):
-        return self._flag_fieldshape
-
-    @flag_fieldshape.setter
-    def flag_fieldshape(self, value):
-        if value is None:
-            value = True
-        self._flag_fieldshape = value
-
-    @property
-    def ff_refintent(self):
-        return self._ff_refintent
-
-    @ff_refintent.setter
-    def ff_refintent(self, value):
-        if value is None:
-            value = 'BANDPASS'
-        self._ff_refintent = value
-
-    @property
-    def ff_max_limit(self):
-        return self._ff_max_limit
-
-    @ff_max_limit.setter
-    def ff_max_limit(self, value):
-        if value is None:
-            value = 5
-        self._ff_max_limit = value
-
-    @property
-    def flag_birdies(self):
-        return self._flag_birdies
-
-    @flag_birdies.setter
-    def flag_birdies(self, value):
-        if value is None:
-            value = True
-        self._flag_birdies = value
-
-    @property
-    def fb_sharps_limit(self):
-        return self._fb_sharps_limit
-
-    @fb_sharps_limit.setter
-    def fb_sharps_limit(self, value):
-        if value is None:
-            value = 0.05
-        self._fb_sharps_limit = value
-
-    @property
-    def flag_toomany(self):
-        return self._flag_birdies
-
-    @flag_toomany.setter
-    def flag_toomany(self, value):
-        if value is None:
-            value = True
-        self._flag_toomany = value
-
-    @property
-    def tmf1_limit(self):
-        return self._tmf1_limit
-
-    @tmf1_limit.setter
-    def tmf1_limit(self, value):
-        if value is None:
-            value = 0.666
-        self._tmf1_limit = value
-
-    @property
-    def tmef1_limit(self):
-        return self._tmef1_limit
-
-    @tmef1_limit.setter
-    def tmef1_limit(self, value):
-        if value is None:
-            value = 0.666
-        self._tmef1_limit = value
-
-    @property
-    def metric_order(self):
-        return self._metric_order
-
-    @metric_order.setter
-    def metric_order(self, value):
-        if value is None:
-            value = 'nmedian, derivative, edgechans, fieldshape, birdies, toomany'
-        self._metric_order = value
-
-    @property
-    def normalize_tsys(self):
-        return self._normalize_tsys
-
-    @normalize_tsys.setter
-    def normalize_tsys(self, value):
-        if value is None:
-            value = False
-        self._normalize_tsys = value
+        # flagging parameters
+        self.flag_nmedian = flag_nmedian
+        self.fnm_limit = fnm_limit
+        self.fnm_byfield = fnm_byfield
+        self.flag_derivative = flag_derivative
+        self.flag_nmedian = flag_nmedian
+        self.fd_max_limit = fd_max_limit
+        self.flag_edgechans = flag_edgechans
+        self.fe_edge_limit = fe_edge_limit
+        self.flag_fieldshape = flag_fieldshape
+        self.ff_refintent = ff_refintent
+        self.ff_max_limit = ff_max_limit
+        self.flag_birdies = flag_birdies
+        self.fb_sharps_limit = fb_sharps_limit
+        self.flag_toomany = flag_toomany
+        self.tmf1_limit = tmf1_limit
+        self.tmef1_limit = tmef1_limit
+        self.metric_order = metric_order
 
 
 class Tsysflag(basetask.StandardTaskTemplate):
@@ -793,10 +671,20 @@ class Tsysflag(basetask.StandardTaskTemplate):
         return result
 
 
-class TsysflagDataInputs(basetask.StandardInputs):
-    
+class TsysflagDataInputs(vdp.StandardInputs):
+    """
+    TsysflagDataInputs defines the inputs for the TsysflagData pipeline task.
+    """
     def __init__(self, context, vis=None, caltable=None):
-        self._init_properties(vars())
+        super(TsysflagDataInputs, self).__init__()
+
+        # pipeline inputs
+        self.context = context
+        # vis must be set first, as other properties may depend on it
+        self.vis = vis
+
+        # data selection arguments
+        self.caltable = caltable
 
 
 class TsysflagData(basetask.StandardTaskTemplate):
@@ -875,7 +763,8 @@ class TsysflagView(object):
 
         return self.result
 
-    def intent_ids(self, intent, ms):
+    @staticmethod
+    def intent_ids(intent, ms):
         """
         Get the fieldids associated with the given intents.
         """  
@@ -964,7 +853,8 @@ class TsysflagView(object):
                     self.calculate_median_channel_view(
                         tsystable, tsysspwid, intent, fieldids[intent])
 
-    def get_tsystable_data(self, tsystable, spwid, fieldids, antenna_names,
+    @staticmethod
+    def get_tsystable_data(tsystable, spwid, fieldids, antenna_names,
                            corr_type, normalise=None):
         """
         Reads in specified Tsys table, selects data for the specified 
@@ -1472,7 +1362,7 @@ class TsysflagView(object):
 
                     # Calculate median Tsys spectrum from spectrum stack
                     for j in range(np.shape(spectrumstack)[1]):
-                        valid_data = spectrumstack[:,j][np.logical_not(flagstack[:,j])]
+                        valid_data = spectrumstack[:, j][np.logical_not(flagstack[:, j])]
                         if len(valid_data):
                             stackmedian[j] = np.median(valid_data)
                             stackmedianflag[j] = False
@@ -1612,10 +1502,10 @@ class TsysflagView(object):
                     spectrumstack = tsysspectrum.data
                     flagstack = tsysspectrum.flag
                 else:
-                    spectrumstack = np.vstack((tsysspectrum.data,
-                      spectrumstack))
-                    flagstack = np.vstack((tsysspectrum.flag,
-                      flagstack))
+                    spectrumstack = np.vstack(
+                        (tsysspectrum.data, spectrumstack))
+                    flagstack = np.vstack(
+                        (tsysspectrum.flag, flagstack))
 
         # From the stack of Tsys spectra, create a median Tsys 
         # spectrum and corresponding flagging state, convert to a
@@ -1629,7 +1519,7 @@ class TsysflagView(object):
             
             # Calculate median Tsys spectrum from spectrum stack
             for j in range(np.shape(spectrumstack)[1]):
-                valid_data = spectrumstack[:,j][np.logical_not(flagstack[:,j])]
+                valid_data = spectrumstack[:, j][np.logical_not(flagstack[:, j])]
                 if len(valid_data):
                     stackmedian[j] = np.median(valid_data)
                     stackmedianflag[j] = False

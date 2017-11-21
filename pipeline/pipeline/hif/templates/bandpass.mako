@@ -35,6 +35,35 @@ $(document).ready(function() {
 
 <h2>Results</h2>
 
+% if adopted_table:
+<h4>Measurement sets using adopted bandpass calibrations</h4>
+    <p>Measurement sets without bandpass calibrator scans adopt the bandpass calibration from an appropriate measurement
+        set within the session. The selection algorithm minimises the time difference between the centre of the bandpass
+        scan and the midpoint of the measurement set missing the bandpass scan.</p>
+
+    <p>The following measurement sets use bandpass calibrations adopted from other measurement sets.</p>
+
+    <table class="table table-bordered table-striped"
+           summary="Measurement sets with bandpass calibrations adopted from other data">
+        <caption>Measurement sets using bandpass calibrations adopted from other data</caption>
+        <thead>
+        <tr>
+            <th scope="col">Measurement Set</th>
+            <th scope="col">Bandpass calibration table adopted</th>
+        </tr>
+        </thead>
+        <tbody>
+            % for tr in adopted_table:
+                <tr>
+                    % for td in tr:
+                ${td}
+                    % endfor
+                </tr>
+            % endfor
+        </tbody>
+    </table>
+% endif
+
 %if phaseup_applications:
 <h4>Phase-up on bandpass calibrator</h4>
 <table class="table table-bordered" summary="Application Results">

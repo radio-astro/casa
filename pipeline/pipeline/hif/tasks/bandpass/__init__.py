@@ -20,4 +20,3 @@ qaadapter.registry.register_to_calibration_topic(common.BandpassResults)
 weblog.add_renderer(PhcorBandpass, 
                     renderer.T2_4MDetailsBandpassRenderer(),
                     group_by='session')
-                 

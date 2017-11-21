@@ -17,6 +17,12 @@ class FluxCalibrationResults(basetask.Results):
     def __init__(self, vis, resantenna=None, uvrange=None, measurements=None):
         super(FluxCalibrationResults, self).__init__()
 
+        if resantenna is None:
+            resantenna = ''
+
+        if uvrange is None:
+            uvrange = ''
+
         if measurements is None:
             measurements = collections.defaultdict(list)
 

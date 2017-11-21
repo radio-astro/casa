@@ -16,10 +16,16 @@ class WeightMSInputs(basetask.StandardInputs):
     Inputs for exporting data to MS 
     NOTE: infile should be a complete list of MSes 
     """
-    def __init__(self, context, infile, outfile, antenna, 
-                 spwid, fieldid, spwtype):
-        self._init_properties(vars())
-        
+    def __init__(self, context, infile, outfile, antenna, spwid, fieldid, spwtype):
+        super(WeightMSInputs, self).__init__(context, vis=infile)
+
+        self.antenna = antenna
+        self.fieldid = fieldid
+        self.infile = infile
+        self.outfile = outfile
+        self.spwid = spwid
+        self.spwtype = spwtype
+
         
 class WeightMSResults(common.SingleDishResults):
     def __init__(self, task=None, success=None, outcome=None):
@@ -41,8 +47,7 @@ class WeightMS(basetask.StandardTaskTemplate):
             'WeightRMS': True,
             'WeightTsysExpTime': False}
    
-    def is_multi_vis_task(self):
-        return True
+    is_multi_vis_task = True
 
     def prepare(self):
         # for each data

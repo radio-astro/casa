@@ -36,6 +36,7 @@ from __future__ import print_function  # get python 3 print function
 import os
 
 import pipeline.infrastructure as infrastructure
+import pipeline.infrastructure.api as api
 import pipeline.infrastructure.basetask as basetask
 from .resultobjects import EditimlistResult
 from pipeline.hif.tasks.makeimlist.cleantarget import CleanTarget
@@ -45,7 +46,6 @@ LOG = infrastructure.get_logger(__name__)
 
 
 class EditimlistInputs(basetask.StandardInputs):
-    @basetask.log_equivalent_CASA_call
     def __init__(self, context, output_dir=None, vis=None,
                  search_radius_arcsec=None,
                  cell=None,
@@ -100,7 +100,7 @@ class EditimlistInputs(basetask.StandardInputs):
 
 # tell the infrastructure to give us mstransformed data when possible by
 # registering our preference for imaging measurement sets
-basetask.ImagingMeasurementSetsPreferred.register(EditimlistInputs)
+api.ImagingMeasurementSetsPreferred.register(EditimlistInputs)
 
 
 class Editimlist(basetask.StandardTaskTemplate):
@@ -109,8 +109,7 @@ class Editimlist(basetask.StandardTaskTemplate):
     Inputs = EditimlistInputs
 
     # TODO:  check to see if I should set this to False
-    def is_multi_vis_task(self):
-        return True
+    is_multi_vis_task = True
 
     def prepare(self):
 

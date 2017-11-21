@@ -43,10 +43,10 @@ def ALMAImageCoordinateUtil(context, ms_names, ant_list, spw_list, fieldid_list)
     # recommendation by EOC
     fwhmfactor = 1.13
     # hard-coded for ALMA-TP array
-    diameter_m = 12.0 
+    diameter_m = 12.0
     obscure_alma = 0.75
     ### END OF ALMA part ###
-    
+
     # msmd-less implementation
     spw = ref_msobj.get_spectral_window(ref_spw)
     freq_hz = numpy.float64(spw.mean_frequency.value)
@@ -55,7 +55,7 @@ def ALMAImageCoordinateUtil(context, ms_names, ant_list, spw_list, fieldid_list)
     fnames = [f.name for f in fields]
     if USE_FIELD_DIR:
         me_center = fields[0].mdirection
-    
+
     # cellx and celly
     import sdbeamutil
     theory_beam_arcsec = sdbeamutil.primaryBeamArcsec(freq_hz, diameter_m, obscure_alma, 10.0, fwhmfactor=fwhmfactor)
@@ -63,21 +63,22 @@ def ALMAImageCoordinateUtil(context, ms_names, ant_list, spw_list, fieldid_list)
     cellx = qa.div(grid_size, grid_factor)
     celly = cellx
     cell_in_deg = qa.convert(cellx, 'deg')['value']
-    LOG.info('Calculating image coordinate of field \'%s\', reference frequency %fGHz' % (fnames[0], freq_hz*1.e-9))
+    LOG.info('Calculating image coordinate of field \'%s\', reference frequency %fGHz' % (fnames[0], freq_hz * 1.e-9))
     LOG.info('cell=%s' % (qa.tos(cellx)))
-    
+
     datatable = DataTable(name=context.observing_run.ms_datatable_name, readonly=True)
     # nx, ny and center
     parent_mses = [utils.get_parent_ms_name(context, name) for name in ms_names]
     index_list = common.get_index_list_for_ms(datatable, parent_mses, ant_list, fieldid_list, spw_list)
-    
+
     if len(index_list) == 0:
         antenna_name = ref_msobj.antennas[ant_list[0]].name
-        LOG.warn('No valid data for source %s antenna %s spw %s in %s. Image will not be created.'%(source_name, antenna_name, ref_spw, ref_msobj.basename))
+        LOG.warn('No valid data for source %s antenna %s spw %s in %s. Image will not be created.' % (
+        source_name, antenna_name, ref_spw, ref_msobj.basename))
         return False
-        
+
     index_list.sort()
-    
+
     # the unit of RA and DEC should be in deg
     ra = datatable.getcol('RA').take(index_list)
     dec = datatable.getcol('DEC').take(index_list)
@@ -85,34 +86,34 @@ def ALMAImageCoordinateUtil(context, ms_names, ant_list, spw_list, fieldid_list)
         (datatable.getcolkeyword('DEC', 'UNIT') != 'deg'):
         raise RuntimeError, "Found unexpected unit of RA/DEC in DataTable. It should be in 'deg'"
     del datatable
-    
+
     ra_min = min(ra)
     ra_max = max(ra)
     dec_min = min(dec)
     dec_max = max(dec)
-    
+
     if USE_FIELD_DIR:
         # phasecenter = field direction
         ra_center = qa.convert(me_center['m0'], 'deg')
         dec_center = qa.convert(me_center['m1'], 'deg')
     else:
         # map center
-        ra_center = qa.quantity(0.5*(ra_min + ra_max), 'deg')
-        dec_center = qa.quantity(0.5*(dec_min + dec_max), 'deg')
+        ra_center = qa.quantity(0.5 * (ra_min + ra_max), 'deg')
+        dec_center = qa.quantity(0.5 * (dec_min + dec_max), 'deg')
     ra_center_in_deg = qa.getvalue(ra_center)
     dec_center_in_deg = qa.getvalue(dec_center)
     phasecenter = 'J2000 %s %s' % (qa.formxxx(ra_center, 'hms'),
-                                     qa.formxxx(dec_center, 'dms'))
-    LOG.info('phasecenter=\'%s\'' % (phasecenter, ))
+                                   qa.formxxx(dec_center, 'dms'))
+    LOG.info('phasecenter=\'%s\'' % (phasecenter,))
 
     dec_correction = 1.0 / math.cos(dec_center_in_deg / 180.0 * 3.1415926535897931)
-    width = 2*max(abs(ra_center_in_deg-ra_min), abs(ra_max-ra_center_in_deg))
-    height = 2*max(abs(dec_center_in_deg-dec_min), abs(dec_max-dec_center_in_deg))
-    LOG.debug('Map extent: [%f, %f] arcmin' % (width/60., height/60.))
-    
+    width = 2 * max(abs(ra_center_in_deg - ra_min), abs(ra_max - ra_center_in_deg))
+    height = 2 * max(abs(dec_center_in_deg - dec_min), abs(dec_max - dec_center_in_deg))
+    LOG.debug('Map extent: [%f, %f] arcmin' % (width / 60., height / 60.))
+
     nx = int(width / (cell_in_deg * dec_correction)) + 1
     ny = int(height / cell_in_deg) + 1
-    
+
     # Adjust nx and ny to be even number for performance (which is 
     # recommended by imager). 
     # Also increase nx and ny  by 2 if they are even number. 
@@ -133,9 +134,9 @@ def ALMAImageCoordinateUtil(context, ms_names, ant_list, spw_list, fieldid_list)
         ny += 2
     else:
         ny += 1
-    
+
     LOG.info('Image pixel size: [nx, ny] = [%s, %s]' % (nx, ny))
-    return phasecenter, cellx, celly, nx, ny    
+    return phasecenter, cellx, celly, nx, ny
 
 
 class SDImagingWorkerInputs(basetask.StandardInputs):
@@ -143,12 +144,28 @@ class SDImagingWorkerInputs(basetask.StandardInputs):
     Inputs for imaging worker
     NOTE: infile should be a complete list of MSes 
     """
-    def __init__(self, context, infiles, outfile, mode, antids, spwids, fieldids, stokes,
-                 edge=None, phasecenter=None, cellx=None, celly=None, nx=None, ny=None):
+
+    def __init__(self, context, infiles, outfile, mode, antids, spwids, fieldids, stokes, edge=None, phasecenter=None,
+                 cellx=None, celly=None, nx=None, ny=None):
         # NOTE: spwids and pols are list of numeric id list while scans
         #       is string (mssel) list
-        self._init_properties(vars())
-    
+        super(SDImagingWorkerInputs, self).__init__(context)
+
+        self.antids = antids
+        self.cellx = cellx
+        self.celly = celly
+        self.edge = edge
+        self.fieldids = fieldids
+        self.infiles = infiles
+        self.mode = mode
+        self.nx = nx
+        self.ny = ny
+        self.outfile = outfile
+        self.phasecenter = phasecenter
+        self.spwids = spwids
+        self.stokes = stokes
+
+
 class SDImagingWorkerResults(common.SingleDishResults):
     def __init__(self, task=None, success=None, outcome=None):
         super(SDImagingWorkerResults, self).__init__(task, success, outcome)
@@ -163,9 +180,8 @@ class SDImagingWorkerResults(common.SingleDishResults):
 
 class SDImagingWorker(basetask.StandardTaskTemplate):
     Inputs = SDImagingWorkerInputs
-    
-    def is_multi_vis_task(self):
-        return True
+
+    is_multi_vis_task = True
 
     def prepare(self):
         inputs = self.inputs
@@ -177,10 +193,12 @@ class SDImagingWorker(basetask.StandardTaskTemplate):
         spwid_list = inputs.spwids
         fieldid_list = inputs.fieldids
         imagemode = inputs.mode
-        phasecenter, cellx, celly, nx, ny = self._get_map_coord(inputs, context, infiles, antid_list, spwid_list, fieldid_list)
-        
-        status = self._do_imaging(infiles, antid_list, spwid_list, fieldid_list, outfile, imagemode, edge, phasecenter, cellx, celly, nx, ny)
- 
+        phasecenter, cellx, celly, nx, ny = self._get_map_coord(inputs, context, infiles, antid_list, spwid_list,
+                                                                fieldid_list)
+
+        status = self._do_imaging(infiles, antid_list, spwid_list, fieldid_list, outfile, imagemode, edge, phasecenter,
+                                  cellx, celly, nx, ny)
+
         if status is True:
             result = SDImagingWorkerResults(task=self.__class__,
                                             success=True,
@@ -191,13 +209,13 @@ class SDImagingWorker(basetask.StandardTaskTemplate):
                                             success=False,
                                             outcome=None)
 
-        if self.inputs.context.subtask_counter is 0: 
+        if self.inputs.context.subtask_counter is 0:
             result.stage_number = self.inputs.context.task_counter - 1
         else:
-            result.stage_number = self.inputs.context.task_counter 
+            result.stage_number = self.inputs.context.task_counter
 
         return result
-    
+
     def analyse(self, result):
         return result
 
@@ -209,7 +227,8 @@ class SDImagingWorker(basetask.StandardTaskTemplate):
         else:
             return ALMAImageCoordinateUtil(context, infiles, ant_list, spw_list, field_list)
 
-    def _do_imaging(self, infiles, antid_list, spwid_list, fieldid_list, imagename, imagemode, edge, phasecenter, cellx, celly, nx, ny):
+    def _do_imaging(self, infiles, antid_list, spwid_list, fieldid_list, imagename, imagemode, edge, phasecenter, cellx,
+                    celly, nx, ny):
         context = self.inputs.context
         idx = utils.get_parent_ms_idx(context, infiles[0])
         if idx >= 0 and idx < len(context.observing_run.measurement_sets):
@@ -217,28 +236,29 @@ class SDImagingWorker(basetask.StandardTaskTemplate):
         else:
             raise ValueError, "The reference ms, %s, not registered to context" % infiles[0]
         ref_spwid = spwid_list[0]
-        
+
         LOG.debug('Members to be processed:')
         for (m, a,s, f) in itertools.izip(infiles, antid_list, spwid_list, fieldid_list):
             LOG.debug('\tMS %s: Antenna %s Spw %s Field %s'%(os.path.basename(m), a,s,f))
     
         # Check for ephemeris source
-        known_ephemeris_list = ['MERCURY', 'VENUS', 'MARS', 'JUPITER', 'SATURN', 'URANUS', 'NEPTUNE', 'PLUTO', 'SUN', 'MOON']
+        known_ephemeris_list = ['MERCURY', 'VENUS', 'MARS', 'JUPITER', 'SATURN', 'URANUS', 'NEPTUNE', 'PLUTO', 'SUN',
+                                'MOON']
         ephemsrcname = ''
         source_name = reference_data.fields[fieldid_list[0]].name
         if source_name.upper() in known_ephemeris_list:
             ephemsrcname = source_name.upper()
             LOG.info("Generating an image of ephemeris source. Setting ephemsrcname='%s'" % ephemsrcname)
-    
+
         # baseline
-        #baseline = '0&&&'
-    
+        # baseline = '0&&&'
+
         # mode
         mode = 'channel'
-    
+
         # stokes
         stokes = self.inputs.stokes
-    
+
         # start, nchan, step
         ref_spwobj = reference_data.spectral_windows[ref_spwid]
         total_nchan = ref_spwobj.num_channels
@@ -254,7 +274,7 @@ class SDImagingWorker(basetask.StandardTaskTemplate):
         if imagemode == 'AMPCAL':
             step = nchan
             nchan = 1
-    
+
         # restfreq
         rest_freq = ref_spwobj.ref_frequency
         if rest_freq is not None:
@@ -262,13 +282,13 @@ class SDImagingWorker(basetask.StandardTaskTemplate):
             restfreq = qa.tos(qa.quantity(numpy.double(rest_freq.value), rest_freq.units['symbol']))
         else:
             raise RuntimeError, "Could not get reference frequency of Spw %d" % ref_spwid
-    
+
         # outframe
         outframe = 'LSRK'
-    
+
         # gridfunction
         gridfunction = 'SF'
-    
+
         # truncate, gwidth, jwidth, and convsupport
         truncate = gwidth = jwidth = -1  # defaults (not used)
         convsupport = 6
@@ -294,8 +314,8 @@ class SDImagingWorker(basetask.StandardTaskTemplate):
                       'stokes': stokes,
                       'ephemsrcname': ephemsrcname}
 
-        #remove existing image explicitly
-        for rmname in [imagename, imagename.rstrip('/')+'.weight']:
+        # remove existing image explicitly
+        for rmname in [imagename, imagename.rstrip('/') + '.weight']:
             if os.path.exists(rmname):
                 shutil.rmtree(rmname)
 
@@ -322,14 +342,14 @@ class SDImagingWorker(basetask.StandardTaskTemplate):
         image_args['spw'] = spwsel_list
         image_args['field'] = fieldsel_list
         image_args['antenna'] = antsel_list
-        LOG.debug('Executing sdimaging task: args=%s'%(image_args))
+        LOG.debug('Executing sdimaging task: args=%s' % (image_args))
         image_job = casa_tasks.sdimaging(**image_args)
 
         # execute job
         self._executor.execute(image_job)
         # check imaging result
         imagename = image_args['outfile']
-        weightname = imagename+'.weight'
+        weightname = imagename + '.weight'
         if not os.path.exists(imagename) or not os.path.exists(weightname):
             LOG.error("Generation of %s failed" % imagename)
             return False
@@ -339,8 +359,8 @@ class SDImagingWorker(basetask.StandardTaskTemplate):
         # image, and all pixels in corresponding weight image is zero. 
         with casatools.ImageReader(weightname) as ia:
             sumsq = ia.statistics()['sumsq'][0]
-        if sumsq==0.0:
+        if sumsq == 0.0:
             LOG.warning("No valid pixel found in image, %s. Discarding the image from futher processing." % imagename)
             return False
-        
+
         return True

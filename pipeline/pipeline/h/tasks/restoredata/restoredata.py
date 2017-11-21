@@ -86,7 +86,6 @@ class RestoreDataInputs(basetask.StandardInputs):
         a string or list of strings containing the ASDM(s) to be restored.
      """
 
-    @basetask.log_equivalent_CASA_call
     def __init__(self, context, copytoraw=None, products_dir=None, rawdata_dir=None,
         output_dir=None, session=None, vis=None, bdfflags=None, lazy=None, asis=None,
         ocorr_mode=None):
@@ -272,8 +271,7 @@ class RestoreData(basetask.StandardTaskTemplate):
     # Override the default behavior for multi-vis tasks
     # Does this interfere with multi-vis behavior of
     # called tasks.
-    def is_multi_vis_task(self):
-        return True
+    is_multi_vis_task = True
 
     def prepare(self):
         """

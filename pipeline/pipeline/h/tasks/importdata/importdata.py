@@ -4,6 +4,7 @@ import os
 import shutil
 import string
 import tarfile
+import types
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
@@ -23,15 +24,11 @@ LOG = infrastructure.get_logger(__name__)
 
 
 class ImportDataInputs(basetask.StandardInputs):
-    @basetask.log_equivalent_CASA_call
-    def __init__(self, context=None, vis=None, output_dir=None, asis=None, process_caldevice=None, session=None,
+    def __init__(self, context, vis=None, output_dir=None, asis=None, process_caldevice=None, session=None,
                  overwrite=None, nocopy=None, save_flagonline=None, bdfflags=None, lazy=None, createmms=None,
                  ocorr_mode=None):
-        super(ImportDataInputs, self).__init__()
+        super(ImportDataInputs, self).__init__(context, vis=vis, output_dir=output_dir)
 
-        self.context = context
-        self.vis = vis
-        self.output_dir = output_dir
         self.asis = asis
         self.process_caldevice = process_caldevice
         self.session = session

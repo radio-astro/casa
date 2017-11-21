@@ -26,8 +26,7 @@ def uniq(inlist):
 
 
 class UncalspwInputs(basetask.StandardInputs):
-    @basetask.log_equivalent_CASA_call
-    def __init__(self, context, vis=None, 
+    def __init__(self, context, vis=None,
                  # table selection arguments
                  delaycaltable=None, bpcaltable=None):
         # set the properties to the values given as input arguments

@@ -6,82 +6,50 @@ import numpy as np
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.casatools as casatools
+import pipeline.infrastructure.vdp as vdp
 from pipeline.h.tasks.common import commonresultobjects
 from pipeline.h.tasks.common import viewflaggers
 from pipeline.h.tasks.flagging.flagdatasetter import FlagdataSetter
 from .resultobjects import AtmflagResults, AtmflagDataResults, AtmflagViewResults
 
+__all__ = [
+    'Atmflag',
+    'AtmflagInputs'
+]
+
 LOG = infrastructure.get_logger(__name__)
 
 
-class AtmflagInputs(basetask.StandardInputs):
-    @basetask.log_equivalent_CASA_call
-    def __init__(self, context, output_dir=None, vis=None,
-                 intent=None, flag_minabs=None, fmin_limit=None,
+class AtmflagInputs(vdp.StandardInputs):
+    """
+    AtmflagInputs defines the inputs for the Atmflag pipeline task.
+    """
+    flag_minabs = vdp.VisDependentProperty(default=False)
+    flag_nmedian = vdp.VisDependentProperty(default=False)
+    fmin_limit = vdp.VisDependentProperty(default=0.1)
+    fnm_lo_limit = vdp.VisDependentProperty(default=0.5)
+    fnm_hi_limit = vdp.VisDependentProperty(default=1E9)
+    intent = vdp.VisDependentProperty(default='*AMP*,*BANDPASS*,*PHASE*')
+
+    def __init__(self, context, output_dir=None, vis=None, intent=None, flag_minabs=None, fmin_limit=None,
                  flag_nmedian=None, fnm_lo_limit=None, fnm_hi_limit=None):
+        super(AtmflagInputs, self).__init__()
 
-        # set the properties to the values given as input arguments
-        self._init_properties(vars())
+        # pipeline inputs
+        self.context = context
+        # vis must be set first, as other properties may depend on it
+        self.vis = vis
+        self.output_dir = output_dir
 
-    @property
-    def intent(self):
-        if self._intent is None:
-            return '*AMP*,*BANDPASS*,*PHASE*'
-        return self._intent
+        # data selection arguments
+        self.intent = intent
 
-    @intent.setter
-    def intent(self, value):
-        self._intent = value
-
-    @property
-    def flag_minabs(self):
-        if self._flag_minabs is None:
-            return False
-        return self._flag_minabs
-
-    @flag_minabs.setter
-    def flag_minabs(self, value):
-        self._flag_minabs = value
-
-    @property
-    def fmin_limit(self):
-        if self._fmin_limit is None:
-            return 0.1
-        return self._fmin_limit
-
-    @fmin_limit.setter
-    def fmin_limit(self, value):
-        self._fmin_limit = value
-
-    @property
-    def flag_nmedian(self):
-        if self._flag_nmedian is None:
-            return False
-        return self._flag_nmedian
-
-    @flag_nmedian.setter
-    def flag_nmedian(self, value):
-        self._flag_nmedian = value
-
-    @property
-    def fnm_lo_limit(self):
-        if self._fnm_lo_limit is None:
-            return 0.5
-        return self._fnm_lo_limit
-
-    @fnm_lo_limit.setter
-    def fnm_lo_limit(self, value):
-        self._fnm_lo_limit = value
-
-    @property
-    def fnm_hi_limit(self):
-        if self._fnm_hi_limit is None:
-            return 1E9
-        return self._fnm_hi_limit
-
-    @fnm_hi_limit.setter
-    def fnm_hi_limit(self, value):
-        self._fnm_hi_limit = value
+        # flagging parameters
+        self.flag_minabs = flag_minabs
+        self.fmin_limit = fmin_limit
+        self.flag_nmedian = flag_nmedian
+        self.fnm_lo_limit = fnm_lo_limit
+        self.fnm_hi_limit = fnm_hi_limit
 
 
 class Atmflag(basetask.StandardTaskTemplate):
@@ -143,9 +111,14 @@ class Atmflag(basetask.StandardTaskTemplate):
         return result
 
 
-class AtmflagDataInputs(basetask.StandardInputs):
+class AtmflagDataInputs(vdp.StandardInputs):
     def __init__(self, context, vis=None):
-        self._init_properties(vars())
+        super(AtmflagDataInputs, self).__init__()
+
+        # pipeline inputs
+        self.context = context
+        # vis must be set first, as other properties may depend on it
+        self.vis = vis
 
 
 class AtmflagData(basetask.StandardTaskTemplate):

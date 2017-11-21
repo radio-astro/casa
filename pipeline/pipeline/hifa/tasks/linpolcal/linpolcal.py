@@ -17,8 +17,7 @@ LOG = infrastructure.get_logger(__name__)
 
 
 class LinpolcalInputs(commoncalinputs.CommonCalibrationInputs):
-    @basetask.log_equivalent_CASA_call
-    def __init__(self, context, output_dir=None, 
+    def __init__(self, context, output_dir=None,
       vis=None, g0table=None, delaytable=None, 
       xyf0table=None, g1table=None, df0table=None,
       # data selection
@@ -138,9 +137,7 @@ class LinpolcalInputs(commoncalinputs.CommonCalibrationInputs):
 class Linpolcal(basetask.StandardTaskTemplate):
     Inputs = LinpolcalInputs
 
-    def is_multi_vis_task(self):
-        # can only work with one measurement set
-        return False
+    is_multi_vis_task = True
 
     def prepare(self):
         inputs = self.inputs
@@ -176,7 +173,8 @@ class Linpolcal(basetask.StandardTaskTemplate):
           scan=best_scan[field_id[0]])
 
         # need to reorder cal application from ..., B, G, K to ..., B, K, G.
-        calstate = inputs.context.callibrary.get_calstate(inputs.calto)
+        calto = callibrary.get_calto_from_inputs(inputs)
+        calstate = inputs.context.callibrary.get_calstate(calto)
         # should only be 1 calto - perhaps add an assert?
         calto, calfroms = calstate.merged().items()[0]
         calfrom_k = calfroms.pop()
@@ -202,7 +200,8 @@ class Linpolcal(basetask.StandardTaskTemplate):
 
         # revise the gain calibration now that we know the source polarization.
         # Again we need to modify the calstate, removing the last 2 cals: K, G.
-        calstate = inputs.context.callibrary.get_calstate(inputs.calto)
+        calto = callibrary.get_calto_from_inputs(inputs)
+        calstate = inputs.context.callibrary.get_calstate(calto)
         calto, calfroms = calstate.merged().items()[0]
         calfrom_xyf0 = calfroms.pop()
         old_gain = calfroms.pop()
@@ -218,7 +217,8 @@ class Linpolcal(basetask.StandardTaskTemplate):
 
         # finally, calculate the instrumental polarization
         # Again we need to modify the calstate, to ...,B, K, G1, XYf0.
-        calstate = inputs.context.callibrary.get_calstate(inputs.calto)
+        calto = callibrary.get_calto_from_inputs(inputs)
+        calstate = inputs.context.callibrary.get_calstate(calto)
         calto, calfroms = calstate.merged().items()[0]
         calfrom_g1 = calfroms.pop()
 
@@ -313,7 +313,8 @@ class Linpolcal(basetask.StandardTaskTemplate):
 
         # polcal not built in to hif so assemble parameters to
         # preapply calstate
-        calstate = inputs.context.callibrary.get_calstate(inputs.calto)
+        calto = callibrary.get_calto_from_inputs(inputs)
+        calstate = inputs.context.callibrary.get_calstate(calto)
         calto, calfroms = calstate.merged().items()[0]
         calapp = callibrary.CalApplication(calto, calfroms)
         gaintable = calapp.gaintable

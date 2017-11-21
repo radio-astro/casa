@@ -18,6 +18,7 @@ from pipeline.h.heuristics import fieldnames
 import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
+import pipeline.infrastructure.vdp as vdp
 from pipeline.infrastructure import casa_tasks
 from . import resultobjects
 
@@ -219,35 +220,15 @@ def correct_ant_posns (vis_name, print_offsets=False):
     return [ 0, ant_string, parms ]
 
 
-class PriorcalsInputs(basetask.StandardInputs):
-    @basetask.log_equivalent_CASA_call
+class PriorcalsInputs(vdp.StandardInputs):
+    swpow_spw = vdp.VisDependentProperty(default='')
+    tecmaps = vdp.VisDependentProperty(default=False)
+
     def __init__(self, context, vis=None, tecmaps=None, swpow_spw=None):
-        # set the properties to the values given as input arguments
-        self._init_properties(vars())
-
-    @property
-    def tecmaps(self):
-        return self._tecmaps
-
-    @tecmaps.setter
-    def tecmaps(self, value):
-        if value is None:
-            value = False
-        elif value:
-            value = True
-        else:
-            value = False
-        self._tecmaps = value
-
-    @property
-    def swpow_spw(self):
-        return self._swpow_spw
-
-    @swpow_spw.setter
-    def swpow_spw(self, value):
-        if value is None:
-            value = ''
-        self._swpow_spw = value
+        self.context = context
+        self.vis = vis
+        self.tecmaps = tecmaps
+        self.swpow_spw = swpow_spw
 
     def to_casa_args(self):
         raise NotImplementedError
@@ -266,7 +247,8 @@ class Priorcals(basetask.StandardTaskTemplate):
         sw_result = self._do_swpowcal()
         antpos_result, antcorrect = self._do_antpos()
         tecmaps_result = None
-        if self.inputs.tecmaps: tecmaps_result = self._do_tecmaps()
+        if self.inputs.tecmaps:
+            tecmaps_result = self._do_tecmaps()
         
         #try:
         #    antpos_result.merge_withcontext(self.inputs.context)
@@ -284,45 +266,44 @@ class Priorcals(basetask.StandardTaskTemplate):
     def _do_gaincurves(self):
         """Run gaincurves task"""
 
-        inputs = GainCurves.Inputs(self.inputs.context, output_dir='')
+        inputs = GainCurves.Inputs(self.inputs.context, vis=self.inputs.vis)
         task = GainCurves(inputs)
         return self._executor.execute(task)
 
     def _do_opcal(self):
         """Run opcal task"""
 
-        inputs = Opcal.Inputs(self.inputs.context, output_dir='')
+        inputs = Opcal.Inputs(self.inputs.context, vis=self.inputs.vis)
         task = Opcal(inputs)
         return self._executor.execute(task)
 
     def _do_rqcal(self):
         """Run requantizer gains task"""
 
-        inputs = Rqcal.Inputs(self.inputs.context, output_dir='')
+        inputs = Rqcal.Inputs(self.inputs.context, vis=self.inputs.vis)
         task = Rqcal(inputs)
         return self._executor.execute(task)
 
     def _do_swpowcal(self):
         """Run switched power task"""
 
-        inputs = Swpowcal.Inputs(self.inputs.context, output_dir='', spw=self.inputs.swpow_spw)
+        inputs = Swpowcal.Inputs(self.inputs.context, vis=self.inputs.vis, spw=self.inputs.swpow_spw)
         task = Swpowcal(inputs)
         return self._executor.execute(task)
 
     def _do_antpos(self):
         """Run hif_antpos to correct for antenna positions"""
-
-        inputs = Antpos.Inputs(self.inputs.context, output_dir='')
+        inputs = Antpos.Inputs(self.inputs.context, vis=self.inputs.vis)
         task = Antpos(inputs)
         result = self._executor.execute(task)
 
         antcorrect = {}
         
         try:
-            antpos_caltable = result[0].final[0].gaintable
+            antpos_caltable = result.final[0].gaintable
             if os.path.exists(antpos_caltable):
                 LOG.info("Start antenna position corrections")
-                antparamlist = correct_ant_posns(inputs.vis[0], print_offsets=False)
+                antparamlist = correct_ant_posns(inputs.vis, print_offsets=False)
                 LOG.info("End antenna position corrections")
 
                 self._check_tropdelay(antpos_caltable)

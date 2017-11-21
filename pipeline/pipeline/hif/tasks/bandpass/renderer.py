@@ -71,14 +71,19 @@ class T2_4MDetailsBandpassRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
         phase_details = {}
         phase_vs_time_subpages = {}
 
-        for result in results:
-            if not result.final:
-                continue
+        no_cal_results = [r for r in results if r.applies_adopted]
+        with_cal_results = [r for r in results if not r.applies_adopted and r.final]
 
+        # we want table entries for all results, but plots only for those with a caltable
+        for result in results:
             vis = os.path.basename(result.inputs['vis'])
             ms = context.observing_run.get_ms(vis)
             bandpass_table_rows.extend(self.get_bandpass_table(context, result, ms))
             phaseup_applications.extend(self.get_phaseup_applications(context, result, ms))
+
+        for result in with_cal_results:
+            vis = os.path.basename(result.inputs['vis'])
+            ms = context.observing_run.get_ms(vis)
             ms_refant = ms.reference_antenna.split(',')[0]
 
             # need two summary plots: one for the refant, one for the mode
@@ -133,7 +138,7 @@ class T2_4MDetailsBandpassRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                 (amp_details, BandpassAmpVsFreqPlotRenderer, amp_vs_time_subpages)):
             if d:
                 all_plots = list(utils.flatten([v for v in d.values()]))
-                renderer = plotter_cls(context, results, all_plots)
+                renderer = plotter_cls(context, with_cal_results, all_plots)
                 with renderer.get_file() as fileobj:
                     fileobj.write(renderer.render())
                     # redirect the subpages to the master page
@@ -141,11 +146,13 @@ class T2_4MDetailsBandpassRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                         subpages[vis] = renderer.path
 
         bandpass_table_rows = utils.merge_td_columns(bandpass_table_rows)
+        adopted_table_rows = make_adopted_table(context, results)
 
         # add the PlotGroups to the Mako context. The Mako template will parse
         # these objects in order to create links to the thumbnail pages we
         # just created
         ctx.update({'bandpass_table_rows': bandpass_table_rows,
+                    'adopted_table': adopted_table_rows,
                     'phaseup_applications': phaseup_applications,
                     'amp_mode': amp_mode,
                     'amp_refant': amp_refant,
@@ -176,7 +183,7 @@ class T2_4MDetailsBandpassRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                 
         applications = []
         for calapp in phaseup_calapps:
-            solint = calapp.origin.inputs['solint']
+            solint = utils.get_origin_input_arg(calapp, 'solint')
 
             if solint == 'inf':
                 solint = 'Infinite'
@@ -188,11 +195,13 @@ class T2_4MDetailsBandpassRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                 in_secs = ['%0.2fs' % (dt.seconds + dt.microseconds * 1e-6) 
                            for dt in utils.get_intervals(context, calapp)]
                 solint = 'Per integration (%s)' % utils.commafy(in_secs, quotes=False, conjunction='or')
-            
-            calmode = calapp.origin.inputs.get('calmode', 'N/A')
+
+            assert(len(calapp.origin) is 1)
+            origin = calapp.origin[0]
+            calmode = origin.inputs.get('calmode', 'N/A')
             calmode = calmode_map.get(calmode, calmode)
-            minblperant = calapp.origin.inputs.get('minblperant', 'N/A')
-            minsnr = calapp.origin.inputs.get('minsnr', 'N/A')
+            minblperant = origin.inputs.get('minblperant', 'N/A')
+            minsnr = origin.inputs.get('minsnr', 'N/A')
             flagged = 'TODO'
             phaseupbw = result.inputs.get('phaseupbw', 'N/A')
 
@@ -214,16 +223,10 @@ class T2_4MDetailsBandpassRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
             if to_intent == '':
                 to_intent = 'ALL'
 
-            LOG.todo('Make all CalAppOrigins a list?')
-            if type(calapp.origin) is not types.ListType:
-                calapp_origins = [calapp.origin]
-            else:
-                calapp_origins = calapp.origin
-
-            for calapp_origin in calapp_origins:                
-                spws = calapp_origin.inputs['spw'].split(',')
+            for origin in calapp.origins:
+                spws = origin.inputs['spw'].split(',')
                 
-                solint = calapp_origin.inputs['solint']
+                solint = origin.inputs['solint']
     
                 if solint == 'inf':
                     solint = 'Infinite'
@@ -238,7 +241,7 @@ class T2_4MDetailsBandpassRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
 
                 # TODO get this from the calapp rather than the top-level 
                 # inputs?
-                bandtype = calapp_origin.inputs['bandtype']
+                bandtype = origin.inputs['bandtype']
                 bandtype = bandtype_map.get(bandtype, bandtype)
                 a = BandpassApplication(ms.basename, bandtype, solint, 
                                         to_intent, ', '.join(spws), gaintable)
@@ -251,7 +254,7 @@ class BaseBandpassPlotRenderer(basetemplates.JsonPlotRenderer):
     def __init__(self, uri, context, results, plots, title, outfile,
                  score_types):
         # wrap singular lists so the code works the same for scalars and vectors
-        if not isinstance(results, list):
+        if not isinstance(results, collections.Iterable):
             results = [results]
 
         self._ms = {}
@@ -341,3 +344,21 @@ class BandpassPhaseVsFreqPlotRenderer(BaseBandpassPlotRenderer):
         super(BandpassPhaseVsFreqPlotRenderer, self).__init__(
                 'bandpass-phase_vs_freq_plots.mako', context, 
                 results, plots, title, outfile, score_types)
+
+
+AdoptedTR = collections.namedtuple('AdoptedTR', 'vis gaintable')
+
+
+def make_adopted_table(context, results):
+    # will hold all the flux stat table rows for the results
+    rows = []
+
+    for adopted_result in [r for r in results if r.applies_adopted]:
+        assert (len(adopted_result.final) == 1)
+        calapp = adopted_result.final[0]
+        vis_cell = os.path.basename(calapp.vis)
+        gaintable_cell = os.path.basename(calapp.gaintable)
+        tr = AdoptedTR(vis_cell, gaintable_cell)
+        rows.append(tr)
+
+    return utils.merge_td_columns(rows)

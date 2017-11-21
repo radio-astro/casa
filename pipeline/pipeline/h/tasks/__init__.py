@@ -1,6 +1,6 @@
 from __future__ import absolute_import
 
-from .applycal import Applycal
+from .applycal import Applycal, HpcApplycal
 from .exportdata import ExportData
 from .importdata import ImportData
 from .mstransform import MsSplit

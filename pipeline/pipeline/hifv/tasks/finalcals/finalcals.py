@@ -24,7 +24,6 @@ LOG = infrastructure.get_logger(__name__)
 
 
 class FinalcalsInputs(basetask.StandardInputs):
-    @basetask.log_equivalent_CASA_call
     def __init__(self, context, vis=None, weakbp=None, refantignore=None):
         # set the properties to the values given as input arguments
         self._init_properties(vars())
@@ -529,16 +528,6 @@ class Finalcals(basetask.StandardTaskTemplate):
         m = self.inputs.context.observing_run.get_ms(self.inputs.vis)
         calibrator_scan_select_string = context.evla['msinfo'][m.name].calibrator_scan_select_string
 
-        applycal_inputs = applycal.IFApplycal.Inputs(context,
-                                                     vis=self.inputs.vis,
-                                                     field='',
-                                                     spw='',
-                                                     # scan = calibrator_scan_select_string,
-                                                     intent='',
-                                                     flagbackup=False,
-                                                     calwt=False,
-                                                     flagsum=False)
-
         AllCalTables = sorted(self.inputs.context.callibrary.active.get_caltable())
         AllCalTables.append(ktypecaltable)
         AllCalTables.append(bpcaltable)
@@ -561,8 +550,6 @@ class Finalcals(basetask.StandardTaskTemplate):
                               'parang': self.parang,
                               'applymode': 'calflagstrict',
                               'flagbackup': False}
-
-        # applycal_task = applycal.IFApplycal(applycal_inputs)
 
         job = casa_tasks.applycal(**applycal_task_args)
 

@@ -5,16 +5,21 @@ from __future__ import absolute_import
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
+import pipeline.infrastructure.vdp as vdp
 from pipeline.h.tasks.common.arrayflaggerbase import FlagCmd
 from pipeline.infrastructure import casa_tasks
 
-# the logger for this module
+__all__ = [
+    'FlagdataSetter',
+    'FlagdataSetterInputs'
+]
+
 LOG = infrastructure.get_logger(__name__)
 
 
-class FlagdataSetterInputs(basetask.StandardInputs):
+class FlagdataSetterInputs(vdp.StandardInputs):
     """
-    FlagdataSetter manages the inputs for the FlagdataSetter task.
+    FlagdataSetterInputs manages the inputs for the FlagdataSetter task.
     """
 
     def __init__(self, context, table, vis=None, output_dir=None, inpfile=None):
@@ -31,17 +36,17 @@ class FlagdataSetterInputs(basetask.StandardInputs):
         :param inpfile: file with flagcmds
         :type inpfile: string
         """
-        self._init_properties(vars())
+        super(FlagdataSetterInputs, self).__init__()
 
-    @property
-    def inpfile(self):
-        if isinstance(self.table, list):
-            return self._handle_multiple_vis('inpfile')
-        return self._inpfile
+        # pipeline inputs
+        self.context = context
+        # vis must be set first, as other properties may depend on it
+        self.vis = vis
+        self.output_dir = output_dir
 
-    @inpfile.setter
-    def inpfile(self, value):
-        self._inpfile = value
+        # data selection arguments
+        self.table = table
+        self.inpfile = inpfile
 
 
 class FlagdataSetterResults(basetask.Results):

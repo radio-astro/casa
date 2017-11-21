@@ -1,16 +1,10 @@
 from __future__ import absolute_import
-import os
-import re
-import types
-import copy
 
 from pipeline.hif.heuristics import checkproductsize
 import pipeline.infrastructure as infrastructure
+import pipeline.infrastructure.api as api
 import pipeline.infrastructure.basetask as basetask
-import pipeline.infrastructure.casatools as casatools
-import pipeline.infrastructure.utils as utils
 import pipeline.infrastructure.project as project
-from pipeline.infrastructure import casa_tasks
 from .resultobjects import CheckProductSizeResult
 
 LOG = infrastructure.get_logger(__name__)
@@ -19,7 +13,6 @@ LOG = infrastructure.get_logger(__name__)
 class CheckProductSizeInputs(basetask.StandardInputs):
     parallel = basetask.property_with_default('parallel', 'automatic')
 
-    @basetask.log_equivalent_CASA_call
     def __init__(self, context, output_dir=None, vis=None,
                  maxcubesize=None, maxcubelimit=None, maxproductsize=None, parallel=None):
         self.performanceparameters = project.PerformanceParameters()
@@ -62,14 +55,13 @@ class CheckProductSizeInputs(basetask.StandardInputs):
 
 # tell the infrastructure to give us mstransformed data when possible by
 # registering our preference for imaging measurement sets
-basetask.ImagingMeasurementSetsPreferred.register(CheckProductSizeInputs)
+api.ImagingMeasurementSetsPreferred.register(CheckProductSizeInputs)
 
 
 class CheckProductSize(basetask.StandardTaskTemplate):
     Inputs = CheckProductSizeInputs
 
-    def is_multi_vis_task(self):
-        return True
+    is_multi_vis_task = True
 
     def prepare(self):
         checkproductsize_heuristics = checkproductsize.CheckProductSizeHeuristics(self.inputs)

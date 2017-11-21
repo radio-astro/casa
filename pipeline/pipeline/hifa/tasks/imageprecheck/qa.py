@@ -1,4 +1,6 @@
 from __future__ import absolute_import
+
+import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.pipelineqa as pqa
 import pipeline.infrastructure.utils as utils
@@ -25,7 +27,7 @@ class ImagePreCheckQAHandler(pqa.QAResultHandler):
 
 
 class ImagePreCheckListQAHandler(pqa.QAResultHandler):
-    result_cls = list
+    result_cls = basetask.ResultsList
     child_cls = imageprecheck.ImagePreCheckResults
 
     def handle(self, context, result):

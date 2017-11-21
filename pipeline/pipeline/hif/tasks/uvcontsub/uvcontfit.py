@@ -7,6 +7,7 @@ import types
 import numpy as np
 
 import pipeline.infrastructure as infrastructure
+import pipeline.infrastructure.api as api
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.callibrary as callibrary
 import pipeline.infrastructure.casatools as casatools
@@ -22,7 +23,6 @@ LOG = infrastructure.get_logger(__name__)
 
 class UVcontFitInputs(basetask.StandardInputs):
 
-    @basetask.log_equivalent_CASA_call
     def __init__(self, context, output_dir=None, vis=None,
         caltable=None, contfile=None, field=None, intent=None, spw=None,
         combine=None, solint=None, fitorder=None):
@@ -196,7 +196,7 @@ class UVcontFitInputs(basetask.StandardInputs):
 
 # tell the infrastructure to give us mstransformed data when possible by
 # registering our preference for imaging measurement sets
-basetask.ImagingMeasurementSetsPreferred.register(UVcontFitInputs)
+api.ImagingMeasurementSetsPreferred.register(UVcontFitInputs)
 
 
 class UVcontFit(basetask.StandardTaskTemplate):

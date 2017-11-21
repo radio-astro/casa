@@ -31,20 +31,25 @@ class.
 """
 from __future__ import absolute_import
 import os
-import types
 import string
 
 import flaghelper
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
+import pipeline.infrastructure.vdp as vdp
 from pipeline.infrastructure import casa_tasks
 
-# the logger for this module
+__all__ = [
+    'FlagDeterBase',
+    'FlagDeterBaseInputs',
+    'FlagDeterBaseResults'
+]
+
 LOG = infrastructure.get_logger(__name__)
 
 
-class FlagDeterBaseInputs(basetask.StandardInputs):
+class FlagDeterBaseInputs(vdp.StandardInputs):
     """
     FlagDeterBaseInputs manages the inputs for the FlagDeterBase task.
     
@@ -116,105 +121,61 @@ class FlagDeterBaseInputs(basetask.StandardInputs):
         RFI, birdies, telluric lines, etc.).    
     """    
 
-    autocorr = basetask.property_with_default('autocorr', True)
-    edgespw = basetask.property_with_default('edgespw', False)
-    flagbackup = basetask.property_with_default('flagbackup', False)
-    fracspw = basetask.property_with_default('fracspw', 0.05)
-    online = basetask.property_with_default('online', True)
-    scan = basetask.property_with_default('scan', True)
-    scannumber = basetask.property_with_default('scannumber', '')
-    shadow = basetask.property_with_default('shadow', True)
-    template = basetask.property_with_default('template', False)
+    autocorr = vdp.VisDependentProperty(default=True)
+    edgespw = vdp.VisDependentProperty(default=False)
 
-    def __init__(self, context, vis=None, output_dir=None, flagbackup=None,
-                 autocorr=None, shadow=None, scan=None, scannumber=None,
-                 intents=None, edgespw=None, fracspw=None, fracspwfps=None, 
-                 online=None, fileonline=None, template=None, filetemplate=None, 
-                 hm_tbuff=None, tbuff=None):
-        # set the properties to the values given as input arguments
-        self._init_properties(vars())
-
-    @property
+    @vdp.VisDependentProperty
     def fileonline(self):
-        if isinstance(self.vis, list):
-            return self._handle_multiple_vis('fileonline')
-        
-        if self._fileonline is None:
-            vis_root = os.path.splitext(self.vis)[0]
-            return vis_root + '.flagonline.txt'
-        return self._fileonline
-    
-    @fileonline.setter
-    def fileonline(self, value):
-        self._fileonline = value
+        vis_root = os.path.splitext(self.vis)[0]
+        return vis_root + '.flagonline.txt'
 
-    @property
+    @vdp.VisDependentProperty
     def filetemplate(self):
-        if isinstance(self.vis, list):
-            return self._handle_multiple_vis('filetemplate')
+        vis_root = os.path.splitext(self.vis)[0]
+        return vis_root + '.flagtemplate.txt'
 
-        if not self._filetemplate:
-            vis_root = os.path.splitext(self.vis)[0]
-            return vis_root + '.flagtemplate.txt'
-
-        if type(self._filetemplate) is types.ListType:
-            idx = self._my_vislist.index(self.vis)
-            return self._filetemplate[idx]
-
-        return self._filetemplate
-
-    @filetemplate.setter
+    @filetemplate.convert
     def filetemplate(self, value):
-        if value in (None, ''):
-            value = []
-        elif type(value) is types.StringType:
-            value = list(value.replace('[', '').replace(']', '').replace("'", "").split(','))
-        self._filetemplate = value
+        if isinstance(value, str):
+            return list(value.replace('[', '').replace(']', '').replace("'", "").split(','))
+        else:
+            return value
 
-    @property
+    flagbackup = vdp.VisDependentProperty(default=False)
+    fracspw = vdp.VisDependentProperty(default=0.05)
+
+    @vdp.VisDependentProperty
     def hm_tbuff(self):
-        return self._hm_tbuff
-    
-    @hm_tbuff.setter
-    def hm_tbuff(self, value=None):
-        if value is None: 
-            value = 'halfint'
-        if value not in ('halfint', '1.5int', 'manual'):
+        return 'halfint'
+
+    @hm_tbuff.convert
+    def hm_tbuff(self, value):
+        if value in ('halfint', '1.5int', 'manual'):
+            return value
+        else:
             LOG.warning('Unexpected value for hm_tbuff: {0}. Using'
                         ' halfint.'.format(value))
-            value = 'halfint'
-        self._hm_tbuff = value
+            return 'halfint'
 
-    @property
+    @vdp.VisDependentProperty
     def inpfile(self):
-        if isinstance(self.vis, list):
-            return self._handle_multiple_vis('inpfile')
-
         vis_root = os.path.splitext(self.vis)[0]
         return os.path.join(self.output_dir, vis_root + '.flagcmds.txt')
 
-    @property
+    @vdp.VisDependentProperty
     def intents(self):
-        if isinstance(self.vis, list):
-            return self._handle_multiple_vis('intents')
-
-        if self._intents is not None:
-            return self._intents
-
         # return just the unwanted intents that are present in the MS
         intents_to_flag = {'POINTING', 'FOCUS', 'ATMOSPHERE', 'SIDEBAND',
                            'UNKNOWN', 'SYSTEM_CONFIGURATION'}
         return ','.join(self.ms.intents.intersection(intents_to_flag))
 
-    @intents.setter
-    def intents(self, value):
-        self._intents = value        
+    online = vdp.VisDependentProperty(default=True)
+    scan = vdp.VisDependentProperty(default=True)
+    scannumber = vdp.VisDependentProperty(default='')
+    shadow = vdp.VisDependentProperty(default=True)
 
-    @property
+    @vdp.VisDependentProperty
     def tbuff(self):
-        if isinstance(self.vis, list):
-            return self._handle_multiple_vis('tbuff')
-
         if self.hm_tbuff == 'halfint':
             if any([a.diameter == 7.0 for a in self.ms.antennas]):
                 return [0.048, 0.0]
@@ -232,16 +193,39 @@ class FlagDeterBaseInputs(basetask.StandardInputs):
             else:
                 t = self.ms.get_median_integration_time()
             return [1.5 * t]
-
         else:
-            return self._tbuff
-            
-    @tbuff.setter
-    def tbuff(self, value=None):
-        if value is None:
-            value = [0.0, 0.0]
-        self._tbuff = value                
-        
+            return [0.0, 0.0]
+
+    template = vdp.VisDependentProperty(default=False)
+
+    def __init__(self, context, vis=None, output_dir=None, flagbackup=None, autocorr=None, shadow=None, scan=None,
+                 scannumber=None, intents=None, edgespw=None, fracspw=None, fracspwfps=None, online=None,
+                 fileonline=None, template=None, filetemplate=None, hm_tbuff=None, tbuff=None):
+        super(FlagDeterBaseInputs, self).__init__()
+
+        # pipeline inputs
+        self.context = context
+        # vis must be set first, as other properties may depend on it
+        self.vis = vis
+        self.output_dir = output_dir
+
+        # solution parameters
+        self.flagbackup = flagbackup
+        self.autocorr = autocorr
+        self.shadow = shadow
+        self.scan = scan
+        self.scannumber = scannumber
+        self.intents = intents
+        self.edgespw = edgespw
+        self.fracspw = fracspw
+        self.fracspwfps = fracspwfps
+        self.online = online
+        self.fileonline = fileonline
+        self.template = template
+        self.filetemplate = filetemplate
+        self.hm_tbuff = hm_tbuff
+        self.tbuff = tbuff
+
     def to_casa_args(self):
         """
         Translate the input parameters of this class to task parameters 
@@ -250,13 +234,13 @@ class FlagDeterBaseInputs(basetask.StandardInputs):
         
         :rtype: dict        
         """
-        return {'vis'        : self.vis,
-                'mode'       : 'list',
-                'action'     : 'apply',                     
-                'inpfile'    : self.inpfile,
-                'tbuff'      : self.tbuff,
-                'savepars'   : False,
-                'flagbackup' : self.flagbackup}
+        return {'vis': self.vis,
+                'mode': 'list',
+                'action': 'apply',
+                'inpfile': self.inpfile,
+                'tbuff': self.tbuff,
+                'savepars': False,
+                'flagbackup': self.flagbackup}
 
 
 class FlagDeterBaseResults(basetask.Results):

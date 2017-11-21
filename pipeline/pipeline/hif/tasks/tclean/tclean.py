@@ -1,19 +1,18 @@
 import os
 import shutil
 import glob
-import decimal
 import commands
 
 import pipeline.domain.measures as measures
 from pipeline.hif.heuristics import imageparams_factory
 import pipeline.infrastructure as infrastructure
+import pipeline.infrastructure.api as api
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.mpihelpers as mpihelpers
 import pipeline.infrastructure.pipelineqa as pipelineqa
 import pipeline.infrastructure.utils as utils
 from pipeline.infrastructure import casa_tasks
-from .basecleansequence import BaseCleanSequence
 from .imagecentrethresholdsequence import ImageCentreThresholdSequence
 from .automaskthresholdsequence import AutoMaskThresholdSequence
 from .manualmaskthresholdsequence import ManualMaskThresholdSequence
@@ -182,13 +181,12 @@ class TcleanInputs(cleanbase.CleanBaseInputs):
         
 # tell the infrastructure to give us mstransformed data when possible by
 # registering our preference for imaging measurement sets
-basetask.ImagingMeasurementSetsPreferred.register(TcleanInputs)
+api.ImagingMeasurementSetsPreferred.register(TcleanInputs)
 
 class Tclean(cleanbase.CleanBase):
     Inputs = TcleanInputs
 
-    def is_multi_vis_task(self):
-        return True
+    is_multi_vis_task = True
 
     def copy_products(self, old_pname, new_pname):
         imlist = commands.getoutput('ls -d '+old_pname+'.*')

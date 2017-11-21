@@ -3,8 +3,9 @@ import types
 import os
 
 import pipeline.infrastructure as infrastructure
-import pipeline.infrastructure.utils as utils
+import pipeline.infrastructure.api as api
 import pipeline.infrastructure.basetask as basetask
+import pipeline.infrastructure.utils as utils
 from .resultobjects import MakeImListResult
 from .cleantarget import CleanTarget
 from pipeline.hif.heuristics import imageparams_factory
@@ -15,8 +16,7 @@ LOG = infrastructure.get_logger(__name__)
 
 
 class MakeImListInputs(basetask.StandardInputs):
-    @basetask.log_equivalent_CASA_call
-    def __init__(self, context, output_dir=None, vis=None, 
+    def __init__(self, context, output_dir=None, vis=None,
       imagename=None, intent=None, field=None, spw=None, contfile=None,
       linesfile=None, uvrange=None, specmode=None, outframe=None,
       hm_imsize=None, hm_cell=None, calmaxpix=None, phasecenter=None,
@@ -270,14 +270,13 @@ class MakeImListInputs(basetask.StandardInputs):
 
 # tell the infrastructure to give us mstransformed data when possible by
 # registering our preference for imaging measurement sets
-basetask.ImagingMeasurementSetsPreferred.register(MakeImListInputs)
+api.ImagingMeasurementSetsPreferred.register(MakeImListInputs)
 
 
 class MakeImList(basetask.StandardTaskTemplate):
     Inputs = MakeImListInputs
 
-    def is_multi_vis_task(self):
-        return True
+    is_multi_vis_task = True
 
     def prepare(self):
         # this python class will produce a list of images to be calculated.

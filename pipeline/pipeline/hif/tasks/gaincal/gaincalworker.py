@@ -46,9 +46,9 @@ class GaincalWorker(basetask.StandardTaskTemplate):
 
         # make a note of the current inputs state before we start fiddling
         # with it. This origin will be attached to the final CalApplication.
-        origin = callibrary.CalAppOrigin(task=GaincalWorker, 
-                                         inputs=inputs.to_casa_args())
-        
+        origin = [callibrary.CalAppOrigin(task=GaincalWorker,
+                                          inputs=inputs.to_casa_args())]
+
         # make fast the caltable name by manually setting it to its current 
         # value. This makes the caltable name permanent, so we can 
         # subsequently append calibrations for each spectral window to the one
@@ -56,7 +56,8 @@ class GaincalWorker(basetask.StandardTaskTemplate):
         inputs.caltable = inputs.caltable
 
         # create a job for each CalTo data selection
-        calstate = inputs.context.callibrary.get_calstate(inputs.calto)                
+        calto = callibrary.get_calto_from_inputs(inputs)
+        calstate = inputs.context.callibrary.get_calstate(calto)
 
         # make a memo of the original spw input. These are the spws we will
         # apply the resultant caltable to
@@ -100,7 +101,6 @@ class GaincalWorker(basetask.StandardTaskTemplate):
         # should calibrate 
         calto = callibrary.CalTo(vis=inputs.vis,
                                  spw=orig_spw)
-                                 #antenna=orig_antenna)
 
         # create the calfrom object describing which data should be selected
         # from this caltable when applied to other data. Set the table name

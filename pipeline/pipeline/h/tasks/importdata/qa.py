@@ -166,7 +166,7 @@ class ImportDataQAHandler(pqa.QAResultHandler):
 
 
 class ImportDataListQAHandler(pqa.QAResultHandler):
-    result_cls = list
+    result_cls = collections.Iterable
     child_cls = importdata.ImportDataResults
 
     def handle(self, context, result):

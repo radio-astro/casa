@@ -1,57 +1,81 @@
 from __future__ import absolute_import
-
+import itertools
 import os
 
-import pipeline.infrastructure.basetask as basetask
-import pipeline.infrastructure.casatools as casatools
 import pipeline.domain.measures as measures
 import pipeline.infrastructure as infrastructure
+import pipeline.infrastructure.basetask as basetask
+import pipeline.infrastructure.casatools as casatools
+import pipeline.infrastructure.mpihelpers as mpihelpers
+import pipeline.infrastructure.sessionutils as sessionutils
+import pipeline.infrastructure.utils as utils
+import pipeline.infrastructure.vdp as vdp
 
-from pipeline.hif.tasks.bandpass import bandpassworker
-from pipeline.hif.tasks.bandpass  import bandpassmode
-from pipeline.hif.tasks import gaincal
-
+from pipeline.infrastructure import callibrary
+from ....hif.tasks.bandpass import bandpassworker
+from ....hif.tasks.bandpass import bandpassmode
+from ....hif.tasks.bandpass.common import BandpassResults
+from ....hif.tasks import gaincal
 from ..bpsolint import bpsolint
 
 LOG = infrastructure.get_logger(__name__)
 
-class ALMAPhcorBandpassInputs(bandpassmode.BandpassModeInputs):
 
-    # Phaseup heuristics, options are '', 'manual' and 'snr'
-    hm_phaseup = basetask.property_with_default('hm_phaseup', 'snr')
-    #    'manual' mode
-    #phaseupbw     = basetask.property_with_default('phaseupbw', '500MHz')
-    phaseupbw     = basetask.property_with_default('phaseupbw', '')
-    #    'snr' mode
-    phaseupsnr = basetask.property_with_default('phaseupsnr', 20.0)
-    phaseupnsols = basetask.property_with_default('phaseupnsols', 2)
-    #    'manual' and 'snr' mode
-    phaseupsolint = basetask.property_with_default('phaseupsolint', 'int')
+__all__ = [
+    'ALMAPhcorBandpassInputs',
+    'ALMAPhcorBandpass',
+    'SessionALMAPhcorBandpass',
+    'SessionALMAPhcorBandpassInputs'
+]
+
+
+class ALMAPhcorBandpassInputs(bandpassmode.BandpassModeInputs):
+    bpnsols = vdp.VisDependentProperty(default=8)
+    bpsnr = vdp.VisDependentProperty(default=50.0)
+    evenbpints = vdp.VisDependentProperty(default=True)
 
     # Bandpass heuristics, options are 'fixed', 'smoothed', and 'snr'
-    hm_bandpass = basetask.property_with_default('hm_bandpass', 'snr')
-    #    'fixed', 'smoothed', and 'snr' mode
-    solint = basetask.property_with_default('solint', 'inf')
-    #    'smoothed' mode
-    maxchannels = basetask.property_with_default('maxchannels', 240)
-    #    'snr' mode
-    evenbpints = basetask.property_with_default('evenbpints', True)
-    bpsnr = basetask.property_with_default('bpsnr', 50.0)
-    bpnsols = basetask.property_with_default('bpnsols', 8)
-    
-    @basetask.log_equivalent_CASA_call
-    def __init__(self, context, mode=None, hm_phaseup=None,
-                 phaseupbw=None, phaseupsolint=None,
-                 phaseupsnr=None, phaseupnsols=None,
-                 hm_bandpass=None, solint=None, maxchannels=None,
-                 evenbpints=None, bpsnr=None, bpnsols=None,
-                 **parameters):
-        super(ALMAPhcorBandpassInputs, self).__init__(context, mode='channel',
-            hm_phaseup=hm_phaseup, phaseupbw=phaseupbw,
-            phaseupsolint=phaseupsolint, phaseupsnr=phaseupsnr, phaseupnsols=phaseupnsols,
-            hm_bandpass=hm_bandpass, solint=solint, maxchannels=maxchannels,
-            evenbpints=evenbpints, bpsnr=bpsnr, bpnsols=bpnsols,
-            **parameters)
+    hm_bandpass = vdp.VisDependentProperty(default='snr')
+    @hm_bandpass.convert
+    def hm_bandpass(self, value):
+        allowed = ('fixed', 'smoothed', 'snr')
+        if value not in allowed:
+            m = ', '.join(('{!r}'.format(i) for i in allowed))
+            raise ValueError('Value not in allowed value set ({!s}): {!r}'.format(m, value))
+        return value
+
+    # Phaseup heuristics, options are '', 'manual' and 'snr'
+    hm_phaseup = vdp.VisDependentProperty(default='snr')
+    @hm_phaseup.convert
+    def hm_phaseup(self, value):
+        allowed = ('', 'manual', 'snr')
+        if value not in allowed:
+            m = ', '.join(('{!r}'.format(i) for i in allowed))
+            raise ValueError('Value not in allowed value set ({!s}): {!r}'.format(m, value))
+        return value
+
+    maxchannels = vdp.VisDependentProperty(default=240)
+    phaseupbw = vdp.VisDependentProperty(default='')
+    phaseupnsols = vdp.VisDependentProperty(default=2)
+    phaseupsnr = vdp.VisDependentProperty(default=20.0)
+    phaseupsolint = vdp.VisDependentProperty(default='int')
+    solint = vdp.VisDependentProperty(default='inf')
+
+    def __init__(self, context, mode=None, hm_phaseup=None, phaseupbw=None, phaseupsolint=None, phaseupsnr=None,
+                 phaseupnsols=None, hm_bandpass=None, solint=None, maxchannels=None, evenbpints=None, bpsnr=None,
+                 bpnsols=None, **parameters):
+        super(ALMAPhcorBandpassInputs, self).__init__(context, mode=mode, **parameters)
+        self.bpnsols = bpnsols
+        self.bpsnr = bpsnr
+        self.evenbpints = evenbpints
+        self.hm_bandpass = hm_bandpass
+        self.hm_phaseup = hm_phaseup
+        self.maxchannels = maxchannels
+        self.phaseupbw = phaseupbw
+        self.phaseupnsols = phaseupnsols
+        self.phaseupsnr = phaseupsnr
+        self.phaseupsolint = phaseupsolint
+        self.solint = solint
 
 
 class ALMAPhcorBandpass(bandpassworker.BandpassWorker):
@@ -64,8 +88,7 @@ class ALMAPhcorBandpass(bandpassworker.BandpassWorker):
         #     hm_phaseup='snr'
         # or
         #     hm_bandpass='snr'
-        if inputs.hm_phaseup =='snr' or \
-            inputs.hm_bandpass == 'snr':
+        if inputs.hm_phaseup == 'snr' or inputs.hm_bandpass == 'snr':
             snr_result = self._compute_bpsolints()
         else:
             snr_result = None
@@ -239,27 +262,27 @@ class ALMAPhcorBandpass(bandpassworker.BandpassWorker):
     def _do_phaseup(self, phaseupsolint='int'):
         inputs = self.inputs
 
-        phaseup_inputs = gaincal.GTypeGaincal.Inputs(inputs.context,
-            vis         = inputs.vis,
-            field       = inputs.field,
-            spw         = self._get_phaseup_spw(),
-            antenna     = inputs.antenna,
-            intent      = inputs.intent,
-            #solint     = inputs.phaseupsolint,
-            solint      = phaseupsolint,
-            refant      = inputs.refant,
-            minblperant = inputs.minblperant,
-            calmode     = 'p',
-            minsnr      = inputs.minsnr)
+        phaseup_inputs = gaincal.GTypeGaincal.Inputs(
+            inputs.context,
+            vis=inputs.vis,
+            field=inputs.field,
+            spw=self._get_phaseup_spw(),
+            antenna=inputs.antenna,
+            intent=inputs.intent,
+            solint=phaseupsolint,
+            refant=inputs.refant,
+            minblperant=inputs.minblperant,
+            calmode='p',
+            minsnr=inputs.minsnr
+        )
 
         phaseup_task = gaincal.GTypeGaincal(phaseup_inputs)
-        #result = self._executor.execute(phaseup_task, merge=True)
         result = self._executor.execute(phaseup_task, merge=False)
-	if not result.final:
+        if not result.final:
             LOG.warning('No bandpass phaseup solution for %s' % (inputs.ms.basename))
-	else:
-	    result.accept(inputs.context)
-	return result
+        else:
+            result.accept(inputs.context)
+        return result
 
     # Compute a standard bandpass
     def _do_bandpass(self):
@@ -319,11 +342,11 @@ class ALMAPhcorBandpass(bandpassworker.BandpassWorker):
                 if os.path.exists(self.inputs.caltable):
                     self.inputs.append = True
                     self.inputs.caltable = result.final[-1].gaintable                
-                    calapp_origins.append(result.final[-1].origin)
+                    calapp_origins.extend(result.final[-1].origin)
 
             # Reset the calto spw list
             result.pool[0].calto.spw = orig_spw
-	    if result.final:
+            if result.final:
                 result.final[0].calto.spw = orig_spw
                 result.final[0].origin = calapp_origins
             
@@ -413,11 +436,11 @@ class ALMAPhcorBandpass(bandpassworker.BandpassWorker):
                 if os.path.exists(self.inputs.caltable):
                     self.inputs.append = True
                     self.inputs.caltable = result.final[-1].gaintable              
-                    calapp_origins.append(result.final[-1].origin)
-                    
+                    calapp_origins.extend(result.final[-1].origin)
+
             # Reset the calto spw list
             result.pool[0].calto.spw = orig_spw
-	    if result.final:
+            if result.final:
                 result.final[0].calto.spw = orig_spw
                 result.final[0].origin = calapp_origins
 
@@ -463,20 +486,207 @@ class ALMAPhcorBandpass(bandpassworker.BandpassWorker):
         return ','.join(outspw)
 
 
-# Constrain the solint to be the largest even number of integrations which
-# are greater than a specified maximum. The inputs and outputs are times in
-# seconds in string quanta format '60.0s'
-
-def _constrain_phaseupsolint (input_solint, integration_time, max_solint):
-
+def _constrain_phaseupsolint(input_solint, integration_time, max_solint):
+    """
+    Constrain the solint to be the largest even number of integrations
+    which are greater than a specified maximum. The inputs and outputs
+    are times in seconds in string quanta format '60.0s'
+    """
     quanta = casatools.quanta
 
     input_solint_q = quanta.quantity(input_solint)
-    integration_time_q = quanta.quantity (integration_time)
+    integration_time_q = quanta.quantity(integration_time)
     max_solint_q = quanta.quantity(max_solint)
 
     newsolint_q = input_solint_q
     while quanta.gt(newsolint_q, max_solint_q):
-         newsolint_q = quanta.sub(newsolint_q, integration_time_q)
+        newsolint_q = quanta.sub(newsolint_q, integration_time_q)
 
     return quanta.tos(newsolint_q, 3)
+
+
+class SessionALMAPhcorBandpassInputs(ALMAPhcorBandpassInputs):
+    # We want to apply bandpass calibrations from BANDPASS scans, not
+    # fall back to calibration against PHASE or AMPLITUDE scans
+    intent = vdp.VisDependentProperty(default='BANDPASS')
+
+    # use common implementation for parallel inputs argument
+    parallel = sessionutils.parallel_inputs_impl()
+
+    def __init__(self, context, mode=None, hm_phaseup=None, phaseupbw=None, phaseupsolint=None, phaseupsnr=None,
+                 phaseupnsols=None, hm_bandpass=None, solint=None, maxchannels=None, evenbpints=None, bpsnr=None,
+                 bpnsols=None, parallel=None, **parameters):
+        super(SessionALMAPhcorBandpassInputs, self).__init__(context, mode=mode, hm_phaseup=hm_phaseup,
+                                                             phaseupbw=phaseupbw, phaseupsolint=phaseupsolint,
+                                                             phaseupsnr=phaseupsnr, phaseupnsols=phaseupnsols,
+                                                             hm_bandpass=hm_bandpass, solint=solint,
+                                                             maxchannels=maxchannels, evenbpints=evenbpints,
+                                                             bpsnr=bpsnr, bpnsols=bpnsols, **parameters)
+        self.parallel = parallel
+
+
+BANDPASS_MISSING = '___BANDPASS_MISSING___'
+
+
+class SessionALMAPhcorBandpass(basetask.StandardTaskTemplate):
+    Inputs = SessionALMAPhcorBandpassInputs
+
+    is_multi_vis_task = True
+
+    def prepare(self):
+        inputs = self.inputs
+
+        vis_list = sessionutils.as_list(inputs.vis)
+
+        assessed = []
+        with sessionutils.VDPTaskFactory(inputs, self._executor, ALMAPhcorBandpass) as factory:
+            task_queue = [(vis, factory.get_task(vis)) for vis in vis_list]
+
+            for (vis, (task_args, task)) in task_queue:
+                # only launch jobs for MSes with bandpass calibrators.
+                # The analyse() method will subsequently adopt the
+                # appropriate bandpass calibration table from one of
+                # the completed jobs.
+                ms = inputs.context.observing_run.get_ms(vis)
+                if 'BANDPASS' not in ms.intents:
+                    assessed.append(sessionutils.VisResultTuple(vis, task_args, BANDPASS_MISSING))
+                    continue
+                try:
+                    worker_result = task.get_result()
+                except mpihelpers.PipelineError as e:
+                    assessed.append(sessionutils.VisResultTuple(vis, task_args, e))
+                else:
+                    assessed.append(sessionutils.VisResultTuple(vis, task_args, worker_result))
+
+        return assessed
+
+    def analyse(self, assessed):
+        # all results will be added to this object
+        final_result = basetask.ResultsList()
+
+        context = self.inputs.context
+
+        session_groups = sessionutils.group_into_sessions(context, assessed)
+        for session_id, session_results in session_groups.iteritems():
+            # get a list of MeasurementSet domain objects for all MSes
+            # in this session
+            session_mses = [context.observing_run.get_ms(vis_result.vis) for vis_result in session_results]
+
+            # get a list of all bandpass scans in this session,
+            # flattening the list of lists to form a single list of
+            # scan domain objects
+            bandpass_scans = list(itertools.chain(*[ms.get_scans(scan_intent='BANDPASS') for ms in session_mses]))
+
+            # create a dict of scan objects to name of the MS
+            # containing that scan
+            scans_to_vis = {scan: ms.name
+                            for scan in bandpass_scans
+                            for ms in session_mses
+                            if scan in ms.scans}
+
+            # create a dict of scan object to results object for the MS
+            # containing that scan
+            scan_to_result = {scan: result
+                              for vis, _, result in session_results
+                              for scan in bandpass_scans
+                              if vis == scans_to_vis[scan]}
+
+            for vis, task_args, vis_result in session_results:
+                if vis_result == BANDPASS_MISSING:
+                    # No bandpass calibrator for this MS, so adopt the
+                    # nearest bandpass calibration in time
+
+                    # get bandpass closest in time, identified from the
+                    # centre of the bandpass scan to the centre of this
+                    # observation
+                    no_bandpass_ms = context.observing_run.get_ms(vis)
+                    centre_time = centre_datetime_from_epochs(no_bandpass_ms.start_time, no_bandpass_ms.end_time)
+                    closest_scan = min(bandpass_scans, key=lambda scan: get_time_delta_seconds(centre_time, scan))
+
+                    # identify which result contains this closest scan
+                    # and adopt its CalApplications
+                    result_to_add = scan_to_result[closest_scan]
+                    adopted_ms = context.observing_run.get_ms(result_to_add.inputs['vis'])
+
+                    LOG.info('Adopting calibrations from {!s} for {!s}'
+                             ''.format(adopted_ms.basename, no_bandpass_ms.basename))
+                    fake_result = BandpassResults(applies_adopted=True)
+                    fake_result.inputs = task_args
+                    fake_result.stage_number = result_to_add.stage_number
+
+                    for calapp in result_to_add.final:
+                        session_calto = calapp.calto
+                        session_calfrom = calapp.calfrom
+
+                        # remap spectral windows to apply calibration
+                        # to
+                        my_spw = sessionutils.remap_spw_str(adopted_ms, no_bandpass_ms, session_calto.spw)
+                        my_calto = callibrary.CalTo(vis=vis, field='', spw=my_spw, antenna='', intent='')
+
+                        for cf in session_calfrom:
+                            # remap spectral windows to take
+                            # calibration from
+                            my_spwmap = sessionutils.remap_spw_int(adopted_ms, no_bandpass_ms, cf.spwmap)
+
+                            my_calfrom = callibrary.CalFrom(gaintable=cf.gaintable,
+                                                            gainfield=cf.gainfield,
+                                                            interp=cf.interp,
+                                                            spwmap=my_spwmap,
+                                                            caltype=cf.caltype,
+                                                            calwt=cf.calwt)
+
+                            remapped_calapp = callibrary.CalApplication(my_calto, my_calfrom, origin=calapp.origin)
+                            fake_result.final.append(remapped_calapp)
+
+                        final_result.append(fake_result)
+
+                elif isinstance(vis_result, Exception):
+                    LOG.error('No bandpass solution created for {!s}'.format(os.path.basename(vis)))
+
+                    fake_result = BandpassResults()
+                    fake_result.inputs = task_args
+
+                    final_result.append(fake_result)
+
+                else:
+                    # the bandpass job for an individual MS is wrapped
+                    # in a ResultsList, hence [0].
+                    final_result.append(vis_result)
+
+        return final_result
+
+
+def centre_datetime_from_epochs(epoch1, epoch2):
+    """
+    Get the time midpoint between two epochs.
+
+    :param epoch1: epoch 1
+    :param epoch2: epoch 2
+    :return: time between epoch1 and epoch2
+    :rtype: datetime.datetime
+    """
+    time1 = utils.get_epoch_as_datetime(epoch1)
+    time2 = utils.get_epoch_as_datetime(epoch2)
+    # use min & max so it doesn't depend on correct time ordering of
+    # arguments
+    start = min([time1, time2])
+    end = max([time1, time2])
+    return start + (end - start) / 2
+
+
+def get_time_delta_seconds(time, scan):
+    """
+    Get the absolute time difference between a time t and a scan's time
+    of observation. The time difference is calculated as the difference
+    between t and the midpoint of the scan.
+
+    :param time: time point
+    :type time: datetime.datetime
+    :param scan: scan to measure time to
+    :type scan: Scan domain object
+    :return: time between time and scan midpoint
+    :rtype: datetime.timedelta
+    """
+    scan_centre = centre_datetime_from_epochs(scan.start_time, scan.end_time)
+    dt = time - scan_centre
+    return abs(dt.total_seconds())

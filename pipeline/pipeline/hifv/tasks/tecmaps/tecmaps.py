@@ -13,7 +13,6 @@ LOG = infrastructure.get_logger(__name__)
 
 
 class TecMapsInputs(basetask.StandardInputs):
-    @basetask.log_equivalent_CASA_call
     def __init__(self, context, output_dir=None, vis=None, caltable=None, caltype=None, parameter=[]):
         # set the properties to the values given as input arguments
         self._init_properties(vars())

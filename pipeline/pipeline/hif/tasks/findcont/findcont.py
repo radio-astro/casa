@@ -7,6 +7,7 @@ import copy
 from pipeline.hif.heuristics import findcont
 from pipeline.hif.heuristics import imageparams_factory
 import pipeline.infrastructure as infrastructure
+import pipeline.infrastructure.api as api
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.contfilehandler as contfilehandler
@@ -21,7 +22,6 @@ LOG = infrastructure.get_logger(__name__)
 class FindContInputs(basetask.StandardInputs):
     parallel = basetask.property_with_default('parallel', 'automatic')
 
-    @basetask.log_equivalent_CASA_call
     def __init__(self, context, output_dir=None, vis=None, target_list=None,
                  parallel=None):
         self._init_properties(vars())
@@ -38,14 +38,13 @@ class FindContInputs(basetask.StandardInputs):
 
 # tell the infrastructure to give us mstransformed data when possible by
 # registering our preference for imaging measurement sets
-basetask.ImagingMeasurementSetsPreferred.register(FindContInputs)
+api.ImagingMeasurementSetsPreferred.register(FindContInputs)
 
 
 class FindCont(basetask.StandardTaskTemplate):
     Inputs = FindContInputs
 
-    def is_multi_vis_task(self):
-        return True
+    is_multi_vis_task = True
 
     def prepare(self):
         inputs = self.inputs

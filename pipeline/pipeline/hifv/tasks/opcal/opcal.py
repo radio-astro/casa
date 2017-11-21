@@ -8,6 +8,7 @@ import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.callibrary as callibrary
 import pipeline.infrastructure.casatools as casatools
+import pipeline.infrastructure.vdp as vdp
 from pipeline.h.heuristics import caltable as caltable_heuristic
 from pipeline.hifv.heuristics import find_EVLA_band
 from pipeline.infrastructure import casa_tasks
@@ -44,66 +45,31 @@ def _find_spw(vis, bands, context):
     return all_spws, center_frequencies
 
 
-class OpcalInputs(basetask.StandardInputs):
-    @basetask.log_equivalent_CASA_call
-    def __init__(self, context, output_dir=None, vis=None, caltable=None, caltype=None, parameter=None, spw=None):
-        # set the properties to the values given as input arguments
-        self._init_properties(vars())
-        setattr(self, 'caltype', 'opac')
+class OpcalInputs(vdp.StandardInputs):
+    spw = vdp.VisDependentProperty(default='')
 
-    @property
+    @vdp.VisDependentProperty
     def caltable(self):
-        # The value of caltable is ms-dependent, so test for multiple
-        # measurement sets and listify the results if necessary 
-        if type(self.vis) is types.ListType:
-            return self._handle_multiple_vis('caltable')
-        
-        # Get the name.
-        if callable(self._caltable):
-            casa_args = self._get_partial_task_args()
-            return self._caltable(output_dir=self.output_dir,
-                                  stage=self.context.stage, **casa_args)
-        return self._caltable
-        
-    @caltable.setter
-    def caltable(self, value):
-        if value is None:
-            value = caltable_heuristic.OpCaltable()
-        self._caltable = value
-    
-    @property
+        namer = caltable_heuristic.OpCaltable()
+        casa_args = self._get_task_args(ignore=('caltable',))
+        return namer.calculate(output_dir=self.output_dir, stage=self.context.stage, **casa_args)
+
+    @vdp.VisDependentProperty
     def parameter(self):
-        return self._parameter
+        return []
 
-    @parameter.setter
-    def parameter(self, value):
-        if value is None:
-            value = []
-        self._parameter = value
-    
-    @property
-    def spw(self):
-        return self._spw
-    
-    @spw.setter
-    def spw(self, value):
-        if value is None:
-            value = ''
-        self._spw = value
+    def __init__(self, context, output_dir=None, vis=None, caltable=None, parameter=None, spw=None):
+        self.context = context
+        self.output_dir = output_dir
+        self.vis = vis
+        self.spw = spw
+        self.parameter = parameter
+        self.caltable = caltable
 
-    # Avoids circular dependency on caltable.
-    # NOT SURE WHY THIS IS NECESSARY.
-    def _get_partial_task_args(self):
-        return {'vis': self.vis, 'caltype': self.caltype}
-
-    # Convert to CASA gencal task arguments.
     def to_casa_args(self):
-        
-        return {'vis': self.vis,
-                'caltable': self.caltable,
-                'caltype': self.caltype,
-                'parameter': self.parameter,
-                'spw': self.spw}
+        args = super(OpcalInputs, self).to_casa_args()
+        args['caltype'] = 'opac'
+        return args
 
 
 class Opcal(basetask.StandardTaskTemplate):

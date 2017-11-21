@@ -1,17 +1,16 @@
-'''
+"""
 Created on 11 Sep 2014
 
 @author: sjw
-'''
-
+"""
+import collections
 import os
-import types
 import numpy as np
 
 import pipeline.hif.tasks.bandpass.renderer as baserenderer
+import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.utils as utils
-import pipeline.infrastructure.casatools as casatools
 
 LOG = logging.get_logger(__name__)
 
@@ -31,10 +30,12 @@ class T2_4MDetailsBandpassRenderer(baserenderer.T2_4MDetailsBandpassRenderer):
         hm_phaseup = result.inputs.get('hm_phaseup', 'N/A')
         if not hm_phaseup:
             return []
-        
-        calmode_map = {'p':'Phase only',
-                       'a':'Amplitude only',
-                       'ap':'Phase and amplitude'}
+
+        calmode_map = {
+            'p': 'Phase only',
+            'a': 'Amplitude only',
+            'ap': 'Phase and amplitude'
+        }
         
         # identify phaseup from 'preceding' list attached to result
         phaseup_calapps = [] 
@@ -46,7 +47,7 @@ class T2_4MDetailsBandpassRenderer(baserenderer.T2_4MDetailsBandpassRenderer):
                 
         applications = []
         for calapp in phaseup_calapps:
-            solint = calapp.origin.inputs['solint']
+            solint = utils.get_origin_input_arg(calapp, 'solint')
 
             if solint == 'inf':
                 solint = 'Infinite'
@@ -57,20 +58,18 @@ class T2_4MDetailsBandpassRenderer(baserenderer.T2_4MDetailsBandpassRenderer):
             if solint == 'int':
                 in_secs = ['%0.2fs' % (dt.seconds + dt.microseconds * 1e-6) 
                            for dt in utils.get_intervals(context, calapp)]
-                solint = 'Per integration (%s)' % utils.commafy(in_secs, 
-                                                                quotes=False, 
-                                                                conjunction='or')
-            
-            calmode = calapp.origin.inputs.get('calmode', 'N/A')
+                solint = 'Per integration (%s)' % utils.commafy(in_secs, quotes=False, conjunction='or')
+
+            assert (len(calapp.origin) == 1)
+            origin = calapp.origin[0]
+            calmode = origin.inputs.get('calmode', 'N/A')
             calmode = calmode_map.get(calmode, calmode)
-            minblperant = calapp.origin.inputs.get('minblperant', 'N/A')
-            minsnr = calapp.origin.inputs.get('minsnr', 'N/A')
+            minblperant = origin.inputs.get('minblperant', 'N/A')
+            minsnr = origin.inputs.get('minsnr', 'N/A')
             flagged = 'TODO'
             phaseupbw = result.inputs.get('phaseupbw', 'N/A')
 
-            a = baserenderer.PhaseupApplication(ms.basename, calmode, solint,
-                                                minblperant, minsnr, flagged,
-                                                phaseupbw)
+            a = baserenderer.PhaseupApplication(ms.basename, calmode, solint, minblperant, minsnr, flagged, phaseupbw)
             applications.append(a)
 
         return applications
@@ -78,25 +77,22 @@ class T2_4MDetailsBandpassRenderer(baserenderer.T2_4MDetailsBandpassRenderer):
     def get_bandpass_table(self, context, result, ms):
         applications = []
 
-        bandtype_map = {'B': 'Channel',
-                        'BPOLY': 'Polynomial'}
+        bandtype_map = {
+            'B': 'Channel',
+            'BPOLY': 'Polynomial'
+        }
 
-        for calapp in result.final:
+        for calapp in [ca for ca in result.final if not result.applies_adopted]:
             gaintable = os.path.basename(calapp.gaintable)
             to_intent = ', '.join(calapp.intent.split(','))
             if to_intent == '':
                 to_intent = 'ALL'
 
-            LOG.todo('Make all CalAppOrigins a list?')
-            if type(calapp.origin) is not types.ListType:
-                calapp_origins = [calapp.origin]
-            else:
-                calapp_origins = calapp.origin
+            for origin in calapp.origin:
+                print origin
+                spws = origin.inputs['spw'].split(',')
 
-            for calapp_origin in calapp_origins:
-                spws = calapp_origin.inputs['spw'].split(',')
-
-                solint = calapp_origin.inputs['solint']
+                solint = origin.inputs['solint']
 
                 if solint == 'inf':
                     solint = 'Infinite'
@@ -113,7 +109,7 @@ class T2_4MDetailsBandpassRenderer(baserenderer.T2_4MDetailsBandpassRenderer):
 
                 # TODO get this from the calapp rather than the top-level
                 # inputs?
-                bandtype = calapp_origin.inputs['bandtype']
+                bandtype = origin.inputs['bandtype']
                 bandtype = bandtype_map.get(bandtype, bandtype)
                 a = baserenderer.BandpassApplication(ms.basename, bandtype, solint,
                                         to_intent, ', '.join(spws), gaintable)
@@ -159,4 +155,3 @@ class T2_4MDetailsBandpassRenderer(baserenderer.T2_4MDetailsBandpassRenderer):
             afreqsolint = timesolint + ',' + freqsolint  + '(%0.1fch)' % (nchan) 
 
         return afreqsolint
-

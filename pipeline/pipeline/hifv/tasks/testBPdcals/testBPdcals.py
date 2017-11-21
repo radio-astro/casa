@@ -2,15 +2,12 @@ from __future__ import absolute_import
 
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure as infrastructure
-import pipeline.infrastructure.callibrary as callibrary
 from pipeline.infrastructure import casa_tasks
 import numpy as np
 
 
 from pipeline.hif.tasks import gaincal
-from pipeline.hif.tasks import bandpass
-from pipeline.hif.tasks import applycal
-from pipeline.hifv.heuristics import getCalFlaggedSoln, getBCalStatistics
+from pipeline.hifv.heuristics import getCalFlaggedSoln
 import pipeline.hif.heuristics.findrefant as findrefant
 from pipeline.hifv.heuristics import weakbp, do_bandpass
 
@@ -18,7 +15,6 @@ LOG = infrastructure.get_logger(__name__)
 
 
 class testBPdcalsInputs(basetask.StandardInputs):
-    @basetask.log_equivalent_CASA_call
     def __init__(self, context, vis=None, weakbp=None, refantignore=None):
         # set the properties to the values given as input arguments
         self._init_properties(vars())
@@ -583,16 +579,6 @@ class testBPdcals(basetask.StandardTaskTemplate):
         m = self.inputs.context.observing_run.get_ms(self.inputs.vis)
         testgainscans = context.evla['msinfo'][m.name].testgainscans
 
-        applycal_inputs = applycal.IFApplycal.Inputs(context,
-            vis = self.inputs.vis,
-            field = '',
-            spw = '',
-            intent = '',
-            #scan = testgainscans,
-            flagbackup = False,
-            calwt = False,
-            flagsum = False)
-
         AllCalTables = sorted(self.inputs.context.callibrary.active.get_caltable())
         AllCalTables.append(ktypecaltable)
         AllCalTables.append(bpdgain_touse)
@@ -616,9 +602,6 @@ class testBPdcals(basetask.StandardTaskTemplate):
                               'applymode'  :'calflagstrict',
                               'flagbackup' :False}
 
-        
-        #applycal_task = applycal.Applycal(applycal_inputs)
-        
         job = casa_tasks.applycal(**applycal_task_args)
 
         return self._executor.execute(job)

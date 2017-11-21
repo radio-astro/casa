@@ -12,7 +12,6 @@ LOG = infrastructure.get_logger(__name__)
 
 class BpSolintInputs(basetask.StandardInputs):
 
-    @basetask.log_equivalent_CASA_call
     def __init__(self, context, output_dir=None, vis=None, field=None,
          intent=None, spw=None, phaseupsnr=None, minphaseupints=None,
          evenbpints=None, bpsnr=None, minbpnchan=None, hm_nantennas=None, maxfracflagged=None): 

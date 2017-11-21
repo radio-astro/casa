@@ -28,11 +28,11 @@ import uuid
 import numpy as np
 
 import cachetools
+import pyparsing
 
 # for is_top_level_task
 from mpi4casa.MPIEnvironment import MPIEnvironment
 
-import pipeline.extern.pyparsing as pyparsing
 import pipeline.extern.ps_mem as ps_mem
 from . import casatools
 from . import logging
@@ -422,10 +422,7 @@ def pickle_copy(original):
 
 
 def pickle_load(fileobj):
-    unpickled = pickle.load(fileobj)
-    if hasattr(unpickled, 'reconnect_weakrefs'):
-        unpickled.reconnect_weakrefs()
-    return unpickled
+    return pickle.load(fileobj)
 
 
 def gen_hash(o):
@@ -477,20 +474,30 @@ def range_to_list(arg):
     return list(atoms.parseString(str(arg)))
 
 
-def collect_properties(instance, ignore=[]):
+def collect_properties(instance, ignore=None):
     """
     Return the public properties of an object as a dictionary
     """
+    if ignore is None:
+        ignore = []
     skip = ['context', 'ms']
     skip.extend(ignore)
     properties = {}
     for dd_name, dd in inspect.getmembers(instance.__class__, inspect.isdatadescriptor):
         if dd_name.startswith('_') or dd_name in skip:
             continue
+        # Hidden VDP properties should not be included
+        if getattr(dd, 'hidden', False) is True:
+            continue
         try:
-            properties[dd_name] = dd.fget(instance)
-        except:
-            LOG.debug('Could not get input property %s' % dd_name)
+            properties[dd_name] = getattr(instance, dd_name)
+            # properties[dd_name] = dd.fget(instance)
+        except TypeError:
+            # TODO can we always use this instead of the data descriptor fget?
+            properties[dd_name] = getattr(instance, dd_name)
+        except AttributeError:
+            LOG.debug('Could not get input property: {!s}.{!s}'.format(instance.__class__, dd_name))
+
     return properties
 
 
@@ -588,20 +595,27 @@ def get_logrecords(result, loglevel):
     :param loglevel: the loglevel to match
     :return:
     """
-    if isinstance(result, list):
+    try:
+        # WeakProxy is registered as an Iterable (and a Container, Hashable, etc.)
+        # so we can't check for isinstance(result, collections.Iterable)
+        # see https://bugs.python.org/issue24067
+        _ = iter(result)
+    except TypeError:
+        if not hasattr(result, 'logrecords'):
+            return []
+        records = [l for l in result.logrecords if l.levelno is loglevel]
+    else:
         # note that flatten returns a generator, which empties after
         # traversal. we convert to a list to allow multiple traversals
         g = flatten([get_logrecords(r, loglevel) for r in result])
         records = list(g)
-    else:
-        records = [l for l in result.logrecords if l.levelno is loglevel]
 
     # append the message target to the LogRecord so we can link to the
     # matching page in the web log
     try: 
         target = os.path.basename(result.inputs['vis'])
         for r in records:
-            r.target = {'vis':target}
+            r.target = {'vis': target}
     except:
         pass
 
@@ -678,7 +692,7 @@ def _convert_arg_to_id(arg_name, ms_path, arg_val):
 
 
 def get_qascores(result, lo=None, hi=None):
-    if isinstance(result, list):
+    if isinstance(result, collections.Iterable):
         scores = flatten([get_qascores(r, lo, hi) for r in result])
     else:
         scores = [s for s in result.qa.pool
@@ -741,30 +755,64 @@ def get_intervals(context, calapp, spw_ids=None):
         use all spws specified in the CalApplication.
     :return: a list of datetime objects representing the unique scan intervals 
     """
-    ms = context.observing_run.get_ms(calapp.vis)
 
-    from_intent = calapp.origin.inputs['intent']
-    # from_intent is given in CASA intents, ie. *AMPLI*, *PHASE*
-    # etc. We need this in pipeline intents.
-    pipeline_intent = to_pipeline_intent(ms, from_intent)
-    scans = ms.get_scans(scan_intent=pipeline_intent)
+    # With the advent of session calibrations, the target MS for the
+    # calibration may be different from the MS used to calculate the
+    # calibration. Therefore, we must look to the calapp.origin, which
+    # refers to the originating calls, to calculate the true values.
+    vis = {o.inputs['vis'] for o in calapp.origin}
+    assert(len(vis) == 1)
+    vis = vis.pop()
+
+    from_intent = {o.inputs['intent'] for o in calapp.origin}
+    assert(len(from_intent) == 1)
+    from_intent = from_intent.pop()
 
     # let CASA parse spw arg in case it contains channel spec
     if not spw_ids:
-        spw_ids = set([spw_id for (spw_id, _, _, _) 
-                       in spw_arg_to_id(calapp.vis, calapp.spw)])
-    
-    all_solints = set()
-    for scan in scans:
-        scan_spw_ids = set([spw.id for spw in scan.spws])
-        # scan with intent may not have data for the spws used in
-        # the gaincal call, eg. X20fb, so only get the solint for 
-        # the intersection
-        solints = [scan.mean_interval(spw_id) 
-                   for spw_id in spw_ids.intersection(scan_spw_ids)]
-        all_solints.update(set(solints))
-    
+        task_spw_args = {o.inputs['spw'] for o in calapp.origin}
+        spw_arg = ','.join(task_spw_args)
+        spw_ids = {spw_id for (spw_id, _, _, _) in spw_arg_to_id(vis, spw_arg)}
+
+    # from_intent is given in CASA intents, ie. *AMPLI*, *PHASE*
+    # etc. We need this in pipeline intents.
+    ms = context.observing_run.get_ms(vis)
+    pipeline_intent = to_pipeline_intent(ms, from_intent)
+    scans = ms.get_scans(scan_intent=pipeline_intent)
+
+    # scan with intent may not have data for the spws used in the
+    # gaincal call, eg. X20fb. Only get the solint for spws in the call
+    # by using the intersection.
+    all_solints = {scan.mean_interval(spw_id)
+                   for scan in scans
+                   for spw_id in spw_ids.intersection({spw.id for spw in scan.spws})}
+
     return all_solints
+
+    # ms = context.observing_run.get_ms(calapp.vis)
+    #
+    # from_intent = calapp.origin.inputs['intent']
+    # # from_intent is given in CASA intents, ie. *AMPLI*, *PHASE*
+    # # etc. We need this in pipeline intents.
+    # pipeline_intent = to_pipeline_intent(ms, from_intent)
+    # scans = ms.get_scans(scan_intent=pipeline_intent)
+    #
+    # # let CASA parse spw arg in case it contains channel spec
+    # if not spw_ids:
+    #     spw_ids = set([spw_id for (spw_id, _, _, _)
+    #                    in spw_arg_to_id(calapp.vis, calapp.spw)])
+    #
+    # all_solints = set()
+    # for scan in scans:
+    #     scan_spw_ids = set([spw.id for spw in scan.spws])
+    #     # scan with intent may not have data for the spws used in
+    #     # the gaincal call, eg. X20fb, so only get the solint for
+    #     # the intersection
+    #     solints = [scan.mean_interval(spw_id)
+    #                for spw_id in spw_ids.intersection(scan_spw_ids)]
+    #     all_solints.update(set(solints))
+    #
+    # return all_solints
 
 
 def merge_jobs(jobs, task, merge=None, ignore=None):
@@ -1275,6 +1323,26 @@ def check_ppr(pprfile):
         return True
     else:
         return False
+
+
+def get_origin_input_arg(calapp, attr):
+    """
+    Get a single-valued task input argument from a CalApp.
+
+    If more than one value is present, for instance, asking for solint
+    when the originating jobs have different solint arguments, an
+    assertion error will be raised.
+
+    :param calapp: CalApplication to inspect
+    :type calapp: callibrary.CalApplication
+    :param attr: name of input argument
+    :type attr: str
+    :return:
+    """
+    values = {o.inputs[attr] for o in calapp.origin}
+    assert (len(values) == 1)
+    return values.pop()
+
 
 def write_errorexit_file(path, root, extension):
 

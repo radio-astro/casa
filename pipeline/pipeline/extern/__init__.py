@@ -14,7 +14,9 @@ import sortedcontainers
 sys.path.append(pkg_resources.resource_filename(__name__, 'intervaltree-2.1.0-py2.7.egg'))
 import intervaltree
 
-from . import pyparsing
+sys.path.append(pkg_resources.resource_filename(__name__, 'pyparsing-2.1.7-py2.7.egg'))
+import pyparsing
+
 from . import logutils
 from . import XmlObjectifier
 #from . import analysis_scripts

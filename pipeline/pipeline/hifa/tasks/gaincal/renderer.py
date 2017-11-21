@@ -69,7 +69,8 @@ class T2_4MDetailsGaincalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                 diagnostic_solints[vis]['phase'] = 'N/A'
 
             try:
-                diag_solint = result.calampresult.final[0].origin.inputs['solint']
+                diag_calapp = result.calampresult.final[0]
+                diag_solint = utils.get_origin_input_arg(diag_calapp, 'solint')
                 diagnostic_solints[vis]['amp'] = diag_solint
             except IndexError:
                 diagnostic_solints[vis]['amp'] = 'N/A'
@@ -214,13 +215,15 @@ class T2_4MDetailsGaincalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
 
     def get_gaincal_applications(self, context, result, ms):
         applications = []
-        
-        calmode_map = {'p':'Phase only',
-                       'a':'Amplitude only',
-                       'ap':'Phase and amplitude'}
+
+        calmode_map = {
+            'p': 'Phase only',
+            'a': 'Amplitude only',
+            'ap': 'Phase and amplitude'
+        }
         
         for calapp in result.final:
-            solint = calapp.origin.inputs['solint']
+            solint = utils.get_origin_input_arg(calapp, 'solint')
 
             if solint == 'inf':
                 solint = 'Infinite'
@@ -236,11 +239,11 @@ class T2_4MDetailsGaincalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
             gaintable = os.path.basename(calapp.gaintable)
             spw = ', '.join(calapp.spw.split(','))
 
-            to_intent = ', '.join(calapp.intent.split(','))
+            to_intent = ', '.join(calapp.calto.intent.split(','))
             if to_intent == '':
                 to_intent = 'ALL'
 
-            calmode = calapp.origin.inputs['calmode']
+            calmode = utils.get_origin_input_arg(calapp, 'calmode')
             calmode = calmode_map.get(calmode, calmode)
             a = GaincalApplication(ms.basename, gaintable, calmode, solint,
                                    to_intent, spw)
@@ -267,7 +270,7 @@ class GaincalPhaseVsTimeDiagnosticPlotRenderer(basetemplates.JsonPlotRenderer):
         title = 'Phase vs time for %s' % vis
         outfile = filenamer.sanitize('diagnostic_phase_vs_time-%s.html' % vis)
 
-        if not isinstance(results, list):
+        if not isinstance(results, collections.Iterable):
             results = [results]
 
         # collect QA results generated for this vis

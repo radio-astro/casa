@@ -29,10 +29,20 @@ def gridding_factory(observing_pattern):
     else:
         raise ValueError('observing_pattern \'%s\' is invalid.'%(observing_pattern))
 
+
 class GriddingInputs(basetask.StandardInputs):
     def __init__(self, context, msnames, antennaids, fieldids, spwids, poltypes, nx=None, ny=None):
-        self._init_properties(vars())
-        
+        super(GriddingInputs, self).__init__(context)
+
+        self.antennaids = antennaids
+        self.fieldids = fieldids
+        self.msnames = msnames
+        self.nx = nx
+        self.ny = ny
+        self.poltypes = poltypes
+        self.spwids = spwids
+
+
 class GriddingResults(common.SingleDishResults):
     def __init__(self, task=None, success=None, outcome=None):
         super(GriddingResults, self).__init__(task, success, outcome)
@@ -56,8 +66,7 @@ class GriddingBase(basetask.StandardTaskTemplate):
             'WeightRMS': True, \
             'WeightTsysExptime': False} 
 
-    def is_multi_vis_task(self):
-        return True
+    is_multi_vis_task = True
 
     def prepare(self):
         start = time.time()

@@ -30,7 +30,6 @@ class SDBaselineInputs(basetask.StandardInputs):
     """
     Inputs for baseline subtraction
     """
-    @basetask.log_equivalent_CASA_call
     def __init__(self, context, infiles=None, antenna=None, spw=None, pol=None, field=None,
                  linewindow=None, edge=None, broadline=None, fitorder=None,
                  fitfunc=None, clusteringalgorithm=None, deviationmask=None):
@@ -178,8 +177,7 @@ class SDBaseline(basetask.StandardTaskTemplate):
             
             return field_id_list, antenna_id_list, spw_id_list
     
-    def is_multi_vis_task(self):
-        return True
+    is_multi_vis_task = True
     
 #    @memory_profiler.profile
     def prepare(self):

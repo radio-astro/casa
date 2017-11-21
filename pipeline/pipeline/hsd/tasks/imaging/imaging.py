@@ -22,7 +22,7 @@ from . import sdcombine
 from .. import common
 from pipeline.extern import sensitivity_improvement
 from ..common import utils as sdutils
-from ..common import compress 
+from ..common import compress
 from ..baseline import baseline
 
 LOG = infrastructure.get_logger(__name__)
@@ -34,13 +34,19 @@ class SDImagingInputs(basetask.StandardInputs):
     """
     Inputs for imaging
     """
-    @basetask.log_equivalent_CASA_call
-    def __init__(self, context, mode=None, infiles=None,
-                 field=None, spw=None):
-        self._init_properties(vars())
-        self.vis = infiles
+    def __init__(self, context, mode=None, infiles=None, field=None, spw=None):
+        super(SDImagingInputs, self).__init__(context, vis=infiles)
+
+        if mode is None:
+            mode = 'line'
+
+        self.field = field
+        self.mode = mode
+        self.spw = spw
+
+        # SJW any subsequent redefinition of vis will not be reflected in
+        # infiles. This should probably be fixed.
         self.infiles = self.vis
-        if self.mode is None: self.mode='line'
 
     @property
     def msid_list(self):
@@ -48,23 +54,11 @@ class SDImagingInputs(basetask.StandardInputs):
         Returns MS index in context observing run specified as infiles.
         """
         ms_names = [ms.name for ms in self.context.observing_run.measurement_sets]
-        return map(ms_names.index, map(os.path.abspath, self.infiles))
+        return map(ms_names.index, map(os.path.abspath, self.vis))
 
     @property
     def antenna(self):
         return ''
-#         if self._antenna is not None:
-#             return self._antenna
-#   
-#         antennas = self.ms.get_antenna(self._antenna)
-#         return ','.join([str(a.id) for a in antennas])
-#   
-#     @antenna.setter
-#     def antenna(self, value):
-#         if value is None:
-#             # use all antenna by default
-#             value = ''
-#         self._antenna = value
 
     @property
     def field(self):
@@ -89,7 +83,7 @@ class SDImagingInputs(basetask.StandardInputs):
 
     @property
     def intent(self):
-        return "TARGET"
+        return 'TARGET'
 
     @property
     def spw(self):
@@ -144,7 +138,7 @@ class SDImagingResults(basetask.ResultsList):
         # merge per item
         super(SDImagingResults, self).merge_with_context(context)
 
-        
+
 class SDImaging(basetask.StandardTaskTemplate):
     Inputs = SDImagingInputs
     # stokes to image and requred POLs for it
@@ -152,8 +146,7 @@ class SDImaging(basetask.StandardTaskTemplate):
     # for linear feed in ALMA. this affects pols passed to gridding module
     required_pols = ['XX', 'YY']
 
-    def is_multi_vis_task(self):
-        return True
+    is_multi_vis_task = True
 
     def prepare(self):
         inputs = self.inputs
@@ -274,7 +267,7 @@ class SDImaging(basetask.StandardTaskTemplate):
             tocombine_images = []
             combined_pols = []
             combined_rms_exclude = []
-  
+
             coord_set = False
             for (name, _members) in image_group.iteritems():
                 msobjs =  map(lambda x: x[0], _members)
@@ -427,7 +420,7 @@ class SDImaging(basetask.StandardTaskTemplate):
                                                                  nx=nx, ny=ny)
                         gridding_task = grid_task_class(gridding_inputs)
                         gridding_result = self._executor.execute(gridding_task)
-                        
+
                         # Extract RMS and number of spectra from grid_tables
                         if isinstance(gridding_result.outcome, compress.CompressedObj):
                             grid_table = gridding_result.outcome.decompress()
@@ -436,7 +429,7 @@ class SDImaging(basetask.StandardTaskTemplate):
                         validsps.append([r[6] for r in grid_table])
                         rmss.append([r[8] for r in grid_table])
                         del grid_table
-                    
+
                     # define RMS ranges in image
                     LOG.info("Calculate spectral line and deviation mask frequency ranges in image.")
                     with casatools.ImageReader(imager_result.outcome) as ia:
@@ -445,7 +438,7 @@ class SDImaging(basetask.StandardTaskTemplate):
                         rms_exclude_freq = self._get_rms_exclude_freq_range_image(frequency_frame, chanmap_range_list, edge, msobjs, antids, spwids, fieldids)
                         LOG.info("The spectral line and deviation mask frequency ranges = %s" % str(rms_exclude_freq))
                     combined_rms_exclude.extend(rms_exclude_freq)
- 
+
                     image_item = imagelibrary.ImageItem(imagename=imagename,
                                                         sourcename=source_name,
                                                         spwlist=spwids,
@@ -475,8 +468,8 @@ class SDImaging(basetask.StandardTaskTemplate):
                     result.task = self.__class__
   
                     result.stage_number = inputs.context.task_counter 
-                    
-                                                  
+
+
                     results.append(result)
                       
             if imagemode == 'AMPCAL':
@@ -632,7 +625,7 @@ class SDImaging(basetask.StandardTaskTemplate):
                 image_rms = statval['rms'][0]
                 LOG.info("Statistics of line free channels (%s): RMS = %f %s, Stddev = %f %s, Mean = %f %s" % (stat_chans, statval['rms'][0], brightnessunit, statval['sigma'][0], brightnessunit, statval['mean'][0], brightnessunit))
 
-                # estimate 
+                # estimate
                 if is_representative_spw:
                     # skip estimate if data is Cycle 2 and earlier + th effective BW is nominal (= chan_width)
                     spwobj = ref_ms.get_spectral_window(rep_spwid)
@@ -699,9 +692,9 @@ class SDImaging(basetask.StandardTaskTemplate):
                                           outcome=outcome,
                                           sensitivity_info=sensitivity_info)
                 result.stage_number = inputs.context.task_counter 
-                
+
                 results.append(result)
-        
+
         return results
     
     def analyse(self, result):
@@ -712,7 +705,7 @@ class SDImaging(basetask.StandardTaskTemplate):
         """
         A utility method to obtain combined list of frequency ranges of
         deviation mask, channel map ranges, and edges.
-        
+
         Arguments
             to_frame    : the frequency frame of output
             chanmap_ranges    : a list of channel ranges to incorporate, e.g., [[min0,max0], [min1,max1], ...]
@@ -771,10 +764,10 @@ class SDImaging(basetask.StandardTaskTemplate):
             qmid_time = qa.quantity(start_time['m0'])
             qmid_time = qa.add(qmid_time, end_time['m0'])
             qmid_time = qa.div(qmid_time, 2.0)
-            time_ref = me.epoch(rf=start_time['refer'], 
+            time_ref = me.epoch(rf=start_time['refer'],
                                 v0=qmid_time)
             position_ref = msobj.antennas[antid].position
-                    
+
             # initialize
             me.done()
             me.doframe(time_ref)
@@ -792,11 +785,11 @@ class SDImaging(basetask.StandardTaskTemplate):
             return image_rms_freq_range
         return self._merge_ranges(numpy.reshape(image_rms_freq_range, (len(image_rms_freq_range)/2, 2), 'C'))
 
-    
+
     def _merge_ranges(self, range_list):
         """
         A utility method to merge overlapping ranges in range_list.
-        
+
         Argument
             range_list    : a list of ranges to merge, e.g., [ [min0,max0], [min1,max1], .... ]
                             each range in the list should be in ascending order (min0 <= max0)
@@ -832,6 +825,6 @@ class SDImaging(basetask.StandardTaskTemplate):
             merged = self._merge_ranges(merged)
         #LOG.info("#####Merged: %s" % str(merged))
         return merged
-            
-            
-    
+
+
+

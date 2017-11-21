@@ -5,10 +5,8 @@ from taskinit import casalog
 import pipeline.h.cli.utils as utils
 
 
-def h_applycal(vis=None, field=None, intent=None, spw=None, antenna=None,
-    applymode=None, calwt=None, flagbackup=None, flagsum=None,
-    flagdetailedsum=None, pipelinemode=None, dryrun=None, acceptresults=None):
-
+def h_applycal(vis=None, field=None, intent=None, spw=None, antenna=None, applymode=None, flagbackup=None, flagsum=None,
+               flagdetailedsum=None, pipelinemode=None, dryrun=None, acceptresults=None):
     # create a dictionary containing all the arguments given in the
     # constructor
     all_inputs = vars()

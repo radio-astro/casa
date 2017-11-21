@@ -1,26 +1,13 @@
 """
-vdp is a pipeline framework module that allows tasks to handle user 
-arguments when multiple measurement sets have been registered with the pipeline. 
+vdp is a pipeline framework module that contains classes to make writing task
+Inputs easier.
 
-Background:    
-    
-    When set to provide automatic values, the original Inputs classes 
-    implementations were intelligent enough to provide different input
-    arguments depending on the current value of vis. This functionality scaled
-    to multiple measurement sets; so long as the Inputs parameter was not
-    overridden, the pipeline could provide ms-specific arguments for each
-    measurement set covered by the task call. 
-    
-    However, the original implementation could not handle user overrides that
-    are measurement set dependent, for example, a different solint for each 
-    measurement set. This meant all measurement sets had to be reduced with
-    the same single override argument, or the measurement sets were
-    individually reduced so that the appropriate override argument could be
-    provided with its matching measurement set.
+- InputsContainer lets task implementations operate within the scope of a
+  single measurement set, even if the pipeline run contains multiple data
+  sets.
 
-    VisDependentProperty is a reworking of pipeline properties that allows
-    values for specific measurement sets to be set, also cleaning up and
-    standardising their implementation.
+- VisDependentProperty is a reworking of pipeline properties to reduce the
+  amount of boilerplate code required to implement an Inputs class.
     
 Implementation details:
 
@@ -30,17 +17,22 @@ Implementation details:
 Examples:
 
     There are three common scenarios that use VisDependentProperty. The
-    following examples assume the Inputs class extends vdp.StandardInputs: 
-
+    following examples show each scenario for an Inputs property belonging to
+    an Inputs class that extends vdp.StandardInputs.
     
-    1. To provide a default value that can be overriden on a per-MS basis. Use
+    1. To provide a default value that can be overridden on a per-MS basis. Use
        the optional 'default' argument to VisDependentProperty, eg: 
     
         myarg = VisDependentProperty(default='some value')
         
-    2. To provide a value via custom code, executed whenever a user override is
-       not provided. Use the @VisDependentProperty decorator on your custom
-       function, eg:
+    2. For more sophisticated default values, e.g., a default value that is a
+       function of other data or properties, use the @VisDependentProperty
+       decorator. A class property decorated with @VisDependentProperty should
+       return the default value for that property. The function will execute
+       in the scope of a single measurement set, i.e., at the time it is
+       called, vis is set to exactly one value. The function will be called to
+       provide a default value for any measurement set that does not have a
+       user override value.
 
         @VisDependentProperty
         def myarg():
@@ -69,14 +61,20 @@ from __future__ import absolute_import
 import collections
 import copy
 import inspect
+import numbers
+import os
 import pprint
-import weakref
 
 from . import api
-from . import callibrary
+from . import argmapper
 from . import launcher
 from . import logging
 from . import utils
+
+__all__ = ['VisDependentProperty',
+           'InputsContainer',
+           'StandardInputs',
+           'ModeInputs']
 
 LOG = logging.get_logger(__name__)
 
@@ -87,6 +85,7 @@ class SingletonType(type):
     a class exists. Creating additional instances returns the existing
     instance.
     """
+
     def __call__(cls, *args, **kwargs):
         try:
             return cls.__instance
@@ -102,17 +101,23 @@ class NullMarker(object):
     or '', and an argument that is null because it has not been set.
     """
     __metaclass__ = SingletonType
-    
-    # user inputs considered equivalent to a NullMarker. Inputs contained in 
-    # this set will 
+
+    # user inputs considered equivalent to a NullMarker. Inputs contained in
+    # this set will
     __NULL_INPUT = frozenset(['', None])
-    
+
     def convert(self, val):
         """
         Process the argument, converting user input considered equivalent to
         null to a NullMarker object.
         """
-        if isinstance(val, NullMarker) or val in self.__NULL_INPUT:
+        # can't check __NULL_INPUT for unhashable types. We know that
+        # __NULL_INPUT does not contain them, so return the value
+        if isinstance(val, NullMarker):
+            return self
+        elif isinstance(val, list):
+            return val
+        elif val in self.__NULL_INPUT:
             return self
         else:
             return val
@@ -120,211 +125,433 @@ class NullMarker(object):
     def __eq__(self, other):
         return isinstance(other, NullMarker)
 
+    def __ne__(self, other):
+        return not isinstance(other, NullMarker)
+
+
+class NoDefaultMarker(object):
+    """
+    NoDefaultMarker is a class that represents the null "parameter not-set" case
+    for default values. It exists to distinguish between a user-provided
+    default value of None, and when a default has not been set.
+    """
+    __metaclass__ = SingletonType
+
+    def __eq__(self, other):
+        return isinstance(other, NoDefaultMarker)
+
+    def __ne__(self, other):
+        return not isinstance(other, NoDefaultMarker)
+
+
+class PipelineInputsMeta(type):
+    """
+    Sets the name of a VisDependentProperty at class definition time.
+    """
+    def __new__(mcls, name, bases, attrs):
+        cls = super(PipelineInputsMeta, mcls).__new__(mcls, name, bases, attrs)
+        for attr, obj in attrs.iteritems():
+            if isinstance(obj, VisDependentProperty):
+                obj.__set_name__(cls, attr)
+        return cls
+
 
 class VisDependentProperty(object):
     """
-    VisDependentProperty is a Python data descriptor that lets pipeline
-    properties handle multiple user arguments, one per measurement set 
-    registered in the context.
+    VisDependentProperty is a Python data descriptor that standardises the
+    behaviour of pipeline Inputs properties and lets them create default values
+    more easily.
 
-    VisDependentProperty can be thought of as a dictionary of dictionaries.
-    The first dictionary maps the key, an Inputs instance, to a second 
-    dictionary, whose keys are all the measurement sets registered in the 
-    Context and whose values are the user arguments that were set for that
-    measurement set. In this way each measurement set can have a unique 
-    argument value.
+    On reading a VisDependentProperty (ie. using the dot prefix: inputs.solint),
+    one of two things happens:
 
-    When the Inputs class definition is parsed, a VisDependentProperty 
-    instance is created for every VisDependentProperty in the class. 
-    Subsequently, whenever the Inputs class is instantiated, a new entry is
-    created in the first dictionary with a weak reference to the instance used
-    as a key. Weak references are used so that temporary Inputs values are not
-    kept alive when the Inputs to which it refers is deleted or fall out of
-    scope.       
-    
-    By default, the second dictionary that maps measurement sets to arguments
-    for that Inputs instance is filled with NullMarker objects. On reading a
-    VisDependentProperty (ie. using the dot prefix: inputs.solint), one of two
-    things happens: 
-    
-    1. If a NullMarker is found in the dictionary - signifying that no user
-       input has been provided - and a 'getter' function has been defined, the
-       getter function will be called to provide a value for that measurement 
-       set.     
-    
+    1. If a NullMarker is found - signifying that no user input has been
+       provided - and a 'getter' function has been defined, the getter function
+       will be called to provide a default value for that measurement set.
+
     or
-    
+
     2. If a user has overridden the value (eg. inputs.solint = 123), that
        value will be returned.
-    
-    The VisDependentProperty framework processes user input (eg. inputs.solint
-    = 123) according to a set of rules:
-    
-    1. If the input is scalar and equal to '' or None, all measurement sets
-       will be mapped back to NullMarker, therefore returning the default
-       value or custom getter function on subsequent access. 
-    
-    2. If the input is a list with number of items equal to the number of
-       measurement sets, the items will be divided up and treated as mapping
-       one value per measurement set.
-    
-    3. Otherwise, the user input is considered as the new default value for
-       all measurement sets. 
-    
-    Before the user input is stored in the dictionary, however, the input is
-    passed through the convert function, assuming one has been provided. The
-    convert function allows the developer to validate or convert user input to
-    a standard format before accepting it as a new argument.
-
     """
     NULL = NullMarker()
 
-    def getter(self, fget):
+    # TODO check whether this can be replaced with NULL
+    NO_DEFAULT = NoDefaultMarker()
+
+    def convert(self, fconvert):
+        """
+        Set the function used to clean and/or convert user-supplied argument
+        values before they are associated with the instance property.
+
+        The provided function should accept one unnamed argument, which when
+        passed will be the user input *for this measurement set*. That is,
+        after potentially being divided up into per-measurement values.
+        """
+        return type(self)(self.fdefault, fconvert, default=self.default, hidden=self.hidden)
+
+    def default(self, fdefault):
         """
         Set the function used to get the attribute value when the user has not
         supplied an override value.
         """
-        return type(self)(fget, self.fconvert, default=self.default)
+        return type(self)(fdefault, self.fconvert, default=self.default, hidden=self.hidden)
 
-    def convert(self, fconvert):
+    def fget(self, owner):
         """
-        Set the function used to clean and/or convert user-supplied argument 
-        values before they are associated with the instance property.
-        
-        The provided function should accept one unnamed argument, which when
-        passed will be the user input *for this measurement set*. That is,
-        after potentially being divided up into per-measurement values. 
-        """ 
-        return type(self)(self.fget, fconvert, default=self.default)
+        Gets the underlying property value from an instance of the class
+        owning this property
 
-    def __init__(self, fget=None, fconvert=None, **kwargs):
-        self.fget = fget
+        :param owner:
+        :return:
+        """
+        return getattr(owner, self.backing_store_name, VisDependentProperty.NULL)
+
+    def fset(self, owner, value):
+        """
+        Sets the property value on the instance owning this property.
+
+        :param owner:
+        :param value:
+        :return:
+        """
+        setattr(owner, self.backing_store_name, value)
+
+    @property
+    def backing_store_name(self):
+        """
+        The name of the attribute holding the value for this property.
+        """
+        return '_' + self.name
+
+    def __init__(self, fdefault=None, fconvert=None, default=NO_DEFAULT, readonly=False, hidden=False):
+        self.fdefault = fdefault
         self.fconvert = fconvert
-        self.default = kwargs.get('default', None)
-        self.readonly = kwargs.get('readonly', False)
-        self.data = weakref.WeakKeyDictionary()
+        self.default = default
+        self.readonly = readonly
+        self.hidden = hidden
 
     def __call__(self, fget, *args, **kwargs):
-        # __call__ is executed when decorating a readonly function 
+        # __call__ is executed when decorating a readonly function
         # LOG.info('In __call__ for %s' % fget.func_name)
         self.fget = fget
         return self
 
-    def __get__(self, inputs, owner):
-        # Return the VisDependentProperty itself when called directly (eg. 
-        # VisDependentProperty.X) so that VisDependentProperty properties
-        # can be accessed.
-        if inputs is None:
+    def __get__(self, instance, owner):
+        # Return the VisDependentProperty itself when called directly
+        if instance is None:
             return self
 
-        # create, if necessary, an entry for this Inputs in the value cache
-        self.initialise_instance(inputs)
+        instance_val = self.fget(instance)
+        if instance_val != VisDependentProperty.NULL:
+            return instance_val
 
-        keys = self.get_cache_keys(inputs)
+        if self.fdefault:
+            return self.fdefault(instance)
 
-        result = []
-        for k, v in [(k, self.data[inputs][k]) for k in keys]:
-            if v == VisDependentProperty.NULL:
-                original_vis = inputs.vis
-                try:
-                    if self.default is not None:
-                        v = self.default
-                    else:
-                        inputs.vis = k
-                        v = self.fget(inputs)
-                finally:
-                    inputs.vis = original_vis
-            result.append(v)
+        if self.default != VisDependentProperty.NO_DEFAULT:
+            return self.default
 
-        # return single values where possible, which is when only one value
-        # is present because the inputs covers one ms or because the values
-        # for each ms are all the same.
-        if len(result) is 1:
-            return result[0]
-        else:
-            if all_unique(result):
-                return result
-            else:
-                return result[0]
-
-    def __set__(self, inputs, value):
+    def __set__(self, instance, value):
         if self.readonly:
-            raise AttributeError
+            raise AttributeError('can\'t set read-only attribute: {!s}'.format(self.name))
 
-        self.initialise_instance(inputs)
-
-        # wrap non-lists in a list
-        if not isinstance(value, (list, tuple)):
-            value = [value]
-
-        # convert null equivalents to the null marker object
-        for i, v in enumerate(value):
-            value[i] = VisDependentProperty.NULL.convert(v)
+        value = VisDependentProperty.NULL.convert(value)
 
         # pass non-null values through the user-provided converter
-        converted = value[:]
-        for i, v in enumerate(converted):
-            if self.fconvert is None:
-                break
-            if v != VisDependentProperty.NULL:
-                converted[i] = self.fconvert(inputs, v)
+        converted = value
+        if self.fconvert is not None:
+            if value != VisDependentProperty.NULL:
+                converted = self.fconvert(instance, value)
 
-        keys = self.get_cache_keys(inputs)
+        self.fset(instance, converted)
 
-        # 1 value, multi vis = assign value to all
-        if len(converted) is 1:
-            for k in keys:
-                self.data[inputs][k] = converted[0]
+    def __set_name__(self, owner, name):
+        self.name = name
 
-        # n values, n vises = assign individually
-        elif len(converted) == len(keys):
-            for k, v in zip(keys, converted):
-                if inputs not in self.data:
-                    self.data[inputs] = {}
-                self.data[inputs][k] = v
 
-        # assign list value to one vis
-        elif len(keys) is 1:
-            self.data[inputs][keys[0]] = converted
+class InputsContainer(object):
+    """
+    InputsContainer is the top-level container object for all task Inputs.
 
-        # mismatch between num values and num keys
+    InputsContainer contains machinery to let Inputs classes operate purely in
+    the scope of a single measurement set, to make both Inputs and Task
+    implementation much simpler.
+
+    The InputsContainer operates in the scope of multiple measurement sets,
+    and holds one Inputs instance for every measurement set within the context
+    At task execution time, the task is executed for each active Inputs
+    instance. Not all the Inputs instances held by the InputsContainer need be
+    active: the user can reduce the scope of the task to a subset of
+    measurement sets by setting vis, which makes an Inputs instance hidden and
+    inactive.
+
+    Tasks that operate in the scope of more than one measurement set, e.g,
+    imaging and session-aware tasks, can disable the InputsContainer machinery
+    by setting is_multi_vis_task to True. For these multivis tasks, one Inputs
+    instance is held in an InputsContainer, but all property sets and gets pass
+    directly through the one underlying inputs instance.
+
+
+    For tasks that operate in the scope of a single measurement set, the
+    InputsContainer class works in conjunction with VisDependentProperty to
+    provide and process user input (eg. inputs.solint = 123) according to a set
+    of rules:
+
+    1. If the input is scalar and equal to '' or None, all measurement sets
+       will be mapped back to NullMarker, therefore returning the default
+       value or custom getter function on subsequent access.
+
+    2. If the input is a list with number of items equal to the number of
+       measurement sets, the items will be divided up and treated as mapping
+       one value per measurement set.
+
+    3. Otherwise, the user input is considered as the new default value for
+       all measurement sets.
+
+    Before the user input is stored in the dictionary, however, the input is
+    passed through the convert function, assuming one has been provided. The
+    convert function allows the developer to validate or convert user input to
+    a standard format before accepting it as a new argument.
+    """
+    def __init__(self, task_cls, context, **kwargs):
+        self._context = context
+        self._task_cls = task_cls
+
+        # task requires all MSes. No processing required.
+        self._multivis = task_cls.is_multi_vis_task
+
+        if self._multivis:
+            self._cls_instances = {'all': task_cls.Inputs(context)}
+            self._active_instances = self._cls_instances.values()
+
         else:
-            raise ValueError
+            # TODO SJW move fn to this module
+            from . import basetask
+            imaging_preferred = basetask.get_imaging_preferred(task_cls.Inputs)
+            ms_pool = context.observing_run.get_measurement_sets(imaging_preferred=imaging_preferred)
 
-    def initialise_instance(self, instance):
-        if instance not in self.data:
-            self.data[instance] = collections.defaultdict(NullMarker)
+            # create an instance for every MS in scope. Unfortunately, some SD
+            # tasks use infiles instead of vis so we need to check inputs
+            # signatures to see what is allowed.
+            constructor_sig = inspect.getargspec(task_cls.Inputs.__init__)
+            if 'vis' in constructor_sig.args:
+                scope_fn = lambda ms: {'vis': ms.name}
+            elif 'infiles' in constructor_sig.args:
+                scope_fn = lambda ms: {'infiles': ms.name}
+            else:
+                scope_fn = lambda ms: {'vis': ms.name}
+                LOG.warn('Miscoded constructor does not accept vis or infiles: {!r}'.format(task_cls.Inputs))
 
-    def get_cache_keys(self, inputs):
-        """
-        Get the cache keys appropriate to the visibilities specified in the
-        inputs argument. 
-        
-        The cache links measurement sets to unique property values. This 
-        function defines the keys that should be used to map visibilities to 
-        the property values for that visibility.        
-        """
-        vis = inputs.vis
-        if not isinstance(vis, (list, tuple)):
-            vis = [vis]
+            try:
+                self._cls_instances = {ms.basename: task_cls.Inputs(context, **scope_fn(ms)) for ms in ms_pool}
+            except TypeError:
+                # catch TypeError exceptions from unexpected keyword arguments
+                # so that we can add some more context to the debug message
+                LOG.error('Error creating {!s}'.format(task_cls.Inputs.__name__))
+                raise
+            self._active_instances = self._cls_instances.values()
 
-        return vis
+        self._vis = ''
 
-#         # MeasurementSet instances themselves are unique, and so are the 
-#         # default and safest key values to use. However, ImportData operates 
-#         # before any MeasurementSet instances have been created, so as an 
-#         # alternative we use the vis strings themselves.
-#         if inputs.__class__.__name__ == 'ImportDataInputs':
-#             return vis        
-#          
-#         return [inputs.context.observing_run.get_ms(v) for v in vis]
-    
+        # TODO find kwargs at runtime so that changes can be reflected?
+        self._initargs = kwargs
+
+        for k, v in kwargs.iteritems():
+            setattr(self, k, v)
+
+    @property
+    def _pipeline_casa_task(self):
+        # Map the Inputs class to the hif* equivalent. Note that
+        # classToCASATask maps Task classes, not Inputs classes, to their hif
+        # equivalent. However, Task.Inputs *does* point to an Inputs class so
+        # we can compare self against that.
+        import pipeline.infrastructure.casataskdict as ctd
+        casa_tasks = [casa_cls for task_cls, casa_cls in ctd.classToCASATask.items()
+                      if task_cls.Inputs is self._task_cls.Inputs]
+
+        if len(casa_tasks) is not 1:
+            return
+
+        # map Python Inputs arguments back to their CASA equivalent
+        remapped = argmapper.inputs_to_casa(self._task_cls.Inputs, self._initargs)
+
+        # CAS-6299. Extra request from Liz:
+        #
+        # "the full directory path of the ASDM location is given from the Pipeline
+        # observatory run, so a PI/DRMs would have to edit this. Could it be
+        # replaced just by the name of the ASDM/ASDMs?"
+        #
+        # this means we have to take the basename of the vis argument for the
+        # importdata calls
+        if '_importdata' in casa_tasks[0]:
+            if 'vis' in remapped:
+                key = 'vis'
+            else:
+                key = 'infiles'
+            remove_slash = lambda x: x.rstrip('/')
+            if isinstance(remapped[key], str):
+                remapped[key] = os.path.basename(remove_slash(remapped[key]))
+            else:
+                remapped[key] = [os.path.basename(remove_slash(v)) for v in remapped[key]]
+
+        task_args = ['%s=%r' % (k, v) for k, v in remapped.items()
+                     if k not in ['self', 'context']
+                     and v is not None]
+
+        # work around CASA problem with globals when no arguments are specified
+        if not task_args:
+            task_args = ['pipelinemode="automatic"']
+
+        casa_call = '%s(%s)' % (casa_tasks[0], ', '.join(task_args))
+
+        return casa_call
+
+    @property
+    def vis(self):
+        vis = [i.vis for i in self._active_instances]
+        return format_value_list(vis)
+
+    @vis.setter
+    def vis(self, vis):
+        # for multivis tasks, all we should do is set vis on the contained
+        # inputs. As there only ever one active inputs instance, nothing
+        # further processing is required so we can exit.
+        if self._multivis:
+            setattr(self._active_instances[0], 'vis', vis)
+            return
+
+        # reset to all MSes if the input arg signals a reset, which expands
+        # task scope to all MSes
+        if VisDependentProperty.NULL.convert(vis) == VisDependentProperty.NULL:
+            vis = self._cls_instances.keys()
+
+        # the key for inputs instances is the basename vis
+        basenames = [os.path.basename(v) for v in vis]
+
+        # create a new inputs instance if one cannot be found
+        for basename, path in zip(basenames, vis):
+            if basename in self._cls_instances:
+                continue
+            self._cls_instances[basename] = self._task_cls.Inputs(self._context, vis=path)
+
+        # set the task scope to the vises set here
+        self._active_instances = [self._cls_instances[n] for n in basenames]
+
+    def __len__(self):
+        return len(self._active_instances)
+
+    def __iter__(self):
+        return iter(self._active_instances)
+
+    def __getitem__(self, index):
+        cls = type(self)
+        if isinstance(index, numbers.Integral):
+            return self._active_instances[index]
+        elif isinstance(index, str):
+            return self._cls_instances[index]
+        else:
+            msg = '{cls.__name__} indices must either be integers or the name of a measurement set'
+            raise TypeError(msg.format(cls=cls))
+
+    def __members__(self):
+        raise NotImplemented
+
+    def __methods__(self):
+        raise NotImplemented
+
+    def __getattr__(self, name):
+        # __getattr__ is only called when this object's __dict__ does not
+        # contain the requested property. When this happens, we delegate to
+        # the currently selected Inputs. First, however, we check whether
+        # the requested property is one of the Python magic methods. If so,
+        # we return the standard implementation. This is necessary for
+        # pickle, which checks for __getnewargs__ and __getstate__.
+        if name.startswith('__') and name.endswith('__'):
+            # LOG.trace('Implement {!s} in InputsContainer'.format(name))
+            return super(InputsContainer, self).__getattr__(name)
+
+        if name in dir(self):
+            return super(InputsContainer, self).__getattr__(name)
+
+        LOG.trace('InputsContainer.{!s}: delegating to {!s}'.format(name, self._task_cls.Inputs.__name__))
+        result = [getattr(i, name) for i in self._active_instances]
+
+        return format_value_list(result)
+
+    def __setattr__(self, name, val):
+        # If the property we're trying to set is one of this base class's
+        # private variables, add it to our __dict__ using the standard
+        # __setattr__ method
+        if name in ('_context', '_task_cls', '_cls_instances', '_active_instances', '_vis', '_initargs', '_multivis'):
+            if LOG.isEnabledFor(logging.TRACE):
+                LOG.trace('Setting {!s}.{!s} = {!r}'.format(self.__class__.__name__, name, val))
+            return super(InputsContainer, self).__setattr__(name, val)
+
+        # check whether this class has a getter/setter by this name. If so,
+        # allow the write to __dict__
+        if name in ('vis',):
+            if LOG.isEnabledFor(logging.TRACE):
+                LOG.trace('Getter/setter found: setting {!s}.{!s} = {!r}'.format(self.__class__.__name__, name, val))
+            return super(InputsContainer, self).__setattr__(name, val)
+
+        if not isinstance(val, (list, tuple)):
+            val = [val] * len(self._active_instances)
+
+        for inputs, user_arg in zip(self._active_instances, val):
+            # some properties may be instance values and not data descriptors
+            # on the class, hence the None default
+            prop = getattr(inputs.__class__, name, None)
+
+            # convert null equivalent values to NULL marker. Only VDP knows
+            # how to handle these, so ensure the property is of the
+            # appropriate type before conversion.
+            if isinstance(prop, VisDependentProperty):
+                null_marker = VisDependentProperty.NULL.convert(user_arg)
+
+                # convert property if it's not null
+                if getattr(prop, 'fconvert', None) is not None:
+                    if null_marker != VisDependentProperty.NULL:
+                        user_arg = prop.fconvert(inputs, user_arg)
+
+            if LOG.isEnabledFor(logging.TRACE):
+                LOG.trace('Setting {!s}.{!s} = {!r}'.format(inputs.__class__.__name__, name, user_arg))
+
+            setattr(inputs, name, user_arg)
+
+    def __repr__(self):
+        return '<InputsContainer({!s}, {!r}>'.format(self._task_cls, self._context.name)
+
+    def __str__(self):
+        if not self._active_instances:
+            return 'Empty'
+        attrs = {name for name in dir(self._task_cls.Inputs) if not name.startswith('_')}
+        methods = {fn_name for fn_name, _ in inspect.getmembers(self._task_cls.Inputs, inspect.ismethod)}
+        props = attrs - methods
+        props.discard('context')
+        props.discard('ms')
+        vals = {k: getattr(self, k) for k in props}
+        return pprint.pformat(vals)
+
+    def as_dict(self):
+        properties = {}
+
+        input_dicts = [i.as_dict() for i in self._active_instances]
+        all_keys = {key for d in input_dicts for key in d}
+        for key in all_keys:
+            vals = [d.get(key, []) for d in input_dicts]
+            properties[key] = format_value_list(vals)
+
+        return properties
+
 
 class StandardInputs(api.Inputs):
-    # - standard non-vis-dependent properties ---------------------------------
+    __metaclass__ = PipelineInputsMeta
 
-    def __deepcopy__(self, memo):
-        return selective_deepcopy(self, memo, shallow_copy=('_context',))
+    #- standard non-vis-dependent properties ---------------------------------
+
+    # def __deepcopy__(self, memo):
+    #     return selective_deepcopy(self, memo, shallow_copy=('_context',))
 
     @property
     def context(self):
@@ -370,16 +597,22 @@ class StandardInputs(api.Inputs):
         with the context.
         """ 
         if value is None:
-            value = [ms.name for ms in self.context.observing_run.measurement_sets]
-        if isinstance(value, list) and len(value) is 1:
+            imaging_preferred = isinstance(self, api.ImagingMeasurementSetsPreferred)
+            mses = self.context.observing_run.get_measurement_sets(imaging_preferred=imaging_preferred)
+            value = [ms.name for ms in mses]
+
+        if len(value) == 1:
+            LOG.warn('Extracting vis from single-value list')
             value = value[0]
-#         if not isinstance(value, (list, tuple)):
-#             value = [value,]
+
+        # for compatibility with the old implementation, single-value lists
+        # should be kept as lists
         self._vis = value
 
-    # - vis-dependent properties ----------------------------------------------
 
-    @VisDependentProperty(readonly=True)
+    #- vis-dependent properties ----------------------------------------------
+
+    @VisDependentProperty(readonly=True, hidden=True)
     def ms(self):
         """
         Return the MeasurementSet for the current value of vis.
@@ -391,53 +624,6 @@ class StandardInputs(api.Inputs):
     @VisDependentProperty
     def output_dir(self):
         return self.context.output_dir
-
-    # - code for getting and setting pickle state -----------------------------
-
-    def __getstate__(self):
-        # The state for each VisDependentProperty is held outside the Inputs
-        # instance, inside the VisDependentProperty instance itself. The 
-        # default __getstate__ implementation returns just __dict__, which would omit 
-        # the VisDependentProperty. The pickled state
-        # is extended to return not just this instance's __dict__ but also a
-        # dictionary of the VisDependentProperty states extracted from the
-        # external VisDependentProperty instance.  
-        return self.__dict__, get_state(self)
-
-    def __setstate__(self, state):
-        obj_state, vdp_state = state
-        self.__dict__.update(obj_state)
-        set_state(self, vdp_state)
-
-    # - utility functions added to base class ---------------------------------
-
-    def _init_properties(self, properties=None, kw_ignore=None):
-        """
-        Set the instance properties using a dictionary of keyword/value pairs.
-        Properties named in kw_ignore will not be set.
-        """
-        if properties is None:
-            properties = {}
-        if kw_ignore is None:
-            kw_ignore = []
-        if 'self' not in kw_ignore:
-            kw_ignore.append('self')
-
-        # set the value of each parameter to that given in the input arguments
-        # set context first as other properties may depend on it.
-        self.context = properties['context']
-
-        if 'vis' in properties:
-            self.vis = properties['vis']
-            del properties['vis']
-
-        for k, v in properties.items():
-            if k not in kw_ignore:
-                LOG.trace('%s: setting %s to %s' % (self.__class__.__name__, k, v))
-                try:
-                    setattr(self, k, v)
-                except AttributeError:
-                    LOG.warning('Trying to set read-only variable: {!s} = {!r}'.format(k, v))
 
     def _get_task_args(self, ignore=None):
         """
@@ -455,7 +641,7 @@ class StandardInputs(api.Inputs):
         # of dictionary of all kw argument names except self, the 
         # pipeline-specific arguments (context, output_dir, run_qa2 etc.) and
         # caltable.
-        skip = ['self', 'context', 'output_dir', 'ms', 'calto', 'calstate']
+        skip = ['self', 'context', 'output_dir', 'ms', 'calstate']
         skip.extend(ignore)
 
         kw_names = [a for a in inspect.getargspec(self.__init__).args if a not in skip]
@@ -512,34 +698,6 @@ class StandardInputs(api.Inputs):
         return utils.collect_properties(self)
 
 
-class OnTheFlyCalibrationMixin(object):
-    """
-    OnTheFlyCalibrationMixin provides a shared implementation for on-the-fly
-    calibration parameters (gaintable, spwmap, etc.) required by some pipeline
-    inputs.
-    
-    As a mixin, this class is not intended to be instantiated; rather, it is
-    inherited by an Inputs that specifies on-the-fly calibration parameters.
-    Getting and setting any of these on-the-fly parameters will then use the
-    shared functionality defined here. 
-    """
-    
-    @VisDependentProperty
-    def calto(self):
-        return callibrary.CalTo(vis=self.vis,
-                                field=self.field, 
-                                spw=self.spw,
-                                intent=self.intent,
-                                antenna=self.antenna)
-
-    @VisDependentProperty
-    def calstate(self):
-        return self.context.callibrary.get_calstate(self.calto, 
-                                                    ignore=['calwt', ])
-
-    opacity = VisDependentProperty(default='')
-
-
 class ModeInputs(api.Inputs):
     """
     ModeInputs is a facade for Inputs of a common task type, allowing the user
@@ -549,17 +707,17 @@ class ModeInputs(api.Inputs):
     key/value pairs, each pair mapping the mode name key to the task class
     value.
     """
+    __metaclass__ = PipelineInputsMeta
+
     _modes = {}
-    
+
     def __init__(self, context, mode=None, **parameters):
         # create a dictionary of Inputs objects, one of each type
-        self._delegates = {}
-        for k, task_cls in self._modes.items():
-            self._delegates[k] = task_cls.Inputs(context)
+        self._delegates = {k: task_cls.Inputs(context, vis=parameters['vis']) for k, task_cls in self._modes.items()}
 
         # set the mode to the requested mode, thus setting the active Inputs
         self.mode = mode
-        
+
         # set any parameters provided by the user
         for k, v in parameters.items():
             setattr(self, k, v)
@@ -567,8 +725,8 @@ class ModeInputs(api.Inputs):
     def __getattr__(self, name):
         # __getattr__ is only called when this object's __dict__ does not
         # contain the requested property. When this happens, we delegate to
-        # the currently selected Inputs. First, however, we check whether 
-        # the requested property is one of the Python magic methods. If so, 
+        # the currently selected Inputs. First, however, we check whether
+        # the requested property is one of the Python magic methods. If so,
         # we return the standard implementation. This is necessary for
         # pickle, which checks for __getnewargs__ and __getstate__.
         if name.startswith('__') and name.endswith('__'):
@@ -577,33 +735,31 @@ class ModeInputs(api.Inputs):
         if name in dir(self):
             return super(ModeInputs, self).__getattr__(name)
 
-        LOG.trace('getattr delegating to %s for attribute \'%s\''
-                  '' % (self._active.__class__.__name__, name))
+        LOG.trace('ModeInputs.{!s}: delegating to {!s}'.format(name, self._active.__class__.__name__))
         return getattr(self._active, name)
 
     def __setattr__(self, name, val):
         # If the property we're trying to set is one of this base class's
         # private variables, add it to our __dict__ using the standard
         # __setattr__ method
-        if name in ('_active', '_delegates', '_mode'):
-            LOG.trace('Setting \'{0}\' attribute to \'{1}\' on \'{2}'
-                      '\' object'.format(name, val, self.__class__.__name__))
+        if name in ('_active', '_delegates', '_mode', '_pipeline_casa_task'):
+            LOG.trace('Setting {!s}.{!s} = {!r}'.format(self.__class__.__name__, name, val))
             return super(ModeInputs, self).__setattr__(name, val)
 
 #         # check whether this class has a getter/setter by this name. If so,
 #         # allow the write to __dict__
-#         for (fn_name, _) in inspect.getmembers(self.__class__, 
+#         for (fn_name, _) in inspect.getmembers(self.__class__,
 #                                                inspect.isdatadescriptor):
-#             # our convention is to prefix the data variable for a 
-#             # getter/setter with an underscore. 
+#             # our convention is to prefix the data variable for a
+#             # getter/setter with an underscore.
 #             if name in (fn_name, '_' + fn_name):
 #                 LOG.trace('Getter/setter found on {0}. Setting \'{1}\' '
 #                           'attribute to \'{2}\''.format(self.__class__.__name__,
 #                                                         name, val))
 #                 super(ModeInputs, self).__setattr__(name, val)
-#                 
+#
 #                 # overriding defaults of wrapped classes requires us to re-get
-#                 # the value after setting it, as the property setter of this 
+#                 # the value after setting it, as the property setter of this
 #                 # superclass has probably transformed it, eg. None => 'inf'.
 #                 # Furthermore, we do not return early, giving this function a
 #                 # chance to set the parameter - with this new value - on the
@@ -613,14 +769,15 @@ class ModeInputs(api.Inputs):
         # check whether this class has a getter/setter by this name. If so,
         # allow the write to __dict__
         for fn_name in dir(self):
-            if name == fn_name:
-                LOG.trace('Getter/setter found on {0}. Setting \'{1}\' '
-                          'attribute to \'{2}\''.format(self.__class__.__name__,
-                                                        name, val))
+            # our convention is to prefix the data variable for a
+            # getter/setter with an underscore.
+            if name in (fn_name, '_' + fn_name):
+            # if name == fn_name:
+                LOG.trace('Getter/setter found: setting {!s}.{!s} = {!r}'.format(self.__class__.__name__, name, val))
                 super(ModeInputs, self).__setattr__(name, val)
-                    
+
                 # overriding defaults of wrapped classes requires us to re-get
-                # the value after setting it, as the property setter of this 
+                # the value after setting it, as the property setter of this
                 # superclass has probably transformed it, eg. None => 'inf'.
                 # Furthermore, we do not return early, giving this function a
                 # chance to set the parameter - with this new value - on the
@@ -632,10 +789,9 @@ class ModeInputs(api.Inputs):
         # Inputs present with all their previously set parameters.
         for d in self._delegates.values():
             if hasattr(d, name):
-                LOG.trace('Setting \'{0}\' attribute to \'{1}\' on \'{2}'
-                          '\' object'.format(name, val, d.__class__.__name__))
+                LOG.trace('Setting {!s}.{!s} = {!r}'.format(self.__class__.__name__, name, val))
                 setattr(d, name, val)
-    
+
     @property
     def mode(self):
         return self._mode
@@ -648,7 +804,7 @@ class ModeInputs(api.Inputs):
                 '\', \''.join(keys[:-1]) + '\' or \'' + keys[-1], value)
             LOG.error(msg)
             raise ValueError(msg)
-        
+
         self._active = self._delegates[value]
         self._mode = value
 
@@ -658,15 +814,15 @@ class ModeInputs(api.Inputs):
         """
         task_cls = self._modes[self._mode]
         return task_cls(self._active)
-    
+
     def as_dict(self):
         props = utils.collect_properties(self._active)
         props.update(utils.collect_properties(self))
-        return props  
-        
+        return props
+
     def to_casa_args(self):
         return self._active.to_casa_args()
-    
+
     def __repr__(self):
         return pprint.pformat(self.as_dict())
 
@@ -676,82 +832,27 @@ class ModeInputs(api.Inputs):
         Get the union of all arguments accepted by this class's constructor.
         """
         all_args = set()
-        
+
         # get the arguments for this class's contructor
         args = inspect.getargspec(cls.__init__).args
         # and add them to our collection
-        all_args.update(args)        
+        all_args.update(args)
 
-        # now do the same for each inputs class we can switch between         
+        # now do the same for each inputs class we can switch between
         for task_cls in cls._modes.values():
             # get the arguments of the task Inputs constructor
-            args = inspect.getargspec(task_cls.Inputs.__init__).args 
+            args = inspect.getargspec(task_cls.Inputs.__init__).args
             # and add them to our set
-            all_args.update(args)        
-        
+            all_args.update(args)
+
         if ignore is not None:
             for i in ignore:
                 all_args.discard(i)
-        
-        return all_args 
 
-    def __getstate__(self):
-        return self.__dict__, get_state(self)
+        return all_args
 
-    def __setstate__(self, state):
-        obj_state, vdp_state = state
-        self.__dict__.update(obj_state)
-        set_state(self, vdp_state)
-
-
-# functions for getting and setting pickle state -----------------------------
-
-
-def get_state(instance):
-    """
-    Get the state of VisDependentProperties in the instance as a list of
-    (name,value) tuples.
-    """
-    state = []
-    for name, vdp in get_vis_dependent_properties(instance):
-        if instance in vdp.data:
-            state.append((name, vdp.data[instance]))
-
-    return state
-
-
-def set_state(instance, state):
-    """
-    Set the state for VisDependentProperties.
-    """
-    cls = instance.__class__
-    for name, val in state:
-        getattr(cls, name).data[instance] = val
 
 # module utility functions ---------------------------------------------------
-
-
-def get_properties_of_type(instance, t):
-    """
-    Get properties of this instance that are of the given type.
-        
-    Returns (property name, type instance) tuples.
-    """
-    cls = instance.__class__
-    return [(name, getattr(cls, name)) for name in dir(cls)
-            if isinstance(getattr(cls, name), t)]
-
-
-def get_vis_dependent_properties(instance):
-    """
-    Get all VisDependentProperty properties of this instance.
-    
-    Remember that the returned VisDependentProperties will contain the state for
-    other instances too!
-        
-    Returns (property name, type instance) tuples.
-    """
-    return get_properties_of_type(instance, VisDependentProperty)
 
 
 def all_unique(o):
@@ -762,8 +863,8 @@ def all_unique(o):
     if not isinstance(o, collections.Iterable):
         raise ValueError('Cannot determine uniqueness of non-iterables')
 
-    hashes = [gen_hash(e) for e in o]
-    return len(hashes) is len(set(hashes))
+    hashes = {gen_hash(e) for e in o}
+    return len(hashes) > 1
 
 
 def gen_hash(o):
@@ -788,37 +889,52 @@ def gen_hash(o):
     return hash(tuple(frozenset(new_o.items())))
 
 
-def selective_deepcopy(instance, memo, shallow_copy=None):
-    """
+# def selective_deepcopy(instance, memo, shallow_copy=None):
+#     """
+#
+#     :param instance:
+#     :param memo:
+#     :param shallow_copy:
+#     :return:
+#     """
+#     if shallow_copy is None:
+#         shallow_copy = []
+#
+#     # extract the state from the instance to deep copy
+#     obj_state = instance.__dict__
+#     vdp_state = get_state(instance)
+#
+#     # create a new instance of the same class
+#     cls = instance.__class__
+#     result = cls.__new__(cls)
+#     memo[id(instance)] = result
+#
+#     # set shallow copies for the requested attributes by directly copying
+#     # across the reference from the old instance
+#     for attr_name in shallow_copy:
+#         setattr(result, attr_name, getattr(instance, attr_name))
+#     # assign deep-copied values for the remaining attributes
+#     for k, v in obj_state.iteritems():
+#         if k not in shallow_copy:
+#             setattr(result, k, copy.deepcopy(v, memo))
+#
+#     # set the VDP state, noting that this state too needs to be deep-copied to
+#     # prevent shared references between the two objects
+#     set_state(result, copy.deepcopy(vdp_state))
+#
+#     return result
 
-    :param instance:
-    :param memo:
-    :param shallow_copy:
-    :return:
-    """
-    if shallow_copy is None:
-        shallow_copy = []
 
-    # extract the state from the instance to deep copy
-    obj_state = instance.__dict__
-    vdp_state = get_state(instance)
-
-    # create a new instance of the same class
-    cls = instance.__class__
-    result = cls.__new__(cls)
-    memo[id(instance)] = result
-
-    # set shallow copies for the requested attributes by directly copying
-    # across the reference from the old instance
-    for attr_name in shallow_copy:
-        setattr(result, attr_name, getattr(instance, attr_name))
-    # assign deep-copied values for the remaining attributes
-    for k, v in obj_state.iteritems():
-        if k not in shallow_copy:
-            setattr(result, k, copy.deepcopy(v, memo))
-
-    # set the VDP state, noting that this state too needs to be deep-copied to
-    # prevent shared references between the two objects
-    set_state(result, copy.deepcopy(vdp_state))
-
-    return result
+def format_value_list(val):
+    # return single values where possible, which is when only one value
+    # is present because the inputs covers one ms or because the values
+    # for each ms are all the same.
+    if len(val) is 0:
+        return val
+    elif len(val) is 1:
+        return val[0]
+    else:
+        if all_unique(val):
+            return val
+        else:
+            return val[0]

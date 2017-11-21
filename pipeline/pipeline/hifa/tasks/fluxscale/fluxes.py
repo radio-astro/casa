@@ -9,20 +9,22 @@ import pipeline.infrastructure as infrastructure
 LOG = infrastructure.get_logger(__name__)
 
 
-def export_flux_from_fit_result (results, context, filename, fieldids_with_spix=[]):
-
+def export_flux_from_fit_result (results, context, filename, fieldids_with_spix=None):
     """
     Export flux densities from a set of results to a CSV file.
     Optional merge in spix values for fields in mergfields.
     """
+    if fieldids_with_spix is None:
+        fieldids_with_spix = []
 
     if type(results) is not types.ListType:
         results = [results, ]
+
     abspath = os.path.join(context.output_dir, filename)
 
     columns = ['ms', 'field', 'spw', 'I', 'Q', 'U', 'V', 'spix', 'comment']
-    with open(abspath, 'w+') as f:
 
+    with open(abspath, 'w+') as f:
         writer = csv.writer(f)
         writer.writerow(columns)
 
@@ -53,8 +55,7 @@ def export_flux_from_fit_result (results, context, filename, fieldids_with_spix=
         LOG.info('Exported %s flux measurements to %s' % (counter, abspath))
 
 
-def find_flux_measurement (context, ms_basename, field_id, spw_id):
-
+def find_flux_measurement(context, ms_basename, field_id, spw_id):
     """
     Find a flux measurement in the context which matched field_id and spw_id
     """
@@ -76,5 +77,3 @@ def find_flux_measurement (context, ms_basename, field_id, spw_id):
         break
 
     return measurement
-
-

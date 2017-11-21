@@ -1,14 +1,11 @@
 from __future__ import absolute_import
-import pipeline.qa.scorecalculator as qacalc
+import collections
+
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.pipelineqa as pqa
 import pipeline.infrastructure.utils as utils
 
-import pipeline.qa.utility.scorers as scorers
-
 from . import resultobjects
-
-from casac import casac
 
 LOG = logging.get_logger(__name__)
 
@@ -30,7 +27,7 @@ class MakeImagesQAHandler(pqa.QAResultHandler):
 
 
 class MakeImagesListQAHandler(pqa.QAResultHandler):
-    result_cls = list
+    result_cls = collections.Iterable
     child_cls = resultobjects.MakeImagesResult
 
     def handle(self, context, result):

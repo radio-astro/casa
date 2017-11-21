@@ -3,54 +3,29 @@ import os
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
-from .. import common
+import pipeline.infrastructure.vdp as vdp
 
-from pipeline.h.tasks.applycal.applycal import ApplycalInputs, Applycal
+from pipeline.hsd.tasks.common import common
+from pipeline.h.tasks.applycal.applycal import Applycal, ApplycalInputs
 
 LOG = infrastructure.get_logger(__name__)
 
 
-class SDApplycalInputs(ApplycalInputs,basetask.StandardInputs,
-                         basetask.OnTheFlyCalibrationMixin):
+class SDApplycalInputs(ApplycalInputs):
     """
     ApplycalInputs defines the inputs for the Applycal pipeline task.
     """
-    @basetask.log_equivalent_CASA_call
-    def __init__(self, context, output_dir=None,
-                 # 
-                 vis=None, 
-                 # data selection arguments
-                 field=None, spw=None, antenna=None, intent=None,
-                 # preapply calibrations
-                 opacity=None, parang=None, applymode=None, calwt=None,
-                 flagbackup=None, flagsum=None, flagdetailedsum=None):
-        self._init_properties(vars())
+    flagdetailedsum = vdp.VisDependentProperty(default=True)
+    intent = vdp.VisDependentProperty(default='TARGET')
 
-    flagdetailedsum = basetask.property_with_default('flagdetailedsum', True)
+    def __init__(self, context, output_dir=None, vis=None, field=None, spw=None, antenna=None, intent=None, parang=None,
+                 applymode=None, flagbackup=None, flagsum=None, flagdetailedsum=None):
+        super(SDApplycalInputs, self).__init__(context, output_dir=output_dir, vis=vis, field=field, spw=spw,
+                                               antenna=antenna, intent=intent, parang=parang, applymode=applymode,
+                                               flagbackup=flagbackup, flagsum=flagsum, flagdetailedsum=flagdetailedsum)
 
-    @property
-    def intent(self):
-        return self._intent
 
-    @intent.setter
-    def intent(self, value):
-        if value is None:
-            value = 'TARGET'
-        self._intent = value.replace('*', '')
-
-    @property
-    def applymode(self):
-        return self._applymode
-
-    @applymode.setter
-    def applymode(self, value):
-        if value is None:
-            value = 'calflagstrict'
-        elif value == '':
-            value = 'calflagstrict'
-        self._applymode = value
-
-class SDApplycal(Applycal, common.SingleDishTask):#basetask.StandardTaskTemplate):
+class SDApplycal(Applycal, common.SingleDishTask):
     """
     Applycal executes CASA applycal tasks for the current context state,
     applying calibrations registered with the pipeline context to the target
@@ -61,28 +36,30 @@ class SDApplycal(Applycal, common.SingleDishTask):#basetask.StandardTaskTemplate
     on-the-fly calibration arguments.
     """
     Inputs = SDApplycalInputs
-    ### Note this is a temporary workaround ###
-    antenna_to_apply = '*&&&'
-    
-    def _get_flagsum_arg(self, vis):
+
+    def modify_task_args(self, task_args):
+        # override template fn in Applycal with our SD-specific antenna
+        # selection arguments
+        task_args['antenna'] = '*&&&'
+        return task_args
+
+    def _get_flagsum_arg(self, args):
         # CAS-8813 flag fraction should be based on target instead of total
-        task_args = super(SDApplycal, self)._get_flagsum_arg(vis=vis)
-        task_args.update({'intent': 'OBSERVE_TARGET#ON_SOURCE'})
+        task_args = super(SDApplycal, self)._get_flagsum_arg(args)
+        task_args['intent'] = 'OBSERVE_TARGET#ON_SOURCE'
         return task_args
         
     def _tweak_flagkwargs(self, template):
         # CAS-8813 flag fraction should be based on target instead of total
-        flagkwargs = []
-        for t in template:
-            flagkwargs.append(t + " intent='OBSERVE_TARGET#ON_SOURCE'")
-        return flagkwargs
-        
+        # use of ' rather than " is required to prevent escaping of flagcmds
+        return [row + " intent='OBSERVE_TARGET#ON_SOURCE'" for row in template]
+
     def prepare(self):
         # execute Applycal
         results = super(SDApplycal, self).prepare()
+
         # Update Tsys in datatable
         context = self.inputs.context
-        #datatable = DataTable(name=context.observing_run.ms_datatable_name, readonly=False)
         datatable = self.datatable_instance
         # this task uses _handle_multiple_vis framework 
         msobj = self.inputs.ms
@@ -96,8 +73,8 @@ class SDApplycal(Applycal, common.SingleDishTask):#basetask.StandardTaskTemplate
                     spwmap = _calfrom.spwmap
                     gainfield= _calfrom.gainfield
                     datatable._update_tsys(context, filename, tsystable, spwmap, fieldids, gainfield)
+
         # here, full export is necessary
         datatable.exportdata(minimal=False)
 
         return results
-    

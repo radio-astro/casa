@@ -1,31 +1,52 @@
 from __future__ import absolute_import
 
+import pipeline.h.tasks.applycal.applycal as applycal
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
+import pipeline.infrastructure.sessionutils as sessionutils
+import pipeline.infrastructure.vdp as vdp
 
-from pipeline.h.tasks.applycal import applycal
+__all__ = ['IFApplycal',
+           'IFApplycalInputs',
+           'HpcIFApplycal',
+           'HpcIFApplycalInputs']
 
 LOG = infrastructure.get_logger(__name__)
 
 
-class IFApplycalInputs(applycal.ApplycalInputs, basetask.StandardInputs,
-                         basetask.OnTheFlyCalibrationMixin):
-    """
-    ApplycalInputs defines the inputs for the Applycal pipeline task.
-    """
-    @basetask.log_equivalent_CASA_call
-    def __init__(self, context, output_dir=None,
-                 #
-                 vis=None,
-                 # data selection arguments
-                 field=None, spw=None, antenna=None, intent=None,
-                 # preapply calibrations
-                 opacity=None, parang=None, applymode=None, calwt=None,
-                 flagbackup=None, flagsum=None, flagdetailedsum=None):
-        self._init_properties(vars())
+class IFApplycalInputs(applycal.ApplycalInputs):
+    flagdetailedsum = vdp.VisDependentProperty(default=True)
 
-    flagdetailedsum = basetask.property_with_default('flagdetailedsum', True)
+    def __init__(self, context, output_dir=None, vis=None, field=None, spw=None, antenna=None, intent=None, parang=None,
+                 applymode=None, flagbackup=None, flagsum=None, flagdetailedsum=None):
+        super(IFApplycalInputs, self).__init__(context, output_dir=output_dir, vis=vis, field=field, spw=spw,
+                                               antenna=antenna, intent=intent, parang=parang, applymode=applymode,
+                                               flagbackup=flagbackup, flagsum=flagsum, flagdetailedsum=flagdetailedsum)
 
 
 class IFApplycal(applycal.Applycal):
     Inputs = IFApplycalInputs
+
+    def __init__(self, inputs):
+        super(IFApplycal, self).__init__(inputs)
+
+
+class HpcIFApplycalInputs(IFApplycalInputs):
+    # use common implementation for parallel inputs argument
+    parallel = sessionutils.parallel_inputs_impl()
+
+    def __init__(self, context, output_dir=None, vis=None, field=None, spw=None, antenna=None, intent=None, parang=None,
+                 applymode=None, flagbackup=None, flagsum=None, flagdetailedsum=None, parallel=None):
+        super(HpcIFApplycalInputs, self).__init__(context, output_dir=output_dir, vis=vis, field=field, spw=spw,
+                                                  antenna=antenna, intent=intent, parang=parang, applymode=applymode,
+                                                  flagbackup=flagbackup, flagsum=flagsum,
+                                                  flagdetailedsum=flagdetailedsum)
+        self.parallel = parallel
+
+
+class HpcIFApplycal(applycal.HpcApplycal):
+    Inputs = HpcIFApplycalInputs
+    Task = IFApplycal
+
+    def __init__(self, inputs):
+        super(HpcIFApplycal, self).__init__(inputs)

@@ -1,99 +1,92 @@
 from __future__ import absolute_import
 
 import os
-import types
 
 import numpy as np
 
+import pipeline.domain as domain
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
+import pipeline.infrastructure.vdp as vdp
 from pipeline.h.tasks.common import calibrationtableaccess as caltableaccess
 from pipeline.h.tasks.common import commonresultobjects
 from pipeline.h.tasks.common import viewflaggers
 from pipeline.h.tasks.flagging.flagdatasetter import FlagdataSetter
-from pipeline.hif.tasks.common import commoncalinputs
 from .resultobjects import LowgainflagDataResults
 from .resultobjects import LowgainflagResults
 from .resultobjects import LowgainflagViewResults
 from .. import bandpass
 from .. import gaincal
 
+__all__ = [
+    'LowgainflagInputsInputs',
+    'Lowgainflag'
+]
+
 LOG = infrastructure.get_logger(__name__)
 
 
-class LowgainflagInputs(commoncalinputs.CommonCalibrationInputs):
-    @basetask.log_equivalent_CASA_call
-    def __init__(self, context, output_dir=None, vis=None, intent=None,
-                 spw=None, refant=None, flag_nmedian=None, fnm_lo_limit=None,
-                 fnm_hi_limit=None, niter=None):
+class LowgainflagInputs(vdp.StandardInputs):
+    """
+    LowgainflagInputs defines the inputs for the Lowgainflag pipeline task.
+    """
+    flag_nmedian = vdp.VisDependentProperty(default=True)
+    fnm_hi_limit = vdp.VisDependentProperty(default=1.3)
+    fnm_lo_limit = vdp.VisDependentProperty(default=0.7)
 
-        # set the properties to the values given as input arguments
-        self._init_properties(vars())
-
-    # standard calibration getters and setters are inherited from
-    # CommonCalibrationInputs
-
-    @property
+    @vdp.VisDependentProperty
     def intent(self):
-        if type(self.vis) is types.ListType:
-            return self._handle_multiple_vis('intent')
+        # default to the intent that would be used for bandpass
+        # calibration
+        bp_inputs = bandpass.PhcorBandpass.Inputs(context=self.context, vis=self.vis, intent=None)
+        return bp_inputs.intent
 
-        if self._intent is None:
-            # default to the intent that would be used for bandpass
-            # calibration
-            bp_inputs = bandpass.PhcorBandpass.Inputs(
-              context=self.context,
-              vis=self.vis,
-              intent=None)
-            value = bp_inputs.intent
-            return value
+    niter = vdp.VisDependentProperty(default=1)
 
-        return self._intent
+    @vdp.VisDependentProperty
+    def refant(self):
+        # we cannot find the context value without the measurement set
+        if not self.ms:
+            return None
 
-    @intent.setter
-    def intent(self, value):
-        self._intent = value
+        # get the reference antenna for this measurement set
+        ant = self.ms.reference_antenna
+        if isinstance(ant, list):
+            ant = ant[0]
 
-    # flag 
-    @property
-    def flag_nmedian(self):
-        return self._flag_nmedian
+        # return the antenna name/id if this is an Antenna domain object
+        if isinstance(ant, domain.Antenna):
+            return getattr(ant, 'name', ant.id)
 
-    @flag_nmedian.setter
-    def flag_nmedian(self, value):
-        if value is None:
-            value = True
-        self._flag_nmedian = value
+        # otherwise return whatever we found. We assume the calling function
+        # knows how to handle an object of this type.
+        return ant
 
-    @property
-    def fnm_lo_limit(self):
-        return self._fnm_lo_limit
+    @vdp.VisDependentProperty
+    def spw(self):
+        science_spws = self.ms.get_spectral_windows(with_channels=True, science_windows_only=True)
+        return ','.join([str(spw.id) for spw in science_spws])
 
-    @fnm_lo_limit.setter
-    def fnm_lo_limit(self, value):
-        if value is None:
-            value = 0.7
-        self._fnm_lo_limit = value
+    def __init__(self, context, output_dir=None, vis=None, intent=None, spw=None, refant=None, flag_nmedian=None,
+                 fnm_lo_limit=None, fnm_hi_limit=None, niter=None):
+        super(LowgainflagInputs, self).__init__()
 
-    @property
-    def fnm_hi_limit(self):
-        return self._fnm_hi_limit
+        # pipeline inputs
+        self.context = context
+        # vis must be set first, as other properties may depend on it
+        self.vis = vis
+        self.output_dir = output_dir
 
-    @fnm_hi_limit.setter
-    def fnm_hi_limit(self, value):
-        if value is None:
-            value = 1.3
-        self._fnm_hi_limit = value
+        # data selection arguments
+        self.intent = intent
+        self.spw = spw
+        self.refant = refant
 
-    @property
-    def niter(self):
-        return self._niter
-
-    @niter.setter
-    def niter(self, value):
-        if value is None:
-            value = 1
-        self._niter = value
+        # flagging parameters
+        self.flag_nmedian = flag_nmedian
+        self.fnm_hi_limit = fnm_hi_limit
+        self.fnm_lo_limit = fnm_lo_limit
+        self.niter = niter
 
 
 class Lowgainflag(basetask.StandardTaskTemplate):
@@ -161,10 +154,21 @@ class Lowgainflag(basetask.StandardTaskTemplate):
         return result
 
 
-class LowgainflagDataInputs(basetask.StandardInputs):
+class LowgainflagDataInputs(vdp.StandardInputs):
     def __init__(self, context, output_dir=None, vis=None, intent=None,
                  spw=None, refant=None):
-        self._init_properties(vars())
+        super(LowgainflagDataInputs, self).__init__()
+
+        # pipeline inputs
+        self.context = context
+        # vis must be set first, as other properties may depend on it
+        self.vis = vis
+        self.output_dir = output_dir
+
+        # data selection arguments
+        self.intent = intent
+        self.spw = spw
+        self.refant = refant
 
 
 class LowgainflagData(basetask.StandardTaskTemplate):
@@ -194,10 +198,10 @@ class LowgainflagData(basetask.StandardTaskTemplate):
 
         # Calculate gain phases
         gpcal_inputs = gaincal.GTypeGaincal.Inputs(
-          context=inputs.context, vis=inputs.vis,
-          intent=inputs.intent, spw=inputs.spw,
-          refant=inputs.refant,
-          calmode='p', minsnr=2.0, solint='int', gaintype='G')
+            context=inputs.context, vis=inputs.vis,
+            intent=inputs.intent, spw=inputs.spw,
+            refant=inputs.refant,
+            calmode='p', minsnr=2.0, solint='int', gaintype='G')
         gpcal_task = gaincal.GTypeGaincal(gpcal_inputs)
         gpcal = self._executor.execute(gpcal_task, merge=False)
         if not gpcal.final:
@@ -208,10 +212,10 @@ class LowgainflagData(basetask.StandardTaskTemplate):
 
         # Calculate gain amplitudes
         gacal_inputs = gaincal.GTypeGaincal.Inputs(
-          context=inputs.context, vis=inputs.vis,
-          intent=inputs.intent, spw=inputs.spw,
-          refant=inputs.refant,
-          calmode='a', minsnr=2.0, solint='inf', gaintype='T')
+            context=inputs.context, vis=inputs.vis,
+            intent=inputs.intent, spw=inputs.spw,
+            refant=inputs.refant,
+            calmode='a', minsnr=2.0, solint='inf', gaintype='T')
         gacal_task = gaincal.GTypeGaincal(gacal_inputs)
         gacal = self._executor.execute(gacal_task, merge=False)
         if not gacal.final:

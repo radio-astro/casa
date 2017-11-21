@@ -22,7 +22,6 @@ class SDBLFlagInputs(basetask.StandardInputs):
     """
     Inputs for single dish flagging
     """
-    @basetask.log_equivalent_CASA_call
     def __init__(self, context, output_dir=None,
                  iteration=None, edge=None, flag_tsys=None, tsys_thresh=None,
                  flag_weath=None, weath_thresh=None,
@@ -72,8 +71,7 @@ class SDBLFlagInputs(basetask.StandardInputs):
         """
         Returns MS index in context observing run specified as infiles.
         """
-        ms_names = [ms.name for ms in self.context.observing_run.measurement_sets]
-        return map(ms_names.index, map(os.path.abspath, self.infiles))
+        return self.context.observing_run.measurement_sets.index(self.ms)
 
     @property
     def antenna(self):

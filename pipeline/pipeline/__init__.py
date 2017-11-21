@@ -58,25 +58,24 @@ def show_weblog(context):
         return
 
     index_html = os.path.join(context.report_dir, 't1-1.html')
-    webbrowser.open(index_html)
+    webbrowser.open('file://' + index_html)
 
 
-def initcli() :
-    print "Initializing cli..."
-    mypath = pkg_resources.resource_filename(__name__, '')
-    hifpath = mypath+"/hif/cli/hif.py"
-    hpath = mypath+"/h/cli/h.py"
-    hsdpath = mypath+"/hsd/cli/hsd.py"
-    hifapath = mypath+"/hifa/cli/hifa.py"
-    hifvpath = mypath+"/hifv/cli/hifv.py"
-    myglobals = stack_frame_find()
+def initcli():
+    LOG.info('Initializing cli...')
+    my_globals = stack_frame_find()
+    for package in ['h', 'hif', 'hifa', 'hifv', 'hsd']:
+        abs_package = 'pipeline.{package}.cli.{package}'.format(package=package)
+        try:
+            # buildmytasks writes output to packagename.py
+            path_to_cli = pkg_resources.resource_filename(abs_package, '{!s}.py'.format(package))
+        except ImportError as e:
+            LOG.debug('Import error: {!s}'.format(e))
+            LOG.info('No tasks found for package: {!s}'.format(package))
+        else:
+            execfile(path_to_cli, my_globals)
+            LOG.info('Loaded CASA tasks from package: {!s}'.format(package))
 
-    execfile(hpath, myglobals)
-    execfile(hifpath, myglobals)
-    execfile(hsdpath, myglobals)
-    execfile(hifapath, myglobals)
-    execfile(hifvpath, myglobals)
-    #exec('import pipeline.infrastructure.executeppr', myglobals)
 
 revision = environment.pipeline_revision
 

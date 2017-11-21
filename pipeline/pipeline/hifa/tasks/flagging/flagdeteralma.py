@@ -2,34 +2,45 @@ from __future__ import absolute_import
 
 import pipeline.domain.measures as measures
 import pipeline.infrastructure as infrastructure
-import pipeline.infrastructure.basetask as basetask
+import pipeline.infrastructure.vdp as vdp
 from pipeline.h.tasks.flagging import flagdeterbase
+
+__all__ = [
+    'FlagDeterALMA',
+    'FlagDeterALMAInputs'
+]
 
 LOG = infrastructure.get_logger(__name__)
 
 
 class FlagDeterALMAInputs(flagdeterbase.FlagDeterBaseInputs):
-    flagbackup = basetask.property_with_default('flagbackup', True)
-    edgespw = basetask.property_with_default('edgespw', True)
-    fracspw = basetask.property_with_default('fracspw', 0.0625)
-    template = basetask.property_with_default('template', True)
+    """
+    FlagDeterALMAInputs defines the inputs for the FlagDeterALMA pipeline task.
+    """
+    edgespw = vdp.VisDependentProperty(default=True)
+    flagbackup = vdp.VisDependentProperty(default=True)
+    fracspw = vdp.VisDependentProperty(default=0.0625)
+    template = vdp.VisDependentProperty(default=True)
 
     # new property for ACA correlator
-    fracspwfps = basetask.property_with_default('fracspwfps', 0.048387)
+    fracspwfps = vdp.VisDependentProperty(default=0.048387)
 
     # New property for QA0 / QA2 flags
-    qa0 = basetask.property_with_default('qa0', True)
-    qa2 = basetask.property_with_default('qa2', True)
+    qa0 = vdp.VisDependentProperty(default=True)
+    qa2 = vdp.VisDependentProperty(default=True)
 
-    @basetask.log_equivalent_CASA_call
-    def __init__(self, context, vis=None, output_dir=None, flagbackup=None,
-                 autocorr=None, shadow=None, scan=None, scannumber=None,
-                 intents=None, edgespw=None, fracspw=None, 
-                 fracspwfps=None, online=None, fileonline=None,
-                 template=None, filetemplate=None, hm_tbuff=None, 
-                 tbuff=None, qa0=None, qa2=None):
-        # set the properties to the values given as input arguments
-        self._init_properties(vars())
+    def __init__(self, context, vis=None, output_dir=None, flagbackup=None, autocorr=None, shadow=None, scan=None,
+                 scannumber=None, intents=None, edgespw=None, fracspw=None, fracspwfps=None, online=None,
+                 fileonline=None, template=None, filetemplate=None, hm_tbuff=None, tbuff=None, qa0=None, qa2=None):
+        super(FlagDeterALMAInputs, self).__init__(
+            context, vis=vis, output_dir=output_dir, flagbackup=flagbackup, autocorr=autocorr, shadow=shadow, scan=scan,
+            scannumber=scannumber, intents=intents, edgespw=edgespw, fracspw=fracspw, fracspwfps=fracspwfps,
+            online=online, fileonline=fileonline, template=template, filetemplate=filetemplate, hm_tbuff=hm_tbuff,
+            tbuff=tbuff)
+
+        # solution parameters
+        self.qa0 = qa0
+        self.qa2 = qa2
 
 
 class FlagDeterALMA(flagdeterbase.FlagDeterBase):

@@ -2,10 +2,11 @@ from __future__ import absolute_import
 
 import numpy
 
-import pipeline.qa.scorecalculator as qacalc
+import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.pipelineqa as pqa
 import pipeline.infrastructure.utils as utils
+import pipeline.qa.scorecalculator as qacalc
 
 from . import baseline
 
@@ -43,7 +44,7 @@ class SDBaselineQAHandler(pqa.QAResultHandler):
 
 
 class SDBaselineListQAHandler(pqa.QAResultHandler):
-    result_cls = list
+    result_cls = basetask.ResultsList
     child_cls = baseline.SDBaselineResults
 
     def handle(self, context, result):

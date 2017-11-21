@@ -6,6 +6,7 @@ import string
 import flaghelper
 
 import pipeline.infrastructure as infrastructure
+import pipeline.infrastructure.api as api
 import pipeline.infrastructure.basetask as basetask
 from pipeline.infrastructure import casa_tasks
 
@@ -51,7 +52,6 @@ class FlagTargetsALMAInputs(basetask.StandardInputs):
     flagbackup = basetask.property_with_default('flagbackup', False)
     template = basetask.property_with_default('template', True)
 
-    @basetask.log_equivalent_CASA_call
     def __init__(self, context, vis=None, output_dir=None, flagbackup=None,
                  template=None, filetemplate=None):
         # set the properties to the values given as input arguments
@@ -107,7 +107,7 @@ class FlagTargetsALMAInputs(basetask.StandardInputs):
 
 # tell the infrastructure to prefentially apply the targets
 # flags to the split MS(s)
-basetask.ImagingMeasurementSetsPreferred.register(FlagTargetsALMAInputs)
+api.ImagingMeasurementSetsPreferred.register(FlagTargetsALMAInputs)
 
 class FlagTargetsALMAResults(basetask.Results):
     def __init__(self, summaries, flagcmds):

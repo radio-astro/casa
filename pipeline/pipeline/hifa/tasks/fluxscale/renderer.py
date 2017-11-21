@@ -1,8 +1,8 @@
-'''
+"""
 Created on 23 Oct 2014
 
 @author: sjw
-'''
+"""
 import collections
 import decimal
 import os
@@ -37,7 +37,8 @@ class T2_4MDetailsGFluxscaleRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
 
             key = intents
             for vis, vis_plots in plots.items():
-                ampuv_allant_plots[vis][key] = vis_plots
+                if len(vis_plots) > 0:
+                    ampuv_allant_plots[vis][key] = vis_plots
                 
         #List of antenna for the fluxscale result, sorted by baseband
         ampuv_ant_plots = collections.defaultdict(dict)
@@ -51,13 +52,19 @@ class T2_4MDetailsGFluxscaleRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
 
             key = intents
             for vis, vis_plots in plots.items():
-                ampuv_ant_plots[vis][key] = vis_plots
+                if len(vis_plots) > 0:
+                    ampuv_ant_plots[vis][key] = vis_plots
 
         table_rows = make_flux_table(pipeline_context, results)
-        
-        mako_context.update({'ampuv_allant_plots' : ampuv_allant_plots,
-                             'ampuv_ant_plots'    : ampuv_ant_plots,
-                             'table_rows'         : table_rows})
+
+        adopted_rows = make_adopted_table(pipeline_context, results)
+
+        mako_context.update({
+            'adopted_table': adopted_rows,
+            'ampuv_allant_plots': ampuv_allant_plots,
+            'ampuv_ant_plots': ampuv_ant_plots,
+            'table_rows': table_rows
+        })
 
     def sort_plots_by_baseband(self, d):
         for vis, plots in d.items():
@@ -112,7 +119,6 @@ class T2_4MDetailsGFluxscaleRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
         return d
     
     
-    
 FluxTR = collections.namedtuple('FluxTR', 'vis field spw freqbw i q u v fluxratio spix')
 
 def make_flux_table(context, results):
@@ -129,7 +135,7 @@ def make_flux_table(context, results):
 
         for field_arg, measurements in single_result.measurements.items():
             field = ms_for_result.get_fields(field_arg)[0]
-            intents = ' '. join(field.intents.intersection(set(['BANDPASS', 'PHASE', 'CHECK'])))
+            intents = ' '. join(field.intents.intersection({'BANDPASS', 'PHASE', 'CHECK'}))
             field_cell = '%s (#%s) %s' % (field.name, field.id, intents)
 
             for measurement in sorted(measurements, key=lambda m: int(m.spw_id)):
@@ -148,8 +154,7 @@ def make_flux_table(context, results):
                         
                         if flux_jy != 0 and unc_jy != 0:
                             unc_ratio = decimal.Decimal('100')*(unc_jy/flux_jy)
-                            uncertainty = ' &#177; %s (%0.1f%%)' % (str(unc),
-                                                                    unc_ratio)
+                            uncertainty = ' &#177; %s (%0.1f%%)' % (str(unc), unc_ratio)
                         else:
                             uncertainty = ''
                             
@@ -192,7 +197,6 @@ def make_flux_table(context, results):
                             fluxes['V'],
                             flux_ratio,
                             fluxes['spix'])
-
                 rows.append(tr)
 
                 tr = FluxTR(vis_cell, field_cell, measurement.spw_id, freqbw, 
@@ -206,3 +210,22 @@ def make_flux_table(context, results):
 
     return utils.merge_td_columns(rows)
 
+
+AdoptedTR = collections.namedtuple('AdoptedTR', 'vis fields')
+
+
+def make_adopted_table(context, results):
+    # will hold all the flux stat table rows for the results
+    rows = []
+
+    for adopted_result in [r for r in results if r.applies_adopted]:
+        ms_for_result = context.observing_run.get_ms(adopted_result.vis)
+        vis_cell = os.path.basename(adopted_result.vis)
+
+        adopted_fields = adopted_result.measurements.keys()
+        field_cell = ', '.join(adopted_fields)
+
+        tr = AdoptedTR(vis_cell, field_cell)
+        rows.append(tr)
+
+    return utils.merge_td_columns(rows)

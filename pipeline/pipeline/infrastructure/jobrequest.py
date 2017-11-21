@@ -1,8 +1,10 @@
 from __future__ import absolute_import
 import copy
+import collections
 import itertools
 import operator
 import os
+import operator
 import platform
 import re
 import sys
@@ -10,18 +12,18 @@ import types
 
 import casadef
 
-import applycal_cli
-import bandpass_cli
+import applycal_pg
+import bandpass_pg
 import calstat_cli
 import clean_cli
 import clearcal_cli
 import delmod_cli
 import exportfits_cli
 import flagcmd_cli
-import flagdata_cli
+import flagdata_pg
 import flagmanager_cli
-import fluxscale_cli
-import gaincal_cli
+import fluxscale_pg
+import gaincal_pg
 import gencal_cli
 import hanningsmooth_cli
 import imdev_cli
@@ -44,7 +46,7 @@ import plotcal_cli
 import plotms_pg
 import plotweather_cli
 import polcal_cli
-import setjy_cli
+import setjy_pg
 import split_cli
 import statwt_cli
 import tclean_pg
@@ -387,10 +389,10 @@ class CASATaskJobGenerator(object):
         return self._jobs
 
     def applycal(self, *v, **k):
-        return self._get_job(applycal_cli.applycal_cli, *v, **k)
+        return self._get_job(applycal_pg.applycal_pg, *v, **k)
 
     def bandpass(self, *v, **k):
-        return self._get_job(bandpass_cli.bandpass_cli, *v, **k)
+        return self._get_job(bandpass_pg.bandpass_pg, *v, **k)
 
     def calstat(self, *v, **k):
         return self._get_job(calstat_cli.calstat_cli, *v, **k)
@@ -408,19 +410,23 @@ class CASATaskJobGenerator(object):
         return self._get_job(exportfits_cli.exportfits_cli, *v, **k)
 
     def gaincal(self, *v, **k):
-        return self._get_job(gaincal_cli.gaincal_cli, *v, **k)
+        return self._get_job(gaincal_pg.gaincal_pg, *v, **k)
 
     def flagcmd(self, *v, **k):
         return self._get_job(flagcmd_cli.flagcmd_cli, *v, **k)
 
     def flagdata(self, *v, **k):
-        return self._get_job(flagdata_cli.flagdata_cli, *v, **k)
+        return self._get_job(flagdata_pg.flagdata_pg, *v, **k)
 
     def flagmanager(self, *v, **k):
         return self._get_job(flagmanager_cli.flagmanager_cli, *v, **k)
 
     def fluxscale(self, *v, **k):
-        return self._get_job(fluxscale_cli.fluxscale_cli, *v, **k)
+        # work around problem with fluxscale_pg that says:
+        # An error occurred running task fluxscale: in method 'calibrater_fluxscale', argument 15 of type 'bool'
+        if 'display' not in k:
+            k['display'] = False
+        return self._get_job(fluxscale_pg.fluxscale_pg, *v, **k)
 
     def gencal(self, *v, **k):
         return self._get_job(gencal_cli.gencal_cli, *v, **k)
@@ -489,7 +495,7 @@ class CASATaskJobGenerator(object):
         return self._get_job(polcal_cli.polcal_cli, *v, **k)
 
     def setjy(self, *v, **k):
-        return self._get_job(setjy_cli.setjy_cli, *v, **k)
+        return self._get_job(setjy_pg.setjy_pg, *v, **k)
 
     def split(self, *v, **k):
         return self._get_job(split_cli.split_cli, *v, **k)

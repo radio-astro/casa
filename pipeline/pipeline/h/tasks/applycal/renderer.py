@@ -39,7 +39,7 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
 
         flag_totals = {}
         for r in result:
-            if r.inputs['flagsum'] == True:
+            if r.inputs['flagsum'] is True:
                 flag_totals = utils.dict_merge(flag_totals,
                                            self.flags_for_result(r, context))
 
@@ -376,7 +376,7 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                                                       [brightest_field.id])
                 amp_vs_uv_summary_plots[vis].extend(plots)
 
-            if pipeline.infrastructure.generate_detail_plots(result):
+            if pipeline.infrastructure.generate_detail_plots(results):
                 scans = ms.get_scans(scan_intent='TARGET')
                 fields = set()
                 for scan in scans:

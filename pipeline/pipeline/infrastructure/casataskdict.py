@@ -7,6 +7,11 @@ import pipeline.hifa.tasks as hifa_tasks
 import pipeline.hifv.tasks as hifv_tasks
 
 CasaTaskDict = {
+    'session_bandpass': 'SessionALMAPhcorBandpass',
+    'session_gfluxscale': 'SessionGcorFluxscale',
+    'hpc_hif_refant': 'HpcRefAnt',
+    'hpc_h_applycal': 'HpcApplycal',
+    'hpc_hifa_applycal': 'HpcIFApplycal',
     # General Tasks ----------------------------------------------------------
     'h_applycal': 'Applycal',
     'h_importdata': 'ImportData',
@@ -104,6 +109,11 @@ CasaTaskDict = {
 
 
 classToCASATask = {
+    h_tasks.HpcApplycal: 'hpc_h_applycal',
+    hif_tasks.HpcIFApplycal: 'hpc_hifa_applycal',
+    hifa_tasks.SessionALMAPhcorBandpass: 'session_bandpass',
+    hifa_tasks.SessionGcorFluxscale: 'session_gfluxscale',
+    hif_tasks.HpcRefAnt: 'hpc_hif_refant',
     # ALMA interferometry tasks ---------------------------------------------
     hifa_tasks.ALMAImportData         : 'hifa_importdata',
     hifa_tasks.ALMAPhcorBandpass      : 'hifa_bandpass',

@@ -16,7 +16,6 @@ LOG = infrastructure.get_logger(__name__)
 
 
 class VLARestoreDataInputs(restoredata.RestoreDataInputs):
-    @basetask.log_equivalent_CASA_call
     def __init__(self, context, copytoraw=None, products_dir=None, rawdata_dir=None,
                  output_dir=None, session=None, vis=None, bdfflags=None, lazy=None, asis=None,
                  ocorr_mode=None, gainmap=None):

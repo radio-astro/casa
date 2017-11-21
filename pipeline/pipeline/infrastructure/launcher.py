@@ -24,10 +24,8 @@ LOG = logging.get_logger(__name__)
 
 
 # minimum allowed CASA revision. Set to 0 or None to disable
-#MIN_CASA_REVISION = 38788
 MIN_CASA_REVISION = [5,0,0,0]
 # maximum allowed CASA revision. Set to 0 or None to disable
-#MAX_CASA_REVISION = None
 MAX_CASA_REVISION = None
 
 
@@ -194,13 +192,16 @@ class Context(object):
             LOG.info('Saving context to \'{0}\''.format(filename))          
             pickle.dump(self, context_file, protocol=-1)
 
-    def __repr__(self):
+    def __str__(self):
         ms_names = [ms.name 
                     for ms in self.observing_run.measurement_sets]
         return ('Context(name=\'{0}\', output_dir=\'{1}\')\n'
                 'Registered measurement sets:\n{2}'
                 ''.format(self.name, self.output_dir,
                           pprint.pformat(ms_names)))
+
+    def __repr__(self):
+        return '<Context(name={!r})>'.format(self.name)
 
     def set_state(self, cls, name, value):
         """
@@ -277,7 +278,7 @@ class Pipeline(object):
             #if MAX_CASA_REVISION and MAX_CASA_REVISION < revision:
             if MAX_CASA_REVISION and casatools.utils.compare_version('>', MAX_CASA_REVISION) is True:
                 #msg = ('Maximum CASA revision for the pipeline is r%s, '
-                       #'got CASA %s (r%s).' % (MAX_CASA_REVISION, 
+                       #'got CASA %s (r%s).' % (MAX_CASA_REVISION,
                                                #casadef.casa_version,
                                                #casadef.subversion_revision))
                 msg = ('Maximum CASA revision for the pipeline is %s, '

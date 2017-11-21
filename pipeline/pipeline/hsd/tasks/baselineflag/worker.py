@@ -1,10 +1,10 @@
 from __future__ import absolute_import
 
-import os
+import copy
 import math
 import numpy
+import os
 import time
-import copy
 import itertools
 
 from taskinit import gentools
@@ -20,20 +20,39 @@ from pipeline.domain.datatable import OnlineFlagIndex
 
 from .flagsummary import _get_iteration
 from .. import common
+from .SDFlagRule import INVALID_STAT
+
 
 LOG = infrastructure.get_logger(__name__)
 
-from .SDFlagRule import INVALID_STAT
 
 class SDBLFlagWorkerInputs(basetask.StandardInputs):
     """
     Inputs for imaging worker
     NOTE: infile should be a complete list of MSes 
     """
-    def __init__(self, context, clip_niteration,
-                 ms_list, antenna_list, fieldid_list, spwid_list, pols_list,
-                 nchan, flagRule, userFlag=[], edge=(0,0), rowmap=None):
-        self._init_properties(vars())
+
+    def __init__(self, context, clip_niteration, ms_list, antenna_list, fieldid_list, spwid_list, pols_list, nchan,
+                 flagRule, userFlag=None, edge=None, rowmap=None):
+        super(SDBLFlagWorkerInputs, self).__init__(context, vis=None, output_dir=None)
+
+        if userFlag is None:
+            userFlag = []
+        if edge is None:
+            edge = (0, 0)
+
+        self.clip_niteration = clip_niteration
+        self.ms_list = ms_list
+        self.antenna_list = antenna_list
+        self.fieldid_list = fieldid_list
+        self.spwid_list = spwid_list
+        self.pols_list = pols_list
+        self.flagRule = flagRule
+        self.nchan = nchan
+        self.userFlag = userFlag
+        self.edge = edge
+        self.rowmap = rowmap
+
 
 class SDBLFlagWorkerResults(common.SingleDishResults):
     def __init__(self, task=None, success=None, outcome=None):
@@ -44,6 +63,7 @@ class SDBLFlagWorkerResults(common.SingleDishResults):
 
     def _outcome_name(self):
         return ''
+
 
 class BLFlagTableContainer(object):
     def __init__(self):
@@ -59,15 +79,15 @@ class BLFlagTableContainer(object):
     @property
     def calvis(self):
         return self.__get_ms_attr('name')
-        
+
     @property
     def blvis(self):
         return self.__get_ms_attr('work_data')
 
-    @property    
+    @property
     def is_baselined(self):
         return getattr(self, '_is_baselined', self.ms is not None and (self.calvis != self.blvis))
-    
+
     @is_baselined.setter
     def is_baselined(self, value):
         self._is_baselined = value
@@ -78,33 +98,32 @@ class BLFlagTableContainer(object):
     def close(self):
         if self.ms is not None:
             self.tb1.close()
-            
+
             if self.is_baselined:
                 self.tb2.close()
-            
+
             self._init()
 
     def open(self, ms, nomodify=False):
         if self.ms is None or self.ms != ms:
             self.close()
-            
+
             self.ms = ms
-            
+
             self.tb1.open(self.calvis, nomodify=nomodify)
-            
+
             if self.is_baselined:
                 self.tb2.open(self.blvis, nomodify=nomodify)
-        
 
-class SDBLFlagWorker(basetask.StandardTaskTemplate): #object):
-    '''
+
+class SDBLFlagWorker(basetask.StandardTaskTemplate):
+    """
     The worker class of single dish flagging task.
     This class defines per spwid flagging operation.
-    '''
+    """
     Inputs = SDBLFlagWorkerInputs
     
-    def is_multi_vis_task(self):
-        return True
+    is_multi_vis_task = True
     
     def _search_datacol(self, table):
         """
@@ -121,15 +140,15 @@ class SDBLFlagWorker(basetask.StandardTaskTemplate): #object):
                 break
         return col_found
             
-    
+
     def prepare(self):
         container = BLFlagTableContainer()
-        
+
         try:
             results = self._prepare(container)
         finally:
             container.close()
-            
+
         return results
 
     def _prepare(self, container):
@@ -177,7 +196,7 @@ class SDBLFlagWorker(basetask.StandardTaskTemplate): #object):
         # loop over members (practically, per antenna loop in an MS)
         for (msobj,antid,fieldid,spwid,pollist) in itertools.izip(ms_list, antid_list, fieldid_list, spwid_list, pols_list):
             LOG.debug('Performing flag for %s Antenna %d Field %d Spw %d'%(msobj.basename,antid,fieldid,spwid))
-            
+
             filename_in = msobj.name
             filename_out = msobj.work_data
             
@@ -205,7 +224,7 @@ class SDBLFlagWorker(basetask.StandardTaskTemplate): #object):
             # open table via container
             container.is_baselined = is_baselined
             container.open(msobj)
-            
+
             if not is_baselined:
                 LOG.debug("No baseline subtraction operated to data. Skipping flag by post fit spectra.")
                 # Reset MASKLIST for the non-baselined DataTable

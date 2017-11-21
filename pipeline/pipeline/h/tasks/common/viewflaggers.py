@@ -8,31 +8,39 @@ import numpy as np
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
+import pipeline.infrastructure.vdp as vdp
 from pipeline.h.tasks.common import arrayflaggerbase
 from pipeline.h.tasks.common import flaggableviewresults
 
 LOG = infrastructure.get_logger(__name__)
 
 
-class MatrixFlaggerInputs(basetask.StandardInputs):
+class MatrixFlaggerInputs(vdp.StandardInputs):
+    prepend = vdp.VisDependentProperty(default='')
+    use_antenna_names = vdp.VisDependentProperty(default=True)
 
-    def __init__(self, context, output_dir=None, vis=None, datatask=None,
-                 viewtask=None, flagsettertask=None, rules=None, niter=None,
-                 extendfields=None, extendbaseband=None, iter_datatask=None,
-                 use_antenna_names=None, prepend=''):
+    def __init__(self, context, output_dir=None, vis=None, datatask=None, viewtask=None, flagsettertask=None,
+                 rules=None, niter=None, extendfields=None, extendbaseband=None, iter_datatask=None,
+                 use_antenna_names=None, prepend=None):
+        super(MatrixFlaggerInputs, self).__init__()
 
-        # set the properties to the values given as input arguments
-        self._init_properties(vars())
+        # pipeline inputs
+        self.context = context
+        # vis must be set first, as other properties may depend on it
+        self.vis = vis
+        self.output_dir = output_dir
 
-    @property
-    def use_antenna_names(self):
-        return self._use_antenna_names
-
-    @use_antenna_names.setter
-    def use_antenna_names(self, value):
-        if value is None:
-            value = True
-        self._use_antenna_names = value
+        # solution parameters
+        self.datatask = datatask
+        self.extendbaseband = extendbaseband
+        self.extendfields = extendfields
+        self.flagsettertask = flagsettertask
+        self.iter_datatask = iter_datatask
+        self.niter = niter
+        self.prepend = prepend
+        self.rules = rules
+        self.use_antenna_names = use_antenna_names
+        self.viewtask = viewtask
 
 
 class MatrixFlaggerResults(basetask.Results,
@@ -1217,24 +1225,29 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
         return newflags, flag_reason
 
 
-class VectorFlaggerInputs(basetask.StandardInputs):
+class VectorFlaggerInputs(vdp.StandardInputs):
+    prepend = vdp.VisDependentProperty(default='')
+    use_antenna_names = vdp.VisDependentProperty(default=True)
 
-    def __init__(self, context, output_dir=None, vis=None, datatask=None,
-                 viewtask=None, flagsettertask=None, rules=None, niter=None,
-                 iter_datatask=None, use_antenna_names=None, prepend=''):
+    def __init__(self, context, output_dir=None, vis=None, datatask=None, viewtask=None, flagsettertask=None,
+                 rules=None, niter=None, iter_datatask=None, use_antenna_names=None, prepend=None):
+        super(VectorFlaggerInputs, self).__init__()
 
-        # set the properties to the values given as input arguments
-        self._init_properties(vars())
+        # pipeline inputs
+        self.context = context
+        # vis must be set first, as other properties may depend on it
+        self.vis = vis
+        self.output_dir = output_dir
 
-    @property
-    def use_antenna_names(self):
-        return self._use_antenna_names
-
-    @use_antenna_names.setter
-    def use_antenna_names(self, value):
-        if value is None:
-            value = True
-        self._use_antenna_names = value
+        # solution parameters
+        self.datatask = datatask
+        self.flagsettertask = flagsettertask
+        self.iter_datatask = iter_datatask
+        self.niter = niter
+        self.prepend = prepend
+        self.rules = rules
+        self.use_antenna_names = use_antenna_names
+        self.viewtask = viewtask
 
 
 class VectorFlaggerResults(basetask.Results,

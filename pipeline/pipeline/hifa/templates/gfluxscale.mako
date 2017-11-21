@@ -89,8 +89,37 @@ $(document).ready(function() {
 
 <h2>Results</h2>
 
+% if adopted_table:
+<h4>Measurement sets using adopted flux calibrations</h4>
+    <p>Measurement sets without flux calibrator scans adopt the appropriate flux calibrations from other measurement
+        sets within the session. This is possible when the measurement sets with- and without-flux calibrator scans
+        independently observe a common set of fields, such as a common phase calibrator. In these instances, the adopted
+        flux calibration for a field is equal to the mean flux calibration for that field as derived from the
+        measurement sets with a flux calibration. The precise values used for these data are listed in the 'Computed
+        Flux Densities' section.</p>
 
+    <p>The following measurement sets use a flux calibration adopted from other measurement sets.</p>
 
+    <table class="table table-bordered table-striped"
+           summary="Measurement sets with flux calibration adopted from other data">
+        <caption>Measurement sets using a flux calibration adopted from other data</caption>
+        <thead>
+        <tr>
+            <th scope="col">Measurement Set</th>
+            <th scope="col">Fields using adopted flux calibration</th>
+        </tr>
+        </thead>
+        <tbody>
+            % for tr in adopted_table:
+                <tr>
+                    % for td in tr:
+                ${td}
+                    % endfor
+                </tr>
+            % endfor
+        </tbody>
+    </table>
+% endif
 
 <h4>Antennas Used for Flux Scaling</h4>
 
@@ -106,7 +135,7 @@ $(document).ready(function() {
 	    </tr>
 	</thead>
 	<tbody>
-% for single_result in result:
+% for single_result in [r for r in result if not r.applies_adopted]:
 		<tr>
 			<td>${os.path.basename(single_result.vis)}</td>
                 	<td>${single_result.uvrange}</td>
@@ -115,7 +144,6 @@ $(document).ready(function() {
 % endfor
 	</tbody>
 </table>
-
 
 
 <h4>Computed Flux Densities</h4>
@@ -160,7 +188,7 @@ $(document).ready(function() {
     <h3>Flux Calibrator Model Comparison</h3>
     Antenna selection used for flux transfer to the secondary calibrators.
 
-	% for ms in ampuv_allant_plots:
+	%for ms in ampuv_allant_plots:
 	    <h4>${ms}</h4>
 		% for intent in ampuv_allant_plots[ms]:
 			<div class="row">
@@ -174,7 +202,7 @@ $(document).ready(function() {
 			                <div class="thumbnail">
 			                    <a href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
 			                       class="fancybox"
-								   title='<div class="pull-left">Baseband ${plot.parameters["baseband"]} (spw ${plot.parameters["spw"]}).<br> 
+								   title='<div class="pull-left">Baseband ${plot.parameters["baseband"]} (spw ${plot.parameters["spw"]}).<br>
 			                              Receiver bands: ${utils.commafy(plot.parameters["receiver"], False)}.<br>
 			                              ${"All antennas." if plot.parameters.get("ant","") == "" else "Antennas: "+str(plot.parameters["ant"])+"."}<br>
 			                              Flux calibrator fields: ${plot.parameters["field"]}.</div>
@@ -188,9 +216,9 @@ $(document).ready(function() {
 			                    <div class="caption">
 									<h4>Baseband ${plot.parameters['baseband']}</h4>
 									${rx_for_plot(plot)}
-									${spws_for_baseband(plot)}									
+									${spws_for_baseband(plot)}
 
-								    <p>Amp vs. uvdist for 
+								    <p>Amp vs. uvdist for
 								    <%
 									antlist = plot.parameters.get('ant','').split(',')
 									antdisp = ' '.join([','.join(antlist[i:i+4])+'<br>' for i in range(0,len(antlist),4)])
@@ -206,7 +234,7 @@ $(document).ready(function() {
 			                <div class="thumbnail">
 			                    <a href="${os.path.relpath(antplot.abspath, pcontext.report_dir)}"
 			                       class="fancybox"
-								   title='<div class="pull-left">Baseband ${antplot.parameters["baseband"]} (spw ${antplot.parameters["spw"]}).<br> 
+								   title='<div class="pull-left">Baseband ${antplot.parameters["baseband"]} (spw ${antplot.parameters["spw"]}).<br>
 			                              Receiver bands: ${utils.commafy(antplot.parameters["receiver"], False)}.<br>
 			                              ${"All antennas." if antplot.parameters.get("ant","") == "" else "Antennas: "+str(antplot.parameters["ant"])+"."}<br>
 			                              Flux calibrator fields: ${antplot.parameters["field"]}.</div>
@@ -220,9 +248,9 @@ $(document).ready(function() {
 			                    <div class="caption">
 									<h4>Baseband ${antplot.parameters['baseband']}</h4>
 									${rx_for_plot(antplot)}
-									${spws_for_baseband(antplot)}									
+									${spws_for_baseband(antplot)}
 
-								    <p>Selection for 
+								    <p>Selection for
 								    <%
 									antlist = antplot.parameters.get('ant','').split(',')
 									antdisp = ' '.join([','.join(antlist[i:i+4])+'<br>' for i in range(0,len(antlist),4)])
@@ -231,7 +259,7 @@ $(document).ready(function() {
 								    </p>
 								</div>
 			                </div>
-		            	% endif		            
+		            	% endif
 		            </div>
 		        % endfor
 			</div>

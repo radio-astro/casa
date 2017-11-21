@@ -7,50 +7,35 @@ import numpy as np
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.casatools as casatools
+import pipeline.infrastructure.vdp as vdp
 from pipeline.h.tasks.common import commonhelpermethods
 from pipeline.h.tasks.common import commonresultobjects
 from pipeline.h.tasks.common import viewflaggers
 from pipeline.h.tasks.flagging.flagdatasetter import FlagdataSetter
 from .resultobjects import RawflagchansResults, RawflagchansDataResults, RawflagchansViewResults
 
+__all__ = [
+    'Rawflagchans',
+    'RawflagchansInputs'
+]
+
 LOG = infrastructure.get_logger(__name__)
 
 
-class RawflagchansInputs(basetask.StandardInputs):
-    @basetask.log_equivalent_CASA_call
-    def __init__(self, context, output_dir=None, vis=None, spw=None,
-                 intent=None,
-                 flag_hilo=None, fhl_limit=None, fhl_minsample=None,
-                 flag_bad_quadrant=None, fbq_hilo_limit=None,
-                 fbq_antenna_frac_limit=None, fbq_baseline_frac_limit=None,
-                 niter=None):
+class RawflagchansInputs(vdp.StandardInputs):
+    """
+    RawflagchansInputs defines the inputs for the Rawflagchans pipeline task.
+    """
+    fbq_antenna_frac_limit = vdp.VisDependentProperty(default=0.2)
+    fbq_baseline_frac_limit = vdp.VisDependentProperty(default=1.0)
+    fbq_hilo_limit = vdp.VisDependentProperty(default=8.0)
+    flag_bad_quadrant = vdp.VisDependentProperty(default=True)
+    flag_hilo = vdp.VisDependentProperty(default=True)
+    fhl_limit = vdp.VisDependentProperty(default=20.0)
+    fhl_minsample = vdp.VisDependentProperty(default=5)
 
-        # set the properties to the values given as input arguments
-        self._init_properties(vars())
-
-    @property
-    def spw(self):
-        if self._spw is not None:
-            return str(self._spw)
-
-        if isinstance(self.vis, list):
-            return self._handle_multiple_vis('spw')
-
-        science_spws = self.ms.get_spectral_windows(self._spw, with_channels=True)
-        return ','.join([str(spw.id) for spw in science_spws])
-
-    @spw.setter
-    def spw(self, value):
-        self._spw = value
-
-    @property
+    @vdp.VisDependentProperty
     def intent(self):
-        if isinstance(self.vis, list):
-            return self._handle_multiple_vis('intent')
-
-        if self._intent is not None:
-            return self._intent
-        
         # if the spw was set, look to see which intents were observed in that
         # spectral window and return the intent based on our order of
         # preference: BANDPASS
@@ -61,10 +46,10 @@ class RawflagchansInputs(basetask.StandardInputs):
                     if intent in spw.intents:
                         if intent != preferred_intents[0]:
                             LOG.warning('%s spw %s: %s not present, %s used instead' %
-                              (os.path.basename(self.vis), spw.id, 
-                              preferred_intents[0], intent))
+                                        (os.path.basename(self.vis), spw.id,
+                                         preferred_intents[0], intent))
                         return intent
-            
+
         # spw was not set, so look through the spectral windows
         for intent in preferred_intents:
             intentok = True
@@ -77,96 +62,44 @@ class RawflagchansInputs(basetask.StandardInputs):
             if intentok:
                 if intent != preferred_intents[0]:
                     LOG.warning('%s %s: %s not present, %s used instead' %
-                      (os.path.basename(self.vis), spw.id, preferred_intents[0],
-                      intent))
+                                (os.path.basename(self.vis), spw.id, preferred_intents[0],
+                                 intent))
                 return intent
-                
+
         # As a fallback, return 'BANDPASS' as the intent.
         return 'BANDPASS'
 
-    @intent.setter
-    def intent(self, value):
-        self._intent = value
+    niter = vdp.VisDependentProperty(default=1)
 
-    @property
-    def flag_hilo(self):
-        return self._flag_hilo
+    @vdp.VisDependentProperty
+    def spw(self):
+        science_spws = self.ms.get_spectral_windows(with_channels=True)
+        return ','.join([str(spw.id) for spw in science_spws])
 
-    @flag_hilo.setter
-    def flag_hilo(self, value):
-        if value is None:
-            value = True
-        self._flag_hilo = value
+    def __init__(self, context, output_dir=None, vis=None, spw=None, intent=None, flag_hilo=None,
+                 fhl_limit=None, fhl_minsample=None, flag_bad_quadrant=None, fbq_hilo_limit=None,
+                 fbq_antenna_frac_limit=None, fbq_baseline_frac_limit=None, niter=None):
+        super(RawflagchansInputs, self).__init__()
 
-    @property
-    def fhl_limit(self):
-        return self._fhl_limit
+        # pipeline inputs
+        self.context = context
+        # vis must be set first, as other properties may depend on it
+        self.vis = vis
+        self.output_dir = output_dir
 
-    @fhl_limit.setter
-    def fhl_limit(self, value):
-        if value is None:
-            value = 20.0
-        self._fhl_limit = value
+        # data selection arguments
+        self.spw = spw
+        self.intent = intent
 
-    @property
-    def fhl_minsample(self):
-        return self._fhl_minsample
-
-    @fhl_minsample.setter
-    def fhl_minsample(self, value):
-        if value is None:
-            value = 5
-        self._fhl_minsample = value
-
-    @property
-    def flag_bad_quadrant(self):
-        return self._flag_bad_quadrant
-
-    @flag_bad_quadrant.setter
-    def flag_bad_quadrant(self, value):
-        if value is None:
-            value = True
-        self._flag_bad_quadrant = value
-
-    @property
-    def fbq_hilo_limit(self):
-        return self._fbq_hilo_limit
-
-    @fbq_hilo_limit.setter
-    def fbq_hilo_limit(self, value):
-        if value is None:
-            value = 8.0
-        self._fbq_hilo_limit = value
-
-    @property
-    def fbq_antenna_frac_limit(self):
-        return self._fbq_antenna_frac_limit
-
-    @fbq_antenna_frac_limit.setter
-    def fbq_antenna_frac_limit(self, value):
-        if value is None:
-            value = 0.2
-        self._fbq_antenna_frac_limit = value
-
-    @property
-    def fbq_baseline_frac_limit(self):
-        return self._fbq_baseline_frac_limit
-
-    @fbq_baseline_frac_limit.setter
-    def fbq_baseline_frac_limit(self, value):
-        if value is None:
-            value = 1.0
-        self._fbq_baseline_frac_limit = value
-
-    @property
-    def niter(self):
-        return self._niter
-
-    @niter.setter
-    def niter(self, value):
-        if value is None:
-            value = 1
-        self._niter = value
+        # flagging parameters
+        self.flag_hilo = flag_hilo
+        self.fhl_limit = fhl_limit
+        self.fhl_minsample = fhl_minsample
+        self.flag_bad_quadrant = flag_bad_quadrant
+        self.fbq_hilo_limit = fbq_hilo_limit
+        self.fbq_antenna_frac_limit = fbq_antenna_frac_limit
+        self.fbq_baseline_frac_limit = fbq_baseline_frac_limit
+        self.niter = niter
 
 
 class Rawflagchans(basetask.StandardTaskTemplate):
@@ -237,16 +170,26 @@ class Rawflagchans(basetask.StandardTaskTemplate):
         return result
 
 
-class RawflagchansDataInputs(basetask.StandardInputs):
+class RawflagchansDataInputs(vdp.StandardInputs):
     
     def __init__(self, context, vis=None, spw=None, intent=None):
         """
+        RawflagchansDataInputs defines the inputs for the RawflagchansData task.
+
         Keyword arguments:
         spw    -- views are created for these spws.
         intent -- views are created for this intent.
         """
+        super(RawflagchansDataInputs, self).__init__()
 
-        self._init_properties(vars())
+        # pipeline inputs
+        self.context = context
+        # vis must be set first, as other properties may depend on it
+        self.vis = vis
+
+        # data selection arguments
+        self.intent = intent
+        self.spw = spw
 
 
 class RawflagchansData(basetask.StandardTaskTemplate):
@@ -484,7 +427,8 @@ class RawflagchansView(object):
 
         return self.result
 
-    def refine_view(self, data, flag):
+    @staticmethod
+    def refine_view(data, flag):
         """Refine the data view by subtracting the median from each
         baseline row, then subtracting the median from each channel
         column.

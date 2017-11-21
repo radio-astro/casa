@@ -3,7 +3,7 @@ import pipeline.infrastructure.pipelineqa as pipelineqa
 import pipeline.infrastructure.renderer.qaadapter as qaadapter
 import pipeline.infrastructure.renderer.weblog as weblog
 
-from .almaphcorbandpass import ALMAPhcorBandpass
+from .almaphcorbandpass import ALMAPhcorBandpass, SessionALMAPhcorBandpass
 from . import renderer
 from pipeline.hif.tasks.bandpass import qa
 from pipeline.hif.tasks.bandpass import common

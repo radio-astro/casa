@@ -8,14 +8,12 @@ from . import common
 LOG = infrastructure.get_logger(__name__)
 
 
-
 class BandpassWorkerInputs(common.CommonBandpassInputs):
     """
     BandpassInputs defines the inputs required by the :class:`Bandpass`
     task.
     """
 
-    @basetask.log_equivalent_CASA_call
     def __init__(self, context, output_dir=None,
                  # 
                  vis=None, caltable=None, 
@@ -58,7 +56,8 @@ class BandpassWorker(basetask.StandardTaskTemplate):
         inputs.caltable = inputs.caltable
 
         # create a job for each CalTo data selection
-        calstate = inputs.context.callibrary.get_calstate(inputs.calto)                
+        calto = callibrary.get_calto_from_inputs(inputs)
+        calstate = inputs.context.callibrary.get_calstate(calto)
 
         # make a memo of the original spw input. These are the spws we will
         # apply the resultant caltable to

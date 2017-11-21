@@ -1,135 +1,91 @@
 from __future__ import absolute_import
+import collections
+import operator
 import os
-import os.path
+import uuid
 
+import scipy.stats as stats
+
+from pipeline.domain import FluxMeasurement
+import pipeline.domain.measures as measures
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.callibrary as callibrary
+import pipeline.infrastructure.vdp as vdp
+import pipeline.infrastructure.sessionutils as sessionutils
 
-from pipeline.h.tasks import importdata
-from . import fluxes
 from pipeline.hif.tasks import gaincal
-from ... import heuristics
+from pipeline.infrastructure import mpihelpers
 from pipeline.h.tasks.common import commonfluxresults
 from pipeline.hif.tasks.fluxscale import fluxscale
 from pipeline.hif.tasks.setmodel import setjy
+from . import fluxes
+from ... import heuristics
+
+__all__ = [
+    'GcorFluxscale',
+    'GcorFluxscaleInputs',
+    'GcorFluxscaleResults',
+    'SessionGcorFluxscale',
+    'SessionGcorFluxscaleInputs'
+]
 
 LOG = infrastructure.get_logger(__name__)
 
 
+class GcorFluxscaleResults(commonfluxresults.FluxCalibrationResults):
+    def __init__(self, vis, resantenna=None, uvrange=None, measurements=None, applies_adopted=False):
+        super(GcorFluxscaleResults, self).__init__(vis, resantenna=resantenna, uvrange=uvrange,
+                                                   measurements=measurements)
+        self.applies_adopted = applies_adopted
+
+    def merge_with_context(self, context):
+        ms = context.observing_run.get_ms(self.vis)
+        ms.derived_fluxes = self.measurements
+
+
 class GcorFluxscaleInputs(fluxscale.FluxscaleInputs):
-    @basetask.log_equivalent_CASA_call
-    def __init__(self, context, output_dir=None, vis=None, caltable=None,
-                 fluxtable=None, reffile=None, reference=None, transfer=None,
-                 refspwmap=None, refintent=None, transintent=None,
-                 solint=None, phaseupsolint=None, minsnr=None, refant=None,
-                 hm_resolvedcals=None, antenna=None, uvrange=None, peak_fraction=None):
-        self._init_properties(vars())
+    antenna = vdp.VisDependentProperty(default='')
+    hm_resolvedcals = vdp.VisDependentProperty(default='automatic')
+    minsnr = vdp.VisDependentProperty(default=2.0)
+    peak_fraction = vdp.VisDependentProperty(default=0.2)
+    phaseupsolint = vdp.VisDependentProperty(default='int')
+    refant = vdp.VisDependentProperty(default='')
 
-    @property
+    @vdp.VisDependentProperty
     def reffile(self):
-        return self._reffile
+        return os.path.join(self.context.output_dir, 'flux.csv')
 
-    @reffile.setter
-    def reffile(self, value=None):
-        if value in (None, ''):
-            value = os.path.join(self.context.output_dir, 'flux.csv')
-        self._reffile = value
-
-    @property
-    def solint(self):
-        if self._solint is None:
-            return 'inf'
-        return self._solint
-
-    @solint.setter
-    def solint(self, value):
-        self._solint = value
-
-    @property
-    def phaseupsolint(self):
-        if self._phaseupsolint is None:
-            return 'int'
-        return self._phaseupsolint
-
-    @phaseupsolint.setter
-    def phaseupsolint(self, value):
-        self._phaseupsolint = value
-
-    @property
-    def minsnr (self):
-        if self._minsnr is None:
-            return 2.0
-        return self._minsnr
-
-    @minsnr.setter
-    def minsnr(self, value):
-        self._minsnr = value
-
-    @property
-    def refant(self):
-        if self._refant is None:
-            return ''
-        return self._refant
-
-    @refant.setter
-    def refant(self, value):
-        self._refant = value
-
-    @property
+    @vdp.VisDependentProperty
     def refspwmap(self):
-        if self._refspwmap is None:
-            return []
-        return self._refspwmap
+        return []
 
-    @refspwmap.setter
-    def refspwmap(self, value):
-        self._refspwmap = value
+    solint = vdp.VisDependentProperty(default='inf')
+    uvrange = vdp.VisDependentProperty(default='')
 
-    @property
-    def hm_resolvedcals(self):
-        if self._hm_resolvedcals is None:
-            return 'automatic'
-        return self._hm_resolvedcals
-
-    @hm_resolvedcals.setter
-    def hm_resolvedcals(self, value):
-        self._hm_resolvedcals = value
-
-    @property
-    def antenna(self):
-        if self._antenna is None:
-            return ''
-        return self._antenna
-
-    @antenna.setter
-    def antenna(self, value):
-        self._antenna = value
-
-    @property
-    def uvrange(self):
-        if self._uvrange is None:
-            return ''
-        return self._uvrange
-
-    @uvrange.setter
-    def uvrange(self, value):
-        self._uvrange = value
-
-    @property
-    def peak_fraction(self):
-        if self._peak_fraction is None:
-            return 0.2
-        return self._peak_fraction
-
-    @peak_fraction.setter
-    def peak_fraction(self, value):
-        self._peak_fraction = value
+    def __init__(self, context, output_dir=None, vis=None, caltable=None, fluxtable=None, reffile=None, reference=None,
+                 transfer=None, refspwmap=None, refintent=None, transintent=None, solint=None, phaseupsolint=None,
+                 minsnr=None, refant=None, hm_resolvedcals=None, antenna=None, uvrange=None, peak_fraction=None):
+        super(GcorFluxscaleInputs, self).__init__(context, output_dir=output_dir, vis=vis, caltable=caltable,
+                                                  fluxtable=fluxtable, reference=reference, transfer=transfer,
+                                                  refspwmap=refspwmap, refintent=refintent, transintent=transintent)
+        self.reffile = reffile
+        self.solint = solint
+        self.phaseupsolint = phaseupsolint
+        self.minsnr = minsnr
+        self.refant = refant
+        self.hm_resolvedcals = hm_resolvedcals
+        self.antenna = antenna
+        self.uvrange = uvrange
+        self.peak_fraction = peak_fraction
 
 
 class GcorFluxscale(basetask.StandardTaskTemplate):
     Inputs = GcorFluxscaleInputs
+
+    def __init__(self, inputs):
+        super(GcorFluxscale, self).__init__(inputs)
 
     def prepare(self, **parameters):
         inputs = self.inputs
@@ -140,22 +96,21 @@ class GcorFluxscale(basetask.StandardTaskTemplate):
         # Check that the measurement set does have an amplitude calibrator.
         if inputs.reference == '':
             # No point carrying on if not.
-            LOG.error('%s has no data with reference intent %s'
-                      '' % (inputs.ms.basename, inputs.refintent))
+            LOG.error('%s has no data with reference intent %s' % (inputs.ms.basename, inputs.refintent))
             return result
 
         # Run setjy for sources in the reference list which have transfer intents.
         if inputs.ms.get_fields(inputs.reference, intent=inputs.transintent):
             self._do_setjy(reffile=inputs.reffile, field=inputs.reference)
         else:
-            LOG.info('Flux calibrator field(s) \'%s\' in %s have no data with intent %s' %
-                        (inputs.reference, inputs.ms.basename, inputs.transintent))
+            LOG.info('Flux calibrator field(s) {!r} in {!s} have no data with '
+                     'intent {!s}'.format(inputs.reference, inputs.ms.basename, inputs.transintent))
 
         # set the reference antenna
         refant = inputs.refant
         if refant == '':
 
-            # Get the reference antenna for this measurement set from the 
+            # Get the reference antenna for this measurement set from the
             # context. This comes back as a string containing a ranked
             # list of antenna names.
             refant = inputs.ms.reference_antenna
@@ -164,16 +119,14 @@ class GcorFluxscale(basetask.StandardTaskTemplate):
             # (refant equals either None or an empty string), then raise an exception.
             #    Note the exception.
             if not (refant and refant.strip()):
-                msg = ('No reference antenna specified and none found in '
-                       'context for %s' % inputs.ms.basename)
+                msg = ('No reference antenna specified and none found in context for %s' % inputs.ms.basename)
                 LOG.error(msg)
                 raise Exception(msg)
 
             # Choose the first antenna.
             refant = refant.split(',')[0]
-            #refant = refant[0]
 
-        LOG.trace('refant:%s' % refant)
+        LOG.trace('refant: %s' % refant)
 
         # Get the reference spwmap for flux scaling
         refspwmap = inputs.refspwmap
@@ -187,9 +140,8 @@ class GcorFluxscale(basetask.StandardTaskTemplate):
         if inputs.ms.combine_spwmap:
             spwidlist = [spw.id for spw in inputs.ms.get_spectral_windows(science_windows_only=True)]
             fieldnamelist = [field.name for field in inputs.ms.get_fields(task_arg=inputs.transfer, intent='PHASE')]
-            exptimes = heuristics.exptimes.get_scan_exptimes(inputs.ms, fieldnamelist, 'PHASE',
-                spwidlist)
-            phaseup_solint = '%0.3fs' % (min ([exptime[1] for exptime in exptimes]) / 4.0)
+            exptimes = heuristics.exptimes.get_scan_exptimes(inputs.ms, fieldnamelist, 'PHASE', spwidlist)
+            phaseup_solint = '%0.3fs' % (min([exptime[1] for exptime in exptimes]) / 4.0)
             phase_gaintype = 'T'
             phase_combine = 'spw'
             phaseup_spwmap = inputs.ms.combine_spwmap
@@ -211,9 +163,8 @@ class GcorFluxscale(basetask.StandardTaskTemplate):
         if inputs.hm_resolvedcals == 'automatic':
             # Get the antennas to be used in the gaincals, limiting
             # the range if the reference calibrator is resolved.
-            resantenna, uvrange = heuristics.fluxscale.antenna(ms=inputs.ms,
-                    refsource=inputs.reference, refant=refant,
-                    peak_frac=inputs.peak_fraction)
+            resantenna, uvrange = heuristics.fluxscale.antenna(ms=inputs.ms, refsource=inputs.reference, refant=refant,
+                                                               peak_frac=inputs.peak_fraction)
 
             # Do nothing if the source is unresolved.
             # If the source is resolved but the number of
@@ -234,12 +185,12 @@ class GcorFluxscale(basetask.StandardTaskTemplate):
         result.resantenna = resantenna
         result.uvrange = uvrange
 
-        # Do a phase-only gaincal on the flux calibrator using a restricted
-        # set of antennas
-        r = self._do_gaincal(field=inputs.reference, intent=inputs.refintent,
-                gaintype=phase_gaintype, calmode='p', combine=phase_combine, solint=inputs.phaseupsolint,
-                antenna=resantenna, uvrange=uvrange, refant=refant, minblperant=minblperant,
-                phaseup_spwmap=None, phase_interp=None, append=False, merge=False)
+        # Do a phase-only gaincal on the flux calibrator using a
+        # restricted set of antennas
+        r = self._do_gaincal(field=inputs.reference, intent=inputs.refintent, gaintype=phase_gaintype, calmode='p',
+                             combine=phase_combine, solint=inputs.phaseupsolint, antenna=resantenna, uvrange=uvrange,
+                             refant=refant, minblperant=minblperant, phaseup_spwmap=None, phase_interp=None,
+                             append=False, merge=False)
 
         # Test for the existence of the caltable
         try:
@@ -251,20 +202,19 @@ class GcorFluxscale(basetask.StandardTaskTemplate):
         # Do a phase-only gaincal on the remaining calibrators using the full
         # set of antennas
         append = os.path.exists(caltable)
-        r = self._do_gaincal(caltable=caltable, field=inputs.transfer,
-                intent=inputs.transintent, gaintype=phase_gaintype, calmode='p',
-                combine=phase_combine, solint=phaseup_solint, antenna=allantenna, uvrange='',
-                minblperant=None, refant=refant, phaseup_spwmap=phaseup_spwmap,
-                phase_interp=phase_interp, append=append, merge=True)
+        r = self._do_gaincal(caltable=caltable, field=inputs.transfer, intent=inputs.transintent,
+                             gaintype=phase_gaintype, calmode='p', combine=phase_combine, solint=phaseup_solint,
+                             antenna=allantenna, uvrange='', minblperant=None, refant=refant,
+                             phaseup_spwmap=phaseup_spwmap, phase_interp=phase_interp, append=append, merge=True)
 
         # Now do the amplitude-only gaincal. This will produce the caltable
         # that fluxscale will analyse
         try:
             r = self._do_gaincal(field=inputs.transfer + ',' + inputs.reference,
-                intent=inputs.transintent + ',' + inputs.refintent, gaintype='T',
-                calmode='a', combine='', solint=inputs.solint, antenna=allantenna, uvrange='',
-                refant=refant, minblperant=minblperant, phaseup_spwmap=None, phase_interp=None,
-                append=False, merge=True)
+                                 intent=inputs.transintent + ',' + inputs.refintent, gaintype='T', calmode='a',
+                                 combine='', solint=inputs.solint, antenna=allantenna, uvrange='', refant=refant,
+                                 minblperant=minblperant, phaseup_spwmap=None, phase_interp=None, append=False,
+                                 merge=True)
 
             # Get the gaincal caltable from the results
             try:
@@ -278,14 +228,15 @@ class GcorFluxscale(basetask.StandardTaskTemplate):
             # each of the amplitude and phase calibrators - looking
             # at each spw separately.
             if os.path.exists(caltable):
-                check_ok = self._check_caltable(caltable=caltable,
-                        ms=inputs.ms, reference=inputs.reference, transfer=inputs.transfer)
+                check_ok = self._check_caltable(caltable=caltable, ms=inputs.ms, reference=inputs.reference,
+                                                transfer=inputs.transfer)
             else:
                 check_ok = False
 
         except:
             caltable = ' %s' % r.error.pop().gaintable if r.error else ''
-            LOG.warn('Cannot compute phase solution table%s for the phase and bandpass calibrator' % (os.path.basename(caltable)))
+            LOG.warn('Cannot compute phase solution table%s for the phase '
+                     'and bandpass calibrator' % (os.path.basename(caltable)))
             check_ok = False
 
         if check_ok:
@@ -295,26 +246,21 @@ class GcorFluxscale(basetask.StandardTaskTemplate):
             # We need to write the fluxscale-derived flux densities to a file,
             # which can then be used as input for the subsequent setjy task.
             # This is the name of that file.
-            reffile = os.path.join(inputs.context.output_dir,
-                                   'fluxscale_s%s.csv' % inputs.context.stage)
+            # use UUID so that parallel MPI processes do not unlink the same file
+            reffile = os.path.join(inputs.context.output_dir, 'fluxscale_{!s}.csv'.format(uuid.uuid4()))
 
             try:
-                fluxscale_result = self._do_fluxscale(caltable,
-                                                      refspwmap=refspwmap)
-
-                #importdata.fluxes.export_flux_from_result(fluxscale_result,
-                                                              #inputs.context,
-                                                              #reffile)
+                fluxscale_result = self._do_fluxscale(caltable, refspwmap=refspwmap)
 
                 # Determine fields ids for which a model spix should be
                 # set along with the derived flux. For now this is
-                # restricted to BANDPASS fields 
-                fieldids_with_spix = [str(f.id) for f in inputs.ms.get_fields(task_arg=inputs.transfer, intent='BANDPASS')]
-                
-                # Store the results in a temporary file. 
-                fluxes.export_flux_from_fit_result(fluxscale_result, inputs.context,
-                                                              reffile,
-                                                              fieldids_with_spix=fieldids_with_spix)
+                # restricted to BANDPASS fields
+                fieldids_with_spix = [str(f.id) for f in inputs.ms.get_fields(task_arg=inputs.transfer,
+                                                                              intent='BANDPASS')]
+
+                # Store the results in a temporary file.
+                fluxes.export_flux_from_fit_result(fluxscale_result, inputs.context, reffile,
+                                                   fieldids_with_spix=fieldids_with_spix)
 
                 # Finally, do a setjy, add its setjy_settings
                 # to the main result
@@ -325,10 +271,9 @@ class GcorFluxscale(basetask.StandardTaskTemplate):
                 # what we passed in as arguments
                 result.measurements.update(fluxscale_result.measurements)
 
-            except Exception, e:
+            except Exception:
                 # Something has gone wrong, return an empty result
                 LOG.error('Unable to complete flux scaling operation for MS %s' % (os.path.basename(inputs.vis)))
-                #LOG.exception(e)
                 return result
 
             finally:
@@ -346,76 +291,59 @@ class GcorFluxscale(basetask.StandardTaskTemplate):
         return result
 
     def _check_caltable(self, caltable, ms, reference, transfer):
-        """Check that the give caltable is well-formed so that a 'fluxscale'
+        """
+        Check that the give caltable is well-formed so that a 'fluxscale'
         will run successfully on it:
+
           1. Check that the caltable contains results for the reference and
              transfer fields.
         """
         # get the ids of the reference source and phase source(s)
-        ref_fieldid = set([field.id for field in ms.fields if
-          field.name==reference])
-        transfer_fieldids = set([field.id for field in ms.fields if
-          field.name in transfer])
+        ref_fieldid = {field.id for field in ms.fields if field.name == reference}
+        transfer_fieldids = {field.id for field in ms.fields if field.name in transfer}
 
-        with casatools.TableReader(caltable, nomodify=False) as table:
-            spwids = table.getcol('SPECTRAL_WINDOW_ID')
-            spwids = set(spwids)
-
+        with casatools.TableReader(caltable) as table:
             fieldids = table.getcol('FIELD_ID')
-            fieldids = set(fieldids)
 
-            # check that fieldids contains the amplitude and phase calibrators
-            if fieldids.isdisjoint(ref_fieldid):
-                LOG.warning(
-                  '%s contains ambiguous reference calibrator field names' %
-                  os.path.basename(caltable))
-                #return False
-                return True
-            if not fieldids.issuperset(transfer_fieldids):
-                LOG.warning(
-                  '%s does not contain results for all transfer calibrators' %
-                  os.path.basename(caltable))
-                #return False
-                return True
+        # warn if field IDs does not contains the amplitude and phase calibrators
+        fieldids = set(fieldids)
+        if fieldids.isdisjoint(ref_fieldid):
+            LOG.warning('%s contains ambiguous reference calibrator field names' % os.path.basename(caltable))
+        if not fieldids.issuperset(transfer_fieldids):
+            LOG.warning('%s does not contain results for all transfer calibrators' % os.path.basename(caltable))
 
         return True
 
-    def _do_gaincal(self, caltable=None, field=None, intent=None, gaintype='G',
-        calmode=None, combine=None, solint=None, antenna=None, uvrange='', refant=None,
-        minblperant=None, phaseup_spwmap=None, phase_interp=None, append=None, merge=True):
-
+    def _do_gaincal(self, caltable=None, field=None, intent=None, gaintype='G', calmode=None, combine=None, solint=None,
+                    antenna=None, uvrange='', refant=None, minblperant=None, phaseup_spwmap=None, phase_interp=None,
+                    append=None, merge=True):
         inputs = self.inputs
 
-        # Get the science spws
-        sci_spwids = [spw.id for spw in inputs.ms.get_spectral_windows(science_windows_only=True)]
-
-        # Use only valid spws
-        spw_ids = []
+        # Use only valid science spws
         fieldlist = inputs.ms.get_fields(task_arg=field)
-        for fld in fieldlist:
-           for spw in fld.valid_spws:
-               if spw.id not in sci_spwids:
-                   continue
-               spw_ids.append(str(spw.id))
-        spw_ids = ','.join(list(set(spw_ids)))
+        sci_spws = set(inputs.ms.get_spectral_windows(science_windows_only=True))
+        spw_ids = {spw.id for fld in fieldlist for spw in fld.valid_spws.intersection(sci_spws)}
+        spw_ids = ','.join(map(str, spw_ids))
 
-        task_args = {'output_dir'  : inputs.output_dir,
-                     'vis'         : inputs.vis,
-                     'caltable'    : caltable,
-                     'field'       : field,
-                     'intent'      : intent,
-                     'spw'         : spw_ids,
-                     'solint'      : solint,
-                     'gaintype'    : gaintype,
-                     'calmode'     : calmode,
-                     'minsnr'      : inputs.minsnr,
-                     'combine'     : combine,
-                     'refant'      : refant,
-                     'antenna'     : antenna,
-                     'uvrange'     : uvrange,
-                     'minblperant' : minblperant,
-                     'solnorm'     : False,
-                     'append'      : append}
+        task_args = {
+            'output_dir': inputs.output_dir,
+            'vis': inputs.vis,
+            'caltable': caltable,
+            'field': field,
+            'intent': intent,
+            'spw': spw_ids,
+            'solint': solint,
+            'gaintype': gaintype,
+            'calmode': calmode,
+            'minsnr': inputs.minsnr,
+            'combine': combine,
+            'refant': refant,
+            'antenna': antenna,
+            'uvrange': uvrange,
+            'minblperant': minblperant,
+            'solnorm': False,
+            'append': append
+        }
 
         # Note that field and antenna task there default values for the
         # purpose of setting up the calto object.
@@ -446,12 +374,14 @@ class GcorFluxscale(basetask.StandardTaskTemplate):
     def _do_fluxscale(self, caltable=None, refspwmap=None):
         inputs = self.inputs
 
-        task_args = {'output_dir' : inputs.output_dir,
-                     'vis'        : inputs.vis,
-                     'caltable'   : caltable,
-                     'reference'  : inputs.reference,
-                     'transfer'   : inputs.transfer,
-                     'refspwmap'  : refspwmap}
+        task_args = {
+            'output_dir': inputs.output_dir,
+            'vis': inputs.vis,
+            'caltable': caltable,
+            'reference': inputs.reference,
+            'transfer': inputs.transfer,
+            'refspwmap': refspwmap
+        }
 
         task_inputs = fluxscale.Fluxscale.Inputs(inputs.context, **task_args)
         task = fluxscale.Fluxscale(task_inputs)
@@ -461,11 +391,13 @@ class GcorFluxscale(basetask.StandardTaskTemplate):
     def _do_setjy(self, reffile=None, field=None):
         inputs = self.inputs
 
-        task_args = {'output_dir' : inputs.output_dir,
-                     'vis'        : inputs.vis,
-                     'field'      : field,
-                     'intent'     : inputs.transintent,
-                     'reffile'    : reffile}
+        task_args = {
+            'output_dir': inputs.output_dir,
+            'vis': inputs.vis,
+            'field': field,
+            'intent': inputs.transintent,
+            'reffile': reffile
+        }
 
         task_inputs = setjy.Setjy.Inputs(inputs.context, **task_args)
         task = setjy.Setjy(task_inputs)
@@ -473,36 +405,265 @@ class GcorFluxscale(basetask.StandardTaskTemplate):
         return self._executor.execute(task, merge=True)
 
     def _mod_last_interp(self, l, interp):
-        l.calfrom[-1] = self._copy_with_interp(l.calfrom[-1], interp)
-
-    def _copy_with_interp(self, old_calfrom, interp):
-        return callibrary.CalFrom(gaintable=old_calfrom.gaintable,
-                                  gainfield=old_calfrom.gainfield,
-                                  interp=interp,
-                                  spwmap=old_calfrom.spwmap,
-                                  caltype=old_calfrom.caltype,
-                                  calwt=old_calfrom.calwt)
+        l.calfrom[-1] = callibrary.copy_calfrom(l.calfrom[-1], interp=interp)
 
     def _mod_last_spwmap(self, l, spwmap):
-        l.calfrom[-1] = self._copy_with_spwmap(l.calfrom[-1], spwmap)
-
-    def _copy_with_spwmap(self, old_calfrom, spwmap):
-        return callibrary.CalFrom(gaintable=old_calfrom.gaintable,
-                                  gainfield=old_calfrom.gainfield,
-                                  interp=old_calfrom.interp,
-                                  spwmap=spwmap,
-                                  caltype=old_calfrom.caltype,
-                                  calwt=old_calfrom.calwt)
+        l.calfrom[-1] = callibrary.copy_calfrom(l.calfrom[-1], spwmap=spwmap)
 
 
-class GcorFluxscaleResults(commonfluxresults.FluxCalibrationResults):
+class SessionGcorFluxscaleInputs(GcorFluxscaleInputs):
+    # use common implementation for parallel inputs argument
+    parallel = sessionutils.parallel_inputs_impl()
 
-    def __init__(self, vis, resantenna=None, uvrange=None, measurements=None):
-        commonfluxresults.FluxCalibrationResults.__init__(self,
-            vis, resantenna=resantenna, uvrange=uvrange, measurements=measurements)
+    def __init__(self, context, output_dir=None, vis=None, caltable=None, fluxtable=None, reffile=None, reference=None,
+                 transfer=None, refspwmap=None, refintent=None, transintent=None, solint=None, phaseupsolint=None,
+                 minsnr=None, refant=None, hm_resolvedcals=None, antenna=None, uvrange=None, peak_fraction=None,
+                 parallel=None):
+        super(SessionGcorFluxscaleInputs, self).__init__(context, output_dir=output_dir, vis=vis, caltable=caltable,
+                                                         fluxtable=fluxtable, reffile=reffile, reference=reference,
+                                                         transfer=transfer, refspwmap=refspwmap, refintent=refintent,
+                                                         transintent=transintent, solint=solint,
+                                                         phaseupsolint=phaseupsolint, minsnr=minsnr, refant=refant,
+                                                         hm_resolvedcals=hm_resolvedcals, antenna=antenna,
+                                                         uvrange=uvrange, peak_fraction=peak_fraction)
+        self.parallel = parallel
 
-    def merge_with_context (self, context):
-        ms = context.observing_run.get_ms(self.vis)
-        ms.derived_fluxes = self.measurements
+
+AMPLITUDE_MISSING = '__AMPLITUDE_MISSING__'
 
 
+class SessionGcorFluxscale(basetask.StandardTaskTemplate):
+    Inputs = SessionGcorFluxscaleInputs
+
+    def __init__(self, inputs):
+        super(SessionGcorFluxscale, self).__init__(inputs)
+
+    is_multi_vis_task = True
+
+    def prepare(self):
+        inputs = self.inputs
+
+        vis_list = sessionutils.as_list(inputs.vis)
+
+        assessed = []
+        with sessionutils.VDPTaskFactory(inputs, self._executor, GcorFluxscale) as factory:
+            task_queue = [(vis, factory.get_task(vis)) for vis in vis_list]
+
+            for (vis, (task_args, task)) in task_queue:
+                # only launch jobs for MSes with amplitude calibrators.
+                # The analyse() method will subsequently adopt the
+                # appropriate flux calibration measurements from one of
+                # the completed jobs.
+                ms = inputs.context.observing_run.get_ms(vis)
+                if 'AMPLITUDE' not in ms.intents:
+                    assessed.append(sessionutils.VisResultTuple(vis, task_args, AMPLITUDE_MISSING))
+                    continue
+                try:
+                    worker_result = task.get_result()
+                except mpihelpers.PipelineError as e:
+                    assessed.append(sessionutils.VisResultTuple(vis, task_args, e))
+                else:
+                    assessed.append(sessionutils.VisResultTuple(vis, task_args, worker_result))
+
+        return assessed
+
+    def analyse(self, assessed):
+        # all results will be added to this object
+        final_result = basetask.ResultsList()
+
+        context = self.inputs.context
+
+        session_groups = sessionutils.group_into_sessions(context, assessed)
+        for session_id, session_results in session_groups.iteritems():
+            # we need to convert the Field ID to field name in the
+            # measurements
+            measurements_per_field = collect_flux_measurements(context, session_results)
+
+            averaged = calc_averages_per_field(measurements_per_field)
+
+            for vis, task_args, vis_result in session_results:
+                if vis_result == AMPLITUDE_MISSING:
+                    no_amplitude_ms = context.observing_run.get_ms(vis)
+
+                    # find other flux calibrations for any of our fields
+                    no_amplitude_field_names = {f.name for f in no_amplitude_ms.fields}
+                    fields_to_adopt = no_amplitude_field_names.intersection(set(averaged.keys()))
+
+                    if len(fields_to_adopt) is 0:
+                        LOG.error('Could not find a flux calibration to adopt for '
+                                  '{!s}.'.format(no_amplitude_ms.basename))
+                        continue
+
+                    LOG.info('Adopting flux calibrations for {!s}; fields: {!s}'
+                             ''.format(no_amplitude_ms.basename, ', '.join(fields_to_adopt)))
+
+                    # these are the measurements to adopt, but the spw
+                    # names still need to be remapped to spw IDs for
+                    # this MS
+                    unmapped_adopted = {k: v for k, v in averaged.iteritems() if k in no_amplitude_field_names}
+
+                    mapped_adopted = map_spw_names_to_id(context, vis, unmapped_adopted)
+
+                    fake_result = GcorFluxscaleResults(vis=vis, measurements=mapped_adopted, applies_adopted=True)
+                    fake_result.inputs = task_args
+                    fake_result.task = SessionGcorFluxscale
+
+                    final_result.append(fake_result)
+
+                elif isinstance(vis_result, Exception):
+                    LOG.error('No flux calibration created for {!s}'.format(os.path.basename(vis)))
+
+                    fake_result = GcorFluxscaleResults(vis=vis)
+                    fake_result.inputs = task_args
+
+                    final_result.append(fake_result)
+                    pass
+
+                else:
+                    final_result.append(vis_result)
+
+        return final_result
+
+
+def get_field_name(context, vis, identifier):
+    ms = context.observing_run.get_ms(vis)
+    fields = set(ms.get_fields(task_arg=identifier))
+    if len(fields) is not 1:
+        raise KeyError('{!r} does not uniquely identify a field: ({!s} matches found)'
+                       ''.format(identifier, len(fields)))
+    fields = fields.pop()
+    return fields.name
+
+
+def collect_flux_measurements(context, vis_result_tuples):
+    """
+    Compile the flux measurements from a set of results into a new
+    dict data structure.
+
+    :param context: the pipeline context
+    :param vis_result_tuples: the VisResultTuples to inspect
+    :type vis_result_tuples: list of VisResultTuples
+    :return: dict of tuples
+    :rtype: dict of {str field name: (vis, spw name, flux measurement)}
+    """
+    d = collections.defaultdict(list)
+
+    for vis, _, result in vis_result_tuples:
+        if result == AMPLITUDE_MISSING:
+            continue
+
+        ms = context.observing_run.get_ms(vis)
+
+        for field_id, measurements in result.measurements.iteritems():
+            field_name = get_field_name(context, vis, field_id)
+
+            for m in measurements:
+                spws = ms.get_spectral_windows(task_arg=m.spw_id)
+                assert(len(spws) is 1)
+                spw = spws.pop()
+                d[field_name].append((vis, spw.name, m))
+
+    return d
+
+
+def calc_averages_per_field(results):
+    """
+    Return a compiled and averaged flux calibrations per field.
+
+    :param results:
+    :return:
+    """
+    averages = collections.defaultdict(list)
+    for field_name, measurement_structs in results.iteritems():
+        spw_names = {spw_name for _, spw_name, _ in measurement_structs}
+        for spw_name in spw_names:
+            measurements_for_spw = [measurement for _, name, measurement in measurement_structs
+                                    if name == spw_name]
+            if len(measurements_for_spw) == 0:
+                continue
+
+            mean = reduce(operator.add, measurements_for_spw) / len(measurements_for_spw)
+
+            # copy the uncertainty if there's only one measurement,
+            # otherwise calculate the standard error of the mean.
+            if len(measurements_for_spw) == 1:
+                m = measurements_for_spw[0]
+                unc_I = m.uncertainty.I
+                unc_Q = m.uncertainty.Q
+                unc_U = m.uncertainty.U
+                unc_V = m.uncertainty.V
+            else:
+                JY = measures.FluxDensityUnits.JANSKY
+                unc_I = stats.sem([float(m.I.to_units(JY)) for m in measurements_for_spw])
+                unc_Q = stats.sem([float(m.Q.to_units(JY)) for m in measurements_for_spw])
+                unc_U = stats.sem([float(m.U.to_units(JY)) for m in measurements_for_spw])
+                unc_V = stats.sem([float(m.V.to_units(JY)) for m in measurements_for_spw])
+
+            # floats are interpreted as Jy, so we don't need to convert
+            # SEM values
+            mean.uncertainty = FluxMeasurement(spw_name, unc_I, unc_Q, unc_U, unc_V)
+
+            averages[field_name].append((spw_name, mean))
+
+    return averages
+
+
+def map_spw_names_to_id(context, vis, field_measurements):
+    """
+    Copy a flux result dict, remapping the target spectral window in
+    the original result to a new measurement set.
+
+    This function makes a copy of a dict of flux calibration results
+    (keys=field names, values=FluxMeasurements), remapping the spectral
+    window target in the results to the corresponding spectral window
+    in the target measurement set.
+
+    :param context: pipeline context
+    :param vis: name of the measurement set to remap spws to
+    :param field_measurements: flux calibrations to adopt
+    :type field_measurements: dict with format {str: [FluxMeasurements]}
+    :return: flux results remapped to measurement set
+    :rtype: dict with format {str: [FluxMeasurements]}
+    """
+    ms = context.observing_run.get_ms(vis)
+    science_spws = ms.get_spectral_windows(science_windows_only=True)
+    spw_names_to_id = {spw.name: spw.id for spw in science_spws}
+    # spw names must uniquely identify a science spw, otherwise we
+    # can't create a correct spw ID mapping
+    assert (len(spw_names_to_id) == len(science_spws))
+
+    d = {field_name: [copy_flux_measurement(m, spw_id=spw_names_to_id[spw_name])
+                      for spw_name, m in measurements if spw_name in spw_names_to_id]
+         for field_name, measurements in field_measurements.iteritems()}
+
+    return d
+
+
+def copy_flux_measurement(source, spw_id=None, I=None, Q=None, U=None, V=None, spix=None, uI=None, uQ=None, uU=None,
+                          uV=None):
+    if spw_id is None:
+        spw_id = source.spw_id
+    if I is None:
+        I = source.I
+    if Q is None:
+        Q = source.Q
+    if U is None:
+        U = source.U
+    if V is None:
+        V = source.V
+    if spix is None:
+        spix = source.spix
+
+    new_fm = FluxMeasurement(spw_id, I, Q=Q, U=U, V=V, spix=spix)
+
+    if uI is None:
+        uI = source.uncertainty.I
+    if uQ is None:
+        uQ = source.uncertainty.Q
+    if uU is None:
+        uU = source.uncertainty.U
+    if uV is None:
+        uV = source.uncertainty.V
+    new_fm.uncertainty = FluxMeasurement(spw_id, uI, Q=uQ, U=uU, V=uV)
+
+    return new_fm

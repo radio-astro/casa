@@ -4,6 +4,7 @@ import tempfile
 import types
 
 import pipeline.infrastructure as infrastructure
+import pipeline.infrastructure.api as api
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.mpihelpers as mpihelpers
 
@@ -15,7 +16,6 @@ LOG = infrastructure.get_logger(__name__)
 
 
 class MakeImagesInputs(basetask.StandardInputs):
-    @basetask.log_equivalent_CASA_call
     def __init__(self, context, output_dir=None, vis=None, target_list=None,
                  weighting=None, robust=None, noise=None, npixels=None,
                  hm_masking=None, hm_sidelobethreshold=None, hm_noisethreshold=None,
@@ -56,14 +56,13 @@ class MakeImagesInputs(basetask.StandardInputs):
 
 # tell the infrastructure to give us mstransformed data when possible by
 # registering our preference for imaging measurement sets
-basetask.ImagingMeasurementSetsPreferred.register(MakeImagesInputs)
+api.ImagingMeasurementSetsPreferred.register(MakeImagesInputs)
 
 
 class MakeImages(basetask.StandardTaskTemplate):
     Inputs = MakeImagesInputs
 
-    def is_multi_vis_task(self):
-        return True
+    is_multi_vis_task = True
 
     def prepare(self):
         inputs = self.inputs

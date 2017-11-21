@@ -74,6 +74,7 @@ import flaghelper
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.casatools as casatools
+import pipeline.infrastructure.vdp as vdp
 from pipeline.h.tasks.flagging import flagdeterbase
 from pipeline.infrastructure import casa_tasks
 
@@ -128,6 +129,7 @@ LOG = infrastructure.get_logger(__name__)
 #               create_from_context().  All functions are overloaded.
 
 # ------------------------------------------------------------------------------
+
 
 class FlagDeterVLAInputs(flagdeterbase.FlagDeterBaseInputs):
 
@@ -213,76 +215,41 @@ class FlagDeterVLAInputs(flagdeterbase.FlagDeterBaseInputs):
 #               Initial version.
 
 # ------------------------------------------------------------------------------
-    edgespw  = basetask.property_with_default('edgespw', True)
-    fracspw  = basetask.property_with_default('fracspw', 0.05)
-    quack = basetask.property_with_default('quack', True)
-    clip = basetask.property_with_default('clip', True)
-    baseband = basetask.property_with_default('baseband', True)
-    #fracspwfps  = basetask.property_with_default('fracspwfps', 0.04837)
-        
-    @basetask.log_equivalent_CASA_call
-    def __init__( self, context, vis=None, output_dir=None, flagbackup=None,
-        autocorr=None, shadow=None, scan=None, scannumber=None, quack=None, clip=None, baseband=None,
-        intents=None, edgespw=None, fracspw=None, fracspwfps=None, online=None,
-        fileonline=None, template=None, filetemplate=None, hm_tbuff=None, tbuff=None ):
+    """
+    FlagDeterVLAInputs defines the inputs for the FlagDeterVLA pipeline task.
+    """
+    baseband = vdp.VisDependentProperty(default=True)
+    clip = vdp.VisDependentProperty(default=True)
+    edgespw = vdp.VisDependentProperty(default=True)
+    fracspw = vdp.VisDependentProperty(default=0.05)
+    # fracspwfps = vdp.VisDependentProperty(default=0.04837)
 
-        # Initialize the public member variables of the inherited class
-        # FlagDeterBaseInputs()
-
-        super(FlagDeterVLAInputs, self).__init__(
-            context, vis=vis, output_dir=output_dir, flagbackup=flagbackup,
-            autocorr=autocorr, shadow=shadow, scan=scan, scannumber=scannumber,
-            intents=intents, edgespw=edgespw, fracspw=fracspw,
-            fracspwfps=fracspwfps, online=online, fileonline=fileonline,
-            template=template, filetemplate=filetemplate, hm_tbuff=hm_tbuff,
-            tbuff=tbuff)
-
-        self._init_properties(vars())
-        
-        
-    @property
+    @vdp.VisDependentProperty
     def intents(self):
-        if type(self.vis) is types.ListType:
-            return self._handle_multiple_vis('intents')
-
-        if self._intents is not None:
-            return self._intents
-
         # return just the unwanted intents that are present in the MS
-        #VLA Specific intents that need to be flagged
-        intents_to_flag = set(['POINTING','FOCUS','ATMOSPHERE','SIDEBAND', 'UNKNOWN', 'SYSTEM_CONFIGURATION', 'UNSPECIFIED#UNSPECIFIED'])
+        # VLA Specific intents that need to be flagged
+        intents_to_flag = {'POINTING', 'FOCUS', 'ATMOSPHERE', 'SIDEBAND',
+                           'UNKNOWN', 'SYSTEM_CONFIGURATION',
+                           'UNSPECIFIED#UNSPECIFIED'}
         return ','.join(self.ms.intents.intersection(intents_to_flag))
 
-    @intents.setter
-    def intents(self, value):
-        self._intents = value
-        
-    '''    
-    @property
-    def hm_tbuff(self):
-        return self._hm_tbuff
-        
-    @hm_tbuff.setter
-    def hm_tbuff(self, value):
-        if value is None:
-            value = 'manual'
-        if value in 'halfint | 1.5int | manual':
-            self._hm_tbuff = value
-        else:
-            self._hm_tbuff = 'manual'
-        
-    @property
-    def tbuff(self):
-        return self._tbuff
-        
-    @tbuff.setter
-    def tbuff(self, value):
-        if value is None:
-            value = 0.0
-        self._tbuff = value
-    '''
-    
-    
+    quack = vdp.VisDependentProperty(default=True)
+
+    def __init__(self, context, vis=None, output_dir=None, flagbackup=None, autocorr=None, shadow=None, scan=None,
+                 scannumber=None, quack=None, clip=None, baseband=None, intents=None, edgespw=None, fracspw=None,
+                 fracspwfps=None, online=None, fileonline=None, template=None, filetemplate=None, hm_tbuff=None,
+                 tbuff=None):
+        super(FlagDeterVLAInputs, self).__init__(
+            context, vis=vis, output_dir=output_dir, flagbackup=flagbackup, autocorr=autocorr, shadow=shadow,
+            scan=scan, scannumber=scannumber, intents=intents, edgespw=edgespw, fracspw=fracspw, fracspwfps=fracspwfps,
+            online=online, fileonline=fileonline, template=template, filetemplate=filetemplate, hm_tbuff=hm_tbuff,
+            tbuff=tbuff)
+
+        # VLA-specific parameters
+        self.quack = quack
+        self.clip = clip
+        self.baseband = baseband
+
 
 # ------------------------------------------------------------------------------
 

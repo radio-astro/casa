@@ -2,6 +2,7 @@ from __future__ import absolute_import
 
 import os
 
+import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.utils as utils
 import pipeline.infrastructure.pipelineqa as pqa
@@ -10,6 +11,7 @@ import pipeline.qa.scorecalculator as qacalc
 from . import mssplit
 
 LOG = logging.get_logger(__name__)
+
 
 class MsSplitQAHandler(pqa.QAResultHandler):
     result_cls = mssplit.MsSplitResults
@@ -36,7 +38,7 @@ class MsSplitListQAHandler(pqa.QAResultHandler):
     """
     QA handler for a list containing MsSplitResults.
     """
-    result_cls = list
+    result_cls = basetask.ResultsList
     child_cls = mssplit.MsSplitResults
     generating_task = mssplit.MsSplit
 

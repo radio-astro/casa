@@ -5,15 +5,11 @@ import collections
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.callibrary as callibrary
+import pipeline.infrastructure.vdp as vdp
 from pipeline.infrastructure import casa_tasks
 
 from pipeline.hif.tasks import applycal
 from pipeline.h.tasks import applycal as happlycal
-
-
-
-
-
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -22,38 +18,43 @@ class ApplycalsInputs(applycal.IFApplycalInputs):
     """
     ApplycalInputs defines the inputs for the Applycal pipeline task.
     """
-    @basetask.log_equivalent_CASA_call
     def __init__(self, context, output_dir=None,
                  #
                  vis=None,
                  # data selection arguments
                  field=None, spw=None, antenna=None, intent=None,
                  # preapply calibrations
-                 opacity=None, parang=None, applymode=None, calwt=None,
+                 parang=None, applymode=None, calwt=None,
                  flagbackup=None, flagsum=None, flagdetailedsum=None, gainmap=None):
-        self._init_properties(vars())
+        super(ApplycalsInputs, self).__init__(context, output_dir=output_dir, vis=vis, field=field, spw=spw,
+                                              antenna=antenna, intent=intent, parang=parang,
+                                              applymode=applymode, flagbackup=flagbackup, flagsum=flagsum,
+                                              flagdetailedsum=flagdetailedsum)
+        self.calwt = calwt
+        self.gainmap = gainmap
 
-    flagdetailedsum = basetask.property_with_default('flagdetailedsum', True)
-    parang = basetask.property_with_default('parang', True)
-    field = basetask.property_with_default('field', '')
-    spw = basetask.property_with_default('spw', '')
-    intent = basetask.property_with_default('intent', '')
-    flagbackup = basetask.property_with_default('flagbackup', False)
-    calwt = basetask.property_with_default('calwt', False)
-    gainmap = basetask.property_with_default('gainmap', False)
+    parang = vdp.VisDependentProperty(default=True)
+    field = vdp.VisDependentProperty(default='')
+    spw = vdp.VisDependentProperty(default='')
+    intent = vdp.VisDependentProperty(default='')
+    flagbackup = vdp.VisDependentProperty(default=False)
+    calwt = vdp.VisDependentProperty(default=False)
+    gainmap = vdp.VisDependentProperty(default=False)
 
     def to_casa_args(self):
         d = super(ApplycalsInputs, self).to_casa_args()
         d['intent'] = ''
         d['field'] = ''
         d['spw'] = ''
-
         return d
 
 
 class Applycals(applycal.IFApplycal):
     Inputs = ApplycalsInputs
-    
+
+    ### Note this is a temporary workaround ###
+    antenna_to_apply = '*&*'
+
     def prepare(self):
         
         # Run applycal
@@ -73,17 +74,27 @@ class Applycals(applycal.IFApplycal):
     def applycal_run(self):
         inputs = self.inputs
 
-        # Get the calibration state for the user's target data selection. This
-        # dictionary of CalTo:CalFroms gives us which calibrations should be
-        # applied and how.
-        merged = inputs.calstate.merged()
+        # Get the target data selection for this task as a CalTo object
+        calto = callibrary.get_calto_from_inputs(inputs)
+
+        # Now get the calibration state for that CalTo data selection. The
+        # returned dictionary of CalTo:CalFroms specifies the calibrations to
+        # be applied and the data selection to apply them to.
+        #
+        # Note that no 'ignore' argument is given to get_calstate
+        # (specifically, we don't say ignore=['calwt'] like many other tasks)
+        # as applycal is a task that can handle calwt and so different values
+        # of calwt should in this case result in different tasks.
+        calstate = inputs.context.callibrary.get_calstate(calto)
+        merged = calstate.merged()
 
         # run a flagdata job to find the flagged state before applycal
         if inputs.flagsum:
             # 20170406 TN
             # flagdata task arguments are indirectly given so that sd applycal task is
             # able to edit them
-            flagdata_summary_job = casa_tasks.flagdata(**self._get_flagsum_arg(vis=inputs.vis))
+            summary_args = dict(vis=inputs.vis, mode='summary')
+            flagdata_summary_job = casa_tasks.flagdata(**self._get_flagsum_arg(summary_args))
             stats_before = self._executor.execute(flagdata_summary_job)
             stats_before['name'] = 'before'
 

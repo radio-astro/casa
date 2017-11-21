@@ -1,4 +1,5 @@
 from __future__ import absolute_import
+import collections
 import os
 
 import pipeline.infrastructure.logging as logging
@@ -86,9 +87,9 @@ class TimegaincalQAHandler(pqa.QAResultHandler):
 
         try:
             for calapp in result.final:
-                solint = calapp.origin.inputs['solint']
-                calmode = calapp.origin.inputs['calmode']
-                if (solint == 'int') and (calmode == 'p'):
+                solint = utils.get_origin_input_arg(calapp, 'solint')
+                calmode = utils.get_origin_input_arg(calapp, 'calmode')
+                if solint == 'int' and calmode == 'p':
                     qa_results_dict[calapp.gaintable] = gpcal.gpcal(calapp.gaintable)
                     qa_results_dict[calapp.gaintable]['PHASE_FIELDS'] = phase_field_ids
 
@@ -103,7 +104,7 @@ class TimegaincalListQAHandler(pqa.QAResultHandler):
     """
     QA handler for a list containing TimegaincalResults.
     """
-    result_cls = list
+    result_cls = collections.Iterable
     child_cls = common.GaincalResults
 
     def handle(self, context, result):

@@ -5,6 +5,7 @@ import types
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
+import pipeline.infrastructure.vdp as vdp
 from pipeline.h.heuristics import caltable as bcaltable
 from pipeline.hif.tasks.common import commoncalinputs as commoncalinputs
 
@@ -15,7 +16,7 @@ class CommonBandpassInputs(commoncalinputs.CommonCalibrationInputs):
     """
     CommonBandpassInputs is the base class for defines inputs that are common
     to all pipeline bandpass calibration tasks.
-    
+
     CommonBandpassInputs should be considered an abstract class. Refer to the
     specializations that inherit from CommonBandpassInputs for concrete
     implementations.
@@ -62,10 +63,10 @@ class CommonBandpassInputs(commoncalinputs.CommonCalibrationInputs):
                     if intent in spw.intents:
                         if intent != preferred_intents[0]:
                             LOG.warning('%s spw %s: %s not present, %s used instead' %
-                              (os.path.basename(self.vis), spw.id, 
+                              (os.path.basename(self.vis), spw.id,
                               preferred_intents[0], intent))
                         return intent
-            
+
         # spw was not set, so look through the spectral windows
         for intent in preferred_intents:
             for spw in self.ms.spectral_windows:
@@ -75,26 +76,83 @@ class CommonBandpassInputs(commoncalinputs.CommonCalibrationInputs):
                           (os.path.basename(self.vis), spw.id, preferred_intents[0],
                           intent))
                     return intent
-                
+
         # current fallback - return an empty intent
         return ''
-    
+
     @intent.setter
     def intent(self, value):
         if isinstance(value, list):
             value = [str(v).replace('*', '') for v in value]
-        if type(value) is types.StringType:    
+        if type(value) is types.StringType:
             value = str(value).replace('*', '')
         self._intent = value
 
-        
+
+class VdpCommonBandpassInputs(commoncalinputs.VdpCommonCalibrationInputs):
+    """
+    CommonBandpassInputs is the base class for defines inputs that are common
+    to all pipeline bandpass calibration tasks.
+
+    CommonBandpassInputs should be considered an abstract class. Refer to the
+    specializations that inherit from CommonBandpassInputs for concrete
+    implementations.
+    """
+    combine = vdp.VisDependentProperty(default='scan')
+    solint = vdp.VisDependentProperty(default='inf')
+    solnorm = vdp.VisDependentProperty(default=True)
+
+    @vdp.VisDependentProperty
+    def caltable(self):
+        namer = bcaltable.BandpassCaltable()
+        casa_args = self._get_task_args(ignore=('caltable',))
+        return namer.calculate(output_dir=self.output_dir, stage=self.context.stage, **casa_args)
+
+    @vdp.VisDependentProperty
+    def intent(self):
+        # if the spw was set, look to see which intents were observed in that
+        # spectral window and return the intent based on our order of
+        # preference: BANDPASS, AMPLITUDE, PHASE
+        preferred_intents = ('BANDPASS', 'PHASE', 'AMPLITUDE')
+        if self.spw:
+            for spw in self.ms.get_spectral_windows(self.spw):
+                for intent in preferred_intents:
+                    if intent in spw.intents:
+                        if intent != preferred_intents[0]:
+                            LOG.warning('%s spw %s: %s not present, %s used instead' %
+                                        (os.path.basename(self.vis), spw.id,
+                                         preferred_intents[0], intent))
+                        return intent
+
+        # spw was not set, so look through the spectral windows
+        for intent in preferred_intents:
+            for spw in self.ms.spectral_windows:
+                if intent in spw.intents:
+                    if intent != preferred_intents[0]:
+                        LOG.warning('%s %s: %s not present, %s used instead' %
+                                    (os.path.basename(self.vis), spw.id, preferred_intents[0],
+                                     intent))
+                    return intent
+
+        # current fallback - return an empty intent
+        return ''
+
+    @intent.convert
+    def intent(self, value):
+        if isinstance(value, list):
+            value = [str(v).replace('*', '') for v in value]
+        if isinstance(value, str):
+            value = value.replace('*', '')
+        return value
+
+
 class BandpassResults(basetask.Results):
     """
     BandpassResults is the results class common to all pipeline bandpass
     calibration tasks.
     """
     
-    def __init__(self, final=None, pool=None, preceding=None):
+    def __init__(self, final=None, pool=None, preceding=None, applies_adopted=False):
         """
         Construct and return a new BandpassResults.
         
@@ -124,6 +182,7 @@ class BandpassResults(basetask.Results):
         self.preceding = preceding[:]
         self.error = set()
         self.qa = {}
+        self.applies_adopted = applies_adopted
 
     def merge_with_context(self, context):
         """
@@ -137,10 +196,6 @@ class BandpassResults(basetask.Results):
             LOG.debug('Adding calibration to callibrary:\n'
                       '%s\n%s' % (calapp.calto, calapp.calfrom))
             context.callibrary.add(calapp.calto, calapp.calfrom)
-
-    @property
-    def caltable_names(self):
-        return set([t.basename for t in self.candidates])
 
     def __repr__(self):
         s = 'BandpassResults:\n'

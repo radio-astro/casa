@@ -34,7 +34,6 @@ https://bugs.nrao.edu/browse/CAS-6869
 
 
 class FluxdbInputs(basetask.StandardInputs):
-    @basetask.log_equivalent_CASA_call
     def __init__(self, context, output_dir=None, vis=None, serviceurl=None):
         # set the properties to the values given as input arguments
         self._init_properties(vars())

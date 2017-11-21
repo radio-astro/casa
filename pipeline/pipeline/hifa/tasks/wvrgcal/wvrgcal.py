@@ -3,7 +3,6 @@ from __future__ import absolute_import
 import collections
 import os
 import shutil
-import types
 
 import numpy as np
 
@@ -11,6 +10,7 @@ import pipeline.domain.measures as measures
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.callibrary as callibrary
+import pipeline.infrastructure.vdp as vdp
 from pipeline.h.heuristics import caltable as caltable_heuristic
 from pipeline.hif.tasks import gaincal
 from pipeline.hifa.heuristics import atm as atm_heuristic
@@ -20,254 +20,109 @@ from pipeline.infrastructure import casa_tasks
 from . import resultobjects
 from . import wvrg_qa
 
+__all__ = [
+    'Wvrgcal',
+    'WvrgcalInputs'
+]
+
 LOG = infrastructure.get_logger(__name__)
 
 WVRInfo = collections.namedtuple('WVRInfo',
                                  'antenna wvr flag rms disc')
 
 
-class WvrgcalInputs(basetask.StandardInputs):
-    @basetask.log_equivalent_CASA_call        
-    def __init__(self, context, output_dir=None, vis=None, caltable=None, 
-                 offsetstable=None, hm_toffset=None, toffset=None,
-                 segsource=None, hm_tie=None, tie=None, sourceflag=None,
-                 nsol=None, disperse=None, wvrflag=None, hm_smooth=None,
-                 smooth=None, scale=None, maxdistm=None, minnumants=None,
-                 mingoodfrac=None, refant=None, qa_intent=None,
-                 qa_bandpass_intent=None, qa_spw=None, accept_threshold=None,
-                 bandpass_result=None, nowvr_result=None, ):
-        self._init_properties(vars())
+class WvrgcalInputs(vdp.StandardInputs):
+    """
+    WvrgcalInputs defines the inputs for the Wvrgcal pipeline task.
+    """
+    accept_threshold = vdp.VisDependentProperty(default=1.0)
+    bandpass_result = vdp.VisDependentProperty(default='', hidden=True)
+    disperse = vdp.VisDependentProperty(default=False)
+    hm_smooth = vdp.VisDependentProperty(default='automatic')
+    hm_tie = vdp.VisDependentProperty(default='automatic')
+    hm_toffset = vdp.VisDependentProperty(default='automatic')
+    maxdistm = vdp.VisDependentProperty(default=500.0)
+    minnumants = vdp.VisDependentProperty(default=2)
+    mingoodfrac = vdp.VisDependentProperty(default=0.8)
+    nowvr_result = vdp.VisDependentProperty(default='', hidden=True)
+    nsol = vdp.VisDependentProperty(default=1)
+    # Default for offsetstable is blank, which means the wvrgcal task will not
+    # apply any offsets.
+    offsetstable = vdp.VisDependentProperty(default='')
+    refant = vdp.VisDependentProperty(default='')
+    # Default for qa_bandpass_intent is blank, which allows the bandpass task
+    # to select a sensible default if the dataset lacks data with BANDPASS
+    # intent.
+    qa_bandpass_intent = vdp.VisDependentProperty(default='')
+    qa_intent = vdp.VisDependentProperty(default='')
+    qa_spw = vdp.VisDependentProperty(default='', hidden=True)
+    scale = vdp.VisDependentProperty(default=1.0)
+    segsource = vdp.VisDependentProperty(default=True)
+    smooth = vdp.VisDependentProperty(default='')
 
-    @property
-    def accept_threshold(self):
-        return self._accept_threshold
-
-    @accept_threshold.setter
-    def accept_threshold(self, value):
-        if value is None:
-            value = 1.0
-        self._accept_threshold = value
-
-    @property
-    def disperse(self):
-        return self._disperse
-
-    @disperse.setter
-    def disperse(self, value):
-        if value is None:
-            value = False
-        self._disperse = value
-
-    @property
-    def hm_smooth(self):
-        return self._hm_smooth
-
-    @hm_smooth.setter
-    def hm_smooth(self, value):
-        if value is None:
-            value = 'automatic'
-        self._hm_smooth = value
-
-    @property
-    def hm_tie(self):
-        return self._hm_tie
-
-    @hm_tie.setter
-    def hm_tie(self, value):
-        if value is None:
-            value = 'automatic'
-        self._hm_tie = value
-
-    @property
-    def hm_toffset(self):
-        return self._hm_toffset
-
-    @hm_toffset.setter
-    def hm_toffset(self, value):
-        if value is None:
-            value = 'automatic'
-        self._hm_toffset = value
-
-    @property
-    def maxdistm(self):
-        return self._maxdistm
-
-    @maxdistm.setter
-    def maxdistm(self, value):
-        if value is None:
-            value = 500.0
-        self._maxdistm = value
-
-    @property
-    def minnumants(self):
-        return self._minnumants
-
-    @minnumants.setter
-    def minnumants(self, value):
-        if value is None:
-            value = 2
-        self._minnumants = value
-
-    @property
-    def mingoodfrac(self):
-        return self._mingoodfrac
-
-    @mingoodfrac.setter
-    def mingoodfrac(self, value):
-        if value is None:
-            value = 0.8
-        self._mingoodfrac = value
-
-    @property
-    def nsol(self):
-        return self._nsol
-
-    @nsol.setter
-    def nsol(self, value):
-        if value is None:
-            value = 1
-        self._nsol = value
-
-    @property
-    def offsetstable(self):
-        # The value of caltable is ms-dependent, so test for multiple
-        # measurement sets and listify the results if necessary
-
-        if self._offsetstable is not None:
-            return self._offsetstable
-
-        if isinstance(self.vis, list):
-            return self._handle_multiple_vis('offsetstable')
-
-        # default is blank, which means the wvrgcal task
-        # will not apply any offsets.
-        return ''
-
-    @offsetstable.setter
-    def offsetstable(self, value):
-        self._offsetstable = value
-
-    @property
-    def refant(self):
-        if self._refant is None:
-            return ''
-        return self._refant
-
-    @refant.setter
-    def refant(self, value):
-        self._refant = value
-
-    @property
-    def qa_bandpass_intent(self):
-        if isinstance(self.vis, list):
-            return self._handle_multiple_vis('qa_bandpass_intent')
-
-        if self._qa_bandpass_intent is None:
-            # default is blank, which allows the bandpass task
-            # to select a sensible default if the dataset lacks
-            # data with BANDPASS intent
-            return ''
-
-        return self._qa_bandpass_intent
-
-    @qa_bandpass_intent.setter
-    def qa_bandpass_intent(self, value):
-        self._qa_bandpass_intent = value
-
-    @property
-    def qa_intent(self):
-        return self._qa_intent
-
-    @qa_intent.setter
-    def qa_intent(self, value):
-        if value is None:
-            value = ''
-        self._qa_intent = value
-
-    @property
-    def qa_spw(self):
-        return self._qa_spw
-
-    @qa_spw.setter
-    def qa_spw(self, value):
-        if value is None:
-            value = ''
-        self._qa_spw = value
-
-    @property
-    def scale(self):
-        return self._scale
-
-    @scale.setter
-    def scale(self, value):
-        if value is None:
-            value = 1.0
-        self._scale = value
-
-    @property
-    def segsource(self):
-        return self._segsource
-
-    @segsource.setter
-    def segsource(self, value):
-        if value is None:
-            value = True
-        self._segsource = value
-
-    @property
-    def smooth(self):
-        return self._smooth
-
-    @smooth.setter
-    def smooth(self, value):
-        if value is None:
-            value = ''
-        self._smooth = value
-
-    @property
+    @vdp.VisDependentProperty
     def sourceflag(self):
-        return self._sourceflag
+        return []
 
-    @sourceflag.setter
-    def sourceflag(self, value):
-        if value is None:
-            value = []
-        self._sourceflag = value
-
-    @property
+    @vdp.VisDependentProperty
     def tie(self):
-        return self._tie
+        return []
 
-    @tie.setter
-    def tie(self, value):
-        if value is None:
-            value = []
-        self._tie = value
+    toffset = vdp.VisDependentProperty(default=0)
 
-    @property
-    def toffset(self):
-        return self._toffset
-
-    @toffset.setter
-    def toffset(self, value):
-        if value is None:
-            value = 0
-        self._toffset = value
-
-    @property
+    @vdp.VisDependentProperty
     def wvrflag(self):
-        return self._wvrflag
+        return []
 
-    @wvrflag.setter
+    @wvrflag.convert
     def wvrflag(self, value):
-        if value in (None, ''):
-            value = []
-        elif isinstance(value, str):
+        if isinstance(value, str):
             if value[0] == '[':
                 value = value.translate(None, '[]\'')
-            value = value.split(',')
+            return value.split(',')
+        else:
+            return value
 
-        self._wvrflag = value
+    def __init__(self, context, output_dir=None, vis=None, caltable=None, offsetstable=None, hm_toffset=None,
+                 toffset=None, segsource=None, hm_tie=None, tie=None, sourceflag=None, nsol=None, disperse=None,
+                 wvrflag=None, hm_smooth=None, smooth=None, scale=None, maxdistm=None, minnumants=None,
+                 mingoodfrac=None, refant=None, qa_intent=None, qa_bandpass_intent=None, qa_spw=None,
+                 accept_threshold=None, bandpass_result=None, nowvr_result=None):
+        super(WvrgcalInputs, self).__init__()
+
+        # pipeline inputs
+        self.context = context
+        # vis must be set first, as other properties may depend on it
+        self.vis = vis
+        self.output_dir = output_dir
+
+        # data selection arguments
+        self.caltable = caltable
+        self.offsetstable = offsetstable
+
+        # solution parameters
+        self.hm_toffset = hm_toffset
+        self.toffset = toffset
+        self.segsource = segsource
+        self.hm_tie = hm_tie
+        self.tie = tie
+        self.sourceflag = sourceflag
+        self.nsol = nsol
+        self.disperse = disperse
+        self.wvrflag = wvrflag
+        self.hm_smooth = hm_smooth
+        self.smooth = smooth
+        self.scale = scale
+        self.maxdistm = maxdistm
+        self.minnumants = minnumants
+        self.mingoodfrac = mingoodfrac
+        self.refant = refant
+        self.qa_intent = qa_intent
+        self.qa_bandpass_intent = qa_bandpass_intent
+        self.qa_spw = qa_spw
+        self.accept_threshold = accept_threshold
+        self.bandpass_result = bandpass_result
+        self.nowvr_result = nowvr_result
 
 
 class Wvrgcal(basetask.StandardTaskTemplate):
@@ -485,7 +340,7 @@ class Wvrgcal(basetask.StandardTaskTemplate):
             qa_spw_list = inputs.qa_spw.split(',')
         
         for qa_spw in qa_spw_list:
-            LOG.info('qa: %s attempting to calculate wvrgcal QA using spw %s' %(os.path.basename(inputs.vis), qa_spw))
+            LOG.info('qa: %s attempting to calculate wvrgcal QA using spw %s' % (os.path.basename(inputs.vis), qa_spw))
             inputs.qa_spw = qa_spw
 
             # Do a bandpass calibration
@@ -666,7 +521,8 @@ class Wvrgcal(basetask.StandardTaskTemplate):
         
         return caltable_namer
     
-    def _get_wvr_caltable_namer(self, inputs):
+    @staticmethod
+    def _get_wvr_caltable_namer(inputs):
         """        
         Returns a function that inserts a ''.flagged_<N>_antennas.wvr' component into a
         filename.
@@ -682,7 +538,8 @@ class Wvrgcal(basetask.StandardTaskTemplate):
         
         return caltable_namer    
 
-    def _get_wvrinfos(self, result):
+    @staticmethod
+    def _get_wvrinfos(result):
 
         def to_microns(x):
             return measures.Distance(x, measures.DistanceUnits.MICROMETRE)

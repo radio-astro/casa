@@ -101,9 +101,9 @@ class T2_4MDetailspriorcalsRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
         for result in results:
             
             ms = os.path.basename(result.inputs['vis'])
-            spw[ms] = result.oc_result[0].spw.split(',')
-            center_frequencies[ms] = result.oc_result[0].center_frequencies
-            opacities[ms] = result.oc_result[0].opacities
+            spw[ms] = result.oc_result.spw.split(',')
+            center_frequencies[ms] = result.oc_result.center_frequencies
+            opacities[ms] = result.oc_result.opacities
             
             plotter = opacitiesdisplay.opacitiesSummaryChart(context, result)
             plots = plotter.plot()
@@ -142,7 +142,7 @@ class T2_4MDetailspriorcalsRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
             # stage directory
             tec_plotfile = ''
             if result.tecmaps_result:
-                original_tec_plotfile = result.tecmaps_result[0].tec_plotfile
+                original_tec_plotfile = result.tecmaps_result.tec_plotfile
                 tec_plotfile = os.path.join(context.report_dir,
                                             'stage%s' % result.stage_number, original_tec_plotfile)
                 os.rename(original_tec_plotfile, tec_plotfile)

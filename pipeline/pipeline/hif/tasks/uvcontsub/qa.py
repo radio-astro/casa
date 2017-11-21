@@ -1,5 +1,5 @@
 from __future__ import absolute_import
-
+import collections
 import os
 
 import pipeline.infrastructure.logging as logging
@@ -38,7 +38,7 @@ class UVcontFitListQAHandler(pqa.QAResultHandler):
     """
     QA handler for a list containing UVcontFitResults.
     """
-    result_cls = list
+    result_cls = collections.Iterable
     child_cls = uvcontfit.UVcontFitResults
     generating_task = uvcontfit.UVcontFit
 
