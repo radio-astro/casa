@@ -76,7 +76,7 @@ class ampfreqPerAntennaChart(object):
     def __init__(self, context, result, caltable):
         self.context = context
         self.result = result
-        self.ms = context.observing_run.get_ms(result.inputs['vis'])
+        self.ms = context.observing_run.get_ms(result.inputs['vis'][0])
         ms = self.ms
         self.caltable = caltable
 
