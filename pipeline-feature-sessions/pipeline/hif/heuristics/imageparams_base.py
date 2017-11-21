@@ -361,7 +361,9 @@ class ImageParamsHeuristics(object):
                         makepsf_imager.deleteTools()
 
                         with casatools.ImageReader('%s.psf' % (tmp_psf_filename)) as image:
-                            makepsf_beams.append(image.restoringbeam())
+                            stats = image.statistics()
+                            if not((stats['min'] == 0.0) and (stats['max'] == 0.0)):
+                                makepsf_beams.append(image.restoringbeam())
 
                         tmp_psf_images = glob.glob('%s.*' % (tmp_psf_filename))
                         for tmp_psf_image in tmp_psf_images:

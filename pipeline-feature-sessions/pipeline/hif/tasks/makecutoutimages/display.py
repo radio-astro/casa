@@ -19,7 +19,6 @@ class CutoutimagesSummary(object):
     def __init__(self, context, result):
         self.context = context
         self.result = result
-        # self.image_stats = image_stats
 
     def plot(self):
         stage_dir = os.path.join(self.context.report_dir,
@@ -62,7 +61,7 @@ class CutoutimagesSummary(object):
                     # get fraction of pixels <= 200 micro Jy VLASS technical requirement.  ignore 0 (masked) values.
                     self.result.RMSfraction200 = (np.count_nonzero((arr != 0) & (arr <= 200e-6)) /
                                                   float(arr.size)) * 100
-            elif 'residual.tt' in subimagename:
+            elif 'residual.pbcor.tt' in subimagename and not subimagename.endswith('.rms'):
                 plot_wrappers.append(sky.SkyDisplay().plot(self.context, subimagename,
                                                            reportdir=stage_dir, intent='',
                                                            collapseFunction='mean'))
@@ -71,8 +70,8 @@ class CutoutimagesSummary(object):
 
             elif 'pb.tt' in subimagename:
                 plot_wrappers.append(sky.SkyDisplay().plot(self.context, subimagename,
-                                           reportdir=stage_dir, intent='',
-                                           collapseFunction='mean'))
+                                                           reportdir=stage_dir, intent='',
+                                                           collapseFunction='mean'))
                 with casatools.ImageReader(subimagename) as image:
                     self.result.pb_stats = image.statistics(robust=True)
 

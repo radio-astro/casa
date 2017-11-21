@@ -297,11 +297,10 @@ class RawflagchansData(basetask.StandardTaskTemplate):
     
                     iterating = openms.iternext()
 
-            # Calculate the average data value, suppress any divide by 0 
-            # error messages.
-            old_settings = np.seterr(divide='ignore')
-            data /= ndata
-            np.seterr(**old_settings)
+            # Calculate the average data value, suppress any divide by 0
+            # error messages (RuntimeWarning).
+            with np.errstate(divide='ignore', invalid='ignore'):
+                data /= ndata
 
             # Take the absolute value of the data points.
             data = np.abs(data)

@@ -510,16 +510,27 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
 
                     # Check limits.
                     mad_max = rule['limit']
-                    i2flag = i[np.logical_and(
-                        np.abs(data - data_median) > mad_max * data_mad,
-                        np.logical_not(flag))]
-                    j2flag = j[np.logical_and(
-                        np.abs(data - data_median) > mad_max * data_mad,
-                        np.logical_not(flag))]
+
+                    # Create masked array with flagged data masked.
+                    data_masked = np.ma.array(np.abs(data - data_median), mask=flag)
+
+                    # Create new masked array from masked array with outliers
+                    # masked. This should avoid performing a comparison with
+                    # flagged data that could include NaNs (that would cause a
+                    # RuntimeWarning).
+                    data_masked = np.ma.masked_greater(data_masked, mad_max * data_mad)
+
+                    # Get indices to flag as the masked elements that were not
+                    # already flagged, i.e. the newly masked elements.
+                    ind2flag = np.logical_and(np.ma.getmask(data_masked),
+                                              np.logical_not(flag))
 
                     # No flagged data.
-                    if len(i2flag) <= 0:
+                    if len(ind2flag) <= 0:
                         continue
+
+                    i2flag = i[ind2flag]
+                    j2flag = j[ind2flag]
 
                     # Add new flag command to flag data underlying the
                     # view.
@@ -547,16 +558,26 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
 
                     # Check limits.
                     mad_max = rule['limit']
-                    i2flag = i[np.logical_and(
-                        data_median - data > mad_max * data_mad,
-                        np.logical_not(flag))]
-                    j2flag = j[np.logical_and(
-                        data_median - data > mad_max * data_mad,
-                        np.logical_not(flag))]
 
+                    # Create masked array with flagged data masked.
+                    data_masked = np.ma.array(data_median - data, mask=flag)
+
+                    # Create new masked array from masked array with outliers
+                    # masked. This should avoid performing a comparison with
+                    # flagged data that could include NaNs (that would cause a
+                    # RuntimeWarning).
+                    data_masked = np.ma.masked_greater(data_masked, mad_max * data_mad)
+
+                    # Get indices to flag as the masked elements that were not
+                    # already flagged, i.e. the newly masked elements.
+                    ind2flag = np.logical_and(np.ma.getmask(data_masked),
+                                              np.logical_not(flag))
                     # No flagged data.
-                    if len(i2flag) <= 0:
+                    if len(ind2flag) <= 0:
                         continue
+
+                    i2flag = i[ind2flag]
+                    j2flag = j[ind2flag]
 
                     # Add new flag commands to flag data underlying the
                     # view.
@@ -583,16 +604,26 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
 
                     # Check limits.
                     mad_max = rule['limit']
-                    i2flag = i[np.logical_and(
-                        data - data_median > mad_max * data_mad,
-                        np.logical_not(flag))]
-                    j2flag = j[np.logical_and(
-                        data - data_median > mad_max * data_mad,
-                        np.logical_not(flag))]
 
+                    # Create masked array with flagged data masked.
+                    data_masked = np.ma.array(data - data_median, mask=flag)
+
+                    # Create new masked array from masked array with outliers
+                    # masked. This should avoid performing a comparison with
+                    # flagged data that could include NaNs (that would cause a
+                    # RuntimeWarning).
+                    data_masked = np.ma.masked_greater(data_masked, mad_max * data_mad)
+
+                    # Get indices to flag as the masked elements that were not
+                    # already flagged, i.e. the newly masked elements.
+                    ind2flag = np.logical_and(np.ma.getmask(data_masked),
+                                              np.logical_not(flag))
                     # No flags
-                    if len(i2flag) <= 0:
+                    if len(ind2flag) <= 0:
                         continue
+
+                    i2flag = i[ind2flag]
+                    j2flag = j[ind2flag]
 
                     # Add new flag commands to flag data underlying the
                     # view.
@@ -614,14 +645,26 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
 
                     # Check limits.
                     limit = rule['limit']
-                    i2flag = i[np.logical_and(np.abs(data) < limit,
-                                              np.logical_not(flag))]
-                    j2flag = j[np.logical_and(np.abs(data) < limit,
-                                              np.logical_not(flag))]
 
+                    # Create masked array with flagged data masked.
+                    data_masked = np.ma.array(np.abs(data), mask=flag)
+
+                    # Create new masked array from masked array with outliers
+                    # masked. This should avoid performing a comparison with
+                    # flagged data that could include NaNs (that would cause a
+                    # RuntimeWarning).
+                    data_masked = np.ma.masked_less(data_masked, limit)
+
+                    # Get indices to flag as the masked elements that were not
+                    # already flagged, i.e. the newly masked elements.
+                    ind2flag = np.logical_and(np.ma.getmask(data_masked),
+                                              np.logical_not(flag))
                     # No flags
-                    if len(i2flag) <= 0:
+                    if len(ind2flag) <= 0:
                         continue
+
+                    i2flag = i[ind2flag]
+                    j2flag = j[ind2flag]
 
                     # Add new flag commands to flag data underlying the
                     # view.
@@ -643,14 +686,27 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
 
                     # Check limits.
                     limit = rule['limit']
-                    i2flag = i[np.logical_and(np.abs(data) > limit,
-                                              np.logical_not(flag))]
-                    j2flag = j[np.logical_and(np.abs(data) > limit,
-                                              np.logical_not(flag))]
+
+                    # Create masked array with flagged data masked.
+                    data_masked = np.ma.array(np.abs(data), mask=flag)
+
+                    # Create new masked array from masked array with outliers
+                    # masked. This should avoid performing a comparison with
+                    # flagged data that could include NaNs (that would cause a
+                    # RuntimeWarning).
+                    data_masked = np.ma.masked_greater(data_masked, limit)
+
+                    # Get indices to flag as the masked elements that were not
+                    # already flagged, i.e. the newly masked elements.
+                    ind2flag = np.logical_and(np.ma.getmask(data_masked),
+                                              np.logical_not(flag))
 
                     # No flags
-                    if len(i2flag) <= 0:
+                    if len(ind2flag) <= 0:
                         continue
+
+                    i2flag = i[ind2flag]
+                    j2flag = j[ind2flag]
 
                     # Add new flag commands to flag data underlying the
                     # view.
@@ -818,18 +874,28 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
                     # Check limits.
                     lo_limit = rule['lo_limit']
                     hi_limit = rule['hi_limit']
-                    i2flag = i[np.logical_and(
-                        np.logical_or(data < lo_limit * data_median,
-                                      data > hi_limit * data_median),
-                        np.logical_not(flag))]
-                    j2flag = j[np.logical_and(
-                        np.logical_or(data < lo_limit * data_median,
-                                      data > hi_limit * data_median),
-                        np.logical_not(flag))]
+
+                    # Create masked array with flagged data masked.
+                    data_masked = np.ma.array(data, mask=flag)
+
+                    # Create new masked array from masked array with outliers
+                    # masked. This should avoid performing a comparison with
+                    # flagged data that could include NaNs (that would cause a
+                    # RuntimeWarning).
+                    data_masked = np.ma.masked_greater(data_masked, hi_limit * data_median)
+                    data_masked = np.ma.masked_less(data_masked, lo_limit * data_median)
+
+                    # Get indices to flag as the masked elements that were not
+                    # already flagged, i.e. the newly masked elements.
+                    ind2flag = np.logical_and(np.ma.getmask(data_masked),
+                                              np.logical_not(flag))
 
                     # No flags
-                    if len(i2flag) <= 0:
+                    if len(ind2flag) <= 0:
                         continue
+
+                    i2flag = i[ind2flag]
+                    j2flag = j[ind2flag]
 
                     # Add new flag commands to flag the data underlying
                     # the view.
@@ -880,17 +946,25 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
                             if len(valid_ant_data) < minsample:
                                 continue
 
-                            # For current antenna data selection, identify points
-                            # that are both low outliers and not already flagged.
-                            j_ant = np.arange(np.shape(ant_flag)[0])
-                            j2flag_lo = j_ant[
-                                np.logical_and(
-                                    data_median - ant_data > mad_max * data_mad,
-                                    np.logical_not(ant_flag))]
- 
+                            # Create masked array with flagged data masked.
+                            ant_data_masked = np.ma.array(data_median - ant_data, mask=ant_flag)
+
+                            # Create new masked array from masked array with outliers
+                            # masked. This should avoid performing a comparison with
+                            # flagged data that could include NaNs (that would cause a
+                            # RuntimeWarning).
+                            ant_data_masked = np.ma.masked_greater(ant_data_masked, mad_max * data_mad)
+
+                            # Get indices to flag as the masked elements that were not
+                            # already flagged, i.e. the newly masked elements.
+                            ind2flag = np.logical_and(np.ma.getmask(ant_data_masked),
+                                                      np.logical_not(ant_flag))
+
                             # If no low outliers were found, skip this antenna.
-                            if len(j2flag_lo) <= 0:
+                            if len(ind2flag) <= 0:
                                 continue
+
+                            j2flag_lo = j[iant, :][ind2flag]
 
                             # Determine number of points found to be low outliers that
                             # were not previously flagged. 
@@ -937,7 +1011,7 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
 
                                 # For current antenna data selection, identify the 
                                 # remaining non-flagged data points.
-                                j2flag_bad = j_ant[np.logical_not(ant_flag)]
+                                j2flag_bad = j[iant, :][np.logical_not(ant_flag)]
 
                                 # Flag the remaining non-flagged data points as
                                 # "bad antenna". 
@@ -969,17 +1043,27 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
                     frac_limit = rule['frac_limit']
                     baseline_frac_limit = rule['baseline_frac_limit']
 
-                    # find outlier flags first                 
-                    i2flag = i[np.logical_and(
-                        np.abs(data - data_median) > hilo_limit * data_mad,
-                        np.logical_not(flag))]
-                    j2flag = j[np.logical_and(
-                        np.abs(data - data_median) > hilo_limit * data_mad,
-                        np.logical_not(flag))]
+                    # find outlier flags first
+                    # Create masked array with flagged data masked.
+                    data_masked = np.ma.array(np.abs(data - data_median), mask=flag)
+
+                    # Create new masked array from masked array with outliers
+                    # masked. This should avoid performing a comparison with
+                    # flagged data that could include NaNs (that would cause a
+                    # RuntimeWarning).
+                    data_masked = np.ma.masked_greater(data_masked, hilo_limit * data_mad)
+
+                    # Get indices to flag as the masked elements that were not
+                    # already flagged, i.e. the newly masked elements.
+                    ind2flag = np.logical_and(np.ma.getmask(data_masked),
+                                              np.logical_not(flag))
 
                     # No flagged data.
-                    if len(i2flag) <= 0:
+                    if len(ind2flag) <= 0:
                         continue
+
+                    i2flag = i[ind2flag]
+                    j2flag = j[ind2flag]
 
                     # have to be careful here not to corrupt the data view
                     # as we go through it testing for bad quadrant/antenna.

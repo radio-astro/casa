@@ -624,7 +624,7 @@ class MakeImList(basetask.StandardTaskTemplate):
                 else:
                     nbin = -1
 
-                if spwspec_ok and imsizes.has_key((field_intent[0],spwspec)):
+                if spwspec_ok and imsizes.has_key((field_intent[0],spwspec)) and ('invalid' not in cells[spwspec]):
                     LOG.debug (
                       'field:%s intent:%s spw:%s cell:%s imsize:%s phasecenter:%s'
                       % (field_intent[0], field_intent[1], spwspec,

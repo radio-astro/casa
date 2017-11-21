@@ -14,161 +14,173 @@
 
             <param type="string" name="imagename">
                 <description>Prefix for output image names.</description>
-                <value></value>
+                <value/>
             </param>
 
             <param type="string" name="search_radius_arcsec">
                 <description>Size of the field finding beam search radius in arcsec.</description>
-                <value></value>
+                <value/>
             </param>
             <param type="stringArray" name="cell">
                 <description>Image X and Y cell size(s) with units or pixels per beam, \'\' for default. Single value same for both. \'&lt;number&gt;ppb\' for pixels per beam.</description>
-                <value></value>
+                <value/>
             </param>
 
             <!--<param type="string" name="conjbeams">-->
                 <!--<description>Use conjugate frequency in tclean for wideband A-terms.</description>-->
-                <!--<value></value>-->
+                <!--<value/>-->
             <!--</param>-->
 
             <param type="string" name="cyclefactor">
                 <description>Controls the depth of clean in minor cycles based on PSF. </description>
-                <value></value>
+                <value/>
             </param>
 
             <param type="string" name="cycleniter">
                 <description>Controls max number of minor cycle iterations in a single major cycle.</description>
-                <value></value>
+                <value/>
             </param>
 
             <param type="string" name="deconvolver">
                 <description>Minor cycle algorithm (multiscale or mtmfs)</description>
-                <value></value>
+                <value/>
             </param>
 
             <param type="string" name="editmode">
                 <description>The edit mode of the task (e.g. add, edit)</description>
-                <value></value>
+                <value/>
             </param>
 
             <param type="stringArray" name="field">
                 <description>Set of data selection field names or ids, \'\' for all</description>
-                <value></value>
+                <value/>
             </param>
 
             <param type="string" name="imaging_mode">
                 <description>Identity of product type (e.g. VLASS quick look) desired.  This will determine the heuristics used.</description>
-                <value></value>
+                <value/>
             </param>
 
             <param type="stringArray" name="imsize">
                 <description>Image X and Y size(s) in pixels or PB level (single fields), \'\' for default. Single value same for both. \'&lt;number&gt;pb\' for PB level.</description>
-                <value></value>
+                <value/>
             </param>
 
             <param type="string" name="intent">
                 <description>Set of data selection intents</description>
-                <value></value>
+                <value/>
             </param>
 
             <param type="string" name="gridder">
                 <description>Name of the gridder to use with tclean</description>
-                <value></value>
+                <value/>
             </param>
 
             <param type="string" name="mask">
                 <description>Used to declare whether to use a predefined mask for tclean.</description>
-                <value></value>
+                <value/>
             </param>
 
             <param type="any" name="nbin">
                 <description>Channel binning factors per spw, \'\' for default.</description>
                 <any type="variant"/>
-                <value type="string"></value>
+                <value type="string"/>
             </param>
 
             <param type="string" name="nchan">
                 <description>Number of channels, -1 = all</description>
-                <value></value>
+                <value/>
             </param>
 
             <param type="string" name="niter">
                 <description>Maximum number of clean iterations</description>
-                <value></value>
+                <value/>
             </param>
 
-            <param type="string" name="nterms">
-                <description></description>
-                <value></value>
+            <param type="int" name="nterms">
+                <description/>
+                <value type="int">2</value>
             </param>
 
             <param type="string" name="parameter_file">
-                <description></description>
-                <value></value>
+                <description/>
+                <value/>
             </param>
 
             <param type="any" name="phasecenter">
                 <description>Image center (direction or field index, \'\' for default)</description>
                 <any type="variant"/>
-                <value type="string"></value>
+                <value type="string"/>
             </param>
 
             <param type="string" name="reffreq">
-                <description></description>
-                <value></value>
+                <description/>
+                <value/>
             </param>
 
-            <param type="string" name="robust">
-                <description>Set the Briggs robustness factor for weighting.</description>
-                <value></value>
+            <param type="double" name="robust" subparam="true">
+                <shortdescription>Robustness parameter</shortdescription>
+                <description>Robustness parameter for Briggs weighting.
+
+                    robust = -2.0 maps to uniform weighting.
+                    robust = +2.0 maps to natural weighting.
+                    (robust=0.5 is equivalent to robust=0.0 in AIPS IMAGR.)
+
+                </description>
+                <value type="double">1.0</value>
+                <allowed kind="range">
+                    <value range="min">-2.0</value>
+                    <value range="max">2.0</value>
+                </allowed>
             </param>
+
 
             <param type="string" name="scales">
                 <description>The scales for multi-scale imaging.</description>
-                <value></value>
+                <value/>
             </param>
 
             <param type="string" name="specmode">
                 <description>Spectral gridding type (mfs, cont, cube, \'\' for default)</description>
-                <value></value>
+                <value/>
             </param>
 
             <param type="string" name="spw">
                 <description>Set of data selection spectral window/channels, \'\' for all</description>
-                <value></value>
+                <value/>
             </param>
 
             <param type="any" name="start">
                 <description>Channel start, \'\' for default</description>
                 <any type="variant"/>
-                <value type="string"></value>
+                <value type="string"/>
             </param>
 
             <param type="string" name="stokes">
-                <description></description>
-                <value></value>
+                <description/>
+                <value/>
             </param>
 
 	    <param type="string" name="threshold">
-	        <description></description>
-                <value></value>
+	        <description/>
+                <value/>
 	    </param>
 
             <param type="string" name="uvtaper">
                 <description>Used to set a uv-taper during clean.</description>
-                <value></value>
+                <value/>
             </param>
 
             <param type="string" name="uvrange">
                 <description>Set of data selection uv ranges, \'\' for all.</description>
                 <any type="variant" limittypes="string stringArray"/>
-                <value type="string"></value>
+                <value type="string"/>
             </param>
 
             <param type="any" name="width">
                 <description>Channel width, \'\' for default.</description>
                 <any type="variant"/>
-                <value type="string"></value>
+                <value type="string"/>
             </param>
 
             <param type="string" name="pipelinemode">
@@ -202,7 +214,7 @@
             <param type="any" name="results">
                 <description>The output results object</description>
                 <any type="variant"/>
-                <value></value>
+                <value/>
             </param>
         </output>
         <returns type="void"/>
