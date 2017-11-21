@@ -24,6 +24,11 @@
 	<value></value>
     </param>
 
+    <param type="string" name="leakage_poltype">
+	<description>poltype to use in first polcal execution - blank string means use default heuristics</description>
+	<value></value>
+    </param>
+
 
     <param type="string" name="pipelinemode">
 	<description>The pipeline operating mode</description>
@@ -55,6 +60,7 @@
                 <default param="acceptresults"><value type="bool">True</value></default>
                 <default param="Dterm_solint"><value type="string"></value></default>
                 <default param="refantignore"><value type="string"></value></default>
+                <default param="leakage_poltype"><value type="string"></value></default>
 	    </equals>
 	    <equals type="string" value="getinputs">
                 <default param="vis"><value type="stringArray"></value></default>
@@ -94,6 +100,9 @@ Dterms_solint -- D-terms spectral averaging
 refantignore -- string list to be ignored as reference antennas.
     default: ''
     Example:  refantignore='ea02,ea03'
+
+leakage_poltype -- string of poltype to use for override in the first polcal execution
+    default: ''   (blank means the task heuristics will decide what poltype to use)
 
 pipelinemode -- The pipeline operating mode. In 'automatic' mode the pipeline
    determines the values of all context defined pipeline inputs

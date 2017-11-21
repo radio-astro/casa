@@ -59,11 +59,12 @@ class CircfeedpolcalResults(polarization.PolarizationResults):
 
 
 class CircfeedpolcalInputs(polarization.PolarizationInputs):
-    def __init__(self, context, vis=None, Dterm_solint=None, refantignore=None):
+    def __init__(self, context, vis=None, Dterm_solint=None, refantignore=None, leakage_poltype=None):
         # set the properties to the values given as input arguments
         self._init_properties(vars())
 
     Dterm_solint = basetask.property_with_default('Dterm_solint', '2MHz')
+    leakge_poltype = basetask.property_with_default('leakage_poltype', '')
 
     @property
     def refantignore(self):
@@ -156,6 +157,11 @@ class Circfeedpolcal(polarization.Polarization):
             poltype = 'Df'      # C1
             self.calstrategy = "Using Calibration Strategy C1: Less than 3 slices CALIBRATE_POL_LEAKAGE, KCROSS, Df, Xf."
         LOG.info(self.calstrategy)
+
+        if self.inputs.leakage_poltype:
+            poltype = self.inputs.leakage_poltype
+            self.calstrategy = "Calibration Strategy OVERRIDE: User-defined leakage_poltype of " + str(poltype)
+            LOG.warn(self.calstrategy)
 
         # Determine the first POLANGLE FIELD
         polanglefield = ''
