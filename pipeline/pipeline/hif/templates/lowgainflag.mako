@@ -23,6 +23,38 @@ def num_lines(report_dir, relpath):
 ## </ul>
 ## % endif
 
+% if updated_refants:
+<h2 id="refants" class="jumptarget">Reference Antenna update</h2>
+
+<p>For the measurement set(s) listed below, the reference antenna
+    list was updated due to significant flagging (antennas moved to
+    end). See warnings in task notifications for details. Shown below
+    are the updated reference antenna lists, only for those
+    measurement sets where it was modified.</p>
+
+<table class="table table-bordered table-striped"
+	   summary="Reference Antennas">
+	<caption>Updated reference antenna selection per measurement set. Antennas are
+	listed in order of highest to lowest priority.</caption>
+	<thead>
+		<tr>
+			<th>Measurement Set</th>
+			<th>Reference Antennas (Highest to Lowest)</th>
+		</tr>
+	</thead>
+	<tbody>
+%for vis in updated_refants:
+		<tr>
+			<td>${os.path.basename(vis)}</td>
+			## insert spaces in refant list to allow browser to break string
+			## if it wants
+			<td>${updated_refants[vis].replace(',', ', ')}</td>
+		</tr>
+%endfor
+	</tbody>
+</table>
+% endif
+
 % if htmlreports:
 <h2>Flags</h2>
 <table class="table table-bordered table-striped">

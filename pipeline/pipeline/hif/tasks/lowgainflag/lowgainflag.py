@@ -8,6 +8,7 @@ import pipeline.domain as domain
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.vdp as vdp
+import pipeline.infrastructure.utils as utils
 from pipeline.h.tasks.common import calibrationtableaccess as caltableaccess
 from pipeline.h.tasks.common import commonresultobjects
 from pipeline.h.tasks.common import viewflaggers
@@ -96,8 +97,7 @@ class Lowgainflag(basetask.StandardTaskTemplate):
         inputs = self.inputs
         
         # Initialize result and store vis in result
-        result = LowgainflagResults()
-        result.vis = inputs.vis
+        result = LowgainflagResults(vis=inputs.vis)
 
         # Construct the task that will read the data.
         datainputs = LowgainflagDataInputs(
@@ -125,9 +125,9 @@ class Lowgainflag(basetask.StandardTaskTemplate):
         # Translate the input flagging parameters to a more compact
         # list of rules.
         rules = flagger.make_flag_rules(
-          flag_nmedian=inputs.flag_nmedian,
-          fnm_lo_limit=inputs.fnm_lo_limit,
-          fnm_hi_limit=inputs.fnm_hi_limit)
+            flag_nmedian=inputs.flag_nmedian,
+            fnm_lo_limit=inputs.fnm_lo_limit,
+            fnm_hi_limit=inputs.fnm_hi_limit)
 
         # Construct the flagger task around the data view task and the
         # flagsetter task. 
@@ -151,6 +151,91 @@ class Lowgainflag(basetask.StandardTaskTemplate):
         return result
 
     def analyse(self, result):
+        """
+        Analyses the Lowgainflag result:
+
+        Identifies, for each view (spw), which antennas have been flagged, and
+        marks these to move to the end of the reference antenna list.
+        """
+        # Initialize set of antennas-to-demote: antennas that are flagged in
+        # any of the spws.
+        ants_flagged_in_any_spw = set()
+
+        # Create a summary of the flagging state by going through
+        # each view product for the specified metric.
+        for description in result.descriptions():
+
+            # Get final view.
+            view = result.last(description)
+
+            # Update set of antennas-to-demote with IDs of antennas fully
+            # flagged in current view.
+            ants_flagged_in_any_spw.update(np.where(np.all(view.flag, axis=1))[0])
+
+        # If any antennas-to-demote were found, then proceed...
+        if ants_flagged_in_any_spw:
+
+            # Get the MS object
+            ms = self.inputs.context.observing_run.get_ms(name=self.inputs.vis)
+
+            # If a list of reference antennas was registered with the MS..
+            if (hasattr(ms, 'reference_antenna') and
+                    isinstance(ms.reference_antenna, str)):
+
+                # Create list of current refants
+                refant = ms.reference_antenna.split(',')
+
+                # Create translation dictionary, reject empty antenna name strings.
+                antenna_id_to_name = {ant.id: ant.name for ant in ms.antennas if ant.name.strip()}
+
+                # Translate IDs of antennas-to-demote to antenna names.
+                ants_to_demote_as_refant = {
+                    antenna_id_to_name[ant_id]
+                    for ant_id in ants_flagged_in_any_spw
+                }
+
+                # Compute intersection between refants and ants to demote as
+                # refant.
+                refants_to_demote = {
+                    ant for ant in refant
+                    if ant in ants_to_demote_as_refant
+                }
+
+                # Create string for log message.
+                ant_msg = utils.commafy(refants_to_demote, quotes=False)
+
+                # Check if the list of refants-to-demote comprises all
+                # refants, in which case the re-ordering of refants is
+                # skipped.
+                if refants_to_demote == set(refant):
+
+                    # Log warning that refant list should have been updated, but
+                    # will not be updated so as to avoid an empty refant list.
+                    LOG.warning(
+                        '{} - the following antennas are fully flagged '
+                        'for one or more spws, but since these comprise all '
+                        'refants, the refant list is *NOT* updated to '
+                        're-order these to the end of the refant list: '
+                        '{}'.format(ms.basename, ant_msg))
+                else:
+                    # Log a warning if any antennas are to be demoted from
+                    # the refant list.
+                    LOG.warning(
+                        '{} - the following antennas are moved to the end '
+                        'of the refant list because they are fully '
+                        'flagged for one or more spws: '
+                        '{}'.format(ms.basename, ant_msg))
+
+                    # Update result to set the refants to demote:
+                    result.refants_to_demote = refants_to_demote
+
+            # If no list of reference antennas was registered with the MS,
+            # raise a warning.
+            else:
+                LOG.warning(
+                    '{} - no reference antennas found in MS, cannot update '
+                    'the reference antenna list.'.format(ms.basename))
+
         return result
 
 

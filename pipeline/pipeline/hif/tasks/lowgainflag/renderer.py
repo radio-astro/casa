@@ -5,7 +5,6 @@ Created on 11 Sep 2014
 """
 import os
 
-#import pipeline.infrastructure.displays.image as image
 import pipeline.h.tasks.common.displays.image as image
 import pipeline.infrastructure.filenamer as filenamer
 import pipeline.infrastructure.logging as logging
@@ -22,33 +21,46 @@ class T2_4MDetailsLowgainFlagRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
     def __init__(self, uri='lowgainflag.mako', 
                  description='Flag antennas with low gain',
                  always_rerender=False):
-        super(T2_4MDetailsLowgainFlagRenderer, self).__init__(uri=uri,
-                description=description, always_rerender=always_rerender)
+        super(T2_4MDetailsLowgainFlagRenderer, self).__init__(
+            uri=uri, description=description, always_rerender=always_rerender)
         
     def update_mako_context(self, mako_context, pipeline_context, results):
         htmlreports = self.get_htmlreports(pipeline_context, results)        
 
-        plots = {}
-
+        # Create plots of flagging views.
         stage = 'stage%s' % results.stage_number
         dirname = os.path.join(pipeline_context.report_dir, stage)
-
+        plots = {}
         for result in (r for r in results if r.view):
             vis = os.path.basename(result.inputs['vis'])
             plotter = image.ImageDisplay()
-            plots[vis] = plotter.plot(context=pipeline_context, results=result, reportdir=dirname)
+            plots[vis] = plotter.plot(
+                context=pipeline_context, results=result, reportdir=dirname)
 
         plots_path = None
         if plots:
             all_plots = list(utils.flatten([v for v in plots.values()]))
-            renderer = TimeVsAntenna1PlotRenderer(pipeline_context, results, all_plots)
+            renderer = TimeVsAntenna1PlotRenderer(pipeline_context, results,
+                                                  all_plots)
             with renderer.get_file() as fileobj:
                 fileobj.write(renderer.render())
-                plots_path = os.path.relpath(renderer.path, pipeline_context.report_dir)
+                plots_path = os.path.relpath(renderer.path,
+                                             pipeline_context.report_dir)
+
+        # Check for updated reference antenna lists.
+        updated_refants = {}
+        for result in results:
+            vis = result.vis
+            # If the reference antenna list was updated, retrieve new refant
+            # list.
+            if result.refants_to_demote:
+                ms = pipeline_context.observing_run.get_ms(name=vis)
+                updated_refants[vis] = ms.reference_antenna
 
         mako_context.update({
             'htmlreports': htmlreports,
-            'plots_path': plots_path
+            'plots_path': plots_path,
+            'updated_refants': updated_refants
         })
 
     def get_htmlreports(self, context, results):
@@ -65,7 +77,8 @@ class T2_4MDetailsLowgainFlagRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
 
         return htmlreports
 
-    def _write_flagcmd_to_disk(self, weblog_dir, result):
+    @staticmethod
+    def _write_flagcmd_to_disk(weblog_dir, result):
         tablename = os.path.basename(result.table)
         filename = os.path.join(weblog_dir, '%s-flag_commands.txt' % tablename)
         flagcmds = [l.flagcmd for l in result.flagcmds()]
