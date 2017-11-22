@@ -163,8 +163,13 @@ class T2_4MDetailsTcleanRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
             #
             with casatools.ImageReader(r.iterations[maxiter]['residual'] + extension) as residual:
                 residual_stats = residual.statistics(robust=True)
+                residual_abs = abs(residual.getchunk())
+
             residual_robust_rms = residual_stats.get('medabsdevmed')[0] * 1.4826  # see CAS-9631
-            residual_max = residual_stats.get('max')[0]
+            if 'VLASS' in r.imaging_mode:
+                residual_max = residual_abs.max()  # see CAS-10731
+            else:
+                residual_max = residual_stats.get('max')[0]
             row_residual_ratio = '%.2f' % (residual_max / residual_robust_rms)
 
             #
