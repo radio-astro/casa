@@ -34,6 +34,7 @@ Todo:
 from __future__ import absolute_import
 from __future__ import print_function  # get python 3 print function
 import os
+import ast
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.api as api
@@ -131,10 +132,12 @@ class Editimlist(basetask.StandardTaskTemplate):
                         # strip whitespace
                         parameter = parameter.strip()
                         value = value.strip()
-                        value = value.strip('\'')
-                        value = value.strip('"')
+                        # all params come in as strings.  evaluate it to set it to the proper type
+                        value = ast.literal_eval(value)
+
                         # use this information to change the values in inputs
-                        print("Setting inputdict['{k}'] to {v}".format(k=parameter, v=value))
+                        print("Setting inputdict['{k}'] to {v} {t}".format(k=parameter, v=value,
+                                                                           t=type(value)))
                         inpdict[parameter] = value
                         inp.keys_to_change.append(parameter)
             else:
