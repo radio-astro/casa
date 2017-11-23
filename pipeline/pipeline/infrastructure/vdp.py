@@ -355,7 +355,17 @@ class InputsContainer(object):
         self._vis = ''
 
         # TODO find kwargs at runtime so that changes can be reflected?
-        self._initargs = kwargs
+        self._initargs = dict(kwargs)
+
+        # When importing data for the first time, the ms_pool is empty and so
+        # _cls_instances remains empty too. That's ok, as setting vis will
+        # create any missing instances for that value of vis. However, vis
+        # must be the first argument set otherwise the setting of any
+        # properties prior to the setting of vis will not take effect as they
+        # had no instance to write to.
+        if 'vis' in kwargs and len(ms_pool) is 0:
+            self.vis = kwargs['vis']
+            del kwargs['vis']
 
         for k, v in kwargs.iteritems():
             setattr(self, k, v)
