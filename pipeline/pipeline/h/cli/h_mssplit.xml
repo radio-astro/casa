@@ -11,12 +11,12 @@
 <input>
 
   <param type="stringArray" name="vis" subparam="true">
-    <description>The list of input measurement sets</description>
+    <description>The list of input MeasurementSets</description>
     <value></value>
   </param>
 
   <param type="stringArray" name="outputvis" subparam="true">
-     <description>The list of output split measurement sets</description>
+     <description>The list of output split MeasurementSets</description>
      <value></value>
   </param>
 
@@ -155,12 +155,12 @@ pipelinemode -- The pipeline operating mode. In 'automatic' mode the pipeline
 ---- pipeline context defined parameter arguments which can be set only in
      'interactive mode'
 
-vis -- The list of input measurement sets to be transformed. Defaults to the
-    list of measurement sets specified in the pipeline import data task.
-    default '': Split all measurement sets in the context. 
+vis -- The list of input MeasurementSets to be transformed. Defaults to the
+    list of MeasurementSets specified in the pipeline import data task.
+    default '': Split all MeasurementSets in the context. 
     example: 'ngc5921.ms', ['ngc5921a.ms', ngc5921b.ms', 'ngc5921c.ms']
 
-outputvis -- The list of output split measurement sets. The output list must
+outputvis -- The list of output split MeasurementSets. The output list must
     be the same length as the input list and the output names must be different
     from the input names.
     default '', The output name defaults to &lt;msrootname&gt;_split.ms
@@ -212,9 +212,9 @@ results -- If pipeline mode is 'getinputs' then None is returned. Otherwise
 
 Description
 
-Create new measurement sets for imaging from the corrected column of the input
-measurement set. By default all science target data is copied to the new ms. The new
-measurement set is not re-indexed to the selected data in the new ms will have the
+Create new MeasurementSets for imaging from the corrected column of the input
+MeasurementSet. By default all science target data is copied to the new ms. The new
+MeasurementSet is not re-indexed to the selected data in the new ms will have the
 same source, field, and spw names and ids as it does in the parent ms. 
 
 Issues

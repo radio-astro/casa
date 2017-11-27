@@ -20,7 +20,7 @@
     </param>
 
     <param type="bool" name="exportmses">
-	<description>Export measurement sets instead of flags and caltables</description>
+	<description>Export MeasurementSets instead of flags and caltables</description>
 	<value>False</value>
     </param>
 
@@ -140,7 +140,7 @@ session -- List of sessions one per visibility file. Currently defaults
    default: []
    example: session=['session1', 'session2']
 
-exportmses -- Export measurements sets defined in vis instead of flags,
+exportmses -- Export MeasurementSets defined in vis instead of flags,
    caltables, and calibration instructions.
    default: False
    example: exportmses = True

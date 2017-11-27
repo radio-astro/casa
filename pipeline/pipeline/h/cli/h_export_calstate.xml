@@ -50,9 +50,9 @@ extension '.calstate'
 
 One of two calibration states can be exported: either the active calibration
 state (those calibrations currently applied on-the-fly but scheduled for
-permanent application to the measurement set in a subsequent hif_applycal
+permanent application to the MeasurementSet in a subsequent hif_applycal
 call) or the applied calibration state (calibrations that were previously
-applied to the measurement set using hif_applycal). The default is to export
+applied to the MeasurementSet using hif_applycal). The default is to export
 the active calibration state.
 
 Issues
