@@ -166,7 +166,7 @@ class T2_4MDetailsTcleanRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                 residual_abs = abs(residual.getchunk())
 
             residual_robust_rms = residual_stats.get('medabsdevmed')[0] * 1.4826  # see CAS-9631
-            if 'VLASS' in r.imaging_mode:
+            if 'VLA' in r.imaging_mode:
                 residual_max = residual_abs.max()  # see CAS-10731
             else:
                 residual_max = residual_stats.get('max')[0]
