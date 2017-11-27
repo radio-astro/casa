@@ -12,7 +12,7 @@ Check interferometry imaging product size and try to mitigate to maximum allowed
 <input>
 
   <param type="stringArray" name="vis" subparam="true">
-    <description>List of input measurement sets</description>
+    <description>List of input MeasurementSets</description>
     <value></value>
   </param>
 
@@ -119,11 +119,11 @@ pipelinemode -- The pipeline operating mode. In 'automatic' mode the pipeline
 ---- pipeline context defined parameter arguments which can be set only in
 'interactive mode'
 
-vis -- The list of input measurement sets. Defaults to the list of measurement
-    sets specified in the h_init or hif_importdata sets.
+vis -- The list of input MeasurementSets. Defaults to the list of MeasurementSets
+    specified in the h_init or hif_importdata sets.
     example: vis='ngc5921.ms'
              vis=['ngc5921a.ms', ngc5921b.ms', 'ngc5921c.ms']
-    default: use all measurement sets in the context 
+    default: use all MeasurementSets in the context 
 
 maxcubesize -- Maximum allowed cube size mitigation goal in GB.
     default: -1 (automatic from performance parameters)

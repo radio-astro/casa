@@ -115,7 +115,7 @@ pipelinemode -- The pipeline operating mode. In 'automatic' mode the
 ---- pipeline context defined parameter argument which can be set only in
 'interactive mode'
 
-infiles -- List of data files. These must be a name of Measurementsets that 
+infiles -- List of data files. These must be a name of MeasurementSets that 
    are registered to context via hsd_importdata task.
    default: []
    example: vis=['uid___A002_X85c183_X36f.ms', 'uid___A002_X85c183_X60b.ms']

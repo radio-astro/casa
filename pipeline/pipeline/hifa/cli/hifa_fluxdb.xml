@@ -12,7 +12,7 @@ Connect to flux calibrator database
 </description>
 <input>
     <param type="stringArray" name="vis" subparam="true">
-        <description>List of input measurement sets</description>
+        <description>List of input MeasurementSets</description>
         <value></value>
     </param>
 

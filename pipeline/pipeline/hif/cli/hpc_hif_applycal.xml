@@ -11,7 +11,7 @@
         </description>
         <input>
             <param type="stringArray" name="vis" subparam="true">
-                <description>List of input measurement sets</description>
+                <description>List of input MeasurementSets</description>
                 <value></value>
             </param>
 
@@ -215,8 +215,8 @@ default: 'automatic'.
 ---- pipeline context defined parameter arguments which can be set only in
 'interactive mode'
 
-vis -- The list of input measurement sets. Defaults to the list of measurement
-sets in the pipeline context.
+vis -- The list of input MeasurementSets. Defaults to the list of
+MeasurementSets in the pipeline context.
 default: []
 example: ['X227.ms']
 

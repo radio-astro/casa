@@ -154,10 +154,10 @@ fitorder -- The fit order of the polynomials.
 ---- pipeline context defined parameter arguments which can be set only in
      'interactive mode'
 
-vis -- The list of input measurement sets for which the UV continuum fits are
-    to be generated. Defaults to the list of imaging measurement sets specified
+vis -- The list of input MeasurementSets for which the UV continuum fits are
+    to be generated. Defaults to the list of imaging MeasurementSets specified
     in the pipeline import data task.
-    default '': Compute the continuum fit for all calibration measurement sets in the context.
+    default '': Compute the continuum fit for all calibration MeasurementSets in the context.
     example: 'ngc5921.ms', ['ngc5921a.ms', ngc5921b.ms', 'ngc5921c.ms']
 
 caltable -- The list of output calibration tables one per input MS. 

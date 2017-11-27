@@ -215,8 +215,8 @@ ocorr_mode -- Read in cross- and auto-correlation data(ca), cross-
    correlation data only (co), or autocorrelation data only (ao).
    default: ca
 
-createmms -- Create a multi-measurement set ('true') ready for parallel
-    processing, or a standard measurement set ('false'). The default setting
+createmms -- Create a multi-MeasurementSet ('true') ready for parallel
+    processing, or a standard MeasurementSet ('false'). The default setting
     ('automatic') creates an MMS if running in a cluster environment.
     default: automatic
 

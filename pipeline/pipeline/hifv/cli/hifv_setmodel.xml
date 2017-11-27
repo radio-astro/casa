@@ -64,7 +64,7 @@
 
 
 <example>
-The hifv_setmodel task does an initial run of setjy on the measurement set
+The hifv_setmodel task does an initial run of setjy on the MeasurementSet
 
 Keyword arguments:
 
@@ -109,7 +109,7 @@ results -- If pipeline mode is 'getinputs' then None is returned. Otherwise
 
 Examples
 
-1. Initial run of setjy on the measurement set
+1. Initial run of setjy on the MeasurementSet
 
    hifv_setmodel
 

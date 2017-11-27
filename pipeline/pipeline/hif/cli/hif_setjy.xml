@@ -12,7 +12,7 @@ Fills the model column with the model visibilities.
 </description>
 <input>
     <param type="stringArray" name="vis" subparam="true">
-	<description>List of input measurement sets</description>
+	<description>List of input MeasurementSets</description>
 	<value></value>
     </param>
 
@@ -201,8 +201,8 @@ standard -- Flux density standard, used if fluxdensity[0] less than 0.0. The
 ---- pipeline context defined parameter arguments which can be set only in
 'interactive mode'
 
-vis -- The list of input measurement sets. Defaults to the list of measurement
-    sets defined in the pipeline context.
+vis -- The list of input MeasurementSets. Defaults to the list of
+    MeasurementSets defined in the pipeline context.
     default: []
     example:
 

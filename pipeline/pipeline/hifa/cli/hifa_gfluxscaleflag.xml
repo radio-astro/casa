@@ -34,7 +34,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <input>
     <param type="stringArray" name="vis" subparam="true">
-        <description>List of input measurement sets</description>
+        <description>List of input MeasurementSets</description>
         <value></value>
     </param>
 
@@ -171,8 +171,8 @@ pipelinemode -- The pipeline operating mode. In 'automatic' mode the pipeline
 ---- pipeline context defined parameter arguments which can be set only in
 'interactive mode'
 
-vis -- The list of input measurement sets. Defaults to the list of measurement
-    sets specified in the pipeline context.
+vis -- The list of input MeasurementSets. Defaults to the list of MeasurementSets
+    specified in the pipeline context.
     default: ''
     example: ['M51.ms']
 

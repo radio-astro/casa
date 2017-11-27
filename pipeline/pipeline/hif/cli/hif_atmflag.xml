@@ -12,7 +12,7 @@ Flag channels with bad atmospheric transmission.
 </description>
 <input>
     <param type="stringArray" name="vis" subparam="true">
-        <description>List of input measurement sets</description>
+        <description>List of input MeasurementSets</description>
         <value></value>
     </param>
 
@@ -156,8 +156,8 @@ fnm_hi_limit -- Flag channels with transmission greater than fnm_hi_limit *
 ---- pipeline context defined parameter arguments which can be set only in
 'interactive mode'
 
-vis -- List of input measurement sets
-    default: [] - Use the measurement sets currently stored in the pipeline context. 
+vis -- List of input MeasurementSets
+    default: [] - Use the MeasurementSets currently stored in the pipeline context. 
     example: vis=['X132.ms']
 
 -- Pipeline task execution modes

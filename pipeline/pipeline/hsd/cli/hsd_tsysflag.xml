@@ -16,7 +16,7 @@ sequence of flagging subtasks, each looking for a different type of possible err
 
 <input>
     <param type="stringArray" name="vis" subparam="true">
-        <description>List of input measurement sets (Not used) </description>
+        <description>List of input MeasurementSets (Not used) </description>
         <value></value>
     </param>
 

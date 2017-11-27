@@ -12,7 +12,7 @@ Compute polarization calibration.
 <input>
 
   <param type="stringArray" name="vis" subparam="true">
-    <description>List of input measurement sets, \'\' for default</description>
+    <description>List of input MeasurementSets, \'\' for default</description>
     <value></value>
   </param>
 
@@ -143,8 +143,8 @@ pipelinemode -- The pipeline operating mode. In 'automatic' mode the pipeline
 ---- pipeline context defined parameter arguments which can be set only in
 'interactive mode'
 
-vis -- The list of input measurement sets. Defaults to the list of measurement
-    sets in the context. CURRENTLY THE LIST MUST CONTAIN 1 MEASUREMENT SET.
+vis -- The list of input MeasurementSets. Defaults to the list of MeasurementSets 
+    in the context. CURRENTLY THE LIST MUST CONTAIN 1 MEASUREMENT SET.
     default: ''
     example: vis=['ngc5921a.ms', ngc5921b.ms', 'ngc5921c.ms']
 

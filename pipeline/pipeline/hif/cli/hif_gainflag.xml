@@ -12,7 +12,7 @@ Flag antennas with deviant gain
 </description>
 <input>
     <param type="stringArray" name="vis" subparam="true">
-        <description>List of input measurement sets</description>
+        <description>List of input MeasurementSets</description>
         <value></value>
     </param>
 
@@ -202,8 +202,8 @@ metric_order -- Order in which the flagging metrics are evaluated.
 ---- pipeline context defined parameter arguments which can be set only in
 'interactive mode'
 
-vis -- List of input measurement sets.
-    default: [] - Use the measurement sets currently known to the pipeline
+vis -- List of input MeasurementSets.
+    default: [] - Use the MeasurementSets currently known to the pipeline
     context. 
 
 intent -- A string containing the list of intents to be checked for antennas

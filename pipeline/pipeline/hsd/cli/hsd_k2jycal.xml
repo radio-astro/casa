@@ -8,7 +8,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 <task type="function" name="hsd_k2jycal" category="pipeline">
 <shortdescription>Derive Kelvin to Jy calibration tables</shortdescription>
 <description>
-Derive the Kelvin to Jy calibration for list of measurement sets
+Derive the Kelvin to Jy calibration for list of MeasurementSets
 </description>
 <input>
     <param type="string" name="reffile" mustexist="true">
@@ -27,7 +27,7 @@ Derive the Kelvin to Jy calibration for list of measurement sets
     </param>
 
     <param type="stringArray" name="infiles" subparam="true">
-        <description>List of input measurement sets</description>
+        <description>List of input MeasurementSets</description>
         <value></value>
     </param>
 
@@ -75,7 +75,7 @@ Derive the Kelvin to Jy calibration for list of measurement sets
 
 <example>
 
-Derive the Kelvin to Jy calibration for list of measurement sets
+Derive the Kelvin to Jy calibration for list of MeasurementSets
 
 Keyword arguments:
 
@@ -163,13 +163,13 @@ results -- If pipeline mode is 'getinputs' then None is returned. Otherwise
 
 Description
 
-Derive the Kelvin to Jy calibration for list of measurement sets
+Derive the Kelvin to Jy calibration for list of MeasurementSets
 
 Issues
 
 Example
 
-1. Compute the Kevin to Jy calibration tables for a list of measurement sets
+1. Compute the Kevin to Jy calibration tables for a list of MeasurementSets
 
     hsd_k2jycal()
 

@@ -259,7 +259,7 @@
             field -- Select fields to image. Use field name(s) NOT id(s). Mosaics
             are assumed to have common source / field names. If intent is specified
             only fields with data matching the intent will be selected. The fields
-            will be selected from measurement sets in 'vis'.
+            will be selected from MeasurementSets in 'vis'.
             default: [''] Fields matching matching intent, one image per target source.
             example: ['3C279'], ['Centaurus*'], ['3C279' ,'J1427-421']
 

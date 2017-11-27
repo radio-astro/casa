@@ -7,11 +7,11 @@
 <task type="function" name="hifa_flagdata" category="pipeline">
 
 <shortdescription>Do basic flagging</shortdescription>
-<description>Do meta data based flagging of a list of measurement sets</description>
+<description>Do meta data based flagging of a list of MeasurementSets</description>
 
 <input>
 	<param type="stringArray" name="vis" subparam="true">
-	    <description>List of input measurement sets to flag</description>
+	    <description>List of input MeasurementSets to flag</description>
 	    <value></value>
 	</param>			
 
@@ -198,7 +198,7 @@
 
 <example>
 The hifa_flagdata data performs basic flagging operations on a list of
-measurement sets.
+MeasurementSets.
 
 
 Keyword arguments:
@@ -271,7 +271,7 @@ tbuff -- The time in seconds used to pad flagging command time intervals if
 ---- pipeline context defined parameter arguments which can be set only in
 'interactive mode'
 
-vis -- The list of input measurement sets. Defaults to the list of measurement
+vis -- The list of input MeasurementSets. Defaults to the list of MeasurementSets
     defined in the pipeline context.
     example:
     default: ''
@@ -310,11 +310,11 @@ Issues
 
 Examples
 
-1. Do basic flagging on a measurement set
+1. Do basic flagging on a MeasurementSet
     
     hifa_flagdata()
 
-2. Do basic flagging on a measurement set flagging additional scans selected
+2. Do basic flagging on a MeasurementSet flagging additional scans selected
    by number as well.
 
     hifa_flagdata(scannumber='13,18')

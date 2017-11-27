@@ -8,11 +8,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 <task type="function" name="hifa_antpos" category="pipeline">
 <shortdescription>Derive an antenna position calibration table</shortdescription>
 <description>
-Derive the antenna position calibration for list of measurement sets
+Derive the antenna position calibration for list of MeasurementSets
 </description>
 <input>
     <param type="stringArray" name="vis" subparam="true">
-        <description>List of input measurement sets</description>
+        <description>List of input MeasurementSets</description>
         <value></value>
     </param>
 

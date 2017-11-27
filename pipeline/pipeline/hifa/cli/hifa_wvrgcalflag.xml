@@ -296,7 +296,7 @@ offsetstable -- List of input temperature offsets table files to subtract from
 
 hm_toffset -- If 'manual', set the 'toffset' parameter to the user-specified value.
           If 'automatic', set the 'toffset' parameter according to the
-          date of the measurement set; toffset=-1 if before 2013-01-21T00:00:00
+          date of the MeasurementSet; toffset=-1 if before 2013-01-21T00:00:00
           toffset=0 otherwise.
     default: 'automatic'
 
@@ -387,7 +387,7 @@ flag_intent -- The data intent(s) on whose wvr correction results the search
     If flag_intent is left blank, the default, the flagging views will be
     derived from data with the default bandpass calibration intent i.e.
     the first in the list BANDPASS, PHASE, AMPLITUDE for which the
-    measurement set has data.
+    MeasurementSet has data.
 
     default ''
 
@@ -429,7 +429,7 @@ accept_threshold -- The phase-rms improvement ratio
 
 Example
 
-1. Compute the WVR calibration for all the measurement sets.
+1. Compute the WVR calibration for all the MeasurementSets.
 
     hifa_wvrgcalflag (hm_tie='automatic')
 

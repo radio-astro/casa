@@ -12,7 +12,7 @@ Compute a clean map.
 <input>
 
   <param type="stringArray" name="vis" subparam="true">
-    <description>List of input measurement sets, \'\' for default</description>
+    <description>List of input MeasurementSets, \'\' for default</description>
     <value></value>
   </param>
 
@@ -462,8 +462,8 @@ pipelinemode -- The pipeline operating mode. In 'automatic' mode the pipeline
 ---- pipeline context defined parameter arguments which can be set only in
 'interactive mode'
 
-vis -- The list of input measurement sets. Defaults to the list of measurement
-    sets in the context.
+vis -- The list of input MeasurementSets. Defaults to the list of
+    MeasurementSets in the context.
     default: ''
     example: vis=['ngc5921a.ms', ngc5921b.ms', 'ngc5921c.ms']
 
@@ -514,9 +514,9 @@ specmode -- Frequency imaging mode, 'mfs', 'cont', 'cube'. \'\' defaults to
 gridder -- Gridding options, 'standard', 'mosaic'.
    Derived as follows:
       1. The 'field' parameter is converted into a list of field_ids for
-         each measurement set in 'vis'.
-      2. If there is more than 1 field_id in the list for any measurement 
-         set then gridder is set to 'mosaic', otherwise it will be set
+         each MeasurementSet in 'vis'.
+      2. If there is more than 1 field_id in the list for any MeasurementSet
+         then gridder is set to 'mosaic', otherwise it will be set
          to 'standard'. 
     default: ''
     'standard'

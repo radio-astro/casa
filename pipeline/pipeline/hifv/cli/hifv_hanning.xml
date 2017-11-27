@@ -109,7 +109,7 @@ results -- If pipeline mode is 'getinputs' then None is returned. Otherwise
 
 Examples
 
-1. Run the task to execute hanning smoothing on a VLA CASA pipeline loaded measurement set.
+1. Run the task to execute hanning smoothing on a VLA CASA pipeline loaded MeasurementSet.
 
    hifv_hanning()
 

@@ -101,7 +101,7 @@
 
 <example>
 
-The hifa_restoredata task restores flagged and calibrated measurements sets
+The hifa_restoredata task restores flagged and calibrated MeasurementSets
 from archived ASDMs and pipeline flagging and calibration date products. 
 
 Keyword arguments:

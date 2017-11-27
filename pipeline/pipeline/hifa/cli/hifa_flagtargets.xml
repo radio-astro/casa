@@ -7,11 +7,11 @@
 <task type="function" name="hifa_flagtargets" category="pipeline">
 
 <shortdescription>Do science target flagging</shortdescription>
-<description>Do meta data based science target flagging of a list of measurement sets</description>
+<description>Do meta data based science target flagging of a list of MeasurementSets</description>
 
 <input>
 	<param type="stringArray" name="vis" subparam="true">
-	    <description>List of input measurement sets to flag</description>
+	    <description>List of input MeasurementSets to flag</description>
 	    <value></value>
 	</param>			
 
@@ -89,7 +89,7 @@
 
 <example>
 The hifa_flagtargets task performs basic flagging operations on a list of
-science target measurement sets.
+science target MeasurementSets.
 
 
 Keyword arguments:
@@ -115,7 +115,7 @@ filetemplate -- The name of an text file that contains the flagging template
 ---- pipeline context defined parameter arguments which can be set only in
 'interactive mode'
 
-vis -- The list of input measurement sets. Defaults to the list of measurement
+vis -- The list of input MeasurementSets. Defaults to the list of MeasurementSets
     defined in the pipeline context.
     example:
     default: ''
@@ -149,7 +149,7 @@ Issues
 
 Examples
 
-1. Do basic flagging on a science target measurement set
+1. Do basic flagging on a science target MeasurementSet
     
     hifa_flagtargets()
 

@@ -12,7 +12,7 @@ Create a a list of images to be cleaned.
 <input>
 
   <param type="stringArray" name="vis" subparam="true">
-    <description>List of input measurement sets</description>
+    <description>List of input MeasurementSets</description>
     <value></value>
   </param>
 
@@ -268,9 +268,9 @@ nbins -- Channel binning factors per spw
 ---- pipeline context defined parameter arguments which can be set only in
      'interactive mode'
 
-vis -- The list of input measurement sets. Defaults to the list of measurement
-    sets specified in the h_init or hif_importdata sets.
-    default '': use all measurement sets in the context 
+vis -- The list of input MeasurementSets. Defaults to the list of MeasurementSets
+    specified in the h_init or hif_importdata sets.
+    default '': use all MeasurementSets in the context 
     example: 'ngc5921.ms', ['ngc5921a.ms', ngc5921b.ms', 'ngc5921c.ms']
 
 intent -- Select intents for which associated fields will be imaged.
@@ -280,7 +280,7 @@ intent -- Select intents for which associated fields will be imaged.
 field -- Select fields to image. Use field name(s) NOT id(s). Mosaics
     are assumed to have common source / field names.  If intent is specified
     only fields with data matching the intent will be selected. The fields
-    will be selected from measurement sets in 'vis'.
+    will be selected from MeasurementSets in 'vis'.
     default: '' Fields matching matching intent, one image per target source.
     example: '3C279', 'Centaurus*', '3C279,J1427-421'
 

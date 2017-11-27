@@ -10,12 +10,12 @@
 </description>
 <input>
     <param type="stringArray" name="vis" subparam="true">
-    <description>The list of input measurement sets</description>
+    <description>The list of input MeasurementSets</description>
     <value></value>
   </param>
 
   <param type="stringArray" name="outputvis" subparam="true">
-     <description>The list of output split measurement sets</description>
+     <description>The list of output split MeasurementSets</description>
      <value></value>
   </param>
 

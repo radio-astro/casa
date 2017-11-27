@@ -8,7 +8,7 @@
         <shortdescription>Compute bandpass calibration solutions</shortdescription>
         <description>
             Compute amplitude and phase as a function of frequency for each spectral
-            window in each measurement set.
+            window in each MeasurementSet.
         </description>
 
         <input>
@@ -339,7 +339,7 @@
 
         <example>
 Compute  amplitude and phase as a function of frequency for each spectral
-window in each measurement set.
+window in each MeasurementSet.
 
 Previous calibration can be applied on the fly.
 
@@ -433,7 +433,7 @@ minsnr -- Solutions below this SNR are rejected. Used for hm_bandtype=
 ---- pipeline context defined parameter arguments which can be set only in
 'interactive mode'
 
-vis -- The list of input measurement sets. Defaults to the list of measurment
+vis -- The list of input MeasurementSets. Defaults to the list of measurment
     sets specified in the pipeline context.
     default: ''
     example: ['M51.ms']
