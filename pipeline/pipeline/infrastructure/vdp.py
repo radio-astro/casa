@@ -318,6 +318,11 @@ class InputsContainer(object):
         self._context = context
         self._task_cls = task_cls
 
+        # TODO SJW move fn to this module
+        from . import basetask
+        imaging_preferred = basetask.get_imaging_preferred(task_cls.Inputs)
+        ms_pool = context.observing_run.get_measurement_sets(imaging_preferred=imaging_preferred)
+
         # task requires all MSes. No processing required.
         self._multivis = task_cls.is_multi_vis_task
 
@@ -326,11 +331,6 @@ class InputsContainer(object):
             self._active_instances = self._cls_instances.values()
 
         else:
-            # TODO SJW move fn to this module
-            from . import basetask
-            imaging_preferred = basetask.get_imaging_preferred(task_cls.Inputs)
-            ms_pool = context.observing_run.get_measurement_sets(imaging_preferred=imaging_preferred)
-
             # create an instance for every MS in scope. Unfortunately, some SD
             # tasks use infiles instead of vis so we need to check inputs
             # signatures to see what is allowed.
