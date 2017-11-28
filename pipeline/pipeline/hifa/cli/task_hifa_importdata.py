@@ -6,7 +6,7 @@ import pipeline.h.cli.utils as utils
 
 
 def hifa_importdata(vis=None, session=None, pipelinemode=None, asis=None, process_caldevice=None, overwrite=None,
-                    nocopy=None, bdfflags=None, lazy=None, dbservice=None, ocorr_mode=None, createmms=None, dryrun=None,
+                    nocopy=None, bdfflags=None, asimaging=None, lazy=None, dbservice=None, ocorr_mode=None, createmms=None, dryrun=None,
                     acceptresults=None):
     # create a dictionary containing all the arguments given in the
     # constructor

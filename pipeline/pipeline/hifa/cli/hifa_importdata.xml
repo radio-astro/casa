@@ -53,6 +53,11 @@
                 <value>True</value>
             </param>
 
+            <param type="bool" name="asimaging">
+                <description>Import measurement sets as imaging measurement sets</description>
+                <value>False</value>
+            </param>
+
             <param type="bool" name="lazy">
                 <description>Use the lazy filler import</description>
                 <value>False</value>
