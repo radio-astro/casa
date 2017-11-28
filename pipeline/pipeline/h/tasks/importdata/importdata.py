@@ -26,7 +26,7 @@ LOG = infrastructure.get_logger(__name__)
 class ImportDataInputs(basetask.StandardInputs):
     def __init__(self, context, vis=None, output_dir=None, asis=None, process_caldevice=None, session=None,
                  overwrite=None, nocopy=None, save_flagonline=None, bdfflags=None, lazy=None, createmms=None,
-                 ocorr_mode=None):
+                 ocorr_mode=None, asimaging=None):
         super(ImportDataInputs, self).__init__(context, vis=vis, output_dir=output_dir)
 
         self.asis = asis
@@ -39,6 +39,7 @@ class ImportDataInputs(basetask.StandardInputs):
         self.lazy = lazy
         self.createmms = createmms
         self.ocorr_mode = ocorr_mode
+        self.asimaging = asimaging
 
     asis = basetask.property_with_default('asis', '')
     bdfflags = basetask.property_with_default('bdfflags', True)
@@ -46,6 +47,7 @@ class ImportDataInputs(basetask.StandardInputs):
     lazy = basetask.property_with_default('lazy', False)
     nocopy = basetask.property_with_default('nocopy', False)
     ocorr_mode = basetask.property_with_default('ocorr_mode', 'ca')
+    asimaging = basetask.property_with_default('asimaging', False)
     overwrite = basetask.property_with_default('overwrite', False)
     process_caldevice = basetask.property_with_default('process_caldevice', False)
     save_flagonline = basetask.property_with_default('save_flagonline', True)
@@ -254,6 +256,10 @@ class ImportData(basetask.StandardTaskTemplate):
         for ms in observing_run.measurement_sets:
             LOG.debug('Setting session to %s for %s' % (inputs.session,
                                                         ms.basename))
+            if inputs.asimaging:
+               LOG.info('Importing %s as an imaging measurement set' % (ms.basename))
+               ms.is_imaging_ms = True
+
             ms.session = inputs.session
 
             ms_origin = 'ASDM' if ms.name in converted_asdm_abspaths else 'MS'
