@@ -18,17 +18,20 @@ LOG = infrastructure.get_logger(__name__)
 class ALMAImportDataInputs(importdata.ImportDataInputs):
     asis = basetask.property_with_default('asis',
                                           'Antenna CalAtmosphere CalWVR ExecBlock Receiver SBSummary Source Station')
-    dbservice = basetask.property_with_default('dbservice', True)
 
     def __init__(self, context, vis=None, output_dir=None, asis=None, process_caldevice=None, session=None,
                  overwrite=None, nocopy=None, bdfflags=None, lazy=None, save_flagonline=None, dbservice=None,
-                 createmms=None, ocorr_mode=None):
+                 createmms=None, ocorr_mode=None, asimaging=None):
         super(ALMAImportDataInputs, self).__init__(context, vis=vis, output_dir=output_dir, asis=asis,
                                                    process_caldevice=process_caldevice, session=session,
                                                    overwrite=overwrite, nocopy=nocopy, bdfflags=bdfflags, lazy=lazy,
                                                    save_flagonline=save_flagonline, createmms=createmms,
                                                    ocorr_mode=ocorr_mode)
         self.dbservice = dbservice
+        self.asimaging = asimaging
+
+    dbservice = basetask.property_with_default('dbservice', True)
+    asimaging = basetask.property_with_default('asimaging', False)
 
     def to_casa_args(self):
         raise NotImplementedError
