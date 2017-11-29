@@ -195,6 +195,8 @@ class Applycal(basetask.StandardTaskTemplate):
         for calto, calfroms in sorted(merged.iteritems()):
             # if there's nothing to apply for this data selection, continue
             if not calfroms:
+                LOG.warn('There is no calibration information for field %s intent %s spw %s in %s' %
+                    (str(calto.field), str(calto.intent), str(calto.spw), inputs.ms.basename))
                 continue
 
             # arrange a calibration job for the unique data selection
