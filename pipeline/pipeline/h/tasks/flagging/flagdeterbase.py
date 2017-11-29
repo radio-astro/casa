@@ -153,8 +153,7 @@ class FlagDeterBaseInputs(vdp.StandardInputs):
         if value in ('halfint', '1.5int', 'manual'):
             return value
         else:
-            LOG.warning('Unexpected value for hm_tbuff: {0}. Using'
-                        ' halfint.'.format(value))
+            LOG.warning('Unsupported value for hm_tbuff: {0}. Using halfint.'.format(value))
             return 'halfint'
 
     @vdp.VisDependentProperty
@@ -174,8 +173,9 @@ class FlagDeterBaseInputs(vdp.StandardInputs):
     scannumber = vdp.VisDependentProperty(default='')
     shadow = vdp.VisDependentProperty(default=True)
 
-    @vdp.VisDependentProperty
-    def tbuff(self):
+    tbuff = vdp.VisDependentProperty(default=[0.0, 0.0])
+    @tbuff.postprocess
+    def tbuff(self, unprocessed):
         if self.hm_tbuff == 'halfint':
             if any([a.diameter == 7.0 for a in self.ms.antennas]):
                 return [0.048, 0.0]
@@ -194,7 +194,7 @@ class FlagDeterBaseInputs(vdp.StandardInputs):
                 t = self.ms.get_median_integration_time()
             return [1.5 * t]
         else:
-            return [0.0, 0.0]
+            return unprocessed
 
     template = vdp.VisDependentProperty(default=False)
 

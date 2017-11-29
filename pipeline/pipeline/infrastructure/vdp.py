@@ -169,15 +169,25 @@ class VisDependentProperty(object):
        provided - and a 'getter' function has been defined, the getter function
        will be called to provide a default value for that measurement set.
 
-    or
-
     2. If a user has overridden the value (eg. inputs.solint = 123), that
-       value will be returned.
+       value will be retrieved.
+
+    3. The value, either the default from step 1 or user-provided from step 2,
+       is run through the optional postprocess function, which gives a final
+       opportunity to change the value depending on the state/value of other
+       properties.
     """
     NULL = NullMarker()
 
     # TODO check whether this can be replaced with NULL
     NO_DEFAULT = NoDefaultMarker()
+
+    @property
+    def backing_store_name(self):
+        """
+        The name of the attribute holding the value for this property.
+        """
+        return '_' + self.name
 
     def convert(self, fconvert):
         """
@@ -188,14 +198,14 @@ class VisDependentProperty(object):
         passed will be the user input *for this measurement set*. That is,
         after potentially being divided up into per-measurement values.
         """
-        return type(self)(self.fdefault, fconvert, default=self.default, hidden=self.hidden)
+        return type(self)(self.fdefault, fconvert, self.fpostprocess, default=self.default, hidden=self.hidden)
 
     def default(self, fdefault):
         """
         Set the function used to get the attribute value when the user has not
         supplied an override value.
         """
-        return type(self)(fdefault, self.fconvert, default=self.default, hidden=self.hidden)
+        return type(self)(fdefault, self.fconvert, self.fpostprocess, hidden=self.hidden)
 
     def fget(self, owner):
         """
@@ -217,16 +227,22 @@ class VisDependentProperty(object):
         """
         setattr(owner, self.backing_store_name, value)
 
-    @property
-    def backing_store_name(self):
+    def postprocess(self, fpostprocess):
         """
-        The name of the attribute holding the value for this property.
-        """
-        return '_' + self.name
+        Set the function used to process the value that is about to be
+        returned. This allows the value to be modified or perhaps a different
+        value based on another property to be returned.
 
-    def __init__(self, fdefault=None, fconvert=None, default=NO_DEFAULT, readonly=False, hidden=False):
+        :param owner:
+        :return:
+        """
+        return type(self)(self.fdefault, self.fconvert, fpostprocess, default=self.default, hidden=self.hidden)
+
+    def __init__(self, fdefault=None, fconvert=None, fpostprocess=None, default=NO_DEFAULT, readonly=False,
+                 hidden=False):
         self.fdefault = fdefault
         self.fconvert = fconvert
+        self.fpostprocess = fpostprocess
         self.default = default
         self.readonly = readonly
         self.hidden = hidden
@@ -243,14 +259,19 @@ class VisDependentProperty(object):
             return self
 
         instance_val = self.fget(instance)
-        if instance_val != VisDependentProperty.NULL:
+
+        if instance_val == VisDependentProperty.NULL:
+            if self.fdefault:
+                instance_val = self.fdefault(instance)
+            elif self.default != VisDependentProperty.NO_DEFAULT:
+                instance_val = self.default
+            else:
+                raise ValueError('Cannot get property with no default and no user value')
+
+        if self.fpostprocess:
+            return self.fpostprocess(instance, instance_val)
+        else:
             return instance_val
-
-        if self.fdefault:
-            return self.fdefault(instance)
-
-        if self.default != VisDependentProperty.NO_DEFAULT:
-            return self.default
 
     def __set__(self, instance, value):
         if self.readonly:
