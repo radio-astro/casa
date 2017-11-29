@@ -177,31 +177,34 @@ class SDChannelAveragedImageDisplay(SDImageDisplay):
 
         return plot_list
 
-class SDIntegratedImageDisplayInputs(SDImageDisplayInputs):
-    def __init__(self, context, result):
-        super(SDIntegratedImageDisplayInputs,self).__init__(context, result)
-        # obtain integrated image using immoments task
-        print self.imagename
-        #job = casa_tasks.immoments(imagename=self.imagename, moments=[0], outfile=self.integrated_imagename)
-
-    @property
-    def integrated_imagename(self):
-        return self.result.outcome['image'].imagename.rstrip('/') + '.integ'
+# class SDMomentMapDisplayInputs(SDImageDisplayInputs):
+#     MAP_MOMENT = 8
+#     def __init__(self, context, result):
+#         super(SDMomentMapDisplayInputs,self).__init__(context, result)
+#         # obtain integrated image using immoments task
+#         print self.imagename
+#         #job = casa_tasks.immoments(imagename=self.imagename, moments=[0], outfile=self.momentmap_name)
+# 
+#     @property
+#     def momentmap_name(self):
+#         return self.result.outcome['image'].imagename.rstrip('/') + ('.mom%d' % self.MAP_MOMENT)
     
-class SDIntegratedImageDisplay(SDImageDisplay):
+class SDMomentMapDisplay(SDImageDisplay):
     MATPLOTLIB_FIGURE_ID = 8911
+    MAP_MOMENT = 8
+    MAP_TITLE = "Max Intensity Map"
 
     def __init__(self, inputs):
         super(self.__class__, self).__init__(inputs)
-        if hasattr(self.inputs, 'integrated_imagename'):
-            self.imagename = self.inputs.integrated_imagename
-        else:
-            self.imagename = self.inputs.result.outcome['image'].imagename.rstrip('/') + '.integ'
+    #         if hasattr(self.inputs, 'momentmap_name'):
+    #             self.imagename = self.inputs.momentmap_name
+    #         else:
+        self.imagename = self.inputs.result.outcome['image'].imagename.rstrip('/') + ('.mom%d' % self.MAP_MOMENT)
 
     def init(self):
         if os.path.exists(self.imagename):
             os.system('rm -rf %s'%(self.imagename))
-        job = casa_tasks.immoments(imagename=self.inputs.imagename, moments=[0], outfile=self.imagename)
+        job = casa_tasks.immoments(imagename=self.inputs.imagename, moments=[self.MAP_MOMENT], outfile=self.imagename)
         job.execute(dry_run=False)
         assert os.path.exists(self.imagename)
         super(self.__class__, self).init()
@@ -276,7 +279,7 @@ class SDIntegratedImageDisplay(SDImageDisplay):
             if beam_circle is None:
                 beam_circle = pointing.draw_beam(axes_tpmap, 0.5 * self.beam_size, self.aspect, self.ra_min, self.dec_min)
 
-            pl.title('Total Power', size=TickSize)
+            pl.title(self.MAP_TITLE, size=TickSize)
             axes_tpmap.set_xlim(xlim)
             axes_tpmap.set_ylim(ylim)
 
@@ -292,7 +295,7 @@ class SDIntegratedImageDisplay(SDImageDisplay):
             parameters['spw'] = self.inputs.spw
             parameters['pol'] = self.image.coordsys.stokes()[pol]#polmap[pol]
             parameters['ant'] = self.inputs.antenna
-            parameters['type'] = 'sd_integrated_map'
+            parameters['type'] = 'sd_moment_map'
             parameters['file'] = self.inputs.imagename
 
             plot = logger.Plot(plotfile,
@@ -1186,14 +1189,14 @@ class SDSpectralImageDisplay(SDImageDisplay):
         worker = SDRmsMapDisplay(self.inputs)
         plot_list.extend(worker.plot())
         t4 = time.time()
-        worker = SDIntegratedImageDisplay(self.inputs)
+        worker = SDMomentMapDisplay(self.inputs)
         plot_list.extend(worker.plot())
         t5 = time.time()
         LOG.debug('sparse_map: elapsed time %s sec'%(t1-t0))
         LOG.debug('channel_map: elapsed time %s sec'%(t2-t1))
         LOG.debug('spectral_map: elapsed time %s sec'%(t3-t2))
         LOG.debug('rms_map: elapsed time %s sec'%(t4-t3))
-        LOG.debug('integrated_map: elapsed time %s sec'%(t5-t4))
+        LOG.debug('moment_map: elapsed time %s sec'%(t5-t4))
         return plot_list
 
 

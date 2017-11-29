@@ -95,9 +95,9 @@ plots_list = [{'title': 'Channel Map',
               {'title': 'Baseline Rms Map',
                'subpage': rmsmap_subpage,
                'plot': rmsmap_plots},
-              {'title': 'Integrated Intensity Map',
-               'subpage': integratedmap_subpage,
-               'plot': integratedmap_plots}]
+              {'title': 'Max Intensity Map',
+               'subpage': momentmap_subpage,
+               'plot': momentmap_plots}]
 %>
 
 <p>This task generates single dish images per source per spectral window. 
