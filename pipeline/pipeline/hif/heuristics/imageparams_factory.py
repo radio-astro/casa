@@ -1,6 +1,7 @@
 from .imageparams_alma import ImageParamsHeuristicsALMA
 from .imageparams_vlass_quick_look import ImageParamsHeuristicsVlassQl
-from .imageparams_vlass_single_epoch import ImageParamsHeuristicsVlassSe
+from .imageparams_vlass_single_epoch_continuum import ImageParamsHeuristicsVlassSeCont
+from .imageparams_vlass_single_epoch_cube import ImageParamsHeuristicsVlassSeCube
 from .imageparams_vla import ImageParamsHeuristicsVLA
 
 
@@ -14,8 +15,10 @@ class ImageParamsHeuristicsFactory(object):
             return ImageParamsHeuristicsALMA(vislist, spw, observing_run, imagename_prefix, proj_params, contfile, linesfile)
         elif imaging_mode == 'VLASS-QL':  # quick look
             return ImageParamsHeuristicsVlassQl(vislist, spw, observing_run, imagename_prefix, proj_params, contfile, linesfile)
-        elif imaging_mode == 'VLASS-SE':  # single epoch
-            return ImageParamsHeuristicsVlassSe(vislist, spw, observing_run, imagename_prefix, proj_params, contfile, linesfile)
+        elif imaging_mode == 'VLASS-SE-CONT':  # single epoch continuum
+            return ImageParamsHeuristicsVlassSeCont(vislist, spw, observing_run, imagename_prefix, proj_params, contfile, linesfile)
+        elif imaging_mode == 'VLASS-SE-CUBE':  # single epoch cube
+            return ImageParamsHeuristicsVlassSeCube(vislist, spw, observing_run, imagename_prefix, proj_params, contfile, linesfile)
         elif imaging_mode == 'VLA' or imaging_mode == 'JVLA' or imaging_mode == 'EVLA':  # VLA but not VLASS
             return ImageParamsHeuristicsVLA(vislist, spw, observing_run, imagename_prefix, proj_params, contfile, linesfile)
         else:

@@ -8,7 +8,7 @@ from .imageparams_base import ImageParamsHeuristics
 LOG = infrastructure.get_logger(__name__)
 
 
-class ImageParamsHeuristicsVlassSe(ImageParamsHeuristics):
+class ImageParamsHeuristicsVlassSeCube(ImageParamsHeuristics):
 
     def __init__(self, vislist, spw, observing_run, imagename_prefix='', proj_params=None, contfile=None, linesfile=None):
         ImageParamsHeuristics.__init__(self, vislist, spw, observing_run, imagename_prefix, proj_params, contfile, linesfile)
