@@ -97,7 +97,10 @@ plots_list = [{'title': 'Channel Map',
                'plot': rmsmap_plots},
               {'title': 'Max Intensity Map',
                'subpage': momentmap_subpage,
-               'plot': momentmap_plots}]
+               'plot': momentmap_plots},
+              {'title': 'Integrated Intensity Map',
+               'subpage': integratedmap_subpage,
+               'plot': integratedmap_plots}]
 %>
 
 <p>This task generates single dish images per source per spectral window. 
@@ -105,39 +108,48 @@ It generates an image combined spectral data from whole antenna as well as image
 
 <h3>Contents</h3>
 <ul>
-<li><a href="#sensitivity">Image Sensitivity Table</a></li>
-<li><a href="#profilemap">Profile Map</a></li>
+%if len(rms_table) > 0:
+    <li><a href="#sensitivity">Image Sensitivity Table</a></li>
+%endif
+%if sparsemap_subpage != {}:
+    <li><a href="#profilemap">Profile Map</a></li>
+%endif
 % for plots in plots_list:
-    <li><a href="#${plots['title'].replace(" ", "")}">${plots['title']}</a></li>
+    % if plots['subpage'] != {}: 
+        <li><a href="#${plots['title'].replace(" ", "")}">${plots['title']}</a></li>
+    %endif
 % endfor
 </ul>
 
-<h3 id="sensitivity" class="jumptarget">Image Sensitivity</h3>
-<p>
-RMS of line-free channels. Estimated RMS is listed for representative images.
-</p>
-<table class="table table-bordered table-striped" summary="Image Sentivitity">
-	<caption>RMS of line-free channels</caption>
-    <thead>
-	    <tr>
-	        <th>Name</th><th>Representative (Estimate)</th><th>Frequency Ranges</th><th>Channel width [kHz]</th><th>RMS [Jy/beam]</th>
-	    </tr>
+%if len(rms_table) > 0:
+	<h3 id="sensitivity" class="jumptarget">Image Sensitivity</h3>
+	<p>
+	RMS of line-free channels. Estimated RMS is listed for representative images.
+	</p>
+	<table class="table table-bordered table-striped" summary="Image Sentivitity">
+		<caption>RMS of line-free channels</caption>
+    	<thead>
+	    	<tr>
+	        	<th>Name</th><th>Representative (Estimate)</th><th>Frequency Ranges</th><th>Channel width [kHz]</th><th>RMS [Jy/beam]</th>
+	    	</tr>
 
-	</thead>
-	<tbody>
-	% for tr in rms_table:
-		<tr>
-		% for td in tr:
-			${td}
-		% endfor
-		</tr>
-	%endfor
-	</tbody>
-</table>
+  		</thead>
+		<tbody>
+		% for tr in rms_table:
+			<tr>
+			% for td in tr:
+				${td}
+			% endfor
+			</tr>
+		%endfor
+		</tbody>
+	</table>
+%endif
 
 
+%if sparsemap_subpage != {}:
 <h3 id="profilemap" class="jumptarget">Profile Map</h3>
-% for field in sparsemap_subpage.keys():
+  % for field in sparsemap_subpage.keys():
     <h4><a class="replace"
            href="${os.path.join(dirname, sparsemap_subpage[field])}">${field}</a>
     </h4>
@@ -194,9 +206,13 @@ RMS of line-free channels. Estimated RMS is listed for representative images.
         % endif
     % endfor
 	<div class="clearfix"></div><!--  flush plots, break to next row -->
-%endfor
+  %endfor
+%endif
 
 % for plots in plots_list:
+    % if plots['subpage'] == {}:
+        <% continue %>
+    % endif
     <h3 id="${plots['title'].replace(" ", "")}" class="jumptarget">${plots['title']}</h3>
     % for field in plots['subpage'].keys():
         <h4><a class="replace"

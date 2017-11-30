@@ -61,7 +61,9 @@ class T2_4MDetailsSingleDishImagingRenderer(basetemplates.T2_4MDetailsDefaultRen
                      'rmsmap': {'type': 'rms_map',
                                 'plot_title': 'Baseline RMS Map'},
                      'momentmap': {'type': 'sd_moment_map',
-                                       'plot_title': 'Maximum Intensity Map'}}
+                                       'plot_title': 'Maximum Intensity Map'},
+                     'integratedmap': {'type': 'sd_integrated_map',
+                                       'plot_title': 'Integrated Intensity Map'}}
         for (key, value) in map_types.iteritems():
             plot_list = self._plots_per_field_with_type(plots, value['type'])
             summary = self._summary_plots(plot_list)
