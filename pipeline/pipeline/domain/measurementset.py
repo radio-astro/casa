@@ -302,7 +302,7 @@ class MeasurementSet(object):
             max_chanwidth = None
             for spw in target_spws_bw:
                chanwidth = spw.channels[0].getWidth().to_units(measures.FrequencyUnits.HERTZ)
-               if (max_chanwidth is not None) or (chanwidth > max_chanwidth):
+               if (max_chanwidth is None) or (chanwidth > max_chanwidth):
                #if not_max_chanwidth or chanwidth > max_chanwidth:
                     target_spwid = spw.id
             LOG.info('Selecting widest channel width spw id %s with channel width <= rerpesentative bandwidth in data set %s' % \
