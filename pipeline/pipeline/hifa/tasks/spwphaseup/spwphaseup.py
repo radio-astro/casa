@@ -35,10 +35,10 @@ class SpwPhaseupInputs(gaincalmode.GaincalModeInputs):
     minfracmaxbw = basetask.property_with_default('minfracmaxbw', 0.8)
     samebb = basetask.property_with_default('samebb', True)
 
-    def __init__(self, context, mode=None, caltable=None, intent=None, hm_spwmapmode=None,
+    def __init__(self, context, mode=None, vis=None, caltable=None, intent=None, hm_spwmapmode=None,
         phasesnr=None, bwedgefrac=None, hm_nantennas=None, maxfracflagged=None,
         maxnarrowbw=None, minfracmaxbw=None, samebb=None, **parameters):
-        super(SpwPhaseupInputs, self).__init__(context, mode='gtype',
+        super(SpwPhaseupInputs, self).__init__(context, mode='gtype', vis=vis,
             caltable=caltable, intent=intent, hm_spwmapmode=hm_spwmapmode,
             phasesnr=phasesnr, bwedgefrac=bwedgefrac, hm_nantennas=hm_nantennas,
             maxfracflagged=maxfracflagged, maxnarrowbw=maxnarrowbw, minfracmaxbw=minfracmaxbw,

@@ -17,11 +17,11 @@ LOG = infrastructure.get_logger(__name__)
 
 
 class TimeGaincalInputs(gaincalmode.GaincalModeInputs):
-    def __init__(self, context, mode=None, calamptable=None,
+    def __init__(self, context, mode=None, vis=None, calamptable=None,
                  calphasetable=None, offsetstable=None, amptable=None, targetphasetable=None,
                  calsolint=None, targetsolint=None, calminsnr=None,
                  targetminsnr=None, **parameters):
-        super(TimeGaincalInputs, self).__init__(context, mode='gtype',
+        super(TimeGaincalInputs, self).__init__(context, mode='gtype', vis=vis,
                                                 calamptable=calamptable, calphasetable=calphasetable,
                                                 offsetstable=offsetstable, amptable=amptable, targetphasetable=targetphasetable,
                                                 calsolint=calsolint, targetsolint=targetsolint,

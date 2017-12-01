@@ -339,6 +339,17 @@ class InputsContainer(object):
         self._context = context
         self._task_cls = task_cls
 
+        # Inspect the Inputs signature to find which attribute sets the scope
+        # (=the MSes to process) for that task.
+        constructor_sig = inspect.getargspec(task_cls.Inputs.__init__)
+        if 'vis' in constructor_sig.args:
+            self._scope_attr = 'vis'
+        elif 'infiles' in constructor_sig.args:
+            self._scope_attr = 'infiles'
+        else:
+            msg = 'No scope argument recognised in {!s} constructor' ''.format(self._task_cls.Inputs.__name__)
+            raise AttributeError(msg)
+
         # TODO SJW move fn to this module
         from . import basetask
         imaging_preferred = basetask.get_imaging_preferred(task_cls.Inputs)
@@ -346,23 +357,14 @@ class InputsContainer(object):
 
         # task requires all MSes. No processing required.
         self._multivis = task_cls.is_multi_vis_task
-
         if self._multivis:
             self._cls_instances = {'all': task_cls.Inputs(context)}
             self._active_instances = self._cls_instances.values()
 
         else:
-            # create an instance for every MS in scope. Unfortunately, some SD
-            # tasks use infiles instead of vis so we need to check inputs
-            # signatures to see what is allowed.
-            constructor_sig = inspect.getargspec(task_cls.Inputs.__init__)
-            if 'vis' in constructor_sig.args:
-                scope_fn = lambda ms: {'vis': ms.name}
-            elif 'infiles' in constructor_sig.args:
-                scope_fn = lambda ms: {'infiles': ms.name}
-            else:
-                scope_fn = lambda ms: {'vis': ms.name}
-                LOG.warn('Miscoded constructor does not accept vis or infiles: {!r}'.format(task_cls.Inputs))
+            # create an instance for every MS in scope. Use the pointer
+            # attribute to know which attribute is the MS 'axis'.
+            scope_fn = lambda ms: {self._scope_attr: ms.name}
 
             try:
                 self._cls_instances = {ms.basename: task_cls.Inputs(context, **scope_fn(ms)) for ms in ms_pool}
@@ -372,8 +374,6 @@ class InputsContainer(object):
                 LOG.error('Error creating {!s}'.format(task_cls.Inputs.__name__))
                 raise
             self._active_instances = self._cls_instances.values()
-
-        self._vis = ''
 
         # TODO find kwargs at runtime so that changes can be reflected?
         self._initargs = dict(kwargs)
@@ -416,10 +416,7 @@ class InputsContainer(object):
         # this means we have to take the basename of the vis argument for the
         # importdata calls
         if '_importdata' in casa_tasks[0]:
-            if 'vis' in remapped:
-                key = 'vis'
-            else:
-                key = 'infiles'
+            key = self._scope_attr
             remove_slash = lambda x: x.rstrip('/')
             if isinstance(remapped[key], str):
                 remapped[key] = os.path.basename(remove_slash(remapped[key]))
@@ -437,37 +434,6 @@ class InputsContainer(object):
         casa_call = '%s(%s)' % (casa_tasks[0], ', '.join(task_args))
 
         return casa_call
-
-    @property
-    def vis(self):
-        vis = [i.vis for i in self._active_instances]
-        return format_value_list(vis)
-
-    @vis.setter
-    def vis(self, vis):
-        # for multivis tasks, all we should do is set vis on the contained
-        # inputs. As there only ever one active inputs instance, nothing
-        # further processing is required so we can exit.
-        if self._multivis:
-            setattr(self._active_instances[0], 'vis', vis)
-            return
-
-        # reset to all MSes if the input arg signals a reset, which expands
-        # task scope to all MSes
-        if VisDependentProperty.NULL.convert(vis) == VisDependentProperty.NULL:
-            vis = self._cls_instances.keys()
-
-        # the key for inputs instances is the basename vis
-        basenames = [os.path.basename(v) for v in vis]
-
-        # create a new inputs instance if one cannot be found
-        for basename, path in zip(basenames, vis):
-            if basename in self._cls_instances:
-                continue
-            self._cls_instances[basename] = self._task_cls.Inputs(self._context, vis=path)
-
-        # set the task scope to the vises set here
-        self._active_instances = [self._cls_instances[n] for n in basenames]
 
     def __len__(self):
         return len(self._active_instances)
@@ -505,6 +471,10 @@ class InputsContainer(object):
         if name in dir(self):
             return super(InputsContainer, self).__getattr__(name)
 
+        if name == self._scope_attr:
+            LOG.trace('Retrieving scope from {!s}.{!s}'.format(self._task_cls.Inputs.__name__, name))
+            return self._get_scope()
+
         LOG.trace('InputsContainer.{!s}: delegating to {!s}'.format(name, self._task_cls.Inputs.__name__))
         result = [getattr(i, name) for i in self._active_instances]
 
@@ -514,17 +484,18 @@ class InputsContainer(object):
         # If the property we're trying to set is one of this base class's
         # private variables, add it to our __dict__ using the standard
         # __setattr__ method
-        if name in ('_context', '_task_cls', '_cls_instances', '_active_instances', '_vis', '_initargs', '_multivis'):
+        if name in ('_context', '_task_cls', '_cls_instances', '_active_instances', '_scope_attr', '_initargs',
+                    '_multivis'):
             if LOG.isEnabledFor(logging.TRACE):
                 LOG.trace('Setting {!s}.{!s} = {!r}'.format(self.__class__.__name__, name, val))
             return super(InputsContainer, self).__setattr__(name, val)
 
         # check whether this class has a getter/setter by this name. If so,
         # allow the write to __dict__
-        if name in ('vis',):
+        if name == self._scope_attr:
             if LOG.isEnabledFor(logging.TRACE):
-                LOG.trace('Getter/setter found: setting {!s}.{!s} = {!r}'.format(self.__class__.__name__, name, val))
-            return super(InputsContainer, self).__setattr__(name, val)
+                LOG.trace('Setting scope: {!s}.{!s} = {!r}'.format(self.__class__.__name__, name, val))
+            return self._set_scope(val)
 
         if not isinstance(val, (list, tuple)):
             val = [val] * len(self._active_instances)
@@ -550,6 +521,36 @@ class InputsContainer(object):
 
             setattr(inputs, name, user_arg)
 
+    def _get_scope(self):
+        scope = [getattr(i, self._scope_attr) for i in self._active_instances]
+        return format_value_list(scope)
+
+    def _set_scope(self, scope):
+        # for multivis tasks, all we should do is set vis on the contained
+        # inputs. As there only ever one active inputs instance, no further
+        # processing is required so we can exit.
+        if self._multivis:
+            setattr(self._active_instances[0], self._scope_attr, scope)
+            return
+
+        # reset to all MSes if the input arg signals a reset, which expands
+        # task scope to all MSes
+        if VisDependentProperty.NULL.convert(scope) == VisDependentProperty.NULL:
+            scope = self._cls_instances.keys()
+
+        # the key for inputs instances is the basename vis
+        basenames = [os.path.basename(v) for v in scope]
+
+        # create a new inputs instance if one cannot be found
+        for basename, path in zip(basenames, scope):
+            if basename in self._cls_instances:
+                continue
+            kwargs = {self._scope_attr: path}
+            self._cls_instances[basename] = self._task_cls.Inputs(self._context, **kwargs)
+
+        # set the task scope to the vises set here
+        self._active_instances = [self._cls_instances[n] for n in basenames]
+
     def __repr__(self):
         return '<InputsContainer({!s}, {!r}>'.format(self._task_cls, self._context.name)
 
@@ -574,6 +575,7 @@ class InputsContainer(object):
             properties[key] = format_value_list(vals)
 
         return properties
+
 
 
 class StandardInputs(api.Inputs):
