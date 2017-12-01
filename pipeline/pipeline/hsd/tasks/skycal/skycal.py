@@ -8,34 +8,55 @@ from pipeline.infrastructure import casa_tasks
 import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.callibrary as callibrary
 import pipeline.infrastructure.sdfilenamer as filenamer
+import pipeline.infrastructure.vdp as vdp
 from .. import common
 
 LOG = infrastructure.get_logger(__name__)
 
 
-class SDSkyCalInputs(basetask.StandardInputs):
-    def __init__(self, context, calmode=None, fraction=None, noff=None,
-                 width=None, elongated=None, output_dir=None,
-                 infiles=None, outfile=None, field=None,
-                 spw=None, scan=None):
-        self._init_properties(vars())
-        #self.vis = self.infiles
-        
-    @property
+class SDSkyCalInputs(vdp.StandardInputs):
+    calmode = vdp.VisDependentProperty(default='auto')
+    elongated = vdp.VisDependentProperty(default=False)
+    field = vdp.VisDependentProperty(default='')
+    fraction = vdp.VisDependentProperty(default='10%')
+    noff = vdp.VisDependentProperty(default=-1)
+    outfile = vdp.VisDependentProperty(default='')
+    scan = vdp.VisDependentProperty(default='')
+    spw = vdp.VisDependentProperty(default='')
+    width = vdp.VisDependentProperty(default=0.5)
+
+    @vdp.VisDependentProperty
     def infiles(self):
         return self.vis
-    
-    @infiles.setter
+
+    @infiles.convert
     def infiles(self, value):
         self.vis = value
-        
+        return value
+
+    def __init__(self, context, calmode=None, fraction=None, noff=None, width=None, elongated=None, output_dir=None,
+                 infiles=None, outfile=None, field=None, spw=None, scan=None):
+        super(SDSkyCalInputs, self).__init__()
+
+        # context and vis must be set first so that properties that require
+        # domain objects can be function
+        self.context = context
+        self.infiles = infiles
+        self.output_dir = output_dir
+        self.outfile = outfile
+
+        self.calmode = calmode
+        self.fraction = fraction
+        self.noff = noff
+        self.width = width
+        self.elongated = elongated
+
+        self.field = field
+        self.spw = spw
+        self.scan = scan
+
     def to_casa_args(self):
-        args = self._get_task_args()
-        
-        # if value is None, replace it with ''
-        for s in ('spw', 'field', 'scan', 'infiles', 'outfile'):
-            if args[s] is None:
-                args[s] = ''
+        args = super(SDSkyCalInputs, self).to_casa_args()
 
         # overwrite is always True
         args['overwrite'] = True
@@ -47,7 +68,8 @@ class SDSkyCalInputs(basetask.StandardInputs):
         del args['vis']
         
         return args
-    
+
+
 class SDSkyCalResults(common.SingleDishResults):
     """
     """
