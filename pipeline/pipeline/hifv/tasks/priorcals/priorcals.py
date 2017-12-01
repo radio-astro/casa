@@ -315,6 +315,12 @@ class Priorcals(basetask.StandardTaskTemplate):
         except:
             LOG.info("No offsets found. No caltable created.")
 
+        m = self.inputs.context.observing_run.get_ms(self.inputs.vis)
+
+        fracantcorrect = len(antcorrect) / len(m.antennas)
+        if fracantcorrect > 0.5:
+            LOG.warn("{:5.2f} percent of antennas needed position corrections.".format(100.0 * fracantcorrect))
+
         return result, antcorrect
 
     def _do_tecmaps(self):
