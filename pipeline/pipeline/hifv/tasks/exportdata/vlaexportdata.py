@@ -1,6 +1,14 @@
 from __future__ import absolute_import
+
 import os
 import shutil
+import collections
+import glob
+import tarfile
+
+from . import vlaifaqua
+#from . import manifest
+import pipeline.h.tasks.common.manifest as manifest
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
@@ -24,6 +32,17 @@ class VLAExportData(exportdata.ExportData):
     # link the accompanying inputs to this task
     Inputs = VLAExportDataInputs
 
+    def prepare(self):
+
+        results = super(VLAExportData, self).prepare()
+
+        # Export the AQUA report
+        oussid = self.get_oussid(self.inputs.context)  # returns string of 'unknown' for VLA
+        aquareport_name = 'pipeline_aquareport.xml'
+        pipe_aqua_reportfile = self._export_aqua_report(self.inputs.context, oussid, aquareport_name,
+                                                        self.inputs.products_dir)
+
+        return results
 
     def _export_casa_restore_script(self, context, script_name, products_dir, oussid, vislist, session_list):
 
@@ -81,4 +100,31 @@ finally:
             shutil.copy(script_file, out_script_file)
 
         return os.path.basename(out_script_file)
+
+    def _export_aqua_report (self, context, oussid, aquareport_name, products_dir):
+        """
+        Save the AQUA report.
+        """
+        aqua_file = os.path.join(context.output_dir, aquareport_name)
+
+        report_generator = vlaifaqua.VLAAquaXmlGenerator()
+        LOG.info('Generating pipeline AQUA report')
+        try:
+            report_xml = report_generator.get_report_xml(context)
+            vlaifaqua.export_to_disk(report_xml, aqua_file)
+        except:
+            LOG.error('Error generating the pipeline AQUA report')
+            return 'Undefined'
+
+        ps = context.project_structure
+        if ps is None:
+            out_aqua_file = os.path.join(products_dir, aquareport_name)
+        elif ps.ousstatus_entity_id == 'unknown':
+            out_aqua_file = os.path.join(products_dir, aquareport_name)
+        else:
+            out_aqua_file = os.path.join(products_dir, oussid + '.' + aquareport_name)
+
+        LOG.info('Copying AQUA report %s to %s' % (aqua_file, out_aqua_file))
+        shutil.copy(aqua_file, out_aqua_file)
+        return os.path.basename(out_aqua_file)
 
