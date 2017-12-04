@@ -387,8 +387,29 @@ class CleanBase(basetask.StandardTaskTemplate):
             if conjbeams is not None:
                 tclean_job_parameters['conjbeams'] = conjbeams
 
-        job = casa_tasks.tclean(**tclean_job_parameters)
-        tclean_result = self._executor.execute(job)
+        # Up until CASA 5.2 it is necessary to run tclean calls with
+        # restoringbeam == 'common' in two steps in HPC mode (CAS-10849).
+        if (tclean_job_parameters['parallel'] == True) and \
+           (tclean_job_parameters['specmode'] == 'cube') and \
+           (tclean_job_parameters['restoration'] == True) and \
+           (tclean_job_parameters['restoringbeam'] == 'common'):
+
+            tclean_job_parameters['restoration'] = False
+            tclean_job_parameters['restoringbeam'] = ''
+            job = casa_tasks.tclean(**tclean_job_parameters)
+            tclean_result = self._executor.execute(job)
+
+            tclean_job_parameters['parallel'] = False
+            tclean_job_parameters['niter'] = 0
+            tclean_job_parameters['restoration'] = True
+            tclean_job_parameters['restoringbeam'] = 'common'
+            tclean_job_parameters['calcpsf'] = False
+            tclean_job_parameters['calcres'] = False
+            job = casa_tasks.tclean(**tclean_job_parameters)
+            tclean_result2 = self._executor.execute(job)
+        else:
+            job = casa_tasks.tclean(**tclean_job_parameters)
+            tclean_result = self._executor.execute(job)
 
         pbcor_image_name = '%s.%s.iter%s.image.pbcor' % (inputs.imagename, inputs.stokes, iter)
 
