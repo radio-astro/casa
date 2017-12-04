@@ -13,6 +13,7 @@ from . import hif
 from . import hsd
 from . import hifv
 from . import hifa
+from . import hsdn
 
 from .infrastructure import Pipeline, Context
 
@@ -50,7 +51,7 @@ def _get_unified_task_module(packages):
             module.__dict__[k] = v
     return module
 
-tasks = _get_unified_task_module([h.tasks, hif.tasks, hco.tasks, hsd.tasks, hifv.tasks, hifa.tasks])
+tasks = _get_unified_task_module([h.tasks, hif.tasks, hco.tasks, hsd.tasks, hifv.tasks, hifa.tasks, hsdn.tasks])
 
 
 def show_weblog(context):
@@ -69,6 +70,7 @@ def initcli():
     hsdpath = mypath + "/hsd/cli/hsd.py"
     hifapath = mypath + "/hifa/cli/hifa.py"
     hifvpath = mypath + "/hifv/cli/hifv.py"
+    hsdnpath = mypath + "/hsdn/cli/hsdn.py"
     myglobals = stack_frame_find()
 
     execfile(hpath, myglobals)
@@ -76,6 +78,7 @@ def initcli():
     execfile(hsdpath, myglobals)
     execfile(hifapath, myglobals)
     execfile(hifvpath, myglobals)
+    execfile(hsdnpath, myglobals)
     # exec('import pipeline.infrastructure.executeppr', myglobals)
 
 

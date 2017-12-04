@@ -5,6 +5,7 @@ import pipeline.hif.tasks as hif_tasks
 import pipeline.hsd.tasks as hsd_tasks
 import pipeline.hifa.tasks as hifa_tasks
 import pipeline.hifv.tasks as hifv_tasks
+import pipeline.hsdn.tasks as hsdn_tasks
 
 CasaTaskDict = {
     'session_bandpass': 'SessionALMAPhcorBandpass',
@@ -104,7 +105,9 @@ CasaTaskDict = {
     'hifv_targetflag': 'Targetflag',
     'hifv_statwt': 'Statwt',
     'hifv_plotsummary': 'PlotSummary',
-    'hifv_restoredata': 'VLARestoreData'
+    'hifv_restoredata': 'VLARestoreData',
+    # NRO tasks -----------------------------------------------------------------
+    'hsdn_importdata': 'NROImportData'
 }
 
 
@@ -207,7 +210,9 @@ classToCASATask = {
     h_tasks.ExportData                : 'h_exportdata',
     h_tasks.RestoreData               : 'h_restoredata',
     h_tasks.MsSplit                   : 'h_mssplit',
-    h_tasks.Tsyscal                   : 'h_tsyscal'
+    h_tasks.Tsyscal                   : 'h_tsyscal',
+    # NRO tasks -----------------------------------------------------------------
+    hsdn_tasks.NROImportData            : 'hsdn_importdata'
 }
 
 
@@ -233,7 +238,7 @@ TASK_COMMENTS = {
      hifa_tasks.ALMAImportData,
      hifv_tasks.VLAImportData,
      hsd_tasks.SDImportData,): (
-        'If required, ASDMs are converted to measurement sets.'
+        'If required, ASDMs are converted to MeasurementSets.'
     ),
     (hifa_tasks.FlagDeterALMA,
      hsd_tasks.FlagDeterALMASingleDish,): (
@@ -381,6 +386,9 @@ TASK_COMMENTS = {
     ),
     (hsd_tasks.SDK2JyCal,): (
         'The Kelvin to Jy calibration tables are generated.'
+    ),
+    (hsdn_tasks.NROImportData,): (
+        'Import Nobeyama MeasurementSets.'
     )
 }
 
