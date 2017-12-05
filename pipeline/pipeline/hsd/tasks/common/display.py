@@ -1,22 +1,21 @@
 from __future__ import absolute_import
 
-import os
-import time
 import abc
-import numpy
-import math
-import pylab as pl
-import matplotlib.gridspec as gridspec
+import datetime
 import itertools
-
-import pipeline.infrastructure as infrastructure
-import pipeline.infrastructure.casatools as casatools
-import pipeline.infrastructure.renderer.logger as logger
-import pipeline.infrastructure.displays.pointing as pointing
-
+import math
+import matplotlib.gridspec as gridspec
+import numpy
+import os
+import pylab as pl
+import time
 from matplotlib.dates import date2num, DateFormatter, MinuteLocator
 from matplotlib.ticker import FuncFormatter, MultipleLocator, AutoLocator
 
+import pipeline.infrastructure as infrastructure
+import pipeline.infrastructure.casatools as casatools
+import pipeline.infrastructure.displays.pointing as pointing
+import pipeline.infrastructure.renderer.logger as logger
 from . import atmutil
 
 LOG = infrastructure.get_logger(__name__)

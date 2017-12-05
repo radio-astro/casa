@@ -124,7 +124,7 @@ class ALMAExportData(exportdata.ExportData):
         flux_file = os.path.join(output_dir, fluxfile_name)
         antpos_file = os.path.join(output_dir, antposfile_name)
         cont_file = os.path.join(output_dir, contfile_name)
-        if os.path.exists(flux_file) or os.path.exists(antpos_file) or os.path_exists(cont_file):
+        if os.path.exists(flux_file) or os.path.exists(antpos_file) or os.path.exists(cont_file):
             empty = False
 
         # Export the general and target source template flagging files
