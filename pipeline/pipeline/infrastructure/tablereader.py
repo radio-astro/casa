@@ -389,10 +389,13 @@ class SpectralWindowTable(object):
             chan_widths = msmd.chanwidths(i)            
             chan_effective_bws = msmd.chaneffbws(i)
             sideband = msmd.sideband(i)
-            try: ### BBC_NO column is optional
-                baseband = msmd.baseband(i)
-            except: ### For Nobeyama (TODO: how to define BBC_NO for NRO)
+            ### BBC_NO column is optional
+            if 'NRO' in msmd.observatorynames():
+                ### For Nobeyama (TODO: how to define BBC_NO for NRO)
                 baseband = i
+            else:
+                baseband = msmd.baseband(i)
+
             ref_freq = msmd.reffreq(i)
             # Read transitions for target spws. Other spws may cause severe
             # messages because the target source IDs may not have the spw.

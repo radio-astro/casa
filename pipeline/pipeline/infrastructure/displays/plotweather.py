@@ -38,16 +38,18 @@ def plotWeather(vis='', figfile='', station=[], help=False):
         print "Could not open WEATHER table.  Did you importasdm with asis='*'?"
         return
 
+    available_cols = mytb.colnames()
     mjdsec = mytb.getcol('TIME')
     mjdsec1 = mjdsec
     vis = vis.split('/')[-1]
     pressure = mytb.getcol('PRESSURE')
     relativeHumidity = mytb.getcol('REL_HUMIDITY')
     temperature = mytb.getcol('TEMPERATURE')
-    dewPoint = mytb.getcol('DEW_POINT')
-    stations = mytb.getcol('NS_WX_STATION_ID')
+    # Nobeyama does not have DEW_POINT and NS_WX_STATION_ID
+    dewPoint = mytb.getcol('DEW_POINT') if 'DEW_POINT' in available_cols else None
     windDirection = (180 / math.pi) * mytb.getcol('WIND_DIRECTION')
     windSpeed = mytb.getcol('WIND_SPEED')
+    stations = mytb.getcol('NS_WX_STATION_ID') if 'NS_WX_STATION_ID' in available_cols else []
     uniqueStations = np.unique(stations)
 
     if (station != []):
@@ -80,39 +82,40 @@ def plotWeather(vis='', figfile='', station=[], help=False):
     if (len(uniqueStations) > 1):
         firstStationRows = np.where(stations == uniqueStations[0])[0]
         secondStationRows = np.where(stations == uniqueStations[1])[0]
+
+        pressure2 = pressure[secondStationRows]
+        relativeHumidity2 = relativeHumidity[secondStationRows]
+        temperature2 = temperature[secondStationRows]
+        dewPoint2 = dewPoint[secondStationRows] if dewPoint is not None else None
+        windDirection2 = windDirection[secondStationRows]
+        windSpeed2 = windSpeed[secondStationRows]
+        mjdsec2 = mjdsec[secondStationRows]
+
         pressure = pressure[firstStationRows]
         relativeHumidity = relativeHumidity[firstStationRows]
         temperature = temperature[firstStationRows]
-        dewPoint = dewPoint[firstStationRows]
+        dewPoint = dewPoint[firstStationRows] if dewPoint is not None else None
         windDirection = windDirection[firstStationRows]
         windSpeed = windSpeed[firstStationRows]
         mjdsec1 = mjdsec[firstStationRows]
-
-        pressure2 = mytb.getcol('PRESSURE')[secondStationRows]
-        relativeHumidity2 = mytb.getcol('REL_HUMIDITY')[secondStationRows]
-        temperature2 = mytb.getcol('TEMPERATURE')[secondStationRows]
-        dewPoint2 = mytb.getcol('DEW_POINT')[secondStationRows]
-        windDirection2 = (180 / math.pi) * mytb.getcol('WIND_DIRECTION')[secondStationRows]
-        windSpeed2 = mytb.getcol('WIND_SPEED')[secondStationRows]
-        mjdsec2 = mjdsec[secondStationRows]
         if (np.mean(temperature2) > 100):
             # convert to Celsius
             temperature2 -= 273.15        
-        if (np.mean(dewPoint2) > 100):
+        if (dewPoint2 is not None and np.mean(dewPoint2) > 100):
             dewPoint2 -= 273.15        
         
     if (np.mean(temperature) > 100):
         # convert to Celsius
         temperature -= 273.15        
-    if (np.mean(dewPoint) > 100):
+    if (dewPoint is not None and np.mean(dewPoint) > 100):
         dewPoint -= 273.15        
-    if (np.mean(dewPoint) == 0):
+    if (dewPoint is not None and np.mean(dewPoint) == 0):
         # assume it is not measured and use NOAA formula to compute from humidity:
         dewPoint = ComputeDewPointCFromRHAndTempC(relativeHumidity, temperature)
     if (np.mean(relativeHumidity) < 0.001):
-        if np.count_nonzero(dewPoint) == 0:
+        if dewPoint is None or np.count_nonzero(dewPoint) == 0:
             # dew point is all zero so it was not measured, so cap the rH at small non-zero value
-            relativeHumidity = 0.001 * np.ones(len(dewPoint))
+            relativeHumidity = 0.001 * np.ones(len(relativeHumidity))
         else:
             print "Replacing zeros in relative humidity with value computed from dew point and temperature."
             dewPointWVP = computeWVP(dewPoint)
@@ -171,7 +174,7 @@ def plotWeather(vis='', figfile='', station=[], help=False):
     adesc.yaxis.grid(True,which='major')
     if (len(uniqueStations) > 1):
         pb.title('blue = station %d,  red = station %d'%(uniqueStations[0],uniqueStations[1]))
-    else:
+    elif (len(uniqueStations) > 0):
         pb.title('blue = station %d'%(uniqueStations[0]))
 
     adesc = pb.subplot(323)
@@ -194,25 +197,28 @@ def plotWeather(vis='', figfile='', station=[], help=False):
     adesc.xaxis.grid(True,which='major')
     adesc.yaxis.grid(True,which='major')
 
-    adesc = pb.subplot(324)
-    pb.plot_date(timeplot,dewPoint, markersize=markersize)
-    if (len(uniqueStations) > 1):
-        pb.hold(True)
-        list_of_date_times = mjdSecondsListToDateTime(mjdsec2)
-        timeplot2 = pb.date2num(list_of_date_times)
-        pb.plot_date(timeplot2, dewPoint2, markersize=markersize, color='r')
-    resizeFonts(adesc,myfontsize)
-#    pb.xlabel('Universal Time (%s)'%utdatestring(mjdsec[0]),size=mysize)
-    pb.ylabel('Dew point (C)',size=mysize)
-    adesc.xaxis.set_major_locator(matplotlib.dates.MinuteLocator(byminute=range(0,60,30)))
-    adesc.xaxis.set_minor_locator(matplotlib.dates.MinuteLocator(byminute=range(0,60,10)))
-    adesc.xaxis.set_major_formatter(matplotlib.dates.DateFormatter('%H:%M'))
-    adesc.fmt_xdata = matplotlib.dates.DateFormatter('%H:%M')
-    RescaleXAxisTimeTicks(pb.xlim(), adesc)
-    adesc.xaxis.grid(True,which='major')
-    adesc.yaxis.grid(True,which='major')
+    pid = 4
+    if dewPoint is not None:
+        adesc = pb.subplot(3,2,pid)
+        pb.plot_date(timeplot,dewPoint, markersize=markersize)
+        if (len(uniqueStations) > 1):
+            pb.hold(True)
+            list_of_date_times = mjdSecondsListToDateTime(mjdsec2)
+            timeplot2 = pb.date2num(list_of_date_times)
+            pb.plot_date(timeplot2, dewPoint2, markersize=markersize, color='r')
+        resizeFonts(adesc,myfontsize)
+#        pb.xlabel('Universal Time (%s)'%utdatestring(mjdsec[0]),size=mysize)
+        pb.ylabel('Dew point (C)',size=mysize)
+        adesc.xaxis.set_major_locator(matplotlib.dates.MinuteLocator(byminute=range(0,60,30)))
+        adesc.xaxis.set_minor_locator(matplotlib.dates.MinuteLocator(byminute=range(0,60,10)))
+        adesc.xaxis.set_major_formatter(matplotlib.dates.DateFormatter('%H:%M'))
+        adesc.fmt_xdata = matplotlib.dates.DateFormatter('%H:%M')
+        RescaleXAxisTimeTicks(pb.xlim(), adesc)
+        adesc.xaxis.grid(True,which='major')
+        adesc.yaxis.grid(True,which='major')
+        pid += 1
 
-    adesc = pb.subplot(325)
+    adesc = pb.subplot(3,2,pid)
     pb.plot_date(timeplot, windSpeed, markersize=markersize)
     if (len(uniqueStations) > 1):
         pb.hold(True)
@@ -230,8 +236,9 @@ def plotWeather(vis='', figfile='', station=[], help=False):
     RescaleXAxisTimeTicks(pb.xlim(), adesc)
     adesc.xaxis.grid(True,which='major')
     adesc.yaxis.grid(True,which='major')
+    pid += 1
 
-    adesc= pb.subplot(326)
+    adesc= pb.subplot(3,2,pid)
 #    pb.xlabel('MJD - %d'%mjdOffset,size=mysize)
     pb.xlabel('Universal Time (%s)'%utdatestring(mjdsec[0]),size=mysize)
     pb.ylabel('Wind direction (deg)',size=mysize)

@@ -866,13 +866,18 @@ class T2_2_3Renderer(T2_2_XRendererBase):
 
     @staticmethod
     def get_display_context(context, ms):
-        # Create regular antenna positions plot.
-        task = summary.PlotAntsChart(context, ms)
-        plot_ants = task.plot()
-        
-        # Create polar-log antenna positions plot.
-        task = summary.PlotAntsChart(context, ms, polarlog=True)
-        plot_ants_plog = task.plot()
+        if context.project_summary.telescope in ('NRO',):
+            # antenna plots are useless for Nobeyama
+            plot_ants = None
+            plot_ants_plog = None
+        else:
+            # Create regular antenna positions plot.
+            task = summary.PlotAntsChart(context, ms)
+            plot_ants = task.plot()
+            
+            # Create polar-log antenna positions plot.
+            task = summary.PlotAntsChart(context, ms, polarlog=True)
+            plot_ants_plog = task.plot()
 
         dirname = os.path.join('session%s' % ms.session,
                                ms.basename)

@@ -13,41 +13,44 @@ import pipeline.infrastructure.renderer.htmlrenderer as hr
 		<li><a href="#tabs-baselines" data-toggle="tab">Baselines</a></li>
 	</ul>
 	<div class="tab-content">
-		<div class="tab-pane active" id="tabs-offsets">		
+		<div class="tab-pane active" id="tabs-offsets">
+		%if plot_ants is not None or plot_ants_plog is not None:
 			<div class="row">
 				<h3>Antenna Positions</h3>	
-	
-				<div class="col-md-3">
-				  	<div class="thumbnail">
-						<a href="${os.path.relpath(plot_ants.abspath, pcontext.report_dir)}"
-						   class="fancybox">
-							<img src="${os.path.relpath(plot_ants.thumbnail, pcontext.report_dir)}"
-								 title="Antenna Latitude vs. Antenna Longitude for ${ms.basename}"
-	 							     alt="Antenna Latitude vs. Antenna Longitude for ${ms.basename}"/>
-					    </a>
-					    <div class="caption">
-							<h4>Antenna Position</h4>
-							<p>Plot antenna latitude vs antenna longitude</p>
+				%if plot_ants is not None:
+					<div class="col-md-3">
+					  	<div class="thumbnail">
+							<a href="${os.path.relpath(plot_ants.abspath, pcontext.report_dir)}"
+							   class="fancybox">
+								<img src="${os.path.relpath(plot_ants.thumbnail, pcontext.report_dir)}"
+									 title="Antenna Latitude vs. Antenna Longitude for ${ms.basename}"
+	 								     alt="Antenna Latitude vs. Antenna Longitude for ${ms.basename}"/>
+						    </a>
+						    <div class="caption">
+								<h4>Antenna Position</h4>
+								<p>Plot antenna latitude vs antenna longitude</p>
+							</div>
 						</div>
 					</div>
-				</div>
-	
-				<div class="col-md-3">
-				  	<div class="thumbnail">
-						<a href="${os.path.relpath(plot_ants_plog.abspath, pcontext.report_dir)}"
-						   class="fancybox">
-							<img src="${os.path.relpath(plot_ants_plog.thumbnail, pcontext.report_dir)}"
-								 title="Antenna Positions (polar-logarithmic) for ${ms.basename}"
-	 							     alt="Antenna Positions (polar-logarithmic) for ${ms.basename}"/>
-					    </a>
-					    <div class="caption">
-							<h4>Antenna Position</h4>
-							<p>Polar-logarithmic plot of antenna positions.</p>
+				%endif
+				%if plot_ants_plog is not None:
+					<div class="col-md-3">
+					  	<div class="thumbnail">
+							<a href="${os.path.relpath(plot_ants_plog.abspath, pcontext.report_dir)}"
+							   class="fancybox">
+								<img src="${os.path.relpath(plot_ants_plog.thumbnail, pcontext.report_dir)}"
+									 title="Antenna Positions (polar-logarithmic) for ${ms.basename}"
+	 								     alt="Antenna Positions (polar-logarithmic) for ${ms.basename}"/>
+						    </a>
+						    <div class="caption">
+								<h4>Antenna Position</h4>
+								<p>Polar-logarithmic plot of antenna positions.</p>
+							</div>
 						</div>
 					</div>
-				</div>
+				%endif
 			</div>
-			
+		%endif
 			<div class="row">
 				<h3>Antenna Details</h3>
 				<div>

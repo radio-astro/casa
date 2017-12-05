@@ -219,7 +219,7 @@ $(document).ready(function(){
 		<a class="replace" href='${os.path.join(dirname, "t2-2-6.html")}'><h3>Scans</h3></a>
 	</div>	
 	
-	% if pcontext.project_summary.telescope.lower() in ('alma') and is_singledish == True:
+	% if pcontext.project_summary.telescope.lower() in ('alma', 'nro') and is_singledish == True:
 	
 	<div class="col-md-6">
 		<a class="replace" href="${os.path.join(dirname, "t2-2-7.html")}">
