@@ -72,7 +72,6 @@ import types
 import flaghelper
 
 import pipeline.infrastructure as infrastructure
-import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.vdp as vdp
 from pipeline.h.tasks.flagging import flagdeterbase
@@ -280,16 +279,13 @@ class FlagDeterVLAInputs(flagdeterbase.FlagDeterBaseInputs):
 
 # ------------------------------------------------------------------------------
 
-    def to_casa_args( self ):
+    def to_casa_args(self):
 
         # Initialize the arguments from the inherited
         # FlagDeterBaseInputs() class
-
-        task_args = super( FlagDeterVLAInputs, self ).to_casa_args()
-
+        task_args = super(FlagDeterVLAInputs, self).to_casa_args()
 
         # Return the tflagdata task arguments
-
         return task_args
 
 # ------------------------------------------------------------------------------
@@ -313,6 +309,7 @@ class FlagDeterVLAInputs(flagdeterbase.FlagDeterBaseInputs):
 #               Initial version created with no new member functions.
 
 # ------------------------------------------------------------------------------
+
 
 class FlagDeterVLAResults(flagdeterbase.FlagDeterBaseResults):
     pass
@@ -343,15 +340,13 @@ class FlagDeterVLAResults(flagdeterbase.FlagDeterBaseResults):
 
 # ------------------------------------------------------------------------------
 
-class FlagDeterVLA(flagdeterbase.FlagDeterBase):
 
-# ------------------------------------------------------------------------------
+class FlagDeterVLA(flagdeterbase.FlagDeterBase):
 
     # Make the member functions of the FlagDeterVLAInputs() class member
     # functions of this class
 
     Inputs = FlagDeterVLAInputs
-
 
     def prepare(self):
         """
@@ -406,7 +401,6 @@ class FlagDeterVLA(flagdeterbase.FlagDeterBase):
 
         inputs = self.inputs
 
-
         # flag anos?
         if inputs.online:
             if not os.path.exists(inputs.fileonline):
@@ -431,8 +425,6 @@ class FlagDeterVLA(flagdeterbase.FlagDeterBase):
                 flag_cmds.extend([cmd for cmd in cmdlist if not ('ANTENNA_NOT_ON_SOURCE' in cmd)])
                 flag_cmds.append('mode=\'summary\' name=\'online\'')
 
-
-
         # Flag shadowed antennas?
         if inputs.shadow:
             flag_cmds.append('mode=\'shadow\' reason=\'shadow\'')
@@ -445,11 +437,6 @@ class FlagDeterVLA(flagdeterbase.FlagDeterBase):
                     intent = '*%s*' % intent
                 flag_cmds.append('mode=\'manual\' intent=\'%s\' reason=\'intents\'' % intent)
             flag_cmds.append('mode=\'summary\' name=\'intents\'')
-
-
-
-
-
 
         # flag template?
         if inputs.template:
@@ -470,16 +457,12 @@ class FlagDeterVLA(flagdeterbase.FlagDeterBase):
         if inputs.autocorr:
             flag_cmds.append('mode=\'manual\' autocorr=True reason=\'autocorr\'')
             flag_cmds.append('mode=\'summary\' name=\'autocorr\'')
-    
 
-            
         # Flag according to scan numbers and intents?
         if inputs.scan and inputs.scannumber != '':
             flag_cmds.append('mode=\'manual\' scan=\'%s\' reason=\'scans\'' % inputs.scannumber)
             flag_cmds.append('mode=\'summary\' name=\'scans\'')
 
-
-            
         # Flag end 5 percent of each spw or minimum of 3 channels
         if inputs.edgespw:
             to_flag = self._get_edgespw_cmds()
@@ -500,9 +483,7 @@ class FlagDeterVLA(flagdeterbase.FlagDeterBase):
         if inputs.quack: 
             flag_cmds.append(self._get_quack_cmds())
             flag_cmds.append('mode=\'summary\' name=\'quack\'')
-            
-        
-            
+
         # Flag 10 end channels at edges of basebands
         if inputs.baseband:
             to_flag = self._get_baseband_cmds()
@@ -521,14 +502,9 @@ class FlagDeterVLA(flagdeterbase.FlagDeterBase):
         
         return flag_cmds
 
-
-
     def _get_autocorr_cmd (self):
         #return 'mode=manual antenna=*&&&'
         return 'mode=\'manual\' autocorr=True'
-
-
-
 
     '''
     def _get_edgespw_cmds(self):
@@ -616,8 +592,7 @@ class FlagDeterVLA(flagdeterbase.FlagDeterBase):
     '''
     
     def _get_edgespw_cmds(self):
-        
-        
+
         inputs = self.inputs
         
         context = inputs.context
@@ -650,8 +625,7 @@ class FlagDeterVLA(flagdeterbase.FlagDeterBase):
         edgespw_cmd = ['mode=\'manual\' spw=\'%s\' reason=\'edgespw\' name=\'edgespw\'' % SPWtoflag]
         
         return edgespw_cmd
-        
-    
+
     def _get_quack_cmds(self):
             """
             Return a flagdata flagging command that will quack, ie
@@ -673,8 +647,7 @@ class FlagDeterVLA(flagdeterbase.FlagDeterBase):
             int_time = m.get_vla_max_integration_time()
             
             quack_mode_cmd = 'mode=\'quack\' scan=\'%s\' quackinterval=%s quackmode=\'beg\' quackincrement=False reason=\'quack\' name=\'quack\'' % (quack_scan_string, str(1.5*int_time))
-            
-            
+
             return quack_mode_cmd
 
     def _get_baseband_cmds(self):
@@ -738,13 +711,9 @@ class FlagDeterVLA(flagdeterbase.FlagDeterBase):
             if (BBC_bandwidths[ii] > 1.0e9):
                 low_spws.append(spwList[ii][0])
                 high_spws.append(spwList[ii][len(spwList[ii])-1])
-        
-        
-        
+
         #----------------
-        
-        
-        
+
         #low_spws = context.evla['msinfo'][m.name].low_spws 
         #high_spws = context.evla['msinfo'][m.name].high_spws
         #channels = context.evla['msinfo'][m.name].channels
@@ -812,4 +781,3 @@ class FlagDeterVLA(flagdeterbase.FlagDeterBase):
         return [cmd for cmd in flaghelper.readFile(filename) 
                 if not cmd.strip().startswith('#')
                 and not all(c in string.whitespace for c in cmd)]
-

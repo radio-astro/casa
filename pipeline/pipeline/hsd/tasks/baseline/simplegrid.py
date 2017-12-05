@@ -1,11 +1,10 @@
 from __future__ import absolute_import
 
 import os
-#import math
-from math import cos
 import numpy
 import collections
 import itertools
+from math import cos
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
@@ -19,6 +18,7 @@ LOG = utils.OnDemandStringParseLogger(_LOG)
 
 NoData = common.NoData
 DO_TEST = False
+
 
 class SDSimpleGriddingInputs(common.SingleDishInputs):
     def __init__(self, context, group_id, member_list, 
@@ -41,6 +41,7 @@ class SDSimpleGriddingInputs(common.SingleDishInputs):
     def reference_member(self):
         return self.group_desc[self.member_list[0]]
         
+
 class SDSimpleGriddingResults(common.SingleDishResults):
     def __init__(self, task=None, success=None, outcome=None):
         super(SDSimpleGriddingResults, self).__init__(task, success, outcome)
@@ -50,6 +51,7 @@ class SDSimpleGriddingResults(common.SingleDishResults):
     
     def _outcome_name(self):
         return ''
+
 
 class SDSimpleGridding(basetask.StandardTaskTemplate):
     Inputs = SDSimpleGriddingInputs
@@ -183,7 +185,6 @@ class SDSimpleGridding(basetask.StandardTaskTemplate):
         LOG.info('ngrid_ra = {}  ngrid_dec = {}', ngrid_ra, ngrid_dec)
         return grid_table
 
-
     def grid(self, grid_table, datatable):
         """
         The process does re-map and combine spectrum for each position
@@ -265,7 +266,6 @@ class SDSimpleGridding(basetask.StandardTaskTemplate):
         for (k,v) in bind_to_grid.iteritems():
             v.sort(cmp=cmp)
         LOG.debug('sorted bind_to_grid={}', bind_to_grid)
-        
 
         # create storage for output
         StorageOut = numpy.zeros((nrow, nchan), dtype=numpy.complex)

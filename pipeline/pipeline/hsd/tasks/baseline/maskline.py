@@ -19,6 +19,7 @@ LOG = utils.OnDemandStringParseLogger(_LOG)
 
 NoData = common.NoData
 
+
 class MaskLineInputs(common.SingleDishInputs):
     def __init__(self, context, iteration, group_id, member_list, #vis_list, field_list, antenna_list, spwid_list,
                  window=None, edge=None, broadline=None, clusteringalgorithm=None):
@@ -56,6 +57,7 @@ class MaskLineInputs(common.SingleDishInputs):
     def reference_member(self):
         return self.group_desc[self.member_list[0]]
         
+
 class MaskLineResults(common.SingleDishResults):
     def __init__(self, task=None, success=None, outcome=None):
         super(MaskLineResults, self).__init__(task, success, outcome)
@@ -112,7 +114,6 @@ class MaskLine(basetask.StandardTaskTemplate):
             else:
                 result.stage_number = self.inputs.context.task_counter 
             return result
-        
 
         window = self.inputs.window
         edge = self.inputs.edge
@@ -237,4 +238,3 @@ class MaskLine(basetask.StandardTaskTemplate):
         
     def analyse(self, result):
         return result
-

@@ -7,7 +7,6 @@ from parallel.parallel_task_helper import ParallelTaskHelper
 import pipeline.h.tasks.applycal.applycal as applycal
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.api as api
-import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.vdp as vdp
 
 LOG = infrastructure.get_logger(__name__)
@@ -105,4 +104,3 @@ class UVcontSub(applycal.Applycal):
 #                    name=caltable.gaintable, spw=caltable.spw,
 #                    vis=os.path.basename(caltable.vis))
 #        return s
-#

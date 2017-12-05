@@ -2,20 +2,15 @@ from __future__ import absolute_import
 
 import os
 import shutil
-import collections
-import glob
-import tarfile
 
 from . import vlaifaqua
-#from . import manifest
-import pipeline.h.tasks.common.manifest as manifest
-
+# import pipeline.h.tasks.common.manifest as manifest
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
-
 from pipeline.h.tasks.exportdata import exportdata
 
 LOG = infrastructure.get_logger(__name__)
+
 
 class VLAExportDataInputs(exportdata.ExportDataInputs):
 
@@ -26,6 +21,7 @@ class VLAExportDataInputs(exportdata.ExportDataInputs):
         self._init_properties(vars())
 
     gainmap = basetask.property_with_default('gainmap', False)
+
 
 class VLAExportData(exportdata.ExportData):
 
@@ -45,7 +41,6 @@ class VLAExportData(exportdata.ExportData):
         return results
 
     def _export_casa_restore_script(self, context, script_name, products_dir, oussid, vislist, session_list):
-
         """
         Save the CASA restore script.
         """
@@ -127,4 +122,3 @@ finally:
         LOG.info('Copying AQUA report %s to %s' % (aqua_file, out_aqua_file))
         shutil.copy(aqua_file, out_aqua_file)
         return os.path.basename(out_aqua_file)
-

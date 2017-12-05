@@ -2,7 +2,6 @@ from __future__ import absolute_import
 
 import pipeline.h.tasks.tsysflag.tsysflag as tsysflag
 import pipeline.infrastructure as infrastructure
-import pipeline.infrastructure.basetask as basetask
 
 __all__ = [
     'Tsysflag',

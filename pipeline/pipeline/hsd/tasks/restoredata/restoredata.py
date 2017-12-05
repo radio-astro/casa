@@ -1,17 +1,16 @@
 from __future__ import absolute_import
 
-import types
 import os
 
+import pipeline.h.tasks.restoredata.restoredata as restoredata
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.casatools as casatools
-
-import pipeline.h.tasks.restoredata.restoredata as restoredata
 from ..importdata import importdata as importdata
 from .. import applycal
 
 LOG = infrastructure.get_logger(__name__)
+
 
 class SDRestoreDataInputs(restoredata.RestoreDataInputs):
 
@@ -70,14 +69,12 @@ class SDRestoreDataResults(restoredata.RestoreDataResults):
                                 k2jy_factor[(spwid, antname, polname)] = 1.0 / (param[ipol] * param[ipol])
                         msobj.k2jy_factor = k2jy_factor
             LOG.debug('msobj.k2jy_factor = {0}'.format(msobj.k2jy_factor))
-                            
-        
+
 
 class SDRestoreData(restoredata.RestoreData):
     Inputs = SDRestoreDataInputs
 
     def prepare(self):
-        
         # run prepare method in the parent class
         results = super(SDRestoreData, self).prepare()
         
@@ -104,4 +101,3 @@ class SDRestoreData(restoredata.RestoreData):
         applycal_inputs = applycal.SDApplycal.Inputs(inputs.context)
         applycal_task = applycal.SDApplycal(applycal_inputs)
         return self._executor.execute(applycal_task, merge=True)
-

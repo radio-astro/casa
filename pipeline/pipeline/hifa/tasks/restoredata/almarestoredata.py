@@ -2,14 +2,13 @@ from __future__ import absolute_import
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
-
 import pipeline.h.tasks.restoredata.restoredata as restoredata
 from ..importdata import almaimportdata
 
 LOG = infrastructure.get_logger(__name__)
 
-class ALMARestoreDataInputs(restoredata.RestoreDataInputs):
 
+class ALMARestoreDataInputs(restoredata.RestoreDataInputs):
     def __init__(self, context, copytoraw=None, products_dir=None,
                  rawdata_dir=None, output_dir=None, session=None, vis=None,
                  bdfflags=None, lazy=None, asis=None, ocorr_mode=None):
@@ -31,5 +30,3 @@ class ALMARestoreData(restoredata.RestoreData):
             asis=inputs.asis, ocorr_mode=inputs.ocorr_mode)
         importdata_task = almaimportdata.ALMAImportData(importdata_inputs)
         return self._executor.execute(importdata_task, merge=True)
-
-

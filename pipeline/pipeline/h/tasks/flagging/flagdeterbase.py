@@ -27,9 +27,9 @@ variables to the correct values and creates the temporary flag command file),
 convert the class arguments to arguments to the CASA task flagdata), create
 the FlagDeterBase() instance, perform FlagDeterBase.analyse(), and execute the
 class.
-
 """
 from __future__ import absolute_import
+
 import os
 import string
 
@@ -174,6 +174,7 @@ class FlagDeterBaseInputs(vdp.StandardInputs):
     shadow = vdp.VisDependentProperty(default=True)
 
     tbuff = vdp.VisDependentProperty(default=[0.0, 0.0])
+
     @tbuff.postprocess
     def tbuff(self, unprocessed):
         if self.hm_tbuff == 'halfint':

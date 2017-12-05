@@ -14,11 +14,10 @@ inputs = pipeline.tasks.singledish.SDExportData.Inputs(context,output_dir,produc
 task = pipeline.tasks.singledish.SDExportData (inputs)
 results = task.execute (dry_run = True)
 results = task.execute (dry_run = False)
-
 """
 from __future__ import absolute_import
-import os
 
+import os
 import tarfile
 import types
 import string
@@ -29,7 +28,6 @@ import shutil
 from . import almasdaqua
 from pipeline.h.tasks.exportdata.aqua import export_to_disk as aqua_export_to_disk
 import pipeline.h.tasks.common.manifest as manifest
-
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.sdfilenamer as filenamer
@@ -107,10 +105,9 @@ class SDExportData(exportdata.ExportData):
         return results
 
     def _make_lists (self, context, session, vis, imaging=False):
-
-        '''
+        """
         Create the vis and sessions lists
-        '''
+        """
         LOG.info('Single dish specific _make_lists')
         # Force inputs.vis to be a list.
         vislist = vis
@@ -221,8 +218,8 @@ class SDExportData(exportdata.ExportData):
         # create the calibration apply file(s) in the products directory.
         apply_file_list = []
         for visfile in vislist:
-            apply_file =  self._export_final_baseline_applylist (context, visfile, products_dir)
-            apply_file_list.append (apply_file)
+            apply_file = self._export_final_baseline_applylist(context, visfile, products_dir)
+            apply_file_list.append(apply_file)
 
         # Create the ordered vis dictionary
         #    The keys are the base vis names
@@ -256,7 +253,7 @@ class SDExportData(exportdata.ExportData):
             namer.asdm(os.path.basename(vis))
             namer.bl_cal()
             name = namer.get_filename()
-            LOG.debug('bl cal table for %s is %s'%(vis, name))
+            LOG.debug('bl cal table for %s is %s' % (vis, name))
             ms = context.observing_run.get_ms(vis)
             science_spws = ms.get_spectral_windows(science_windows_only=True)
             spw = ','.join(itertools.imap(lambda s: str(s.id), science_spws))
@@ -284,13 +281,13 @@ class SDExportData(exportdata.ExportData):
             LOG.debug('No K2Jy factor file found.')
             return None
         if len(reffile_list) > 1:
-            raise RuntimeError("K2Jy conversion file must be only one. %s found."%(len(reffile_list)))
+            raise RuntimeError("K2Jy conversion file must be only one. %s found." % (len(reffile_list)))
         
         jyperk = reffile_list.pop()
         
         if not os.path.exists(jyperk):
             # if reffile doesn't exist, return None
-            LOG.debug('K2Jy file \'%s\' not found'%(jyperk))
+            LOG.debug('K2Jy file \'%s\' not found' % (jyperk))
             return None
         
         LOG.info('Exporting {0} as a product'.format(jyperk))
@@ -339,8 +336,7 @@ class SDExportData(exportdata.ExportData):
 
         return tarfilename
     
-    def _export_casa_restore_script (self, context, script_name, products_dir, oussid, vislist, session_list):
-
+    def _export_casa_restore_script(self, context, script_name, products_dir, oussid, vislist, session_list):
         """
         Save the CASA restore scropt.
         """
@@ -350,21 +346,21 @@ class SDExportData(exportdata.ExportData):
         # Get the output file name
         ps = context.project_structure
         if ps is None:
-            script_file = os.path.join (context.report_dir, script_name)
-            out_script_file = os.path.join (products_dir, script_name)
+            script_file = os.path.join(context.report_dir, script_name)
+            out_script_file = os.path.join(products_dir, script_name)
         elif ps.ousstatus_entity_id == 'unknown':
-            script_file = os.path.join (context.report_dir, script_name)
-            out_script_file = os.path.join (products_dir, script_name)
+            script_file = os.path.join(context.report_dir, script_name)
+            out_script_file = os.path.join(products_dir, script_name)
         else:
-            script_file = os.path.join (context.report_dir, script_name)
-            out_script_file = os.path.join (products_dir, oussid + '.' + script_name)
+            script_file = os.path.join(context.report_dir, script_name)
+            out_script_file = os.path.join(products_dir, oussid + '.' + script_name)
 
-        LOG.info('Creating casa restore script %s' %  (script_file))
+        LOG.info('Creating casa restore script %s' % (script_file))
 
         # This is hardcoded.
-        tmpvislist=[]
+        tmpvislist = []
 
-        #ALMA TP default
+        # ALMA TP default
         ocorr_mode = 'ao'
 
         for vis in vislist:
@@ -374,7 +370,6 @@ class SDExportData(exportdata.ExportData):
             tmpvislist.append(filename)
         task_string = "    hsd_restoredata(vis=%s, session=%s, ocorr_mode='%s')" % (tmpvislist, session_list, ocorr_mode)
 
-
         template = '''__rethrow_casa_exceptions = True
 h_init()
 try:
@@ -383,15 +378,15 @@ finally:
     h_save()
 ''' % task_string
 
-        with open (script_file, 'w') as casa_restore_file:
+        with open(script_file, 'w') as casa_restore_file:
             casa_restore_file.write(template)
 
         LOG.info('Copying casa restore script %s to %s' % \
                  (script_file, out_script_file))
         if not self._executor._dry_run:
-            shutil.copy (script_file, out_script_file)
+            shutil.copy(script_file, out_script_file)
 
-        return os.path.basename (out_script_file)
+        return os.path.basename(out_script_file)
 
     def _export_aqua_report(self, context, oussid, aquareport_name, products_dir):
         """
@@ -440,7 +435,7 @@ finally:
 
         if aux_fproducts:
             # Add auxliary data products file
-            pipemanifest.add_aux_products_file (ouss, os.path.basename(aux_fproducts))
+            pipemanifest.add_aux_products_file(ouss, os.path.basename(aux_fproducts))
 
         # Add the auxiliary caltables
         if aux_caltablesdict:
@@ -448,7 +443,7 @@ finally:
                 session = pipemanifest.get_session(ouss, session_name)
                 pipemanifest.add_auxcaltables(session, aux_caltablesdict[session_name][1])
                 for vis_name in aux_caltablesdict[session_name][0]:
-                    pipemanifest.add_auxasdm (session, vis_name, aux_calapplysdict[vis_name])
+                    pipemanifest.add_auxasdm(session, vis_name, aux_calapplysdict[vis_name])
 
         pipemanifest.write(manifest_file)
-###########################################################        
+###########################################################

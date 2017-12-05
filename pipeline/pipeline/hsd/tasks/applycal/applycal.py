@@ -2,7 +2,6 @@ from __future__ import absolute_import
 import os
 
 import pipeline.infrastructure as infrastructure
-import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.vdp as vdp
 
 from pipeline.hsd.tasks.common import common
@@ -71,7 +70,7 @@ class SDApplycal(Applycal, common.SingleDishTask):
                 if _calfrom.caltype == 'tsys':
                     tsystable = _calfrom.gaintable
                     spwmap = _calfrom.spwmap
-                    gainfield= _calfrom.gainfield
+                    gainfield = _calfrom.gainfield
                     datatable._update_tsys(context, filename, tsystable, spwmap, fieldids, gainfield)
 
         # here, full export is necessary

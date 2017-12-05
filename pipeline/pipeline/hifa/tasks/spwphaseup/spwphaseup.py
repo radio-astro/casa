@@ -16,6 +16,7 @@ from pipeline.hifa.tasks.gaincalsnr import gaincalsnr
 
 LOG = infrastructure.get_logger(__name__)
 
+
 class SpwPhaseupInputs(gaincalmode.GaincalModeInputs):
 
     # Set the spw map determination parameters here.

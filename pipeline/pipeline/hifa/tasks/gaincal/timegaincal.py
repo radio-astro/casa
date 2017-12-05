@@ -9,7 +9,6 @@ import pipeline.infrastructure.callibrary as callibrary
 from pipeline.h.heuristics import caltable as gcaltable
 from pipeline.hif.tasks.gaincal import common
 from pipeline.hif.tasks.gaincal import gaincalmode
-from pipeline.hif.tasks.gaincal import gaincalworker
 from pipeline.hif.tasks.gaincal import gtypegaincal
 from pipeline.hifa.heuristics import exptimes as gexptimes
 

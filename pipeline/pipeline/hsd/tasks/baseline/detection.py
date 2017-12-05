@@ -2,10 +2,8 @@ from __future__ import absolute_import
 
 import os
 import time
-from math import sqrt
 import numpy
 import math
-import types
 import pylab as PL
 
 import pipeline.infrastructure as infrastructure
@@ -22,6 +20,7 @@ NoData = common.NoData
 
 _LOG = infrastructure.get_logger(__name__)
 LOG = utils.OnDemandStringParseLogger(_LOG)
+
 
 class DetectLineInputs(common.SingleDishInputs):
     def __init__(self, context, window=None, edge=None, broadline=None):
@@ -54,7 +53,8 @@ class DetectLineInputs(common.SingleDishInputs):
     @broadline.setter
     def broadline(self, value):
         self._broadline = value
-        
+
+
 class DetectLineResults(common.SingleDishResults):
     def __init__(self, task=None, success=None, outcome=None):
         super(DetectLineResults, self).__init__(task, success, outcome)
@@ -81,6 +81,7 @@ class DetectLineResults(common.SingleDishResults):
         
     def _outcome_name(self):
         return ''
+
 
 class DetectLine(basetask.StandardTaskTemplate):
     Inputs = DetectLineInputs
@@ -254,7 +255,6 @@ class DetectLine(basetask.StandardTaskTemplate):
     def analyse(self, result):
         return result
 
-
     def _detect(self, spectrum, mask, threshold, tweak, edge):
         nchan = len(spectrum)
         (EdgeL, EdgeR) = edge
@@ -313,7 +313,6 @@ class DetectLine(basetask.StandardTaskTemplate):
                 else: flag = True
         return protected
 
-
     def _get_predefined_window(self, window):
         if len(window) == 0:
             return []
@@ -322,7 +321,6 @@ class DetectLine(basetask.StandardTaskTemplate):
                 return map(self._get_linerange, window)
             else:
                 return [self._get_linerange(window)]
-            
 
     def _get_linerange(self, window):
         spwid = self.inputs.spw
@@ -359,6 +357,7 @@ def get_linerange(window, spwid, ms):
     else:
         raise RuntimeError('Invalid linewindow format')
 
+
 def get_restfrequency(vis, spwid, source_id):
     source_table = os.path.join(vis, 'SOURCE')
     with casatools.TableReader(source_table) as tb:
@@ -373,5 +372,3 @@ def get_restfrequency(vis, spwid, source_id):
                     return None
         finally:
             tsel.close()
-            
-    

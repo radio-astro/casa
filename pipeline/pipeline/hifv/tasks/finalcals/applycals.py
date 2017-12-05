@@ -2,7 +2,6 @@ from __future__ import absolute_import
 
 import collections
 
-import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.callibrary as callibrary
 import pipeline.infrastructure.vdp as vdp
@@ -152,7 +151,6 @@ class Applycals(applycal.IFApplycal):
 
                 jobs.append(casa_tasks.applycal(**args))
 
-
         if inputs.gainmap:
             for calto, calfroms in merged.items():
                 # if there's nothing to apply for this data selection, continue
@@ -188,9 +186,7 @@ class Applycals(applycal.IFApplycal):
 
                 jobs.append(casa_tasks.applycal(**args))
 
-
         # execute the jobs
-
         for job in jobs:
             self._executor.execute(job)
 
@@ -209,7 +205,6 @@ class Applycals(applycal.IFApplycal):
             result.summaries = [stats_before, stats_after]
 
         # Flagging stats by spw and antenna
-
         if inputs.flagsum and inputs.flagdetailedsum:
             ms = self.inputs.context.observing_run.get_ms(inputs.vis)
             spws = ms.get_spectral_windows()
@@ -319,7 +314,6 @@ class Applycals(applycal.IFApplycal):
                 targetscans.append(scan)
 
             # Check for consecutive time ranges
-            
 
             # see if this scan is the last one in the relevant scan list
             # or see if we have a phase2
@@ -370,7 +364,3 @@ class Applycals(applycal.IFApplycal):
             print " "
 
         return applycalgroups
-
-
-
-

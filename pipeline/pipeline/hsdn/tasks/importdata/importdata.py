@@ -1,8 +1,8 @@
-'''
+"""
 Created on Dec 4, 2017
 
 @author: kana
-'''
+"""
 from __future__ import absolute_import
 
 import pipeline.infrastructure as infrastructure
@@ -25,10 +25,10 @@ class NROImportDataInputs(importdata.ImportDataInputs):
         save_flagonline=False
         
         super(NROImportDataInputs, self).__init__(context, vis=vis, output_dir=output_dir, asis=asis,
-                                                 process_caldevice=process_caldevice, session=session,
-                                                 overwrite=overwrite, nocopy=nocopy, save_flagonline=save_flagonline,
-                                                 bdfflags=bdfflags, lazy=lazy, createmms=createmms,
-                                                 ocorr_mode=ocorr_mode)
+                                                  process_caldevice=process_caldevice, session=session,
+                                                  overwrite=overwrite, nocopy=nocopy, save_flagonline=save_flagonline,
+                                                  bdfflags=bdfflags, lazy=lazy, createmms=createmms,
+                                                  ocorr_mode=ocorr_mode)
 
 
 class NROImportDataResults(sd_importdata.SDImportDataResults):
@@ -57,7 +57,6 @@ class NROImportDataResults(sd_importdata.SDImportDataResults):
                 break
                
 
-
 class NROImportData(sd_importdata.SDImportData):
     Inputs = NROImportDataInputs 
 
@@ -65,7 +64,7 @@ class NROImportData(sd_importdata.SDImportData):
         # the input data should be MSes
         # TODO: check data type
         # get results object by running super.prepare()
-        results =  super(NROImportData, self).prepare()
+        results = super(NROImportData, self).prepare()
         myresults = NROImportDataResults(mses=results.mses, reduction_group_list=results.reduction_group_list,
                                          datatable_name=results.datatable_name, setjy_results=results.setjy_results)
         myresults.origin = results.origin

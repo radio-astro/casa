@@ -31,6 +31,7 @@ HHMMSSss = pointing.HHMMSSss
 
 LOG = infrastructure.get_logger(__name__)
 
+
 class ChannelAveragedAxesManager(object):
     def __init__(self, xformatter, yformatter, xlocator, ylocator, xrotation, yrotation, ticksize, colormap):
         self.xformatter = xformatter
@@ -70,6 +71,7 @@ class ChannelAveragedAxesManager(object):
             
         return self._axes_tpmap
 
+
 class SDChannelAveragedImageDisplay(SDImageDisplay):
     MATPLOTLIB_FIGURE_ID = 8911
     
@@ -103,7 +105,6 @@ class SDChannelAveragedImageDisplay(SDImageDisplay):
 
         pl.gcf().sca(axes_tpmap)
 
-        
         plot_list = []
         
 #         masked_data = self.data * self.mask
@@ -188,7 +189,8 @@ class SDChannelAveragedImageDisplay(SDImageDisplay):
 #     @property
 #     def momentmap_name(self):
 #         return self.result.outcome['image'].imagename.rstrip('/') + ('.mom%d' % self.MAP_MOMENT)
-    
+
+
 class SDMomentMapDisplay(SDImageDisplay):
     MATPLOTLIB_FIGURE_ID = 8911
     MAP_MOMENT = 8
@@ -239,7 +241,6 @@ class SDMomentMapDisplay(SDImageDisplay):
 
         pl.gcf().sca(axes_tpmap)
 
-        
         plot_list = []
         
         for pol in xrange(self.npol):
@@ -308,7 +309,6 @@ class SDMomentMapDisplay(SDImageDisplay):
 
         return plot_list
  
-
 
 class ChannelMapAxesManager(ChannelAveragedAxesManager):
     def __init__(self, xformatter, yformatter, xlocator, ylocator, xrotation, yrotation, ticksize, colormap, nh, nv, brightnessunit):
@@ -415,8 +415,6 @@ class ChannelMapAxesManager(ChannelAveragedAxesManager):
             yield a
         
 
-
-        
 class SDChannelMapDisplay(SDImageDisplay):
     #MATPLOTLIB_FIGURE_ID = 8910
     NumChannelMap = 15
@@ -831,9 +829,7 @@ class SDRmsMapDisplay(SDImageDisplay):
             if len(array2d[pol]) == self.nx*self.ny:
                 array3d[pol,:,:] = numpy.array(array2d[pol]).reshape((self.ny,self.nx))
         return numpy.flipud(array3d.transpose())
-        
 
-    
     def __plot_channel_map(self):
         pl.clf()
 
@@ -1154,7 +1150,6 @@ class SDSpectralMapDisplay(SDImageDisplay):
                                        field=self.inputs.source,
                                        parameters=parameters)
                     plot_list.append(plot)
-            
 
                     Npanel += 1
             del data, mask2d
@@ -1208,4 +1203,3 @@ def SDImageDisplayFactory(mode):
     else:
         # mode should be 'SP'
         return SDSpectralImageDisplay
-

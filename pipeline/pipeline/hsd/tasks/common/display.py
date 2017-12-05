@@ -41,6 +41,7 @@ def mjd_to_datedict(val, unit='d'):
     mjd = casatools.quanta.quantity(val,unit)
     return casatools.quanta.splitdate(mjd)
 
+
 def mjd_to_datetime(val):
     mjd = mjd_to_datedict(val, unit='d')
     date_time = datetime.datetime(mjd['year'], mjd['month'],
@@ -48,17 +49,21 @@ def mjd_to_datetime(val):
                                   mjd['min'], mjd['sec'])
     return date_time
 
+
 def mjd_to_datestring(val, fmt='%Y/%m/%d'):
     date_time = mjd_to_datetime(val)
     return date_time.strftime(fmt)
 
+
 # vectorized version
 mjd_to_datetime_vectorized = numpy.vectorize(mjd_to_datetime)
+
 
 def mjd_to_plotval(mjd_list):
     datetime_list = mjd_to_datetime_vectorized(mjd_list)
     return date2num(datetime_list)
     
+
 class CustomDateFormatter(DateFormatter):
     """
     Customized date formatter that puts YYYY/MM/DD under usual
@@ -71,9 +76,11 @@ class CustomDateFormatter(DateFormatter):
         tick = DateFormatter.__call__(self, x, pos)
         self.fmt = fmt_saved
         return tick
-            
+
+
 def utc_formatter(fmt='%H:%M'):
     return CustomDateFormatter(fmt)
+
 
 def utc_locator(start_time=None, end_time=None):
     if start_time is None or end_time is None:
@@ -84,6 +91,7 @@ def utc_locator(start_time=None, end_time=None):
         tick_interval = int(dt/10) + 1
         #print tick_interval
         return MinuteLocator(byminute=range(0,60,tick_interval))
+
 
 class PlotObjectHandler(object):
     def __init__(self):
@@ -117,10 +125,12 @@ class PlotObjectHandler(object):
             obj.remove()
         self.storage = []
 
+
 class SingleDishDisplayInputs(object):
     def __init__(self, context, result):
         self.context = context
         self.result = result
+
 
 class SpectralImage(object):
     def __init__(self, imagename):
@@ -454,7 +464,6 @@ class SDImageDisplay(object):
         return numpy.flipud(array3d.transpose())
 
 
-
 def get_base_frequency(table, freqid, nchan):
     freq_table = os.path.join(table, 'FREQUENCIES')
     with casatools.TableReader(freq_table) as tb:
@@ -465,11 +474,13 @@ def get_base_frequency(table, freqid, nchan):
                                  for i in xrange(nchan)])
     return chan_freq
 
+
 def get_base_frame(table):
     freq_table = os.path.join(table, 'FREQUENCIES')
     with casatools.TableReader(freq_table) as tb:
         base_frame = tb.getkeyword('BASEFRAME')
     return base_frame
+
 
 def drop_edge(array):
     # array should be two-dimensional (nchan,nrow)
@@ -481,16 +492,15 @@ def drop_edge(array):
     return a
 
 
-
 class TimeAxesManager(object):
     def __init__(self):
         self.locator = utc_locator()
         
     def init(self, start_time=None, end_time=None):
         self.locator = utc_locator(start_time, end_time)
-        
-# sparse profile map
 
+
+# sparse profile map
 def form3(n):
     if n <= 4:
         return 4
@@ -501,6 +511,7 @@ def form3(n):
     else:
         return 8
 
+
 def form4(n):
     if n <= 4:
         return 4
@@ -508,6 +519,7 @@ def form4(n):
         return 5
     else:
         return 5.5
+
 
 class SparseMapAxesManager(object):
     def __init__(self, nh, nv, brightnessunit, ticksize, clearpanel=True, figure_id=None):
@@ -596,7 +608,6 @@ class SparseMapAxesManager(object):
                 axes.xaxis.set_major_locator(pl.NullLocator())
 
                 yield axes
-        
 
     def setup_labels(self, label_ra, label_dec):
         for x in xrange(self.nh):
@@ -1011,9 +1022,7 @@ class SDSparseMapDisplay(SDImageDisplay):
             full_blc[iax] = max(blc[i], 0)
             full_trc[iax] = min(trc[i], array_shape[iax])
         return data[map(slice, full_blc,full_trc)]
-        
-        
-        
+
 
 def ch_to_freq(ch, frequency):
     ich = int(ch)
@@ -1025,5 +1034,3 @@ def ch_to_freq(ch, frequency):
         df = frequency[jch] - frequency[ich]
         freq = frequency[ich] + offset_min * df
     return freq
-   
-

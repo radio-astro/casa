@@ -7,26 +7,22 @@ import glob
 import tarfile
 
 from . import almaifaqua
-#from . import manifest
-import pipeline.h.tasks.common.manifest as manifest 
-
+import pipeline.h.tasks.common.manifest as manifest
 import pipeline.infrastructure as infrastructure
-import pipeline.infrastructure.basetask as basetask
-
 import pipeline.h.tasks.exportdata.exportdata as exportdata
 
 LOG = infrastructure.get_logger(__name__)
 
-
 AuxFileProducts = collections.namedtuple('AuxFileProducts', 'flux_file antenna_file cont_file flagtargets_list')
 
-class ALMAExportDataInputs(exportdata.ExportDataInputs):
 
+class ALMAExportDataInputs(exportdata.ExportDataInputs):
     def __init__(self, context, output_dir=None, session=None, vis=None, exportmses=None,
                  pprfile=None, calintents=None, calimages=None, targetimages=None,
-                 products_dir=None ):
+                 products_dir=None):
         # set the properties to the values given as input arguments
         self._init_properties(vars())
+
 
 class ALMAExportData(exportdata.ExportData):
 
@@ -40,13 +36,14 @@ class ALMAExportData(exportdata.ExportData):
         oussid = self.get_oussid(self.inputs.context)
 
         # Make the imaging vislist and the sessions lists.
-        session_list, session_names, session_vislists, vislist = super(ALMAExportData, self)._make_lists(self.inputs.context,
-            self.inputs.session, self.inputs.vis, imaging=True)
+        session_list, session_names, session_vislists, vislist = super(ALMAExportData, self)._make_lists(
+            self.inputs.context, self.inputs.session, self.inputs.vis, imaging=True)
 
         if vislist:
             # Export the auxiliary caltables if any
             #    These are currently the uvcontinuum fit tables.
-            auxcaltables = self._do_aux_session_products(self.inputs.context, oussid, session_names, session_vislists,
+            auxcaltables = self._do_aux_session_products(
+                self.inputs.context, oussid, session_names, session_vislists,
                 self.inputs.output_dir, self.inputs.products_dir)
 
             # Export the auxiliary cal apply files if any
@@ -67,7 +64,8 @@ class ALMAExportData(exportdata.ExportData):
             prefix = oussid
         else:
             prefix = oussid + '.' + recipe_name
-        auxfproducts =  self._do_auxiliary_products(self.inputs.context, prefix, self.inputs.output_dir, self.inputs.products_dir)
+        auxfproducts = self._do_auxiliary_products(
+            self.inputs.context, prefix, self.inputs.output_dir, self.inputs.products_dir)
 
         # Export the AQUA report
         aquareport_name = 'pipeline_aquareport.xml'
@@ -82,24 +80,24 @@ class ALMAExportData(exportdata.ExportData):
 
         return results
 
-    def _do_aux_session_products (self, context, oussid, session_names, session_vislists, output_dir, products_dir):
+    def _do_aux_session_products(self, context, oussid, session_names, session_vislists, output_dir, products_dir):
 
         # Make the standard sessions dictionary and export per session products
         #    Currently these are compressed tar files of per session calibration tables
-        sessiondict = super(ALMAExportData, self)._do_standard_session_products (context, oussid, session_names,
-            session_vislists, products_dir, imaging=True)
+        sessiondict = super(ALMAExportData, self)._do_standard_session_products(
+            context, oussid, session_names, session_vislists, products_dir, imaging=True)
 
         return sessiondict
 
-    def _do_aux_ms_products (self, context, vislist, products_dir):
+    def _do_aux_ms_products(self, context, vislist, products_dir):
    
         # Loop over the measurements sets in the working directory, and
         # create the calibration apply file(s) in the products directory.
         apply_file_list = []
         for visfile in vislist:
-            apply_file =  super(ALMAExportData, self)._export_final_applylist (context, \
-                visfile, products_dir, imaging=True)
-            apply_file_list.append (apply_file)
+            apply_file = super(ALMAExportData, self)._export_final_applylist(
+                context, visfile, products_dir, imaging=True)
+            apply_file_list.append(apply_file)
 
         # Create the ordered vis dictionary
         #    The keys are the base vis names
@@ -112,10 +110,9 @@ class ALMAExportData(exportdata.ExportData):
         return visdict
 
     def _do_auxiliary_products(self, context, oussid, output_dir, products_dir):
-
-        '''
-        Generate the auxliliary products
-        '''
+        """
+        Generate the auxiliary products
+        """
 
         fluxfile_name = 'flux.csv'
         antposfile_name = 'antennapos.csv'
@@ -124,9 +121,9 @@ class ALMAExportData(exportdata.ExportData):
 
         # Get the flux, antenna position, and continuum subtraction
         # files and test to see if at least one of them exists
-        flux_file = os.path.join (output_dir, fluxfile_name)
-        antpos_file = os.path.join (output_dir, antposfile_name)
-        cont_file = os.path.join (output_dir, contfile_name)
+        flux_file = os.path.join(output_dir, fluxfile_name)
+        antpos_file = os.path.join(output_dir, antposfile_name)
+        cont_file = os.path.join(output_dir, contfile_name)
         if os.path.exists(flux_file) or os.path.exists(antpos_file) or os.path_exists(cont_file):
             empty = False
 
@@ -139,7 +136,7 @@ class ALMAExportData(exportdata.ExportData):
 
         targetflags_filelist = []
         for file_name in glob.glob('*.flag*template.txt'):
-            flags_file = os.path.join (output_dir, file_name)
+            flags_file = os.path.join(output_dir, file_name)
             if os.path.exists(flags_file):
                 empty = False
                 targetflags_filelist.append(flags_file)
@@ -201,33 +198,30 @@ class ALMAExportData(exportdata.ExportData):
 
         return tarfilename
 
-
-    def _export_casa_restore_script (self, context, script_name, products_dir, oussid, vislist, session_list):
-
+    def _export_casa_restore_script(self, context, script_name, products_dir, oussid, vislist, session_list):
         """
         Save the CASA restore scropt.
         """
-
         # Generate the file list
 
         # Get the output file name
         ps = context.project_structure
         if ps is None:
-            script_file = os.path.join (context.report_dir, script_name)
-            out_script_file = os.path.join (products_dir, script_name)
+            script_file = os.path.join(context.report_dir, script_name)
+            out_script_file = os.path.join(products_dir, script_name)
         elif ps.ousstatus_entity_id == 'unknown':
-            script_file = os.path.join (context.report_dir, script_name)
-            out_script_file = os.path.join (products_dir, script_name)
+            script_file = os.path.join(context.report_dir, script_name)
+            out_script_file = os.path.join(products_dir, script_name)
         else:
-            script_file = os.path.join (context.report_dir, script_name)
-            out_script_file = os.path.join (products_dir, oussid + '.' + script_name)
+            script_file = os.path.join(context.report_dir, script_name)
+            out_script_file = os.path.join(products_dir, oussid + '.' + script_name)
 
-        LOG.info('Creating casa restore script %s' %  (script_file))
+        LOG.info('Creating casa restore script %s' % (script_file))
 
         # This is hardcoded.
-        tmpvislist=[]
+        tmpvislist = []
 
-        #ALMA default
+        # ALMA default
         ocorr_mode = 'ca'
 
         for vis in vislist:
@@ -246,15 +240,15 @@ finally:
     h_save()
 ''' % task_string
 
-        with open (script_file, 'w') as casa_restore_file:
+        with open(script_file, 'w') as casa_restore_file:
             casa_restore_file.write(template)
 
         LOG.info('Copying casa restore script %s to %s' % \
                  (script_file, out_script_file))
         if not self._executor._dry_run:
-            shutil.copy (script_file, out_script_file)
+            shutil.copy(script_file, out_script_file)
 
-        return os.path.basename (out_script_file)
+        return os.path.basename(out_script_file)
 
     def _export_aqua_report (self, context, oussid, aquareport_name, products_dir):
         """
@@ -295,7 +289,7 @@ finally:
 
         if aux_fproducts:
             # Add auxliary data products file
-            pipemanifest.add_aux_products_file (ouss, os.path.basename(aux_fproducts))
+            pipemanifest.add_aux_products_file(ouss, os.path.basename(aux_fproducts))
 
         # Add the auxiliary caltables
         if aux_caltablesdict:
@@ -303,6 +297,6 @@ finally:
                 session = pipemanifest.get_session(ouss, session_name)
                 pipemanifest.add_auxcaltables(session, aux_caltablesdict[session_name][1])
                 for vis_name in aux_caltablesdict[session_name][0]:
-                    pipemanifest.add_auxasdm (session, vis_name, aux_calapplysdict[vis_name])
+                    pipemanifest.add_auxasdm(session, vis_name, aux_calapplysdict[vis_name])
 
         pipemanifest.write(manifest_file)

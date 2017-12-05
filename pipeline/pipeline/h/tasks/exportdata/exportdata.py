@@ -26,12 +26,10 @@ inputs = pipeline.tasks.exportdata.Exportdata.Inputs(context,
       vis, output_dir, sessions, pprfile, products_dir)
 task = pipeline.tasks.exportdata.ExportData (inputs)
   results = task.execute (dry_run = True)
-
-
 """
 from __future__ import absolute_import
+
 import os
-import glob
 import errno
 import tarfile
 import shutil
@@ -48,14 +46,14 @@ from casa_system import casa as casasys
 import pipeline as pipeline
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
-from pipeline.infrastructure import casa_tasks
 import pipeline.infrastructure.callibrary as callibrary
 import pipeline.infrastructure.imagelibrary as imagelibrary
+from pipeline.infrastructure import casa_tasks
+from ..common import manifest
 
 # the logger for this module
 LOG = infrastructure.get_logger(__name__)
 
-from .. common  import manifest
 
 StdFileProducts = collections.namedtuple('StdFileProducts', 'ppr_file weblog_file casa_commands_file casa_pipescript casa_restore_script')
 
@@ -109,13 +107,11 @@ class ExportDataInputs(basetask.StandardInputs):
     .. py:attribute:: products_dir
 
     the directory where the data productions will be written
-
-     """
+    """
 
     def __init__(self, context, output_dir=None, session=None, vis=None, exportmses=None,
                  pprfile=None, calintents=None, calimages=None, targetimages=None,
-                 products_dir=None ):
-
+                 products_dir=None):
         """
         Initialise the Inputs, initialising any property values to those given
         here.
@@ -226,6 +222,7 @@ class ExportDataInputs(basetask.StandardInputs):
     @targetimages.setter
     def targetimages(self, value):
         self._targetimages = value
+
 
 class ExportDataResults(basetask.Results):
     def __init__(self, pprequest='', sessiondict=collections.OrderedDict(),

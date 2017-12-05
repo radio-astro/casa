@@ -6,9 +6,6 @@ import types
 import fnmatch
 import shutil
 import tarfile
-import StringIO
-import re
-import copy
 
 from casa_system import casa as casasys
 
@@ -18,8 +15,6 @@ import pipeline.infrastructure.basetask as basetask
 from pipeline.infrastructure import casa_tasks
 from pipeline.h.tasks.exportdata import exportdata
 from pipeline.h.tasks.common import manifest
-import pipeline.infrastructure.callibrary as callibrary
-import pipeline.infrastructure.imagelibrary as imagelibrary
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -118,8 +113,6 @@ class Exportvlassdata(basetask.StandardTaskTemplate):
     def analyse(self, results):
         return results
 
-
-
     def get_oussid(self, context):
 
         """
@@ -139,7 +132,6 @@ class Exportvlassdata(basetask.StandardTaskTemplate):
         return oussid
 
     def get_recipename(self, context):
-
         """
         Get the recipe name
         """
@@ -157,10 +149,9 @@ class Exportvlassdata(basetask.StandardTaskTemplate):
         return recipe_name
 
     def _make_lists(self, context, session, vis, imaging=False):
-
-        '''
+        """
         Create the vis and sessions lists
-        '''
+        """
 
         # Force inputs.vis to be a list.
         vislist = vis
@@ -180,10 +171,9 @@ class Exportvlassdata(basetask.StandardTaskTemplate):
 
     def _do_standard_ous_products(self, context, exportmses, oussid, pprfile, session_list, vislist, output_dir,
                                   products_dir):
-
-        '''
+        """
         Generate the per ous standard products
-        '''
+        """
 
         # Locate and copy the pipeline processing request.
         #     There should normally be at most one pipeline processing request.
@@ -212,10 +202,9 @@ class Exportvlassdata(basetask.StandardTaskTemplate):
 
     def _make_pipe_manifest(self, context, oussid, stdfproducts, sessiondict,
                             visdict, exportmses, calimages, targetimages):
-
-        '''
+        """
         Generate the manifest file
-        '''
+        """
 
         # Initialize the manifest document and the top level ous status.
         pipemanifest = self._init_pipemanifest(oussid)
@@ -254,9 +243,9 @@ class Exportvlassdata(basetask.StandardTaskTemplate):
         return pipemanifest
 
     def _init_pipemanifest(self, oussid):
-        '''
+        """
         Initialize the pipeline manifest
-        '''
+        """
 
         pipemanifest = manifest.PipelineManifest(oussid)
         return pipemanifest
@@ -303,12 +292,11 @@ class Exportvlassdata(basetask.StandardTaskTemplate):
         return pprmatchesout
 
     def _get_sessions(self, context, sessions, vis):
-
         """
-    Return a list of sessions where each element of the list contains
-    the  vis files associated with that session. In future this routine
-    will be driven by the context but for now use the user defined sessions
-    """
+        Return a list of sessions where each element of the list contains
+        the vis files associated with that session. In future this routine
+        will be driven by the context but for now use the user defined sessions
+        """
 
         # If the input session list is empty put all the visibility files
         # in the same session.
@@ -355,7 +343,6 @@ class Exportvlassdata(basetask.StandardTaskTemplate):
         return wksessions, session_names, session_vis_list
 
     def _export_weblog(self, context, products_dir, oussid):
-
         """
         Save the processing web log to a tarfile
         """
@@ -388,7 +375,6 @@ class Exportvlassdata(basetask.StandardTaskTemplate):
         return tarfilename
 
     def _export_casa_commands_log(self, context, casalog_name, products_dir, oussid):
-
         """
         Save the CASA commands file.
         """
@@ -412,7 +398,6 @@ class Exportvlassdata(basetask.StandardTaskTemplate):
         return os.path.basename(out_casalog_file)
 
     def _export_casa_script(self, context, casascript_name, products_dir, oussid):
-
         """
         Save the CASA script.
         """
@@ -437,7 +422,6 @@ class Exportvlassdata(basetask.StandardTaskTemplate):
         return os.path.basename(out_casascript_file)
 
     def _export_pipe_manifest(self, manifest_name, products_dir, pipemanifest):
-
         """
         Save the manifest file.
         """
@@ -448,10 +432,3 @@ class Exportvlassdata(basetask.StandardTaskTemplate):
             pipemanifest.write(out_manifest_file)
 
         return out_manifest_file
-
-
-
-
-
-
-

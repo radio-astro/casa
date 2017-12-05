@@ -1,7 +1,3 @@
-
-# Imports
-# -------
-
 from __future__ import absolute_import
 
 import collections
@@ -14,14 +10,7 @@ from pipeline.domain import DataTable
 from pipeline.h.tasks.flagging import flagdeterbase
 from pipeline.infrastructure.displays import pointing
 
-
-# ------------------------------------------------------------------------------
-# Initialize a logger
-# -------------------
-
 LOG = infrastructure.get_logger(__name__)
-
-# ------------------------------------------------------------------------------
 
 
 class FlagDeterALMASingleDishInputs(flagdeterbase.FlagDeterBaseInputs):
@@ -85,26 +74,23 @@ class FlagDeterALMASingleDishResults(flagdeterbase.FlagDeterBaseResults):
             LOG.info('Regenerate pointing plots to update flag information')
             for antenna in msobj.antennas:
                 for (target, reference) in msobj.calibration_strategy['field_strategy'].iteritems():
-                    LOG.debug('target field id %s / reference field id %s'%(target,reference))
+                    LOG.debug('target field id %s / reference field id %s' % (target, reference))
                     task = pointing.SingleDishPointingChart(context, msobj, antenna, 
-                                                                target_field_id=target,
-                                                                reference_field_id=reference,
-                                                                target_only=True)
+                                                            target_field_id=target,
+                                                            reference_field_id=reference,
+                                                            target_only=True)
                     task.plot(revise_plot=True)
                     task = pointing.SingleDishPointingChart(context, msobj, antenna, 
-                                                                target_field_id=target,
-                                                                reference_field_id=reference,
-                                                                target_only=False)
+                                                            target_field_id=target,
+                                                            reference_field_id=reference,
+                                                            target_only=False)
                     task.plot(revise_plot=True)
             
 
 class FlagDeterALMASingleDish(flagdeterbase.FlagDeterBase):
 
-# ------------------------------------------------------------------------------
-
     # Make the member functions of the FlagDeterALMASingleDishInputs() class member
     # functions of this class
-
     Inputs = FlagDeterALMASingleDishInputs
     
     # Flag edge channels if bandwidth exceeds bandwidth_limit

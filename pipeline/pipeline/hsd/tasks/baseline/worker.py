@@ -18,6 +18,7 @@ from pipeline.infrastructure import casa_tasks
 _LOG = infrastructure.get_logger(__name__)
 LOG = sdutils.OnDemandStringParseLogger(_LOG)
 
+
 class BaselineParamKeys(object):
     ROW = 'row'
     POL = 'pol'
@@ -35,6 +36,8 @@ class BaselineParamKeys(object):
     NWAVE = 'nwave'
     ORDERED_KEY = [ROW, POL, MASK, CLIPNITER, CLIPTHRESH, USELF, LFTHRESH, 
                    LEDGE, REDGE, AVG_LIMIT, FUNC, ORDER, NPIECE, NWAVE]
+
+
 BLP = BaselineParamKeys
     
 
@@ -48,8 +51,10 @@ def write_blparam(fileobj, param):
     #line = ','.join((str(param[k]) if k in param.keys() else '' for k in BLP.ORDERED_KEY))
     fileobj.write(line+'\n')
 
+
 def as_maskstring(masklist):
     return ';'.join(map(lambda x: '%s~%s'%(x[0],x[1]), masklist))
+
 
 def generate_plot_table(ms_id, antenna_id, spw_id, polarization_ids, grid_table):
     def _filter(msid, ant, spw, pols, table):
@@ -59,6 +64,7 @@ def generate_plot_table(ms_id, antenna_id, spw_id, polarization_ids, grid_table)
                 yield new_row_entry
     new_table = list(_filter(ms_id, antenna_id, spw_id, polarization_ids, grid_table))
     return new_table
+
 
 class BaselineSubtractionInputsBase(basetask.StandardInputs):
     DATACOLUMN = {'CORRECTED_DATA': 'corrected',
@@ -110,6 +116,7 @@ class BaselineSubtractionInputsBase(basetask.StandardInputs):
                         break
         return colname
     
+
 class BaselineSubtractionResults(common.SingleDishResults):
     def __init__(self, task=None, success=None, outcome=None):
         super(BaselineSubtractionResults, self).__init__(task, success, outcome)
@@ -120,6 +127,7 @@ class BaselineSubtractionResults(common.SingleDishResults):
     def _outcome_name(self):
         # outcome should be a name of blparam text file
         return 'blparam: "%s" bloutput: "%s"'%(self.outcome['blparam'], self.outcome['bloutput'])
+
 
 class BaselineFitParamConfig(basetask.StandardTaskTemplate):
     ApplicableDuration = 'raster' # 'raster' | 'subscan'
@@ -368,6 +376,7 @@ class BaselineFitParamConfig(basetask.StandardTaskTemplate):
             r.append([idx[-1], len(mask)])
         return r
 
+
 class CubicSplineFitParamConfigInputs(BaselineSubtractionInputsBase):
     def __init__(self, context, vis=None, field_id=None, antenna_id=None, spw_id=None, 
                  fit_order=None, edge=None, deviationmask=None, blparam=None, bloutput=None):
@@ -376,6 +385,7 @@ class CubicSplineFitParamConfigInputs(BaselineSubtractionInputsBase):
     fit_order = basetask.property_with_default('fit_order', 'automatic')
     edge = basetask.property_with_default('edge', (0,0))
     
+
 class CubicSplineFitParamConfig(BaselineFitParamConfig):
     Inputs = CubicSplineFitParamConfigInputs
     
@@ -397,12 +407,14 @@ class CubicSplineFitParamConfig(BaselineFitParamConfig):
         self.paramdict[BLP.NPIECE] = num_pieces
         return self.paramdict
 
+
 class BaselineSubtractionWorkerInputs(BaselineSubtractionInputsBase):
     def __init__(self, context, vis=None,  
                  fit_order=None, edge=None, deviationmask_list=None, blparam=None, bloutput=None, 
                  grid_table_list=None, channelmap_range_list=None):
         self._init_properties(vars())
         
+
 class BaselineSubtractionWorker(basetask.StandardTaskTemplate):
     Inputs = BaselineSubtractionWorkerInputs
     SubTask = None
@@ -459,8 +471,10 @@ class BaselineSubtractionWorker(basetask.StandardTaskTemplate):
     def analyse(self, results):
         return results
                 
+
 class CubicSplineBaselineSubtractionWorker(BaselineSubtractionWorker):
     SubTask = CubicSplineFitParamConfig
+
 
 # facade for FitParam
 class BaselineSubtractionInputs(basetask.ModeInputs):
@@ -470,6 +484,6 @@ class BaselineSubtractionInputs(basetask.ModeInputs):
     def __init__(self, context, fitfunc, **parameters):
         super(BaselineSubtractionInputs, self).__init__(context=context, mode=fitfunc, **parameters)
     
+
 class BaselineSubtractionTask(basetask.ModeTask):
     Inputs = BaselineSubtractionInputs
-    

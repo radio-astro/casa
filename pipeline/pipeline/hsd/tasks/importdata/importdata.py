@@ -1,12 +1,12 @@
 from __future__ import absolute_import
+
 import os
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
+import pipeline.h.tasks.importdata.importdata as importdata
 from pipeline.domain.datatable import absolute_path
 from . import inspection
-
-import pipeline.h.tasks.importdata.importdata as importdata
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -64,11 +64,11 @@ class SDImportDataResults(basetask.Results):
                 matched_id = -1
                 for (group_id, group_desc) in observing_run.ms_reduction_group.iteritems():
                     if group_desc == mydesc:
-                        LOG.info('merge input group %s to group %s'%(myid, group_id))
+                        LOG.info('merge input group %s to group %s' % (myid, group_id))
                         matched_id = group_id
-                        LOG.info('number of members before merge: %s'%(len(group_desc)))
+                        LOG.info('number of members before merge: %s' % (len(group_desc)))
                         group_desc.merge(mydesc)
-                        LOG.info('number of members after merge: %s'%(len(group_desc)))
+                        LOG.info('number of members after merge: %s' % (len(group_desc)))
                 if matched_id == -1:
                     LOG.info('add new group')
                     key = len(observing_run.ms_reduction_group)
@@ -79,7 +79,6 @@ class SDImportDataResults(basetask.Results):
                 '\n\t'.join([ms.name for ms in self.mses]))
         
 
-
 class SDImportData(importdata.ImportData):
     Inputs = SDImportDataInputs 
     
@@ -88,11 +87,11 @@ class SDImportData(importdata.ImportData):
         results = super(SDImportData, self).prepare()
         
         # per MS inspection
-        table_name = absolute_path(os.path.join(self.inputs.context.name,'MSDataTable.tbl'))
+        table_name = absolute_path(os.path.join(self.inputs.context.name, 'MSDataTable.tbl'))
 
         reduction_group_list = []
         for ms in results.mses:
-            LOG.debug('Start inspection for %s'%(ms.basename))
+            LOG.debug('Start inspection for %s' % (ms.basename))
             inspector = inspection.SDInspection(table_name, ms=ms)
             reduction_group = self._executor.execute(inspector, merge=False)
             reduction_group_list.append(reduction_group)
@@ -105,4 +104,3 @@ class SDImportData(importdata.ImportData):
         
         myresults.origin = results.origin
         return myresults
-    
