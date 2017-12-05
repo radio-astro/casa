@@ -3,7 +3,7 @@
     <ProcedureTitle>hsdn_calimage</ProcedureTitle>
 
     <ProcessingCommand>
-        <Command xmlns="">hsd_importdata</Command>
+        <Command xmlns="">hsdn_importdata</Command>
         <ParameterSet>
         </ParameterSet>
     </ProcessingCommand>
