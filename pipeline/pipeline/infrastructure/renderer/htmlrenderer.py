@@ -684,7 +684,7 @@ class T2_1DetailsRenderer(object):
 
         vla_basebands = ''
 
-        if context.project_summary.telescope != 'ALMA':
+        if context.project_summary.telescope not in ('ALMA', 'NRO'):
         # All VLA basebands
 
             vla_basebands = []
