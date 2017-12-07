@@ -1682,7 +1682,10 @@ def score_checksources(mses, fieldname, spwid, imagename):
     qa = casatools.quanta
     me = casatools.measures
 
-    # Get the reference direction of the field
+    # Get the reference direction of the check source field 
+    #    There is at least one field with check source intent
+    #    Protect against the same source having multiple fields
+    #    with different intent.
     #    Assume that the same field as defined by its field name
     #    has the same direction in all the mses that contributed
     #    to the input image. Loop through the ms(s) and find the
@@ -1693,14 +1696,26 @@ def score_checksources(mses, fieldname, spwid, imagename):
     refdirection = None
     for ms in mses:
         field = ms.get_fields(name=fieldname)
+        # No fields with the check source name. Should be
+        # impossible at this point but check just in case
         if not field:
             continue
-        if 'CHECK' not in field[0].intents:
+        # Find check field for that ms
+        chkfield = None
+        for fielditem in field:
+            if 'CHECK' not in fielditem.intents:
+                continue
+            chkfield = fielditem
+            break
+        # No matching check field for that ms, next ms
+        if chkfield is None:
             continue
-        refdirection = me.measure(field[0].mdirection, 'ICRS')
+        # Found field, get reference direction in ICRS coordinates
+        LOG.info('Using field name %s id %s to determine check source reference direction' %(chkfield.name, str(chkfield.id)))
+        refdirection = me.measure(chkfield.mdirection, 'ICRS')
         break
 
-    # Get the reference flux of the field
+    # Get the reference flux of the check source field
     #    Loop over all the ms(s) extracting the derived flux
     #    values for the specified field and spw. Set the reference
     #    flux to the maximum of these values.
@@ -1709,11 +1724,20 @@ def score_checksources(mses, fieldname, spwid, imagename):
         if not ms.derived_fluxes:
             continue
         for field_arg, measurements in ms.derived_fluxes.items():
-            mfield = ms.get_fields(field_arg)[0]
-            if 'CHECK' not in mfield.intents:
+            #mfield = ms.get_fields(field_arg)[0]
+            mfield = ms.get_fields(field_arg)
+            chkfield = None
+            for mfielditem in mfield:
+                if mfielditem.name != fieldname:
+                    continue
+                if 'CHECK' not in mfielditem.intents:
+                    continue
+                chkfield = mfielditem
+                break
+            # No matching check field for this ms
+            if chkfield is None:
                 continue
-            if mfield.name != fieldname:
-                continue
+            LOG.info('Using field name %s id %s to identify check source flux densities' %(chkfield.name, str(chkfield.id)))
             for measurement in sorted(measurements, key=lambda m: int(m.spw_id)):
                 if int(measurement.spw_id) != spwid:
                     continue
