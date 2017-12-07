@@ -2,6 +2,7 @@ from __future__ import absolute_import
 
 import os
 import types
+import copy
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
@@ -182,6 +183,7 @@ class TimeGaincal(basetask.StandardTaskTemplate):
             phaseup_spwmap = inputs.ms.phaseup_spwmap
             phase_interp = 'linear,linear'
         amp_calsolint = phase_calsolint
+        amp_interp = 'nearest,linear'
 
         # Produce the diagnostic table for displaying amplitude vs time plots. 
         #     This table is not applied to the data
@@ -236,12 +238,9 @@ class TimeGaincal(basetask.StandardTaskTemplate):
         #     The gaintype 'T' or 'G' is set to the gaintype of the parent phase table
         #     Spw combine is off
         #     Unique name generated internally
-        #if phaseup_spwmap:
         phaseoffsetresult = self._do_offsets_phasecal(solint='inf',
             gaintype=phase_gaintype, combine='')
         result.phaseoffsetresult = phaseoffsetresult
-        #else:
-            #result.phaseoffsetresult = None
 
         # Readjust to the true calto.intent
         calphaseresult.pool[0].calto.intent = 'AMPLITUDE,BANDPASS'
@@ -252,9 +251,22 @@ class TimeGaincal(basetask.StandardTaskTemplate):
         result.final.extend(calphaseresult.final)
 
         # Compute the amplitude calibration
+        #   Make a deep copy of the results
         ampresult = self._do_target_ampcal()
 
-        # Accept the amplitude result as is.
+        # The solint for this table is always 'inf'
+        #    Use nearest interpolation for the flux, bandpass, and
+        #    phase calibraters, the standard linear interpolation
+        #    for the check and target sources.
+        ampresult2 = copy.deepcopy(ampresult)
+        ampresult.pool[0].calto.intent='AMPLITUDE,BANDPASS,PHASE'
+        self._mod_last_interp(ampresult.pool[0], amp_interp)
+        self._mod_last_interp(ampresult.final[0], amp_interp)
+        ampresult2.pool[0].calto.intent='CHECK,TARGET'
+        result.pool.extend(ampresult2.pool)
+        result.final.extend(ampresult2.final)
+
+        # Accept the amplitude results
         result.pool.extend(ampresult.pool)
         result.final.extend(ampresult.final)
 
