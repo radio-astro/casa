@@ -224,11 +224,18 @@ class Gfluxscaleflag(basetask.StandardTaskTemplate):
 
             # Create amplitude caltable
             LOG.info('Compute amplitude gaincal table.')
-            self._do_gaincal(
-                intent=inputs.intent, gaintype='T', calmode='a',
-                combine='', solint=inputs.solint,
-                minsnr=inputs.minsnr, refant=inputs.refant,
-                interp='linear,linear', merge=True)
+            if inputs.solint == 'inf':
+                self._do_gaincal(
+                    intent=inputs.intent, gaintype='T', calmode='a',
+                    combine='', solint=inputs.solint,
+                    minsnr=inputs.minsnr, refant=inputs.refant,
+                    interp='nearest,linear', merge=True)
+            else:
+                self._do_gaincal(
+                    intent=inputs.intent, gaintype='T', calmode='a',
+                    combine='', solint=inputs.solint,
+                    minsnr=inputs.minsnr, refant=inputs.refant,
+                    interp='linear,linear', merge=True)
 
             # Apply the new caltables to the MS.
             LOG.info('Applying phase-up, bandpass, and amplitude cal tables.')
