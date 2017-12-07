@@ -198,7 +198,12 @@ class Bandpassflag(basetask.StandardTaskTemplate):
                 context=inputs.context, vis=inputs.vis, intent=inputs.intent,
                 gaintype='T', antenna='', calmode='a', solint='inf')
             gacaltask = gaincal.GTypeGaincal(gacalinputs)
-            gacalresult = self._executor.execute(gacaltask, merge=True)
+            #gacalresult = self._executor.execute(gacaltask, merge=True)
+            gacalresult = self._executor.execute(gacaltask)
+            # Fix up the interp value
+            self._mod_last_interp(gacalresult.pool[0], 'nearest,linear')
+            self._mod_last_interp(gacalresult.final[0], 'nearest,linear')
+            gacalresult.accept(inputs.context)
 
             # Apply the new caltables to the MS.
             LOG.info('Applying phase-up, bandpass, and amplitude cal tables.')
@@ -327,6 +332,19 @@ class Bandpassflag(basetask.StandardTaskTemplate):
             result = self._evaluate_refant_update(result, flags)
 
         return result
+
+    def _mod_last_interp(self, l, interp):
+            l.calfrom[-1] = self._copy_with_interp(l.calfrom[-1], interp)
+
+    @staticmethod
+    def _copy_with_interp(old_calfrom, interp):
+        return callibrary.CalFrom(gaintable=old_calfrom.gaintable,
+                                  gainfield=old_calfrom.gainfield,
+                                  interp=interp,
+                                  spwmap=old_calfrom.spwmap,
+                                  caltype=old_calfrom.caltype,
+                                  calwt=old_calfrom.calwt)
+
 
     def _evaluate_refant_update(self, result, flags):
         """
