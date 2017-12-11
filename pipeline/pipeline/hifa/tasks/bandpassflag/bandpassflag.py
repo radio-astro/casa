@@ -19,7 +19,6 @@ from pipeline.infrastructure import casa_tasks
 from .resultobjects import BandpassflagResults
 from ..bandpass.almaphcorbandpass import ALMAPhcorBandpassInputs
 
-
 __all__ = [
     'BandpassflagInputs',
     'BandpassflagResults',
@@ -198,9 +197,11 @@ class Bandpassflag(basetask.StandardTaskTemplate):
                 context=inputs.context, vis=inputs.vis, intent=inputs.intent,
                 gaintype='T', antenna='', calmode='a', solint='inf')
             gacaltask = gaincal.GTypeGaincal(gacalinputs)
-            #gacalresult = self._executor.execute(gacaltask, merge=True)
             gacalresult = self._executor.execute(gacaltask)
-            # Fix up the interp value
+
+            # CAS-10491: for scan-based amplitude solves that will be applied
+            # to the calibrator, set interp to 'nearest' => modify result from
+            # gaincal to update interp before merging into context.
             self._mod_last_interp(gacalresult.pool[0], 'nearest,linear')
             self._mod_last_interp(gacalresult.final[0], 'nearest,linear')
             gacalresult.accept(inputs.context)
@@ -344,7 +345,6 @@ class Bandpassflag(basetask.StandardTaskTemplate):
                                   spwmap=old_calfrom.spwmap,
                                   caltype=old_calfrom.caltype,
                                   calwt=old_calfrom.calwt)
-
 
     def _evaluate_refant_update(self, result, flags):
         """
