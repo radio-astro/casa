@@ -6,143 +6,91 @@ import shutil
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
-import pipeline.infrastructure.callibrary as callibrary
 import pipeline.infrastructure.tablereader as tablereader
 from pipeline.infrastructure import casa_tasks
+import pipeline.infrastructure.vdp as vdp
 
 LOG = infrastructure.get_logger(__name__)
 
+__all__ = [
+    'MsSplitInputs',
+    'MsSplit',
+    'MsSplitResults'
+]
+
+
 # Define the minimum set of parameters required to split out
 # the requested data (defined by field, spw, intent) from the
-# original MS and optionaly average in time and channel.  
-# If replace us True replace the parameter MS with the transformed
+# original MS and optionally average in time and channel.  
+#
+# If replace is True replace the parameter MS with the transformed
 # one on disk and in the context
 
-class MsSplitInputs(basetask.StandardInputs):
+class MsSplitInputs(vdp.StandardInputs):
 
-    def __init__(self, context, output_dir=None, vis=None,
-        outputvis=None, field=None, intent=None, spw=None,
-        datacolumn=None, chanbin=None, timebin=None, replace=None):
-
-        # set the properties to the values given as input arguments
-        self._init_properties(vars())
-
-    # Revisit this later
-    #    For now use a simple default naming convention
+    # Revisit this naming convention later
+    #    For the time being use a simple default naming convention
     #    Borrow the output file name list handling technique from
     #    the hif_flagdata interface
-    @property
+
+    @vdp.VisDependentProperty
     def outputvis(self):
-        if type(self.vis) is types.ListType:
-            return self._handle_multiple_vis('outputvis')
+        vis_root = os.path.splitext(self.vis)[0]
+        return vis_root + '_split.ms'
 
-        if not self._outputvis:
-            vis_root = os.path.splitext(self.vis)[0]
-            return vis_root + '_split.ms'
-
-        if type(self._outputvis) is types.ListType:
-            idx = self._my_vislist.index(self.vis)
-            return self._outputvis[idx]
-
-        return self._outputvis
-
-    @outputvis.setter
+    @outputvis.convert
     def outputvis(self, value):
-        if value in (None, ''):
-            value = []
-        elif type(value) is types.StringType:
-            value = list(value.replace('[','').replace(']','').replace("'","").split(','))
-        self._outputvis = value
+        if isinstance(value, str):
+            return list(value.replace('[', '').replace(']', '').replace("'", "").split(','))
+        else:
+            return value
 
-    # Select all fields by default
-    @property
+    @vdp.VisDependentProperty
     def field(self):
-        # If field was explicitly set, return that value
-        if self._field is not None:
-            return self._field
-
-        # If invoked with multiple mses, return a list of fields
-        if type(self.vis) is types.ListType:
-            return self._handle_multiple_vis('field')
-
         return ''
 
-    @field.setter
+    @field.convert
     def field(self, value):
-        self._field = value
+        return value
 
-    # Select all intents by default
-    #    Pipeline intents must be stored here 
-    @property
+    @vdp.VisDependentProperty
     def intent(self):
-        return self._intent
-
-    @intent.setter
-    def intent(self, value):
-        if value is None:
-            value = ''
-        self._intent = value
-
-    # Select all spws by default
-    @property
-    def spw(self):
-        if self._spw is not None:
-            return self._spw
-
-        if type(self.vis) is types.ListType:
-            return self._handle_multiple_vis('spw')
-
         return ''
 
-    @spw.setter
+    @intent.convert
+    def intent(self, value):
+        return value
+
+    @vdp.VisDependentProperty
+    def spw(self):
+        return ''
+
+    @spw.convert
     def spw(self, value):
-        self._spw = value
+        return value
 
-    # Select the data column by default 
-    @property
-    def datacolumn(self):
-        return self._datacolumn
+    datacolumn = vdp.VisDependentProperty(default='data')
+    chanbin = vdp.VisDependentProperty(default=1)
+    timebin = vdp.VisDependentProperty(default='0s')
+    replace = vdp.VisDependentProperty(default=True)
 
-    @datacolumn.setter
-    def datacolumn(self, value):
-        if value is None:
-            value = 'data'
-        self._datacolumn = value
+    def __init__(self, context, vis=None, output_dir=None, outputvis=None,
+        field=None, intent=None, spw=None, datacolumn=None, chanbin=None,
+        timebin=None, replace=None):
 
-    # Select the spectral binning factor
-    #    This factor is passed directly to CASA
-    @property
-    def chanbin(self):
-        return self._chanbin
+        super(MsSplitInputs, self).__init__()
 
-    @chanbin.setter
-    def chanbin(self, value):
-        if value is None:
-            value = 1
-        self._chanbin = value
-
-    # Select the time averaging factor
-    #    This factor is passed directly to CASA
-    @property
-    def timebin(self):
-        return self._timebin
-
-    @timebin.setter
-    def timebin(self, value):
-        if value is None:
-            value = '0s'
-        self._timebin = value
-
-    # Define the replace parameter
-    @property
-    def replace (self):
-        return self._replace
-
-    @replace.setter
-    def replace(self, value):
-        if value is None:
-            value = True
-        self._replace = value
+        self.context = context
+        self.vis = vis
+        self.output_dir = output_dir
+        self.outputvis = outputvis
+        self.field = field
+        self.intent = intent
+        self.spw = spw
+        self.datacolumn = datacolumn
+        self.chanbin = chanbin
+        self.timebin = timebin
+        self.replace = replace
 
     def to_casa_args(self):
         d = super(MsSplitInputs, self).to_casa_args()
@@ -159,10 +107,6 @@ class MsSplitInputs(basetask.StandardInputs):
             d['chanaverage'] = True
         if d['timebin'] != '0s':
             d['timeaverage'] = True
-
-        # Force the the reindex parameter to False. 
-        # This option may no be needed here.
-        #d['reindex'] = False
 
         return d
 
@@ -204,8 +148,6 @@ class MsSplit(basetask.StandardTaskTemplate):
         # remove the old file.
         if inputs.replace:
             shutil.rmtree(result.vis)
-            #shutil.move (result.outputvis, result.vis)
-            #result.outputvis = result.vis
 
         # Import the new MS
         to_import = os.path.abspath(result.outputvis)
@@ -237,11 +179,9 @@ class MsSplitResults(basetask.Results):
 
         target = context.observing_run
         parentms = None
-        #if self.vis == self.outputvis:
         # The parent MS has been removed.
         if not os.path.exists(self.vis):
             for index, ms in enumerate(target.get_measurement_sets()):
-                #if ms.name == self.outputvis:
                 if ms.name == self.vis:
                     parentms = index
                     break
