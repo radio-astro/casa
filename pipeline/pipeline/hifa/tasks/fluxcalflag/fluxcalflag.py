@@ -7,110 +7,62 @@ import numpy as np
 
 import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.basetask as basetask
+import pipeline.infrastructure.vdp as vdp
 import pipeline.infrastructure as infrastructure
 from pipeline.infrastructure import casa_tasks
 from .solsyslinesdict import SolarSystemLineList
 
+__all__ = [
+    'FluxcalFlag',
+    'FluxcalFlagInputs',
+    'FluxcalFlagResults'
+]
+
 LOG = infrastructure.get_logger(__name__)
 
-
-class FluxcalFlagInputs(basetask.StandardInputs):
+class FluxcalFlagInputs(vdp.StandardInputs):
     """
     Initialise the flux calibration flagging task inputs object.
     """
-    def __init__(self, context, output_dir=None,
-                 # standard parameters 
-                 vis=None, field=None, spw=None, 
-                 # intent for calculating field name
-                 intent=None, threshold=None,
-                 appendlines=None, linesfile=None,
-                 applyflags=None
-                 ):
-        # set the properties to the values given as input arguments
-        self._init_properties(vars())
 
-    @property
+    @vdp.VisDependentProperty
     def field(self):
-        # if field was explicitly set, return that value 
-        if self._field is not None:
-            return self._field
-        
-        # if invoked with multiple mses, return a list of fields
-        if type(self.vis) is types.ListType:
-            return self._handle_multiple_vis('field')
-        
-        # otherwise return each field in the current ms that has been observed
+        # Return each field in the current ms that has been observed
         # with the desired intent
         fields = self.ms.get_fields(intent=self.intent)
         field_names = set([f.name for f in fields])
         return ','.join(field_names)
 
-    @field.setter
-    def field(self, value):
-        self._field = value
+    intent = vdp.VisDependentProperty(default='AMPLITUDE')
+    threshold = vdp.VisDependentProperty(default=0.75)
+    appendlines = vdp.VisDependentProperty(default=False)
 
-    @property
-    def intent(self):
-        if self._intent is not None:
-            return self._intent.replace('*', '')
-        return None            
-   
-    @intent.setter
-    def intent(self, value):
-        if value is None:
-            value = 'AMPLITUDE'
-        self._intent = string.replace(value, '*', '')
-
-    @property
-    def threshold(self):
-        if self._threshold is not None:
-            return self._threshold
-        return None            
-
-    @threshold.setter
-    def threshold(self, value):
-        if value is None:
-            value = 0.75
-        self._threshold = value
-
-    @property
-    def appendlines(self):
-        if self._appendlines is not None:
-            return self._appendlines
-        return False           
-
-    @appendlines.setter
-    def appendlines(self, value):
-        if value is None:
-            value = False
-        self._appendlines = value
-
-    @property
+    @vdp.VisDependentProperty
     def linesfile(self):
-        if type(self.vis) is types.ListType:
-            return self._handle_multiple_vis('linesfile')
+        vis_root = os.path.splitext(self.vis)[0]
+        return vis_root + '_.txt'
 
-        if self._linesfile is None:
-            vis_root = os.path.splitext(self.vis)[0]
-            return vis_root + '_.txt'
-        return self._linesfile
+    applyflags = vdp.VisDependentProperty(default=True)
 
-    @linesfile.setter
-    def linesfile(self, value):
-        self._linesfile = value
+    def __init__(self, context, vis=None, output_dir=None,
+                 field=None, spw=None, intent=None,
+                 threshold=None, appendlines=None, linesfile=None,
+                 applyflags=None
+                 ):
+        super(FluxcalFlagInputs, self).__init__()
 
-    @property
-    def applyflags(self):
-        if self._applyflags is not None:
-            return self._applyflags
-        return True          
-
-    @applyflags.setter
-    def applyflags(self, value):
-        if value is None:
-            value = True
-        self._applyflags = value
-
+        # pipeline inputs
+        self.context = context
+        # vis must be set first, as other properties may depend on it
+        self.vis = vis
+        self.output_dir = output_dir
+        self.field = field
+        self.spw = spw
+        self.intent = intent
+        self.threshold = threshold
+        self.appendlines = appendlines
+        self.linesfile = linesfile
+        self.applyflags = applyflags
 
 class FluxcalFlagResults(basetask.Results):
     def __init__(self, vis, fluxcal_linelist=[], fluxcal_flagcmds=[],
