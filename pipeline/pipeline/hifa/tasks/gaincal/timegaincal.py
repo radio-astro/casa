@@ -7,154 +7,51 @@ import copy
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.callibrary as callibrary
+import pipeline.infrastructure.vdp as vdp
+
 from pipeline.h.heuristics import caltable as gcaltable
+
 from pipeline.hif.tasks.gaincal import common
-from pipeline.hif.tasks.gaincal import gaincalmode
+#from pipeline.hif.tasks.gaincal import gaincalmode
 from pipeline.hif.tasks.gaincal import gtypegaincal
 from pipeline.hifa.heuristics import exptimes as gexptimes
 
 LOG = infrastructure.get_logger(__name__)
 
-
-class TimeGaincalInputs(gaincalmode.GaincalModeInputs):
-    def __init__(self, context, mode=None, vis=None, calamptable=None,
-                 calphasetable=None, offsetstable=None, amptable=None, targetphasetable=None,
-                 calsolint=None, targetsolint=None, calminsnr=None,
-                 targetminsnr=None, **parameters):
-        super(TimeGaincalInputs, self).__init__(context, mode='gtype', vis=vis,
-                                                calamptable=calamptable, calphasetable=calphasetable,
-                                                offsetstable=offsetstable, amptable=amptable, targetphasetable=targetphasetable,
-                                                calsolint=calsolint, targetsolint=targetsolint,
-                                                calminsnr=calminsnr, targetminsnr=targetminsnr,
-                                                **parameters)
-
-    @property
-    def calamptable(self):
-        # The value of caltable is ms-dependent, so test for multiple
-        # measurement sets and listify the results if necessary
-
-        if self._calamptable is not None:
-            return self._calamptable
-
-        if type(self.vis) is types.ListType:
-            return self._handle_multiple_vis('calamptable')
-
-        return gcaltable.GaincalCaltable()
-
-    @calamptable.setter
-    def calamptable(self, value):
-        self._calamptable = value
-
-    @property
-    def calphasetable(self):
-        # The value of caltable is ms-dependent, so test for multiple
-        # measurement sets and listify the results if necessary
-
-        if self._calphasetable is not None:
-            return self._calphasetable
-
-        if type(self.vis) is types.ListType:
-            return self._handle_multiple_vis('calphasetable')
-
-        return gcaltable.GaincalCaltable()
-
-    @calphasetable.setter
-    def calphasetable(self, value):
-        self._calphasetable = value
-
-    @property
-    def targetphasetable(self):
-        # The value of caltable is ms-dependent, so test for multiple
-        # measurement sets and listify the results if necessary
-
-        if self._targetphasetable is not None:
-            return self._targetphasetable
-
-        if type(self.vis) is types.ListType:
-            return self._handle_multiple_vis('targetphasetable')
-
-        return gcaltable.GaincalCaltable()
-
-    @targetphasetable.setter
-    def targetphasetable(self, value):
-        self._targetphasetable = value
-
-    @property
-    def offsetstable(self):
-        # The value of caltable is ms-dependent, so test for multiple
-        # measurement sets and listify the results if necessary
-
-        if self._offsetstable is not None:
-            return self._offsetstable
-
-        if type(self.vis) is types.ListType:
-            return self._handle_multiple_vis('offsetstable')
-
-        return gcaltable.GaincalCaltable()
-
-    @offsetstable.setter
-    def offsetstable(self, value):
-        self._offsetstable = value
-
-    @property
-    def amptable(self):
-        # The value of caltable is ms-dependent, so test for multiple
-        # measurement sets and listify the results if necessary
-
-        if self._amptable is not None:
-            return self._amptable
-
-        if type(self.vis) is types.ListType:
-            return self._handle_multiple_vis('amptable')
-
-        return gcaltable.GaincalCaltable()
-
-    @amptable.setter
-    def amptable(self, value):
-        self._amptable = value
-
-    @property
-    def calsolint(self):
-        return self._calsolint
-
-    @calsolint.setter
-    def calsolint(self, value):
-        if value is None:
-            value = 'int'
-        self._calsolint = value
-
-    @property
-    def calminsnr(self):
-        return self._calminsnr
-
-    @calminsnr.setter
-    def calminsnr(self, value):
-        if value is None:
-            value = 2.0
-        self._calminsnr = value
-
-    @property
-    def targetsolint(self):
-        return self._targetsolint
-
-    @targetsolint.setter
-    def targetsolint(self, value):
-        if value is None:
-            value = 'inf'
-        self._targetsolint = value
-
-    @property
-    def targetminsnr(self):
-        return self._targetminsnr
-
-    @targetminsnr.setter
-    def targetminsnr(self, value):
-        if value is None:
-            value = 3.0
-        self._targetminsnr = value
+__all__ = [
+    'TimeGaincalInputs',
+    'TimeGaincal',
+    'TimeGaincalResults'
+]
 
 
-class TimeGaincal(basetask.StandardTaskTemplate):
+class TimeGaincalInputs(gtypegaincal.GTypeGaincalInputs):
+
+    calamptable = vdp.VisDependentProperty(default=None)
+    calphasetable = vdp.VisDependentProperty(default=None)
+    targetphasetable = vdp.VisDependentProperty(default=None)
+    offsetstable = vdp.VisDependentProperty(default=None)
+    amptable = vdp.VisDependentProperty(default=None)
+    calsolint = vdp.VisDependentProperty(default='int')
+    calminsnr = vdp.VisDependentProperty(default=2.0)
+    targetsolint = vdp.VisDependentProperty(default='inf')
+    targetminsnr = vdp.VisDependentProperty(default=3.0)
+
+    def __init__(self, context, vis=None, output_dir=None, calamptable=None, calphasetable=None,
+        offsetstable=None, amptable=None, targetphasetable=None, calsolint=None,
+        targetsolint=None, calminsnr=None, targetminsnr=None, **parameters):
+        super(TimeGaincalInputs, self).__init__(context, vis=vis, output_dir=output_dir,  **parameters)
+        self.calamptable = calamptable
+        self.calphasetable = calphasetable
+        self.targetphasetable = targetphasetable
+        self.offsetstable = offsetstable
+        self.amptable = amptable
+        self.calsolint = calsolint
+        self.calminsnr = calminsnr
+        self.targetsolint = targetsolint
+        self.targetminsnr = targetminsnr
+
+class TimeGaincal(gtypegaincal.GTypeGaincal):
     Inputs = TimeGaincalInputs
 
     def prepare(self, **parameters):
@@ -169,8 +66,7 @@ class TimeGaincal(basetask.StandardTaskTemplate):
         if inputs.ms.combine_spwmap:
             spwidlist = [spw.id for spw in inputs.ms.get_spectral_windows(task_arg=inputs.spw, science_windows_only=True)]
             fieldnamelist = [field.name for field in inputs.ms.get_fields(task_arg=inputs.field, intent='PHASE')]
-            exptimes = gexptimes.get_scan_exptimes(inputs.ms, fieldnamelist, 'PHASE',
-                                                   spwidlist)
+            exptimes = gexptimes.get_scan_exptimes(inputs.ms, fieldnamelist, 'PHASE', spwidlist)
             phase_calsolint = '%0.3fs' % (min([exptime[1] for exptime in exptimes]) / 4.0)
             phase_gaintype = 'T'
             phase_combine = 'spw'
