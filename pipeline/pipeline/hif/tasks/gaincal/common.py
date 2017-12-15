@@ -6,6 +6,8 @@ import types
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
+import pipeline.infrastructure.vdp as vdp
+
 from pipeline.h.heuristics import caltable as gcaltable
 from pipeline.hif.tasks.common import commoncalinputs
 
@@ -40,6 +42,36 @@ class CommonGaincalInputs(commoncalinputs.CommonCalibrationInputs):
             value = 'PHASE,AMPLITUDE,BANDPASS'
         self._intent = str(value).replace('*', '')
 
+
+class VdpCommonGaincalInputs(commoncalinputs.VdpCommonCalibrationInputs):
+    """
+    CommonGaincalInputs is the base class for defines inputs that are common
+    to all pipeline bandpass calibration tasks.
+
+    CommonGaincalInputs should be considered an abstract class. Refer to the
+    specializations that inherit from CommonBandpassInputs for concrete
+    implementations.
+    """
+
+    calmode = vdp.VisDependentProperty(default='ap')
+
+    @vdp.VisDependentProperty
+    def caltable(self):
+        namer = gcaltable.GaincalCaltable()
+        casa_args = self._get_task_args(ignore=('caltable',))
+        return namer.calculate(output_dir=self.output_dir, stage=self.context.stage, **casa_args)
+
+    @vdp.VisDependentProperty
+    def intent(self):
+        return 'PHASE,AMPLITUDE,BANDPASS'
+
+    @intent.convert
+    def intent(self, value):
+        if isinstance(value, list):
+            value = [str(v).replace('*', '') for v in value]
+        if isinstance(value, str):
+            value = value.replace('*', '')
+        return value
 
 class GaincalResults(basetask.Results):
     """
