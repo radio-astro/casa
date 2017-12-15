@@ -8,16 +8,24 @@ import flaghelper
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.api as api
 import pipeline.infrastructure.basetask as basetask
+import pipeline.infrastructure.vdp as vdp
 from pipeline.infrastructure import casa_tasks
 
 # the logger for this module
 LOG = infrastructure.get_logger(__name__)
 
+__all__ = [
+    'FlagTargetsALMA',
+    'FlagTargetsALMAInputs',
+    'FlalgTargetsALMAFlagResults'
+]
+
+
 """
 Flag ALMA target science target data.
 """
 
-class FlagTargetsALMAInputs(basetask.StandardInputs):
+class FlagTargetsALMAInputs(vdp.StandardInputs):
     """
     FlagTargetsALMA Inputs manages the inputs for the FlagTargetALMA task.
     
@@ -49,47 +57,42 @@ class FlagTargetsALMAInputs(basetask.StandardInputs):
         The filename of the ASCII file that contains the flagging template 
     """    
 
-    flagbackup = basetask.property_with_default('flagbackup', False)
-    template = basetask.property_with_default('template', True)
+    flagbackup = vdp.VisDependentProperty (default=False)
+    template = vdp.VisDependentProperty(default=True)
 
-    def __init__(self, context, vis=None, output_dir=None, flagbackup=None,
-                 template=None, filetemplate=None):
-        # set the properties to the values given as input arguments
-        self._init_properties(vars())
+    @vdp.VisDependentProperty
+    def filetemplate(self):
+        vis_root = os.path.splitext(self.vis)[0].split('_target')[0]
+        return vis_root + '.flagtargetstemplate.txt'
 
+    @filetemplate.convert
+    def filetemplate(self, value):
+        if isinstance(value, str):
+            return list(value.replace('[', '').replace(']', '').replace("'", "").split(','))
+        else:
+            return value
 
-    @property
+    @vdp.VisDependentProperty
     def inpfile(self):
-        if type(self.vis) is types.ListType:
-            return self._handle_multiple_vis('inpfile')
-
         vis_root = os.path.splitext(self.vis)[0].split('_target')[0]
         return os.path.join(self.output_dir, vis_root + '.flagtargetscmds.txt')
-
-
-    @property
-    def filetemplate(self):
-        if type(self.vis) is types.ListType:
-            return self._handle_multiple_vis('filetemplate')
-
-        if not self._filetemplate:
-            vis_root = os.path.splitext(self.vis)[0].split('_target')[0]
-            return vis_root + '.flagtargetstemplate.txt'
-
-        if type(self._filetemplate) is types.ListType:
-            idx = self._my_vislist.index(self.vis)
-            return self._filetemplate[idx]
-
-        return self._filetemplate
-
-    @filetemplate.setter
-    def filetemplate(self, value):
-        if value in (None, ''):
-            value = []
-        elif type(value) is types.StringType:
-            value = list(value.replace('[','').replace(']','').replace("'","").split(','))
-        self._filetemplate = value
     
+    def __init__(self, context, vis=None, output_dir=None, flagbackup=None,
+        template=None, filetemplate=None):
+
+        super(FlagTargetsALMAInputs, self).__init__()
+
+        # pipeline inputs
+        self.context = context
+        # vis must be set first, as other properties may depend on it
+        self.vis = vis
+        self.output_dir = output_dir
+        
+        self.flagbackup = flagbackup
+        self.template = template
+        self.filetemplate = filetemplate
+
+
     def to_casa_args(self):
         """
         Translate the input parameters of this class to task parameters 
