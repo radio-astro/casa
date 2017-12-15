@@ -5,8 +5,9 @@ import types
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.callibrary as callibrary
+import pipeline.infrastructure.vdp as vdp
+
 from pipeline.h.heuristics import caltable as gcaltable
-from pipeline.hif.tasks.gaincal import gaincalmode
 from pipeline.hif.tasks.gaincal import gaincalworker
 from pipeline.hif.tasks.gaincal import gtypegaincal
 from pipeline.hifa.heuristics.phasespwmap import combine_spwmap
@@ -16,54 +17,62 @@ from pipeline.hifa.tasks.gaincalsnr import gaincalsnr
 
 LOG = infrastructure.get_logger(__name__)
 
+__all__ = [
+    'SpwPhaseupInputs',
+    'SpwPhaseup',
+    'SpwPhaseupResults'
+]
 
-class SpwPhaseupInputs(gaincalmode.GaincalModeInputs):
 
-    # Set the spw map determination parameters here.
-    intent = basetask.property_with_default('intent', 'BANDPASS')
-    hm_spwmapmode = basetask.property_with_default('hm_spwmapmode', 'auto')
+class SpwPhaseupInputs(gtypegaincal.GTypeGaincalInputs):
 
-    # Auto mode mapping parameters
-    phasesnr = basetask.property_with_default('phasesnr', 25.0)
+    intent = vdp.VisDependentProperty(default='BANDPASS')
 
-    # Combine mode mapping parameters
-    bwedgefrac = basetask.property_with_default('bwedgefrac', 0.03125)
-    hm_nantennas = basetask.property_with_default('hm_nantennas', 'all')
-    maxfracflagged = basetask.property_with_default('unflagged', 0.90)
+    # Spw mapping mode heuristics, options are 'auto', 'combine', 'simple', and 'default'
+    hm_spwmapmode = vdp.VisDependentProperty(default='auto')
+    @hm_spwmapmode.convert
+    def hm_spwmapmode(self, value):
+        allowed = ('auto', 'combine', 'simple', 'default')
+        if value not in allowed:
+            m = ', '.join(('{!r}'.format(i) for i in allowed))
+            raise ValueError('Value not in allowed value set ({!s}): {!r}'.format(m, value))
+        return value
 
-    # Simple mode mapping parameter
-    maxnarrowbw = basetask.property_with_default('maxnarrowbw', '300MHz')
-    minfracmaxbw = basetask.property_with_default('minfracmaxbw', 0.8)
-    samebb = basetask.property_with_default('samebb', True)
+    phasesnr = vdp.VisDependentProperty(default=25.0)
+    bwedgefrac = vdp.VisDependentProperty(default=0.03125)
 
-    def __init__(self, context, mode=None, vis=None, caltable=None, intent=None, hm_spwmapmode=None,
+    # Antenna flagging heuristics parameter
+    hm_nantennas = vdp.VisDependentProperty(default='all')
+    @hm_nantennas.convert
+    def hm_nantennas(self, value):
+        allowed = ('all', 'unflagged')
+        if value not in allowed:
+            m = ', '.join(('{!r}'.format(i) for i in allowed))
+            raise ValueError('Value not in allowed value set ({!s}): {!r}'.format(m, value))
+        return value
+
+    maxfracflagged = vdp.VisDependentProperty(default=0.90)
+    maxnarrowbw = vdp.VisDependentProperty(default='300MHz')
+    minfracmaxbw = vdp.VisDependentProperty(default=0.8)
+    samebb = vdp.VisDependentProperty(default=True)
+    caltable = vdp.VisDependentProperty(default=None)
+
+    def __init__(self, context, vis=None, output_dir=None, caltable=None, intent=None, hm_spwmapmode=None,
         phasesnr=None, bwedgefrac=None, hm_nantennas=None, maxfracflagged=None,
         maxnarrowbw=None, minfracmaxbw=None, samebb=None, **parameters):
-        super(SpwPhaseupInputs, self).__init__(context, mode='gtype', vis=vis,
-            caltable=caltable, intent=intent, hm_spwmapmode=hm_spwmapmode,
-            phasesnr=phasesnr, bwedgefrac=bwedgefrac, hm_nantennas=hm_nantennas,
-            maxfracflagged=maxfracflagged, maxnarrowbw=maxnarrowbw, minfracmaxbw=minfracmaxbw,
-            samebb=samebb, **parameters)
+        super(SpwPhaseupInputs, self).__init__(context, vis=vis, output_dir=output_dir,  **parameters)
+        self.caltable = caltable
+        self.intent = intent
+        self.hm_spwmapmode = hm_spwmapmode
+        self.phasesnr = phasesnr
+        self.bwedgefrac = bwedgefrac
+        self.hm_nantennas = hm_nantennas
+        self.maxfracflagged = maxfracflagged
+        self.maxnarrowbw = maxnarrowbw
+        self.minfracmaxbw = minfracmaxbw
+        self.samebb = samebb
 
-    @property
-    def caltable(self):
-        # The value of caltable is ms-dependent, so test for multiple
-        # measurement sets and listify the results if necessary
-
-        if self._caltable is not None:
-            return self._caltable
-
-        if type(self.vis) is types.ListType:
-            return self._handle_multiple_vis('caltable')
-
-        return gcaltable.GaincalCaltable()
-
-    @caltable.setter
-    def caltable(self, value):
-        self._caltable = value
-
-
-class SpwPhaseup(gaincalworker.GaincalWorker):
+class SpwPhaseup(gtypegaincal.GTypeGaincal):
     Inputs = SpwPhaseupInputs
 
     def prepare(self, **parameters):
@@ -227,6 +236,7 @@ class SpwPhaseup(gaincalworker.GaincalWorker):
           'output_dir'  : inputs.output_dir,
           'vis'         : inputs.vis,
           'caltable'    : inputs.caltable,
+          #'caltable'    : None,
           'field'       : inputs.field,
           'intent'      : inputs.intent,
           'spw'         : inputs.spw,
