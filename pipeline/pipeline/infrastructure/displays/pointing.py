@@ -290,7 +290,20 @@ class SingleDishPointingChart(object):
         datatable.importdata(datatable_name, minimal=False, readonly=True)
 
         target_spws = ms.get_spectral_windows(science_windows_only=True)
-        spw_id = target_spws[0].id
+        # Search for the first available SPW, antenna combination
+        # observing_pattern is None for invalid combination.
+        spw_id = None
+        for s in target_spws:
+            field_patterns = ms.observing_pattern[antenna_id][s.id].values()
+            if field_patterns.count(None) < len(field_patterns):
+                # at least one valid field exists.
+                spw_id = s.id
+                break
+        if spw_id is None:
+            LOG.info('No data with antenna=%d and spw=%s found in %s' % (antenna_id, str(target_spws), ms.basename))
+            LOG.info('Skipping pointing plot')
+            return None
+        else: LOG.debug('Generate pointing plot using antenna=%d and spw=%d of %s' % (antenna_id, spw_id, ms.basename))
         beam_size = casatools.quanta.convert(ms.beam_sizes[antenna_id][spw_id], 'deg')
         beam_size_in_deg = casatools.quanta.getvalue(beam_size)
         obs_pattern = ms.observing_pattern[antenna_id][spw_id]
@@ -324,8 +337,8 @@ class SingleDishPointingChart(object):
         
         RA = datatable.getcol('RA')[dt_rows]
         if len(RA) == 0: # no row found
-            LOG.info('No data found with antenna=%d, spw=%d, and field=%s in %s.' % (antenna_id, spw_id, str(field_id), ms.basename))
-            LOG.info('Skipping pointing plots.')
+            LOG.warn('No data found with antenna=%d, spw=%d, and field=%s in %s.' % (antenna_id, spw_id, str(field_id), ms.basename))
+            LOG.warn('Skipping pointing plots.')
             return None
         DEC = datatable.getcol('DEC')[dt_rows]
         FLAG = numpy.zeros(len(RA), dtype=int)
