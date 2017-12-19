@@ -4,6 +4,7 @@ import shutil
 import types
 
 import pipeline.infrastructure as infrastructure
+import pipeline.infrastructure.vdp as vdp
 import pipeline.infrastructure.basetask as basetask
 from pipeline.infrastructure import casa_tasks
 import pipeline.infrastructure.casatools as casatools
@@ -69,18 +70,30 @@ class TransformimagedataResults(basetask.Results):
 
 
 class TransformimagedataInputs(mssplit.MsSplitInputs):
-    
-    clear_pointing = basetask.property_with_default('clear_pointing', True)
-    modify_weights = basetask.property_with_default('modify_weights', False)
-    wtmode = basetask.property_with_default('wtmode', '')
-    
+
+    clear_pointing = vdp.VisDependentProperty(True)
+    modify_weights = vdp.VisDependentProperty(False)
+    wtmode = vdp.VisDependentProperty('')
+
     def __init__(self, context, output_dir=None, vis=None,
                  outputvis=None, field=None, intent=None, spw=None,
                  datacolumn=None, chanbin=None, timebin=None, replace=None,
                  clear_pointing=None, modify_weights=None, wtmode=None):
+
         # set the properties to the values given as input arguments
-        self._init_properties(vars())
-        
+        self.context = context
+        self.output_dir = output_dir
+        self.vis = vis
+
+        self.outputvis = outputvis
+        self.field = field
+        self.intent = intent
+        self.spw = spw
+        self.datacolumn = datacolumn
+        self.chanbin = chanbin
+        self.timebin = timebin
+        self.replace = replace
+
         if clear_pointing is not False:
             clear_pointing = True
         self.clear_pointing = clear_pointing
@@ -92,8 +105,8 @@ class TransformimagedataInputs(mssplit.MsSplitInputs):
         self.wtmode = wtmode
         self.context = context
 
-    replace = basetask.property_with_default('replace', False)
-    datacolumn = basetask.property_with_default('datacolumn', 'corrected')
+    replace = vdp.VisDependentProperty(False)
+    datacolumn = vdp.VisDependentProperty('corrected')
 
     @property
     def outputvis(self):
