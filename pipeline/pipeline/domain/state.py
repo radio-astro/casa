@@ -272,7 +272,10 @@ class StateNAOJ(State):
     # dictionary to map from STATE table obs_mode to pipeline intent
     obs_mode_mapping = {
         'OBSERVE_TARGET#ON_SOURCE'           : 'TARGET',
-        'OBSERVE_TARGET#OFF_SOURCE'          : 'REFERENCE'
+        'OBSERVE_TARGET#OFF_SOURCE'          : 'REFERENCE',
+        'CALIBRATE_ATMOSPHERE#R_SOURCE'      : 'ATMOSPHERE',
+        'CALIBRATE_ATMOSPHERE#SKY_SOURCE'    : 'ATMOSPHERE',
+        'CALIBRATE_ATMOSPHERE#ZERO_SOURCE'   : 'ATMOSPHERE'
     }
     
     def __init__(self, state_id, obs_mode):

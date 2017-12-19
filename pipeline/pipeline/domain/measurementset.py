@@ -411,6 +411,10 @@ class MeasurementSet(object):
             return [w for w in spws if w.num_channels not in (1, 4)
                     and not science_intents.isdisjoint(w.intents)]
 
+        if self.antenna_array.name == 'NRO':
+            science_intents = {'TARGET'}
+            return [w for w in spws if not science_intents.isdisjoint(w.intents)]
+
         return spws
 
     def get_all_spectral_windows(self, task_arg='', with_channels=False):
