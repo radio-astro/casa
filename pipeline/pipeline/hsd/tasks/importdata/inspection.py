@@ -144,8 +144,20 @@ class SDInspection(object):
                     reduction_group[key] = newgroup
                 else:
                     key = match
-                for antenna in ms.antennas:
-                    reduction_group[key].add_member(ms, antenna.id, spw.id, field_id)
+                ### Check existance of antenna, spw, field combination in MS
+                ddid = ms.get_data_description(id=spw.id)
+                with casatools.TableReader(ms.name) as tb:
+                    subtb = tb.query('DATA_DESC_ID==%d && FIELD_ID==%d' %(ddid.id, field.id),
+                                     columns='ANTENNA1')
+                    valid_antid = set(subtb.getcol('ANTENNA1'))
+                    subtb.close()
+#                 myms = casatools.ms
+#                 valid_antid = myms.msseltoindex(vis=ms.name, spw=spw.id,
+#                                                 field=field_id, baseline='*&&&')['antenna1']
+#                 for antenna in ms.antennas:
+#                         reduction_group[key].add_member(ms, antenna.id, spw.id, field_id)
+                for ant_id in valid_antid:
+                        reduction_group[key].add_member(ms, ant_id, spw.id, field_id)
         
         return reduction_group
     
