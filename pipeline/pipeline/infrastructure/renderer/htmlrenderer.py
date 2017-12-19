@@ -1003,12 +1003,17 @@ class T2_2_7Renderer(T2_2_XRendererBase):
                                                                 target_field_id=target,
                                                                 reference_field_id=reference,
                                                                 target_only=True)
-                    target_pointings.append(task.plot())
+                    plotres = task.plot()
+                    # for missing antenna, spw, field combinations
+                    if plotres is None: continue
+                    target_pointings.append(plotres)
                     task = pointing.SingleDishPointingChart(context, ms, antenna, 
                                                                 target_field_id=target,
                                                                 reference_field_id=reference,
                                                                 target_only=False)
-                    whole_pointings.append(task.plot())
+                    plotres = task.plot()
+                    if plotres is not None:
+                        whole_pointings.append(plotres)
 
         dirname = os.path.join('session%s' % ms.session,
                                ms.basename)

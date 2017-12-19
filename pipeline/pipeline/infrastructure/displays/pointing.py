@@ -323,6 +323,10 @@ class SingleDishPointingChart(object):
                 dt_rows = vfunc(ms_ids, field_ids, antenna_ids, spw_ids)
         
         RA = datatable.getcol('RA')[dt_rows]
+        if len(RA) == 0: # no row found
+            LOG.info('No data found with antenna=%d, spw=%d, and field=%d in %s.' % (antenna_id, spw_id, field_id, ms.name))
+            LOG.info('Skipping pointing plots.')
+            return None
         DEC = datatable.getcol('DEC')[dt_rows]
         FLAG = numpy.zeros(len(RA), dtype=int)
         rows = numpy.where(dt_rows == True)[0]
