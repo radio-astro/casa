@@ -324,7 +324,7 @@ class SingleDishPointingChart(object):
         
         RA = datatable.getcol('RA')[dt_rows]
         if len(RA) == 0: # no row found
-            LOG.info('No data found with antenna=%d, spw=%d, and field=%d in %s.' % (antenna_id, spw_id, field_id, ms.name))
+            LOG.info('No data found with antenna=%d, spw=%d, and field=%s in %s.' % (antenna_id, spw_id, str(field_id), ms.basename))
             LOG.info('Skipping pointing plots.')
             return None
         DEC = datatable.getcol('DEC')[dt_rows]
