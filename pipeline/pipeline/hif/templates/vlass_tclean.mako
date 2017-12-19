@@ -81,18 +81,18 @@ except:
                 <tr>
                     %if row.nchan is not None:
                         %if row.nchan == 1:
+                            <td rowspan="13">${row.field}</td>
+                            <td rowspan="13">${row.spw}</td>
+                            <td rowspan="13">${row.pol}</td>
+                        %else:
                             <td rowspan="12">${row.field}</td>
                             <td rowspan="12">${row.spw}</td>
                             <td rowspan="12">${row.pol}</td>
-                        %else:
-                            <td rowspan="11">${row.field}</td>
-                            <td rowspan="11">${row.spw}</td>
-                            <td rowspan="11">${row.pol}</td>
                         %endif
                     %else:
-                        <td rowspan="11">${row.field}</td>
-                        <td rowspan="11">${row.spw}</td>
-                        <td rowspan="11">${row.pol}</td>
+                        <td rowspan="12">${row.field}</td>
+                        <td rowspan="12">${row.spw}</td>
+                        <td rowspan="12">${row.pol}</td>
                     %endif
                     <th>${row.frequency_label}</th>
                     <td>${row.frequency}</td>
@@ -102,9 +102,9 @@ except:
                     thumbnail_relpath = os.path.relpath(row.plot.thumbnail, pcontext.report_dir)
                     %>
                     %if row.nchan == 1:
-                    <td rowspan="11">
+                    <td rowspan="12">
                     %else:
-                    <td rowspan="10">
+                    <td rowspan="11">
                     %endif
                         <a class="fancybox"
                            href="${fullsize_relpath}"
@@ -179,6 +179,11 @@ except:
                 <tr>
                     <th>clean iterations</th>
                     <td>${row.iterdone}</td>
+                </tr>
+
+                <tr>
+                    <th>stop reason</th>
+                    <td>[${row.stopcode}] ${row.stopreason}</td>
                 </tr>
 
                 <tr>

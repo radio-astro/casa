@@ -62,6 +62,7 @@ class TcleanResult(basetask.Results):
         # Temporarily needed until CAS-8576 is fixed
         self._residual_max = 0.0
         self._tclean_stopcode = 0
+        self._tclean_stopreason = None
         self._tclean_iterdone = 0
         # This should be automatic, but it does not yet work
         self.pipeline_casa_task = 'Tclean'
@@ -292,6 +293,19 @@ class TcleanResult(basetask.Results):
 
     def set_tclean_stopcode(self, tclean_stopcode):
         self._tclean_stopcode = tclean_stopcode
+
+    @property
+    def tclean_stopreason(self):
+        return self._tclean_stopreason
+
+    def set_tclean_stopreason(self, tclean_stopcode):
+        stopreasons = ['iteration limit', 'threshold', 'force stop',
+                       'no change in peak residual across two major cycles',
+                       'peak residual increased by more than 5 times from the previous major cycle',
+                       'peak residual increased by more than 5 times from the minimum reached', 'zero mask']
+        assert 0 < tclean_stopcode <= len(stopreasons),\
+            "tclean stop code {} does not index into stop reasons list".format(tclean_stopcode)
+        self._tclean_stopreason = stopreasons[tclean_stopcode-1]
 
     @property
     def tclean_iterdone(self):

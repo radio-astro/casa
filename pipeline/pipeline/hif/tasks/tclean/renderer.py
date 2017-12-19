@@ -25,7 +25,7 @@ ImageRow = collections.namedtuple('ImageInfo', (
     'field spw pol frequency_label frequency beam beam_pa sensitivity '
     'cleaning_threshold residual_ratio non_pbcor_label non_pbcor pbcor score '
     'fractional_bw_label fractional_bw aggregate_bw_label aggregate_bw '
-    'image_file nchan plot qa_url iterdone'))
+    'image_file nchan plot qa_url iterdone stopcode stopreason'))
 
 
 class T2_4MDetailsTcleanRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
@@ -189,8 +189,12 @@ class T2_4MDetailsTcleanRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
             #
             if 'VLASS' in r.imaging_mode:
                 row_iterdone = r.tclean_iterdone
+                row_stopcode = r.tclean_stopcode
+                row_stopreason = r.tclean_stopreason
             else:
                 row_iterdone = None
+                row_stopcode = None
+                row_stopreason = None
 
             #
             # cleaning threshold cell
@@ -317,7 +321,9 @@ class T2_4MDetailsTcleanRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                 nchan=nchan,
                 plot=None,
                 qa_url=None,
-                iterdone=row_iterdone
+                iterdone=row_iterdone,
+                stopcode=row_stopcode,
+                stopreason=row_stopreason,
             )
             image_rows.append(row)
 
