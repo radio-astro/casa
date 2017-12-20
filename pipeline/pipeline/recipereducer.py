@@ -109,6 +109,7 @@ def _get_tasks(context, args, procedure):
                            'hifa_importdata',
                            'hifv_importdata',
                            'hif_restoredata',
+                           'hifa_restoredata',
                            'hsd_importdata',
                            'hsdn_importdata']:
             task_args['vis'] = args.vis
