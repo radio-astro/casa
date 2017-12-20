@@ -46,6 +46,9 @@ class TsysSummaryChart(object):
 
         self._kwargs = kwargs
 
+        # showfdm does not make sense for NRO
+        self._showfdm = ms.antenna_array.name != 'NRO'
+
 
     def create_task(self):
         unique_tsys_spws = set(self._spwmap.values())
@@ -59,7 +62,7 @@ class TsysSummaryChart(object):
                      'interactive' : False,
                      'spw'         : spw_arg,
                      'showatm'     : True,
-                     'showfdm'     : True,
+                     'showfdm'     : self._showfdm,
                      'chanrange'   : '90%',  # CAS-7011
                      'subplot'     : 11,
                      'figfile'     : self._figroot}
@@ -121,6 +124,10 @@ class TsysPerAntennaChart(common.PlotbandpassDetailBase):
                 spwmap[tsys_spw_id].append(science_spw_id)                    
         self._tsys_map = dict((tsys_id, ','.join([str(i) for i in science_ids]))
                               for tsys_id, science_ids in spwmap.items())
+
+        # showfdm does not make sense for NRO
+        if ms.antenna_array.name == 'NRO':
+            self._kwargs['showfdm'] = False
 
     def plot(self):
         missing = [(spw_id, ant_id)
