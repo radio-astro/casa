@@ -43,7 +43,7 @@ class PlotmsLeaf(object):
         # forcing all correlations to be plotted would be equivalent.
         if correlation == '':
             observatory = self._ms.antenna_array.name
-            if observatory == 'ALMA':
+            if observatory in ('ALMA', 'NRO'):
                 correlation = self._ms.get_alma_corrstring()
             elif observatory in ('VLA', 'EVLA'):
                 correlation = self._ms.get_vla_corrstring()
