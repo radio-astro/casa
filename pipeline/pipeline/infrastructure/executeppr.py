@@ -254,7 +254,7 @@ def executeppr (pprXmlFile, importonly=True, breakpoint='breakpoint',
             if taskname == 'ImportData' or taskname == 'RestoreData' or \
             taskname == 'ALMAImportData' or taskname == 'ALMARestoreData' or \
             taskname == 'VLAImportData' or taskname == 'VLARestoreData' or \
-            taskname == 'SDImportData':
+            taskname == 'SDImportData' or taskname == 'NROImportData':
 	        task_args['vis'] = files
 	        task_args['session'] = sessions
 	    
@@ -296,6 +296,11 @@ def executeppr (pprXmlFile, importonly=True, breakpoint='breakpoint',
 	        break
         
             if taskname == 'SDImportData' and importonly:
+                casatools.post_to_log("Terminating execution after running " + taskname,
+                                      echo_to_screen=echo_to_screen)
+                break
+
+            if taskname == 'NROImportData' and importonly:
                 casatools.post_to_log("Terminating execution after running " + taskname,
                                       echo_to_screen=echo_to_screen)
                 break
