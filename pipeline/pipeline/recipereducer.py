@@ -109,12 +109,13 @@ def _get_tasks(context, args, procedure):
                            'hifa_importdata',
                            'hifv_importdata',
                            'hif_restoredata',
-                           'hsd_importdata']:
+                           'hsd_importdata',
+                           'hsdn_importdata']:
             task_args['vis'] = args.vis
             # we might override this later with the procedure definition
             task_args['session'] = args.session
 
-        elif cli_command in ['hsd_importdataold', 'hsd_restoredata']:
+        elif cli_command in [ 'hsd_restoredata' ]:
             task_args['infiles'] = args.infiles
 
         for parameterset in processingcommand.findall('ParameterSet'):
