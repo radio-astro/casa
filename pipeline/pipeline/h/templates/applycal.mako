@@ -41,7 +41,7 @@ def sanitise(url):
 	return filenamer.sanitize(url)
 
 def spws_for_baseband(plot):
-	spws = str(plot.parameters['spw']).split(',')
+	spws = format_range(plot.parameters['spw']).split(',')
 	if not spws:
 		return ''
 	return '<h6 style="margin-top: -11px;">Spw%s</h6>' % utils.commafy(spws, quotes=False, multi_prefix='s')
@@ -129,6 +129,10 @@ def total_for_agent(agent, row, mses=flags.keys()):
 def space_comma(s):
 	return ', '.join(string.split(s, ','))
 
+def format_range(ranges):
+    #convert a ranges string (e.g., '0~2') to a string of comma separated numbers (e.g., '0,1,2')
+    return str(',').join(map(str, utils.range_to_list(ranges)))
+    
 def format_spwmap(spwmap, scispws):
     if not spwmap:
         return ''
@@ -224,11 +228,11 @@ def format_spwmap(spwmap, scispws):
 			<td rowspan="${ca_rowspan}">${filesizes[vis]}</td>
 			<td rowspan="${ca_rowspan}">${space_comma(calapp.calto.intent)}</td>
 			<td rowspan="${ca_rowspan}">${space_comma(calapp.calto.field)}</td>
-			<td rowspan="${ca_rowspan}">${space_comma(calapp.calto.spw)}</td>
+			<td rowspan="${ca_rowspan}">${space_comma(format_range(calapp.calto.spw))}</td>
 			<td rowspan="${ca_rowspan}">${space_comma(calapp.calto.antenna)}</td>
 		% for calfrom in calapp.calfrom:
 			<td>${caltypes[calfrom.gaintable]}</td>
-			<td>${format_spwmap(calfrom.spwmap, [int(spw) for spw in calapp.calto.spw.split(',')])}</td>
+			<td>${format_spwmap(calfrom.spwmap, utils.range_to_list(calapp.calto.spw))}</td>
 			<td>${space_comma(calfrom.gainfield)}</td>
 			<td>${space_comma(calfrom.interp)}</td>
 			<td>${calfrom.calwt}</td>
