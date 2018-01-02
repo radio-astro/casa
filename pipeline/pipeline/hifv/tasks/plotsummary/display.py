@@ -56,7 +56,7 @@ class plotsummarySummaryChart(object):
 
         # create amp vs. UVwave plots of each cal field and then max 30 targets
 
-        calfields = m.get_fields(intent='BANDPASS,PHASE,AMPLITUDE')
+        calfields = m.get_fields(intent='BANDPASS,PHASE,AMPLITUDE,POLARIZATION,POLANGLE,POLLEAKAGE')
         alltargetfields = m.get_fields(intent='TARGET')
 
         plotfields = calfields
