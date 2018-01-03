@@ -4,6 +4,7 @@ import os
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.callibrary as callibrary
+import pipeline.infrastructure.vdp as vdp
 import pipeline.infrastructure.utils as utils
 from pipeline.infrastructure import casa_tasks
 from . import common
@@ -12,21 +13,45 @@ LOG = infrastructure.get_logger(__name__)
 
 
 
-class GaincalWorkerInputs(common.CommonGaincalInputs):
-    def __init__(self, context, output_dir=None,
-                 # 
-                 vis=None, caltable=None, 
-                 # data selection arguments
-                 field=None, spw=None, antenna=None, uvrange=None, intent=None,
-                 selectdata=None,
-                 # solution parameters
-                 gaintype=None, smodel=None, calmode=None, solint=None,
-                 combine=None, refant=None, minblperant=None, minsnr=None,
-                 solnorm=None, append=None, scan=None, splinetime=None, npointaver=None,
-                 phasewrap=None,
-                 # preapply calibrations
-                 opacity=None, preavg=None):
-        self._init_properties(vars())
+class GaincalWorkerInputs(common.VdpCommonGaincalInputs):
+    def __init__(self, context, output_dir=None, vis=None, caltable=None, 
+        field=None, spw=None, antenna=None, uvrange=None, intent=None,
+        selectdata=None, gaintype=None, smodel=None, calmode=None, solint=None,
+        combine=None, refant=None, minblperant=None, minsnr=None, solnorm=None,
+        append=None, scan=None, splinetime=None, npointaver=None,
+        phasewrap=None, opacity=None, preavg=None):
+
+        self.context = context
+        self.vis = vis
+        self.output_dir = output_dir
+
+        self.field = field
+        self.spw = spw
+        self.antenna = antenna
+        self.uvrange = uvrange
+        self.intent = intent
+        self.scan = scan
+        self.selectdata = selectdata
+
+        self.gaintype = gaintype
+
+        self.smodel = smodel
+        self.calmode = calmode
+        self.solint = solint
+        self.combine = combine
+        self.refant = refant
+        self.minblperant = minblperant
+        self.minsnr = minsnr
+        self.solnorm = solnorm
+        self.append = append
+        self.preavg = preavg
+        self.opacity = opacity
+        self.parang = parang
+        self.splinetime = splinetime
+        self.npointaver = npointaver
+        self.phasewrap = phasewrap
+
+        self.caltable = caltable
 
 
 class GaincalWorker(basetask.StandardTaskTemplate):
@@ -99,15 +124,13 @@ class GaincalWorker(basetask.StandardTaskTemplate):
 
         # create the data selection target defining which data this caltable 
         # should calibrate 
-        calto = callibrary.CalTo(vis=inputs.vis,
-                                 spw=orig_spw)
+        calto = callibrary.CalTo(vis=inputs.vis, spw=orig_spw)
 
         # create the calfrom object describing which data should be selected
         # from this caltable when applied to other data. Set the table name
         # name (mandatory) and gainfield (to conform to suggested script 
         # standard), leaving spwmap, interp, etc. at their default values.
-        calfrom = callibrary.CalFrom(inputs.caltable, 
-                                     caltype='gaincal',
+        calfrom = callibrary.CalFrom(inputs.caltable, caltype='gaincal',
                                      gainfield='nearest')
 
         calapp = callibrary.CalApplication(calto, calfrom, origin)
@@ -127,14 +150,6 @@ class GaincalWorker(basetask.StandardTaskTemplate):
         
         missing = [table for table in result.pool
                    if table not in on_disk and not self._executor._dry_run]        
-        #if missing:
-            #l = len(missing)
-            #msg = ('Gaincal output caltable%s %s %s missing' % 
-                   #('' if l is 1 else 's',
-                   #utils.commafy([os.path.basename(ca.gaintable) for ca in missing], False),
-                   #'is' if l is 1 else 'are'))
-            #LOG.error(msg)
-            #raise IOError(msg)
 
         result.error.clear()
         result.error.update(missing)
