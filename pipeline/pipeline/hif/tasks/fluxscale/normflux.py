@@ -5,57 +5,63 @@ import string
 
 import pipeline.domain as domain
 import pipeline.domain.measures as measures
+
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.utils as utils
-#from ..common import commonfluxresults
-from pipeline.h.tasks.common import commonfluxresults
+import pipeline.infrastructure.vdp as vdp
 
-#from pipeline.hif.heuristics import fieldnames as fieldnames
+from pipeline.h.tasks.common import commonfluxresults
 from pipeline.h.heuristics import fieldnames as fieldnames
 
 LOG = infrastructure.get_logger(__name__)
 
 
-class NormaliseFluxInputs(basetask.StandardInputs):
-    def __init__(self, context, vis=None, reference=None, transfer=None,
+class NormaliseFluxInputs(vdp.StandardInputs):
+
+    @vdp.VisDependentProperty
+    def reference(self):
+        # this will give something like '0542+3243,0343+242'
+        field_fn = fieldnames.IntentFieldnames()
+        reference_fields = field_fn.calculate(self.ms, self.refintent)
+        # run the answer through a set, just in case there are duplicates
+        fields = {s for s in utils.safe_split(reference_fields)}
+
+        return ','.join(fields)
+
+    refintent = vdp.VisDependentProperty(default='AMPLITUDE')
+
+    @vdp.VisDependentProperty
+    def transfer(self):
+        transfer_fn = fieldnames.IntentFieldnames()
+        # call the heuristic to get the transfer fields as a string
+        transfer_fields = transfer_fn.calculate(self.ms, self.transintent)
+
+        # remove the reference field should it also have been observed with
+        # the transfer intent
+        transfers = set(self.ms.get_fields(task_arg=transfer_fields))
+        references = set(self.ms.get_fields(task_arg=self.reference))
+        diff = transfers.difference(references)
+
+        transfer_names = {f.name for f in diff}
+        fields_with_name = self.ms.get_fields(name=transfer_names)
+        if len(fields_with_name) is not len(diff) or len(diff) is not len(transfer_names):
+            return ','.join([str(f.id) for f in diff])
+        else:
+            return ','.join(transfer_names)
+
+    transintent = vdp.VisDependentProperty(default='PHASE,BANDPASS,CHECK')
+
+    def __init__(self, context, output_dir=None, vis=None, reference=None, transfer=None,
                  refintent=None, transintent=None):
-        self.vis = vis
         self.context = context
+        self.vis = vis
+        self.output_dir = output_dir
         self.reference = reference
         self.transfer = transfer
         self.refintent = refintent
         self.transintent = transintent
         
-    @property
-    def reference(self):
-        if callable(self._reference):
-            obsrun = self.context.observing_run
-            fields = set()
-            for ms in obsrun.measurement_sets:
-                # first call the heuristic to get the reference fields as a
-                # string
-                reference_fields = self._reference(ms, self.refintent)
-                fields.update(utils.safe_split(reference_fields))
-            return ','.join(fields)
-
-        return self._reference
-
-    @reference.setter
-    def reference(self, value):
-        if value is None:
-            value = fieldnames.IntentFieldnames()
-        self._reference = value
-
-    @property
-    def refintent(self):
-        if self._refintent is None:
-            return 'AMPLITUDE'
-        return self._refintent
-    
-    @refintent.setter
-    def refintent(self, value):
-        self._refintent = value
 
     @property
     def transfer(self):

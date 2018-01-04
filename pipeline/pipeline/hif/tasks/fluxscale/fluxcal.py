@@ -4,91 +4,62 @@ import types
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.utils as utils
+import pipeline.infrastructure.vdp as vdp
+
 from . import fluxscale
 from pipeline.hif.tasks.setmodel import setmodel
 from pipeline.hif.tasks.setmodel import setjy
-
-#from pipeline.hif.heuristics import fieldnames as fieldnames
 from pipeline.h.heuristics import fieldnames as fieldnames
 
 LOG = infrastructure.get_logger(__name__)
 
+class FluxcalInputs(vdp.StandardInputs):
 
-class FluxcalInputs(basetask.StandardInputs):
-    def __init__(self, context, vis=None, output_dir=None, reference=None,
-                 transfer=None, refintent=None, transintent=None):
-        # set the properties to the values given as input arguments
-        self._init_properties(vars())
-
-    @property
+    @vdp.VisDependentProperty
     def reference(self):
-        if not callable(self._reference):
-            return self._reference
-
-        if type(self.vis) is types.ListType:
-            return self._handle_multiple_vis('reference')
-
         # this will give something like '0542+3243,0343+242'
-        reference_fields = self._reference(self.ms, self.refintent)
-
+        field_fn = fieldnames.IntentFieldnames()
+        reference_fields = field_fn.calculate(self.ms, self.refintent)
         # run the answer through a set, just in case there are duplicates
-        fields = set()
-        fields.update(utils.safe_split(reference_fields))
-        
+        fields = {s for s in utils.safe_split(reference_fields)}
+
         return ','.join(fields)
 
-    @reference.setter
-    def reference(self, value):
-        if value is None:
-            value = fieldnames.IntentFieldnames()
-        self._reference = value
+    refintent = vdp.VisDependentProperty(default='AMPLITUDE')
 
-    @property
-    def refintent(self):
-        if self._refintent is None:
-            return 'AMPLITUDE'
-        return self._refintent
-    
-    @refintent.setter
-    def refintent(self, value):
-        self._refintent = value
-
-    @property
+    @vdp.VisDependentProperty
     def transfer(self):
-        if not callable(self._transfer):
-            return self._transfer
-
-        if type(self.vis) is types.ListType:
-            return self._handle_multiple_vis('transfer')
-
+        transfer_fn = fieldnames.IntentFieldnames()
         # call the heuristic to get the transfer fields as a string
-        transfer_fields = self._transfer(self.ms, self.transintent)
+        transfer_fields = transfer_fn.calculate(self.ms, self.transintent)
 
         # remove the reference field should it also have been observed with
         # the transfer intent
-        transfers = set([i for i in utils.safe_split(transfer_fields)])
-        references = set([i for i in utils.safe_split(self.reference)])
-        return ','.join(transfers.difference(references))
+        transfers = set(self.ms.get_fields(task_arg=transfer_fields))
+        references = set(self.ms.get_fields(task_arg=self.reference))
+        diff = transfers.difference(references)
 
-    @transfer.setter
-    def transfer(self, value):
-        if value is None:
-            value = fieldnames.IntentFieldnames()
-        self._transfer = value
+        transfer_names = {f.name for f in diff}
+        fields_with_name = self.ms.get_fields(name=transfer_names)
+        if len(fields_with_name) is not len(diff) or len(diff) is not len(transfer_names):
+            return ','.join([str(f.id) for f in diff])
+        else:
+            return ','.join(transfer_names)
 
-    @property
-    def transintent(self):
-        if self._transintent is None:
-            return 'PHASE'
-        return self._transintent
-    
-    @transintent.setter
-    def transintent(self, value):
-        self._transintent = value
+    transintent = vdp.VisDependentProperty(default='PHASE,BANDPASS,CHECK')
+
+    def __init__(self, context, vis=None, output_dir=None, reference=None,
+                 transfer=None, refintent=None, transintent=None):
+         self.context = context
+         self.vis = vis
+         self.output_dir = output_dir
+         self.reference = reference
+         self.transfer = transfer
+         self.refintent = refintent
+         self.transintent = transintent
 
     def to_casa_args(self):
         raise NotImplementedError
-
 
 class Fluxcal(basetask.StandardTaskTemplate):
     Inputs = FluxcalInputs
