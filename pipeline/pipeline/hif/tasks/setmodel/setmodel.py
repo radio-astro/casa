@@ -3,132 +3,75 @@ import os
 import types
 import copy
 
-#from ...heuristics import fieldnames
-from pipeline.h.heuristics import fieldnames as fieldnames
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.utils as utils
-#from ..common import commonfluxresults
+import pipeline.infrastructure.vdp as vdp
+
+from pipeline.h.heuristics import fieldnames as fieldnames
 from pipeline.h.tasks.common import commonfluxresults
 from . import setjy
 
 LOG = infrastructure.get_logger(__name__)
 
 
-class SetModelsInputs(basetask.StandardInputs):
-    def __init__(self, context, output_dir=None, vis=None, reference=None,
-                 refintent=None, transfer=None, transintent=None,
-                 reffile=None, normfluxes=None, scalebychan=None):
-        # set the properties to the values given as input arguments
-        self._init_properties(vars())
+class SetModelsInputs(vdp.StandardInputs):
 
-    @property
+    @vdp.VisDependentProperty
     def reference(self):
-        if not callable(self._reference):
-            return self._reference
-
-        if type(self.vis) is types.ListType:
-            return self._handle_multiple_vis('reference')
-
         # this will give something like '0542+3243,0343+242'
-        if self.refintent in (None, ''):
-            return ''
-        reference_fields = self._reference(self.ms, self.refintent)
-
+        field_fn = fieldnames.IntentFieldnames()
+        reference_fields = field_fn.calculate(self.ms, self.refintent)
         # run the answer through a set, just in case there are duplicates
-        fields = set()
-        fields.update(utils.safe_split(reference_fields))
-        
+        fields = {s for s in utils.safe_split(reference_fields)}
         return ','.join(fields)
 
-    @reference.setter
-    def reference(self, value):
-        if value is None:
-            value = fieldnames.IntentFieldnames()
-        self._reference = value
+    refintent = vdp.VisDependentProperty(default = 'AMPLITUDE')
 
-    @property
-    def refintent(self):
-        return self._refintent
-
-    @refintent.setter
-    def refintent(self, value):
-        if value is None:
-            value = 'AMPLITUDE'
-        self._refintent = value
-
-    @property
+    @vdp.VisDependentProperty
     def transfer(self):
-        if not callable(self._transfer):
-            return self._transfer
-
-        if type(self.vis) is types.ListType:
-            return self._handle_multiple_vis('transfer')
-
+        transfer_fn = fieldnames.IntentFieldnames()
         # call the heuristic to get the transfer fields as a string
-        if self.transintent in (None, ''):
-            return ''
-        transfer_fields = self._transfer(self.ms, self.transintent)
+        transfer_fields = transfer_fn.calculate(self.ms, self.transintent)
 
-        # Remove the reference field should it also have been observed with
+        # remove the reference field should it also have been observed with
         # the transfer intent
         transfers = set(self.ms.get_fields(task_arg=transfer_fields))
         references = set(self.ms.get_fields(task_arg=self.reference))
         diff = transfers.difference(references)
 
-        transfer_names = set([f.name for f in diff])
+        transfer_names = {f.name for f in diff}
         fields_with_name = self.ms.get_fields(name=transfer_names)
         if len(fields_with_name) is not len(diff) or len(diff) is not len(transfer_names):
             return ','.join([str(f.id) for f in diff])
         else:
             return ','.join(transfer_names)
 
-    @transfer.setter
-    def transfer(self, value):
-        if value is None:
-            value = fieldnames.IntentFieldnames()
-        self._transfer = value
+    transintent = vdp.VisDependentProperty(default = 'BANDPASS')
 
-    @property
-    def transintent(self):
-        return self._transintent
-
-    @transintent.setter
-    def transintent(self, value):
-        if value is None:
-            value = 'BANDPASS'
-        self._transintent = value
-
-    @property
+    @vdp.VisDependentProperty
     def reffile(self):
-        return self._reffile
+        value = os.path.join(self.context.output_dir, 'flux.csv')
+        return value
 
-    @reffile.setter
-    def reffile(self, value=None):
-        if value in (None, ''):
-            value = os.path.join(self.context.output_dir, 'flux.csv')
-        self._reffile = value
+    normfluxes = vdp.VisDependentProperty(default = True)
+    scalebycan = vdp.VisDependentProperty(default = True)
 
-    @property
-    def normfluxes(self):
-        return self._normfluxes
+    def __init__(self, context, output_dir=None, vis=None, reference=None,
+                 refintent=None, transfer=None, transintent=None,
+                 reffile=None, normfluxes=None, scalebychan=None):
 
-    @normfluxes.setter
-    def normfluxes(self, value=None):
-        if value is None:
-            value = True
-        self._normfluxes = value
+        self.context = context
+        self.vis = vis
+        self.output_dir = output_dir
+        self.reference = reference
+        self.refintent = refintent
+        self.transfer = transfer
+        self.transintent = transintent
+        self.reffile = reffile
+        self.normfluxes = normfluxes
+        self.scalebychan = scalebychan
 
-    @property
-    def scalebychan(self):
-        return self._scalebychan
-
-    @scalebychan.setter
-    def scalebychan(self, value):
-        if value is None:
-            value = True
-        self._scalebychan = value
-        
 
 class SetModels(basetask.StandardTaskTemplate):
     Inputs = SetModelsInputs
@@ -139,10 +82,10 @@ class SetModels(basetask.StandardTaskTemplate):
         result = commonfluxresults.FluxCalibrationResults(vis=self.inputs.vis)
 
         # Set reference calibrator models.
-        #    These models will always be assigned the lookup reference frequency,
-        #    Stokes parameters, and spix if they are available. If not the
+        #    These models will be assigned the lookup reference frequency,
+        #    Stokes parameters, and spix if they are available. If they are not the
         #    Setjy defaults (spw center frequency, [1.0, 0.0, 0.0, 0.0], 0.0)
-        #    will be assigned.
+        #    will be used
         reference_fields = self.inputs.reference
         reference_intents = self.inputs.refintent
         if reference_fields not in (None, ''):
@@ -153,10 +96,10 @@ class SetModels(basetask.StandardTaskTemplate):
             result.measurements.update(copy.deepcopy(refresults.measurements))
 
         # Set transfer calibrator models.
-        #    These models will always be assigned the lookup reference frequency,
-        #    Stokes parameters, and spix if they are available. If not the
+        #    These models will  be assigned the lookup reference frequency,
+        #    Stokes parameters, and spix if they are available. If they are not the
         #    Setjy defaults (spw center frequency, [1.0, 0.0, 0.0, 0.0], 0.0)
-        #    will be assigned. If normfluxes is True then the stokes parameters
+        #    will be used . If normfluxes is True then the stokes parameters
         #    will be normalized to a value of 1
         transfer_fields = self.inputs.transfer
         transfer_intents = self.inputs.transintent
@@ -173,9 +116,6 @@ class SetModels(basetask.StandardTaskTemplate):
         return result
 
     # Call the Setjy task
-    #    Note that intent has already been used to compute the appropriate fields
-    #    so it is set to ''. Reffile, normfluxes, scalebychan default to the current
-    #    Setjy defaults. Do not accept these results into the context.
     def _do_setjy(self, field, intent, reffile=None, normfluxes=None, scalebychan=None):
 
         task_args = {

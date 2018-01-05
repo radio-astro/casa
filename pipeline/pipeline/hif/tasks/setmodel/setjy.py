@@ -9,104 +9,72 @@ import numpy as np
 import decimal
 
 
-#from ..common import commonfluxresults
-from pipeline.h.tasks.common import commonfluxresults
-import pipeline.domain as domain
-import pipeline.domain.measures as measures
-from pipeline.hif.heuristics import standard as standard
+
 import pipeline.infrastructure.basetask as basetask
-from pipeline.infrastructure import casa_tasks
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.utils as utils
+import pipeline.infrastructure.vdp as vdp
+from pipeline.infrastructure import casa_tasks
+
+import pipeline.domain as domain
+import pipeline.domain.measures as measures
+from pipeline.h.tasks.common import commonfluxresults
+from pipeline.hif.heuristics import standard as standard
 
 LOG = infrastructure.get_logger(__name__)
 
-class SetjyInputs(basetask.StandardInputs):
-    def __init__(self, context, output_dir=None,
-                 # some standard setjy selection parameters
-                 vis=None, field=None, intent=None, spw=None,
-                 # other standard setjy parameters
-                 model=None, scalebychan=None, fluxdensity=None,
-                 spix=None, reffreq=None, standard=None,
-                 # reference spectrum
-                 #    tuple containing reffreq, fluxdensity, spix
-                 refspectra=None,
-                 # reference flux file
-                 reffile=None, normfluxes=None):
-        # set the properties to the values given as input arguments
-        self._init_properties(vars())
+class SetjyInputs(vdp.StandardInputs):
 
-    @property
+    @vdp.VisDependentProperty
     def field(self):
-        # if field was explicitly set, return that value 
-        if self._field is not None:
-            return self._field
         
-        # if invoked with multiple mses, return a list of fields
-        if type(self.vis) is types.ListType:
-            return self._handle_multiple_vis('field')
-        
-        # otherwise return each field in the current ms that has been observed
+        # Get field ids in the current ms that have been observed
         # with the desired intent
         fields = self.ms.get_fields(intent=self.intent)
         unique_field_names = set([f.name for f in fields])
         field_ids = set([f.id for f in fields])
 
-        # fields with different intents may have the same name. Check for this
-        # and return the IDs if necessary
+        # Fields with different intents may have the same name. Check for this
+        # and return the field ids rather than the names to resolve any 
+        # ambiguities.
         if len(unique_field_names) is len(field_ids):
             return ','.join(unique_field_names)
         else:
             return ','.join([str(i) for i in field_ids])
 
-    @field.setter
-    def field(self, value):
-        self._field = value
+    intent = vdp.VisDependentProperty (default='AMPLITUDE')
 
-    @property
-    def intent(self):
-        if self._intent is not None:
-            return self._intent.replace('*', '')
-        return None            
-    
-    @intent.setter
-    def intent(self, value):
-        if value is None:
-            value = 'AMPLITUDE'
-        self._intent = string.replace(value, '*', '')
-
-    @property
+    @vdp.VisDependentProperty
     def refspectra(self):
-        # If flux density was explicitly set and is *not* -1 (which is 
-        # hard-coded as the default value in the task interface), return that
-        # value. 
+
+        # If flux density was explicitly set and is not equal to -1, which is 
+        # hard-coded as the default value in the task interface return the
+        # default tuple which is composed of the reference frequency, the
+        # Stokes fluxdensity and the spectral index
         if self.fluxdensity is not -1:
             return (self.reffreq, self.fluxdensity, self.spix)
 
-        # If invoked with multiple mses, return a list of flux densities
-        if type(self.vis) is types.ListType:
-            return self._handle_multiple_vis('refspectra')
-
+        # There is no ms object.
         if not self.ms:
             return
 
-        # So _fluxdensity is -1, indicating we should do a flux lookup. The
-        # lookup order is: 
-        # 1) from file, unless it's a solar system object
-        # 2) from CASA
+        # The fluxdensity parameter  is set ot  -1 which indicates that we must do a
+        # flux lookup. The # lookup order is: 
+        #     1) from file, unless it's a solar system object
+        #     2) from CASA
         
-        # TODO: Add reading directly from the context 
+        # TODO: Replace with reading directly from the context 
 
-        # We now read the reference flux value from a file
+        # Read the reference flux values from a file
         ref_flux = []
         if os.path.exists(self.reffile):
             with open(self.reffile, 'rt') as f:
-                reader = csv.reader(f)
 
                 # First row is header row
+                reader = csv.reader(f)
                 reader.next()
         
-                # Loop over rows trying the new format first
+                # Loop over rows trying the new CSV format first
                 for row in reader:
                     try:
                         try:
@@ -123,29 +91,32 @@ class SetjyInputs(basetask.StandardInputs):
                     if os.path.basename(ms_name) != self.ms.basename:
                         continue
 
+                    # Add the value
                     spw_id = int(spw_id)
                     ref_flux.append((field_id, spw_id, float(I), float(Q), 
                                      float(U), float(V), float(spix)))
         
                     # TODO sort the flux values in spw order?
 
-        # Warning if reference file was specified but not found.
+        # Issue warning if the reference file was specified but not found.
         if not os.path.exists(self.reffile) and self.reffile not in ('', None):
             LOG.warning('Flux reference file not found: {!s}'.format(self.reffile))
 
-        # Get the spectral window IDs for the spws specified by the inputs
+        # Get the spectral window ids for the spws specified by the inputs
         spws = self.ms.get_spectral_windows(self.spw)
         spw_ids = sorted(spw.id for spw in spws)
 
         # In order to print flux densities in the same order as the fields, we
-        # need to get the flux density for each field in turn 
+        # must retrieve the flux density for each field in turn 
         field_flux = []
         for field_arg in utils.safe_split(self.field):
+
             # Field names may resolve to multiple field IDs
             fields = self.ms.get_fields(task_arg=field_arg, intent=self.intent)
             field_ids = set([str(field.id) for field in fields])
             field_names = set([field.name for field in fields])
 
+            # Find fluxes
             flux_by_spw = [] 
             for spw_id in spw_ids:
                 reffreq = str(self.ms.get_spectral_window(spw_id).centre_frequency)
@@ -184,84 +155,25 @@ class SetjyInputs(basetask.StandardInputs):
 
         return field_flux[0] if len(field_flux) is 1 else field_flux
 
-    @refspectra.setter
-    def refspectra(self, value):
-        # default value is tuple containing standard defaults
-        if value is None:
-            value = (self.reffreq, self.fluxdensity, self.spix)
-        self._refspectra = value
-
-    @property
+    @vdp.VisDependentProperty
     def reffile(self):
-        return self._reffile
+        value = os.path.join(self.context.output_dir, 'flux.csv')
+        return value
     
-    @reffile.setter
-    def reffile(self, value=None):
-        if value in (None, ''):
-            value = os.path.join(self.context.output_dir, 'flux.csv')
-        self._reffile = value
+    normfluxes = vdp.VisDependentProperty (default = False)
+    reffreq = vdp.VisDependentProperty (default = '1GHz')
+    fluxdensity = vdp.VisDependentProperty (default = -1)
+    spix = vdp.VisDependentProperty (default = 0.0)
+    scalebychan = vdp.VisDependentProperty (default = True)
 
-    @property
-    def normfluxes(self):
-        return self._normfluxes
-    
-    @normfluxes.setter
-    def normfluxes(self, value=None):
-        if value is None:
-            value = False
-        self._normfluxes = value
-
-    @property
-    def reffreq(self):
-        return self._reffreq
-
-    @reffreq.setter
-    def reffreq(self, value):
-        if value is None:
-            value = '1GHz'
-        self._reffreq = value
-
-    @property
-    def fluxdensity(self):
-        return self._fluxdensity
-
-    @fluxdensity.setter
-    def fluxdensity(self, value):
-        if value is None:
-            value = -1
-        self._fluxdensity = value
-
-    @property
-    def spix(self):
-        return self._spix
-
-    @spix.setter
-    def spix(self, value):
-        if value is None:
-            value = 0.0
-        self._spix = value
-
-    @property
-    def scalebychan(self):
-        return self._scalebychan
-
-    @scalebychan.setter
-    def scalebychan(self, value):
-        if value is None:
-            value = True
-        self._scalebychan = value
-
-    @property
+    @vdp.VisDependentProperty
     def standard(self):
-        # if invoked with multiple mses, return a list of standards
-        if type(self.vis) is types.ListType:
-            return self._handle_multiple_vis('standard')
 
-        if not callable(self._standard):
-            return self._standard
+        # Get the standard heuriistics function.
+        heu_standard = standard.Standard()
 
-        # field may be an integer, but the standard heuristic operates on
-        # strings, so find the corresponding name of the fields 
+        # The field may be an integer, but the standard heuristic operates on
+        # strings so determine the corresponding name of the fields 
         field_names = []
         for field in utils.safe_split(self.field):
             if str(field).isdigit():
@@ -271,15 +183,35 @@ class SetjyInputs(basetask.StandardInputs):
             else:
                 field_names.append(field)
 
-        standards = [self._standard(field) for field in field_names]
+        standards = [heu_standard(field) for field in field_names]
         return standards[0] if len(standards) is 1 else standards
 
-    @standard.setter
-    def standard(self, value):
-        if value is None:
-            value = standard.Standard()
-        self._standard = value
-        
+    def __init__(self, context, output_dir=None, vis=None,
+        field=None, intent=None, spw=None,
+        model=None, scalebychan=None, fluxdensity=None,
+        spix=None, reffreq=None, standard=None,
+        #    tuple containing reffreq, fluxdensity, spix
+        refspectra=None,
+        reffile=None, normfluxes=None):
+
+        self.context = context
+        self.vis = vis
+        self.output_dir = output_dir
+
+        self.field = field
+        self.intent = intent
+        self.spw = spw
+
+        self.model = model
+        self.scalebychan = scalebychan
+        self.fluxdensity = fluxdensity
+        self.spix = spix
+        self.reffreq = reffreq
+        self.standard = standard
+        self.refspectra = refspectra
+        self.reffile = reffile
+        self.normfluxes = normfluxes
+
     def to_casa_args(self):
         d = super(SetjyInputs, self).to_casa_args()
 
