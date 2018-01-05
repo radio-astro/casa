@@ -12,159 +12,110 @@ import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.callibrary as callibrary
 import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.contfilehandler as contfilehandler
-from pipeline.h.heuristics import caltable as uvcaltable
+import pipeline.infrastructure.vdp as vdp
 from pipeline.infrastructure import casa_tasks
+
+from pipeline.h.heuristics import caltable as uvcaltable
 
 LOG = infrastructure.get_logger(__name__)
 
 # Fit the contininuum in the UV plane using the CASA style
 # uvcontfit task written by the pipeline.
 
+class UVcontFitInputs(vdp.StandardInputs):
 
-class UVcontFitInputs(basetask.StandardInputs):
+
+    @vdp.VisDependentProperty
+    def caltable(self):
+        namer = uvcaltable.UVcontCaltable()
+        casa_args = self._get_task_args(ignore=('caltable',))
+        return namer.calculate(output_dir=self.output_dir, stage=self.context.stage, **casa_args)
+
+    @vdp.VisDependentProperty
+    def contfile(self):
+        if self.context.contfile:
+            return self.context.contfile
+        elif os.path.exists(os.path.join(self.context.output_dir, 'cont.dat')):
+            return os.path.join(self.context.output_dir, 'cont.dat')
+        else:
+            return ''
+
+    # Always return a caltype of 'uvcont'
+    #    Do we actually need this ?
+    @vdp.VisDependentProperty
+    def caltype(self):
+        return 'uvcont'
+
+    @caltype.convert
+    def caltype(self, value):
+        return 'uvcont'
+
+    # Find all the fields with the specified intent
+    @vdp.VisDependentProperty
+    def field(self):
+        # Return  field ids  in the current ms that have been observed
+        # with the specified intent
+        fields = self.ms.get_fields(intent=self.intent)
+        unique_field_names = set([f.name for f in fields])
+        field_ids = set([f.id for f in fields])
+
+        # Fields with different intents may have the same name. Check for this
+        # and return ids instead of names if this is required to resolve ambiguities
+        if len(unique_field_names) is len(field_ids):
+            return ','.join(unique_field_names)
+        else:
+            return ','.join([str(i) for i in field_ids])
+
+    intent = vdp.VisDependentProperty(default = 'TARGET')
+
+    # Find all the the spws with the specified intent. These may be a subset of the
+    # science spws which include calibration only spws.
+
+    @vdp.VisDependentProperty
+    def spw(self):
+        science_target_intents = set(self.intent.split(','))
+        science_target_spws = []
+
+        science_spws = [spw for spw in self.ms.get_spectral_windows(science_windows_only=True)]
+        for spw in science_spws:
+            if spw.intents.intersection(science_target_intents):
+                science_target_spws.append(spw)
+
+        return ','.join([str(spw.id) for spw in science_target_spws])
+
+    @spw.convert
+    def spw(self, value):
+        science_target_intents = set(self.intent.split(','))
+        science_target_spws = []
+
+        science_spws = [spw for spw in self.ms.get_spectral_windows(task_arg=value, science_windows_only=True)]
+        for spw in science_spws:
+            if spw.intents.intersection(science_target_intents):
+                science_target_spws.append(spw)
+
+        return ','.join([str(spw.id) for spw in science_target_spws])
+
+    combine = vdp.VisDependentProperty(default = '')
+    solint = vdp.VisDependentProperty(default = 'int')
+    fitorder = vdp.VisDependentProperty(default = 1)
+
 
     def __init__(self, context, output_dir=None, vis=None,
         caltable=None, contfile=None, field=None, intent=None, spw=None,
         combine=None, solint=None, fitorder=None):
 
         # Set the properties to the values given as input arguments
-        self._init_properties(vars())
-
-    @property
-    def caltable(self):
-        """
-        Get the caltable argument for these inputs.
-
-        If set to a table-naming heuristic, this should give a sensible name
-        considering the current CASA task arguments.
-        """
-        if type(self.vis) is types.ListType:
-            return self._handle_multiple_vis('caltable')
-
-        if callable(self._caltable):
-            casa_args = self._get_task_args(ignore=('caltable',))
-            return self._caltable(output_dir=self.output_dir,
-                                  stage=self.context.stage,
-                                  **casa_args)
-        return self._caltable
-
-    @caltable.setter
-    def caltable(self, value):
-        if value is None:
-            value = uvcaltable.UVcontCaltable()
-        self._caltable = value
-
-    @property
-    def contfile(self):
-        return self._contfile
-
-    @contfile.setter
-    def contfile(self, value):
-        if value in (None, ''):
-            if self.context.contfile:
-                value = self.context.contfile
-            elif os.path.exists(os.path.join(self.context.output_dir, 'cont.dat')):
-                value = os.path.join(self.context.output_dir, 'cont.dat')
-        self._contfile = value
-
-    @property
-    def caltype(self):
-        return 'uvcont'
-
-    # Find all the fields with the specified intent
-    @property
-    def field(self):
-        # If field was explicitly set, return that value
-        if self._field is not None:
-            return self._field
-
-        # If invoked with multiple mses, return a list of fields
-        if type(self.vis) is types.ListType:
-            return self._handle_multiple_vis('field')
-
-        # Otherwise return each field in the current ms that has been observed
-        # with the desired intent
-        fields = self.ms.get_fields(intent=self.intent)
-        unique_field_names = set([f.name for f in fields])
-        field_ids = set([f.id for f in fields])
-
-        # Fields with different intents may have the same name. Check for this
-        # and return the IDs if necessary
-        if len(unique_field_names) is len(field_ids):
-            return ','.join(unique_field_names)
-        else:
-            return ','.join([str(i) for i in field_ids])
-
-    @field.setter
-    def field(self, value):
-        self._field = value
-
-    # Select TARGET data by default
-    @property
-    def intent(self):
-        return self._intent
-
-    @intent.setter
-    def intent(self, value):
-        if value is None:
-            value = 'TARGET'
-        self._intent = value
-
-    # Find all the the spws with the specified intent. These may be a subset of the
-    # science windows which included calibration spws.
-
-    @property
-    def spw(self):
-        if self._spw is not None:
-            return self._spw
-
-        if type(self.vis) is types.ListType:
-            return self._handle_multiple_vis('spw')
-
-        science_target_intents = set(self.intent.split(','))
-        science_target_spws = []
-
-        science_spws = [spw for spw in self.ms.get_spectral_windows(self._spw)]
-        for spw in science_spws:
-            if spw.intents.intersection(science_target_intents):
-                science_target_spws.append(spw)
-        return ','.join([str(spw.id) for spw in science_target_spws])
-
-    @spw.setter
-    def spw(self, value):
-        if value is None:
-            value = ''
-        self._spw = str(value)
-
-    @property
-    def combine(self):
-        return self._combine
-
-    @combine.setter
-    def combine(self, value):
-        if value is None:
-            value = ''
-        self._combine = value
-
-    @property
-    def solint(self):
-        return self._solint
-
-    @solint.setter
-    def solint(self, value):
-        if value is None:
-            value = 'int'
-        self._solint = value
-
-    @property
-    def fitorder(self):
-        return self._fitorder
-
-    @fitorder.setter
-    def fitorder(self, value):
-        if value is None:
-            value = 1
-        self._fitorder = value
+        self.context = context
+        self.vis = vis
+        self.output_dir = output_dir
+        self.caltable = caltable
+        self.contfile = contfile
+        self.field = field
+        self.intent = intent
+        self.spw = spw
+        self.combine = combine
+        self.solint = solint
+        self.fitorder = fitorder
 
     def to_casa_args(self, caltable, field='', spw='', append=False):
         d = super(UVcontFitInputs, self).to_casa_args()
