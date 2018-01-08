@@ -5,31 +5,17 @@ import types
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
+import pipeline.infrastructure.vdp as vdp
 
 from pipeline.hifa.heuristics import snr as snr_heuristics
 
 LOG = infrastructure.get_logger(__name__)
 
-class BpSolintInputs(basetask.StandardInputs):
+class BpSolintInputs(vdp.StandardInputs):
 
-    def __init__(self, context, output_dir=None, vis=None, field=None,
-         intent=None, spw=None, phaseupsnr=None, minphaseupints=None,
-         evenbpints=None, bpsnr=None, minbpnchan=None, hm_nantennas=None, maxfracflagged=None): 
-
-        # set the properties to the values given as input arguments
-        self._init_properties(vars())
-
-    @property
+    @vdp.VisDependentProperty
     def field(self):
-        # If field was explicitly set, return that value
-        if self._field is not None:
-            return self._field
-
-        # If invoked with multiple ms's, return a list of fields
-        if type(self.vis) is types.ListType:
-            return self._handle_multiple_vis('field')
-
-        # Otherwise return each field name in the current ms that has been
+        # Return field names in the current ms that have been
         # observed with the desired intent
         fields = self.ms.get_fields(intent=self.intent)
         fieldids = set(sorted([f.id for f in fields])) 
@@ -40,31 +26,10 @@ class BpSolintInputs(basetask.StandardInputs):
         field_names = set(fieldnames)
         return ','.join(field_names)
 
-    @field.setter
-    def field(self, value):
-        self._field = value
+    intent = vdp.VisDependentProperty(default = 'BANDPASS')
 
-    @property
-    def intent(self):
-        if self._intent is not None:
-            return self._intent.replace('*', '')
-        return None
-
-    @intent.setter
-    def intent(self, value):
-        if value is None:
-            value = 'BANDPASS'
-        self._intent = string.replace(value, '*', '')
-
-    @property
+    @vdp.VisDependentProperty
     def spw(self):
-        # If spw was explicitly set, return that value
-        if self._spw is not None:
-            return self._spw
-
-        # If invoked with multiple mses, return a list of spws
-        if type(self.vis) is types.ListType:
-            return self._handle_multiple_vis('spw')
 
         # Get the science spw ids
         sci_spws = set([spw.id for spw in \
@@ -88,95 +53,33 @@ class BpSolintInputs(basetask.StandardInputs):
         spws = [str(spw) for spw in sorted(spws)]
         return ','.join(spws)
 
-    @spw.setter
-    def spw(self, value):
-        self._spw = value
+    phaseupsnr = vdp.VisDependentProperty(default = 20.0)
+    minphaseupints = vdp.VisDependentProperty(default = 2)
+    evenbpints = vdp.VisDependentProperty(default = False)
+    bpsnr = vdp.VisDependentProperty(default = 50.0)
+    minbpnchan = vdp.VisDependentProperty(default = 8)
+    hm_nantennas = vdp.VisDependentProperty(default = 'unflagged')
+    maxfracflagged = vdp.VisDependentProperty(default = 0.90)
 
-    @property
-    def phaseupsnr(self):
-        if self._phaseupsnr is not None:
-            return self._phaseupsnr
-        return None
+    def __init__(self, context, output_dir=None, vis=None, field=None,
+         intent=None, spw=None, phaseupsnr=None, minphaseupints=None,
+         evenbpints=None, bpsnr=None, minbpnchan=None, hm_nantennas=None, maxfracflagged=None): 
 
-    @phaseupsnr.setter
-    def phaseupsnr(self, value):
-        if value is None:
-            value = 20.0
-        self._phaseupsnr = value
+         self.context = context
+         self.vis = vis
+         self.output_dir = output_dir
 
-    @property
-    def minphaseupints(self):
-        if self._minphaseupints is not None:
-            return self._minphaseupints
-        return None
+         self.field = field
+         self.intent = intent
+         self.spw = spw
 
-    @minphaseupints.setter
-    def minphaseupints(self, value):
-        if value is None:
-            value = 2
-        self._minphaseupints = value
-
-    @property
-    def evenbpints(self):
-        if self._evenbpints is not None:
-            return self._evenbpints
-        return None
-
-    @evenbpints.setter
-    def evenbpints(self, value):
-        if value is None:
-            value = False
-        self._evenbpints = value
-
-    @property
-    def bpsnr(self):
-        if self._bpsnr is not None:
-            return self._bpsnr
-        return None
-
-    @bpsnr.setter
-    def bpsnr(self, value):
-        if value is None:
-            value = 50.0
-        self._bpsnr = value
-
-    @property
-    def minbpnchan(self):
-        if self._minbpnchan is not None:
-            return self._minbpnchan
-        return None
-
-    @minbpnchan.setter
-    def minbpnchan(self, value):
-        if value is None:
-            value = 8
-        self._minbpnchan = value
-
-    @property
-    def hm_nantennas (self):
-        if self._hm_nantennas is not None:
-            return self._hm_nantennas
-        return None
-
-    # Options are 'all' and 'unflagged'
-    @hm_nantennas.setter
-    def hm_nantennas (self, value):
-        if value is None:
-            value = 'unflagged'
-        self._hm_nantennas = value
-
-    @property
-    def maxfracflagged(self):
-        if self._maxfracflagged is not None:
-            return self._maxfracflagged
-        return None
-
-    @maxfracflagged.setter
-    def maxfracflagged(self, value):
-        if value is None:
-            value = 0.90
-        self._maxfracflagged = value
-
+         self.phaseupsnr = phaseupsnr
+         self.minphaseupints = minphaseupints
+         self.evenbpints = evenbpints
+         self.bpsnr = bpsnr
+         self.minbpnchan = minbpnchan 
+         self.hm_natennas = hm_nantennas
+         self.maxfracflagged = maxfracflagged
 
 class BpSolint(basetask.StandardTaskTemplate):
     Inputs = BpSolintInputs
@@ -326,24 +229,6 @@ class BpSolintResults(basetask.Results):
         self.nbpsolutions = nbpsolutions
         self.bpchansensitivities = bpsensitivities
         self.bpchansnrs = bpchansnrs
-
-#    def merge_with_context(self, context):
-#
-#        if self.vis is None:
-#            LOG.error ( ' No results to merge ')
-#            return
-#
-#        if not self.phaseup_result.final:
-#            LOG.error ( ' No results to merge ')
-#            return
-#
-#        # Merge the spw phaseup offset table
-#        self.phaseup_result.merge_with_context(context)
-#
-#        # Merge the phaseup spwmap
-#        ms = context.observing_run.get_ms( name = self.vis)
-#        if ms:
-#            ms.phaseup_spwmap = self.phaseup_spwmap
 
     def __repr__(self):
         if self.vis is None or not self.spwids:
