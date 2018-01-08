@@ -5,31 +5,17 @@ import types
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
+import pipeline.infrastructure.vdp as vdp
 
 from pipeline.hifa.heuristics import snr as snr_heuristics
 
 LOG = infrastructure.get_logger(__name__)
 
-class GaincalSnrInputs(basetask.StandardInputs):
+class GaincalSnrInputs(vdp.StandardInputs):
 
-    def __init__(self, context, output_dir=None, vis=None, field=None,
-         intent=None, spw=None, phasesnr=None, bwedgefrac=None,
-         hm_nantennas=None, maxfracflagged=None): 
-
-        # set the properties to the values given as input arguments
-        self._init_properties(vars())
-
-    @property
+    @vdp.VisDependentProperty
     def field(self):
-        # If field was explicitly set, return that value
-        if self._field is not None:
-            return self._field
-
-        # If invoked with multiple ms's, return a list of fields
-        if type(self.vis) is types.ListType:
-            return self._handle_multiple_vis('field')
-
-        # Otherwise return each field name in the current ms that has been
+        # Return field names in the current ms that have been
         # observed with the desired intent
         fields = self.ms.get_fields(intent=self.intent)
         fieldids = set(sorted([f.id for f in fields])) 
@@ -40,31 +26,10 @@ class GaincalSnrInputs(basetask.StandardInputs):
         field_names = set(fieldnames)
         return ','.join(field_names)
 
-    @field.setter
-    def field(self, value):
-        self._field = value
+    intent = vdp.VisDependentProperty(default = 'PHASE')
 
-    @property
-    def intent(self):
-        if self._intent is not None:
-            return self._intent.replace('*', '')
-        return None
-
-    @intent.setter
-    def intent(self, value):
-        if value is None:
-            value = 'PHASE'
-        self._intent = string.replace(value, '*', '')
-
-    @property
+    @vdp.VisDependentProperty
     def spw(self):
-        # If spw was explicitly set, return that value
-        if self._spw is not None:
-            return self._spw
-
-        # If invoked with multiple mses, return a list of spws
-        if type(self.vis) is types.ListType:
-            return self._handle_multiple_vis('spw')
 
         # Get the science spw ids
         sci_spws = set([spw.id for spw in \
@@ -92,59 +57,26 @@ class GaincalSnrInputs(basetask.StandardInputs):
         spws = [str(spw) for spw in sorted(spws)]
         return ','.join(spws)
 
-    @spw.setter
-    def spw(self, value):
-        self._spw = value
+    phasesnr = vdp.VisDependentProperty(default = 25.0)
+    bwedgefrac = vdp.VisDependentProperty(default = 0.03125)
+    hm_nantennas = vdp.VisDependentProperty(default = 'unflagged')
+    maxfracflagged = vdp.VisDependentProperty(default = 0.90)
 
-    @property
-    def phasesnr(self):
-        if self._phasesnr is not None:
-            return self._phasesnr
-        return None
+    def __init__(self, context, output_dir=None, vis=None, field=None,
+         intent=None, spw=None, phasesnr=None, bwedgefrac=None,
+         hm_nantennas=None, maxfracflagged=None): 
 
-    @phasesnr.setter
-    def phasesnr(self, value):
-        if value is None:
-            value = 25.0
-        self._phasesnr = value
+         self.context = context
+         self.vis = vis
+         self.output_dir = output_dir
 
-    @property
-    def bwedgefrac(self):
-        if self._bwedgefrac is not None:
-            return self._bwedgefrac
-        return None
-
-    @bwedgefrac.setter
-    def bwedgefrac(self, value):
-        if value is None:
-            value = 0.03125
-        self._bwedgefrac = value
-
-    @property
-    def hm_nantennas (self):
-        if self._hm_nantennas is not None:
-            return self._hm_nantennas
-        return None
-
-    # Options are 'all' and 'unflagged'
-    @hm_nantennas.setter
-    def hm_nantennas (self, value):
-        if value is None:
-            value = 'unflagged'
-        self._hm_nantennas = value
-
-    @property
-    def maxfracflagged(self):
-        if self._maxfracflagged is not None:
-            return self._maxfracflagged
-        return None
-
-    @maxfracflagged.setter
-    def maxfracflagged(self, value):
-        if value is None:
-            value = 0.90
-        self._maxfracflagged = value
-
+         self.field = field
+         self.intent = intent
+         self.spw = spw
+         self.phasesnr = phasesnr
+         self.bwedgefrac = bwedgefrac
+         self.hm_nantennas = hm_nantennas
+         self.maxfracflagged = maxfracflagged
 
 class GaincalSnr(basetask.StandardTaskTemplate):
     Inputs = GaincalSnrInputs
