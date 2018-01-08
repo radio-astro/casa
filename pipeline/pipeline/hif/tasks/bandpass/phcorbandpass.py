@@ -2,10 +2,12 @@ from __future__ import absolute_import
 
 import os
 
-import pipeline.infrastructure.basetask as basetask
-import pipeline.infrastructure.casatools as casatools
-import pipeline.domain.measures as measures
 import pipeline.infrastructure as infrastructure
+import pipeline.infrastructure.basetask as basetask
+import pipeline.infrastructure.vdp as vdp
+import pipeline.infrastructure.casatools as casatools
+
+import pipeline.domain.measures as measures
 from . import bandpassworker
 from . import bandpassmode
 from .. import gaincal
@@ -13,29 +15,17 @@ from .. import gaincal
 LOG = infrastructure.get_logger(__name__)
 
 
-
 class PhcorBandpassInputs(bandpassmode.BandpassModeInputs):
-    phaseup       = basetask.property_with_default('phaseup', True)
-    ##phaseupbw     = basetask.property_with_default('phaseupbw', '500MHz')
-    phaseupbw     = basetask.property_with_default('phaseupbw', '')
-    phaseupsolint = basetask.property_with_default('phaseupsolint', 'int')
-    solint        = basetask.property_with_default('solint', 'inf')
-    #maxchannels   = basetask.property_with_default('maxchannels', 240)
+
+    phaseup       = vdp.VisDependentProperty(default=True)
+    phaseupbw     = vdp.VisDependentProperty(default='')
+    phaseupsolint = vdp.VisDependentProperty(default='int')
+    solint        = vdp.VisDependentProperty(default='inf')
     
-    def __init__(self,
-                 # parameters for BandpassModeInputs:
-                 context, mode=None,
-                 # parameters specific to this task:
-                 phaseup=None, phaseupbw=None, phaseupsolint=None,
-                 # parameters overridden by this task:
-                 #solint=None, maxchannels=None,
-                 solint=None,
-                 # other parameters to be passed to child bandpass task
-                 **parameters):
-        super(PhcorBandpassInputs, self).__init__(context, mode='channel',
-            phaseup=phaseup, phaseupbw=phaseupbw, phaseupsolint=phaseupsolint,
-            #solint=solint, maxchannels=maxchannels, **parameters)
-            solint=solint, **parameters)
+    def __init__(self, context, mode=None, phaseup=None, phaseupbw=None, phaseupsolint=None,
+                 solint=None, **parameters):
+        super(PhcorBandpassInputs, self).__init__(context, mode='channel', phaseup=phaseup,
+            phaseupbw=phaseupbw, phaseupsolint=phaseupsolint, solint=solint, **parameters)
 
 
 class PhcorBandpass(bandpassworker.BandpassWorker):
@@ -77,7 +67,6 @@ class PhcorBandpass(bandpassworker.BandpassWorker):
 
         phaseup_task = gaincal.GTypeGaincal(phaseup_inputs)
         
-        #return self._executor.execute(phaseup_task, merge=True)
         result = self._executor.execute(phaseup_task, merge=False)
         if not result.final:
             LOG.warning('No bandpass phaseup solution computed for %s' % (inputs.ms.basename))

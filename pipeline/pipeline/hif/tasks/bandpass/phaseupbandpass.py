@@ -23,27 +23,19 @@ class PhaseUpBandpassInputs(channelbandpass.ChannelBandpassInputs):
     but does not extend - ChannelBandpassInputs.
 
     """
-    def __init__(self, context, output_dir=None,
-                 #
-                 vis=None, caltable=None, 
-                 # data selection arguments
-                 field=None, spw=None, antenna=None, intent=None,
-                 # solution parameters
-                 solint=None, combine=None, refant=None, minblperant=None,
-                 minsnr=None, solnorm=None, fillgaps=None, append=None,
-                 # preapply calibrations
-                 opacity=None, parang=None):
-        super(PhaseUpBandpassInputs, self).__init__(context,
-            output_dir=output_dir,
-            vis=vis, caltable=caltable,
-            # data selection arguments
-            field=field, spw=spw, intent=intent,
-            # solution parameters
-            solint=solint, combine=combine, refant=refant, 
-            minblperant=minblperant, minsnr=minsnr, solnorm=solnorm,
-            fillgaps=fillgaps, append=append,
-            # preapply calibrations
+    def __init__(self, context, output_dir=None, vis=None, caltable=None, 
+        field=None, spw=None, antenna=None, intent=None,
+        solint=None, combine=None, refant=None, minblperant=None,
+        minsnr=None, solnorm=None, fillgaps=None, append=None,
+        opacity=None, parang=None):
+
+        super(PhaseUpBandpassInputs, self).__init__(context, output_dir=output_dir,
+            vis=vis, caltable=caltable, field=field, spw=spw, intent=intent, antenna=antenna,
+            solint=solint, combine=combine, refant=refant, minblperant=minblperant,
+            minsnr=minsnr, solnorm=solnorm, fillgaps=fillgaps, append=append,
             opacity=opacity, parang=parang)
+
+        self.antenna = antenna
 
     def _copy_to_clone(self, clone):
         super(PhaseUpBandpassInputs, self)._copy_to_clone(clone)

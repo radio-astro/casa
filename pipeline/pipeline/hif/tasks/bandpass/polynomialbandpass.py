@@ -2,11 +2,19 @@ from __future__ import absolute_import
 import string
 
 import pipeline.infrastructure as infrastructure
+import pipeline.infrastructure.vdp as vdp
 import pipeline.infrastructure.api as api
+
 from . import adapters
 from . import bandpassworker
 from . import channelbandpass
 from . import common
+
+__all__ = [
+    'PolynomialBandpass',
+    'PolynomialBandpassInputs'
+]
+
 
 from pipeline.h.heuristics import echoheuristic as echoheuristic
 from pipeline.hif.heuristics import bporder as bporder
@@ -14,57 +22,60 @@ from pipeline.hif.heuristics import bporder as bporder
 LOG = infrastructure.get_logger(__name__)
 
 
-
-class PolynomialBandpassInputs(common.CommonBandpassInputs):
-    def __init__(self, context, output_dir=None,
-                 #
-                 vis=None, caltable=None, 
-                 # data selection arguments
-                 field=None, spw=None, antennas=None, intent=None,
-                 # solution parameters
-                 solint=None, combine=None, refant=None, minblperant=None,
-                 solnorm=None, fillgaps=None, degamp=None, degphase=None,
-                 visnorm=None, maskcenter=None, maskedge=None, append=None,
-                 # preapply calibrations
-                 opacity=None, parang=None):
-        self._init_properties(vars())
-
-    def _printable(self, heuristic):
-        if isinstance(heuristic, echoheuristic.EchoHeuristic):
-            return heuristic()
-        return heuristic 
+class PolynomialBandpassInputs(common.VdpCommonBandpassInputs):
 
     @property
     def bandtype(self):
         return 'BPOLY'
 
-    @property
-    def degamp(self):
-        return self._degamp
+    @vdp.VisDependentProperty
+    def degamp (self):
+        return bporder.BPOrder()
 
-    @degamp.setter
-    def degamp(self, value):
-        if value is None:
-            value = bporder.BPOrder()
-        if not isinstance(value, api.Heuristic):
-            value = echoheuristic.EchoHeuristic(value)
-        self._degamp = value
+    @degamp.convert
+    def degamp (self, value):
+        return echoheuristic.EchoHeuristic(value)
 
-    @property
-    def degphase(self):
-        return self._degphase
+    @vdp.VisDependentProperty
+    def degphase (self):
+        return bporder.BPOrder()
 
-    @degphase.setter
-    def degphase(self, value):
-        if value is None:
-            value = bporder.BPOrder()
-        if not isinstance(value, api.Heuristic):
-            value = echoheuristic.EchoHeuristic(value)
-        self._degphase = value
+    @degphase.convert
+    def degphase (self, value):
+        return echoheuristic.EchoHeuristic(value)
 
+    def __init__(self, context, output_dir=None, vis=None, caltable=None, 
+        field=None, spw=None, antennas=None, intent=None,
+        solint=None, combine=None, refant=None, minblperant=None,
+        solnorm=None, fillgaps=None, degamp=None, degphase=None,
+        visnorm=None, maskcenter=None, maskedge=None, append=None,
+        opacity=None, parang=None):
 
-# extending BandpassWorker allows us to use its analyse, otherwise we'd extend
+        self.context = context
+        self.vis = vis
+        self.output_idr = outputdir
+        self.field = field
+        self.intent = intent
+        self.spw = spw
+        self.antennas = antennas
+        self.solint = solint
+        self.combine = combine
+        self.refant = refant
+        self.minblperant = minblperant
+        self.solnorm = solnorm
+        self.fillgaps = fillgaps
+        self.degamp = degamp
+        self.degphase = degphase
+        self.visnorm = visnorm
+        self.maskcenter = maskcenter
+        self.maskedge = maskedge
+        self.append = append
+        self.opacity = opacity
+        self.parang = parang
+
+# Eextending BandpassWorker allows us to use its analyse method, otherwise we'd extend
 # StandardTaskTemplate.
+
 class PolynomialBandpass(bandpassworker.BandpassWorker):
     Inputs = PolynomialBandpassInputs
 

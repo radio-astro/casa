@@ -1,32 +1,61 @@
 from __future__ import absolute_import
+
 import pipeline.infrastructure.basetask as basetask
+import pipeline.infrastructure.vdp as vdp
 import pipeline.infrastructure.callibrary as callibrary
 import pipeline.infrastructure as infrastructure
 from pipeline.infrastructure import casa_tasks
+
 from . import common
 
 LOG = infrastructure.get_logger(__name__)
 
 
-class BandpassWorkerInputs(common.CommonBandpassInputs):
+class BandpassWorkerInputs(common.VdpCommonBandpassInputs):
     """
     BandpassInputs defines the inputs required by the :class:`Bandpass`
     task.
     """
 
-    def __init__(self, context, output_dir=None,
-                 # 
-                 vis=None, caltable=None, 
-                 # data selection arguments
-                 field=None, spw=None, antenna=None, intent=None,
-                 # solution parameters
-                 solint=None, combine=None, refant=None, minblperant=None,
-                 minsnr=None, solnorm=None, bandtype=None, fillgaps=None, 
-                 degamp=None, degphase=None, visnorm=None, maskcenter=None,
-                 maskedge=None, append=None, scan=None,
-                 # preapply calibrations
-                 opacity=None, parang=None):
-        self._init_properties(vars())
+    def __init__(self, context, output_dir=None, vis=None, caltable=None, 
+        field=None, spw=None, antenna=None, intent=None,
+        solint=None, combine=None, refant=None, minblperant=None,
+        minsnr=None, solnorm=None, bandtype=None, fillgaps=None, 
+        degamp=None, degphase=None, visnorm=None, maskcenter=None,
+        maskedge=None, append=None, scan=None,
+        opacity=None, parang=None):
+
+        self.context = context
+        self.vis = vis
+        self.output_dir = output_dir
+
+        self.field = field
+        self.intent = intent
+        self.spw = spw
+        self.antenna = antenna
+        self.scan = scan
+
+        self.solint = solint
+        self.combine = combine
+        self.refant = refant
+        self.minblperant
+
+        self.minsnr = minsnr
+        self.solnorm = solnorm
+        self.bandtype = bandtype
+        self.fillgaps = fillgaps
+
+        self.degamp = degamp
+        self.degphase = degphase
+        self.visnorm = visnorm
+        self.maskcenter = maskcenter
+        self.maskedge = maskedge
+        self.append = append
+
+        self.opacity = opacity
+        self.parang = parang
+
+        self.caltable = caltable
 
 
 class BandpassWorker(basetask.StandardTaskTemplate):
