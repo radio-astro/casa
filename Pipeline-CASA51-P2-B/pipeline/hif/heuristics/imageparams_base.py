@@ -339,33 +339,49 @@ class ImageParamsHeuristics(object):
 
                         # Now get better estimate from makePSF
                         tmp_psf_filename = str(uuid.uuid4())
-                        center_chan = int(self.observing_run.get_ms(valid_vislist[0]).get_spectral_window(spwid).num_channels/2)
-                        paramList = ImagerParameters(msname=valid_vislist,
-                                                     spw=str(spwid),
-                                                     field=field,
-                                                     imagename=tmp_psf_filename,
-                                                     imsize=cleanhelper.cleanhelper.getOptimumSize(int(2.0*largest_primary_beam_size/cellv)),
-                                                     cell='%.2g%s' % (cellv, cellu),
-                                                     gridder='standard',
-                                                     weighting='briggs',
-                                                     robust=robust,
-                                                     uvtaper=uvtaper,
-                                                     specmode='cube',
-                                                     start=center_chan,
-                                                     nchan=1)
-                        makepsf_imager = PySynthesisImager(params=paramList)
-                        makepsf_imager.initializeImagers()
-                        makepsf_imager.initializeNormalizers()
-                        makepsf_imager.setWeighting()
-                        makepsf_imager.makePSF()
-                        makepsf_imager.deleteTools()
 
-                        with casatools.ImageReader('%s.psf' % (tmp_psf_filename)) as image:
-                            makepsf_beams.append(image.restoringbeam())
+                        # Need to find an unflagged channel
+                        makepsf_channel = None
+                        for msname in valid_vislist:
+                            # Get the channel flags
+                            channel_flags = self.get_channel_flags(msname, field, str(spwid))
 
-                        tmp_psf_images = glob.glob('%s.*' % (tmp_psf_filename))
-                        for tmp_psf_image in tmp_psf_images:
-                            shutil.rmtree(tmp_psf_image)
+                            # Get first unflagged channel from the center
+                            makepsf_channel = self.get_first_unflagged_channel_from_center(channel_flags)
+
+                            if makepsf_channel is not None:
+                                break
+
+                        if makepsf_channel is not None:
+                            LOG.info('Using channel %d for makePSF' % (makepsf_channel))
+                            paramList = ImagerParameters(msname=valid_vislist,
+                                                         spw=str(spwid),
+                                                         field=field,
+                                                         imagename=tmp_psf_filename,
+                                                         imsize=cleanhelper.cleanhelper.getOptimumSize(int(2.0*largest_primary_beam_size/cellv)),
+                                                         cell='%.2g%s' % (cellv, cellu),
+                                                         gridder='standard',
+                                                         weighting='briggs',
+                                                         robust=robust,
+                                                         uvtaper=uvtaper,
+                                                         specmode='cube',
+                                                         start=makepsf_channel,
+                                                         nchan=1)
+                            makepsf_imager = PySynthesisImager(params=paramList)
+                            makepsf_imager.initializeImagers()
+                            makepsf_imager.initializeNormalizers()
+                            makepsf_imager.setWeighting()
+                            makepsf_imager.makePSF()
+                            makepsf_imager.deleteTools()
+
+                            with casatools.ImageReader('%s.psf' % (tmp_psf_filename)) as image:
+                                # Avoid bad PSFs
+                                if all(qaTool.getvalue(qaTool.convert(image.restoringbeam()['minor'], 'arcsec')) > 1e-5):
+                                    makepsf_beams.append(image.restoringbeam())
+
+                            tmp_psf_images = glob.glob('%s.*' % (tmp_psf_filename))
+                            for tmp_psf_image in tmp_psf_images:
+                                shutil.rmtree(tmp_psf_image)
 
         finally:
             casatools.imager.done()
@@ -985,6 +1001,98 @@ class ImageParamsHeuristics(object):
 
         return spw_topo_freq_param, spw_topo_chan_param, spw_topo_freq_param_dict, spw_topo_chan_param_dict, total_topo_bw, aggregate_topo_bw, aggregate_lsrk_bw
 
+    def get_channel_flags(self, msname, field, spw):
+        """
+        Determine channel flags for a given field and spw selection in one MS.
+        """
+
+        # CAS-8997
+        #
+        # ms.selectinit(datadescid=x) is required to avoid the 'Data shape
+        # varies...' warning message. There's no guarantee that a single
+        # spectral window will resolve to a single data description, e.g.
+        # the polarisation setup may change. There's not enough
+        # information passed into this function to consistently identify the
+        # data description that should be specified so on occasion the
+        # warning message will reoccur.
+        #
+        # TODO refactor method signature to include data description ID
+        #
+        msDO = self.observing_run.get_ms(msname)
+        spwDO = msDO.get_spectral_window(spw)
+        data_description_ids = {dd.id for dd in msDO.data_descriptions if dd.spw is spwDO}
+        if len(data_description_ids) == 1:
+            dd_id = data_description_ids.pop()
+        else:
+            msg = 'Could not resolve {!s} spw {!s} to a single data description'.format(msname, spwDO.id)
+            LOG.warning(msg)
+            dd_id = 0
+
+        try:
+            with casatools.MSReader(msname) as msTool:
+                # CAS-8997 selectinit is required to avoid the 'Data shape varies...' warning message
+                msTool.selectinit(datadescid=dd_id)
+                # Antenna selection does not work (CAS-8757)
+                #staql={'field': field, 'spw': spw, 'antenna': '*&*'}
+                staql={'field': field, 'spw': spw}
+                msTool.msselect(staql)
+                msTool.iterinit(maxrows = 500)
+                msTool.iterorigin()
+
+                channel_flags = np.array([True] * spwDO.num_channels)
+
+                iterating = True
+                while iterating:
+                    flag_ants = msTool.getdata(['flag','antenna1','antenna2'])
+
+                    # Calculate averaged flagging vector keeping all unflagged
+                    # channels from any baseline.
+                    if flag_ants != {}:
+                        for i in xrange(flag_ants['flag'].shape[2]):
+                            # Antenna selection does not work (CAS-8757)
+                            if (flag_ants['antenna1'][i] != flag_ants['antenna2'][i]):
+                                for j in xrange(flag_ants['flag'].shape[0]):
+                                     channel_flags = np.logical_and(channel_flags, flag_ants['flag'][j,:,i])
+
+                    iterating = msTool.iternext()
+
+        except Exception as e:
+            LOG.error('Exception while determining flags: %s' % e)
+            channel_flags = np.array([])
+
+        return channel_flags
+
+    def get_first_unflagged_channel_from_center(self, channel_flags):
+        """
+        Find first unflagged channel from center channel.
+        """
+
+        i_low = i_high = None
+        num_channels = len(channel_flags)
+        center_channel = int(num_channels / 2)
+
+        for i in xrange(center_channel, -1, -1):
+            if channel_flags[i] == False:
+                i_low = i
+                break
+
+        for i in xrange(center_channel, num_channels):
+            if channel_flags[i] == False:
+                i_high = i
+                break
+
+        if (i_low is None) and (i_high is None):
+            return None
+        elif (i_low is None):
+            return i_high
+        elif (i_high is None):
+            return i_low
+        else:
+            if (center_channel-i_low) < (i_high-center_channel):
+                return i_low
+            else:
+                return i_high
+
     def lsrk_freq_intersection(self, vis, field, spw):
         """
         Calculate LSRK frequency intersection of a list of MSs for a
@@ -994,62 +1102,13 @@ class ImageParamsHeuristics(object):
         lsrk_channel_widths = []
 
         for msname in vis:
-            # CAS-8997
-            #
-            # ms.selectinit(datadescid=x) is required to avoid the 'Data shape
-            # varies...' warning message. There's no guarantee that a single
-            # spectral window will resolve to a single data description, e.g.
-            # the polarisation setup may change. There's not enough
-            # information passed into this function to consistently identify the
-            # data description that should be specified so on occasion the
-            # warning message will reoccur.
-            #
-            # TODO refactor method signature to include data description ID
-            #
-            msDO = self.observing_run.get_ms(msname)
-            spwDO = msDO.get_spectral_window(spw)
-            data_description_ids = {dd.id for dd in msDO.data_descriptions if dd.spw is spwDO}
-            if len(data_description_ids) == 1:
-                dd_id = data_description_ids.pop()
-            else:
-                msg = 'Could not resolve {!s} spw {!s} to a single data description'.format(msname, spwDO.id)
-                LOG.warning(msg)
-                dd_id = 0
+            # Get the channel flags
+            channel_flags = self.get_channel_flags(msname, field, spw)
 
-            try:
-                with casatools.MSReader(msname) as msTool:
-                    # CAS-8997 selectinit is required to avoid the 'Data shape varies...' warning message
-                    msTool.selectinit(datadescid=dd_id)
-                    # Antenna selection does not work (CAS-8757)
-                    #staql={'field': field, 'spw': spw, 'antenna': '*&*'}
-                    staql={'field': field, 'spw': spw}
-                    msTool.msselect(staql)
-                    msTool.iterinit(maxrows = 500)
-                    msTool.iterorigin()
+            # Get indices of unflagged channels
+            nfi = np.where(channel_flags == False)[0]
 
-                    result = np.array([True] * spwDO.num_channels)
-
-                    iterating = True
-                    while iterating:
-                        flag_ants = msTool.getdata(['flag','antenna1','antenna2'])
-
-                        # Calculate averaged flagging vector keeping all unflagged
-                        # channels from any baseline.
-                        if flag_ants != {}:
-                            for i in xrange(flag_ants['flag'].shape[2]):
-                                # Antenna selection does not work (CAS-8757)
-                                if (flag_ants['antenna1'][i] != flag_ants['antenna2'][i]):
-                                    for j in xrange(flag_ants['flag'].shape[0]):
-                                         result = np.logical_and(result, flag_ants['flag'][j,:,i])
-
-                        iterating = msTool.iternext()
-
-                nfi = np.where(result == False)[0]
-
-            except Exception as e:
-                LOG.error('Exception while determining edge flags: %s' % e)
-                nfi = np.array([])
-
+            # Use unflagged edge channels to determine LSRK frequency range
             if nfi.shape != (0,):
                 with casatools.ImagerReader(msname) as imager:
                     # Just the edges. Skip one extra channel in final frequency range.
@@ -1321,22 +1380,17 @@ class ImageParamsHeuristics(object):
     def cyclefactor(self):
         return None
 
-
     def cycleniter(self):
         return None
-
 
     def scales(self):
         return None
 
-
     def uvtaper(self, beam_natural=None):
         return None
 
-
     def uvrange(self):
         return None
-
 
     def reffreq(self):
         return None
