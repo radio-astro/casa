@@ -5,6 +5,7 @@ import re
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
+import pipeline.infrastructure.vdp as vdp
 from pipeline.h.tasks.common.arrayflaggerbase import FlagCmd
 
 LOG = infrastructure.get_logger(__name__)
@@ -32,12 +33,15 @@ class WvrgcalFlagSetterResult(basetask.Results):
         pass
 
 
-class WvrgcalFlagSetterInputs(basetask.StandardInputs):
+class WvrgcalFlagSetterInputs(vdp.StandardInputs):
     """This class handles the setting of bad antennas in
     wvrgcal.
     """
     def __init__(self, context, table, vis=None, datatask=None):
-        self._init_properties(vars())
+        self.context = context
+        self.vis = vis
+        self.datatask = datatask
+        self.table = table
 
 
 class WvrgcalFlagSetter(basetask.StandardTaskTemplate):
