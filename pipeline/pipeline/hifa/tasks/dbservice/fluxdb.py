@@ -1,19 +1,11 @@
-import os
-import sys
 import urllib
-import csv
 from xml.dom import minidom
 import datetime
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.casatools as casatools
-import pipeline.infrastructure.utils as utils
 import pipeline.infrastructure.basetask as basetask
-import pipeline.infrastructure.callibrary as callibrary
-from pipeline.infrastructure import casa_tasks
-
-#execfile('analysisUtils.py')
-#import analysisUtils as au
+import pipeline.infrastructure.vdp as vdp
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -33,22 +25,15 @@ https://bugs.nrao.edu/browse/CAS-6869
 # http://twiki.csrg.cl/twiki/bin/view/LIRAE/SourceCatalogueVO
 
 
-class FluxdbInputs(basetask.StandardInputs):
+class FluxdbInputs(vdp.StandardInputs):
+
+    serviceurl = vdp.VisDependentProperty (default='http://asa-test.alma.cl/bfs/')
+
     def __init__(self, context, output_dir=None, vis=None, serviceurl=None):
-        # set the properties to the values given as input arguments
-        self._init_properties(vars())
-
-    @property
-    def serviceurl(self):
-        return self._serviceurl
-
-    @serviceurl.setter
-    def serviceurl(self, value):
-        if value is None:
-            #value = 'http://bender.csrg.cl:2121/bfs-0.2/ssap'
-            value = 'http://asa-test.alma.cl/bfs/'
-        self._serviceurl = value
-        
+        self.context = context
+        self.vis = vis
+        self.output_dir = output_dir
+        self.serviceurl = serviceurl
     
 class FluxdbResults(basetask.Results):
     def __init__(self, fluxtable=[]):
