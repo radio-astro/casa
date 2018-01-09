@@ -55,7 +55,7 @@ caltables are presented below.</p>
                   data_spw="${True}">
 
 	<%def name="title()">
-		Flagging plots
+		Flagging metric view(s)
 	</%def>
 
 	<%def name="preamble()">
@@ -79,31 +79,6 @@ caltables are presented below.</p>
 	</%def>
 </%self:plot_group>
 
-% if metric_plots:
-<h3>Flagging metric views</h3>
-
-<p>Flagging metric views are calculated for various data intents after both
-the pipeline and wvrgcal task have selected antennas whose WVR correction
-needs flagging. The correction applied to those antennas in these plots is
-the correction interpolated from neighboring antennas. Sometimes antennas can
-have sufficiently corrupted data that the metric can still not be calculated,
-but those antennas will in most cases be flagged for the rest of the
-calibration process. Click on a link below to show all flagging metric views
-for that measurement set.</p>
-
-<ul>
-% for ms, subpage in metric_subpages.items():
-    <li>
-        <a href="${os.path.relpath(os.path.join(dirname, subpage), pcontext.report_dir)}"
-           data-vis="${ms}"
-           class="replace">
-            ${ms}
-        </a>
-    </li>
-% endfor
-</ul>
-% endif
-
 <%self:plot_group plot_dict="${phase_offset_summary_plots}"
 				  url_fn="${lambda x: phase_offset_subpages[x]}"
 				  data_spw="${True}"
@@ -114,11 +89,39 @@ for that measurement set.</p>
 	</%def>
 
 	<%def name="preamble()">
-		<p>These plots show the deviation about the scan median phase before and after WVR application.
-		Points are plotted per integration and per correlation.</p>
+        % if metric_plots:
 
-		<p>Click the summary plots to enlarge, or click the summary title for a gallery of more
-		detailed plots for individual antennas.</p>
+            <p>The following set of plots show the improvement in the rms phase
+            after applying the WVR corrections. These plots are calculated for
+            various data intents after both the pipeline and wvrgcal task have
+            selected antennas whose WVR correction needs flagging. The
+            correction applied to those antennas in these plots is the
+            correction interpolated from neighboring antennas. Sometimes
+            antennas can have sufficiently corrupted data that the metric can
+            still not be calculated, but those antennas will in most cases be
+            flagged for the rest of the calibration process. Click on a link
+            below to show all flagging metric views for that measurement set.
+            </p>
+
+            <ul>
+            % for ms, subpage in metric_subpages.items():
+                <li>
+                    <a href="${os.path.relpath(os.path.join(dirname, subpage), pcontext.report_dir)}"
+                       data-vis="${ms}"
+                       class="replace">
+                        ${ms}
+                    </a>
+                </li>
+            % endfor
+            </ul>
+            % endif
+
+		<p>The next set of plots show the deviation about the scan median phase
+        before and after WVR application. Points are plotted per integration
+        and per correlation.</p>
+
+		<p>Click the summary plots to enlarge, or click the summary title for a
+        gallery of more detailed plots for individual antennas.</p>
 	</%def>
 
 	<%def name="mouseover(plot)">Click to show WVR phase offset plots for spw ${plot.parameters['spw']}</%def>
@@ -146,15 +149,16 @@ for that measurement set.</p>
 		(upper panel) vs distance to the reference antenna before and after
         WVR application.</p>
 
-		<p>The lower panel of these plots show the median absolute deviation of the gaincal
-		corrections with and without WVR correction applied. The upper panel shows the ratio of
-		the RMS deviations about the median for data with WVR correction applied to the RMS
-		deviations without WVR correction. One plot is generated per scan, with points plotted per
-		correlation and antenna as a function of distance from the reference antenna.</p>
+		<p>The lower panel of these plots show the median absolute deviation of
+        the gaincal corrections with and without WVR correction applied. The
+        upper panel shows the ratio of the RMS deviations about the median for
+        data with WVR correction applied to the RMS deviations without WVR
+        correction. One plot is generated per scan, with points plotted per
+		correlation and antenna as a function of distance from the reference
+        antenna.</p>
 
-		<p>Click the summary plots to enlarge them, or the summary plot
-		title to show a gallery of phase offset plots for individual
-		antenna.</p>
+		<p>Click the summary plots to enlarge them, or the summary plot title
+        to show a gallery of phase offset plots for individual antenna.</p>
 	</%def>
 
 	<%def name="mouseover(plot)">Click to show WVR phase offset vs baseline plots for spw ${plot.parameters['spw']}</%def>

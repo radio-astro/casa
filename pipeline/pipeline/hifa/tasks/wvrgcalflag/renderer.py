@@ -196,8 +196,8 @@ class WvrcalflagMetricPlotsRenderer(basetemplates.JsonPlotRenderer):
     def __init__(self, context, result, plots):
         vis = utils.get_vis_from_plots(plots)
 
-        title = 'WVR flagging metric view for %s' % vis
-        outfile = filenamer.sanitize('flagging_metric-%s.html' % vis)
+        title = 'RMS phase improvement view for %s' % vis
+        outfile = filenamer.sanitize('rms_phase_improvement-%s.html' % vis)
 
         super(WvrcalflagMetricPlotsRenderer, self).__init__(
                 'generic_x_vs_y_spw_intent_plots.mako', 
@@ -247,7 +247,7 @@ class WvrgcalflagFlagPlotRenderer(basetemplates.JsonPlotRenderer):
     def __init__(self, context, result, plots):
         vis = utils.get_vis_from_plots(plots)
 
-        title = 'Flagging plots for %s' % vis
+        title = 'Flagging metric view for %s' % vis
         outfile = filenamer.sanitize('flagging_antenna_vs_time-%s.html' % vis)
 
         super(WvrgcalflagFlagPlotRenderer, self).__init__(
