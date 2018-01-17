@@ -3,26 +3,30 @@ from __future__ import absolute_import
 import pipeline.infrastructure.basetask as basetask
 from pipeline.infrastructure import casa_tasks
 import pipeline.infrastructure as infrastructure
+import pipeline.infrastructure.vdp as vdp
+
 
 LOG = infrastructure.get_logger(__name__)
 
 # CHECKING FLAGGING OF ALL CALIBRATORS
 # use rflag mode of flagdata
 
-class CheckflagInputs(basetask.StandardInputs):
-    def __init__(self, context, vis=None, checkflagmode=None):
-        # set the properties to the values given as input arguments
-        self._init_properties(vars())
-    
-    @property
+
+class CheckflagInputs(vdp.StandardInputs):
+    @vdp.VisDependentProperty
     def checkflagmode(self):
         return self._checkflagmode
 
-    @checkflagmode.setter
+    @checkflagmode.convert
     def checkflagmode(self, value):
         if value is None:
             value = None
         self._checkflagmode = value
+
+    def __init__(self, context, vis=None, checkflagmode=None):
+        self.context = context
+        self.vis = vis
+        self.checkflagmode = checkflagmode
     
 
 class CheckflagResults(basetask.Results):
