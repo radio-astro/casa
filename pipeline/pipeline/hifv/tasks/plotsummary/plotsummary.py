@@ -2,16 +2,17 @@ from __future__ import absolute_import
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
+import pipeline.infrastructure.vdp as vdp
 
 from ..finalcals import applycals
 
 LOG = infrastructure.get_logger(__name__)
 
 
-class PlotSummaryInputs(basetask.StandardInputs):
+class PlotSummaryInputs(vdp.StandardInputs):
     def __init__(self, context, vis=None):
-        # set the properties to the values given as input arguments
-        self._init_properties(vars())
+        self.context = context
+        self.vis = vis
 
 
 class PlotSummaryResults(basetask.Results):
