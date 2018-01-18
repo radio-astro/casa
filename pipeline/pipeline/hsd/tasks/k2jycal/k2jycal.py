@@ -1,65 +1,56 @@
 from __future__ import absolute_import
 
 import os
-import types
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
+import pipeline.infrastructure.vdp as vdp
 from pipeline.h.heuristics import caltable as caltable_heuristic
 from . import jyperkreader
 from . import worker
 
 LOG = infrastructure.get_logger(__name__)
 
-class SDK2JyCalInputs(basetask.StandardInputs):
+class SDK2JyCalInputs(vdp.StandardInputs):
+
+    reffile = vdp.VisDependentProperty(default='jyperk.csv')
+
+    @vdp.VisDependentProperty
+    def infiles(self):
+        return self.vis
+
+    @infiles.convert
+    def infiles(self, value):
+        self.vis = value
+        return value
+
+    @vdp.VisDependentProperty
+    def caltable(self):
+        """
+        Get the caltable argument for these inputs.
+
+        If set to a table-naming heuristic, this should give a sensible name
+        considering the current CASA task arguments.
+        """
+        namer = caltable_heuristic.AmpCaltable()
+        # ignore caltable to avoid circular reference
+        casa_args = self._get_task_args(ignore=('caltable',))
+        return namer.calculate(output_dir=self.output_dir,
+                               stage=self.context.stage, **casa_args)
+    
     def __init__(self, context, output_dir=None, infiles=None, caltable=None,
                  reffile=None):
-        vis=infiles
+        super(SDK2JyCalInputs, self).__init__()
+
+        # context and vis/infiles must be set first so that properties that require
+        # domain objects can be function
+        self.context = context
+        self.infiles = infiles
+        self.output_dir = output_dir
+
         # set the properties to the values given as input arguments
-        self._init_properties(vars())
-        if type(self.vis) is not types.ListType:
-            self.vis = [self.vis]
-
-    @property
-    def caltable(self):
-        # The value of caltable is ms-dependent, so test for multiple
-        # measurement sets and listify the results if necessary 
-        if type(self.infiles) is types.ListType:
-            return self._handle_multiple_vis('caltable')
-        
-        # Get the name.
-        if callable(self._caltable):
-            casa_args = self._get_partial_task_args()
-            return self._caltable(output_dir=self.output_dir,
-                                  stage=self.context.stage,
-                                  **casa_args)
-        return self._caltable
-    
-    @caltable.setter
-    def caltable(self, value):
-        if value is None:
-            value = caltable_heuristic.AmpCaltable()
-        self._caltable = value
-
-    @property
-    def caltype(self):
-        return 'amp'
-
-    @property
-    def reffile(self):
-        return self._reffile
-    
-    @reffile.setter
-    def reffile(self, value):
-        if value is None:
-            value = 'jyperk.csv'
-        self._reffile = value
-
-    # Avoids circular dependency on caltable.
-    def _get_partial_task_args(self):
-        return {'vis'     : self.vis,
-                'caltype' : self.caltype}
-
+        self.caltable = caltable
+        self.reffile = reffile
 
 class SDK2JyCalResults(basetask.Results):
     def __init__(self, vis=None, final=[], pool=[], reffile=None, factors={},
@@ -108,7 +99,7 @@ class SDK2JyCal(basetask.StandardTaskTemplate):
     def prepare(self):
         inputs = self.inputs
 
-        if self.inputs.reffile is None or not os.path.exists(self.inputs.reffile):
+        if not os.path.exists(self.inputs.reffile):
             LOG.error('No scaling factors available')
             return SDK2JyCalResults(vis=os.path.basename(inputs.vis), pool=[])
         # read scaling factor list
