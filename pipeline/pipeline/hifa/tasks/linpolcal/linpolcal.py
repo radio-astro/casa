@@ -5,6 +5,7 @@ import types
 import pipeline.hif.tasks.gaincal as gaincal
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
+import pipeline.infrastructure.vdp as vdp
 import pipeline.infrastructure.callibrary as callibrary
 from pipeline.h.heuristics import caltable as hcaltable
 from pipeline.hif.tasks.common import commoncalinputs
@@ -16,18 +17,9 @@ from .resultobjects import LinpolcalResult
 LOG = infrastructure.get_logger(__name__)
 
 
-class LinpolcalInputs(commoncalinputs.CommonCalibrationInputs):
-    def __init__(self, context, output_dir=None,
-      vis=None, g0table=None, delaytable=None, 
-      xyf0table=None, g1table=None, df0table=None,
-      # data selection
-      field=None, spw=None, antenna=None, intent=None,
-      # solution parameters
-      gaincalsolint=None, minblperant=None, refant=None):
-        # set the properties to the values given as input arguments
-        self._init_properties(vars())
+class LinpolcalInputs(commoncalinputs.VdpCommonCalibrationInputs):
 
-    @property
+    @vdp.VisDependentProperty
     def delaytable(self):
         # best to have logic for unset value in the getter, if in the setter
         # you have to avoid race conditions with other setters that this one
@@ -41,11 +33,11 @@ class LinpolcalInputs(commoncalinputs.CommonCalibrationInputs):
 
         return self._delaytable
 
-    @delaytable.setter
+    @delaytable.convert
     def delaytable(self, value):
         self._delaytable = value
 
-    @property
+    @vdp.VisDependentProperty
     def df0table(self):
         # best to have logic for unset value in the getter, if in the setter
         # you have to avoid race conditions with other setters that this one
@@ -59,11 +51,11 @@ class LinpolcalInputs(commoncalinputs.CommonCalibrationInputs):
 
         return self._df0table
 
-    @df0table.setter
+    @df0table.convert
     def df0table(self, value):
         self._df0table = value
 
-    @property
+    @vdp.VisDependentProperty
     def g0table(self):
         # best to have logic for unset value in the getter, if in the setter
         # you have to avoid race conditions with other setters that this one
@@ -80,11 +72,11 @@ class LinpolcalInputs(commoncalinputs.CommonCalibrationInputs):
 
         return self._g0table
 
-    @g0table.setter
+    @g0table.convert
     def g0table(self, value):
         self._g0table = value
 
-    @property
+    @vdp.VisDependentProperty
     def g1table(self):
         # best to have logic for unset value in the getter, if in the setter
         # you have to avoid race conditions with other setters that this one
@@ -101,21 +93,21 @@ class LinpolcalInputs(commoncalinputs.CommonCalibrationInputs):
 
         return self._g1table
 
-    @g1table.setter
+    @g1table.convert
     def g1table(self, value):
         self._g1table = value
 
-    @property
+    @vdp.VisDependentProperty
     def gaincalsolint(self):
         return self._gaincalsolint
 
-    @gaincalsolint.setter
+    @gaincalsolint.convert
     def gaincalsolint(self, value):
         if value is None:
             value = 'int'
         self._gaincalsolint = value
 
-    @property
+    @vdp.VisDependentProperty
     def xyf0table(self):
         # best to have logic for unset value in the getter, if in the setter
         # you have to avoid race conditions with other setters that this one
@@ -129,9 +121,34 @@ class LinpolcalInputs(commoncalinputs.CommonCalibrationInputs):
 
         return self._xyf0table
 
-    @xyf0table.setter
+    @xyf0table.convert
     def xyf0table(self, value):
         self._xyf0table = value
+
+    def __init__(self, context, output_dir=None, vis=None, g0table=None, delaytable=None,
+                 xyf0table=None, g1table=None, df0table=None,
+                 field=None, spw=None, antenna=None, intent=None,
+                 gaincalsolint=None, minblperant=None, refant=None):
+        super(LinpolcalInputs, self).__init__()
+
+        self.context = context
+        self.vis = vis
+        self.output_dir = output_dir
+
+        self.g0table = g0table
+        self.delaytable = delaytable
+        self.xyf0table = xyf0table
+        self.g1table = g1table
+        self.df0table = df0table
+
+        self.intent = intent
+        self.field = field
+        self.spw = spw
+        self.antenna = antenna
+        self.refant = refant
+
+        self.gaincalsolint = gaincalsolint
+        self.minblperant = minblperant
 
 
 class Linpolcal(basetask.StandardTaskTemplate):
