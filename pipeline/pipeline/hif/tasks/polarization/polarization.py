@@ -1,11 +1,9 @@
 from __future__ import absolute_import
-import os
-
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
+import pipeline.infrastructure.vdp as vdp
 from pipeline.infrastructure import casa_tasks
-#import pipeline.hif.tasks.gaincal as gaincal
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -32,10 +30,10 @@ class PolarizationResults(basetask.Results):
         return 'PolarizationResults:'
 
 
-class PolarizationInputs(basetask.StandardInputs):
+class PolarizationInputs(vdp.StandardInputs):
     def __init__(self, context, vis=None):
-        # set the properties to the values given as input arguments
-        self._init_properties(vars())
+        self.context = context
+        self.vis = vis
 
 
 class Polarization(basetask.StandardTaskTemplate):
@@ -55,22 +53,8 @@ class Polarization(basetask.StandardTaskTemplate):
     def do_gaincal(self, caltable):
         inputs = self.inputs
 
-        #Similar inputs to linpolcal.py
-        task_inputs = gaincal.GTypeGaincal.Inputs(inputs.context,
-                                                  output_dir=inputs.output_dir,
-                                                  vis=inputs.vis,
-                                                  caltable=caltable,
-                                                  field=inputs.field,
-                                                  intent='',
-                                                  scan='',
-                                                  spw=inputs.spw,
-                                                  solint='int',
-                                                  gaintype='KCROSS',
-                                                  refant=RefAntOutput[0].lower(),
-                                                  smodel=[1, 0, 1, 0])
 
-        gaincal_task = gaincal.GTypeGaincal(task_inputs)
-        result = self._executor.execute(gaincal_task, merge=True)
+        result = True
 
         return result
 
@@ -95,7 +79,7 @@ class Polarization(basetask.StandardTaskTemplate):
                      'caltable': caltable,
                      'field': '0',
                      'refant': RefAntOutput[0].lower(),
-                     'gaintable': GainTables,
+                     'gaintable': [],
                      'poltype': poltype,
                      'gainfield': ['', '', '', '0', '0', ''],
                      'spwmap': [[], spwmapK, [], [], [], []],

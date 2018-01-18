@@ -3,6 +3,7 @@ import math
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
+import pipeline.infrastructure.vdp as vdp
 from pipeline.infrastructure import casa_tasks
 from pipeline.hif.tasks.polarization import polarization
 import pipeline.hif.tasks.gaincal as gaincal
@@ -59,23 +60,16 @@ class CircfeedpolcalResults(polarization.PolarizationResults):
 
 
 class CircfeedpolcalInputs(polarization.PolarizationInputs):
+    Dterm_solint = vdp.VisDependentProperty(default='2MHz')
+    leakge_poltype = vdp.VisDependentProperty(default='')
+    refantignore = vdp.VisDependentProperty(default='')
+
     def __init__(self, context, vis=None, Dterm_solint=None, refantignore=None, leakage_poltype=None):
-        # set the properties to the values given as input arguments
-        self._init_properties(vars())
-
-    Dterm_solint = basetask.property_with_default('Dterm_solint', '2MHz')
-    leakge_poltype = basetask.property_with_default('leakage_poltype', '')
-
-    @property
-    def refantignore(self):
-        return self._refantignore
-
-    @refantignore.setter
-    def refantignore(self, value):
-        if value is None:
-            value = ''
-        self._refantignore = value
-
+        self.context = context
+        self.vis = vis
+        self.Dterm_solint = Dterm_solint
+        self.refantignore = refantignore
+        self.leakge_poltype = leakage_poltype
 
 
 class Circfeedpolcal(polarization.Polarization):
