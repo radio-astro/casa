@@ -3,24 +3,24 @@ from __future__ import absolute_import
 import os
 import shutil
 
-from . import vlaifaqua
-# import pipeline.h.tasks.common.manifest as manifest
 import pipeline.infrastructure as infrastructure
-import pipeline.infrastructure.basetask as basetask
+import pipeline.infrastructure.vdp as vdp
 from pipeline.h.tasks.exportdata import exportdata
+from . import vlaifaqua
 
 LOG = infrastructure.get_logger(__name__)
 
 
 class VLAExportDataInputs(exportdata.ExportDataInputs):
+    gainmap = vdp.VisDependentProperty(default=False)
 
-    def __init__(self, context, output_dir=None, session=None, vis=None, exportmses=None,
-                 pprfile=None, calintents=None, calimages=None, targetimages=None,
-                 products_dir=None, gainmap=None):
-        # set the properties to the values given as input arguments
-        self._init_properties(vars())
-
-    gainmap = basetask.property_with_default('gainmap', False)
+    def __init__(self, context, output_dir=None, session=None, vis=None, exportmses=None, pprfile=None, calintents=None,
+                 calimages=None, targetimages=None, products_dir=None, gainmap=None):
+        super(VLAExportDataInputs, self).__init__(context, output_dir=output_dir, session=session, vis=vis,
+                                                  exportmses=exportmses, pprfile=pprfile, calintents=calintents,
+                                                  calimages=calimages, targetimages=targetimages,
+                                                  products_dir=products_dir)
+        self.gainmap = gainmap
 
 
 class VLAExportData(exportdata.ExportData):

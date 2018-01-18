@@ -9,6 +9,7 @@ import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.casatools as casatools
 from pipeline.infrastructure import casa_tasks
 import pipeline.infrastructure.mpihelpers as mpihelpers
+import pipeline.infrastructure.vdp as vdp
 
 import pipeline.h.tasks.importdata.importdata as importdata
 from pipeline.hifv.heuristics.vlascanheuristics import VLAScanHeuristics
@@ -17,20 +18,20 @@ LOG = infrastructure.get_logger(__name__)
 
 
 class VLAImportDataInputs(importdata.ImportDataInputs):
+    # Override defaults in ImportDataInputs
+    asis = vdp.VisDependentProperty(default='Receiver CalAtmosphere')
+    ocorr_mode = vdp.VisDependentProperty(default='co')
+    bdfflags = vdp.VisDependentProperty(default=False)
+    process_caldevice = vdp.VisDependentProperty(default=True)
+
     def __init__(self, context, vis=None, output_dir=None, asis=None, process_caldevice=None, session=None,
                  overwrite=None, nocopy=None, bdfflags=None, lazy=None, save_flagonline=None, createmms=None,
                  ocorr_mode=None):
-        super(VLAImportDataInputs, self).__init__(context=context, vis=vis, output_dir=output_dir, asis=asis,
-                                                  process_caldevice=process_caldevice, session=session,
-                                                  overwrite=overwrite, nocopy=nocopy, bdfflags=bdfflags, lazy=lazy,
-                                                  save_flagonline=save_flagonline, createmms=createmms,
-                                                  ocorr_mode=ocorr_mode)
-
-    # Override defaults in ImportDataInputs
-    asis = basetask.property_with_default('asis', 'Receiver CalAtmosphere')
-    ocorr_mode = basetask.property_with_default('ocorr_mode', 'co')
-    bdfflags = basetask.property_with_default('bdfflags', False)
-    process_caldevice = basetask.property_with_default('process_caldevice', True)
+        super(VLAImportDataInputs, self).__init__(context, vis=vis, output_dir=output_dir, asis=asis,
+                                                   process_caldevice=process_caldevice, session=session,
+                                                   overwrite=overwrite, nocopy=nocopy, bdfflags=bdfflags, lazy=lazy,
+                                                   save_flagonline=save_flagonline, createmms=createmms,
+                                                   ocorr_mode=ocorr_mode, asimaging=False)
 
 
 class VLAImportDataResults(basetask.Results):

@@ -1,4 +1,5 @@
 from __future__ import absolute_import
+
 import os
 import tempfile
 import types
@@ -7,51 +8,63 @@ import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.api as api
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.mpihelpers as mpihelpers
-
+import pipeline.infrastructure.vdp as vdp
+from .resultobjects import MakeImagesResult
 from ..tclean import Tclean
 from ..tclean.resultobjects import TcleanResult
-from .resultobjects import MakeImagesResult
 
 LOG = infrastructure.get_logger(__name__)
 
 
-class MakeImagesInputs(basetask.StandardInputs):
-    def __init__(self, context, output_dir=None, vis=None, target_list=None,
-                 weighting=None, robust=None, noise=None, npixels=None,
-                 hm_masking=None, hm_sidelobethreshold=None, hm_noisethreshold=None,
-                 hm_lownoisethreshold=None, hm_negativethreshold=None,
-                 hm_minbeamfrac=None, hm_growiterations=None,
-                 hm_cleaning=None, tlimit=None,
-                 masklimit=None, maxncleans=None, cleancontranges=None, parallel=None):
-        self._init_properties(vars())
+class MakeImagesInputs(vdp.StandardInputs):
+    cleancontranges = vdp.VisDependentProperty(default=False)
+    hm_cleaning = vdp.VisDependentProperty(default='rms')
+    hm_growiterations = vdp.VisDependentProperty(default=-999)
+    hm_lownoisethreshold = vdp.VisDependentProperty(default=-999.0)
+    hm_masking = vdp.VisDependentProperty(default='auto')
+    hm_minbeamfrac = vdp.VisDependentProperty(default=-999.0)
+    hm_negativethreshold = vdp.VisDependentProperty(default=-999.0)
+    hm_noisethreshold = vdp.VisDependentProperty(default=-999.0)
+    hm_sidelobethreshold = vdp.VisDependentProperty(default=-999.0)
+    masklimit = vdp.VisDependentProperty(default=2.0)
+    maxncleans = vdp.VisDependentProperty(default=10)
+    noise = vdp.VisDependentProperty(default='1.0Jy')
+    npixels = vdp.VisDependentProperty(default=0)
+    parallel = vdp.VisDependentProperty(default='automatic')
+    robust = vdp.VisDependentProperty(default=-999.0)
+    tlimit = vdp.VisDependentProperty(default=2.0)
+    weighting = vdp.VisDependentProperty(default='briggs')
 
-    @property
+    @vdp.VisDependentProperty
     def target_list(self):
-        return self._target_list
+        return self.context.clean_list_pending
 
-    @target_list.setter
-    def target_list(self, value):
-        if not value:
-            value = self.context.clean_list_pending
-        self._target_list = value
+    def __init__(self, context, output_dir=None, vis=None, target_list=None, weighting=None, robust=None, noise=None,
+                 npixels=None, hm_masking=None, hm_sidelobethreshold=None, hm_noisethreshold=None,
+                 hm_lownoisethreshold=None, hm_negativethreshold=None, hm_minbeamfrac=None, hm_growiterations=None,
+                 hm_cleaning=None, tlimit=None, masklimit=None, maxncleans=None, cleancontranges=None, parallel=None):
+        self.context = context
+        self.output_dir = output_dir
+        self.vis = vis
 
-    hm_cleaning = basetask.property_with_default('hm_cleaning', 'rms')
-    hm_masking = basetask.property_with_default('hm_masking', 'auto')
-    hm_sidelobethreshold = basetask.property_with_default('hm_sidelobethreshold', -999.0)
-    hm_noisethreshold = basetask.property_with_default('hm_noisethreshold', -999.0)
-    hm_lownoisethreshold = basetask.property_with_default('hm_lownoisethreshold', -999.0)
-    hm_negativethreshold = basetask.property_with_default('hm_negativethreshold', -999.0)
-    hm_minbeamfrac = basetask.property_with_default('hm_minbeamfrac', -999.0)
-    hm_growiterations = basetask.property_with_default('hm_growiterations', -999)
-    masklimit = basetask.property_with_default('masklimit', 2.0)
-    maxncleans = basetask.property_with_default('maxncleans', 10)
-    noise = basetask.property_with_default('noise', '1.0Jy')
-    npixels = basetask.property_with_default('npixels', 0)
-    parallel = basetask.property_with_default('parallel', 'automatic')
-    robust = basetask.property_with_default('robust', -999.0)
-    cleancontranges = basetask.property_with_default('cleancontranges', False)
-    tlimit = basetask.property_with_default('tlimit', 2.0)
-    weighting = basetask.property_with_default('weighting', 'briggs')
+        self.target_list = target_list
+        self.weighting = weighting
+        self.robust = robust
+        self.noise = noise
+        self.npixels = npixels
+        self.hm_masking = hm_masking
+        self.hm_sidelobethreshold = hm_sidelobethreshold
+        self.hm_noisethreshold = hm_noisethreshold
+        self.hm_lownoisethreshold = hm_lownoisethreshold
+        self.hm_negativethreshold = hm_negativethreshold
+        self.hm_minbeamfrac = hm_minbeamfrac
+        self.hm_growiterations = hm_growiterations
+        self.hm_cleaning = hm_cleaning
+        self.tlimit = tlimit
+        self.masklimit = masklimit
+        self.maxncleans = maxncleans
+        self.cleancontranges = cleancontranges
+        self.parallel = parallel
 
 
 # tell the infrastructure to give us mstransformed data when possible by

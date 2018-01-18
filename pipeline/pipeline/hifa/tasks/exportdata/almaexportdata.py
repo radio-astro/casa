@@ -17,11 +17,12 @@ AuxFileProducts = collections.namedtuple('AuxFileProducts', 'flux_file antenna_f
 
 
 class ALMAExportDataInputs(exportdata.ExportDataInputs):
-    def __init__(self, context, output_dir=None, session=None, vis=None, exportmses=None,
-                 pprfile=None, calintents=None, calimages=None, targetimages=None,
-                 products_dir=None):
-        # set the properties to the values given as input arguments
-        self._init_properties(vars())
+    def __init__(self, context, output_dir=None, session=None, vis=None, exportmses=None, pprfile=None, calintents=None,
+                 calimages=None, targetimages=None, products_dir=None):
+        super(ALMAExportDataInputs, self).__init__(context, output_dir=output_dir, session=session, vis=vis,
+                                                   exportmses=exportmses, pprfile=pprfile, calintents=calintents,
+                                                   calimages=calimages, targetimages=targetimages,
+                                                   products_dir=products_dir)
 
 
 class ALMAExportData(exportdata.ExportData):

@@ -1,23 +1,27 @@
 from __future__ import absolute_import
-import os
 
-
-from pipeline.hifa.heuristics import imageprecheck
-from pipeline.hif.heuristics import imageparams_factory
-from pipeline.h.tasks.common.sensitivity import Sensitivity
+import pipeline.domain.measures as measures
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
-from pipeline.infrastructure import casa_tasks
 import pipeline.infrastructure.casatools as casatools
-import pipeline.domain.measures as measures
 import pipeline.infrastructure.imageparamsfilehandler as imageparamsfilehandler
+import pipeline.infrastructure.vdp as vdp
+from pipeline.h.tasks.common.sensitivity import Sensitivity
+from pipeline.hif.heuristics import imageparams_factory
+from pipeline.hifa.heuristics import imageprecheck
 
 LOG = infrastructure.get_logger(__name__)
 
 
 class ImagePreCheckResults(basetask.Results):
-    def __init__(self, real_repr_target=False, repr_target='', repr_source='', repr_spw=None, minAcceptableAngResolution='0.0arcsec', maxAcceptableAngResolution='0.0arcsec', hm_robust=0.5, hm_uvtaper='', sensitivities=[], sensitivity_bandwidth=None):
+    def __init__(self, real_repr_target=False, repr_target='', repr_source='', repr_spw=None,
+                 minAcceptableAngResolution='0.0arcsec', maxAcceptableAngResolution='0.0arcsec', hm_robust=0.5,
+                 hm_uvtaper='', sensitivities=None, sensitivity_bandwidth=None):
         super(ImagePreCheckResults, self).__init__()
+
+        if sensitivities is None:
+            sensitivities = []
+
         self.real_repr_target = real_repr_target
         self.repr_target = repr_target
         self.repr_source = repr_source
@@ -55,10 +59,10 @@ class ImagePreCheckResults(basetask.Results):
             '\n\t'.join(['robust=%.2f' % (self.hm_robust), 'uvtaper=%s' % (self.hm_uvtaper)]))
 
 
-class ImagePreCheckInputs(basetask.StandardInputs):
+class ImagePreCheckInputs(vdp.StandardInputs):
     def __init__(self, context, vis=None):
-        # set the properties to the values given as input arguments
-        self._init_properties(vars())
+        self.context = context
+        self.vis = vis
 
 
 class ImagePreCheck(basetask.StandardTaskTemplate):
@@ -71,17 +75,17 @@ class ImagePreCheck(basetask.StandardTaskTemplate):
         inputs = self.inputs
         cqa = casatools.quanta
 
-        imageprecheck_heuristics = imageprecheck.ImagePreCheckHeuristics(self.inputs)
         image_heuristics_factory = imageparams_factory.ImageParamsHeuristicsFactory()
-        image_heuristics = image_heuristics_factory.getHeuristics( \
-            vislist = inputs.vis, \
-            spw = '', \
-            observing_run = inputs.context.observing_run, \
-            imagename_prefix = inputs.context.project_structure.ousstatus_entity_id, \
-            proj_params = inputs.context.project_performance_parameters, \
-            contfile = inputs.context.contfile, \
-            linesfile = inputs.context.linesfile, \
-            imaging_mode = 'ALMA')
+        image_heuristics = image_heuristics_factory.getHeuristics(
+            vislist=inputs.vis,
+            spw='',
+            observing_run=inputs.context.observing_run,
+            imagename_prefix=inputs.context.project_structure.ousstatus_entity_id,
+            proj_params=inputs.context.project_performance_parameters,
+            contfile=inputs.context.contfile,
+            linesfile=inputs.context.linesfile,
+            imaging_mode='ALMA'
+        )
 
         repr_target, repr_source, repr_spw, reprBW_mode, real_repr_target, minAcceptableAngResolution, maxAcceptableAngResolution = image_heuristics.representative_target()
 
@@ -133,29 +137,30 @@ class ImagePreCheck(basetask.StandardTaskTemplate):
                 try:
                     sensitivity, min_sensitivity, max_sensitivity, min_field_id, max_field_id, eff_ch_bw, sens_bw = \
                         image_heuristics.calc_sensitivities(inputs.vis, repr_field, 'TARGET', str(repr_spw), nbin, {}, 'cube', gridder, cells[(robust, '[]')], imsizes[(robust, '[]')], 'briggs', robust, [], phasecenter)
-                    sensitivities.append(Sensitivity( \
-                        **{'array': array, \
-                           'field': repr_field, \
-                           'spw': str(repr_spw), \
-                           'bandwidth': cqa.quantity(sens_bw, 'Hz'), \
-                           'bwmode': 'repBW', \
-                           'beam': beams[(robust, '[]')], \
-                           'cell': [cqa.convert(cells[(robust, '[]')][0], 'arcsec'), cqa.convert(cells[(robust, '[]')][0], 'arcsec')], \
-                           'robust': robust, \
-                           'uvtaper': [], \
-                           'sensitivity': cqa.quantity(sensitivity, 'Jy/beam')}))
+                    sensitivities.append(Sensitivity(
+                        array=array,
+                        field=repr_field,
+                        spw=str(repr_spw),
+                        bandwidth=cqa.quantity(sens_bw, 'Hz'),
+                        bwmode='repBW',
+                        beam=beams[(robust, '[]')],
+                        cell=[cqa.convert(cells[(robust, '[]')][0], 'arcsec'),
+                              cqa.convert(cells[(robust, '[]')][0], 'arcsec')],
+                        robust=robust,
+                        uvtaper=[],
+                        sensitivity=cqa.quantity(sensitivity, 'Jy/beam')))
                 except:
-                    sensitivities.append(Sensitivity( \
-                        **{'array': array, \
-                           'field': repr_field, \
-                           'spw': str(repr_spw), \
-                           'bandwidth': cqa.quantity(0.0, 'Hz'), \
-                           'bwmode': 'repBW', \
-                           'beam': beams[(robust, '[]')], \
-                           'cell': ['0.0 arcsec', '0.0 arcsec'], \
-                           'robust': robust, \
-                           'uvtaper': [], \
-                           'sensitivity': cqa.quantity(0.0, 'Jy/beam')}))
+                    sensitivities.append(Sensitivity(
+                        array=array,
+                        field=repr_field,
+                        spw=str(repr_spw),
+                        bandwidth=cqa.quantity(0.0, 'Hz'),
+                        bwmode='repBW',
+                        beam=beams[(robust, '[]')],
+                        cell=['0.0 arcsec', '0.0 arcsec'],
+                        robust=robust,
+                        uvtaper=[],
+                        sensitivity=cqa.quantity(0.0, 'Jy/beam')))
                     sens_bw = 0.0
 
                 sensitivity_bandwidth = cqa.quantity(sens_bw, 'Hz')
@@ -165,30 +170,31 @@ class ImagePreCheck(basetask.StandardTaskTemplate):
                 sensitivity, min_sensitivity, max_sensitivity, min_field_id, max_field_id, eff_ch_bw, sens_bw = \
                     image_heuristics.calc_sensitivities(inputs.vis, repr_field, 'TARGET', cont_spw, -1, {}, 'cont', gridder, cells[(robust, '[]')], imsizes[(robust, '[]')], 'briggs', robust, [], phasecenter)
                 for cont_sens_bw_mode in cont_sens_bw_modes:
-                    sensitivities.append(Sensitivity( \
-                        **{'array': array, \
-                           'field': repr_field, \
-                           'spw': str(repr_spw), \
-                           'bandwidth': cqa.quantity(min(sens_bw, num_cont_spw * 1.875e9), 'Hz'), \
-                           'bwmode': cont_sens_bw_mode, \
-                           'beam': beams[(robust, '[]')], \
-                           'cell': [cqa.convert(cells[(robust, '[]')][0], 'arcsec'), cqa.convert(cells[(robust, '[]')][0], 'arcsec')], \
-                           'robust': robust, \
-                           'uvtaper': [], \
-                           'sensitivity': cqa.quantity(sensitivity, 'Jy/beam')}))
+                    sensitivities.append(Sensitivity(
+                        array=array,
+                        field=repr_field,
+                        spw=str(repr_spw),
+                        bandwidth=cqa.quantity(min(sens_bw, num_cont_spw * 1.875e9), 'Hz'),
+                        bwmode=cont_sens_bw_mode,
+                        beam=beams[(robust, '[]')],
+                        cell=[cqa.convert(cells[(robust, '[]')][0], 'arcsec'),
+                              cqa.convert(cells[(robust, '[]')][0], 'arcsec')],
+                        robust=robust,
+                        uvtaper=[],
+                        sensitivity=cqa.quantity(sensitivity, 'Jy/beam')))
             except:
-                for cont_sens_bw_mode in cont_sens_bw_modes:
-                    sensitivities.append(Sensitivity( \
-                        **{'array': array, \
-                           'field': repr_field, \
-                           'spw': str(repr_spw), \
-                           'bandwidth': cqa.quantity(0.0, 'Hz'), \
-                           'bwmode': 'repBW', \
-                           'beam': beams[(robust, '[]')], \
-                           'cell': ['0.0 arcsec', '0.0 arcsec'], \
-                           'robust': robust, \
-                           'uvtaper': [], \
-                           'sensitivity': cqa.quantity(0.0, 'Jy/beam')}))
+                for _ in cont_sens_bw_modes:
+                    sensitivities.append(Sensitivity(
+                        array=array,
+                        field=repr_field,
+                        spw=str(repr_spw),
+                        bandwidth=cqa.quantity(0.0, 'Hz'),
+                        bwmode='repBW',
+                        beam=beams[(robust, '[]')],
+                        cell=['0.0 arcsec', '0.0 arcsec'],
+                        robust=robust,
+                        uvtaper=[],
+                        sensitivity=cqa.quantity(0.0, 'Jy/beam')))
                 sens_bw = 0.0
 
             if sensitivity_bandwidth is None:
@@ -212,58 +218,60 @@ class ImagePreCheck(basetask.StandardTaskTemplate):
                         try:
                             sensitivity, min_sensitivity, max_sensitivity, min_field_id, max_field_id, eff_ch_bw, sens_bw = \
                                 image_heuristics.calc_sensitivities(inputs.vis, repr_field, 'TARGET', str(repr_spw), nbin, {}, 'cube', gridder, cells[(hm_robust, str(hm_uvtaper))], imsizes[(hm_robust, str(hm_uvtaper))], 'briggs', hm_robust, hm_uvtaper, phasecenter)
-                            sensitivities.append(Sensitivity( \
-                                **{'array': array, \
-                                   'field': repr_field, \
-                                   'spw': str(repr_spw), \
-                                   'bandwidth': cqa.quantity(sens_bw, 'Hz'), \
-                                   'bwmode': 'repBW', \
-                                   'beam': beams[(hm_robust, str(hm_uvtaper))], \
-                                   'cell': [cqa.convert(cells[(hm_robust, str(hm_uvtaper))][0], 'arcsec'), cqa.convert(cells[(hm_robust, str(hm_uvtaper))][0], 'arcsec')], \
-                                   'robust': hm_robust, \
-                                   'uvtaper': hm_uvtaper, \
-                                   'sensitivity': cqa.quantity(sensitivity, 'Jy/beam')}))
+                            sensitivities.append(Sensitivity(
+                                array=array,
+                                field=repr_field,
+                                spw=str(repr_spw),
+                                bandwidth=cqa.quantity(sens_bw, 'Hz'),
+                                bwmode='repBW',
+                                beam=beams[(hm_robust, str(hm_uvtaper))],
+                                cell=[cqa.convert(cells[(hm_robust, str(hm_uvtaper))][0], 'arcsec'),
+                                      cqa.convert(cells[(hm_robust, str(hm_uvtaper))][0], 'arcsec')],
+                                robust=hm_robust,
+                                uvtaper=hm_uvtaper,
+                                sensitivity=cqa.quantity(sensitivity, 'Jy/beam')))
                         except:
-                            sensitivities.append(Sensitivity( \
-                                **{'array': array, \
-                                   'field': repr_field, \
-                                   'spw': str(repr_spw), \
-                                   'bandwidth': cqa.quantity(0.0, 'Hz'), \
-                                   'bwmode': 'repBW', \
-                                   'beam': beams[(robust, '[]')], \
-                                   'cell': ['0.0 arcsec', '0.0 arcsec'], \
-                                   'robust': robust, \
-                                   'uvtaper': [], \
-                                   'sensitivity': cqa.quantity(0.0, 'Jy/beam')}))
+                            sensitivities.append(Sensitivity(
+                                array=array,
+                                field=repr_field,
+                                spw=str(repr_spw),
+                                bandwidth=cqa.quantity(0.0, 'Hz'),
+                                bwmode='repBW',
+                                beam=beams[(robust, '[]')],
+                                cell=['0.0 arcsec', '0.0 arcsec'],
+                                robust=robust,
+                                uvtaper=[],
+                                sensitivity=cqa.quantity(0.0, 'Jy/beam')))
 
                     try:
                         sensitivity, min_sensitivity, max_sensitivity, min_field_id, max_field_id, eff_ch_bw, sens_bw = \
                             image_heuristics.calc_sensitivities(inputs.vis, repr_field, 'TARGET', cont_spw, -1, {}, 'cont', gridder, cells[(hm_robust, str(hm_uvtaper))], imsizes[(hm_robust, str(hm_uvtaper))], 'briggs', hm_robust, hm_uvtaper, phasecenter)
                         for cont_sens_bw_mode in cont_sens_bw_modes:
-                            sensitivities.append(Sensitivity( \
-                                **{'array': array, \
-                                   'field': repr_field, \
-                                   'spw': str(repr_spw), \
-                                   'bandwidth': cqa.quantity(min(sens_bw, num_cont_spw * 1.875e9), 'Hz'), \
-                                   'bwmode': cont_sens_bw_mode, \
-                                   'beam': beams[(hm_robust, str(hm_uvtaper))], \
-                                   'cell': [cqa.convert(cells[(hm_robust, str(hm_uvtaper))][0], 'arcsec'), cqa.convert(cells[(hm_robust, str(hm_uvtaper))][0], 'arcsec')], \
-                                   'robust': hm_robust, \
-                                   'uvtaper': hm_uvtaper, \
-                                   'sensitivity': cqa.quantity(sensitivity, 'Jy/beam')}))
+                            sensitivities.append(Sensitivity(
+                                array=array,
+                                field=repr_field,
+                                spw=str(repr_spw),
+                                bandwidth=cqa.quantity(min(sens_bw, num_cont_spw * 1.875e9), 'Hz'),
+                                bwmode=cont_sens_bw_mode,
+                                beam=beams[(hm_robust, str(hm_uvtaper))],
+                                cell=[cqa.convert(cells[(hm_robust, str(hm_uvtaper))][0], 'arcsec'),
+                                      cqa.convert(cells[(hm_robust, str(hm_uvtaper))][0], 'arcsec')],
+                                robust=hm_robust,
+                                uvtaper=hm_uvtaper,
+                                sensitivity=cqa.quantity(sensitivity, 'Jy/beam')))
                     except:
-                        for cont_sens_bw_mode in cont_sens_bw_modes:
-                            sensitivities.append(Sensitivity( \
-                                **{'array': array, \
-                                   'field': repr_field, \
-                                   'spw': str(repr_spw), \
-                                   'bandwidth': cqa.quantity(0.0, 'Hz'), \
-                                   'bwmode': 'repBW', \
-                                   'beam': beams[(robust, '[]')], \
-                                   'cell': ['0.0 arcsec', '0.0 arcsec'], \
-                                   'robust': robust, \
-                                   'uvtaper': [], \
-                                   'sensitivity': cqa.quantity(0.0, 'Jy/beam')}))
+                        for _ in cont_sens_bw_modes:
+                            sensitivities.append(Sensitivity(
+                                array=array,
+                                field=repr_field,
+                                spw=str(repr_spw),
+                                bandwidth=cqa.quantity(0.0, 'Hz'),
+                                bwmode='repBW',
+                                beam=beams[(robust, '[]')],
+                                cell=['0.0 arcsec', '0.0 arcsec'],
+                                robust=robust,
+                                uvtaper=[],
+                                sensitivity=cqa.quantity(0.0, 'Jy/beam')))
             else:
                 hm_uvtaper = []
         else:
@@ -277,17 +285,18 @@ class ImagePreCheck(basetask.StandardTaskTemplate):
         hm_robust = 0.5
         hm_uvtaper = []
 
-        return ImagePreCheckResults( \
-                   real_repr_target, \
-                   repr_target, \
-                   repr_source, \
-                   repr_spw, \
-                   minAcceptableAngResolution=minAcceptableAngResolution, \
-                   maxAcceptableAngResolution=maxAcceptableAngResolution, \
-                   hm_robust=hm_robust, \
-                   hm_uvtaper=hm_uvtaper, \
-                   sensitivities=sensitivities, \
-                   sensitivity_bandwidth=sensitivity_bandwidth)
+        return ImagePreCheckResults(
+            real_repr_target,
+            repr_target,
+            repr_source,
+            repr_spw,
+            minAcceptableAngResolution=minAcceptableAngResolution,
+            maxAcceptableAngResolution=maxAcceptableAngResolution,
+            hm_robust=hm_robust,
+            hm_uvtaper=hm_uvtaper,
+            sensitivities=sensitivities,
+            sensitivity_bandwidth=sensitivity_bandwidth
+        )
 
     def analyse(self, results):
         return results

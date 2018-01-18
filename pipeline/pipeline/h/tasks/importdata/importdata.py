@@ -4,12 +4,12 @@ import os
 import shutil
 import string
 import tarfile
-import types
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.mpihelpers as mpihelpers
 import pipeline.infrastructure.tablereader as tablereader
+import pipeline.infrastructure.vdp as vdp
 from pipeline.infrastructure import casa_tasks
 
 from . import fluxes
@@ -23,81 +23,42 @@ __all__ = [
 LOG = infrastructure.get_logger(__name__)
 
 
-class ImportDataInputs(basetask.StandardInputs):
+class ImportDataInputs(vdp.StandardInputs):
+    asimaging = vdp.VisDependentProperty(default=False)
+    asis = vdp.VisDependentProperty(default='')
+    bdfflags = vdp.VisDependentProperty(default=True)
+    createmms = vdp.VisDependentProperty(default='automatic')
+    lazy = vdp.VisDependentProperty(default=False)
+    nocopy = vdp.VisDependentProperty(default=False)
+    ocorr_mode = vdp.VisDependentProperty(default='ca')
+    overwrite = vdp.VisDependentProperty(default=False)
+    process_caldevice = vdp.VisDependentProperty(default=False)
+    save_flagonline = vdp.VisDependentProperty(default=True)
+    session = vdp.VisDependentProperty(default='session_1')
+
     def __init__(self, context, vis=None, output_dir=None, asis=None, process_caldevice=None, session=None,
                  overwrite=None, nocopy=None, save_flagonline=None, bdfflags=None, lazy=None, createmms=None,
                  ocorr_mode=None, asimaging=None):
-        super(ImportDataInputs, self).__init__(context, vis=vis, output_dir=output_dir)
+        super(ImportDataInputs, self).__init__()
 
-        self.asis = asis
-        self.process_caldevice = process_caldevice
-        self.session = session
-        self.overwrite = overwrite
-        self.nocopy = nocopy
-        self.save_flagonline = save_flagonline
-        self.bdfflags = bdfflags
-        self.lazy = lazy
-        self.createmms = createmms
-        self.ocorr_mode = ocorr_mode
+        self.context = context
+        self.vis = vis
+        self.output_dir = output_dir
+
         self.asimaging = asimaging
-
-    asis = basetask.property_with_default('asis', '')
-    bdfflags = basetask.property_with_default('bdfflags', True)
-    createmms = basetask.property_with_default('createmms', 'automatic')
-    lazy = basetask.property_with_default('lazy', False)
-    nocopy = basetask.property_with_default('nocopy', False)
-    ocorr_mode = basetask.property_with_default('ocorr_mode', 'ca')
-    asimaging = basetask.property_with_default('asimaging', False)
-    overwrite = basetask.property_with_default('overwrite', False)
-    process_caldevice = basetask.property_with_default('process_caldevice', False)
-    save_flagonline = basetask.property_with_default('save_flagonline', True)
-
-    @property
-    def session(self):
-        if isinstance(self.vis, list):
-            return self._handle_multiple_vis('session')
-
-        # if vis is a scalar but session is a list, return the session for this vis
-        if not isinstance(self.vis, list) and isinstance(self._session, list):
-            idx = self._my_vislist.index(self.vis)
-            return self._session[idx]
-
-        if isinstance(self.vis, str) and isinstance(self._session, str):
-            return self._session
-
-        # current default - return all intents
-        return 'session_1'
-
-    @session.setter
-    def session(self, value):
-        self._session = value
+        self.asis = asis
+        self.bdfflags = bdfflags
+        self.createmms = createmms
+        self.lazy = lazy
+        self.nocopy = nocopy
+        self.ocorr_mode = ocorr_mode
+        self.overwrite = overwrite
+        self.process_caldevice = process_caldevice
+        self.save_flagonline = save_flagonline
+        self.session = session
 
     def to_casa_args(self):
         raise NotImplementedError
-
-    # MandatoryPipelineInputs raises an exception if vis has not been
-    # registered with the context. For an import task however, the vis is never
-    # registered. To avoid the exception, we override the vis getter and
-    # setter.
-    @property
-    def vis(self):
-        return self._vis
-
-    @vis.setter
-    def vis(self, value):
-        vislist = value if isinstance(value, list) else [value, ]
-
-        # VISLIST_RESET_KEY is present when vis is set by handle_multivis.
-        # In this case we do not want to reset my_vislist, as handle_multivis is
-        # setting vis to the individual measurement sets
-        if not hasattr(self, basetask.VISLIST_RESET_KEY):
-            LOG.trace('Setting Inputs._my_vislist to %s' % vislist)
-            self._my_vislist = vislist
-        else:
-            LOG.trace('Leaving Inputs._my_vislist at current value of %s'
-                      % self._my_vislist)
-
-        self._vis = value
 
 
 class ImportDataResults(basetask.Results):

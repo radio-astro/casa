@@ -1,7 +1,7 @@
 from __future__ import absolute_import
 
 import pipeline.infrastructure as infrastructure
-import pipeline.infrastructure.basetask as basetask
+import pipeline.infrastructure.vdp as vdp
 
 import pipeline.h.tasks.importdata.fluxes as fluxes
 import pipeline.h.tasks.importdata.importdata as importdata
@@ -16,8 +16,8 @@ LOG = infrastructure.get_logger(__name__)
 
 
 class ALMAImportDataInputs(importdata.ImportDataInputs):
-    asis = basetask.property_with_default('asis',
-                                          'Antenna CalAtmosphere CalWVR ExecBlock Receiver SBSummary Source Station')
+    asis = vdp.VisDependentProperty(default='Antenna CalAtmosphere CalWVR ExecBlock Receiver SBSummary Source Station')
+    dbservice = vdp.VisDependentProperty(default=True)
 
     def __init__(self, context, vis=None, output_dir=None, asis=None, process_caldevice=None, session=None,
                  overwrite=None, nocopy=None, bdfflags=None, lazy=None, save_flagonline=None, dbservice=None,
@@ -26,15 +26,8 @@ class ALMAImportDataInputs(importdata.ImportDataInputs):
                                                    process_caldevice=process_caldevice, session=session,
                                                    overwrite=overwrite, nocopy=nocopy, bdfflags=bdfflags, lazy=lazy,
                                                    save_flagonline=save_flagonline, createmms=createmms,
-                                                   ocorr_mode=ocorr_mode)
+                                                   ocorr_mode=ocorr_mode, asimaging=asimaging)
         self.dbservice = dbservice
-        self.asimaging = asimaging
-
-    dbservice = basetask.property_with_default('dbservice', True)
-    asimaging = basetask.property_with_default('asimaging', False)
-
-    def to_casa_args(self):
-        raise NotImplementedError
 
 
 class ALMAImportData(importdata.ImportData):

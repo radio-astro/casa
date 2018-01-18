@@ -48,6 +48,7 @@ import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.callibrary as callibrary
 import pipeline.infrastructure.imagelibrary as imagelibrary
+import pipeline.infrastructure.vdp as vdp
 from pipeline.infrastructure import casa_tasks
 from ..common import manifest
 
@@ -58,7 +59,7 @@ LOG = infrastructure.get_logger(__name__)
 StdFileProducts = collections.namedtuple('StdFileProducts', 'ppr_file weblog_file casa_commands_file casa_pipescript casa_restore_script')
 
 
-class ExportDataInputs(basetask.StandardInputs):
+class ExportDataInputs(vdp.StandardInputs):
     """
     ExportDataInputs manages the inputs for the ExportData task.
 
@@ -109,6 +110,20 @@ class ExportDataInputs(basetask.StandardInputs):
     the directory where the data productions will be written
     """
 
+    calimages = vdp.VisDependentProperty(default=[])
+    calintents = vdp.VisDependentProperty(default='')
+    exportmses = vdp.VisDependentProperty(default=False)
+    pprfile = vdp.VisDependentProperty(default='')
+    session = vdp.VisDependentProperty(default=[])
+    targetimages = vdp.VisDependentProperty(default=[])
+
+    @vdp.VisDependentProperty
+    def products_dir(self):
+        if self.context.products_dir is None:
+            return os.path.abspath('./')
+        else:
+            return self.context.products_dir
+
     def __init__(self, context, output_dir=None, session=None, vis=None, exportmses=None,
                  pprfile=None, calintents=None, calimages=None, targetimages=None,
                  products_dir=None):
@@ -133,106 +148,33 @@ class ExportDataInputs(basetask.StandardInputs):
         :param products_dir: the data products directory for pipeline data
         :type products_dir: string
         """
+        super(ExportDataInputs, self).__init__()
+        self.context = context
+        self.vis = vis
+        self.output_dir = output_dir
 
-        # set the properties to the values given as input arguments
-        self._init_properties(vars())
-
-    # Code for handling sessions should be moved to the launcher.py,
-    # basetask.py, and importdata.py modules. Session information
-    # may come from the user or the pipeline processing request.
-
-    @property
-    def session(self):
-        if self._session is None:
-            self._session = []
-        return self._session
-
-    @session.setter
-    def session (self, value):
-        self._session = value
-
-    @property
-    def products_dir(self):
-        if self._products_dir is None:
-            if self.context.products_dir is None:
-                self._products_dir = os.path.abspath('./')
-            else:
-                self._products_dir = self.context.products_dir
-            try:
-                LOG.trace('Creating products directory \'%s\'' % self._products_dir)
-                os.makedirs(self.products_dir)
-            except OSError as exc:
-                if exc.errno == errno.EEXIST:
-                    pass
-                else: raise
-
-            return self._products_dir
-        return self._products_dir
-
-    @products_dir.setter
-    def products_dir(self, value):
-        self._products_dir = value
-
-    @property
-    def exportmses (self):
-        if self._exportmses is None:
-            self._exportmses = False
-        return self._exportmses
-
-    @exportmses.setter
-    def exportmses(self, value):
-        self._exportmses = value
-
-    @property
-    def pprfile(self):
-        if self._pprfile is None:
-            self._pprfile = ''
-        return self._pprfile
-
-    @pprfile.setter
-    def pprfile(self, value):
-        self._pprfile = value
-
-    @property
-    def calintents(self):
-        if self._calintents is None:
-            self._calintents = ''
-        return self._calintents
-
-    @calintents.setter
-    def calintents(self, value):
-        self._calintents = value
-
-    @property
-    def calimages(self):
-        if self._calimages is None:
-            self._calimages = []
-        return self._calimages
-
-    @calimages.setter
-    def calimages(self, value):
-        self._calimages = value
-
-    @property
-    def targetimages(self):
-        if self._targetimages is None:
-            self._targetimages = []
-        return self._targetimages
-
-    @targetimages.setter
-    def targetimages(self, value):
-        self._targetimages = value
+        self.session = session
+        self.exportmses = exportmses
+        self.pprfile = pprfile
+        self.calintents = calintents
+        self.calimages = calimages
+        self.targetimages = targetimages
+        self.products_dir = products_dir
 
 
 class ExportDataResults(basetask.Results):
-    def __init__(self, pprequest='', sessiondict=collections.OrderedDict(),
-                 visdict=collections.OrderedDict(), calimages=(), targetimages=(),
-                 weblog='', pipescript='', restorescript='', commandslog='', 
-                 manifest=''):
+    def __init__(self, pprequest='', sessiondict=None, visdict=None, calimages=(), targetimages=(), weblog='',
+                 pipescript='', restorescript='', commandslog='', manifest=''):
         """
         Initialise the results object with the given list of JobRequests.
         """
         super(ExportDataResults, self).__init__()
+
+        if sessiondict is None:
+            sessiondict = collections.OrderedDict()
+        if visdict is None:
+            visdict = collections.OrderedDict()
+
         self.pprequest = pprequest
         self.sessiondict = sessiondict
         self.visdict = visdict
@@ -278,10 +220,18 @@ class ExportData(basetask.StandardTaskTemplate):
         Prepare and execute an export data job appropriate to the
         task inputs.
         """
-
         # Create a local alias for inputs, so we're not saying
         # 'self.inputs' everywhere
         inputs = self.inputs
+
+        try:
+            LOG.trace('Creating products directory: {!s}'.format(inputs.products_dir))
+            os.makedirs(inputs.products_dir)
+        except OSError as exc:
+            if exc.errno == errno.EEXIST:
+                pass
+            else:
+                raise
 
         # Initialize the standard ous is string.
         oussid = self.get_oussid(inputs.context)
@@ -290,8 +240,8 @@ class ExportData(basetask.StandardTaskTemplate):
         result = ExportDataResults()
 
         # Make the standard vislist and the sessions lists. 
-        session_list, session_names, session_vislists, vislist = self._make_lists(inputs.context,
-            inputs.session, inputs.vis)
+        session_list, session_names, session_vislists, vislist = self._make_lists(inputs.context, inputs.session,
+                                                                                  inputs.vis)
 
         # Export the standard per OUS file products
         #    The pipeline processing request
@@ -305,9 +255,10 @@ class ExportData(basetask.StandardTaskTemplate):
         else:
             prefix = oussid + '.' + recipe_name
         stdfproducts = self._do_standard_ous_products(inputs.context, inputs.exportmses,
-            prefix, inputs.pprfile, session_list, vislist, inputs.output_dir, inputs.products_dir)
+                                                      prefix, inputs.pprfile, session_list, vislist, inputs.output_dir,
+                                                      inputs.products_dir)
         if stdfproducts.ppr_file:
-            result.pprequest = os.path.basename(stdfproducts.ppr_file) 
+            result.pprequest = os.path.basename(stdfproducts.ppr_file)
         result.weblog = os.path.basename(stdfproducts.weblog_file)
         result.pipescript = os.path.basename(stdfproducts.casa_pipescript)
         if inputs.exportmses:
@@ -346,7 +297,7 @@ class ExportData(basetask.StandardTaskTemplate):
         #    TBD Remove support for auxiliary data products to the individual pipelines
         pipemanifest = self._make_pipe_manifest (inputs.context, oussid, stdfproducts, sessiondict, visdict,
             inputs.exportmses,
-            [os.path.basename(image) for image in calimages_fitslist], 
+            [os.path.basename(image) for image in calimages_fitslist],
             [os.path.basename(image) for image in targetimages_fitslist])
         casa_pipe_manifest = self._export_pipe_manifest(inputs.context, oussid,
             'pipeline_manifest.xml', inputs.products_dir, pipemanifest)
@@ -783,7 +734,7 @@ class ExportData(basetask.StandardTaskTemplate):
                 applyfile.write(applied_calstate.as_applycal())
         except:
             applyfile_name = 'Undefined'
-            LOG.info('No calibrations for MS %s' % os.path.basename(vis)) 
+            LOG.info('No calibrations for MS %s' % os.path.basename(vis))
 
         return applyfile_name
 
@@ -1036,7 +987,7 @@ finally:
         LOG.info('Creating manifest file %s' % (out_manifest_file))
         if not self._executor._dry_run:
             pipemanifest.write(out_manifest_file)
-            
+
         return out_manifest_file
 
     def _fitsfile(self, products_dir, imagename):

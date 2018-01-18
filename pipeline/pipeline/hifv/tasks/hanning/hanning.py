@@ -13,6 +13,7 @@ LOG = infrastructure.get_logger(__name__)
 
 class HanningInputs(vdp.StandardInputs):
     def __init__(self, context, vis=None):
+        super(HanningInputs, self).__init__()
         self.context = context
         self.vis = vis
 

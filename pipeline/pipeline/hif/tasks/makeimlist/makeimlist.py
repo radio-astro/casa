@@ -1,271 +1,144 @@
 from __future__ import absolute_import
-import types
-import os
 
+import ast
+import os
+import types
+
+import pipeline.domain.measures as measures
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.api as api
 import pipeline.infrastructure.basetask as basetask
-import pipeline.infrastructure.utils as utils
-from .resultobjects import MakeImListResult
-from .cleantarget import CleanTarget
-from pipeline.hif.heuristics import imageparams_factory
 import pipeline.infrastructure.casatools as casatools
-import pipeline.domain.measures as measures
+import pipeline.infrastructure.utils as utils
+import pipeline.infrastructure.vdp as vdp
+from pipeline.hif.heuristics import imageparams_factory
+from .cleantarget import CleanTarget
+from .resultobjects import MakeImListResult
 
 LOG = infrastructure.get_logger(__name__)
 
 
-class MakeImListInputs(basetask.StandardInputs):
-    def __init__(self, context, output_dir=None, vis=None,
-      imagename=None, intent=None, field=None, spw=None, contfile=None,
-      linesfile=None, uvrange=None, specmode=None, outframe=None,
-      hm_imsize=None, hm_cell=None, calmaxpix=None, phasecenter=None,
-      nchan=None, start=None, width=None, nbins=None):
+class MakeImListInputs(vdp.StandardInputs):
+    # simple properties with no logic ----------------------------------------------------------------------------------
+    calmaxpix = vdp.VisDependentProperty(default=300)
+    imagename = vdp.VisDependentProperty(default='')
+    intent = vdp.VisDependentProperty(default='TARGET')
+    nchan = vdp.VisDependentProperty(default=-1)
+    outframe = vdp.VisDependentProperty(default='LSRK')
+    phasecenter = vdp.VisDependentProperty(default='')
+    start = vdp.VisDependentProperty(default='')
+    uvrange = vdp.VisDependentProperty(default='')
+    width = vdp.VisDependentProperty(default='')
 
-        self._init_properties(vars())
+    # properties requiring some processing or MS-dependent logic -------------------------------------------------------
 
-    # context, output_dir and vis setters/getters are handled by 
-    # the base class 
+    contfile = vdp.VisDependentProperty(default='cont.dat')
 
-    @property
-    def imagename(self):
-        return self._imagename
+    @contfile.postprocess
+    def contfile(self, unprocessed):
+        return os.path.join(self.context.output_dir, unprocessed)
 
-    @imagename.setter
-    def imagename(self, value):
-        if value is None:
-            value = ''
-        self._imagename = value
-
-    @property
-    def intent(self):
-        return self._intent
-
-    @intent.setter
-    def intent(self, value):
-        if value is None:
-            value = 'TARGET'
-        self._intent = value
-
-    @property
+    @vdp.VisDependentProperty
     def field(self):
-        if (self._field in [None, '']) and ('TARGET' in self.intent) and self.context.size_mitigation_parameters.has_key('field'):
+        if 'TARGET' in self.intent and 'field' in self.context.size_mitigation_parameters:
             return self.context.size_mitigation_parameters['field']
-        else:
-            return self._field
+        return ''
 
-    @field.setter
-    def field(self, value):
-        if value is None:
-            value = ''
-        self._field = value
-
-    @property
-    def spw(self):
-        if (self.specmode == 'cube') and self.context.size_mitigation_parameters.has_key('spw'):
-            return self.context.size_mitigation_parameters['spw']
-        else:
-            return self._spw
-
-    @spw.setter
-    def spw(self, value):
-        if value is None:
-            value = ''
-        # Use str() method to catch single spwid case via PPR which maps to int.
-        self._spw = str(value)
-
-    @property
-    def contfile(self):
-        return self._contfile
-
-    @contfile.setter
-    def contfile(self, value=None):
-        if value in (None, ''):
-            value = os.path.join(self.context.output_dir, 'cont.dat')
-        else:
-            value = os.path.join(self.context.output_dir, value)
-        self._contfile = value
-
-    @property
-    def linesfile(self):
-        return self._linesfile
-
-    @linesfile.setter
-    def linesfile(self, value=None):
-        if value in (None, ''):
-            value = os.path.join(self.context.output_dir, 'lines.dat')
-        else:
-            value = os.path.join(self.context.output_dir, value)
-        self._linesfile = value
-
-    @property
-    def uvrange(self):
-        return self._uvrange
-
-    @uvrange.setter
-    def uvrange(self, value):
-        if value is None:
-            value = ''
-        self._uvrange = value
-
-    @property
-    def specmode(self):
-        if self._specmode is None:
-            if 'TARGET' in self.intent:
-                return 'cube'
-            else:
-                return 'mfs'
-        return self._specmode
-
-    @specmode.setter
-    def specmode(self, value):
-        self._specmode = value
-
-    @property
-    def outframe(self):
-        if self._outframe is None:
-            return 'LSRK'
-        return self._outframe
-
-    @outframe.setter
-    def outframe(self, value):
-         self._outframe = value
-
-    @property
-    def hm_imsize(self):
-        if self._hm_imsize is None:
-            if ('TARGET' in self.intent) and self.context.size_mitigation_parameters.has_key('hm_imsize'):
-                self._hm_imsize = self.context.size_mitigation_parameters['hm_imsize']
-            else:
-                self._hm_imsize = []
-
-        # Convert string to list
-        if type(self._hm_imsize) is types.StringType:
-            if len(self._hm_imsize) > 0:
-                if self._hm_imsize[0] == '[':
-                    temp = self._hm_imsize.translate(None, '[]\'')
-                    temp = temp.split(',')
-                    try:
-                        self._hm_imsize = map(int, temp)
-                    except:
-                        self._hm_imsize = temp
-                    self._hm_imsize = map(int, temp)
-            else:
-                self._hm_imsize = []
-        elif type(self._hm_imsize) is types.IntType:
-            self._hm_imsize = [self._hm_imsize, self._hm_imsize]
-
-        # Convert to single string for '<number>pb' option
-        temp = None
-        for item in self._hm_imsize:
-            if type(item) is types.StringType:
-                if item.find('pb') != -1:
-                    temp = item
-        if temp:
-            self._hm_imsize = temp
-
-        return self._hm_imsize
-
-    @hm_imsize.setter
-    def hm_imsize(self, value):
-        self._hm_imsize = value
-
-    @property
+    @vdp.VisDependentProperty
     def hm_cell(self):
-        if self._hm_cell is None:
-            if ('TARGET' in self.intent) and self.context.size_mitigation_parameters.has_key('hm_cell'):
-                self._hm_cell = self.context.size_mitigation_parameters['hm_cell']
-            else:
-                self._hm_cell = []
+        if 'TARGET' in self.intent and 'hm_cell' in self.context.size_mitigation_parameters:
+            return self.context.size_mitigation_parameters['hm_cell']
+        return []
 
-        # Convert string to list
-        if type(self._hm_cell) is types.StringType:
-            if len(self._hm_cell) > 0:
-                if self._hm_cell[0] == '[':
-                    temp = self._hm_cell.translate(None, '[]\'')
-                    temp = temp.split(',')
-                    self._hm_cell = temp
-            else:
-                self._hm_cell = []
+    @hm_cell.convert
+    def hm_cell(self, val):
+        if isinstance(val, str):
+            if 'ppb' in val:
+                return val
 
-        # Convert to single string for '<nummber>ppb' option
-        temp = None
-        for item in self._hm_cell:
-            if item.find('ppb') != -1:
-                temp = item.replace('"', '').replace("'", "")
-        if temp:
-            self._hm_cell = temp
+            try:
+                return ast.literal_eval(val)
+            except:
+                pass
 
-        return self._hm_cell
+        raise ValueError('Malformatted value for hm_cell: {!r}'.format(val))
 
-    @hm_cell.setter
-    def hm_cell(self, value):
-        self._hm_cell = value
+    @vdp.VisDependentProperty
+    def hm_imsize(self):
+        if 'TARGET' in self.intent and 'hm_imsize' in self.context.size_mitigation_parameters:
+            return self.context.size_mitigation_parameters['hm_imsize']
+        return []
 
-    @property
-    def calmaxpix(self):
-        return self._calmaxpix
+    @hm_imsize.convert
+    def hm_imsize(self, val):
+        if isinstance(val, int):
+            return [val, val]
 
-    @calmaxpix.setter
-    def calmaxpix(self, value):
-        if value is None:
-            value = 300
-        self._calmaxpix = value
+        if isinstance(val, str):
+            if 'pb' in val:
+                return val
 
-    @property
-    def phasecenter(self):
-        return self._phasecenter
+            try:
+                # convert string to list
+                return ast.literal_eval(val).split(',')
+            except:
+                pass
 
-    @phasecenter.setter
-    def phasecenter(self, value):
-        if value is None:
-            value = ''
-        self._phasecenter = value
+        raise ValueError('Malformatted value for hm_imsize: {!r}'.format(val))
 
-    # optional added parameters start here
+    linesfile = vdp.VisDependentProperty(default='lines.dat')
 
-    @property
-    def nchan(self):
-        return self._nchan
+    @linesfile.postprocess
+    def linesfile(self, unprocessed):
+        return os.path.join(self.context.output_dir, unprocessed)
 
-    @nchan.setter
-    def nchan(self, value):
-        if value is None:
-            value = -1
-        self._nchan = value
-
-    @property
-    def start(self):
-        return self._start
-
-    @start.setter
-    def start(self, value):
-        if value is None:
-            value = ''
-        self._start = value
-
-    @property
-    def width(self):
-        return self._width
-
-    @width.setter
-    def width(self, value):
-        if value is None:
-            value = ''
-        self._width = value
-
-    @property
+    @vdp.VisDependentProperty
     def nbins(self):
-        if (self._nbins in [None, '']) and ('TARGET' in self.intent) and self.context.size_mitigation_parameters.has_key('nbins'):
+        if 'TARGET' in self.intent and 'nbins' in self.context.size_mitigation_parameters:
             return self.context.size_mitigation_parameters['nbins']
-        else:
-            return self._nbins
+        return ''
 
-    @nbins.setter
-    def nbins(self, value):
-        if value is None:
-            value = ''
-        self._nbins = value
+    @vdp.VisDependentProperty
+    def spw(self):
+        if self.specmode == 'cube' and 'spw' in self.context.size_mitigation_parameters:
+            return self.context.size_mitigation_parameters['spw']
+        return ''
+
+    @spw.convert
+    def spw(self, val):
+        # Use str() method to catch single spwid case via PPR which maps to int.
+        return str(val)
+
+    @vdp.VisDependentProperty
+    def specmode(self):
+        if 'TARGET' in self.intent:
+            return 'cube'
+        return 'mfs'
+
+    def __init__(self, context, output_dir=None, vis=None, imagename=None, intent=None, field=None, spw=None,
+                 contfile=None, linesfile=None, uvrange=None, specmode=None, outframe=None, hm_imsize=None,
+                 hm_cell=None, calmaxpix=None, phasecenter=None, nchan=None, start=None, width=None, nbins=None):
+        self.context = context
+        self.output_dir = output_dir
+        self.vis = vis
+
+        self.imagename = imagename
+        self.intent = intent
+        self.field = field
+        self.spw = spw
+        self.contfile = contfile
+        self.linesfile = linesfile
+        self.uvrange = uvrange
+        self.specmode = specmode
+        self.outframe = outframe
+        self.hm_imsize = hm_imsize
+        self.hm_cell = hm_cell
+        self.calmaxpix = calmaxpix
+        self.phasecenter = phasecenter
+        self.nchan = nchan
+        self.start = start
+        self.width = width
+        self.nbins = nbins
 
 
 # tell the infrastructure to give us mstransformed data when possible by
@@ -299,15 +172,16 @@ class MakeImList(basetask.StandardTaskTemplate):
             image_repr_target = False
 
             # Initial heuristics instance without spw information.
-            self.heuristics = image_heuristics_factory.getHeuristics( \
-                vislist = inputs.vis, \
-                spw = '', \
-                observing_run = inputs.context.observing_run, \
-                imagename_prefix = inputs.context.project_structure.ousstatus_entity_id, \
-                proj_params = inputs.context.project_performance_parameters, \
-                contfile = inputs.contfile, \
-                linesfile = inputs.linesfile, \
-                imaging_mode = inputs.context.project_summary.telescope)
+            self.heuristics = image_heuristics_factory.getHeuristics(
+                vislist=inputs.vis,
+                spw='',
+                observing_run=inputs.context.observing_run,
+                imagename_prefix=inputs.context.project_structure.ousstatus_entity_id,
+                proj_params=inputs.context.project_performance_parameters,
+                contfile=inputs.contfile,
+                linesfile=inputs.linesfile,
+                imaging_mode=inputs.context.project_summary.telescope
+            )
 
             repr_target, repr_source, repr_spw, reprBW_mode, real_repr_target, minAcceptableAngResolution, maxAcceptableAngResolution = self.heuristics.representative_target()
             # The PI cube shall only be created for real representative targets
@@ -368,15 +242,16 @@ class MakeImList(basetask.StandardTaskTemplate):
             spw = '[]'
             spwlist = []
 
-        self.heuristics = image_heuristics_factory.getHeuristics( \
-            vislist = inputs.vis, \
-            spw = spw, \
-            observing_run = inputs.context.observing_run, \
-            imagename_prefix = inputs.context.project_structure.ousstatus_entity_id, \
-            proj_params = inputs.context.project_performance_parameters, \
-            contfile = inputs.contfile, \
-            linesfile = inputs.linesfile, \
-            imaging_mode = inputs.context.project_summary.telescope)
+        self.heuristics = image_heuristics_factory.getHeuristics(
+            vislist=inputs.vis,
+            spw=spw,
+            observing_run=inputs.context.observing_run,
+            imagename_prefix=inputs.context.project_structure.ousstatus_entity_id,
+            proj_params=inputs.context.project_performance_parameters,
+            contfile=inputs.contfile,
+            linesfile=inputs.linesfile,
+            imaging_mode=inputs.context.project_summary.telescope
+        )
 
         if inputs.specmode == 'cont':
             # Make sure the spw list is sorted numerically
@@ -631,23 +506,25 @@ class MakeImList(basetask.StandardTaskTemplate):
                       cells[spwspec], imsizes[(field_intent[0],spwspec)],
                       phasecenters[field_intent[0]]))
 
-                    target = CleanTarget(**{'field': field_intent[0],
-                                            'intent': field_intent[1],
-                                            'spw': new_spwspec,
-                                            'spwsel_lsrk': spwsel,
-                                            'cell': cells[spwspec],
-                                            'imsize': imsizes[(field_intent[0], spwspec)],
-                                            'phasecenter': phasecenters[field_intent[0]],
-                                            'specmode': inputs.specmode,
-                                            'gridder': self.heuristics.gridder(field_intent[1], field_intent[0]),
-                                            'imagename': imagenames[(field_intent, spwspec)],
-                                            'start': inputs.start,
-                                            'width': widths[(field_intent[0], spwspec)],
-                                            'nbin': nbin,
-                                            'nchan': nchans[(field_intent[0], spwspec)],
-                                            'uvrange': inputs.uvrange,
-                                            'stokes': 'I',
-                                            'heuristics': self.heuristics})
+                    target = CleanTarget(
+                        field=field_intent[0],
+                        intent=field_intent[1],
+                        spw=new_spwspec,
+                        spwsel_lsrk=spwsel,
+                        cell=cells[spwspec],
+                        imsize=imsizes[(field_intent[0], spwspec)],
+                        phasecenter=phasecenters[field_intent[0]],
+                        specmode=inputs.specmode,
+                        gridder=self.heuristics.gridder(field_intent[1], field_intent[0]),
+                        imagename=imagenames[(field_intent, spwspec)],
+                        start=inputs.start,
+                        width=widths[(field_intent[0], spwspec)],
+                        nbin=nbin,
+                        nchan=nchans[(field_intent[0], spwspec)],
+                        uvrange=inputs.uvrange,
+                        stokes='I',
+                        heuristics=self.heuristics
+                    )
 
                     result.add_target(target)
 

@@ -16,6 +16,7 @@ class CheckflagInputs(vdp.StandardInputs):
     checkflagmode = vdp.VisDependentProperty(default='')
 
     def __init__(self, context, vis=None, checkflagmode=None):
+        super(CheckflagInputs, self).__init__()
         self.context = context
         self.vis = vis
         self.checkflagmode = checkflagmode

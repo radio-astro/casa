@@ -100,26 +100,32 @@ class NullMarker(object):
     It exists to distinguish between a user-provided null value, such as None
     or '', and an argument that is null because it has not been set.
     """
-    __metaclass__ = SingletonType
+    def __init__(self, null_input):
+        """
+        Values equal to those in null_input will be considered equal to null.
 
-    # user inputs considered equivalent to a NullMarker. Inputs contained in
-    # this set will
-    __NULL_INPUT = frozenset(['', None])
+        :param null_input: user inputs considered equivalent to a NullMarker.
+        :type null_input: iterable
+        """
+        self.null_input = frozenset(null_input)
 
     def convert(self, val):
         """
         Process the argument, converting user input considered equivalent to
         null to a NullMarker object.
         """
-        # can't check __NULL_INPUT for unhashable types. We know that
-        # __NULL_INPUT does not contain them, so return the value
-        if isinstance(val, NullMarker):
-            return self
-        elif isinstance(val, list):
-            return val
-        elif val in self.__NULL_INPUT:
-            return self
-        else:
+        try:
+            if isinstance(val, NullMarker):
+                return self
+            elif isinstance(val, list):
+                return val
+            elif val in self.null_input:
+                return self
+            else:
+                return val
+        except TypeError:
+            # can't check __null_input for unhashable types. We know that
+            # __null_input does not contain them, so return the value
             return val
 
     def __eq__(self, other):
@@ -127,6 +133,13 @@ class NullMarker(object):
 
     def __ne__(self, other):
         return not isinstance(other, NullMarker)
+
+    def __str__(self):
+        return 'NullMarker({!s})'.format(','.join(self.null_input))
+
+
+# shared instance, as very few inputs require custom null equivalents
+_NULL = NullMarker(null_input=[None, ''])
 
 
 class NoDefaultMarker(object):
@@ -177,8 +190,6 @@ class VisDependentProperty(object):
        opportunity to change the value depending on the state/value of other
        properties.
     """
-    NULL = NullMarker()
-
     # TODO check whether this can be replaced with NULL
     NO_DEFAULT = NoDefaultMarker()
 
@@ -198,14 +209,15 @@ class VisDependentProperty(object):
         passed will be the user input *for this measurement set*. That is,
         after potentially being divided up into per-measurement values.
         """
-        return type(self)(self.fdefault, fconvert, self.fpostprocess, default=self.default, hidden=self.hidden)
+        return type(self)(self.fdefault, fconvert, self.fpostprocess, default=self.default, hidden=self.hidden,
+                          null_input=self.null_input)
 
     def default(self, fdefault):
         """
         Set the function used to get the attribute value when the user has not
         supplied an override value.
         """
-        return type(self)(fdefault, self.fconvert, self.fpostprocess, hidden=self.hidden)
+        return type(self)(fdefault, self.fconvert, self.fpostprocess, hidden=self.hidden, null_input=self.null_input)
 
     def fget(self, owner):
         """
@@ -215,7 +227,7 @@ class VisDependentProperty(object):
         :param owner:
         :return:
         """
-        return getattr(owner, self.backing_store_name, VisDependentProperty.NULL)
+        return getattr(owner, self.backing_store_name, self.null)
 
     def fset(self, owner, value):
         """
@@ -236,21 +248,31 @@ class VisDependentProperty(object):
         :param owner:
         :return:
         """
-        return type(self)(self.fdefault, self.fconvert, fpostprocess, default=self.default, hidden=self.hidden)
+        return type(self)(self.fdefault, self.fconvert, fpostprocess, default=self.default, hidden=self.hidden,
+                          null_input=self.null_input)
 
     def __init__(self, fdefault=None, fconvert=None, fpostprocess=None, default=NO_DEFAULT, readonly=False,
-                 hidden=False):
+                 hidden=False, null_input=None):
         self.fdefault = fdefault
         self.fconvert = fconvert
         self.fpostprocess = fpostprocess
         self.default = default
         self.readonly = readonly
         self.hidden = hidden
+        self.null_input = null_input
 
-    def __call__(self, fget, *args, **kwargs):
-        # __call__ is executed when decorating a readonly function
+        # use shared NullMarker instance where possible. There are lots of
+        # Inputs properties, and only a handful require something custom.
+        if null_input is None:
+            self.null = _NULL
+        else:
+            self.null = NullMarker(null_input=null_input)
+
+    def __call__(self, fdefault, *args, **kwargs):
+        # __call__ is executed when a function definition is called with
+        # arguments
         # LOG.info('In __call__ for %s' % fget.func_name)
-        self.fget = fget
+        self.fdefault = fdefault
         return self
 
     def __get__(self, instance, owner):
@@ -260,7 +282,7 @@ class VisDependentProperty(object):
 
         instance_val = self.fget(instance)
 
-        if instance_val == VisDependentProperty.NULL:
+        if instance_val == self.null:
             if self.fdefault:
                 instance_val = self.fdefault(instance)
             elif self.default != VisDependentProperty.NO_DEFAULT:
@@ -277,12 +299,12 @@ class VisDependentProperty(object):
         if self.readonly:
             raise AttributeError('can\'t set read-only attribute: {!s}'.format(self.name))
 
-        value = VisDependentProperty.NULL.convert(value)
+        value = self.null.convert(value)
 
         # pass non-null values through the user-provided converter
         converted = value
         if self.fconvert is not None:
-            if value != VisDependentProperty.NULL:
+            if value != self.null:
                 converted = self.fconvert(instance, value)
 
         self.fset(instance, converted)
@@ -501,24 +523,26 @@ class InputsContainer(object):
             val = [val] * len(self._active_instances)
 
         for inputs, user_arg in zip(self._active_instances, val):
-            # some properties may be instance values and not data descriptors
-            # on the class, hence the None default
-            prop = getattr(inputs.__class__, name, None)
-
-            # convert null equivalent values to NULL marker. Only VDP knows
-            # how to handle these, so ensure the property is of the
-            # appropriate type before conversion.
-            if isinstance(prop, VisDependentProperty):
-                null_marker = VisDependentProperty.NULL.convert(user_arg)
-
-                # convert property if it's not null
-                if getattr(prop, 'fconvert', None) is not None:
-                    if null_marker != VisDependentProperty.NULL:
-                        user_arg = prop.fconvert(inputs, user_arg)
+            # SJW: Do not convert user values, as they will be converted in
+            # the call to setattr
+            #
+            # # some properties may be instance values and not data descriptors
+            # # on the class, hence the None default
+            # prop = getattr(inputs.__class__, name, None)
+            #
+            # # convert null equivalent values to NULL marker. Only VDP knows
+            # # how to handle these, so ensure the property is of the
+            # # appropriate type before conversion.
+            # if isinstance(prop, VisDependentProperty):
+            #     null_marker = VisDependentProperty.NULL.convert(user_arg)
+            #
+            #     # convert property if it's not null
+            #     if getattr(prop, 'fconvert', None) is not None:
+            #         if null_marker != VisDependentProperty.NULL:
+            #             user_arg = prop.fconvert(inputs, user_arg)
 
             if LOG.isEnabledFor(logging.TRACE):
                 LOG.trace('Setting {!s}.{!s} = {!r}'.format(inputs.__class__.__name__, name, user_arg))
-
             setattr(inputs, name, user_arg)
 
     def _get_scope(self):
@@ -535,7 +559,7 @@ class InputsContainer(object):
 
         # reset to all MSes if the input arg signals a reset, which expands
         # task scope to all MSes
-        if VisDependentProperty.NULL.convert(scope) == VisDependentProperty.NULL:
+        if _NULL.convert(scope) == _NULL:
             scope = self._cls_instances.keys()
 
         # the key for inputs instances is the basename vis
@@ -634,9 +658,9 @@ class StandardInputs(api.Inputs):
             mses = self.context.observing_run.get_measurement_sets(imaging_preferred=imaging_preferred)
             value = [ms.name for ms in mses]
 
-        if len(value) == 1:
-            LOG.warn('Extracting vis from single-value list')
-            value = value[0]
+        # if len(value) == 1:
+        #     # LOG.warn('Extracting vis from single-value list')
+        #     value = value[0]
 
         # for compatibility with the old implementation, single-value lists
         # should be kept as lists
@@ -652,6 +676,8 @@ class StandardInputs(api.Inputs):
      
         :rtype: :class:`~pipeline.domain.MeasurementSet`
         """
+        if isinstance(self.vis, list):
+            return [self.context.observing_run.get_ms(vis) for vis in self.vis]
         return self.context.observing_run.get_ms(self.vis)
 
     @VisDependentProperty

@@ -4,6 +4,7 @@ import os
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
+import pipeline.infrastructure.vdp as vdp
 import pipeline.h.tasks.importdata.importdata as importdata
 from pipeline.domain.datatable import absolute_path
 from . import inspection
@@ -12,19 +13,19 @@ LOG = infrastructure.get_logger(__name__)
 
 
 class SDImportDataInputs(importdata.ImportDataInputs):
+    asis = vdp.VisDependentProperty(default='SBSummary ExecBlock Antenna Station Receiver Source CalAtmosphere CalWVR')
+    ocorr_mode = vdp.VisDependentProperty(default='ao')
+    with_pointing_correction = vdp.VisDependentProperty(default=True)
+
     def __init__(self, context=None, vis=None, output_dir=None, asis=None, process_caldevice=None, session=None,
                  overwrite=None, nocopy=None, bdfflags=None, save_flagonline=None, lazy=None,
                  with_pointing_correction=None, createmms=None, ocorr_mode=None):
-        super(SDImportDataInputs, self).__init__(context=context, vis=vis, output_dir=output_dir, asis=asis,
+        super(SDImportDataInputs, self).__init__(context, vis=vis, output_dir=output_dir, asis=asis,
                                                  process_caldevice=process_caldevice, session=session,
                                                  overwrite=overwrite, nocopy=nocopy, bdfflags=bdfflags, lazy=lazy,
                                                  save_flagonline=save_flagonline, createmms=createmms,
-                                                 ocorr_mode=ocorr_mode)
+                                                 ocorr_mode=ocorr_mode, asimaging=False)
         self.with_pointing_correction = with_pointing_correction
-
-    asis = basetask.property_with_default('asis', 'SBSummary ExecBlock Antenna Station Receiver Source CalAtmosphere CalWVR')
-    ocorr_mode = basetask.property_with_default('ocorr_mode', 'ao')
-    with_pointing_correction = basetask.property_with_default('with_pointing_correction', True)
 
 
 class SDImportDataResults(basetask.Results):

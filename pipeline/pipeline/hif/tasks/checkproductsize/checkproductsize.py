@@ -5,52 +5,39 @@ import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.api as api
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.project as project
+import pipeline.infrastructure.vdp as vdp
 from .resultobjects import CheckProductSizeResult
 
 LOG = infrastructure.get_logger(__name__)
 
 
-class CheckProductSizeInputs(basetask.StandardInputs):
-    parallel = basetask.property_with_default('parallel', 'automatic')
+class CheckProductSizeInputs(vdp.StandardInputs):
+    parallel = vdp.VisDependentProperty(default='automatic')
 
-    def __init__(self, context, output_dir=None, vis=None,
-                 maxcubesize=None, maxcubelimit=None, maxproductsize=None, parallel=None):
-        self.performanceparameters = project.PerformanceParameters()
-        self._init_properties(vars())
-
-    @property
-    def maxcubesize(self):
-        if self._maxcubesize in (None, -1.0):
-            return self.performanceparameters.max_cube_size
-        else:
-            return self._maxcubesize
-
-    @maxcubesize.setter
-    def maxcubesize(self, value):
-        self._maxcubesize = value
-
-    @property
+    @vdp.VisDependentProperty(null_input=[None, '', -1, -1.0])
     def maxcubelimit(self):
-        if self._maxcubelimit in (None, -1.0):
-            return self.maxcubesize
-        else:
-            return self._maxcubelimit
+        return project.PerformanceParameters().max_cube_size
 
-    @maxcubelimit.setter
-    def maxcubelimit(self, value):
-        self._maxcubelimit = value
+    @vdp.VisDependentProperty(null_input=[None, '', -1, -1.0])
+    def maxcubesize(self):
+        return project.PerformanceParameters().max_cube_size
 
-    @property
+    @vdp.VisDependentProperty(null_input=[None, '', -1, -1.0])
     def maxproductsize(self):
-        if self._maxproductsize in (None, -1.0):
-            return self.performanceparameters.max_product_size
-        else:
-            return self._maxproductsize
+        return project.PerformanceParameters().max_product_size
 
-    @maxproductsize.setter
-    def maxproductsize(self, value):
-        self._maxproductsize = value
+    def __init__(self, context, output_dir=None, vis=None, maxcubesize=None, maxcubelimit=None, maxproductsize=None,
+                 parallel=None):
+        super(CheckProductSizeInputs, self).__init__()
 
+        self.context = context
+        self.output_dir = output_dir
+        self.vis = vis
+
+        self.maxcubesize = maxcubesize
+        self.maxcubelimit = maxcubelimit
+        self.maxproductsize = maxproductsize
+        self.parallel = parallel
 
 
 # tell the infrastructure to give us mstransformed data when possible by
@@ -84,16 +71,16 @@ class CheckProductSize(basetask.StandardTaskTemplate):
 
         size_mitigation_parameters['status'] = status
 
-        result = CheckProductSizeResult(self.inputs.maxcubesize, \
-                                        self.inputs.maxcubelimit, \
-                                        self.inputs.maxproductsize, \
-                                        original_maxcubesize, \
-                                        original_productsize, \
-                                        cube_mitigated_productsize, \
-                                        maxcubesize, \
-                                        productsize, \
-                                        size_mitigation_parameters, \
-                                        status, \
+        result = CheckProductSizeResult(self.inputs.maxcubesize,
+                                        self.inputs.maxcubelimit,
+                                        self.inputs.maxproductsize,
+                                        original_maxcubesize,
+                                        original_productsize,
+                                        cube_mitigated_productsize,
+                                        maxcubesize,
+                                        productsize,
+                                        size_mitigation_parameters,
+                                        status,
                                         reason)
 
         # Log summary information
