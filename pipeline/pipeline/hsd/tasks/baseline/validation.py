@@ -18,7 +18,6 @@ from ..common import utils
 _LOG = infrastructure.get_logger(__name__)
 LOG = utils.OnDemandStringParseLogger(_LOG)
 
-
 def ValidationFactory(pattern):
     if pattern == 'RASTER':
         return ValidateLineRaster
@@ -96,11 +95,11 @@ class ValidateLineInputs(common.SingleDishInputs):
     @property
     def group_desc(self):
         return self.context.observing_run.ms_reduction_group[self.group_id]
-    
+
     @property
     def reference_member(self):
         return self.group_desc[self.member_list[0]]
-        
+
 
 class ValidateLineResults(common.SingleDishResults):
     def __init__(self, task=None, success=None, outcome=None):
@@ -227,13 +226,18 @@ class ValidateLineRaster(basetask.StandardTaskTemplate):
     Inputs = ValidateLineInputs
 
     CLUSTER_WHITEN = 1.0
+    #CLUSTER_WHITEN = 4.0 # sensitivity of line width compared to center position -> 1/4
 
+    # as of 2017/7/4 Valid=0.5, Marginal=0.35, Questionable=0.2
+    # should be Valid=0.7, Marginal=0.5, Questionable=0.3
     Valid = rules.ClusterRule['ThresholdValid']
     Marginal = rules.ClusterRule['ThresholdMarginal']
     Questionable = rules.ClusterRule['ThresholdQuestionable']
     MinFWHM = rules.LineFinderRule['MinFWHM']
     #MaxFWHM = rules.LineFinderRule['MaxFWHM']
     #Clustering_Algorithm = rules.ClusterRule['ClusterAlgorithm']
+    DebugOutName = '%05d' % (int(time.time())%100000)
+    DebugOutVer = [0, 0]
     
     @property
     def MaxFWHM(self):
@@ -316,6 +320,11 @@ class ValidateLineRaster(basetask.StandardTaskTemplate):
         flag = 1
         Npos = 0
 
+        # 2017/7/4 clean-up detect_signal
+        LOG.trace('Before: Detect_Signal = {}', detect_signal)
+        detect_signal = self.clean_detect_signal(detect_signal)
+        LOG.trace('After: Detect_Signal = {}', detect_signal)
+
         for row in ROWS:
             # detect_signal[row][2]: [[LineStartChannelN, LineEndChannelN, Binning],[],,,[]]
             if len(detect_signal[row][2]) != 0 and detect_signal[row][2][0][0] != -1:
@@ -328,14 +337,17 @@ class ValidateLineRaster(basetask.StandardTaskTemplate):
                     if line[0] != line[1]: #and tSFLAG[row] == 1:
                         #2014/11/28 add Binning info into Region
                         Region.append([row, line[0], line[1], detect_signal[row][0], detect_signal[row][1], flag, line[2]])
-                        ### 2011/05/17 make cluster insensitive to the line width
+                        ### 2011/05/17 make cluster insensitive to the line width: Whiten
                         dummy.append([float(line[1] - line[0]) / self.CLUSTER_WHITEN, 0.5 * float(line[0] + line[1])])
-        Region2 = numpy.array(dummy) # [Width, Center]
+        Region2 = numpy.array(dummy) # [FullWidth, Center]
         ### 2015/04/22 save Region to file for test
-        #fp = open('ClstRegion.%d.txt' % (int(time.time()/60)-23630000), 'w')
-        #for i in range(len(Region)):
-        #    fp.writelines('%d %f %f %f %f %d %d\n' % (Region[i][0],Region[i][1],Region[i][2],Region[i][3],Region[i][4],Region[i][5],Region[i][6]))
-        #fp.close()
+        if infrastructure.logging.logging_level == infrastructure.logging.LOGGING_LEVELS['trace'] or \
+           infrastructure.logging.logging_level == infrastructure.logging.LOGGING_LEVELS['debug']:
+            self.DebugOutVer[0] += 1
+            with open('ClstRegion.%s.%02d.txt' % (self.DebugOutName, self.DebugOutVer[0]), 'w') as fp:
+                for i in range(len(Region)):
+                    fp.writelines('%d %f %f %f %f %d %d\n' % (Region[i][0],Region[i][1],Region[i][2],Region[i][3],Region[i][4],Region[i][5],Region[i][6]))
+
         del dummy
         LOG.debug('Npos = {}', Npos)
         # 2010/6/9 for non-detection
@@ -390,18 +402,31 @@ class ValidateLineRaster(basetask.StandardTaskTemplate):
         # K-mean Clustering Analysis with LineWidth and LineCenter
         # Max number of protect regions are SDC.SDParam['Cluster']['MaxCluster'] (Max lines)
         ProcStartTime = time.time()
-        LOG.info('K-mean Clustering Analaysis Start')
+        LOG.info('Clustering Analysis Start')
 
         # Bestlines: [[center, width, T/F],[],,,[]]
         clustering_algorithm = self.inputs.clusteringalgorithm
+        # 2017/7/25 fix to Hierarchical Clustering for test
+        clustering_algorithm = 'hierarchy'
         LOG.debug('clustering algorithm is \'{}\'', clustering_algorithm)
         if clustering_algorithm == 'kmean':
             (Ncluster, Bestlines, BestCategory, Region) = self.clustering_kmean(Region, Region2)
         else:
-            (Ncluster, Bestlines, BestCategory, Region) = self.clustering_hierarchy(Region, Region2, rules.ClusterRule['ThresholdHierarchy'])
+            (Ncluster, Bestlines, BestCategory, Region) = self.clustering_hierarchy(Region, Region2, nThreshold=rules.ClusterRule['ThresholdHierarchy'], method='single')
 
         ProcEndTime = time.time()
-        LOG.info('K-mean Cluster Analaysis End: Elapsed time = {} sec', (ProcEndTime - ProcStartTime))
+        LOG.info('Clustering Analysis End: Elapsed time = {} sec', (ProcEndTime - ProcStartTime))
+        # 2017/8/15 for non-detection after cleaninig
+        if Ncluster == 0: 
+            outcome = {'lines': [],
+                       'channelmap_range': [],
+                       'cluster_info': {},
+                       'datatable': datatable_out}
+            result = ValidateLineResults(task=self.__class__,
+                                         success=True,
+                                         outcome=outcome)
+            result.task = self.__class__
+            return result
 
         # Sort lines and Category by LineCenter: lines[][0]
         LineIndex = numpy.argsort([line[0] for line in Bestlines[:Ncluster]])
@@ -417,6 +442,7 @@ class ValidateLineRaster(basetask.StandardTaskTemplate):
         LineIndex2 = numpy.argsort(LineIndex)
         print 'LineIndex2:', LineIndex2
         print 'BestCategory:', BestCategory
+
         #for i in range(len(BestCategory)): category[i] = LineIndex2[BestCategory[i]]
         category = [LineIndex2[bc] for bc in BestCategory]
 
@@ -438,6 +464,7 @@ class ValidateLineRaster(basetask.StandardTaskTemplate):
         
         ProcEndTime = time.time()
         LOG.info('Clustering: Validation Stage End: Elapsed time = {} sec', (ProcEndTime - ProcStartTime))
+
         ######## Clustering: Smoothing Stage ########
         # Rating:  [0.0, 0.4, 0.5, 0.4, 0.0]
         #          [0.4, 0.7, 1.0, 0.7, 0.4]
@@ -529,6 +556,111 @@ class ValidateLineRaster(basetask.StandardTaskTemplate):
     def analyse(self, result):
         return result
 
+
+    def clean_detect_signal(self, DS):
+        """
+        Spectra in each grid positions are splitted into 3 groups along time series.
+        Group of spectra is then combined to 1 spectrum. So, one grid position has
+        3 combined spectra.
+        Suppose that the real signal is correlated but the error is not, we can
+        clean false signals (not correlated) in advance of the validation stage.
+        detect_signal = {ID1: [RA, DEC, [[LineStartChannel1, LineEndChannel1, Binning],
+                                         [LineStartChannel2, LineEndChannel2, Binning],
+                                         [LineStartChannelN, LineEndChannelN, Binning]]],
+                         IDn: [RA, DEC, [[LineStartChannel1, LineEndChannel1, Binning],
+                                         [LineStartChannelN, LineEndChannelN, Binning]]]}
+        """
+        # grouping by position
+        Gthreshold = 1.0 / 3600.
+        DSkey = DS.keys()
+        PosGroup = []
+        # PosGroup: [[ID,ID,ID],[ID,ID,ID],...,[ID,ID,ID]]
+        for ID in DS.keys():
+            if ID in DSkey:
+                del DSkey[DSkey.index(ID)]
+                DStmp = DSkey[:]
+                PosGroup.append([ID])
+                for nID in DStmp:
+                    if abs(DS[ID][0] - DS[nID][0]) < Gthreshold and abs(DS[ID][1] - DS[nID][1]) < Gthreshold:
+                        del DSkey[DSkey.index(nID)]
+                        PosGroup[-1].append(nID)
+        LOG.debug('clean_detect_signal: PosGroup = {}', PosGroup)
+        for PList in PosGroup:
+            if len(PList) > 2:
+                data = {}
+                for i in PList:
+                    data[i] = DS[i][2]
+                # threshold 0.7: identical line is detected in all 3 data: strict checking
+                # threshold 0.6: identical line is detected in 2 data out of 3
+                ret = self.clean_detect_line(data.copy(), threshold=0.7)
+                for i in PList:
+                    DS[i][2] = ret[i]
+
+        return DS
+
+
+    def clean_detect_line(self, data, threshold=0.6):
+        """
+        Select only line candidates with good possibility by checking all spectra taken at the same position
+        data: {ID1: [[LineStart, LineEnd, Binning],,,],
+               ID2: [[LineStart, LineEnd, Binning],,,],
+               IDn: [[LineStart, LineEnd, Binning],,,]}
+        """
+        ret = {}
+        NSP = float(len(data))
+        for ID in data.keys():
+            ret[ID] = []
+        for ID in data.keys():
+            for i in range(len(data[ID])):
+                if data[ID][i][0] != -1:
+                    ref = data[ID][i][:]
+                    tmp = []
+                    # if binning > 1: expected number of lines in the grid doubles, i.e., two different offsets
+                    for nID in data.keys():
+                        Lines = [0.0, 0.0, 0.0]
+                        for j in range(len(data[nID])):
+                            # check binning is the same, and overlap
+                            if data[nID][j][2] == ref[2] and self.CheckLineIdentity(ref, data[nID][j], overlap=0.7):
+                                Lines[0] += data[nID][j][0]
+                                Lines[1] += data[nID][j][1]
+                                Lines[2] += 1.0
+                                # clear identical line
+                                data[nID][j] = [-1, -1, 1]
+                        if Lines[2] > 0: tmp.append([nID, [Lines[0]/Lines[2], Lines[1]/Lines[2], ref[2]]])
+                    if len(tmp) / NSP >= threshold:
+                        for nID, ref in tmp:
+                            ret[nID].append(ref)
+        for ID in data.keys():
+            if len(ret[ID]) == 0: ret[ID].append([-1, -1, 1])
+
+        return ret
+
+
+    def CheckLineIdentity(self, old, new, overlap=0.7):
+        """
+        True if the overlap of two lines is greater than the threshold
+        1L          1R          1L         1R          1L        1R       1L       1R
+         [          ]           [          ]            [         ]       [         ]
+         xxxxxxxxxxxx           xxxxxxxxxxxx            xxxxxxxxxxx       xxxxxxxxxxx
+        oooooooooooooo           oooooooooooo          ooooooooooo         ooooooooo
+        [            ]           [          ]          [         ]         [       ]
+        2L          2R          2L         2R          2L        2R       2L       2R
+
+        True if Num(x) / Num(o) >= overlap
+
+        old: [left, right, binning]
+        new: [left, right, binning]
+        """
+        if(old[0] <= new[0] < old[1] or \
+           old[0] < new[1] <= old[1] or \
+           new[0] <= old[0] < new[1] or \
+           new[0] < old[1] <= new[1]) and \
+           (min(old[1], new[1]) - max(old[0], new[0]) + 1) / float(max((old[1] - old[0] + 1), (new[1] - new[0] + 1))) >= overlap:
+            #print 'Identical', old, new
+            return True
+        else: return False
+
+
     def clustering_kmean(self, Region, Region2):
         # Region = [[row, chan0, chan1, RA, DEC, flag, Binning],[],[],,,[]]
         # Region2 = [[Width, Center],[],[],,,[]]
@@ -547,6 +679,7 @@ class ValidateLineRaster(basetask.StandardTaskTemplate):
         converged = False
         #
         elapsed = 0.0
+        self.DebugOutVer[1] += 1
         for Ncluster in xrange(1, MaxCluster + 1):
             index0=len(ListScore)
             # Fix the random seed 2008/5/23
@@ -568,7 +701,7 @@ class ValidateLineRaster(basetask.StandardTaskTemplate):
 
                     # remove empty line in codebook
                     codebook = codebook.take([x for x in xrange(0,len(codebook)) 
-                                              if any(category==x)], axis=0)
+                                            if any(category==x)], axis=0)
                     NclusterNew = len(codebook)
 
                     # Clear Flag
@@ -589,18 +722,26 @@ class ValidateLineRaster(basetask.StandardTaskTemplate):
                         # Calculate Cluster Characteristics
                         MaxDistance = max(distance * ((distance < Threshold) * (category == Nc)))
                         indices = [x for x in xrange(len(category)) 
-                                   if category[x] == Nc and Region[x][5] != 0]
+                                if category[x] == Nc and Region[x][5] != 0]
                         properties = Region2.take(indices, axis=0)
                         median_props = numpy.median(properties, axis=0)
                         lines.append([median_props[1], median_props[0], True, MaxDistance])
                     MemberRate = (len(Region) - Outlier)/float(len(Region))
+                    MeanDistance = (distance * numpy.transpose(numpy.array(Region))[5]).mean()
                     LOG.trace('lines = {}, MemberRate = {}', lines, MemberRate)
 
                     # 2010/6/15 Plot the score along the number of the clusters
                     ListNcluster.append(Ncluster)
-                    Score = self.clustering_kmean_score(Region, MedianWidth, NclusterNew, MemberRate, distance)
+                    Score = self.clustering_kmean_score(MeanDistance, MedianWidth, NclusterNew, MemberRate)
                     ListScore.append(Score)
                     LOG.debug('NclusterNew = {}, Score = {}', NclusterNew, Score)
+
+                    ### 2017/07/06 save Score to file for test
+                    if infrastructure.logging.logging_level == infrastructure.logging.LOGGING_LEVELS['trace'] or \
+                       infrastructure.logging.logging_level == infrastructure.logging.LOGGING_LEVELS['debug']:
+                        with open('ClstProp.%s.%02d.txt' % (self.DebugOutName, self.DebugOutVer[1]), "wa") as fp:
+                            fp.writelines('%d,%f,%f,%f,%f,%s\n' % (NclusterNew, Score, MeanDistance, MedianWidth, MemberRate, lines))
+
                     if BestScore < 0 or Score < BestScore:
                         BestNcluster = NclusterNew
                         BestScore = Score
@@ -612,10 +753,11 @@ class ValidateLineRaster(basetask.StandardTaskTemplate):
             ListBestScore.append(min(ListScore[index0:]))
             LOG.debug('Ncluster = {}, BestScore = {}', NclusterNew, ListBestScore[-1])
             # iteration end if Score(N) < Score(N+1),Score(N+2),Score(N+3)
-            if len(ListBestScore) > 3 and \
-               ListBestScore[-4] <= ListBestScore[-3] and \
-               ListBestScore[-4] <= ListBestScore[-2] and \
-               ListBestScore[-4] <= ListBestScore[-1]:
+            #if len(ListBestScore) > 3 and \
+            #   ListBestScore[-4] <= ListBestScore[-3] and \
+            #   ListBestScore[-4] <= ListBestScore[-2] and \
+            #   ListBestScore[-4] <= ListBestScore[-1]:
+            if len(ListBestScore) >= 10:
                 LOG.info('Determined the Number of Clusters to be {}', BestNcluster)
                 converged = True
                 break
@@ -625,7 +767,7 @@ class ValidateLineRaster(basetask.StandardTaskTemplate):
 
         self.cluster_info['cluster_score'] = [ListNcluster, ListScore]
         self.cluster_info['detected_lines'] = Region2
-        self.cluster_info['cluster_property'] = Bestlines # [[Center, Width, T/F, ClusterRadius],[],,,[]]
+        self.cluster_info['cluster_property'] = Bestlines # [[Center, Width/WHITEN, T/F, ClusterRadius],[],,,[]]
         self.cluster_info['cluster_scale'] = self.CLUSTER_WHITEN
         #SDP.ShowClusterScore(ListNcluster, ListScore, ShowPlot, FigFileDir, FigFileRoot)
         #SDP.ShowClusterInchannelSpace(Region2, Bestlines, self.CLUSTER_WHITEN, ShowPlot, FigFileDir, FigFileRoot)
@@ -634,7 +776,8 @@ class ValidateLineRaster(basetask.StandardTaskTemplate):
 
         return (BestNcluster, Bestlines, BestCategory, BestRegion)
 
-    def clustering_hierarchy(self, Region, Region2, nThreshold=3.0, method='ward'):
+
+    def clustering_hierarchy(self, Region, Region2, nThreshold=3.0, method='single'):
     #def calc_clustering(self, nThreshold, method='ward'):
         """
         Hierarchical Clustering
@@ -648,37 +791,55 @@ class ValidateLineRaster(basetask.StandardTaskTemplate):
         in:
             self.Data -> Region2
             self.Ndata
- 
         out:
             self.Threshold
             self.Nthreshold
             self.Category
             self.Ncluster
         """
-        Data = self.set_data(Region2, ordering=[0,1])
+        Data = self.set_data(Region2, ordering=[0,1]) # Data: numpy[[width, center],[w,c],,,]
+        Repeat = 3 # Number of artificial detection points to normalize the cluster distance 
         # Calculate LinkMatrix from given data set
         if method.lower() == 'single': # nearest point linkage method
-            LinkMatrix = HIERARCHY.single(Data)
+            H_Clustering = HIERARCHY.single
         elif method.lower() == 'complete': # farthest point linkage method
-            LinkMatrix = HIERARCHY.complete(Data)
+            H_Clustering = HIERARCHY.complete
         elif method.lower() == 'average': # average linkage method
-            LinkMatrix = HIERARCHY.average(Data)
+            H_Clustering = HIERARCHY.average
         elif method.lower() == 'centroid': # centroid/UPGMC linkage method
-            LinkMatrix = HIERARCHY.centroid(Data)
+            H_Clustering = HIERARCHY.centroid
         elif method.lower() == 'median': # median/WPGMC linkage method
-            LinkMatrix = HIERARCHY.median(Data)
+            H_Clustering = HIERARCHY.median
         else: # Ward's linkage method: default
-            LinkMatrix = HIERARCHY.ward(Data)
+            H_Clustering = HIERARCHY.ward
+        # temporaly add artificial detection points to normalize the cluster distance
+        tmp = numpy.zeros((Data.shape[0]+Repeat*2, Data.shape[1]), numpy.float)
+        tmp[Repeat*2:] = Data.copy()
+        for i in range(Repeat):
+            tmp[i] = [self.nchan/2, 0]
+            tmp[Repeat+i] = [self.nchan/2, self.nchan-1]
+        LOG.debug('tmp[:10] = {}', tmp[:10])
+        tmpLinkMatrix = H_Clustering(tmp)
+        MedianDistance = numpy.median(tmpLinkMatrix.T[2])
+        MeanDistance = tmpLinkMatrix.T[2].mean()
+        Stddev = tmpLinkMatrix.T[2].std()
+        del tmp, tmpLinkMatrix
+        LOG.debug('MedianDistance = {}, MeanDistance = {}, Stddev = {}', MedianDistance, MeanDistance, Stddev)
+        LOG.debug('Ndata = {}', Data.shape[0])
 
         # Divide data set into several clusters
         # LinkMatrix[n][2]: distance between two data/clusters
         # 1st classification
-        MedianDistance = numpy.median(LinkMatrix.T[2])
-        Stddev = LinkMatrix.T[2].std()
+        LinkMatrix = H_Clustering(Data)
+        #MedianDistance = numpy.median(LinkMatrix.T[2])
+        #Stddev = LinkMatrix.T[2].std()
         Nthreshold = nThreshold
-        Threshold = MedianDistance + Nthreshold * Stddev
+        #Threshold = MedianDistance + Nthreshold * Stddev
+        Threshold = MeanDistance + Nthreshold * Stddev
         Category = HIERARCHY.fcluster(LinkMatrix, Threshold, criterion='distance')
         Ncluster = Category.max()
+        LOG.debug('nThreshold = {}, method = {}', nThreshold, method)
+        LOG.debug('Init Threshold = {}, Init Ncluster = {}', Threshold, Ncluster)
         print 'Init Threshold:', Threshold,
         print '\tInit Ncluster:', Ncluster
 
@@ -690,15 +851,25 @@ class ValidateLineRaster(basetask.StandardTaskTemplate):
                 print 'skip(%d): %d' % (k, len(NewData))
                 continue # LinkMatrix = ()
             NewIDX = IDX[Category==(k+1)]
-            LinkMatrix = HIERARCHY.ward(NewData) # Ward's linkage method
+            LinkMatrix = H_Clustering(NewData) # selected linkage method
             #print LinkMatrix
             MedianDistance = numpy.median(LinkMatrix.T[2])
+            MeanDistance = LinkMatrix.T[2].mean()
             #print 'MedianD', MedianDistance
             Stddev = LinkMatrix.T[2].std()
-            NewThreshold = MedianDistance + Nthreshold ** 2. * Stddev # *3. is arbitrary
+            LOG.debug('MedianDistance = {}, MeanDistance = {}, Stddev = {}', MedianDistance, MeanDistance, Stddev)
+            #NewThreshold = MedianDistance + Nthreshold ** 2. * Stddev
+            #NewThreshold = MedianDistance + Nthreshold ** 1.5 * Stddev
+            #NewThreshold = MeanDistance + Nthreshold ** 1.5 * Stddev
+            #NewThreshold = MeanDistance + Nthreshold * 2.0 * Stddev
+            NewThreshold = MeanDistance + Nthreshold * 1.5 * Stddev
+            #NewThreshold = MedianDistance + Nthreshold ** 1.3 * Stddev
+            #NewThreshold = MedianDistance + Nthreshold * Stddev
+            LOG.debug('Threshold({}): {}', k, NewThreshold)
             print 'Threshold(%d): %.1f' % (k, NewThreshold),
             NewCategory = HIERARCHY.fcluster(LinkMatrix, NewThreshold, criterion='distance')
             NewNcluster = NewCategory.max()
+            LOG.debug('NewCluster({}): {}', k, NewNcluster)
             print '\tNewNcluster(%d): %d' % (k, NewNcluster),
             print '\t# of Members(%d): %d: ' % (k, ((Category==k+1)*1).sum()),
             for kk in range(NewNcluster):
@@ -709,11 +880,14 @@ class ValidateLineRaster(basetask.StandardTaskTemplate):
                     if NewCategory[i] > 1:
                         Category[NewIDX[i]] = C + NewCategory[i] - 1
         Ncluster = Category.max() # update Ncluster
-        (Region, Range, Stdev) = self.clean_cluster(Data, Category, Region, 3.0, 2) # nThreshold, NumParam
-        for i in range(len(Category)):
-            #if Category[i] > Ncluster: Region[i][5] = 0 # flag out cleaned data
-            Category[i] -= 1 # Category starts with 1 -> starts with 0 (to align kmean)
+
+        (Region, Range, Stdev, Category) = self.clean_cluster(Data, Category, Region, Nthreshold, 2) # nThreshold, NumParam
+        # 2017/7/25 ReNumbering is done in clean_cluster
+        #for i in range(len(Category)):
+        #    #if Category[i] > Ncluster: Region[i][5] = 0 # flag out cleaned data
+        #    Category[i] -= 1 # Category starts with 1 -> starts with 0 (to align kmean)
         Bestlines = []
+        Ncluster = len(Range)
         for j in range(Ncluster):
             Bestlines.append([Range[j][1], Range[j][0], True, Range[j][4]])
         LOG.info('Final: Ncluster = {}, lines = {}', Ncluster, Bestlines)
@@ -724,6 +898,7 @@ class ValidateLineRaster(basetask.StandardTaskTemplate):
         self.cluster_info['cluster_scale'] = self.CLUSTER_WHITEN
 
         return (Ncluster, Bestlines, Category, Region)
+
 
     def set_data(self, Observation, ordering='none'):
         """
@@ -761,22 +936,29 @@ class ValidateLineRaster(basetask.StandardTaskTemplate):
         del Obs, OrderList
         return (Data)
 
+
     def clean_cluster(self, Data, Category, Region, Nthreshold, NumParam):
         """
         Clean-up cluster by eliminating outliers
          Radius = StandardDeviation * nThreshold (circle/sphere)
         in:
-            self.Data
-            self.Category
-            self.Nthreshold
-            self.Ncluster
+            Data
+            Category
+            Nthreshold
+            Ncluster
         out:
-            self.Range
-            self.Stdev
+            Region: flag information is added
+            Range: Range[Ncluster][5]: [ClusterCenterX, ClusterCenterY, 0, 0, Threshold]
+            Stdev: Stdev[Ncluster][5]: [ClusterStddevX, ClusterStddevY, 0, 0, 0]
+            Category: renumbered category
         """
         IDX = numpy.array([x for x in xrange(len(Data))])
         Ncluster = Category.max()
         C = Ncluster + 1
+        ValidClusterID = []
+        ValidRange = []
+        ValidStdev = []
+        ReNumber = {}
         Range = numpy.zeros((C, 5), numpy.float)
         Stdev = numpy.zeros((C, 5), numpy.float)
         for k in range(Ncluster):
@@ -791,58 +973,44 @@ class ValidateLineRaster(basetask.StandardTaskTemplate):
                 Tmp = ((NewData - numpy.array([[Range[k][0]],[Range[k][1]],[Range[k][2]]]))**2).sum(axis=0)**0.5
             else: # NumParam == 2
                 Tmp = ((NewData - numpy.array([[Range[k][0]],[Range[k][1]]]))**2).sum(axis=0)**0.5
-            Threshold = Tmp.mean() + Tmp.std() * Nthreshold
+            Threshold = numpy.median(Tmp) + Tmp.std() * Nthreshold
+            #Threshold = Tmp.mean() + Tmp.std() * Nthreshold
             Range[k][4] = Threshold
-            print 'Threshold(%d): %.1f' % (k, Threshold),
+            LOG.trace('Threshold({}) = {}', k, Threshold)
             Out = NewIDX[Tmp > Threshold]
-            print '\tOut Of Cluster (%d): %d' % (k, len(Out))
+            #if (len(NewIDX) - len(Out)) < 6: # max 3 detections for each binning: detected in two binning pattern
+            if (len(NewIDX) - len(Out)) < 3: # max 3 detections for each binning: detected in at least one binning pattern: sensitive to very narrow lines
+                LOG.trace('Non Cluster: {}', len(NewIDX))
+                for i in NewIDX:
+                    #self.Category[i] = C
+                    Region[i][5] = 0
+                ReNumber[k+1] = 0
+                continue
+            LOG.trace('Out Of Cluster ({}): {}', k, len(Out))
             if len(Out > 0):
                 for i in Out:
                     #Category[i] = C
                     Region[i][5] = 0
-                NewData = Data[Category == k+1].T
-                #for i in range(NumParam):
-                #    Range[k][i] = NewData[i].mean()
-                #    Stdev[k][i] = NewData[i].std()
-        return (Region, Range, Stdev)
+            ReNumber[k+1] = len(ValidClusterID)
+            ValidClusterID.append(k)
+        for k in ValidClusterID:
+            ValidRange.append(Range[k])
+            ValidStdev.append(Stdev[k])
+        LOG.debug('ReNumbering Table: {}', ReNumber)
+        for j in range(len(Category)): Category[j] = ReNumber[Category[j]]
+        #return (Region, Range, Stdev)
+        return (Region, numpy.array(ValidRange), numpy.array(ValidStdev), Category)
+    
 
-    def Clustering_Hierarchy_Clean(nThreshold, Observation, Category):
-        NumParam = len(Observation[0])
-        IDX = numpy.array([x for x in xrange(len(Observation))])
-        C = Category.max() + 1
-        Range = numpy.zeros((C, 5), numpy.float)
-        Stdev = numpy.zeros((C, 5), numpy.float)
-        for k in range(Category.max()):
-            NewData = Observation[Category == k+1].T
-            NewIDX = IDX[Category == k+1]
-            for i in range(NumParam):
-                Range[k][i] = NewData[i].mean()
-                Stdev[k][i] = NewData[i].std()
-            if(NumParam == 4):
-                Tmp = ((NewData - numpy.array([[Range[k][0]],[Range[k][1]],[Range[k][2]],[Range[k][3]]]))**2).sum(axis=0)**0.5
-            elif(NumParam == 3):
-                Tmp = ((NewData - numpy.array([[Range[k][0]],[Range[k][1]],[Range[k][2]]]))**2).sum(axis=0)**0.5
-            else: # NumParam == 2
-                Tmp = ((NewData - numpy.array([[Range[k][0]],[Range[k][1]]]))**2).sum(axis=0)**0.5
-            Threshold = Tmp.mean() + Tmp.std() * nThreshold
-            Range[k][4] = Threshold
-            print 'Threshold(%d): %.1f' % (k, Threshold)
-            Out = NewIDX[Tmp > Threshold]
-            print 'Out Of Cluster (%d): %d' % (k, len(Out))
-            if len(Out > 0):
-                for i in Out:
-                    Category[i] = C
-                NewData = Observation[Category == k+1].T
-                for i in range(NumParam):
-                    Range[k][i] = NewData[i].mean()
-                    Stdev[k][i] = NewData[i].std()
-        return (Category, Range, Stdev)
-
-    def clustering_kmean_score(self, Region, MedianWidth, Ncluster, MemberRate, distance):
+    def clustering_kmean_score(self, MeanDistance, MedianWidth, Ncluster, MemberRate):
         # Rating
         ### 2011/05/12 modified for (distance==0)
         ### 2014/11/28 further modified for (distance==0)
-        return(math.sqrt(((distance * numpy.transpose(numpy.array(Region))[5]).mean())**2.0 + (MedianWidth/2.0)**2.0) * (Ncluster+ 1.0/Ncluster) * (((1.0 - MemberRate)**0.5 + 1.0)**2.0))
+        ### 2017/07/05 modified to be sensitive to MemberRate
+        # (distance * numpy.transpose(Region[5])).mean(): average distance from each cluster center
+        #return(math.sqrt(((distance * numpy.transpose(numpy.array(Region))[5]).mean())**2.0 + (MedianWidth/2.0)**2.0) * (Ncluster+ 1.0/Ncluster) * (((1.0 - MemberRate)**0.5 + 1.0)**2.0))
+        return(math.sqrt(MeanDistance**2.0 + (MedianWidth/2.0)**2.0) * (Ncluster+ 1.0/Ncluster) * ((1.0 - MemberRate) * 100.0 + 1.0))
+
 
     def detection_stage(self, Ncluster, nra, ndec, ra0, dec0, grid_ra, grid_dec, category, Region, detect_signal):
         """
@@ -869,7 +1037,7 @@ class ValidateLineRaster(basetask.StandardTaskTemplate):
                 # binning = 4**n
                 n = int(math.log(Region[i][6])/math.log(4.) + 0.1)
                 # if binning larger than 1, detection is done twice: m=>0.5
-                if n == 0: m = 1.0
+                if n == 0: m = 1.0 # case binning=1
                 else: m = 0.5
                 try:
                     #2014/11/28 Counting is done for each binning separately
@@ -877,8 +1045,15 @@ class ValidateLineRaster(basetask.StandardTaskTemplate):
                     #GridCluster[category[i]][int((Region[i][3] - ra0)/grid_ra)][int((Region[i][4] - dec0)/grid_dec)] += 1.0
                 except IndexError:
                     pass
-        #2014/11/28 select the largest value among different Binning
         GridCluster = GridClusterWithBinning.max(axis=1)
+        #2014/11/28 select the largest value among different Binning
+        #2017/7/4 normalize by the number of spectra in the grid
+        #x1, x2, x3 = GridCluster.shape
+        #for i in range(x1):
+        #    GridCluster[i] /= GridMember
+        #    for j in range(x2):
+        #        for k in range(x3):
+        #            if GridCluster[i][j][k] > 1.0: GridCluster[i][j][k] = 1.0
         #for i in xrange(Ncluster):
         #    for j in xrange(nra):
         #        for k in xrange(ndec):
@@ -916,11 +1091,12 @@ class ValidateLineRaster(basetask.StandardTaskTemplate):
         
         return (GridCluster, GridMember)
 
+
     def validation_stage(self, GridCluster, GridMember, lines):
         # Validated if number of spectrum which contains feature belongs to the cluster is greater or equal to
         # the half number of spectrum in the Grid
         # Normally, 3 spectra are created for each grid positions,
-        # therefore, GridMember[ra][dec] = 3 for most of the cases.
+        # therefore, gridmember[ra][dec] = 3 for most of the cases.
         # Normalized validity can be
         # 1/3 (0.2<V) -> only one detection -> Qestionable
         # 2/3 (0.5<V)-> two detections -> Marginal
@@ -941,8 +1117,8 @@ class ValidateLineRaster(basetask.StandardTaskTemplate):
                         GridCluster[Nc][x][y] = 1.0
                     ### 2014/11/28 Binning valiation is taken into account in the previous stage
                     # normarize validity
-                    else: GridCluster[Nc][x][y] /= float(GridMember[x][y])
-                    #else: GridCluster[Nc][x][y] = min(GridCluster[Nc][x][y] / sqrt(GridMember[x][y]), 3.0)
+                    #else: GridCluster[Nc][x][y] /= float(GridMember[x][y])
+                    else: GridCluster[Nc][x][y] = min(GridCluster[Nc][x][y] / float(GridMember[x][y]), 1.0)
 
             if ((GridCluster[Nc] > self.Questionable)*1).sum() == 0: lines[Nc][2] = False
 
@@ -954,6 +1130,7 @@ class ValidateLineRaster(basetask.StandardTaskTemplate):
         
         return (GridCluster, GridMember, lines)
 
+
     def smoothing_stage(self, GridCluster, lines):
         # Rating:  [0.0, 0.4, 0.5, 0.4, 0.0]
         #          [0.4, 0.7, 1.0, 0.7, 0.4]
@@ -961,6 +1138,12 @@ class ValidateLineRaster(basetask.StandardTaskTemplate):
         #          [0.4, 0.7, 1.0, 0.7, 0.4]
         #          [0.0, 0.4, 0.5, 0.4, 0.0]
         # Rating = 1.0 / (Dx**2 + Dy**2)**(0.5) : if (Dx, Dy) == (0, 0) rating = 6.0
+        # NewRating[0.0, 0.2, 0.3, 0.2, 0.0]
+        #          [0.2, 0.5, 1.0, 0.5, 0.2]
+        #          [0.3, 1.0, 6.0, 1.0, 0.3]
+        #          [0.2, 0.5, 1.0, 0.5, 0.2]
+        #          [0.0, 0.2, 0.3, 0.2, 0.0]
+        # NewRating = 1.0 / (Dx**2 + Dy**2) : if (Dx, Dy) == (0, 0) rating = 6.0
         (Ncluster,nra,ndec) = GridCluster.shape
         GridScore = numpy.zeros((2, nra, ndec), dtype=numpy.float32)
         LOG.trace('GridCluster = {}', GridCluster)
@@ -980,13 +1163,15 @@ class ValidateLineRaster(basetask.StandardTaskTemplate):
                         # dx = 0
                         for dy in range_y:
                             ny = y + dy
-                            Rating = 1.0 / abs(dy)
+                            #Rating = 1.0 / abs(dy)
+                            Rating = 1.0 / abs(dy*dy)
                             GridScore[0][x][y] += Rating * GridCluster[Nc][x][ny]
                             GridScore[1][x][y] += Rating
                         # dy = 0
                         for dx in range_x:
                             nx = x + dx
-                            Rating = 1.0 / abs(dx)
+                            #Rating = 1.0 / abs(dx)
+                            Rating = 1.0 / abs(dx*dx)
                             GridScore[0][x][y] += Rating * GridCluster[Nc][nx][y]
                             GridScore[1][x][y] += Rating
                         # dx != 0 and dy != 0
@@ -994,7 +1179,8 @@ class ValidateLineRaster(basetask.StandardTaskTemplate):
                             for dy in range_y:
                                 if (abs(dx) + abs(dy)) <= 3:
                                     (nx, ny) = (x + dx, y + dy)
-                                    Rating = 1.0 / sqrt(dx*dx + dy*dy)
+                                    #Rating = 1.0 / sqrt(dx*dx + dy*dy)
+                                    Rating = 1.0 / (dx*dx + dy*dy)
                                     GridScore[0][x][y] += Rating * GridCluster[Nc][nx][ny]
                                     GridScore[1][x][y] += Rating
                         #for dx in [-2, -1, 0, 1, 2]:
@@ -1008,7 +1194,8 @@ class ValidateLineRaster(basetask.StandardTaskTemplate):
                         #               GridScore[1][x][y] += Rating
                 LOG.trace('Score :  GridScore[{}][0] = {}', Nc, GridScore[0])
                 LOG.trace('Rating:  GridScore[{}][1] = {}', Nc, GridScore[1])
-                GridCluster[Nc] = GridScore[0] / GridScore[1]
+                #GridCluster[Nc] = GridScore[0] / GridScore[1]
+                GridCluster[Nc] = GridScore[0] / GridScore[1] * 2.0 # for single valid detection
             if ((GridCluster[Nc] > self.Questionable)*1).sum() < 0.1: lines[Nc][2] = False
 
         threshold = [self.Valid, self.Marginal, self.Questionable]
@@ -1017,6 +1204,7 @@ class ValidateLineRaster(basetask.StandardTaskTemplate):
         LOG.trace('GridCluster = {}', GridCluster)
         
         return (GridCluster, lines)
+
 
     def final_stage(self, GridCluster, GridMember, Region, Region2, lines, category, grid_ra, grid_dec, broad_component, xorder, yorder, x0, y0, Grid2SpectrumID, index_list, PosList):
                 
@@ -1027,14 +1215,12 @@ class ValidateLineRaster(basetask.StandardTaskTemplate):
         LOG.trace('GridCluster = {}', GridCluster)
         LOG.trace('GridMember = {}', GridMember)
         LOG.trace('lines = {}', lines)
+        LOG.info('Ncluster={}', Ncluster)
 
         # Dictionary for final output
         RealSignal = {}
 
-        #HalfGrid = (grid_ra ** 2 + grid_dec ** 2) ** 0.5 / 2.0
         HalfGrid = 0.5 * sqrt(grid_ra*grid_ra + grid_dec*grid_dec)
-
-        LOG.info('Ncluster={}', Ncluster)
         
         MinFWHM = self.MinFWHM
         MaxFWHM = self.MaxFWHM
@@ -1044,401 +1230,336 @@ class ValidateLineRaster(basetask.StandardTaskTemplate):
         for i in range(len(lines)):
             channelmap_range.append(lines[i][:])
 
-        # Clean isolated grids
         for Nc in xrange(Ncluster):
             LOG.trace('------00------ Exec for Nth Cluster: Nc={}', Nc)
             LOG.trace('lines[Nc] = {}', lines[Nc])
-            #print '\nNc=', Nc
-            if lines[Nc][2] != False:
-                Plane = (GridCluster[Nc] > self.Marginal) * 1
-                if Plane.sum() == 0:
-                    lines[Nc][2] = False
-                    channelmap_range[Nc][2] = False
-                    #print 'lines[Nc][2] -> False'
-                    continue
-                Original = GridCluster[Nc].copy()
-                # Clear GridCluster Nc-th plane
-                GridCluster[Nc] *= 0.0
-                Nmember = []
-                Realmember = []
-                MemberList = []
-                NsubCluster = 0
-                for x in xrange(nra):
-                    for y in xrange(ndec):
-                        if Plane[x][y] == 1:
-                            Plane[x][y] = 2
-                            SearchList = [(x, y)]
-                            M = 1
-                            if Original[x][y] > self.Valid: MM = 1
-                            #if Original[x][y] > self.Marginal: MM = 1
-                            else: MM = 0
-                            MemberList.append([(x, y)])
-                            while(len(SearchList) != 0):
-                                cx, cy = SearchList[0]
-                                #for dx in [-1, 0, 1]:
-                                for dx in xrange(-min(1,cx),min(2,nra-cx)):
-                                    #for dy in [-1, 0, 1]:
-                                    for dy in xrange(-min(1,cy),min(2,ndec-cy)):
-                                        (nx, ny) = (cx + dx, cy + dy)
-                                        #if 0 <= nx < nra and 0 <= ny < ndec and Plane[nx][ny] == 1:
-                                        if Plane[nx][ny] == 1:
-                                            Plane[nx][ny] = 2
-                                            SearchList.append((nx, ny))
-                                            M += 1
-                                            if Original[nx][ny] > self.Valid: MM += 1
-                                            #if Original[nx][ny] > self.Marginal: MM += 1
-                                            MemberList[NsubCluster].append((nx, ny))
-                                del SearchList[0]
-                            Nmember.append(M)
-                            Realmember.append(MM)
-                            NsubCluster += 1
+            if lines[Nc][2] == False: continue
+            Plane = (GridCluster[Nc] > self.Marginal) * 1
+            if Plane.sum() == 0:
+                lines[Nc][2] = False
+                channelmap_range[Nc][2] = False
+                continue
+            Original = GridCluster[Nc].copy()
+            # Clear GridCluster Nc-th plane
+            GridCluster[Nc] *= 0.0
 
-                # If no members left, skip to next cluster
-                if len(Nmember) == 0: continue
-                # Threshold is set to half the number of the largest cluster in the plane
-                #Threshold = max(Nmember) / 2.0
-                #Threshold = min(max(Realmember) / 2.0, 3)
-                Threshold = min(0.5 * max(Realmember), 3)
-                for n in xrange(NsubCluster -1, -1, -1):
-                    # isolated cluster made from single spectrum should be omitted
-                    if Nmember[n] == 1:
-                        (x, y) = MemberList[n][0]
-                        if GridMember[x][y] <= 1:
-                            Nmember[n] = 0
-                            #print '\nHere Nmember[%d] = 1' % n
-                    # Sub-Cluster whose member below the threshold is cleaned
-                    if Nmember[n] < Threshold:
-                        #print '\nNmember[%d]=%d, Threshold=%f' % (n, Nmember[n], Threshold)
-                        for (x, y) in MemberList[n]:
-                            Plane[x][y] == 0
-                        del Nmember[n]
-                        del MemberList[n]
+            # Clean isolated grids
+            MemberList, Realmember = self.CleanIsolation(nra, ndec, Original, Plane, GridMember)
+            if len(MemberList) == 0: continue
 
-                # Blur each SubCluster with the radius of sqrt(Nmember/Pi) * ratio
-                ratio = rules.ClusterRule['BlurRatio']
-                # Set-up SubCluster
-                for n in xrange(len(Nmember)):
-                    LOG.trace('------01------ n={}', n)
-                    SubPlane = numpy.zeros((nra, ndec), dtype=numpy.float32)
-                    #xlist = []
-                    #ylist = []
-                    for (x, y) in MemberList[n]:
-                        SubPlane[x][y] = Original[x][y]
-                        #xlist.append(x)
-                        #ylist.append(y)
-                    # Calculate Blur radius
-                    #Blur = int((Realmember[n] / 3.141592653) ** 0.5 * ratio + 0.5)
-                    #BlurF = (Realmember[n] / 3.141592653) ** 0.5 * ratio + 1.5
-                    BlurF = sqrt(Realmember[n] / 3.141592653) * ratio + 1.5
-                    Blur = int(BlurF)
-                    # Set-up kernel for convolution
-                    # caution: if nra < (Blur*2+1) and ndec < (Blur*2+1)
-                    #  => dimension of SPC.convolve2d(Sub,kernel) gets not (nra,ndec) but (Blur*2+1,Blur*2+1)
-                    if nra < (Blur * 2 + 1) and ndec < (Blur * 2 + 1): Blur = int((max(nra, ndec) - 1) / 2)
-                    kernel = numpy.zeros((Blur * 2 + 1, Blur * 2 + 1),dtype=int)
-                    for x in xrange(Blur * 2 + 1):
-                        dx = Blur - x
-                        for y in xrange(Blur * 2 + 1):
-                            dy = Blur - y
-                            if sqrt(dx*dx + dy*dy) <= BlurF:
-                                kernel[x][y] = 1
-                    BlurPlane = (convolve2d(SubPlane, kernel) > self.Marginal) * 1
-                    ValidPlane = (SubPlane > self.Valid) * 1
-                    LOG.trace('GridCluster.shape = {}', list(GridCluster.shape))
-                    LOG.trace('Plane.shape = {}', list(Plane.shape))
-                    LOG.trace('SubPlane.shape = {}', list(SubPlane.shape))
-                    LOG.trace('BlurPlane.shape = {}', list(BlurPlane.shape))
-                    for x in xrange(len(Plane)):
-                        LOG.trace(' {} : {}', x, list(Plane[x]))
-                    for x in xrange(len(BlurPlane)):
-                        LOG.trace(' {} : {}', x, list(BlurPlane[x]))
-                    for x in xrange(len(ValidPlane)):
-                        LOG.trace(' {} : {}', x, list(ValidPlane[x]))
+            # Blur each SubCluster with the radius of sqrt(Nmember/Pi) * ratio
+            ratio = rules.ClusterRule['BlurRatio']
+            # Set-up SubCluster
+            for Ns in xrange(len(MemberList)): # Ns: SubCluster number
+                LOG.trace('------01------ Ns={}', Ns)
+                SubPlane = numpy.zeros((nra, ndec), dtype=numpy.float32)
+                for (x, y) in MemberList[Ns]: SubPlane[x][y] = Original[x][y]
+                ValidPlane, BlurPlane = self.DoBlur(Realmember[Ns], nra, ndec, SubPlane, ratio)
 
-                    LOG.trace('ValidPlane {}', ValidPlane)
-                    LOG.trace('Plane {}', Plane)
-                    LOG.trace('SubPlane {}', SubPlane)
-                    LOG.trace('BlurPlane {}', BlurPlane)
-                    LOG.trace('Original {}', Original)
-                    LOG.trace('GridClusterV {}', self.GridClusterValidation[Nc])
-                    # 2D fit for each Plane
-                    # Use the data for fit if GridCluster[Nc][x][y] > self.Valid
-                    # Not use for fit but apply the value at the border if GridCluster[Nc][x][y] > self.Marginal
+                LOG.debug('GridCluster.shape = {}', list(GridCluster.shape))
+                LOG.trace('Original {}', Original)
+                LOG.debug('SubPlane.shape = {}', list(SubPlane.shape))
+                LOG.trace('SubPlane {}', SubPlane)
+                LOG.debug('BlurPlane.shape = {}', list(BlurPlane.shape))
+                LOG.trace('BlurPlane {}', BlurPlane)
+                LOG.trace('ValidPlane {}', ValidPlane)
+                LOG.trace('GridClusterV {}', self.GridClusterValidation[Nc])
 
-                    # 2009/9/10 duplication of the position was taken into account (broad_component=True)
-                    Bfactor = 1.0
-                    if broad_component: Bfactor = 2.0
-                    # Determine fitting order if not specified
-                    #if xorder < 0: xorder0 = min(((numpy.sum(ValidPlane, axis=0) > 0.5)*1).sum() - 1, 5)
-                    #if yorder < 0: yorder0 = min(((numpy.sum(ValidPlane, axis=1) > 0.5)*1).sum() - 1, 5)
-                    ### 2014/10/30 comment out below 2 lines
-                    #if xorder < 0: xorder0 = int(min(((numpy.sum(self.GridClusterValidation[Nc], axis=0) > 0.5)*1).sum()/Bfactor - 1, 5))
-                    #if yorder < 0: yorder0 = int(min(((numpy.sum(self.GridClusterValidation[Nc], axis=1) > 0.5)*1).sum()/Bfactor - 1, 5))
-                    ###if xorder < 0: xorder0 = int(min(((numpy.sum(ValidPlane, axis=0) > 0.5)*1).sum()/Bfactor - 1, 5))
-                    ###if yorder < 0: yorder0 = int(min(((numpy.sum(ValidPlane, axis=1) > 0.5)*1).sum()/Bfactor - 1, 5))
-                    #if xorder < 0: xorder0 = min(max(max(xlist) - min(xlist), 0), 5)
-                    #if yorder < 0: yorder0 = min(max(max(ylist) - min(ylist), 0), 5)
-                    # 2014/10/30 for not causing Singular Matrix Error
-                    (ylen, xlen) = self.GridClusterValidation[Nc].shape
-                    if xorder < 0: xorder0 = min(xlen-1-numpy.sum((self.GridClusterValidation[Nc]<0.5)*1, axis=1).min(), 5)
-                    if yorder < 0: yorder0 = min(ylen-1-numpy.sum((self.GridClusterValidation[Nc]<0.5)*1, axis=0).min(), 5)
 
-                    LOG.trace('(X,Y)order, order0 = ({}, {}) ({}, {})', xorder, yorder, xorder0, yorder0)
+                # 2D fit for each Plane
+                # Use the data for fit if GridCluster[Nc][x][y] > self.Valid
+                # Not use for fit but apply the value at the border if GridCluster[Nc][x][y] > self.Marginal
 
-                    # clear Flag
-                    for i in xrange(len(category)): Region[i][5] = 1
+                (ylen, xlen) = self.GridClusterValidation[Nc].shape
+                # 2017/9/21 GridClusterValidation should not be used for order determination
+                # 0 <= xorder0,yorder0 <= 5, swap xorder0 and yorder0
+                if xorder < 0: xorder0 = max(min(numpy.sum(ValidPlane, axis=0).max()-1, 5), 0)
+                if yorder < 0: yorder0 = max(min(numpy.sum(ValidPlane, axis=1).max()-1, 5), 0)
+                #if xorder < 0: xorder0 = max(min(numpy.sum(ValidPlane, axis=1).max()-1, 5), 0)
+                #if yorder < 0: yorder0 = max(min(numpy.sum(ValidPlane, axis=0).max()-1, 5), 0)
+                LOG.trace('(X,Y)order, order0 = ({}, {}) ({}, {})', xorder, yorder, xorder0, yorder0)
 
-                    if xorder0 < 0 or yorder0 < 0:
-                        SingularMatrix = True
-                        ExceptionLinAlg = False
+                # clear Flag
+                for i in xrange(len(category)): Region[i][5] = 1
+
+                #while ExceptionLinAlg:
+                FitData = []
+                LOG.trace('------02-1---- category={}, len(category)={}, ClusterNumber(Nc)={}, SubClusterNumber(Ns)={}', category, len(category), Nc, Ns)
+                #Region format:([row, line[0], line[1], RA, DEC, flag])
+                dummy = [tuple(Region[i][:5]) for i in xrange(len(category)) 
+                         if category[i] == Nc and Region[i][5] == 1 and \
+                            SubPlane[int((Region[i][3] - x0)/grid_ra)][int((Region[i][4] - y0)/grid_dec)] > self.Valid]
+                LOG.trace('------02-2----- len(dummy)={}, dummy={}', len(dummy), dummy)
+                if len(dummy) == 0: continue
+
+                # same signal can be detected in a single row with multiple binning
+                # in that case, take maximum width as a representative width (Lmax-Lmin)
+                (Lrow, Lmin, Lmax, LRA, LDEC) = dummy[0]
+                for i in xrange(1, len(dummy)):
+                    if Lrow == dummy[i][0]:
+                        Lmin, Lmax = (min(Lmin, dummy[i][1]), max(Lmax, dummy[i][2]))
                     else:
-                        SingularMatrix = False
-                        ExceptionLinAlg = True
-
-                    # for Channel Map wavelength range determination
-                    (MaskMin, MaskMax) = (10000, 0)
-
-                    while ExceptionLinAlg:
-                        LOG.trace('------02------ in ExceptionLinAlg')
-                        FitData = []
-                        ### 2011/05/15 One parameter (Width, Center) for each spectra
-                        #Region format:([row, line[0], line[1], detect_signal[row][0], detect_signal[row][1], flag])
-                        LOG.trace('------02-1---- category={}, len(category)={}, Nc={}', category, len(category), Nc)
-                        #LOG.trace('------02-2---- Region=%s' % Region)
-                        for i in xrange(len(category)):
-                            LOG.trace('category[i], i, Nc = {}, {}, {}', category[i], i, Nc)
-                            if category[i] == Nc:
-                                LOG.trace('Subplane={}', SubPlane[int((Region[i][3] - x0)/grid_ra)][int((Region[i][4] - y0)/grid_dec)])
-                        dummy = [tuple(Region[i][:5]) for i in xrange(len(category))
-                                 if category[i] == Nc and Region[i][5] == 1 and SubPlane[int((Region[i][3] - x0)/grid_ra)][int((Region[i][4] - y0)/grid_dec)] > self.Valid]
-                        LOG.trace('------02-3---- dummy={}', dummy)
-                        LOG.trace('------02-4----- len(dummy)={}', len(dummy))
-                        ###2014/11/12 in case of len(dummy)==0
-                        if len(dummy) == 0:
-                            SingularMatrix = False
-                            break
-                        (Lrow, Lmin, Lmax, LRA, LDEC) = dummy[0]
-                        for i in xrange(1,len(dummy)):
-                            if Lrow == dummy[i][0]:
-                                Lmin = min(Lmin, dummy[i][1])
-                                Lmax = max(Lmax, dummy[i][2])
-                            else:
-                                FitData.append([Lmin, Lmax, LRA, LDEC, 1])
-                                (Lrow, Lmin, Lmax, LRA, LDEC) = dummy[i]
                         FitData.append([Lmin, Lmax, LRA, LDEC, 1])
-                        del dummy
+                        (Lrow, Lmin, Lmax, LRA, LDEC) = dummy[i]
+                FitData.append([Lmin, Lmax, LRA, LDEC, 1])
+                del dummy
+                # FitData format: [Chan0, Chan1, RA, DEC, flag]
+                LOG.trace('FitData = {}', FitData)
 
-                        # Instantiate SVD solver
-                        solver = SVDSolver2D(xorder0, yorder0)
-                        for iteration in xrange(3):
-                            LOG.trace('------03------ iteration={}', iteration)
-                            LOG.trace('2D Fit Iteration = {}', iteration)
+                # Instantiate SVD solver
+                #LOG.trace('2D Fit Order: xorder0={} yorder0={}', xorder0, yorder0)
+                #solver = SVDSolver2D(xorder0, yorder0)
 
-                            ### Commented out three lines 2011/05/15
-                            ### 2015/8/11
-                            # FitData format: [Chan0, Chan1, RA, DEC, flag]
-                            #for i in range(len(category)):
-                            #    if category[i] == Nc and Region[i][5] == 1 and SubPlane[int((Region[i][3] - x0)/grid_ra)][int((Region[i][4] - y0)/grid_dec)] > self.Valid:
-                            #        FitData.append((Region2[i][0], Region2[i][1], Region[i][3], Region[i][4]))
+                # TN refactoring
+                # Comment out the following if statement since 
+                # 1) len(FitData) is always greater than 0. 
+                #    Lee the code just above start of iteration.
+                # 2) SingularMatrix is always False in this 
+                #    loop. Exit the loop whenever SingularMatrix 
+                #    is set to False. See code below.
+                #if len(FitData) == 0 or SingularMatrix: break
 
-                            # TN refactoring
-                            # Comment out the following if statement since 
-                            # 1) len(FitData) is always greater than 0. 
-                            #    Lee the code just above start of iteration.
-                            # 2) SingularMatrix is always False in this 
-                            #    loop. Exit the loop whenever SingularMatrix 
-                            #    is set to False. See code below.
-                            #if len(FitData) == 0 or SingularMatrix: break
-                            LOG.trace('FitData = {}', FitData)
-
-                            # effective components of FitData
-                            effective = [i for i in xrange(len(FitData)) 
-                                         if FitData[i][4] == 1]
-
+                SingularMatrix = False
+                for iteration in xrange(3): # iteration loop for 2D fit sigma flagging
+                    LOG.trace('------03------ iteration={}', iteration)
+                    # effective components of FitData
+                    effective = [i for i in xrange(len(FitData)) if FitData[i][4] == 1]
+                    # prepare data for SVD fit
+                    #xdata = numpy.array([FitData[i][2] for i in effective], dtype=numpy.float64)
+                    #ydata = numpy.array([FitData[i][3] for i in effective], dtype=numpy.float64)
+                    #lmindata = numpy.array([FitData[i][0] for i in effective], dtype=numpy.float64)
+                    #lmaxdata = numpy.array([FitData[i][1] for i in effective], dtype=numpy.float64)
+                    # 2017/9/26 Repeat solver.find_good_solution until not through exception by reducing xorder and yorder
+                    SVDsolver = True
+                    while(1):
+                        LOG.trace('2D Fit Order: xorder0={} yorder0={}', xorder0, yorder0)
+                        if(SVDsolver):
+                            # Instantiate SVD solver
+                            solver = SVDSolver2D(xorder0, yorder0)
                             # prepare data for SVD fit
-                            ExceptionLinAlg = False
                             xdata = numpy.array([FitData[i][2] for i in effective], dtype=numpy.float64)
                             ydata = numpy.array([FitData[i][3] for i in effective], dtype=numpy.float64)
                             lmindata = numpy.array([FitData[i][0] for i in effective], dtype=numpy.float64)
                             lmaxdata = numpy.array([FitData[i][1] for i in effective], dtype=numpy.float64)
-                            try:
+                        else:
+                            # 2017/9/28 old code is incerted for validation purpose
+                            # make arrays for coefficient calculation
+                            # Matrix    MM x A = B  ->  A = MM^-1 x B
+                            M0 = numpy.zeros((xorder0 * 2 + 1) * (yorder0 * 2 + 1), dtype=numpy.float64)
+                            M1 = numpy.zeros((xorder0 * 2 + 1) * (yorder0 * 2 + 1), dtype=numpy.float64)
+                            B0 = numpy.zeros((xorder0 + 1) * (yorder0 + 1), dtype=numpy.float64)
+                            B1 = numpy.zeros((xorder0 + 1) * (yorder0 + 1), dtype=numpy.float64)
+                            MM0 = numpy.zeros([(xorder0 + 1) * (yorder0 + 1), (xorder0 + 1) * (yorder0 + 1)], dtype=numpy.float64)
+                            MM1 = numpy.zeros([(xorder0 + 1) * (yorder0 + 1), (xorder0 + 1) * (yorder0 + 1)], dtype=numpy.float64)
+                            for (Width, Center, x, y, flag) in FitData:
+                                if flag == 1:
+                                    for k in range(yorder0 * 2 + 1): 
+                                        for j in range(xorder0 * 2 + 1): 
+                                            M0[j + k * (xorder0 * 2 + 1)] += math.pow(x, j) * math.pow(y, k)
+                                    for k in range(yorder0 + 1): 
+                                        for j in range(xorder0 + 1): 
+                                            B0[j + k * (xorder0 + 1)] += math.pow(x, j) * math.pow(y, k) * Center
+                                    for k in range(yorder0 * 2 + 1): 
+                                        for j in range(xorder0 * 2 + 1): 
+                                            M1[j + k * (xorder0 * 2 + 1)] += math.pow(x, j) * math.pow(y, k)
+                                    for k in range(yorder0 + 1): 
+                                        for j in range(xorder0 + 1):
+                                            B1[j + k * (xorder0 + 1)] += math.pow(x, j) * math.pow(y, k) * Width
+                            # make Matrix MM0,MM1 and calculate A0,A1
+                            for K in range((xorder0 + 1) * (yorder0 + 1)):
+                                k0 = K % (xorder0 + 1)
+                                k1 = int(K / (xorder0 + 1))
+                                for J in range((xorder0 + 1) * (yorder0 + 1)):
+                                    j0 = J % (xorder0 + 1)
+                                    j1 = int(J / (xorder0 + 1))
+                                    MM0[J, K] = M0[j0 + k0 + (j1 + k1) * (xorder0 * 2 + 1)]
+                                    MM1[J, K] = M1[j0 + k0 + (j1 + k1) * (xorder0 * 2 + 1)]
+                            LOG.trace('OLD:MM0 = {}', MM0.tolist())
+                            LOG.trace('OLD:B0 = {}', B0.tolist())
+
+                        try:
+                            if(SVDsolver):
                                 solver.set_data_points(xdata, ydata)
                                 A0 = solver.find_good_solution(lmaxdata)
                                 A1 = solver.find_good_solution(lmindata)
                                 LOG.trace('SVD: A0={}', A0.tolist())
                                 LOG.trace('SVD: A1={}', A1.tolist())
-                            except Exception, e:
-                                LOG.trace('------04------ in exception loop ExceptionLinAlg={} SingularMatrix={}', ExceptionLinAlg, SingularMatrix)
-                                if xorder0 != 0 or yorder0 != 0:
-                                    ExceptionLinAlg = True
-                                    LOG.trace('xorder0,yorder0 = {},{}', xorder0, yorder0)
-                                    xorder0 = max(xorder0 - 1, 0)
-                                    yorder0 = max(yorder0 - 1, 0)
-                                    LOG.info('Fit failed. Trying lower order ({}, {})', xorder0, yorder0)
-                                else:
-                                    SingularMatrix = True
-                                import traceback
-                                LOG.trace(traceback.format_exc(e))
+                                break
+                                # verification
+#                               diff_lmin = numpy.zeros(len(effective), dtype=numpy.float64)
+#                               diff_lmax = numpy.zeros(len(effective), dtype=numpy.float64)
+#                               for ieff in xrange(len(effective)):
+#                                   eff = effective[ieff]
+#                                   lmin_ex = FitData[eff][0]
+#                                   lmax_ex = FitData[eff][1]
+#                                   x = FitData[eff][2]
+#                                   y = FitData[eff][3]
+#                                   lmin_fit, lmax_fit = _eval_poly(xorder0+1, yorder0+1, x, y, A0, A1) 
+#                                   diff_lmin[ieff] = abs((lmin_fit - lmin_ex) / lmin_ex)
+#                                   diff_lmax[ieff] = abs((lmax_fit - lmax_ex) / lmax_ex)
+#                               LOG.trace('SVD: Lmin difference: max %s, min %s, mean %s, std %s'%(diff_lmin.max(), diff_lmin.min(), diff_lmin.mean(), diff_lmin.std()))
+#                               LOG.trace('SVD: Lmax difference: max %s, min %s, mean %s, std %s'%(diff_lmax.max(), diff_lmax.min(), diff_lmax.mean(), diff_lmax.std()))
+
+                            else:
+                                A0 = LA.solve(MM0, B0)
+                                A1 = LA.solve(MM1, B1)
+                                LOG.trace('OLD: A0={}', A0.tolist())
+                                LOG.trace('OLD: A1={}', A1.tolist())
+                                del MM0, MM1, B0, B1, M0, M1
                                 break
 
-                            # verification
-#                             diff_lmin = numpy.zeros(len(effective), dtype=numpy.float64)
-#                             diff_lmax = numpy.zeros(len(effective), dtype=numpy.float64)
-#                             for ieff in xrange(len(effective)):
-#                                 eff = effective[ieff]
-#                                 lmin_ex = FitData[eff][0]
-#                                 lmax_ex = FitData[eff][1]
-#                                 x = FitData[eff][2]
-#                                 y = FitData[eff][3]
-#                                 lmin_fit, lmax_fit = _eval_poly(xorder0+1, yorder0+1, x, y, A0, A1) 
-#                                 diff_lmin[ieff] = abs((lmin_fit - lmin_ex) / lmin_ex)
-#                                 diff_lmax[ieff] = abs((lmax_fit - lmax_ex) / lmax_ex)
-#                             LOG.trace('SVD: Lmin difference: max %s, min %s, mean %s, std %s'%(diff_lmin.max(), diff_lmin.min(), diff_lmin.mean(), diff_lmin.std()))
-#                             LOG.trace('SVD: Lmax difference: max %s, min %s, mean %s, std %s'%(diff_lmax.max(), diff_lmax.min(), diff_lmax.mean(), diff_lmax.std()))
-                            
-                            LOG.trace('------05------ after try ExceptionLinAlg={} SingularMatrix={}', ExceptionLinAlg, SingularMatrix)
-
-                            # Calculate Sigma
-                            # Sigma should be calculated in the upper stage
-                            # Fit0: Center or Lmax, Fit1: Width or Lmin
-                            Diff = []
-                            # TN refactoring
-                            # Calculation of Diff is duplicated here and 
-                            # following clipping stage. So, evalueate Diff 
-                            # only once here and reuse it in clipping.
-                            for (Width, Center, x, y, flag) in FitData:
-                                LOG.trace('{} {} {} {} {} {}', xorder0,yorder0,x,y,A0,A1)
-                                (Fit0, Fit1) = _eval_poly(xorder0+1, yorder0+1, x, y, A0, A1)
-                                Fit0 -= Center
-                                Fit1 -= Width
-                                Diff.append(sqrt(Fit0*Fit0 + Fit1*Fit1))
-                            #if len(Diff) > 1: Threshold = numpy.array(Diff).mean() + numpy.array(Diff).std() * self.nsigma
-                            #if len(Diff) > 1:
-                            if len(effective) > 1:
-                                npdiff = numpy.array(Diff)[effective]
-                                Threshold = npdiff.mean()
-                                #Threshold += npdiff.std()
-                                Threshold += sqrt(numpy.square(npdiff - Threshold).mean()) * self.nsigma
-                            #if len(Diff) > 1: Threshold = numpy.array(Diff).std() * self.nsigma
-                            else: Threshold *= 2.0
-                            LOG.trace('Diff = {}', [Diff[i] for i in effective])
-                            LOG.trace('2D Fit Threshold = {}', Threshold)
-
-                            # Sigma Clip
-                            NFlagged = 0
-                            Number = len(FitData)
-                            ### 2011/05/15
-                            for i in xrange(Number):
-                                # Reuse Diff
-                                if Diff[i] <= Threshold:
-                                    FitData[i][4] = 1
-                                else:
-                                    FitData[i][4] = 0
-                                    NFlagged += 1
-
-                            LOG.trace('2D Fit Flagged/All = ({}, {})', NFlagged, Number)
-                            #2009/10/15 compare the number of the remainder and fitting order
-                            if (Number - NFlagged) <= max(xorder0, yorder0) or Number == NFlagged:
+                        except Exception, e:
+                            LOG.trace('------04------ in exception loop SingularMatrix={}', SingularMatrix)
+                            import traceback
+                            LOG.trace(traceback.format_exc(e))
+                            if xorder0 != 0 or yorder0 != 0:
+                                xorder0 = max(xorder0 - 1, 0)
+                                yorder0 = max(yorder0 - 1, 0)
+                                LOG.info('Fit failed. Trying lower order ({}, {})', xorder0, yorder0)
+                            else:
                                 SingularMatrix = True
                                 break
-                    # Iteration End
-                    ### 2011/05/15 Fitting is no longer (Width, Center) but (minchan, maxChan)
-                    LOG.trace('------06------ End of Iteration ExceptionLinAlg={} SingularMatrix={}', ExceptionLinAlg, SingularMatrix)
+                    if SingularMatrix: break
 
-                    # FitData: [(Chan0, Cha1, RA, DEC, Flag)]
-                    if not SingularMatrix:
-                        LOG.trace('------07------ in not SingularMatrix loop')
-                        FitData = []
-                        for i in range(len(category)):
-                            if category[i] == Nc and Region[i][5] == 1 and SubPlane[int((Region[i][3] - x0)/grid_ra)][int((Region[i][4] - y0)/grid_dec)] > self.Valid:
-                                #FitData.append((Region[i][1], Region[i][2], Region[i][3], Region[i][4]))
-                                #FitData.append((Region2[i][0], Region2[i][1], Region[i][3], Region[i][4]))
-                                FitData.append(tuple(Region2[i][:5]))
-                        if len(FitData) == 0: continue
+                    # Calculate Sigma
+                    # Sigma should be calculated in the upper stage
+                    # Fit0: Center or Lmax, Fit1: Width or Lmin
+                    Diff = []
+                    # TN refactoring
+                    # Calculation of Diff is duplicated here and 
+                    # following clipping stage. So, evalueate Diff 
+                    # only once here and reuse it in clipping.
+                    for (Width, Center, x, y, flag) in FitData:
+                        LOG.trace('{} {} {} {} {} {}', xorder0,yorder0,x,y,A0,A1)
+                        (Fit0, Fit1) = _eval_poly(xorder0+1, yorder0+1, x, y, A0, A1)
+                        Fit0 -= Center
+                        Fit1 -= Width
+                        Diff.append(sqrt(Fit0*Fit0 + Fit1*Fit1))
+                    if len(effective) > 1:
+                        npdiff = numpy.array(Diff)[effective]
+                        Threshold = npdiff.mean()
+                        Threshold += sqrt(numpy.square(npdiff - Threshold).mean()) * self.nsigma
+                    else: Threshold *= 2.0
+                    LOG.trace('Diff = {}', [Diff[i] for i in effective])
+                    LOG.trace('2D Fit Threshold = {}', Threshold)
 
-                        # for Channel Map velocity range determination 2014/1/12
-                        (MaskMin, MaskMax) = (10000.0, 0.0)
-                        # Calculate Fit for each position
-                        LOG.trace('------08------ Calc Fit for each pos')
-                        for x in xrange(nra):
-                            for y in xrange(ndec):
-                                if ValidPlane[x][y] == 1:
-                                    LOG.trace('------09------ in ValidPlane x={} y={}', x, y)
-                                    for PID in Grid2SpectrumID[x][y]:
-                                        ID = index_list[PID]
-                                        ### 2011/05/15 (Width, Center) -> (minchan, maxChan)
-                                        (Chan1, Chan0) = _eval_poly(xorder0+1, yorder0+1, PosList[0][PID], PosList[1][PID], A0, A1) 
-                                        Fit0 = 0.5 * (Chan0 + Chan1)
-                                        Fit1 = (Chan1 - Chan0) + 1.0
-                                        LOG.trace('Fit0, Fit1 = {}, {}', Fit0, Fit1)
-                                        # 2015/04/23 remove MaxFWHM check
-                                        if (Fit1 >= MinFWHM): # and (Fit1 <= MaxFWHM):
-                                            Allowance, Protect = self.calc_allowance(Fit0, Fit1, self.nchan, MinFWHM, MaxFWHM)
-                                            # for Channel map velocity range determination 2014/1/12
-                                            MaskCen = (Protect[0] + Protect[1]) / 2.0
-                                            if MaskMin > MaskCen: MaskMin = max(0, MaskCen)
-                                            if MaskMax < MaskCen: MaskMax = min(self.nchan - 1, MaskCen)
-                                            #if MaskMin > Protect[0]: MaskMin = Protect[0]
-                                            #if MaskMax < Protect[1]: MaskMax = Protect[1]
+                    # Sigma Clip
+                    NFlagged = 0
+                    Number = len(FitData)
+                    ### 2011/05/15
+                    for i in xrange(Number):
+                        # Reuse Diff
+                        if Diff[i] <= Threshold:
+                            FitData[i][4] = 1
+                        else:
+                            FitData[i][4] = 0
+                            NFlagged += 1
 
-                                            if RealSignal.has_key(ID):
-                                                RealSignal[ID][2].append(Protect)
-                                            else:
-                                                RealSignal[ID] = [PosList[0][PID], PosList[1][PID] ,[Protect]]
-                                        else: LOG.trace('------10------ out of range Fit0={} Fit1={}', Fit0,Fit1)
-                                elif BlurPlane[x][y] == 1:
-                                    LOG.trace('------11------ in BlurPlane x={} y={}', x, y)
-                                    # in Blur Plane, Fit is not extrapolated, 
-                                    # but use the nearest value in Valid Plane
-                                    # Search the nearest Valid Grid
-                                    Nearest = []
-                                    square_aspect = grid_ra / grid_dec
-                                    square_aspect *= square_aspect
-                                    Dist2 = numpy.inf
-                                    for xx in range(nra):
-                                        for yy in range(ndec):
-                                            if ValidPlane[xx][yy] == 1:
-                                                Dist3 = (xx-x)*(xx-x)*square_aspect + (yy-y)*(yy-y)
-                                                if Dist2 > Dist3:
-                                                    Nearest = [xx, yy]
-                                                    Dist2 = Dist3
-                                    (RA0, DEC0) = (x0 + grid_ra * (x + 0.5), y0 + grid_dec * (y + 0.5))
-                                    (RA1, DEC1) = (x0 + grid_ra * (Nearest[0] + 0.5), y0 + grid_dec * (Nearest[1] + 0.5))
+                    LOG.trace('2D Fit Flagged/All = ({}, {})', NFlagged, Number)
+                    #2009/10/15 compare the number of the remainder and fitting order
+                    if (Number - NFlagged) <= max(xorder0, yorder0) or Number == NFlagged:
+                        SingularMatrix = True
+                        break
+                    #2017/9/27 exit if there is update (no flag, or flag number is the same to the previous iteration)
+                    if NFlagged == 0: break
+                    if iteration == 0: NFlagOrg = NFlagged
+                    elif NFlagOrg == NFlagged: break
+                # Iteration End
 
-                                    # Setup the position near the border
-                                    RA2 = RA1 - (RA1 - RA0) * HalfGrid / sqrt(Dist2)
-                                    DEC2 = DEC1 - (DEC1 - DEC0) * HalfGrid / sqrt(Dist2)
-                                    LOG.trace('[X,Y],[XX,YY] = [{},{}],{}', x,y,Nearest)
-                                    LOG.trace('(RA0,DEC0),(RA1,DEC1),(RA2,DEC2) = ({:.5},{:.5}),({:.5},{:.5}),({:.5},{:.5})',RA0,DEC0,RA1,DEC1,RA2,DEC2)
-                                    # Calculate Fit and apply same value to all the spectra in the Blur Grid
-                                    ### 2011/05/15 (Width, Center) -> (minchan, maxChan)
-                                    # Border case
-                                    #(Chan0, Chan1) = _eval_poly(xorder0+1, yorder0+1, RA2, DEC2, A0, A1)
-                                    # Center case
-                                    (Chan1, Chan0) = _eval_poly(xorder0+1, yorder0+1, RA1, DEC1, A0, A1)
-                                    Fit0 = 0.5 * (Chan0 + Chan1)
-                                    Fit1 = (Chan1 - Chan0)
-                                    LOG.trace('Fit0, Fit1 = {}, {}', Fit0, Fit1)
-                                    # 2015/04/23 remove MaxFWHM check
-                                    if (Fit1 >= MinFWHM): # and (Fit1 <= MaxFWHM):
-                                        Allowance, Protect = self.calc_allowance(Fit0, Fit1, self.nchan, MinFWHM, MaxFWHM)
-                                        # for Channel map velocity range determination 2014/1/12
-                                        # Valid case only: ignore blur case
-                                        #if MaskMin > Protect[0]: MaskMin = Protect[0]
-                                        #if MaskMax < Protect[1]: MaskMax = Protect[1]
+                ### 2011/05/15 Fitting is no longer (Width, Center) but (minchan, maxChan)
+                LOG.trace('------06------ End of Iteration: SingularMatrix={}', SingularMatrix)
+                if SingularMatrix: # skip for next Ns (SubCluster)
+                    LOG.trace('------06b----- Skip for the next SubCluster')
+                    continue
 
-                                        for PID in Grid2SpectrumID[x][y]:
-                                            ID = index_list[PID]
-                                            if RealSignal.has_key(ID):
-                                                RealSignal[ID][2].append(Protect)
-                                            else:
-                                                RealSignal[ID] = [PosList[0][PID], PosList[1][PID] ,[Protect]]
+                LOG.trace('------07------ SingularMatrix=False')
+                # Clear FitData and restore all relevant data
+                # FitData: [(Chan0, Chan1, RA, DEC, Flag)]
+                FitData = []
+                for i in range(len(category)):
+                    if category[i] == Nc and Region[i][5] == 1 and SubPlane[int((Region[i][3] - x0)/grid_ra)][int((Region[i][4] - y0)/grid_dec)] > self.Valid:
+                        FitData.append(tuple(Region2[i][:5]))
+                if len(FitData) == 0: continue
+
+                # for Channel Map velocity range determination 2014/1/12
+                (MaskMin, MaskMax) = (10000.0, 0.0)
+                # Calculate Fit for each position
+                LOG.trace('------08------ Calc Fit for each pos')
+                for x in xrange(nra):
+                    for y in xrange(ndec):
+                        if ValidPlane[x][y] == 1:
+                            LOG.trace('------09------ in ValidPlane x={} y={}', x, y)
+                            for PID in Grid2SpectrumID[x][y]:
+                                ID = index_list[PID]
+                                ### 2011/05/15 (Width, Center) -> (minchan, maxChan)
+                                (Chan1, Chan0) = _eval_poly(xorder0+1, yorder0+1, PosList[0][PID], PosList[1][PID], A0, A1) 
+                                Fit0 = 0.5 * (Chan0 + Chan1)
+                                Fit1 = (Chan1 - Chan0) + 1.0
+                                LOG.trace('Fit0, Fit1 = {}, {}', Fit0, Fit1)
+                                # 2015/04/23 remove MaxFWHM check
+                                if (Fit1 >= MinFWHM): # and (Fit1 <= MaxFWHM):
+                                    ProtectMask = self.calc_ProtectMask(Fit0, Fit1, self.nchan, MinFWHM, MaxFWHM)
+                                    # for Channel map velocity range determination 2014/1/12
+                                    MaskCen = (ProtectMask[0] + ProtectMask[1]) / 2.0
+                                    if MaskMin > MaskCen: MaskMin = max(0, MaskCen)
+                                    if MaskMax < MaskCen: MaskMax = min(self.nchan - 1, MaskCen)
+
+                                    if RealSignal.has_key(ID):
+                                        RealSignal[ID][2].append(ProtectMask)
                                     else:
-                                        LOG.trace('------12------ out of range Fit0={} Fit1={}', Fit0,Fit1)
-                                        continue
-                                    #else: continue
-                    # for Plot
-                    if not SingularMatrix: GridCluster[Nc] += BlurPlane
+                                        RealSignal[ID] = [PosList[0][PID], PosList[1][PID] ,[ProtectMask]]
+                                else: LOG.trace('------10------ out of range Fit0={} Fit1={}', Fit0,Fit1)
+                        elif BlurPlane[x][y] == 1:
+                            LOG.trace('------11------ in BlurPlane x={} y={}', x, y)
+                            # in Blur Plane, Fit is not extrapolated, 
+                            # but use the nearest value in Valid Plane
+                            # Search the nearest Valid Grid
+                            Nearest = []
+                            square_aspect = grid_ra / grid_dec
+                            square_aspect *= square_aspect
+                            Dist2 = numpy.inf
+                            for xx in range(nra):
+                                for yy in range(ndec):
+                                    if ValidPlane[xx][yy] == 1:
+                                        Dist3 = (xx-x)*(xx-x)*square_aspect + (yy-y)*(yy-y)
+                                        if Dist2 > Dist3:
+                                            Nearest = [xx, yy]
+                                            Dist2 = Dist3
+                            (RA0, DEC0) = (x0 + grid_ra * (x + 0.5), y0 + grid_dec * (y + 0.5))
+                            (RA1, DEC1) = (x0 + grid_ra * (Nearest[0] + 0.5), y0 + grid_dec * (Nearest[1] + 0.5))
+
+                            # Setup the position near the border
+                            RA2 = RA1 - (RA1 - RA0) * HalfGrid / sqrt(Dist2)
+                            DEC2 = DEC1 - (DEC1 - DEC0) * HalfGrid / sqrt(Dist2)
+                            LOG.trace('[X,Y],[XX,YY] = [{},{}],{}', x,y,Nearest)
+                            LOG.trace('(RA0,DEC0),(RA1,DEC1),(RA2,DEC2) = ({:.5},{:.5}),({:.5},{:.5}),({:.5},{:.5})',RA0,DEC0,RA1,DEC1,RA2,DEC2)
+                            # Calculate Fit and apply same value to all the spectra in the Blur Grid
+                            ### 2011/05/15 (Width, Center) -> (minchan, maxChan)
+                            # Border case
+                            #(Chan0, Chan1) = _eval_poly(xorder0+1, yorder0+1, RA2, DEC2, A0, A1)
+                            # Center case
+                            (Chan1, Chan0) = _eval_poly(xorder0+1, yorder0+1, RA1, DEC1, A0, A1)
+                            Fit0 = 0.5 * (Chan0 + Chan1)
+                            Fit1 = (Chan1 - Chan0)
+                            LOG.trace('Fit0, Fit1 = {}, {}', Fit0, Fit1)
+                            # 2015/04/23 remove MaxFWHM check
+                            if (Fit1 >= MinFWHM): # and (Fit1 <= MaxFWHM):
+                                ProtectMask = self.calc_ProtectMask(Fit0, Fit1, self.nchan, MinFWHM, MaxFWHM)
+
+                                for PID in Grid2SpectrumID[x][y]:
+                                    ID = index_list[PID]
+                                    if RealSignal.has_key(ID):
+                                        RealSignal[ID][2].append(ProtectMask)
+                                    else:
+                                        RealSignal[ID] = [PosList[0][PID], PosList[1][PID] ,[ProtectMask]]
+                            else:
+                                LOG.trace('------12------ out of range Fit0={} Fit1={}', Fit0,Fit1)
+                                continue
+
+                # Add every SubClusters to GridCluster just for Plot
+                GridCluster[Nc] += BlurPlane
+                #if not SingularMatrix: GridCluster[Nc] += BlurPlane
+
                 if ((GridCluster[Nc] > 0.5)*1).sum() < self.Questionable or MaskMax == 0.0:
                     lines[Nc][2] = False
                     channelmap_range[Nc][2] = False
@@ -1453,18 +1574,102 @@ class ValidateLineRaster(basetask.StandardTaskTemplate):
 
                 for x in range(nra):
                     for y in range(ndec):
-                        #if GridCluster[Nc][x][y] > 0.5: GridCluster[Nc][x][y] = 1.0
-                        #if Original[x][y] > self.Valid: GridCluster[Nc][x][y] = 2.0
                         if Original[x][y] > self.Valid: GridCluster[Nc][x][y] = 2.0
                         elif GridCluster[Nc][x][y] > 0.5: GridCluster[Nc][x][y] = 1.0
-                        
 
         threshold = [1.5, 0.5, 0.5, 0.5]
         self.__update_cluster_flag('final', GridCluster, threshold, 1000)
         
         return (RealSignal, lines, channelmap_range)
 
-    def calc_allowance(self, Center, Width, nchan, MinFWHM, MaxFWHM):
+    def CleanIsolation(self, nra, ndec, Original, Plane, GridMember):
+        """
+        Clean isolated cluster
+        return: if no cluster is left after the cleaning, n == 0
+          MemberList contains positions of cluster member with Marginal+Valid detection
+          MemberList[n]: [[(x00,y00),(x01,y01),........,(x0k-1,y0k-1)],
+                          [(x10,y10),(x11,y11),..,(x1i-1,y1i-1)],
+                                  ......
+                          [(xn-10,yn-10),(xn-11,yn-11),..,(xn-1i-1,yn-1j-1)]]
+          Realmember contains positions of cluster member with only Valid detection
+          Realmember[n]: [[(x00,y00),(x01,y01),..,(x0a-1,y0a-1)],
+                          [(x10,y10),(x11,y11),..,(x1b-1,y1b-1)],
+                                  ......
+                          [(xn-10,yn-10),(xn-11,yn-11),..,(xn-1c-1,yn-1c-1)]]
+        """
+        Nmember = []    # number of positions where value > self.Marginal in each SubCluster
+        Realmember = [] # number of positions where value > self.Valid in each SubCluster
+        MemberList = []
+        NsubCluster = 0
+        # Separate cluster members into several SubClusters by spacial connection
+        for x in xrange(nra):
+            for y in xrange(ndec):
+                if Plane[x][y] == 1:
+                    Plane[x][y] = 2
+                    SearchList = [(x, y)]
+                    M = 1
+                    if Original[x][y] > self.Valid: MM = 1
+                    else: MM = 0
+                    MemberList.append([(x, y)])
+                    while(len(SearchList) != 0):
+                        cx, cy = SearchList[0]
+                        #for dx in [-1, 0, 1]:
+                        for dx in xrange(-min(1,cx),min(2,nra-cx)):
+                            #for dy in [-1, 0, 1]:
+                            for dy in xrange(-min(1,cy),min(2,ndec-cy)):
+                                (nx, ny) = (cx + dx, cy + dy)
+                                #if 0 <= nx < nra and 0 <= ny < ndec and Plane[nx][ny] == 1:
+                                if Plane[nx][ny] == 1:
+                                    Plane[nx][ny] = 2
+                                    SearchList.append((nx, ny))
+                                    M += 1
+                                    if Original[nx][ny] > self.Valid: MM += 1
+                                    MemberList[NsubCluster].append((nx, ny))
+                        del SearchList[0]
+                    Nmember.append(M)
+                    Realmember.append(MM)
+                    NsubCluster += 1
+
+        if len(Nmember) > 0:
+            # Threshold is set to half the number of the largest cluster in the plane
+            #Threshold = max(Nmember) / 2.0
+            Threshold = min(0.5 * max(Realmember), 3)
+            for n in xrange(NsubCluster -1, -1, -1):
+                # isolated cluster made from single spectrum should be omitted
+                if Nmember[n] == 1:
+                    (x, y) = MemberList[n][0]
+                    if GridMember[x][y] <= 1:
+                        Nmember[n] = 0
+                # Sub-Cluster whose member below the threshold is cleaned
+                if Nmember[n] < Threshold:
+                    for (x, y) in MemberList[n]:
+                        Plane[x][y] == 0
+                    del Nmember[n], Realmember[n], MemberList[n]
+        return MemberList, Realmember
+
+    def DoBlur(self, Realmember, nra, ndec, SubPlane, ratio):
+        # Calculate Blur radius
+        BlurF = sqrt(Realmember / 3.141592653) * ratio + 1.5
+        Blur = int(BlurF)
+        # Set-up kernel for convolution
+        # caution: if nra < (Blur*2+1) and ndec < (Blur*2+1)
+        #  => dimension of SPC.convolve2d(Sub,kernel) gets not (nra,ndec) but (Blur*2+1,Blur*2+1)
+        if nra < (Blur * 2 + 1) and ndec < (Blur * 2 + 1): Blur = int((max(nra, ndec) - 1) / 2)
+        kernel = numpy.zeros((Blur * 2 + 1, Blur * 2 + 1),dtype=int)
+        for x in xrange(Blur * 2 + 1):
+            dx = Blur - x
+            for y in xrange(Blur * 2 + 1):
+                dy = Blur - y
+                if sqrt(dx*dx + dy*dy) <= BlurF:
+                    kernel[x][y] = 1
+        # ValidPlane is used for fitting parameters
+        # BlurPlane is not used for fitting but just extend the parameter determined in ValidPlane
+        return (SubPlane > self.Valid) * 1, (convolve2d(SubPlane, kernel) > self.Marginal) * 1
+
+    def calc_ProtectMask(self, Center, Width, nchan, MinFWHM, MaxFWHM):
+        """
+        return ProtectMask: [MaskL, MaskR]
+        """
         #Allowance = Fit1 / 2.0 * 1.3
         # To keep broad line region, make allowance larger
         ### 2011/05/16 allowance + 0.5 ->  2.5 for sharp line
@@ -1475,11 +1680,11 @@ class ValidateLineRaster(basetask.StandardTaskTemplate):
         ### 2015/04/23 Allowance=MaxFWHM at x=MaxFWHM, Allowance=2xMinFWHM+10 at x=MinFWHM
         Allowance = ((MaxFWHM-Width)*(2.0*MinFWHM+10.0) + (Width-MinFWHM)*MaxFWHM) / (MaxFWHM-MinFWHM) / 2.0
         ### 2011/10/21 left side mask exceeded nchan
-        Protect = [min(max(int(Center - Allowance), 0), nchan - 1), min(int(Center + Allowance), nchan - 1)]
+        ProtectMask = [min(max(int(Center - Allowance), 0), nchan - 1), min(int(Center + Allowance), nchan - 1)]
         #Allowance = Fit1 / 2.0 * 1.5
-        #Protect = [max(int(Fit0 - Allowance + 0.5), 0), min(int(Fit0 + Allowance + 0.5), nchan - 1)]
-        LOG.trace('1 Allowance = %s Protect = %s' % (Allowance, Protect))
-        return (Allowance, Protect)
+        #ProtectMask = [max(int(Fit0 - Allowance + 0.5), 0), min(int(Fit0 + Allowance + 0.5), nchan - 1)]
+        LOG.trace('Allowance = %s ProtectMask = %s' % (Allowance, ProtectMask))
+        return ProtectMask
         
     def __merge_lines(self, lines, nchan):
         nlines = len(lines)
@@ -1527,7 +1732,6 @@ class ValidateLineRaster(basetask.StandardTaskTemplate):
         self.cluster_info['%s_threshold'%(stage)] = threshold
         LOG.trace('cluster_flag = {}', cluster_flag)
         
-
 def convolve2d( data, kernel, mode='nearest', cval=0.0 ):
     """
     2d convolution function.
@@ -1563,7 +1767,6 @@ def convolve2d( data, kernel, mode='nearest', cval=0.0 ):
                     cdata[ix][iy] += kernel[jx][jy] * val
     return cdata
 
-
 def _eval_poly(xorder, yorder, x, y, xcoeff, ycoeff):
     xpoly = 0.0
     ypoly = 0.0
@@ -1581,7 +1784,6 @@ def _eval_poly(xorder, yorder, x, y, xcoeff, ycoeff):
             idx += 1
         yk *= y
     return (xpoly, ypoly)
-
 
 def _to_validated_lines(detect_lines):
     # conversion from [chmin, chmax] to [center, width, T/F]
@@ -1609,12 +1811,12 @@ class SVDSolver2D(object):
         self.L = (self.xorder + 1) * (self.yorder + 1)
 
         # design matrix
-        self.storage = numpy.zeros(self.N * self.L, dtype=numpy.float64)
+        self.storage = numpy.empty(self.N * self.L, dtype=numpy.float64)
         self.G = None 
 
         # for SVD
-        self.Vs = numpy.zeros((self.L, self.L), dtype=numpy.float64)
-        self.B = numpy.zeros(self.L, dtype=numpy.float64)
+        self.Vs = numpy.empty((self.L, self.L), dtype=numpy.float64)
+        self.B = numpy.empty(self.L, dtype=numpy.float64)
         self.U = None
     
     def set_data_points(self, x, y):
@@ -1651,6 +1853,51 @@ class SVDSolver2D(object):
                     xp *= x[k]
                 yp *= y[k]
                 
+    def _do_svd(self):
+        LOG.trace('G.shape={}', self.G.shape)
+        self.U, self.s, self.Vh = LA.svd(self.G, full_matrices=False)
+        LOG.trace('U.shape={} (N,L)=({},{})', self.U.shape, self.N, self.L)
+        LOG.trace('s.shape={}', self.s.shape)
+        LOG.trace('Vh.shape={}', self.Vh.shape)
+        LOG.trace('s = {}', self.s)
+        assert self.U.shape == (self.N, self.L)
+        assert len(self.s) == self.L
+        assert self.Vh.shape == (self.L, self.L)
+        
+    def _svd_with_mask(self, nmask=0):
+        if not hasattr(self, 's'):
+            # do SVD
+            self._do_svd()
+            
+        assert nmask < self.L
+        
+        for icol in xrange(self.L):
+            if self.L - 1 - icol < nmask:
+                sinv = 0.0
+            else:
+                sinv = 1.0 / self.s[icol]
+            for irow in xrange(self.L):
+                self.Vs[irow, icol] = self.Vh[icol, irow] * sinv
+                        
+    def _svd_with_eps(self, eps=1.0e-7):
+        if not hasattr(self, 's'):
+            # do SVD
+            self._do_svd()
+            
+        assert 0.0 < eps
+        
+        # max value of s is always s[0] since it is sorted 
+        # in descendent order
+        #threshold = self.s.max() * eps
+        threshold = self.s[0] * eps
+        for icol in xrange(self.L):
+            if self.s[icol] < threshold:
+                sinv = 0.0
+            else:
+                sinv = 1.0 / self.s[icol]
+            for irow in xrange(self.L):
+                self.Vs[irow, icol] = self.Vh[icol, irow] * sinv
+                        
     def _svd(self, eps):
         LOG.trace('G.shape={}', self.G.shape)
         self.U, s, Vh = LA.svd(self.G, full_matrices=False)
@@ -1665,11 +1912,11 @@ class SVDSolver2D(object):
         assert Vh.shape == (self.L, self.L)
         assert 0.0 < eps
         
-        absolute_s = abs(s)
-        condition_number = absolute_s.min() / absolute_s.max()
-        if condition_number < self.CONDITION_NUMBER_LIMIT:
-            LOG.trace('smax {}, smin {}, condition_number is {}', absolute_s.max(), absolute_s.min(), condition_number)
-            raise RuntimeError('singular matrix')
+#         absolute_s = abs(s)
+#         condition_number = absolute_s.min() / absolute_s.max()
+#         if condition_number < self.CONDITION_NUMBER_LIMIT:
+#             LOG.trace('smax {}, smin {}, condition_number is {}', absolute_s.max(), absolute_s.min(), condition_number)
+#             raise RuntimeError('singular matrix')
         
         threshold = s.max() * eps
         for i in xrange(self.L):
@@ -1691,6 +1938,58 @@ class SVDSolver2D(object):
         #LOG.trace('poly=%s'%(poly))
         return poly   
                 
+    def solve_with_mask(self, z, out=None, nmask=0):
+        nz = len(z)
+        assert nz == self.N
+        
+        self._svd_with_mask(nmask)
+        
+        if out is None:
+            A = numpy.zeros(self.L, dtype=numpy.float64)
+        else:
+            A = out
+            A[:] = 0
+            assert len(A) == self.L
+        self.B[:] = 0
+        for i in xrange(self.L):
+            for k in xrange(self.N):
+                self.B[i] += self.U[k, i] * z[k]
+        for i in xrange(self.L):
+            for k in xrange(self.L):
+                A[i] += self.Vs[i, k] * self.B[k] 
+                
+        #fit = numpy.fromiter((self._eval_poly_from_G(i, A) for i in xrange(self.N)), dtype=numpy.float64)   
+        #LOG.trace('fit=%s'%(fit))
+        #LOG.trace('diff=%s'%(abs(fit - z)/z))
+        return A    
+    
+    def solve_with_eps(self, z, out=None, eps=1.0e-7):
+        assert 0.0 <= eps
+        
+        nz = len(z)
+        assert nz == self.N
+        
+        self._svd_with_eps(eps)
+        
+        if out is None:
+            A = numpy.zeros(self.L, dtype=numpy.float64)
+        else:
+            A = out
+            A[:] = 0
+            assert len(A) == self.L
+        self.B[:] = 0
+        for i in xrange(self.L):
+            for k in xrange(self.N):
+                self.B[i] += self.U[k, i] * z[k]
+        for i in xrange(self.L):
+            for k in xrange(self.L):
+                A[i] += self.Vs[i, k] * self.B[k] 
+                
+        #fit = numpy.fromiter((self._eval_poly_from_G(i, A) for i in xrange(self.N)), dtype=numpy.float64)   
+        #LOG.trace('fit=%s'%(fit))
+        #LOG.trace('diff=%s'%(abs(fit - z)/z))
+        return A        
+        
     def solve_for(self, z, out=None, eps=1.0e-7):
         assert 0.0 <= eps
         
@@ -1722,17 +2021,18 @@ class SVDSolver2D(object):
         assert 0.0 <= threshold
         eps_list = map(lambda x: 10**x, xrange(-11, -3))
         
-        best_ans = None
         best_score = 1e30
         best_eps = eps_list[0]
         intlog = lambda x: int(numpy.log10(x))
-        ans = numpy.zeros(self.L, dtype=numpy.float64)
-        best_ans = numpy.zeros(self.L, dtype=numpy.float64)
-        diff = numpy.zeros(self.N, dtype=numpy.float64)
+        ans = numpy.empty(self.L, dtype=numpy.float64)
+        best_ans = numpy.empty(self.L, dtype=numpy.float64)
+        diff = numpy.empty(self.N, dtype=numpy.float64)
+        
+        # do SVD
+        self._do_svd()
+        
         for eps in eps_list:
-            ans = self.solve_for(z, out=ans, eps=eps)
-            #fit = numpy.fromiter((self._eval_poly_from_G(i, ans) for i in xrange(self.N)), dtype=numpy.float64)
-            #diff = abs((fit - z) / z)
+            ans = self.solve_with_eps(z, out=ans, eps=eps)
             for i in xrange(self.N):
                 fit = self._eval_poly_from_G(i, ans)
                 if z[i] != 0:
@@ -1753,3 +2053,4 @@ class SVDSolver2D(object):
         
         LOG.trace('best eps: {} (score {})', intlog(best_eps), best_score)
         return best_ans
+    
