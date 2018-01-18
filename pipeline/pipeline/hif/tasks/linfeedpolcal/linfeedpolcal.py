@@ -1,10 +1,10 @@
 from __future__ import absolute_import
-import os
-
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
+import pipeline.infrastructure.vdp as vdp
 from pipeline.infrastructure import casa_tasks
+
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -31,10 +31,10 @@ class LinfeedpolcalResults(basetask.Results):
         return 'LinfeedpolcalResults:'
 
 
-class LinfeedpolcalInputs(basetask.StandardInputs):
+class LinfeedpolcalInputs(vdp.StandardInputs):
     def __init__(self, context, vis=None):
-        # set the properties to the values given as input arguments
-        self._init_properties(vars())
+        self.context = context
+        self.vis = vis
 
 
 class Linfeedpolcal(basetask.StandardTaskTemplate):
