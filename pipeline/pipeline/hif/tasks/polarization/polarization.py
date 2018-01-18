@@ -32,6 +32,7 @@ class PolarizationResults(basetask.Results):
 
 class PolarizationInputs(vdp.StandardInputs):
     def __init__(self, context, vis=None):
+        super(PolarizationInputs, self).__init__()
         self.context = context
         self.vis = vis
 

@@ -65,6 +65,7 @@ class CircfeedpolcalInputs(polarization.PolarizationInputs):
     refantignore = vdp.VisDependentProperty(default='')
 
     def __init__(self, context, vis=None, Dterm_solint=None, refantignore=None, leakage_poltype=None):
+        super(CircfeedpolcalInputs, self).__init__()
         self.context = context
         self.vis = vis
         self.Dterm_solint = Dterm_solint

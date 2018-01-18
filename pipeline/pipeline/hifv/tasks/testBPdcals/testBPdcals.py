@@ -20,6 +20,7 @@ class testBPdcalsInputs(vdp.StandardInputs):
     refantignore = vdp.VisDependentProperty(default='')
 
     def __init__(self, context, vis=None, weakbp=None, refantignore=None):
+        super(testBPdcalsInputs, self).__init__()
         self.context = context
         self.vis = vis
         self._weakbp = weakbp
