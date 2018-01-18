@@ -27,14 +27,18 @@
 # Imports
 # -------
 
+import os
+import operator
+
 import numpy
 
-import casa
 from casac import casac
 
 import pipeline.infrastructure.api as api
 import pipeline.infrastructure as infrastructure
+import pipeline.infrastructure.casatools as casatools
 from pipeline.infrastructure import casa_tasks
+import pipeline.infrastructure.vdp as vdp
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -92,7 +96,10 @@ LOG = infrastructure.get_logger(__name__)
 
 # ------------------------------------------------------------------------------
 
-class RefAntHeuristics( api.Heuristic ):
+class RefAntHeuristics(object):
+    __metaclass__ = vdp.PipelineInputsMeta
+
+    refantignore = vdp.VisDependentProperty(default='')
 
 # ------------------------------------------------------------------------------
 
@@ -134,23 +141,19 @@ class RefAntHeuristics( api.Heuristic ):
 
 # ------------------------------------------------------------------------------
 
-    def __init__( self, vis, field, spw, intent, geometry, flagging, refantignore='' ):
+    def __init__( self, vis, field, spw, intent, geometry, flagging, refantignore=None):
 
         # Initialize the public member variables of this class
 
         self.vis = vis
-
         self.field = field
         self.spw = spw
         self.intent = intent
-
         self.geometry = geometry
         self.flagging = flagging
         self.refantignore = refantignore
 
         # Return None
-
-        return None
 
 # ------------------------------------------------------------------------------
 
@@ -181,61 +184,37 @@ class RefAntHeuristics( api.Heuristic ):
 # ------------------------------------------------------------------------------
 
     def calculate( self ):
-
         # If no heuristics are specified, return no reference antennas
-
-        if not ( self.geometry or self.flagging ): return []
-
+        if not (self.geometry or self.flagging):
+            return []
 
         # Get the antenna names and initialize the score dictionary
-
         names = self._get_names()
         LOG.debug('Got antenna name list {0}'.format(names))
 
-
-
-        score = dict()
-        for n in names: score[n] = 0.0
-
+        score = {n: 0.0 for n in names}
 
         # For each selected heuristic, add the score for each antenna
-
         if self.geometry:
             geoClass = RefAntGeometry(self.vis)
             geoScore = geoClass.calc_score()
-            # for n in names: score[n] += geoScore[n]
             for n in names:
-                if geoScore.has_key(n):
+                if n in geoScore:
                     score[n] += geoScore[n]
                     LOG.debug('Antenna {0} geometry score {1}  total score {2}'.format(n, geoScore[n], score[n]))
 
         if self.flagging:
-            flagClass = RefAntFlagging(self.vis, self.field,
-                                       self.spw, self.intent)
+            flagClass = RefAntFlagging(self.vis, self.field, self.spw, self.intent)
             flagScore = flagClass.calc_score()
-            # for n in names: score[n] += flagScore[n]
             for n in names:
-                if flagScore.has_key(n):
+                if n in flagScore:
                     score[n] += flagScore[n]
                     LOG.info('Antenna {0} flagging score {1} total score {2}'.format(n, flagScore[n], score[n]))
-
-
 
         # Calculate the final score and return the list of ranked
         # reference antennas.  NB: The best antennas have the highest
         # score, so a reverse sort is required.
-
-        keys = numpy.array( score.keys() )
-        values = numpy.array( score.values() )
-        argSort = numpy.argsort( values )[::-1]
-
-        refAnt = keys[argSort]
-
-
-
-        # Return the list of ranked reference antennas
-
-        return( refAnt )
+        return [k for k,_ in sorted(score.iteritems(), key=operator.itemgetter(1), reverse=True)]
 
 # ------------------------------------------------------------------------------
 
@@ -261,41 +240,17 @@ class RefAntHeuristics( api.Heuristic ):
 
 # ------------------------------------------------------------------------------
 
-    def _get_names( self ):
-
-        # Create the local instance of the table tool and open the MS
-
-        #tbLoc = casa.__tablehome__.create()
-        tbLoc = casac.table()
-        #tbLoc.open( self.vis[0]+'/ANTENNA' ) # Take zeroth element
-        tbLoc.open( self.vis+'/ANTENNA' ) # Take zeroth element
-
-
-        # Get the antenna names and capitalize them (unfortunately,
-        # some CASA tools capitalize them and others don't)
-        # This should no longer be necessary. Clean up code
-        # later.
-
-        names = tbLoc.getcol( 'NAME' ).tolist()
-
-        rNames = range( len(names) )
-        #for n in rNames: names[n] = names[n].upper()
-        for n in rNames: names[n] = names[n]
-
-
-        # Close the local instance of the table tool and delete it
-
-        tbLoc.close()
-        del tbLoc
+    def _get_names(self):
+        antenna_table = os.path.join(self.vis, 'ANTENNA')
+        with casatools.TableReader(antenna_table) as table:
+            names = table.getcol('NAME').tolist()
 
         # Remove ignored antennas
         if self.refantignore:
             LOG.warn('Antennas to be ignored: {0}'.format(self.refantignore))
-            names = [antenna for antenna in names if antenna not in self.refantignore.split(',')]
-
+            names = [n for n in names if n not in self.refantignore.split(',')]
 
         # Return the antenna names
-
         return names
 
 # ------------------------------------------------------------------------------
