@@ -71,9 +71,9 @@ class TransformimagedataResults(basetask.Results):
 
 class TransformimagedataInputs(mssplit.MsSplitInputs):
 
-    clear_pointing = vdp.VisDependentProperty(True)
-    modify_weights = vdp.VisDependentProperty(False)
-    wtmode = vdp.VisDependentProperty('')
+    clear_pointing = vdp.VisDependentProperty(default=True)
+    modify_weights = vdp.VisDependentProperty(default=False)
+    wtmode = vdp.VisDependentProperty(default='')
 
     def __init__(self, context, output_dir=None, vis=None,
                  outputvis=None, field=None, intent=None, spw=None,
@@ -105,8 +105,8 @@ class TransformimagedataInputs(mssplit.MsSplitInputs):
         self.wtmode = wtmode
         self.context = context
 
-    replace = vdp.VisDependentProperty(False)
-    datacolumn = vdp.VisDependentProperty('corrected')
+    replace = vdp.VisDependentProperty(default=False)
+    datacolumn = vdp.VisDependentProperty(default='corrected')
 
     @property
     def outputvis(self):
