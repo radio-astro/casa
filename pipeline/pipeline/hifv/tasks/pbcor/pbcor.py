@@ -1,12 +1,10 @@
 from __future__ import absolute_import
-import os
-
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
+import pipeline.infrastructure.vdp as vdp
 from pipeline.infrastructure import casa_tasks
 import pipeline.infrastructure.imagelibrary as imagelibrary
-from recipes import tec_maps
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -54,10 +52,11 @@ class PbcorResults(basetask.Results):
         return 'PbcorResults:'
 
 
-class PbcorInputs(basetask.StandardInputs):
+class PbcorInputs(vdp.StandardInputs):
     def __init__(self, context, vis=None):
-        # set the properties to the values given as input arguments
-        self._init_properties(vars())
+        super(PbcorInputs, self).__init__()
+        self.context = context
+        self.vis = vis
 
 
 class Pbcor(basetask.StandardTaskTemplate):
@@ -97,10 +96,4 @@ class Pbcor(basetask.StandardTaskTemplate):
 
         return self._executor.execute(task)
 
-    def _do_tec_maps(self):
-
-        tec_maps.create(vis=self.vis, doplot=True, imname='iono')
-        # gencal_job = casa_tasks.gencal(**gencal_args)
-        gencal_job = casa_tasks.gencal(vis=self.vis, caltable='tec.cal', caltype='tecim', infile='iono.IGS_TEC.im')
-        self._executor.execute(gencal_job)
 
