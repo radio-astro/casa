@@ -13,15 +13,7 @@ LOG = infrastructure.get_logger(__name__)
 
 
 class CheckflagInputs(vdp.StandardInputs):
-    @vdp.VisDependentProperty
-    def checkflagmode(self):
-        return self._checkflagmode
-
-    @checkflagmode.convert
-    def checkflagmode(self, value):
-        if value is None:
-            value = None
-        self._checkflagmode = value
+    checkflagmode = vdp.VisDependentProperty(default='')
 
     def __init__(self, context, vis=None, checkflagmode=None):
         self.context = context
