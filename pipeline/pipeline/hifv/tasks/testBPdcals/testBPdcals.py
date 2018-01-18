@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 
 import pipeline.infrastructure.basetask as basetask
+import pipeline.infrastructure.vdp as vdp
 import pipeline.infrastructure as infrastructure
 from pipeline.infrastructure import casa_tasks
 import numpy as np
@@ -14,37 +15,17 @@ from pipeline.hifv.heuristics import weakbp, do_bandpass
 LOG = infrastructure.get_logger(__name__)
 
 
-class testBPdcalsInputs(basetask.StandardInputs):
+class testBPdcalsInputs(vdp.StandardInputs):
+    weakbp = vdp.VisDependentProperty(default=False)
+    refantignore = vdp.VisDependentProperty(default='')
+
     def __init__(self, context, vis=None, weakbp=None, refantignore=None):
-        # set the properties to the values given as input arguments
-        self._init_properties(vars())
-
+        self.context = context
+        self.vis = vis
         self._weakbp = weakbp
-
+        self.refantignore = refantignore
         self.gain_solint1 = 'int'
         self.gain_solint2 = 'int'
-
-    @property
-    def weakbp(self):
-        return self._weakbp
-
-    @weakbp.setter
-    def weakbp(self, value):
-
-        if self._weakbp is None:
-            self._weakbp = False
-
-        self._weakbp = value
-
-    @property
-    def refantignore(self):
-        return self._refantignore
-
-    @refantignore.setter
-    def refantignore(self, value):
-        if value is None:
-            value = ''
-        self._refantignore = value
 
 
 class testBPdcalsResults(basetask.Results):
