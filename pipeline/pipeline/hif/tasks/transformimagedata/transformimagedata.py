@@ -103,7 +103,6 @@ class TransformimagedataInputs(mssplit.MsSplitInputs):
         self.modify_weights = modify_weights
 
         self.wtmode = wtmode
-        self.context = context
 
     replace = vdp.VisDependentProperty(default=False)
     datacolumn = vdp.VisDependentProperty(default='corrected')
