@@ -1,18 +1,8 @@
 from __future__ import absolute_import
 
 import pipeline.infrastructure.basetask as basetask
-from pipeline.infrastructure import casa_tasks
-import pipeline.infrastructure.casatools as casatools
-import pipeline.domain.measures as measures
 import pipeline.infrastructure as infrastructure
-import pipeline.infrastructure.callibrary as callibrary
-
-import itertools
-
-from pipeline.hif.tasks import gaincal
-from pipeline.hif.tasks import bandpass
-from pipeline.hif.tasks import applycal
-from pipeline.hifv.heuristics import getCalFlaggedSoln, getBCalStatistics
+import pipeline.infrastructure.vdp as vdp
 
 from pipeline.hifv.tasks.testBPdcals import testBPdcals
 from pipeline.hifv.tasks.flagging.flagbaddeformatters import FlagBadDeformatters
@@ -23,16 +13,13 @@ from pipeline.hifv.tasks.semiFinalBPdcals import semiFinalBPdcals
 
 LOG = infrastructure.get_logger(__name__)
 
-# CHECKING FLAGGING OF ALL CALIBRATORS
-# use rflag mode of flagdata
 
-class HeuristicflagInputs(basetask.StandardInputs):
+class HeuristicflagInputs(vdp.StandardInputs):
     def __init__(self, context, vis=None):
-        # set the properties to the values given as input arguments
-        self._init_properties(vars())
-    
-    
-    
+        super(HeuristicflagInputs, self).__init__()
+        self.context = context
+        self.vis = vis
+
 
 class HeuristicflagResults(basetask.Results):
     def __init__(self, jobs=[]):
@@ -45,6 +32,7 @@ class HeuristicflagResults(basetask.Results):
         for job in self.jobs:
             s += '%s performed. Statistics to follow?' % str(job)
         return s 
+
 
 class Heuristicflag(basetask.StandardTaskTemplate):
     Inputs = HeuristicflagInputs
@@ -74,7 +62,7 @@ class Heuristicflag(basetask.StandardTaskTemplate):
         return HeuristicflagResults([])
     
     def analyse(self, results):
-	return results
+        return results
     
     def _do_testBPdcals(self):
         
@@ -120,8 +108,3 @@ class Heuristicflag(basetask.StandardTaskTemplate):
         result = self._executor.execute(task, True)
         
         return result
-    
-    
-    
-    
-    

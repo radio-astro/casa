@@ -14,9 +14,9 @@ LOG = infrastructure.get_logger(__name__)
 
 class StatwtInputs(vdp.StandardInputs):
     def __init__(self, context, vis=None):
+        super(StatwtInputs, self).__init__()
         self.context = context
         self.vis = vis
-
 
 
 class StatwtResults(basetask.Results):
@@ -52,9 +52,10 @@ class Statwt(basetask.StandardTaskTemplate):
 
         fielddict = cont_file_to_CASA()
 
-        if fielddict != {}: LOG.info('cont.dat file present.  Using VLA Spectral Line Heuristics for task statwt.')
+        if fielddict != {}:
+            LOG.info('cont.dat file present.  Using VLA Spectral Line Heuristics for task statwt.')
 
-        if (fielddict == {}):
+        if fielddict == {}:
             task_args = {'vis'          : self.inputs.vis,
                          'dorms'        : False,
                          'fitspw'       : '',
@@ -69,9 +70,7 @@ class Statwt(basetask.StandardTaskTemplate):
             
             return self._executor.execute(job)
 
-        if (fielddict != {}):
-
-
+        if fielddict != {}:
             for field in fielddict.keys():
                 task_args = {'vis'          : self.inputs.vis,
                          'dorms'        : False,

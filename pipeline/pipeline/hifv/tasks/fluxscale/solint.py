@@ -4,6 +4,7 @@ import pipeline.infrastructure.basetask as basetask
 from pipeline.infrastructure import casa_tasks
 import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure as infrastructure
+import pipeline.infrastructure.vdp as vdp
 
 from pipeline.hifv.heuristics import getCalFlaggedSoln, getBCalStatistics
 import numpy as np
@@ -12,33 +13,18 @@ import pipeline.hif.heuristics.findrefant as findrefant
 LOG = infrastructure.get_logger(__name__)
 
 
-class SolintInputs(basetask.StandardInputs):
+class SolintInputs(vdp.StandardInputs):
+    limit_short_solint = vdp.VisDependentProperty(default='')
+    refantignore = vdp.VisDependentProperty(default='')
+
     def __init__(self, context, vis=None, limit_short_solint=None, refantignore=None):
-        # set the properties to the values given as input arguments
-        self._init_properties(vars())
-        
+        super(SolintInputs, self).__init__()
+        self.context = context
+        self.vis = vis
+        self.limit_short_solint = limit_short_solint
+        self.refantignore = refantignore
         self.gain_solint1 = 'int'
         self.gain_solint2 = 'int'
-
-    @property
-    def limit_short_solint(self):
-        return self._limit_short_solint
-
-    @limit_short_solint.setter
-    def limit_short_solint(self, value):
-        if value is None:
-            value = ''
-        self._limit_short_solint = value
-
-    @property
-    def refantignore(self):
-        return self._refantignore
-
-    @refantignore.setter
-    def refantignore(self, value):
-        if value is None:
-            value = ''
-        self._refantignore = value
 
 
 class SolintResults(basetask.Results):
