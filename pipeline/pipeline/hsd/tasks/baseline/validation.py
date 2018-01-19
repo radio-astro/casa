@@ -18,6 +18,7 @@ from ..common import utils
 _LOG = infrastructure.get_logger(__name__)
 LOG = utils.OnDemandStringParseLogger(_LOG)
 
+
 def ValidationFactory(pattern):
     if pattern == 'RASTER':
         return ValidateLineRaster
@@ -556,7 +557,6 @@ class ValidateLineRaster(basetask.StandardTaskTemplate):
     def analyse(self, result):
         return result
 
-
     def clean_detect_signal(self, DS):
         """
         Spectra in each grid positions are splitted into 3 groups along time series.
@@ -598,7 +598,6 @@ class ValidateLineRaster(basetask.StandardTaskTemplate):
 
         return DS
 
-
     def clean_detect_line(self, data, threshold=0.6):
         """
         Select only line candidates with good possibility by checking all spectra taken at the same position
@@ -635,7 +634,6 @@ class ValidateLineRaster(basetask.StandardTaskTemplate):
 
         return ret
 
-
     def CheckLineIdentity(self, old, new, overlap=0.7):
         """
         True if the overlap of two lines is greater than the threshold
@@ -659,7 +657,6 @@ class ValidateLineRaster(basetask.StandardTaskTemplate):
             #print 'Identical', old, new
             return True
         else: return False
-
 
     def clustering_kmean(self, Region, Region2):
         # Region = [[row, chan0, chan1, RA, DEC, flag, Binning],[],[],,,[]]
@@ -775,7 +772,6 @@ class ValidateLineRaster(basetask.StandardTaskTemplate):
         LOG.debug('Category = {}, CodeBook = {}', category, BestCodebook)
 
         return (BestNcluster, Bestlines, BestCategory, BestRegion)
-
 
     def clustering_hierarchy(self, Region, Region2, nThreshold=3.0, method='single'):
     #def calc_clustering(self, nThreshold, method='ward'):
@@ -899,7 +895,6 @@ class ValidateLineRaster(basetask.StandardTaskTemplate):
 
         return (Ncluster, Bestlines, Category, Region)
 
-
     def set_data(self, Observation, ordering='none'):
         """
         Observation: numpy.array([[val1, val2, val3,..,valN],
@@ -935,7 +930,6 @@ class ValidateLineRaster(basetask.StandardTaskTemplate):
             sys.exit(0)
         del Obs, OrderList
         return (Data)
-
 
     def clean_cluster(self, Data, Category, Region, Nthreshold, NumParam):
         """
@@ -1001,7 +995,6 @@ class ValidateLineRaster(basetask.StandardTaskTemplate):
         #return (Region, Range, Stdev)
         return (Region, numpy.array(ValidRange), numpy.array(ValidStdev), Category)
     
-
     def clustering_kmean_score(self, MeanDistance, MedianWidth, Ncluster, MemberRate):
         # Rating
         ### 2011/05/12 modified for (distance==0)
@@ -1010,7 +1003,6 @@ class ValidateLineRaster(basetask.StandardTaskTemplate):
         # (distance * numpy.transpose(Region[5])).mean(): average distance from each cluster center
         #return(math.sqrt(((distance * numpy.transpose(numpy.array(Region))[5]).mean())**2.0 + (MedianWidth/2.0)**2.0) * (Ncluster+ 1.0/Ncluster) * (((1.0 - MemberRate)**0.5 + 1.0)**2.0))
         return(math.sqrt(MeanDistance**2.0 + (MedianWidth/2.0)**2.0) * (Ncluster+ 1.0/Ncluster) * ((1.0 - MemberRate) * 100.0 + 1.0))
-
 
     def detection_stage(self, Ncluster, nra, ndec, ra0, dec0, grid_ra, grid_dec, category, Region, detect_signal):
         """
@@ -1091,7 +1083,6 @@ class ValidateLineRaster(basetask.StandardTaskTemplate):
         
         return (GridCluster, GridMember)
 
-
     def validation_stage(self, GridCluster, GridMember, lines):
         # Validated if number of spectrum which contains feature belongs to the cluster is greater or equal to
         # the half number of spectrum in the Grid
@@ -1129,7 +1120,6 @@ class ValidateLineRaster(basetask.StandardTaskTemplate):
         self.GridClusterValidation = GridCluster.copy()
         
         return (GridCluster, GridMember, lines)
-
 
     def smoothing_stage(self, GridCluster, lines):
         # Rating:  [0.0, 0.4, 0.5, 0.4, 0.0]
@@ -1204,7 +1194,6 @@ class ValidateLineRaster(basetask.StandardTaskTemplate):
         LOG.trace('GridCluster = {}', GridCluster)
         
         return (GridCluster, lines)
-
 
     def final_stage(self, GridCluster, GridMember, Region, Region2, lines, category, grid_ra, grid_dec, broad_component, xorder, yorder, x0, y0, Grid2SpectrumID, index_list, PosList):
                 
@@ -1731,7 +1720,8 @@ class ValidateLineRaster(basetask.StandardTaskTemplate):
         self.cluster_info['cluster_flag'] = cluster_flag
         self.cluster_info['%s_threshold'%(stage)] = threshold
         LOG.trace('cluster_flag = {}', cluster_flag)
-        
+
+
 def convolve2d( data, kernel, mode='nearest', cval=0.0 ):
     """
     2d convolution function.
@@ -1767,6 +1757,7 @@ def convolve2d( data, kernel, mode='nearest', cval=0.0 ):
                     cdata[ix][iy] += kernel[jx][jy] * val
     return cdata
 
+
 def _eval_poly(xorder, yorder, x, y, xcoeff, ycoeff):
     xpoly = 0.0
     ypoly = 0.0
@@ -1784,6 +1775,7 @@ def _eval_poly(xorder, yorder, x, y, xcoeff, ycoeff):
             idx += 1
         yk *= y
     return (xpoly, ypoly)
+
 
 def _to_validated_lines(detect_lines):
     # conversion from [chmin, chmax] to [center, width, T/F]
