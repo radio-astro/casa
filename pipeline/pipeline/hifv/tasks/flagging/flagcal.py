@@ -3,6 +3,7 @@ import os
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
+import pipeline.infrastructure.vdp as vdp
 from pipeline.infrastructure import casa_tasks
 
 LOG = infrastructure.get_logger(__name__)
@@ -30,14 +31,16 @@ class FlagcalResults(basetask.Results):
         return 'FlagcalResults:'
 
 
-class FlagcalInputs(basetask.StandardInputs):
-    def __init__(self, context, vis=None, caltable=None, clipminmax=None):
-        # set the properties to the values given as input arguments
-        self._init_properties(vars())
-        self.vis = vis
+class FlagcalInputs(vdp.StandardInputs):
+    caltable = vdp.VisDependentProperty(default='finalampgaincal.g')
+    clipminmax = vdp.VisDependentProperty(default=[0.9, 1.1])
 
-    caltable = basetask.property_with_default('caltable', 'finalampgaincal.g')
-    clipminmax = basetask.property_with_default('clipminmax', [0.9, 1.1])
+    def __init__(self, context, vis=None, caltable=None, clipminmax=None):
+        super(FlagcalInputs, self).__init__()
+        self.context = context
+        self.vis = vis
+        self.caltable = caltable
+        self.clipminmax = clipminmax
 
 
 class Flagcal(basetask.StandardTaskTemplate):
@@ -80,4 +83,3 @@ class Flagcal(basetask.StandardTaskTemplate):
         self._executor.execute(job)
 
         return FlagcalResults([job])
-
