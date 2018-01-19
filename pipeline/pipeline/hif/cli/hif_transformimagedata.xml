@@ -14,8 +14,8 @@
     <value></value>
   </param>
 
-  <param type="stringArray" name="outputvis" subparam="true">
-     <description>The list of output split MeasurementSets</description>
+  <param type="string" name="outputvis" subparam="true">
+     <description>The output MeasurementSet</description>
      <value></value>
   </param>
 

@@ -74,16 +74,37 @@ class TransformimagedataInputs(mssplit.MsSplitInputs):
     clear_pointing = vdp.VisDependentProperty(default=True)
     modify_weights = vdp.VisDependentProperty(default=False)
     wtmode = vdp.VisDependentProperty(default='')
+    replace = vdp.VisDependentProperty(default=False)
+    datacolumn = vdp.VisDependentProperty(default='corrected')
 
-    def __init__(self, context, output_dir=None, vis=None,
+    @vdp.VisDependentProperty
+    def outputvis(self):
+
+        output_dir = self.context.output_dir
+
+        if isinstance(self._outputvis, vdp.NullMarker):
+            # Need this to be in the working directory
+            # vis_root = os.path.splitext(self.vis)[0]
+            vis_root = os.path.splitext(os.path.basename(self.vis))[0]
+            return output_dir + '/' + vis_root + '_split.ms'
+        else:
+            return output_dir + '/' + os.path.basename(self.outputvis)
+
+    @outputvis.convert
+    def outputvis(self, value=''):
+        return value
+
+    def __init__(self, context, vis=None, output_dir=None,
                  outputvis=None, field=None, intent=None, spw=None,
                  datacolumn=None, chanbin=None, timebin=None, replace=None,
                  clear_pointing=None, modify_weights=None, wtmode=None):
 
+        # super(TransformimagedataInputs, self).__init__()
+
         # set the properties to the values given as input arguments
         self.context = context
-        self.output_dir = output_dir
         self.vis = vis
+        self.output_dir = output_dir
 
         self.outputvis = outputvis
         self.field = field
@@ -103,37 +124,6 @@ class TransformimagedataInputs(mssplit.MsSplitInputs):
         self.modify_weights = modify_weights
 
         self.wtmode = wtmode
-
-    replace = vdp.VisDependentProperty(default=False)
-    datacolumn = vdp.VisDependentProperty(default='corrected')
-
-    @property
-    def outputvis(self):
-
-        output_dir = self.context.output_dir
-
-        if type(self.vis) is types.ListType:
-            return self._handle_multiple_vis('outputvis')
-
-        if not self._outputvis:
-            # Need this to be in the working directory
-            # vis_root = os.path.splitext(self.vis)[0]
-            vis_root = os.path.splitext(os.path.basename(self.vis))[0]
-            return output_dir + '/' + vis_root + '_split.ms'
-
-        if type(self._outputvis) is types.ListType:
-            idx = self._my_vislist.index(self.vis)
-            return output_dir + '/' + os.path.basename(self._outputvis[idx])
-
-        return output_dir + '/' + os.path.basename(self._outputvis)
-
-    @outputvis.setter
-    def outputvis(self, value):
-        if value in (None, ''):
-            value = []
-        elif type(value) is types.StringType:
-            value = list(value.replace('[', '').replace(']', '').replace("'", "").split(','))
-        self._outputvis = value
 
 
 class Transformimagedata(mssplit.MsSplit):
