@@ -1,10 +1,10 @@
 from __future__ import absolute_import
 
 import os
-import types
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
+import pipeline.infrastructure.vdp as vdp
 from pipeline.infrastructure import casa_tasks
 import pipeline.infrastructure.utils as utils
 #from pipeline.hif.heuristics import fieldnames
@@ -18,10 +18,110 @@ from .flagsummary import SDBLFlagSummary
 
 LOG = infrastructure.get_logger(__name__)
 
-class SDBLFlagInputs(basetask.StandardInputs):
+class SDBLFlagInputs(vdp.StandardInputs):
     """
     Inputs for single dish flagging
     """
+    def __to_numeric(self, val):
+        return sdutils.to_numeric(val)
+    
+    def __to_bool(self, val):
+        return sdutils.to_bool(val)
+
+    def __to_int(self, val):
+        return sdutils.to_bool(val)
+    
+    intent = vdp.VisDependentProperty(default='TARGET')
+    iteration = vdp.VisDependentProperty(default=5, fconvert=__to_int)
+    flag_tsys = vdp.VisDependentProperty(default=True, fconvert=__to_bool)
+    tsys_thresh = vdp.VisDependentProperty(default=3.0, fconvert=__to_numeric)
+    flag_weath = vdp.VisDependentProperty(default=False, fconvert=__to_bool)
+    weath_thresh = vdp.VisDependentProperty(default=3.0, fconvert=__to_numeric)
+    flag_prfre = vdp.VisDependentProperty(default=True, fconvert=__to_bool)
+    prfre_thresh = vdp.VisDependentProperty(default=3.0, fconvert=__to_numeric)
+    flag_pofre = vdp.VisDependentProperty(default=True, fconvert=__to_bool)
+    pofre_thresh = vdp.VisDependentProperty(default=1.3333, fconvert=__to_numeric)
+    flag_prfr = vdp.VisDependentProperty(default=True, fconvert=__to_bool)
+    prfr_thresh = vdp.VisDependentProperty(default=4.5, fconvert=__to_numeric)
+    flag_pofr = vdp.VisDependentProperty(default=True, fconvert=__to_bool)
+    pofr_thresh = vdp.VisDependentProperty(default=4.0, fconvert=__to_numeric)
+    flag_prfrm = vdp.VisDependentProperty(default=True, fconvert=__to_bool)
+    prfrm_thresh = vdp.VisDependentProperty(default=5.5, fconvert=__to_numeric)
+    prfrm_nmean = vdp.VisDependentProperty(default=5, fconvert=__to_int)
+    flag_pofrm = vdp.VisDependentProperty(default=True, fconvert=__to_bool)
+    pofrm_thresh = vdp.VisDependentProperty(default=5.0, fconvert=__to_numeric)
+    pofrm_nmean = vdp.VisDependentProperty(default=5, fconvert=__to_int)
+    flag_user = vdp.VisDependentProperty(default=False, fconvert=__to_bool)
+    user_thresh = vdp.VisDependentProperty(default=5.0, fconvert=__to_numeric)
+    plotflag = vdp.VisDependentProperty(default=True, fconvert=__to_bool)
+
+    @vdp.VisDependentProperty
+    def infiles(self):
+        return self.vis
+
+    @infiles.convert
+    def infiles(self, value):
+        self.vis = value
+        return value
+
+    @vdp.VisDependentProperty
+    def msid_list(self):
+        """
+        Returns MS index in context observing run specified as infiles.
+        """
+        return self.context.observing_run.measurement_sets.index(self.ms)
+    
+    @iteration.convert
+    def iteration(self, value):
+        return int(value)
+    
+    edge = vdp.VisDependentProperty(default=[0,0])
+    
+    @edge.convert
+    def edge(self, value):
+        return sdutils.to_list(value)
+
+    @vdp.VisDependentProperty
+    def antenna(self):
+        return ''
+
+    @antenna.convert
+    def antenna(self, value):
+        antennas = self.ms.get_antenna(value)
+        # if all antennas are selected, return ''
+        if len(antennas) == len(self.ms.antennas):
+            return ''
+        return utils.find_ranges([a.id for a in antennas])
+#         return ','.join([str(a.id) for a in antennas])
+
+    @vdp.VisDependentProperty
+    def field(self):
+        # this will give something like '0542+3243,0343+242'
+        field_finder = fieldnames.IntentFieldnames()
+        intent_fields = field_finder.calculate(self.ms, self.intent)
+
+        # run the answer through a set, just in case there are duplicates
+        fields = set()
+        fields.update(utils.safe_split(intent_fields))
+
+        return ','.join(fields)
+
+    @vdp.VisDependentProperty
+    def spw(self):
+        science_spws = self.ms.get_spectral_windows(with_channels=True)
+        return ','.join([str(spw.id) for spw in science_spws])
+
+    @vdp.VisDependentProperty
+    def pol(self):
+        # filters polarization by self.spw
+        selected_spwids = [int(spwobj.id) for spwobj in self.ms.get_spectral_windows(self.spw, with_channels=True)]
+        pols = set()
+        for idx in selected_spwids:
+            pols.update(self.ms.get_data_description(spw=idx).corr_axis)
+        
+        return ','.join(pols)
+
+
     def __init__(self, context, output_dir=None,
                  iteration=None, edge=None, flag_tsys=None, tsys_thresh=None,
                  flag_weath=None, weath_thresh=None,
@@ -35,126 +135,52 @@ class SDBLFlagInputs(basetask.StandardInputs):
                  plotflag=None,
                  infiles=None, antenna=None, field=None,
                  spw=None, pol=None):
-        self._init_properties(vars())
-        self.vis = infiles
-        self.infiles = self.vis
-        # parameters to convert to float type
-        for param in ['iteration', 'tsys_thresh', 'weath_thresh',
-                          'prfre_thresh', 'pofre_thresh', 'prfr_thresh',
-                          'pofr_thresh', 'prfrm_thresh', 'prfrm_nmean',
-                          'pofrm_thresh', 'pofrm_nmean', 'user_thresh']:
-            setattr(self, param, sdutils.to_numeric(getattr(self, param)))
-        # parameters to convert to int type
-        for attr in ['iteration', 'prfrm_nmean', 'pofrm_nmean']:
-            value = getattr(self, attr)
-            if value is not None:
-                setattr(self, attr, int(value))
-        # parameters to convert to list type
-        for param in ['edge']:
-            setattr(self, param, sdutils.to_list(getattr(self, param)))
-        # parameters to convert to boolean type
-        for param in ['flag_tsys', 'flag_weath', 'flag_prfre',
-                       'flag_pofre', 'flag_prfr', 'flag_pofr',
-                       'flag_prfrm', 'flag_pofrm', 'flag_user',
-                       'plotflag']:
-            setattr(self, param, sdutils.to_bool(getattr(self, param)))
-        if self.iteration is None: self.iteration = 5
+        super(SDBLFlagInputs, self).__init__()
+        
+        # context and vis/infiles must be set first so that properties that require
+        # domain objects can be function
+        self.context = context
+        self.infiles = infiles
+        self.output_dir = output_dir
+        # task specific parameters
+        self.iteration = iteration
+        self.edge = edge
+        self.flag_tsys = flag_tsys
+        self.tsys_thresh = tsys_thresh
+        self.flag_weath = flag_weath
+        self.weath_thresh = weath_thresh
+        self.flag_prfre = flag_prfre
+        self.prfre_thresh = prfre_thresh
+        self.flag_pofre = flag_pofre
+        self.pofre_thresh = pofre_thresh
+        self.flag_prfr = flag_prfr
+        self.prfr_thresh = prfr_thresh
+        self.flag_pofr = flag_pofr
+        self.pofr_thresh = pofr_thresh
+        self.flag_prfrm = flag_prfrm
+        self.prfrm_thresh = prfrm_thresh
+        self.prfrm_nmean = prfrm_nmean
+        self.flag_pofrm = flag_pofrm
+        self.pofrm_thresh = pofrm_thresh
+        self.pofrm_nmean = pofrm_nmean
+        self.flag_user = flag_user
+        self.user_thresh = user_thresh
+        self.plotflag = plotflag
+        self.antenna = antenna
+        self.field = field
+        self.spw = spw
+        self.pol = pol
+       
         ### Default Flag rule
         from . import SDFlagRule
         reload(SDFlagRule)
         self.FlagRuleDictionary = SDFlagRule.SDFlagRule
-        # update FlagRuleDictionary
-        self.__configureFlagRule()
+        # MUST NOT configure FlagRuleDictionary here.
+        # Constructor of vdp Inputs classes is called without 
+        # user task parameter values at first and then later updated
+        # with user defined values (see InputsContainer.__init__) 
 
-    @property
-    def msid_list(self):
-        """
-        Returns MS index in context observing run specified as infiles.
-        """
-        return self.context.observing_run.measurement_sets.index(self.ms)
-
-    @property
-    def antenna(self):
-        if self._antenna is not None:
-            return self._antenna
-        ##### never come to this place because setter sets ''
-        if type(self.vis) is types.ListType:
-            return self._handle_multiple_vis('antenna')
-
-        antennas = self.ms.get_antenna(self._antenna)
-        return ','.join([str(a.id) for a in antennas])
-
-    @antenna.setter
-    def antenna(self, value):
-        if value is None:
-            value = ''
-        self._antenna = value
-
-    @property
-    def field(self):
-        if not callable(self._field):
-            return self._field
-
-        # filters field with intents in self.intent
-        if type(self.vis) is types.ListType:
-            return self._handle_multiple_vis('field')
-
-        # this will give something like '0542+3243,0343+242'
-        intent_fields = self._field(self.ms, self.intent)
-
-        # run the answer through a set, just in case there are duplicates
-        fields = set()
-        fields.update(utils.safe_split(intent_fields))
-        
-        return ','.join(fields)
-
-    @field.setter
-    def field(self, value):
-        if value is None:
-            value = fieldnames.IntentFieldnames()
-        self._field = value
-
-    @property
-    def intent(self):
-        return "TARGET"
-
-    @property
-    def spw(self):
-        if self._spw is not None:
-            return self._spw
-        
-        if type(self.vis) is types.ListType:
-            return self._handle_multiple_vis('spw')
-        # filters science spws by default
-        science_spws = self.ms.get_spectral_windows(self._spw, with_channels=True)
-        return ','.join([str(spw.id) for spw in science_spws])
-
-    @spw.setter
-    def spw(self, value):
-        self._spw = value
-
-    @property
-    def pol(self):
-        if self._pol is not None:
-            return self._pol
-        ##### never come to this place because setter sets ''
-        if type(self.vis) is types.ListType:
-            return self._handle_multiple_vis('pol')
-        # filters polarization by self.spw
-        selected_spwids = [spwobj.id for spwobj in self.ms.get_spectral_windows(self.spw, with_channels=True)]
-        pols = set()
-        for idx in selected_spwids:
-            pols.update(self.ms.get_data_description(spw=idx).corr_axis)
-        
-        return ','.join(pols)
-
-    @pol.setter
-    def pol(self, value):
-        if value is None:
-            value = ''
-        self._pol = value
-
-    def __configureFlagRule(self):
+    def _configureFlagRule(self):
         """A private method to convert input parameters to FlagRuleDictionary"""
         d = { 'TsysFlag': (self.flag_tsys, [self.tsys_thresh]),
               'WeatherFlag': (self.flag_weath, [self.weath_thresh]),
@@ -168,14 +194,16 @@ class SDBLFlagInputs(basetask.StandardInputs):
         keys = ['Threshold', 'Nmean']
         for (k,v) in d.iteritems():
             (b,p) = v
-            if b is None:
+            if b is vdp.VisDependentProperty.NULL:
                 # Don't touch operation flag but need to update thresholds.
                 for i in xrange(len(p)):
-                    if p[i] is not None: self.FlagRuleDictionary[k][keys[i]] = p[i] 
+                    if p[i] is not vdp.VisDependentProperty.NULL:
+                        self.FlagRuleDictionary[k][keys[i]] = p[i]
             elif b == True:
                 self.activateFlagRule( k )
                 for i in xrange(len(p)):
-                    if p[i] is not None: self.FlagRuleDictionary[k][keys[i]] = p[i]
+                    if p[i] is not vdp.VisDependentProperty.NULL:
+                        self.FlagRuleDictionary[k][keys[i]] = p[i]
             elif b == False:
                 self.deactivateFlagRule( k )
 
@@ -241,9 +269,14 @@ class SDBLFlag(basetask.StandardTaskTemplate):
         in_spw = inputs.spw
         in_field = inputs.field
         in_pol = '' if inputs.pol in ['', '*'] else inputs.pol.split(',')
-        flag_rule = inputs.FlagRuleDictionary
         clip_niteration = inputs.iteration
         reduction_group = context.observing_run.ms_reduction_group
+        # update FlagRuleDictionary
+        inputs._configureFlagRule()
+        flag_rule = inputs.FlagRuleDictionary
+
+        print("Flag Rule for %s: %s" % (cal_name, flag_rule))
+
 
         rowmap = None
         if os.path.abspath(cal_name)==os.path.abspath(bl_name):
