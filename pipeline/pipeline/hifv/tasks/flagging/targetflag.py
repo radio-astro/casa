@@ -5,6 +5,7 @@ import types
 import pipeline.infrastructure.basetask as basetask
 from pipeline.infrastructure import casa_tasks
 import pipeline.infrastructure as infrastructure
+import pipeline.infrastructure.vdp as vdp
 from pipeline.hifv.heuristics import cont_file_to_CASA
 
 LOG = infrastructure.get_logger(__name__)
@@ -13,29 +14,30 @@ LOG = infrastructure.get_logger(__name__)
 # use rflag mode of flagdata
 
 
-class TargetflagInputs(basetask.StandardInputs):
-    def __init__(self, context, vis=None, intents=None):
-        # set the properties to the values given as input arguments
-        self._init_properties(vars())
-
-    @property
+class TargetflagInputs(vdp.StandardInputs):
+    @vdp.VisDependentProperty
     def intents(self):
         if type(self.vis) is types.ListType:
             return self._handle_multiple_vis('intents')
 
-        if self._intents is not None:
-            return self._intents
+        if self.intents is not None:
+            return self.intents
 
         # return just the unwanted intents that are present in the MS
         # intents_to_flag = set(['POINTING','FOCUS','ATMOSPHERE','SIDEBAND','UNKNOWN', 'SYSTEM_CONFIGURATION'])
-        #return ''
-        intents_to_flag = set(['*CALIBRATE*','*TARGET*'])
+        # return ''
+        intents_to_flag = set(['*CALIBRATE*', '*TARGET*'])
         return ','.join(self.ms.intents.intersection(intents_to_flag))
 
-    @intents.setter
+    @intents.convert
     def intents(self, value):
-        self._intents = value
+        return value
 
+    def __init__(self, context, vis=None, intents=None):
+        super(TargetflagInputs, self).__init__()
+        self.context = context
+        self.vis = vis
+        self.intents = intents
 
 
 class TargetflagResults(basetask.Results):
