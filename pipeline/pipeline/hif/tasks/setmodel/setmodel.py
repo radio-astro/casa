@@ -61,6 +61,7 @@ class SetModelsInputs(vdp.StandardInputs):
                  refintent=None, transfer=None, transintent=None,
                  reffile=None, normfluxes=None, scalebychan=None):
 
+        super(SetModelsInputs, self).__init__()
         self.context = context
         self.vis = vis
         self.output_dir = output_dir

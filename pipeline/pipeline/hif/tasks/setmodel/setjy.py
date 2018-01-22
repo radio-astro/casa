@@ -194,6 +194,8 @@ class SetjyInputs(vdp.StandardInputs):
         refspectra=None,
         reffile=None, normfluxes=None):
 
+        super(SetjyInputs, self).__init__()
+
         self.context = context
         self.vis = vis
         self.output_dir = output_dir
