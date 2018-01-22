@@ -24,7 +24,6 @@ LOG = infrastructure.get_logger(__name__)
 
 class UVcontFitInputs(vdp.StandardInputs):
 
-
     @vdp.VisDependentProperty
     def caltable(self):
         namer = uvcaltable.UVcontCaltable()
@@ -103,6 +102,8 @@ class UVcontFitInputs(vdp.StandardInputs):
     def __init__(self, context, output_dir=None, vis=None,
         caltable=None, contfile=None, field=None, intent=None, spw=None,
         combine=None, solint=None, fitorder=None):
+
+        super(UVcontFitInputs, self).__init__()
 
         # Set the properties to the values given as input arguments
         self.context = context
