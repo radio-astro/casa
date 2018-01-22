@@ -4,6 +4,7 @@ import pipeline.infrastructure.basetask as basetask
 from pipeline.infrastructure import casa_tasks
 import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure as infrastructure
+import pipeline.infrastructure.vdp as vdp
 import pipeline.infrastructure.utils as utils
 
 import numpy as np
@@ -18,38 +19,24 @@ import pipeline.hif.heuristics.findrefant as findrefant
 LOG = infrastructure.get_logger(__name__)
 
 
-class Fluxboot2Inputs(basetask.StandardInputs):
+class Fluxboot2Inputs(vdp.StandardInputs):
+    """
+    If a caltable is specified, then the fluxgains stage from the scripted pipeline is skipped
+    and we proceed directly to the flux density bootstrapping.
+    """
+    caltable = vdp.VisDependentProperty(default=None)
+    refantignore = vdp.VisDependentProperty(default='')
+
     def __init__(self, context, vis=None, caltable=None, refantignore=None):
-        # set the properties to the values given as input arguments
-        self._init_properties(vars())
+        super(Fluxboot2Inputs, self).__init__()
+        self.context = context
+        self.vis = vis
+        self.caltable = caltable
+        self.refantignore = refantignore
         self.spix = 0.0
         self.sources = []
         self.flux_densities = []
         self.spws = []
-
-    @property
-    def caltable(self):
-        return self._caltable
-
-    @caltable.setter
-    def caltable(self, value):
-        """
-        If a caltable is specified, then the fluxgains stage from the scripted pipeline is skipped
-        and we proceed directly to the flux density bootstrapping.
-        """
-        if value is None:
-            value = None
-        self._caltable = value
-
-    @property
-    def refantignore(self):
-        return self._refantignore
-
-    @refantignore.setter
-    def refantignore(self, value):
-        if value is None:
-            value = ''
-        self._refantignore = value
 
 
 class Fluxboot2Results(basetask.Results):
