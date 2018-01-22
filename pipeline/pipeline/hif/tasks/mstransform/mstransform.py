@@ -109,6 +109,8 @@ class MstransformInputs(vdp.StandardInputs):
     def __init__(self, context, output_dir=None, vis=None,
         outputvis=None, field=None, intent=None, spw=None):
 
+        super(MstransformInputs, self).__init__()
+
         # set the properties to the values given as input arguments
         self.context = context
         self.vis = vis
