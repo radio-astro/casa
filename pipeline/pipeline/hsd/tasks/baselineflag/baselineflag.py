@@ -194,16 +194,15 @@ class SDBLFlagInputs(vdp.StandardInputs):
         keys = ['Threshold', 'Nmean']
         for (k,v) in d.iteritems():
             (b,p) = v
-            if b is vdp.VisDependentProperty.NULL:
-                # Don't touch operation flag but need to update thresholds.
-                for i in xrange(len(p)):
-                    if p[i] is not vdp.VisDependentProperty.NULL:
-                        self.FlagRuleDictionary[k][keys[i]] = p[i]
-            elif b == True:
+            # if b is vdp.VisDependentProperty.NULL:
+            #     # Don't touch operation flag but need to update thresholds.
+            #     for i in xrange(len(p)):
+            #         if p[i] is not vdp.VisDependentProperty.NULL:
+            #             self.FlagRuleDictionary[k][keys[i]] = p[i]
+            if b == True:
                 self.activateFlagRule( k )
                 for i in xrange(len(p)):
-                    if p[i] is not vdp.VisDependentProperty.NULL:
-                        self.FlagRuleDictionary[k][keys[i]] = p[i]
+                    self.FlagRuleDictionary[k][keys[i]] = p[i]
             elif b == False:
                 self.deactivateFlagRule( k )
 

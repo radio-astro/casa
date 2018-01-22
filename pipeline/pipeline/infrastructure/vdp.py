@@ -107,7 +107,7 @@ class NullMarker(object):
         :param null_input: user inputs considered equivalent to a NullMarker.
         :type null_input: iterable
         """
-        self.null_input = frozenset(null_input)
+        self.null_input = tuple(null_input)
 
     def convert(self, val):
         """
@@ -117,10 +117,10 @@ class NullMarker(object):
         try:
             if isinstance(val, NullMarker):
                 return self
-            elif isinstance(val, list):
-                return val
             elif val in self.null_input:
                 return self
+            elif isinstance(val, list):
+                return val
             else:
                 return val
         except TypeError:
@@ -357,61 +357,99 @@ class InputsContainer(object):
     convert function allows the developer to validate or convert user input to
     a standard format before accepting it as a new argument.
     """
-    def __init__(self, task_cls, context, **kwargs):
+    def __init__(self, task_cls, context, *args, **kwargs):
         self._context = context
         self._task_cls = task_cls
+        self._initargs = kwargs.copy()
 
-        # Inspect the Inputs signature to find which attribute sets the scope
-        # (=the MSes to process) for that task.
-        constructor_sig = inspect.getargspec(task_cls.Inputs.__init__)
-        if 'vis' in constructor_sig.args:
+        # Inspect the Inputs constructor specification to find out which
+        # attribute sets the scope (=the data sets to process) for that task.
+        #
+        # note: _scope_attr must be set for __setattr__ to function correctly
+        #
+        constructor_spec = inspect.getargspec(task_cls.Inputs.__init__)
+        if 'vis' in constructor_spec.args:
             self._scope_attr = 'vis'
-        elif 'infiles' in constructor_sig.args:
+        elif 'infiles' in constructor_spec.args:
             self._scope_attr = 'infiles'
         else:
             msg = 'No scope argument recognised in {!s} constructor' ''.format(self._task_cls.Inputs.__name__)
             raise AttributeError(msg)
 
-        # TODO SJW move fn to this module
-        from . import basetask
-        imaging_preferred = basetask.get_imaging_preferred(task_cls.Inputs)
-        ms_pool = context.observing_run.get_measurement_sets(imaging_preferred=imaging_preferred)
+        # all arguments must be of kev/value type for processing
+        named_args = name_all_arguments(self._task_cls.Inputs.__init__, context, *args, **kwargs)
 
-        # task requires all MSes. No processing required.
+        # if no datasets are not specified, set the dataset scope to all those
+        # registered with the context
+        try:
+            scope_property = getattr(self._task_cls.Inputs, self._scope_attr)
+            scope_null = scope_property.null
+        except:
+            scope_null = _NULL
+        scope_value = named_args.get(self._scope_attr, scope_null)
+        scope_is_null = scope_null == scope_null.convert(scope_value)
+
+        if scope_is_null:
+            # TODO SJW move fn to this module
+            from . import basetask
+            imaging_preferred = basetask.get_imaging_preferred(self._task_cls.Inputs)
+            ms_pool = self._context.observing_run.get_measurement_sets(imaging_preferred=imaging_preferred)
+            named_args[self._scope_attr] = [ms.name for ms in ms_pool]
+
+        # multi-vis tasks do not require any further processing
         self._multivis = task_cls.is_multi_vis_task
         if self._multivis:
-            self._cls_instances = {'all': task_cls.Inputs(context)}
+            self._cls_instances = {'all': task_cls.Inputs(**named_args)}
             self._active_instances = self._cls_instances.values()
+            return
 
-        else:
-            # create an instance for every MS in scope. Use the pointer
-            # attribute to know which attribute is the MS 'axis'.
-            scope_fn = lambda ms: {self._scope_attr: ms.name}
+        # assign constructor args to data sets
+        constructor_args = self._remap_constructor_args(**named_args)
 
-            try:
-                self._cls_instances = {ms.basename: task_cls.Inputs(context, **scope_fn(ms)) for ms in ms_pool}
-            except TypeError:
-                # catch TypeError exceptions from unexpected keyword arguments
-                # so that we can add some more context to the debug message
-                LOG.error('Error creating {!s}'.format(task_cls.Inputs.__name__))
-                raise
-            self._active_instances = self._cls_instances.values()
+        try:
+            # create dict of <data name>: Inputs instance
+            self._cls_instances = {os.path.basename(kw[self._scope_attr]): task_cls.Inputs(**kw)
+                                   for kw in constructor_args}
+        except TypeError:
+            # catch TypeError exceptions from unexpected keyword arguments
+            # so that we can add some more context to the debug message
+            LOG.error('Error creating {!s}'.format(task_cls.Inputs.__name__))
+            raise
 
-        # TODO find kwargs at runtime so that changes can be reflected?
-        self._initargs = dict(kwargs)
+        self._active_instances = self._cls_instances.values()
 
-        # When importing data for the first time, the ms_pool is empty and so
-        # _cls_instances remains empty too. That's ok, as setting vis will
-        # create any missing instances for that value of vis. However, vis
-        # must be the first argument set otherwise the setting of any
-        # properties prior to the setting of vis will not take effect as they
-        # had no instance to write to.
-        if 'vis' in kwargs and len(ms_pool) is 0:
-            self.vis = kwargs['vis']
-            del kwargs['vis']
+    def _remap_constructor_args(self, **kwargs):
+        # find out how many datasets are in this call. This number is used to
+        # multiply scalar values appropriately
+        scope_val = kwargs[self._scope_attr]
+        if isinstance(scope_val, str):
+            scope_val = scope_val.split(',')
+        if not isinstance(scope_val, list):
+            msg = 'Illegal format for {!s}: {!r}'.format(self._scope_attr, scope_val)
+            raise AttributeError(msg)
+        num_datasets = len(scope_val)
 
-        for k, v in kwargs.iteritems():
-            setattr(self, k, v)
+        # Process each argument value. In the resulting dict, each key is an
+        # argument name with values containing one value per dataset
+        processed = {k: self._process_arg_val(num_datasets, k, v) for k, v in kwargs.iteritems()}
+
+        # Split the dict so that we have n dicts for n datasets, with each
+        # dict containing just the values for that data.
+        return [{k: v[i] for k, v in processed.iteritems()} for i in range(num_datasets)]
+
+    def _process_arg_val(self, num_datasets, name, val):
+        if name == self._scope_attr:
+            if isinstance(val, str):
+                return val.split(',')
+            else:
+                return val
+
+        # n values, n vis => distribute values
+        if isinstance(val, (list, tuple)) and len(val) == num_datasets:
+            return val
+
+        # n values, m vis => assign value to all
+        return [val for _ in range(num_datasets)]
 
     @property
     def _pipeline_casa_task(self):
@@ -487,7 +525,7 @@ class InputsContainer(object):
         # we return the standard implementation. This is necessary for
         # pickle, which checks for __getnewargs__ and __getstate__.
         if name.startswith('__') and name.endswith('__'):
-            # LOG.trace('Implement {!s} in InputsContainer'.format(name))
+            # LOG.error('Implement {!s} in InputsContainer'.format(name))
             return super(InputsContainer, self).__getattr__(name)
 
         if name in dir(self):
@@ -519,31 +557,22 @@ class InputsContainer(object):
                 LOG.trace('Setting scope: {!s}.{!s} = {!r}'.format(self.__class__.__name__, name, val))
             return self._set_scope(val)
 
-        if not isinstance(val, (list, tuple)):
-            val = [val] * len(self._active_instances)
-
-        for inputs, user_arg in zip(self._active_instances, val):
-            # SJW: Do not convert user values, as they will be converted in
-            # the call to setattr
-            #
-            # # some properties may be instance values and not data descriptors
-            # # on the class, hence the None default
-            # prop = getattr(inputs.__class__, name, None)
-            #
-            # # convert null equivalent values to NULL marker. Only VDP knows
-            # # how to handle these, so ensure the property is of the
-            # # appropriate type before conversion.
-            # if isinstance(prop, VisDependentProperty):
-            #     null_marker = VisDependentProperty.NULL.convert(user_arg)
-            #
-            #     # convert property if it's not null
-            #     if getattr(prop, 'fconvert', None) is not None:
-            #         if null_marker != VisDependentProperty.NULL:
-            #             user_arg = prop.fconvert(inputs, user_arg)
-
+        for inputs, user_arg in self._map_args_to_vis(val):
             if LOG.isEnabledFor(logging.TRACE):
                 LOG.trace('Setting {!s}.{!s} = {!r}'.format(inputs.__class__.__name__, name, user_arg))
             setattr(inputs, name, user_arg)
+
+    def _map_args_to_vis(self, val):
+        """
+        distribute a incoming user argument amongst the active instances.
+
+        :param val: 
+        :return:
+        """
+        if not isinstance(val, (list, tuple)):
+            val = [val] * len(self._active_instances)
+
+        return zip(self._active_instances, val)
 
     def _get_scope(self):
         scope = [getattr(i, self._scope_attr) for i in self._active_instances]
@@ -565,6 +594,9 @@ class InputsContainer(object):
         # the key for inputs instances is the basename vis
         basenames = [os.path.basename(v) for v in scope]
 
+        #
+        # TODO: the code below should be removed after constructor refactoring
+        #
         # create a new inputs instance if one cannot be found
         for basename, path in zip(basenames, scope):
             if basename in self._cls_instances:
@@ -601,7 +633,6 @@ class InputsContainer(object):
         return properties
 
 
-
 class StandardInputs(api.Inputs):
     __metaclass__ = PipelineInputsMeta
 
@@ -636,38 +667,15 @@ class StandardInputs(api.Inputs):
             raise TypeError(msg)
         self._context = value
 
-    @property
-    def vis(self):
-        """
-        Get the filenames of the measurement sets on which this task should
-        operate.
-        """ 
-        return self._vis
-
-    @vis.setter
-    def vis(self, value):
-        """
-        Set the filenames of the measurement sets on which this task should
-        operate.
-        
-        If value is not set, this defaults to all measurement sets registered
-        with the context.
-        """ 
-        if value is None:
-            imaging_preferred = isinstance(self, api.ImagingMeasurementSetsPreferred)
-            mses = self.context.observing_run.get_measurement_sets(imaging_preferred=imaging_preferred)
-            value = [ms.name for ms in mses]
-
-        # if len(value) == 1:
-        #     # LOG.warn('Extracting vis from single-value list')
-        #     value = value[0]
-
-        # for compatibility with the old implementation, single-value lists
-        # should be kept as lists
-        self._vis = value
-
-
     #- vis-dependent properties ----------------------------------------------
+
+    vis = VisDependentProperty(default='', null_input=['', None, [], ['']])
+
+    # @VisDependentProperty
+    # def vis(self):
+    #     imaging_preferred = isinstance(self, api.ImagingMeasurementSetsPreferred)
+    #     mses = self.context.observing_run.get_measurement_sets(imaging_preferred=imaging_preferred)
+    #     return [ms.name for ms in mses]
 
     @VisDependentProperty(readonly=True, hidden=True)
     def ms(self):
@@ -997,3 +1005,36 @@ def format_value_list(val):
             return val
         else:
             return val[0]
+
+
+def name_all_arguments(cls, *args, **kwargs):
+    # we need to know the names of any non-key/value arguments supplied
+    # in the constructor. The names of the argument can be found in the
+    # constructor specification.
+    argspec = inspect.getargspec(cls)
+
+    # The constructor specification includes 'self', which is not passed
+    # in either args or kwargs. Hence, a dummy value for self is supplied
+    # as the first argument so that the argument indices do not need to be
+    # shifted.
+    if argspec.args[0] == 'self':
+        args = ('dummy self',) + args
+
+    # get args passed positionally (=args with no default)
+    num_positional_args = len(argspec.args) - len(argspec.defaults)
+    positional_args = {k: v for k, v in zip(argspec.args, args[:num_positional_args])}
+    # get kw args passed by position (=args with a default, but key not
+    # specified in call)
+    positional_kwargs = {k: v for k, v in zip(argspec.args[num_positional_args:], args[num_positional_args:])}
+
+    named_args = {}
+    named_args.update(positional_args)
+    named_args.update(positional_kwargs)
+    named_args.update(kwargs)
+
+    # having inserted self, we now remove it as the instance value is
+    # supplied automatically by Python during instance creation
+    if 'self' in named_args:
+        del named_args['self']
+
+    return named_args

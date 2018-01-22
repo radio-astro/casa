@@ -1,6 +1,5 @@
 from __future__ import absolute_import
 
-import types
 import os
 import shutil
 
@@ -27,62 +26,27 @@ __all__ = [
 # one on disk and in the context
 
 class MsSplitInputs(vdp.StandardInputs):
-
-    # Revisit this naming convention later
-    #    For the time being use a simple default naming convention
-    #    Borrow the output file name list handling technique from
-    #    the hif_flagdata interface
+    chanbin = vdp.VisDependentProperty(default=1)
+    datacolumn = vdp.VisDependentProperty(default='data')
+    field = vdp.VisDependentProperty(default='')
+    intent = vdp.VisDependentProperty(default='')
+    replace = vdp.VisDependentProperty(default=True)
+    spw = vdp.VisDependentProperty(default='')
+    timebin = vdp.VisDependentProperty(default='0s')
 
     @vdp.VisDependentProperty
     def outputvis(self):
         vis_root = os.path.splitext(self.vis)[0]
         return vis_root + '_split.ms'
 
-    @outputvis.convert
-    def outputvis(self, value):
-        if isinstance(value, str):
-            return list(value.replace('[', '').replace(']', '').replace("'", "").split(','))
-        else:
-            return value
-
-    @vdp.VisDependentProperty
-    def field(self):
-        return ''
-
-    @field.convert
-    def field(self, value):
-        return value
-
-    @vdp.VisDependentProperty
-    def intent(self):
-        return ''
-
-    @intent.convert
-    def intent(self, value):
-        return value
-
-    @vdp.VisDependentProperty
-    def spw(self):
-        return ''
-
-    @spw.convert
-    def spw(self, value):
-        return value
-
-    datacolumn = vdp.VisDependentProperty(default='data')
-    chanbin = vdp.VisDependentProperty(default=1)
-    timebin = vdp.VisDependentProperty(default='0s')
-    replace = vdp.VisDependentProperty(default=True)
-
-    def __init__(self, context, vis=None, output_dir=None, outputvis=None,
-        field=None, intent=None, spw=None, datacolumn=None, chanbin=None,
-        timebin=None, replace=None):
-
+    def __init__(self, context, vis=None, output_dir=None, outputvis=None, field=None, intent=None, spw=None,
+                 datacolumn=None, chanbin=None, timebin=None, replace=None):
         super(MsSplitInputs, self).__init__()
 
         self.context = context
         self.vis = vis
         self.output_dir = output_dir
+
         self.outputvis = outputvis
         self.field = field
         self.intent = intent
@@ -95,18 +59,13 @@ class MsSplitInputs(vdp.StandardInputs):
     def to_casa_args(self):
         d = super(MsSplitInputs, self).to_casa_args()
 
-        # Filter out unwanted parameters
-        #     Note that the trailing , is required
-        #     Leave the commented out code in place
-        #     as an example.
-        for ignore in ('replace', ):
-            if ignore in d:
-                del d[ignore]
-
         if d['chanbin'] > 1:
             d['chanaverage'] = True
         if d['timebin'] != '0s':
             d['timeaverage'] = True
+
+        # Filter out unwanted parameters
+        del d['replace']
 
         return d
 

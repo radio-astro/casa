@@ -35,7 +35,7 @@ class MakeImagesInputs(vdp.StandardInputs):
     tlimit = vdp.VisDependentProperty(default=2.0)
     weighting = vdp.VisDependentProperty(default='briggs')
 
-    @vdp.VisDependentProperty
+    @vdp.VisDependentProperty(null_input=['', None, {}])
     def target_list(self):
         return self.context.clean_list_pending
 

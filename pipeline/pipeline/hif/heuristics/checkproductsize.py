@@ -40,7 +40,7 @@ class CheckProductSizeHeuristics(object):
         size_mitigation_parameters = {}
 
         # Create makeimlist inputs
-        makeimlist_inputs = makeimlist.MakeImListInputs(self.context)
+        makeimlist_inputs = makeimlist.MakeImListInputs(self.context, vis=self.inputs.vis)
         makeimlist_inputs.intent = 'TARGET'
         makeimlist_inputs.specmode = 'cube'
 
