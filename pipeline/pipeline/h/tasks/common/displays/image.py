@@ -12,6 +12,7 @@ import pylab as plt
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.renderer.logger as logger
+import pipeline.infrastructure.utils as utils
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -71,6 +72,60 @@ class ImageDisplay(object):
         chunks.append(np.array(chunk))
         return chunks
 
+    @staticmethod
+    def _get_plotfile(result, prefix=''):
+        fileparts = {
+            'prefix': prefix,
+            'datatype': result.datatype,
+            'x': result.axes[0].name,
+            'y': result.axes[1].name,
+            'file': '' if result.filename is None else 'File_%s' % os.path.basename(result.filename),
+            'intent': '' if result.intent == '' else 'Intent_%s' % result.intent.replace(',', '_'),
+            'fieldname': '' if result.fieldname == '' else 'Field_%s' % result.fieldname.replace(',', '_'),
+            'fieldid': '' if result.field_id is None else 'ID_%s' % result.field_id.replace(',', '_'),
+            'pol': '' if result.pol is None else 'Pol_%s' % result.pol.replace(',', '_'),
+        }
+
+        if result.spw == '':
+            fileparts['spw'] = ''
+        else:
+            # format spws for filename sorting
+            spws = ['%0.2d' % int(spw) for spw in string.split(str(result.spw), ',')]
+            fileparts['spw'] = 'SpW_%s' % '_'.join(spws)
+
+        if result.ant is None or result.ant == '':
+            fileparts['ant'] = ''
+        else:
+            fileparts['ant'] = 'Ant_%s' % utils.find_ranges(result.ant)
+
+        if result.time is None or result.time == '':
+            fileparts['time'] = ''
+        else:
+            # represent time sensibly relative to day start
+            t = result.time - 86400.0 * np.floor(result.time/86400.0)
+            h = int(np.floor(t/3600.0))
+            t -= h * 3600.0
+            m = int(np.floor(t/60.0))
+            t -= m * 60.0
+            s = int(np.floor(t))
+            fileparts['time'] = '%sh%sm%ss' % (h, m, s)
+
+        png = "{prefix}_{datatype}_{y}_vs_{x}_{file}_{intent}_{fieldname}_" \
+              "{fieldid}_{spw}_{pol}_{ant}_{time}.png".format(**fileparts)
+        png = sanitize(png)
+
+        # Maximum filename size for Lustre filesystems is 255 bytes.
+        # ImageDisplayMosaics can exceed this limit due to including the IDs
+        # of all antennas. Truncate filename while keeping it unique
+        # by replacing with hash.
+        if len(png) > 251:  # 255 - '.png'
+            png_hash = str(hash(png))
+            LOG.info('Truncating plot filename to avoid filesystem limit.\n'
+                     'Old: %s\nNew: %s', png, png_hash)
+            png = '%s.png' % png_hash
+
+        return png
+
     def plot(self, context, results, reportdir, prefix='',
              change='Flagging', dpi=None):
 
@@ -88,15 +143,10 @@ class ImageDisplay(object):
         for description in descriptionlist:
             xtitle = results.first(description).axes[0].name
             ytitle = results.first(description).axes[1].name
-            plotfile = '%s_%s_%s_v_%s_%s.png' % (
-                prefix, results.first(description).datatype, ytitle, xtitle,
-                description)
-            plotfile = sanitize(plotfile)
+            plotfile = self._get_plotfile(results.first(description), prefix)
             plotfile = os.path.join(reportdir, plotfile)
 
             ant = results.first(description).ant
-            if ant is not None:
-                ant = ant[0]
             plot = logger.Plot(
                 plotfile,
                 x_axis=xtitle, y_axis=ytitle,
@@ -313,11 +363,18 @@ class ImageDisplay(object):
         if plotnumber > 1:
             plt.gca().yaxis.set_major_formatter(ticker.NullFormatter())
 
-        if ydata_numeric[0] == ydata_numeric[-1]:
-            # sometimes causes empty plots if min==max
-            extent = [xdata[0], xdata[-1], ydata_numeric[0], ydata_numeric[-1]+1]
+        if 'ANTENNA' in xtitle.upper():
+            if ydata_numeric[0] == ydata_numeric[-1]:
+                # sometimes causes empty plots if min==max
+                extent = [0, len(xdata)-1, ydata_numeric[0], ydata_numeric[-1] + 1]
+            else:
+                extent = [0, len(xdata)-1, ydata_numeric[0], ydata_numeric[-1]]
         else:
-            extent = [xdata[0], xdata[-1], ydata_numeric[0], ydata_numeric[-1]]
+            if ydata_numeric[0] == ydata_numeric[-1]:
+                # sometimes causes empty plots if min==max
+                extent = [xdata[0], xdata[-1], ydata_numeric[0], ydata_numeric[-1]+1]
+            else:
+                extent = [xdata[0], xdata[-1], ydata_numeric[0], ydata_numeric[-1]]
             
         # If plotting by antenna, then extend limits of the axis to ensure that 
         # the tick marks align correctly with the center of the antenna pixels.
@@ -328,44 +385,101 @@ class ImageDisplay(object):
             extent[2] -= 0.5
             extent[3] += 0.5
 
+        # Plot the image array.
         plt.imshow(np.transpose(data), cmap=cmap, norm=norm, vmin=vmin,
                    vmax=vmax, interpolation='nearest', origin='lower',
                    aspect=aspect, extent=extent)
+
+        # Store limits of current plot.
         lims = plt.axis()
 
+        # Set y-axis title, only add this to the first panel.
+        if plotnumber == 1:
+            plt.ylabel(ytitle, size=15)
+
+        # Set x-axis title, add units to title if available.
         xlabel = xtitle
         if xunits:
             xlabel = '%s [%s]' % (xlabel, xunits)
         plt.xlabel(xlabel, size=15)
-        for label in plt.gca().get_xticklabels():
-            label.set_fontsize(10)
-        plt.title(subtitle, fontsize='large')
-        if plotnumber == 1:
-            plt.ylabel(ytitle, size=15)
-        for label in plt.gca().get_yticklabels():
-            label.set_fontsize(10)
 
-        # rotate x tick labels to avoid them clashing
-        plt.xticks(rotation=35)
-        
+        # Create the color-bar.
         # plot wedge, make tick numbers smaller, label with units
         if vmin == vmax:
             cb = plt.colorbar(shrink=shrink, fraction=fraction,
                               ticks=[-1, 0, 1])
         else:
-            if (vmax - vmin > 0.001) and (vmax - vmin) < 10000:
+            if (vmax - vmin > 0.01) and (vmax - vmin) < 1000:
                 cb = plt.colorbar(shrink=shrink, fraction=fraction)
             else:
                 cb = plt.colorbar(shrink=shrink, fraction=fraction,
                                   format='%.1e')
+        # Set size of labels on the color-bar.
         for label in cb.ax.get_yticklabels():
-            label.set_fontsize(8)
-        if plotnumber == 1:
-            if dataunits is not None:
-                cb.set_label('%s (%s)' % (datatype, dataunits), fontsize=10)
-            else:
-                cb.set_label(datatype, fontsize=10)
+            label.set_fontsize(7)
+        # Shows labels for color-bar for right-most panel, adding units if available.
+        data_label = datatype if dataunits is None else '%s (%s)' % (datatype, dataunits)
+        if nplots == 2 or plotnumber == 2:
+            cb.set_label(data_label, fontsize=10)
 
+        # Set size of labels on axes.
+        for label in plt.gca().get_yticklabels():
+            label.set_fontsize(10)
+
+        # Rotate x tick labels to avoid them clashing
+        plt.xticks(rotation=35)
+
+        # If plotting with antenna on the x-axis, then modify the tick mark
+        # layout.
+        if 'ANTENNA' in xtitle.upper():
+            # Offset the plot title to allow space for labels above upper
+            # x-axis.
+            plt.title(subtitle, fontsize='large', y=1.06)
+
+            # Set x-ticks explicitly for each antenna ID.
+            xticks = np.arange(0, len(xdata), 1)
+
+            # Set size of x-labels based on number of antennas, with minimum
+            # label size of 5.
+            xlabel_size = max(np.ceil(10 - len(xdata) / 9), 5)
+
+            # Add labels for even-indices in antenna array.
+            ax1 = plt.gca()
+            ax1.set_xticks(xticks[::2])
+            ax1.set_xticklabels([str(x) for x in xdata[::2]], rotation=90)
+            ax1.xaxis.set_minor_locator(ticker.FixedLocator(xdata[1::2]))
+
+            # Display ticks outside the plot for both axes and both sides;
+            # further rotation tick labels.
+            ax1.tick_params(axis='both', which='both', direction='out')
+
+            # Set x-label size.
+            for label in ax1.get_xticklabels():
+                label.set_fontsize(xlabel_size)
+
+            # Add labels for odd-indices in antenna array.
+            if len(xdata) > 1:
+                ax2 = ax1.twiny()
+                ax2.set_xticks(xticks[1::2])
+                ax2.set_xticklabels([str(x) for x in xdata[1::2]], rotation=90)
+                ax2.xaxis.set_minor_locator(ticker.FixedLocator(xdata[::2]))
+
+                # Display ticks outside the plot for both axes and both sides;
+                # further rotation tick labels.
+                ax2.tick_params(axis='both', which='both', direction='out')
+
+                # Set x-label size.
+                for label in ax2.get_xticklabels():
+                    label.set_fontsize(xlabel_size)
+        else:
+            # Set plot title.
+            plt.title(subtitle, fontsize='large')
+
+            # For x-axis, enable minor ticks
+            plt.gca().xaxis.set_minor_locator(ticker.AutoMinorLocator())
+
+        # If plotting by time on y-axis, then disable automatic tickmarks,
+        # and add labels manually for chunks of continguous time.
         if ytitle.upper() == 'TIME':
             plt.gca().yaxis.set_major_locator(plt.NullLocator())
             if plotnumber == 1:
@@ -386,19 +500,13 @@ class ImageDisplay(object):
                     ax.axhline(chunk[0]-0.5, color='white')
                     ax.axhline(chunk[-1]+0.5, color='white')
                     ax.text(lims[0]-0.25, ydata[chunk[0]], tstring,
-                            fontsize=10, ha='right', va='bottom',
+                            fontsize=8, ha='right', va='bottom',
                             clip_on=False)
 
-        # For x-axis, enable minor ticks
-        plt.gca().xaxis.set_minor_locator(ticker.AutoMinorLocator())
-
-        # If plotting by baseline on y-axis, add minor tick marks (should mark 
+        # If plotting by baseline on y-axis, add minor tick marks (should mark
         # start of each new antenna)
         if 'BASELINE' in ytitle.upper():
             plt.gca().yaxis.set_minor_locator(ticker.AutoMinorLocator())
-        
-        # Display ticks outside the plot for both axes and both sides
-        plt.gca().tick_params(axis='both', which='both', direction='out')
 
         # reset lims to values for image, stops box being pulled off edge
         # of image by other plotting commands.

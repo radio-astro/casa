@@ -20,7 +20,7 @@ from .. import bandpass
 from .. import gaincal
 
 __all__ = [
-    'LowgainflagInputsInputs',
+    'LowgainflagInputs',
     'Lowgainflag'
 ]
 
@@ -152,89 +152,132 @@ class Lowgainflag(basetask.StandardTaskTemplate):
 
     def analyse(self, result):
         """
-        Analyses the Lowgainflag result:
+        Analyses the Lowgainflag result.
 
-        Identifies, for each view (spw), which antennas have been flagged, and
-        marks these to move to the end of the reference antenna list.
+        :param result: LowgainflagResults object
+        :return: LowgainflagResults object
         """
-        # Initialize set of antennas-to-demote: antennas that are flagged in
-        # any of the spws.
-        ants_flagged_in_any_spw = set()
+        result = self._update_reference_antennas(result)
 
-        # Create a summary of the flagging state by going through
-        # each view product for the specified metric.
+        return result
+
+    def _update_reference_antennas(self, result):
+        """
+        Updates the Lowgainflag result to mark any antennas that were found to
+        be fully flagged in any of the flagging views to be demoted when
+        result gets accepted.
+
+        :param result: LowgainflagResults object
+        :return: LowgainflagResults object
+        """
+        # First summarize which antennas are fully flagged in any flagging view.
+        ants_flagged_in_any_spw = self._summarize_fully_flagged_antennas(result)
+
+        # If any fully flagged antennas were found, then update result to mark
+        # these antennas for demotion.
+        if ants_flagged_in_any_spw:
+            result = self._mark_antennas_for_demotion(result, ants_flagged_in_any_spw)
+
+        return result
+
+    @staticmethod
+    def _summarize_fully_flagged_antennas(result):
+        """
+        Create a summary of fully flagged antennas based on all flagging views
+        in the result.
+
+        :param result: LowgainflagResults object
+        :return: list of int, representing IDs of antennas that are fully
+        flagged.
+        """
+        ants_flagged_in_any_view = set()
+
         for description in result.descriptions():
-
             # Get final view.
             view = result.last(description)
 
-            # Update set of antennas-to-demote with IDs of antennas fully
-            # flagged in current view.
-            ants_flagged_in_any_spw.update(np.where(np.all(view.flag, axis=1))[0])
+            # Identify antennas fully flagged for all timestamps, mapping the
+            # array indices to the original antenna IDs using the flagging view
+            # x-axis data.
+            antids_fully_flagged = view.axes[0].data[
+                np.where(np.all(view.flag, axis=1))[0]]
 
-        # If any antennas-to-demote were found, then proceed...
-        if ants_flagged_in_any_spw:
+            # Update set of fully flagged antennas based on current view.
+            ants_flagged_in_any_view.update(antids_fully_flagged)
 
-            # Get the MS object
-            ms = self.inputs.context.observing_run.get_ms(name=self.inputs.vis)
+        return ants_flagged_in_any_view
 
-            # If a list of reference antennas was registered with the MS..
-            if (hasattr(ms, 'reference_antenna') and
-                    isinstance(ms.reference_antenna, str)):
+    def _mark_antennas_for_demotion(self, result, ants_to_demote):
+        """
+        Modify result to set antennas to be demoted if/when result gets
+        accepted into the pipeline context. If list of antennas to demote
+        comprises all antennas, then skip demotion but raise a warning.
 
-                # Create list of current refants
-                refant = ms.reference_antenna.split(',')
+        :param result: LowgainflagResults object
+        :param ants_to_demote: list of ints, representing IDs of antennas to
+        demote.
+        :return: LowgainflagResults object
+        """
+        # Get the MS object
+        ms = self.inputs.context.observing_run.get_ms(name=self.inputs.vis)
 
-                # Create translation dictionary, reject empty antenna name strings.
-                antenna_id_to_name = {ant.id: ant.name for ant in ms.antennas if ant.name.strip()}
+        # Proceed only if a list of reference antennas was registered with the MS.
+        if (hasattr(ms, 'reference_antenna') and
+                isinstance(ms.reference_antenna, str)):
 
-                # Translate IDs of antennas-to-demote to antenna names.
-                ants_to_demote_as_refant = {
-                    antenna_id_to_name[ant_id]
-                    for ant_id in ants_flagged_in_any_spw
-                }
+            # Create list of current refants
+            refant = ms.reference_antenna.split(',')
 
-                # Compute intersection between refants and ants to demote as
-                # refant.
-                refants_to_demote = {
-                    ant for ant in refant
-                    if ant in ants_to_demote_as_refant
-                }
+            # Create translation dictionary, reject empty antenna name strings.
+            antenna_id_to_name = {ant.id: ant.name for ant in ms.antennas if ant.name.strip()}
 
-                # Create string for log message.
-                ant_msg = utils.commafy(refants_to_demote, quotes=False)
+            # Translate IDs of antennas-to-demote to antenna names.
+            ants_to_demote_as_refant = {
+                antenna_id_to_name[ant_id]
+                for ant_id in ants_to_demote
+            }
 
-                # Check if the list of refants-to-demote comprises all
-                # refants, in which case the re-ordering of refants is
-                # skipped.
-                if refants_to_demote == set(refant):
+            # Compute intersection between refants and ants to demote as
+            # refant.
+            refants_to_demote = {
+                ant for ant in refant
+                if ant in ants_to_demote_as_refant
+            }
 
-                    # Log warning that refant list should have been updated, but
-                    # will not be updated so as to avoid an empty refant list.
-                    LOG.warning(
-                        '{} - the following antennas are fully flagged '
-                        'for one or more spws, but since these comprise all '
-                        'refants, the refant list is *NOT* updated to '
-                        're-order these to the end of the refant list: '
-                        '{}'.format(ms.basename, ant_msg))
-                else:
-                    # Log a warning if any antennas are to be demoted from
-                    # the refant list.
-                    LOG.warning(
-                        '{} - the following antennas are moved to the end '
-                        'of the refant list because they are fully '
-                        'flagged for one or more spws: '
-                        '{}'.format(ms.basename, ant_msg))
+            # Create string for log message.
+            ant_msg = utils.commafy(refants_to_demote, quotes=False)
 
-                    # Update result to set the refants to demote:
-                    result.refants_to_demote = refants_to_demote
+            # Check if the list of refants-to-demote comprises all
+            # refants, in which case the re-ordering of refants is
+            # skipped.
+            if refants_to_demote == set(refant):
 
-            # If no list of reference antennas was registered with the MS,
-            # raise a warning.
-            else:
+                # Log warning that refant list should have been updated, but
+                # will not be updated so as to avoid an empty refant list.
                 LOG.warning(
-                    '{} - no reference antennas found in MS, cannot update '
-                    'the reference antenna list.'.format(ms.basename))
+                    '{} - the following antennas are fully flagged '
+                    'for one or more spws, but since these comprise all '
+                    'refants, the refant list is *NOT* updated to '
+                    're-order these to the end of the refant list: '
+                    '{}'.format(ms.basename, ant_msg))
+            else:
+                # Log a warning if any antennas are to be demoted from
+                # the refant list.
+                LOG.warning(
+                    '{} - the following antennas are moved to the end '
+                    'of the refant list because they are fully '
+                    'flagged for one or more spws: '
+                    '{}'.format(ms.basename, ant_msg))
+
+                # Update result to set the refants to demote:
+                result.refants_to_demote = refants_to_demote
+
+        # If no list of reference antennas was registered with the MS,
+        # raise a warning.
+        else:
+            LOG.warning(
+                '{} - no reference antennas found in MS, cannot update '
+                'the reference antenna list.'.format(ms.basename))
 
         return result
 
@@ -351,27 +394,17 @@ class LowgainflagView(object):
 
         return self.result
 
-    def calculate_view(self, table):
+    def calculate_view(self, table, min_nants_threshold=5):
         """
         table -- Name of gain table to be analysed.
-        spwid -- view will be calculated using data for this spw id.
+        min_nants_threshold -- flagging view is created if number of
+            antennas in a set equals-or-exceeds this threshold.
         """
 
+        # Open gains caltable.
         gtable = caltableaccess.CalibrationTableDataFiller.getcal(table)
 
-        ms = self.context.observing_run.get_ms(name=self.vis)
-        antenna_ids = [antenna.id for antenna in ms.antennas] 
-        antenna_ids.sort()
-        antenna_name = {}
-        for antenna_id in antenna_ids:
-            antenna_name[antenna_id] = [antenna.name for antenna in ms.antennas
-                                        if antenna.id == antenna_id][0]
-
-        # spw arg may contain channel specification. Let MS parse input and
-        # read spw ID from the SpectralWindow domain objects that are returned
-        spwids = [spw.id for spw in ms.get_spectral_windows(self.spw)]
-
-        # get range of times covered
+        # Get range of times covered.
         times = set()
         for row in gtable.rows:
             # The gain table is T, should be no pol dimension
@@ -394,39 +427,78 @@ class LowgainflagView(object):
                 last_time = timestamp
         times = np.array(filtered_times)
 
-        # make gain image for each spwid
+        # Get the MS domain object.
+        ms = self.context.observing_run.get_ms(name=self.vis)
+
+        # Get spw IDs from MS: the task input "spw" arg may contain channel
+        # specification, so let MS parse input and read spw ID from the
+        # SpectralWindow domain objects that are returned.
+        spwids = [spw.id for spw in ms.get_spectral_windows(self.spw)]
+
+        # Identify set of unique antenna diameters present in MS.
+        ant_diameters = {antenna.diameter for antenna in ms.antennas}
+
+        # Create flagging view for each spwid.
         for spwid in spwids:
-            data = np.zeros([antenna_ids[-1]+1, len(times)])
-            flag = np.ones([antenna_ids[-1]+1, len(times)], np.bool)
 
-            for row in gtable.rows:
-                if row.get('SPECTRAL_WINDOW_ID') == spwid:
-                    gain = row.get('CPARAM')[0][0]
-#                    print 'GETTING SNR'
-#                    gain = row.get('SNR')[0][0]
-                    ant = row.get('ANTENNA1')
-                    caltime = row.get('TIME')
-                    gainflag = row.get('FLAG')[0][0]
-                    if not gainflag:
-                        data[ant, np.abs(times-caltime) < 5] = np.abs(gain)
-                        flag[ant, np.abs(times-caltime) < 5] = 0
+            # Create separate flagging view for each set of antennas with
+            # same diameter.
+            for antdiam in ant_diameters:
+                # Identify antennas with current diameter.
+                antenna_ids = [antenna.id
+                               for antenna in ms.antennas
+                               if antenna.diameter == antdiam]
+                antenna_ids.sort()
 
-            axes = [
-                commonresultobjects.ResultAxis(
-                    name='Antenna1', units='id',
-                    data=np.arange(antenna_ids[-1]+1)),
-                commonresultobjects.ResultAxis(
-                    name='Time', units='', data=times)
-            ]
+                # Create translation of antenna ID to flagging view
+                # axis ID.
+                antid_to_axisid = {
+                    ant_id: axis_id
+                    for axis_id, ant_id in enumerate(antenna_ids)
+                }
+                nants = len(antenna_ids)
 
-            # associate the result with a generic filename - using
-            # specific names gives confusing duplicates on the weblog
-            # display
-            viewresult = commonresultobjects.ImageResult(
-                filename='%s(gtable)' % os.path.basename(gtable.vis),
-                intent=self.intent, data=data, flag=flag, axes=axes,
-                datatype='gain amplitude', spw=spwid)
-          
-            # add the view results and their children results to the
-            # class result structure
-            self.result.addview(viewresult.description, viewresult)
+                # If the number of antennas is below the threshold, then skip
+                # flagging for the set with current diameter.
+                if nants < min_nants_threshold:
+                    LOG.info("Number of antennas with diameter of {:.1f} is"
+                             " below the minimum threshold ({}), skipping"
+                             " flagging for these antennas (no flagging view"
+                             " created).".format(antdiam, min_nants_threshold))
+                else:
+                    # Initialize arrays for flagging view.
+                    data = np.zeros([nants, len(times)])
+                    flag = np.ones([nants, len(times)], np.bool)
+
+                    for row in gtable.rows:
+                        ant = row.get('ANTENNA1')
+                        if (row.get('SPECTRAL_WINDOW_ID') == spwid and
+                                ant in antenna_ids):
+                            gain = row.get('CPARAM')[0][0]
+                            caltime = row.get('TIME')
+                            gainflag = row.get('FLAG')[0][0]
+                            if not gainflag:
+                                data[antid_to_axisid[ant], np.abs(times-caltime) < 5] = np.abs(gain)
+                                flag[antid_to_axisid[ant], np.abs(times-caltime) < 5] = 0
+
+                    axes = [
+                        commonresultobjects.ResultAxis(
+                            name='Antenna1', units='id',
+                            data=np.asarray(antenna_ids)),
+                        commonresultobjects.ResultAxis(
+                            name='Time', units='', data=times)
+                    ]
+
+                    # associate the result with a generic filename - using
+                    # specific names gives confusing duplicates on the weblog
+                    # display
+                    ants = ','.join([str(ant) for ant in antenna_ids])
+                    viewresult = commonresultobjects.ImageResult(
+                        filename='%s(gtable)' % os.path.basename(gtable.vis),
+                        intent=self.intent, data=data, flag=flag, axes=axes,
+                        datatype='gain amplitude', spw=spwid,
+                        ant=ants)
+
+                    # add the view results and their children results to the
+                    # class result structure
+                    self.result.addview(viewresult.description, viewresult)
