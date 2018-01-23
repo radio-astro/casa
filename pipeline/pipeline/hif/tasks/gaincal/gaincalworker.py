@@ -21,36 +21,39 @@ class GaincalWorkerInputs(common.VdpCommonGaincalInputs):
         append=None, scan=None, splinetime=None, npointaver=None,
         phasewrap=None, opacity=None, preavg=None):
 
+        # Standard parameters
         self.context = context
         self.vis = vis
         self.output_dir = output_dir
 
+        # Gaincla calibration inputs parameters
         self.field = field
         self.spw = spw
         self.antenna = antenna
         self.uvrange = uvrange
         self.intent = intent
-        self.scan = scan
         self.selectdata = selectdata
-
-        self.gaintype = gaintype
-
-        self.smodel = smodel
-        self.calmode = calmode
-        self.solint = solint
-        self.combine = combine
         self.refant = refant
         self.minblperant = minblperant
+        self.opacity = opacity
+        self.calmode = calmode
+
+        # Task parameters
+        self.gaintype = gaintype
+        self.scan = scan
+        self.smodel = smodel
+        self.solint = solint
+        self.combine = combine
         self.minsnr = minsnr
         self.solnorm = solnorm
         self.append = append
         self.preavg = preavg
-        self.opacity = opacity
         self.parang = parang
         self.splinetime = splinetime
         self.npointaver = npointaver
         self.phasewrap = phasewrap
 
+        # The caltable (input parameter)
         self.caltable = caltable
 
 

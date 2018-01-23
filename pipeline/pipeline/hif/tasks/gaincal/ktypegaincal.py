@@ -9,6 +9,11 @@ from . import gaincalworker
 LOG = infrastructure.get_logger(__name__)
 
 class KTypeGaincalInputs(common.VdpCommonGaincalInputs):
+
+    append = vdp.VisDependentProperty(default=False)
+    scan = vdp.VisDependentProperty(default='')
+    parang = vdp.VisDependentProperty(default=False)
+
     combine = vdp.VisDependentProperty(default='')
     minsnr  = vdp.VisDependentProperty(default=3)
     solint  = vdp.VisDependentProperty(default='int')
@@ -22,32 +27,35 @@ class KTypeGaincalInputs(common.VdpCommonGaincalInputs):
                  solnorm=None, append=None, scan=None,
                  opacity=None, parang=None):
 
+        # Standard parameters
         self.context = context
         self.vis = vis
         self.output_dir = output_dir
 
+        # Gaincal inputs parameters
         self.field = field
         self.spw = spw
         self.antenna = antenna
         self.uvrange = uvrange
         self.intent = intent
-        self.scan = scan
-
-        self.gaintype = gaintype
-
-        self.smodel = smodel
         self.calmode = calmode
-        self.solint = solint
-        self.combine = combine
         self.refant = refant
         self.minblperant = minblperant
+        self.opacity = opacity
+
+        # Task parameters
+        self.scan = scan
+        self.gaintype = gaintype
+        self.smodel = smodel
+        self.solint = solint
+        self.combine = combine
         self.minsnr = minsnr
         self.solnorm = solnorm
-        self.append = append
-        self.scan = scan
-        self.opacity = opacity
         self.parang = parang
+        self.preavg = -1
+        self.append = append
 
+        # The caltable (caltable is an inputs parameter)
         self.caltable = caltable
 
 

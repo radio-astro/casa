@@ -10,11 +10,19 @@ LOG = infrastructure.get_logger(__name__)
 
 
 class GTypeGaincalInputs(common.VdpCommonGaincalInputs):
+
+    scan = vdp.VisDependentProperty(default='')
+
+    gaintype = vdp.VisDependentProperty(default='G')
+    preavg = vdp.VisDependentProperty(default=-1)
+
     combine = vdp.VisDependentProperty(default='')
     minsnr = vdp.VisDependentProperty(default=3)
     solint = vdp.VisDependentProperty(default='inf')
     solnorm = vdp.VisDependentProperty(default=False)
-    gaintype = vdp.VisDependentProperty(default='G')
+    parang = vdp.VisDependentProperty(default=False)
+
+    append = vdp.VisDependentProperty(default=False)
 
     def __init__(self, context, output_dir=None, vis=None, caltable=None, 
         field=None, spw=None, antenna=None, uvrange=None, intent=None,
@@ -23,32 +31,35 @@ class GTypeGaincalInputs(common.VdpCommonGaincalInputs):
 	solnorm=None, append=None, scan=None, preavg=None,
         opacity=None, parang=None):
 
+        # Standard parameters
         self.context = context
         self.vis = vis
         self.output_dir = output_dir
 
+        # Gaincal inputs parameters
         self.field = field
         self.spw = spw
         self.antenna = antenna
         self.uvrange = uvrange
         self.intent = intent
-        self.scan = scan
-
-        self.gaintype = gaintype
-
-        self.smodel = smodel
         self.calmode = calmode
-        self.solint = solint
-        self.combine = combine
         self.refant = refant
         self.minblperant = minblperant
+        self.opacity = opacity
+
+        # Task parameters
+        self.scan = scan
+        self.gaintype = gaintype
+        self.smodel = smodel
+        self.solint = solint
+        self.combine = combine
         self.minsnr = minsnr
         self.solnorm = solnorm
-        self.append = append
         self.preavg = preavg
-        self.opacity = opacity
         self.parang = parang
+        self.append = append
 
+        # Caltable parameters (caltable from inputs)
         self.caltable = caltable
 
 
