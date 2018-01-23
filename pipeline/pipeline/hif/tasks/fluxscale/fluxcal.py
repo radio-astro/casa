@@ -50,6 +50,7 @@ class FluxcalInputs(vdp.StandardInputs):
 
     def __init__(self, context, vis=None, output_dir=None, reference=None,
                  transfer=None, refintent=None, transintent=None):
+         super (FluxcalInputs, self).__init__()
          self.context = context
          self.vis = vis
          self.output_dir = output_dir

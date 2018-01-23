@@ -54,6 +54,7 @@ class NormaliseFluxInputs(vdp.StandardInputs):
 
     def __init__(self, context, output_dir=None, vis=None, reference=None, transfer=None,
                  refintent=None, transintent=None):
+        super(NormaliseFluxInputs, self).__init__()
         self.context = context
         self.vis = vis
         self.output_dir = output_dir

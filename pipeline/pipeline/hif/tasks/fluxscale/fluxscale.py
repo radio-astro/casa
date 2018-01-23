@@ -86,6 +86,7 @@ class FluxscaleInputs(vdp.StandardInputs):
 
     def __init__(self, context, output_dir=None, vis=None, caltable=None, fluxtable=None, reference=None, transfer=None,
                  refspwmap=None, refintent=None, transintent=None):
+        super(FluxscaleInputs, self).__init__()
         self.context = context
         self.vis = vis
         self.output_dir = output_dir
