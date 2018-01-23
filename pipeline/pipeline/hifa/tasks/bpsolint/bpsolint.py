@@ -65,6 +65,8 @@ class BpSolintInputs(vdp.StandardInputs):
          intent=None, spw=None, phaseupsnr=None, minphaseupints=None,
          evenbpints=None, bpsnr=None, minbpnchan=None, hm_nantennas=None, maxfracflagged=None): 
 
+         super(BpSolintInputs, self).__init__()
+
          self.context = context
          self.vis = vis
          self.output_dir = output_dir

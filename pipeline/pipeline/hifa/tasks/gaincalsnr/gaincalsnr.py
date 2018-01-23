@@ -66,6 +66,8 @@ class GaincalSnrInputs(vdp.StandardInputs):
          intent=None, spw=None, phasesnr=None, bwedgefrac=None,
          hm_nantennas=None, maxfracflagged=None): 
 
+         super(GaincalSnrInputs, self).__init__()
+
          self.context = context
          self.vis = vis
          self.output_dir = output_dir

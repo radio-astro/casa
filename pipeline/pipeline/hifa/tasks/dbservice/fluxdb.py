@@ -30,6 +30,7 @@ class FluxdbInputs(vdp.StandardInputs):
     serviceurl = vdp.VisDependentProperty (default='http://asa-test.alma.cl/bfs/')
 
     def __init__(self, context, output_dir=None, vis=None, serviceurl=None):
+        super(FluxdbInputs, self).__init__()
         self.context = context
         self.vis = vis
         self.output_dir = output_dir
