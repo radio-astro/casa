@@ -443,7 +443,7 @@ class RestoreData(basetask.StandardTaskTemplate):
         # figured out.
         importdata_inputs = importdata.ImportData.Inputs(inputs.context,
             vis=vislist, session=sessionlist, save_flagonline=False,
-            lazy=inputs.lazy, bdfflags=inputs.bdfflags, dbservice=False,
+            lazy=inputs.lazy, bdfflags=inputs.bdfflags,
             asis=inputs.asis, ocorr_mode=inputs.ocorr_mode)
         importdata_task = importdata.ImportData(importdata_inputs)
         return self._executor.execute(importdata_task, merge=True)
