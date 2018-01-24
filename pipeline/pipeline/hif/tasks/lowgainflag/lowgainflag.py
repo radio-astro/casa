@@ -461,7 +461,7 @@ class LowgainflagView(object):
                 # If the number of antennas is below the threshold, then skip
                 # flagging for the set with current diameter.
                 if nants < min_nants_threshold:
-                    LOG.info("Number of antennas with diameter of {:.1f} is"
+                    LOG.info("Number of antennas with diameter of {:.1f} m is"
                              " below the minimum threshold ({}), skipping"
                              " flagging for these antennas (no flagging view"
                              " created).".format(antdiam, min_nants_threshold))
