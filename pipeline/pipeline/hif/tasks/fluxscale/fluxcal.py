@@ -65,7 +65,7 @@ class FluxcalInputs(vdp.StandardInputs):
 class Fluxcal(basetask.StandardTaskTemplate):
     Inputs = FluxcalInputs
 
-    def prepare(self, **parameters):
+    def prepare(self):
         results1 = self._do_setmodel()
         results2 = self._do_fluxscale()
         LOG.info('TODO: average flux across measurement sets?')
