@@ -51,8 +51,9 @@ class TransformimagedataResults(basetask.Results):
         # Remove original measurement set from context
         context.observing_run.measurement_sets.pop(0)
 
-        for i in range(0,len(context.clean_list_pending)):
-            context.clean_list_pending[i]['heuristics'].observing_run.measurement_sets[0].name = self.outputvis
+        for i in range(0, len(context.clean_list_pending)):
+            outvisname = context.output_dir + '/' + os.path.basename(self.outputvis)
+            context.clean_list_pending[i]['heuristics'].observing_run.measurement_sets[0].name = outvisname
             newvislist = [self.outputvis]
             context.clean_list_pending[i]['heuristics'].vislist = newvislist
 
