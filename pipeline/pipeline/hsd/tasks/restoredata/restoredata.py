@@ -6,21 +6,23 @@ import pipeline.h.tasks.restoredata.restoredata as restoredata
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.casatools as casatools
-from ..importdata import importdata as importdata
+import pipeline.infrastructure.vdp as vdp
 from .. import applycal
+from ..importdata import importdata as importdata
 
 LOG = infrastructure.get_logger(__name__)
 
 
 class SDRestoreDataInputs(restoredata.RestoreDataInputs):
+    asis = vdp.VisDependentProperty('SBSummary ExecBlock Antenna Station Receiver Source CalAtmosphere CalWVR')
+    ocorr_mode = vdp.VisDependentProperty('ao')
 
-    def __init__(self, context, copytoraw=None, products_dir=None,
-                 rawdata_dir=None, output_dir=None, session=None, vis=None,
-                 bdfflags=None, lazy=None, asis=None, ocorr_mode=None):
-        self._init_properties(vars())
-
-    asis = basetask.property_with_default('asis', 'SBSummary ExecBlock Antenna Station Receiver Source CalAtmosphere CalWVR')
-    ocorr_mode = basetask.property_with_default('ocorr_mode', 'ao')
+    def __init__(self, context, copytoraw=None, products_dir=None, rawdata_dir=None, output_dir=None, session=None,
+                 vis=None, bdfflags=None, lazy=None, asis=None, ocorr_mode=None):
+        super(SDRestoreDataInputs, self).__init__(context, copytoraw=copytoraw, products_dir=products_dir,
+                                                  rawdata_dir=rawdata_dir, output_dir=output_dir, session=session,
+                                                  vis=vis, bdfflags=bdfflags, lazy=lazy, asis=asis,
+                                                  ocorr_mode=ocorr_mode)
 
 
 class SDRestoreDataResults(restoredata.RestoreDataResults):
@@ -58,7 +60,7 @@ class SDRestoreDataResults(restoredata.RestoreDataResults):
                         for irow in xrange(nrow):
                             spwid = spws[irow]
                             antenna = antennas[irow]
-                            param = params[:,0,irow]
+                            param = params[:, 0, irow]
                             npol = param.shape[0]
                             antname = msobj.get_antenna(antenna)[0].name
                             dd = msobj.get_data_description(spw=int(spwid))
@@ -68,7 +70,7 @@ class SDRestoreDataResults(restoredata.RestoreDataResults):
                                 polname = dd.get_polarization_label(ipol)
                                 k2jy_factor[(spwid, antname, polname)] = 1.0 / (param[ipol] * param[ipol])
                         msobj.k2jy_factor = k2jy_factor
-            LOG.debug('msobj.k2jy_factor = {0}'.format(msobj.k2jy_factor))
+            LOG.debug('msobj.k2jy_factor = {0}'.format(getattr(msobj, 'k2jy_factor', 'N/A')))
 
 
 class SDRestoreData(restoredata.RestoreData):
@@ -89,15 +91,20 @@ class SDRestoreData(restoredata.RestoreData):
 
     def _do_importasdm(self, sessionlist, vislist):
         inputs = self.inputs
-        importdata_inputs = importdata.SDImportData.Inputs(inputs.context,
-            vis=vislist, session=sessionlist, save_flagonline=False,
-            lazy=inputs.lazy, bdfflags=inputs.bdfflags,
-            asis=inputs.asis, ocorr_mode=inputs.ocorr_mode)
-        importdata_task = importdata.SDImportData(importdata_inputs)
+        # SDImportDataInputs operate in the scope of a single measurement set.
+        # To operate in the scope of multiple MSes we must use an
+        # InputsContainer.
+        container = vdp.InputsContainer(importdata.SDImportData, inputs.context, vis=vislist, session=sessionlist,
+                                        save_flagonline=False, lazy=inputs.lazy, bdfflags=inputs.bdfflags,
+                                        asis=inputs.asis, ocorr_mode=inputs.ocorr_mode)
+        importdata_task = importdata.SDImportData(container)
         return self._executor.execute(importdata_task, merge=True)
     
     def _do_applycal(self):
         inputs = self.inputs
-        applycal_inputs = applycal.SDApplycal.Inputs(inputs.context)
-        applycal_task = applycal.SDApplycal(applycal_inputs)
+        # SDApplyCalInputs operates in the scope of a single measurement set.
+        # To operate in the scope of multiple MSes we must use an
+        # InputsContainer.
+        container = vdp.InputsContainer(applycal.SDApplycal, inputs.context)
+        applycal_task = applycal.SDApplycal(container)
         return self._executor.execute(applycal_task, merge=True)

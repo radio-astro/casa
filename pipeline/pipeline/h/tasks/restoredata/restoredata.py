@@ -33,17 +33,17 @@ import shutil
 import string
 import tarfile
 import tempfile
-import types
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
+import pipeline.infrastructure.vdp as vdp
 from .. import applycal
 from .. import importdata
 
 # Note:
 #    manifest.py should probably be moved to the common
 #    subdirectory once the workflow is proofed
-#from pipeline.h.tasks.exportdata import manifest
+# from pipeline.h.tasks.exportdata import manifest
 from .. common import manifest
 
 from pipeline.infrastructure import casa_tasks
@@ -52,7 +52,7 @@ from pipeline.infrastructure import casa_tasks
 LOG = infrastructure.get_logger(__name__)
 
 
-class RestoreDataInputs(basetask.StandardInputs):
+class RestoreDataInputs(vdp.StandardInputs):
     """
     RestoreDataInputs manages the inputs for the RestoreData task.
 
@@ -86,10 +86,28 @@ class RestoreDataInputs(basetask.StandardInputs):
         a string or list of strings containing the ASDM(s) to be restored.
      """
 
-    def __init__(self, context, copytoraw=None, products_dir=None, rawdata_dir=None,
-        output_dir=None, session=None, vis=None, bdfflags=None, lazy=None, asis=None,
-        ocorr_mode=None):
+    asis = vdp.VisDependentProperty(default='')
+    bdfflags = vdp.VisDependentProperty(default=True)
+    copytoraw = vdp.VisDependentProperty(default=True)
+    lazy = vdp.VisDependentProperty(default=False)
+    ocorr_mode = vdp.VisDependentProperty(default='ca')
 
+    @vdp.VisDependentProperty
+    def products_dir(self):
+        if self.context.products_dir is None:
+            return os.path.abspath('../products')
+        return self.context.products_dir
+
+    @vdp.VisDependentProperty
+    def rawdata_dir(self):
+        return os.path.abspath('../rawdata')
+
+    @vdp.VisDependentProperty
+    def session(self):
+        return []
+
+    def __init__(self, context, copytoraw=None, products_dir=None, rawdata_dir=None, output_dir=None, session=None,
+                 vis=None, bdfflags=None, lazy=None, asis=None, ocorr_mode=None):
         """
         Initialise the Inputs, initialising any property values to those given
         here.
@@ -115,113 +133,35 @@ class RestoreDataInputs(basetask.StandardInputs):
         :param asis: list of ASDM tables to import as is
         :type asis: comma delimated list of tables
         """
+        super(RestoreDataInputs, self).__init__()
 
-        # set the properties to the values given as input arguments
-        self._init_properties(vars())
+        self.context = context
+        self.output_dir = output_dir
+        self.vis = vis
+        self.session = session
 
-    # Session information  may come from the user or the pipeline processing
-    # request.
+        self.products_dir = products_dir
+        self.rawdata_dir = rawdata_dir
+        self.copytoraw = copytoraw
 
-    @property
-    def copytoraw(self):
-        if self._copytoraw is None:
-            self._copytoraw = True
-            return self._copytoraw
-        return self._copytoraw
+        self.bdfflags = bdfflags
+        self.lazy = lazy
+        self.asis = asis
+        self.ocorr_mode = ocorr_mode
 
-    @copytoraw.setter
-    def copytoraw(self, value):
-        self._copytoraw = value
-
-    @property
-    def products_dir(self):
-        if self._products_dir is None:
-            if self.context.products_dir is None:
-                self._products_dir = os.path.abspath('../products')
-            else:
-                self._products_dir = self.context.products_dir
-            return self._products_dir
-        return self._products_dir
-
-    @products_dir.setter
-    def products_dir(self, value):
-        self._products_dir = value
-
-    @property
-    def rawdata_dir(self):
-        if self._rawdata_dir is None:
-            self._rawdata_dir = os.path.abspath('../rawdata')
-        elif not self._rawdata_dir:
-            self._rawdata_dir = os.path.abspath('../rawdata')
-        return self._rawdata_dir
-
-    @rawdata_dir.setter
-    def rawdata_dir(self, value):
-        self._rawdata_dir = value
-
-    @property
-    def session(self):
-        if self._session is None:
-            self._session = []
-        return self._session
-
-    @session.setter
-    def session(self, value):
-        self._session = value
-
-    # MandatoryPipelineInputs raises an exception if vis has not been
-    # registered with the context. For an import task, the vis is never
-    # registered; to avoid the exception, we override the vis getter and
-    # setter.
-    @property
-    def vis(self):
-        return self._vis
-
-    @vis.setter
-    def vis(self, value):
-        if type(value) is types.ListType:
-            self._my_vislist = value
-        self._vis = value
-
-    @property
-    def bdfflags(self):
-        if self._bdfflags is None:
-            self._bdfflags = True
-        return self._bdfflags
-
-    @bdfflags.setter
-    def bdfflags(self, value):
-        self._bdfflags = value
-
-    @property
-    def lazy(self):
-        if self._lazy is None:
-            self._lazy = False
-        return self._lazy
-
-    @lazy.setter
-    def lazy(self, value):
-        self._lazy = value
-
-    @property
-    def ocorr_mode(self):
-        if self._ocorr_mode is None:
-            self._ocorr_mode = 'ca'
-        return self._ocorr_mode
-
-    @ocorr_mode.setter
-    def ocorr_mode(self, value):
-        self._ocorr_mode = value
-
-    @property
-    def asis(self):
-        if self._asis is None:
-            self._asis = ''
-        return self._asis
-
-    @asis.setter
-    def asis(self, value):
-        self._asis = value
+    # # MandatoryPipelineInputs raises an exception if vis has not been
+    # # registered with the context. For an import task, the vis is never
+    # # registered; to avoid the exception, we override the vis getter and
+    # # setter.
+    # @property
+    # def vis(self):
+    #     return self._vis
+    #
+    # @vis.setter
+    # def vis(self, value):
+    #     if type(value) is types.ListType:
+    #         self._my_vislist = value
+    #     self._vis = value
 
 
 class RestoreDataResults(basetask.Results):
@@ -241,7 +181,7 @@ class RestoreDataResults(basetask.Results):
         for ms in context.observing_run.measurement_sets:
             self.mses.append(ms)
         if self.applycal_results:
-            if type(self.applycal_results) is types.ListType:
+            if isinstance(self.applycal_results, list):
                 for result in self.applycal_results:
                     result.merge_with_context(context)
             else:
@@ -284,11 +224,13 @@ class RestoreData(basetask.StandardTaskTemplate):
 
         # Force inputs.vis and inputs.session to be a list.
         sessionlist = inputs.session
-        if type(sessionlist) is types.StringType:
+        if isinstance(sessionlist, str):
             sessionlist = [sessionlist, ]
+
         tmpvislist = inputs.vis
-        if type(tmpvislist) is types.StringType:
+        if isinstance(tmpvislist, str):
             tmpvislist = [tmpvislist, ]
+
         vislist = []
         for vis in tmpvislist:
             if os.path.dirname(vis) == '':
@@ -306,11 +248,11 @@ class RestoreData(basetask.StandardTaskTemplate):
         #   requires the exportdata / restoredata tasks to be synchronized
         #   but it is maintained for testing purposes.
         if inputs.copytoraw:
-            self._do_copy_manifest_toraw ('*pipeline_manifest.xml')
-            pipemanifest = self._do_get_manifest ('*pipeline_manifest.xml') 
+            self._do_copy_manifest_toraw('*pipeline_manifest.xml')
+            pipemanifest = self._do_get_manifest('*pipeline_manifest.xml')
             self._do_copytoraw(pipemanifest)
         else:
-            pipemanifest = self._do_get_manifest ('*pipeline_manifest.xml') 
+            pipemanifest = self._do_get_manifest('*pipeline_manifest.xml')
 
         # Convert ASDMS assumed to be on disk in rawdata_dir. After this step
         # has been completed the MS and MS.flagversions directories will exist
@@ -321,16 +263,14 @@ class RestoreData(basetask.StandardTaskTemplate):
 
         # Restore final MS.flagversions and flags
         flag_version_name = 'Pipeline_Final'
-        flag_version_list = self._do_restore_flags(pipemanifest,
-            flag_version_name=flag_version_name)
+        self._do_restore_flags(pipemanifest, flag_version_name=flag_version_name)
 
         # Get the session list and the visibility files associated with
         # each session.
         session_names, session_vislists = self._get_sessions()
 
         # Restore calibration tables
-        self._do_restore_caltables(pipemanifest, session_names=session_names,
-            session_vislists=session_vislists)
+        self._do_restore_caltables(pipemanifest, session_names=session_names, session_vislists=session_vislists)
 
         # Import calibration apply lists
         self._do_restore_calstate(pipemanifest)
@@ -353,7 +293,7 @@ class RestoreData(basetask.StandardTaskTemplate):
         """
         return results
 
-    def _do_copy_manifest_toraw (self, template):
+    def _do_copy_manifest_toraw(self, template):
 
         """
         Get the pipeline manifest
@@ -363,13 +303,13 @@ class RestoreData(basetask.StandardTaskTemplate):
 
         # Download the pipeline manifest file from the archive or
         #     products_dir to rawdata_dir
-        manifestfiles = glob.glob(os.path.join(inputs.products_dir, template))
-        for manifestfile in manifestfiles:
+        manifest_files = glob.glob(os.path.join(inputs.products_dir, template))
+        for manifestfile in manifest_files:
             LOG.info('Copying %s to %s' % (manifestfile, inputs.rawdata_dir))
             shutil.copy(manifestfile, os.path.join(inputs.rawdata_dir,
-                os.path.basename(manifestfile)))
+                                                   os.path.basename(manifestfile)))
 
-    def _do_get_manifest (self, template):
+    def _do_get_manifest(self, template):
 
         """
         Get the pipeline manifest object
@@ -391,64 +331,58 @@ class RestoreData(basetask.StandardTaskTemplate):
 
         return pipemanifest
 
-    def _do_copytoraw (self, pipemanifest):
-
+    def _do_copytoraw(self, pipemanifest):
         inputs = self.inputs
-
         ouss = pipemanifest.get_ous()
 
         # Download flag versions
         #   Download from the archive or products_dir to rawdata_dir.
         if pipemanifest is not None:
-            inflagfiles = [os.path.join(inputs.products_dir, flagfile) for flagkey, \
-                flagfile in pipemanifest.get_final_flagversions(ouss).iteritems()]
+            inflagfiles = [os.path.join(inputs.products_dir, flagfile)
+                           for flagfile in pipemanifest.get_final_flagversions(ouss).itervalues()]
         else:
-            inflagfiles = glob.glob(os.path.join(inputs.products_dir, \
-                '*.flagversions.tgz'))
+            inflagfiles = glob.glob(os.path.join(inputs.products_dir, '*.flagversions.tgz'))
+
         for flagfile in inflagfiles:
             LOG.info('Copying %s to %s' % (flagfile, inputs.rawdata_dir))
-            shutil.copy(flagfile, os.path.join(inputs.rawdata_dir,
-                os.path.basename(flagfile)))
+            shutil.copy(flagfile, os.path.join(inputs.rawdata_dir, os.path.basename(flagfile)))
 
         # Download calibration tables
         #   Download calibration files from the archive or products_dir to
         if pipemanifest is not None:
-            incaltables = [os.path.join(inputs.products_dir, caltable) for caltablekey, \
-                caltable in pipemanifest.get_caltables(ouss).iteritems()]
+            incaltables = [os.path.join(inputs.products_dir, caltable)
+                           for caltable in pipemanifest.get_caltables(ouss).itervalues()]
         else:
-            incaltables = glob.glob(os.path.join(inputs.products_dir, \
-                '*.caltables.tgz'))
+            incaltables = glob.glob(os.path.join(inputs.products_dir, '*.caltables.tgz'))
+
         for caltable in incaltables:
             LOG.info('Copying %s to %s' % (caltable, inputs.rawdata_dir))
-            shutil.copy(caltable, os.path.join(inputs.rawdata_dir,
-                os.path.basename(caltable)))
+            shutil.copy(caltable, os.path.join(inputs.rawdata_dir, os.path.basename(caltable)))
 
         # Download calibration apply lists
         #   Download from the archive or products_dir to rawdata_dir.
         #   TBD: Currently assumed done somehow
         if pipemanifest is not None:
-            inapplycals = [os.path.join(inputs.products_dir, applycals) for applycalskey, \
-                applycals in pipemanifest.get_applycals(ouss).iteritems()]
+            inapplycals = [os.path.join(inputs.products_dir, applycals)
+                           for applycals in pipemanifest.get_applycals(ouss).itervalues()]
         else:
-            inapplycals = glob.glob(os.path.join(inputs.products_dir, \
-                '*.calapply.txt'))
-        for applycal in inapplycals:
-            LOG.info('Copying %s to %s' % (applycal, inputs.rawdata_dir))
-            shutil.copy(applycal, os.path.join(inputs.rawdata_dir,
-                os.path.basename(applycal)))
+            inapplycals = glob.glob(os.path.join(inputs.products_dir, '*.calapply.txt'))
+
+        for calapply_list in inapplycals:
+            LOG.info('Copying %s to %s' % (calapply_list, inputs.rawdata_dir))
+            shutil.copy(calapply_list, os.path.join(inputs.rawdata_dir, os.path.basename(calapply_list)))
 
     def _do_importasdm(self, sessionlist, vislist):
         inputs = self.inputs
         # The asis is temporary until we get the EVLA / ALMA factoring
         # figured out.
-        importdata_inputs = importdata.ImportData.Inputs(inputs.context,
-            vis=vislist, session=sessionlist, save_flagonline=False,
-            lazy=inputs.lazy, bdfflags=inputs.bdfflags,
-            asis=inputs.asis, ocorr_mode=inputs.ocorr_mode)
-        importdata_task = importdata.ImportData(importdata_inputs)
+        container = vdp.InputsContainer(importdata.ImportData, inputs.context, vis=vislist, session=sessionlist,
+                                        save_flagonline=False, lazy=inputs.lazy, bdfflags=inputs.bdfflags,
+                                        asis=inputs.asis, ocorr_mode=inputs.ocorr_mode)
+        importdata_task = importdata.ImportData(container)
         return self._executor.execute(importdata_task, merge=True)
 
-    def  _do_restore_flags(self, pipemanifest, flag_version_name='Pipeline_Final'):
+    def _do_restore_flags(self, pipemanifest, flag_version_name='Pipeline_Final'):
         inputs = self.inputs
         flagversionlist = []
         if pipemanifest is not None:
@@ -463,17 +397,17 @@ class RestoreData(basetask.StandardTaskTemplate):
             flagversion = ms.basename + '.flagversions'
             flagversionpath = os.path.join(inputs.output_dir, flagversion)
             if os.path.exists(flagversionpath):
-                LOG.info('Removing default flagversion for %s' % (ms.basename))
+                LOG.info('Removing default flagversion for %s' % ms.basename)
                 if not self._executor._dry_run:
                     shutil.rmtree(flagversionpath)
 
             # Untar MS.flagversions file in rawdata_dir to output_dir
             if ouss is not None:
                 tarfilename = os.path.join(inputs.rawdata_dir,
-                    pipemanifest.get_final_flagversions(ouss)[ms.basename])
+                                           pipemanifest.get_final_flagversions(ouss)[ms.basename])
             else:
                 tarfilename = os.path.join(inputs.rawdata_dir,
-                    ms.basename + '.flagversions.tgz')
+                                           ms.basename + '.flagversions.tgz')
             LOG.info('Extracting %s' % flagversion)
             LOG.info('    From %s' % tarfilename)
             LOG.info('    Into %s' % inputs.output_dir)
@@ -482,8 +416,7 @@ class RestoreData(basetask.StandardTaskTemplate):
                     tar.extractall(path=inputs.output_dir)
 
             # Restore final flags version using flagmanager
-            LOG.info('Restoring final flags for %s from flag version %s' % \
-                     (ms.basename, flag_version_name))
+            LOG.info('Restoring final flags for %s from flag version %s' % (ms.basename, flag_version_name))
             if not self._executor._dry_run:
                 task = casa_tasks.flagmanager(vis=ms.name,
                                               mode='restore',
@@ -506,10 +439,9 @@ class RestoreData(basetask.StandardTaskTemplate):
         for ms in inputs.context.observing_run.measurement_sets:
             if ouss is not None:
                 applyfile_name = os.path.join(inputs.rawdata_dir,
-                    pipemanifest.get_applycals(ouss)[ms.basename])
+                                              pipemanifest.get_applycals(ouss)[ms.basename])
             else:
-                applyfile_name = os.path.join(inputs.rawdata_dir,
-                    ms.basename + '.calapply.txt')
+                applyfile_name = os.path.join(inputs.rawdata_dir, ms.basename + '.calapply.txt')
             LOG.info('Restoring calibration state for %s from %s'
                      '' % (ms.basename, applyfile_name))
 
@@ -559,13 +491,10 @@ class RestoreData(basetask.StandardTaskTemplate):
 
         # Determine the OUS uid
         ps = inputs.context.project_structure
-        if ps is None:
-            ousid = ''
-        elif ps.ousstatus_entity_id == 'unknown':
+        if ps is None or ps.ousstatus_entity_id == 'unknown':
             ousid = ''
         else:
-            ousid = ps.ousstatus_entity_id.translate(\
-                string.maketrans(':/', '__')) + '.'
+            ousid = ps.ousstatus_entity_id.translate(string.maketrans(':/', '__')) + '.'
 
         # Loop over sessions
         for index, session in enumerate(session_names):
@@ -576,13 +505,13 @@ class RestoreData(basetask.StandardTaskTemplate):
             # Open the tarfile and get the names
             if ouss is not None:
                 tarfilename = os.path.join(inputs.rawdata_dir,
-                    pipemanifest.get_caltables(ouss)[session])
+                                           pipemanifest.get_caltables(ouss)[session])
             elif ousid == '':
-                tarfilename = glob.glob(os.path.join(inputs.rawdata_dir, '*' + session +
-                    '.caltables.tgz'))[0]
+                tarfilename = glob.glob(os.path.join(inputs.rawdata_dir,
+                                                     '*' + session + '.caltables.tgz'))[0]
             else:
                 tarfilename = os.path.join(inputs.rawdata_dir,
-                    ousid + session + '.caltables.tgz')
+                                           ousid + session + '.caltables.tgz')
 
             with tarfile.open(tarfilename, 'r:gz') as tar:
                 tarmembers = tar.getmembers()
@@ -598,49 +527,48 @@ class RestoreData(basetask.StandardTaskTemplate):
                             # it is uncertain whether or not slash (/) exists at the end
                             if member.name.endswith('.tbl/') or member.name.endswith('.tbl'):
                                 LOG.info('    Extracting caltable %s' % member.name)
+
                     if not self._executor._dry_run:
                         if len(extractlist) == len(tarmembers):
                             tar.extractall(path=inputs.output_dir)
                         else:
-                            tar.extractall(path=inputs.output_dir,
-                                           members=extractlist)
+                            tar.extractall(path=inputs.output_dir, members=extractlist)
 
     def _do_applycal(self):
-        inputs = self.inputs
-        applycal_inputs = applycal.Applycal.Inputs(inputs.context)
-        applycal_task = applycal.Applycal(applycal_inputs)
+        container = vdp.InputsContainer(applycal.Applycal, self.inputs.context)
+        applycal_task = applycal.Applycal(container)
         return self._executor.execute(applycal_task, merge=True)
 
-    def _get_sessions(self, sessions=[], vis=[]):
-
+    def _get_sessions(self, sessions=None, vis=None):
         """
         Return a list of sessions where each element of the list contains
         the  vis files associated with that session. If sessions is
         undefined the context is searched for session information
         """
+        if sessions is None:
+            sessions = []
+        if vis is None:
+            vis = []
 
         inputs = self.inputs
+        all_mses = inputs.context.observing_run.measurement_sets
 
         # Get the MS list from the context by default.
         if len(vis) == 0:
-            wkvis = []
-            for ms in inputs.context.observing_run.measurement_sets:
-                wkvis.append(ms.name)
+            wkvis = [ms.name for ms in all_mses]
         else:
             wkvis = vis
 
         # If the input session list is empty determine the sessions from
         # the context.
         if len(sessions) == 0:
-            wksessions = []
-            for visname in wkvis:
-                session = inputs.context.observing_run.get_ms(name=visname).session
-                wksessions.append(session)
+            wksessions = [ms.session for ms in all_mses]
         else:
             wksessions = sessions
 
         # Determine the number of unique sessions.
-        session_seqno = 0; session_dict = {}
+        session_seqno = 0
+        session_dict = {}
         for i in range(len(wksessions)):
             if wksessions[i] not in session_dict:
                 session_dict[wksessions[i]] = session_seqno
@@ -649,8 +577,7 @@ class RestoreData(basetask.StandardTaskTemplate):
         # Initialize the output session names and visibility file lists
         session_names = []
         session_vis_list = []
-        for key, _ in sorted(session_dict.iteritems(),
-                             key=lambda(k, v): (v, k)):
+        for key, _ in sorted(session_dict.iteritems(), key=lambda(k, v): (v, k)):
             session_names.append(key)
             session_vis_list.append([])
 
@@ -667,8 +594,6 @@ class RestoreData(basetask.StandardTaskTemplate):
 
         # Log the sessions
         for i in range(len(session_vis_list)):
-            LOG.info('Visibility list for session %s is %s' % \
-            (session_names[i], session_vis_list[i]))
+            LOG.info('Visibility list for session %s is %s' % (session_names[i], session_vis_list[i]))
 
         return session_names, session_vis_list
-
