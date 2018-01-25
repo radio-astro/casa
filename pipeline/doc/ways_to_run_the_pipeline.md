@@ -138,10 +138,12 @@ This can be useful to run the Pipeline just up to the stage that you want to deb
  then create a short script in "../debug.script" with:
   
 ```
-import pipeline
+task_to_run = 'hifa_tsysflag'
+import pipeline, pipeline.recipereducer
 context = pipeline.Pipeline(context='last', loglevel='info', plotlevel='default').context
-inputs = pipeline.infrastructure.vdp.InputsContainer(pipeline.hifa.tasks.tsysflag.Tsysflag, context)
-task = pipeline.hifa.tasks.tsysflag.Tsysflag(inputs)
+taskclass = pipeline.recipereducer._get_task_class(task_to_run)
+inputs = pipeline.infrastructure.vdp.InputsContainer(taskclass, context)
+task = taskclass(inputs)
 result = task.execute(dry_run=False)
 result.accept(context)
 context.save()
