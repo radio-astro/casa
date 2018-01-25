@@ -544,13 +544,17 @@ class SBSummaryTable(object):
         msname = _get_ms_name(ms)
         sbsummary_table = os.path.join(msname, 'ASDM_SBSUMMARY')
         observing_modes = []
-        with casatools.TableReader(sbsummary_table) as tb:
-            observing_mode = tb.getcol('observingMode')
-            for irow in xrange(tb.nrows()):
-                cell = observing_mode[:,irow]
-                for mode in cell:
-                    if mode not in observing_modes:
-                        observing_modes.append(mode)
+        try:
+            with casatools.TableReader(sbsummary_table) as tb:
+                observing_mode = tb.getcol('observingMode')
+                for irow in xrange(tb.nrows()):
+                    cell = observing_mode[:,irow]
+                    for mode in cell:
+                        if mode not in observing_modes:
+                            observing_modes.append(mode)
+        except:
+            LOG.warn ('Error reading observing modes for %s' % (ms.basename))
+
         return observing_modes
 
     @staticmethod
