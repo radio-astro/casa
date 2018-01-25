@@ -114,19 +114,9 @@ class NullMarker(object):
         Process the argument, converting user input considered equivalent to
         null to a NullMarker object.
         """
-        try:
-            if isinstance(val, NullMarker):
-                return self
-            elif val in self.null_input:
-                return self
-            elif isinstance(val, list):
-                return val
-            else:
-                return val
-        except TypeError:
-            # can't check __null_input for unhashable types. We know that
-            # __null_input does not contain them, so return the value
-            return val
+        if isinstance(val, NullMarker) or val in self.null_input:
+            return self
+        return val
 
     def __eq__(self, other):
         return isinstance(other, NullMarker)
@@ -303,9 +293,8 @@ class VisDependentProperty(object):
 
         # pass non-null values through the user-provided converter
         converted = value
-        if self.fconvert is not None:
-            if value != self.null:
-                converted = self.fconvert(instance, value)
+        if self.fconvert is not None and value != self.null:
+            converted = self.fconvert(instance, value)
 
         self.fset(instance, converted)
 
@@ -379,7 +368,7 @@ class InputsContainer(object):
         # all arguments must be of kev/value type for processing
         named_args = name_all_arguments(self._task_cls.Inputs.__init__, context, *args, **kwargs)
 
-        # if no datasets are not specified, set the dataset scope to all those
+        # if no datasets are specified, set the dataset scope to all those
         # registered with the context
         try:
             scope_property = getattr(self._task_cls.Inputs, self._scope_attr)
@@ -638,9 +627,6 @@ class StandardInputs(api.Inputs):
 
     #- standard non-vis-dependent properties ---------------------------------
 
-    # def __deepcopy__(self, memo):
-    #     return selective_deepcopy(self, memo, shallow_copy=('_context',))
-
     @property
     def context(self):
         """
@@ -670,12 +656,6 @@ class StandardInputs(api.Inputs):
     #- vis-dependent properties ----------------------------------------------
 
     vis = VisDependentProperty(default='', null_input=['', None, [], ['']])
-
-    # @VisDependentProperty
-    # def vis(self):
-    #     imaging_preferred = isinstance(self, api.ImagingMeasurementSetsPreferred)
-    #     mses = self.context.observing_run.get_measurement_sets(imaging_preferred=imaging_preferred)
-    #     return [ms.name for ms in mses]
 
     @VisDependentProperty(readonly=True, hidden=True)
     def ms(self):
@@ -945,8 +925,7 @@ def gen_hash(o):
         return tuple([gen_hash(e) for e in o])
 
     elif not isinstance(o, dict):
-        # h = hash(o)
-        # LOG.trace('Hash: %s=%s' % (o, h))
+        # LOG.trace('Hash: %s=%s' % (o, hash(o)))
         return hash(o)
 
     new_o = copy.deepcopy(o)
@@ -954,42 +933,6 @@ def gen_hash(o):
         new_o[k] = gen_hash(v)
 
     return hash(tuple(frozenset(new_o.items())))
-
-
-# def selective_deepcopy(instance, memo, shallow_copy=None):
-#     """
-#
-#     :param instance:
-#     :param memo:
-#     :param shallow_copy:
-#     :return:
-#     """
-#     if shallow_copy is None:
-#         shallow_copy = []
-#
-#     # extract the state from the instance to deep copy
-#     obj_state = instance.__dict__
-#     vdp_state = get_state(instance)
-#
-#     # create a new instance of the same class
-#     cls = instance.__class__
-#     result = cls.__new__(cls)
-#     memo[id(instance)] = result
-#
-#     # set shallow copies for the requested attributes by directly copying
-#     # across the reference from the old instance
-#     for attr_name in shallow_copy:
-#         setattr(result, attr_name, getattr(instance, attr_name))
-#     # assign deep-copied values for the remaining attributes
-#     for k, v in obj_state.iteritems():
-#         if k not in shallow_copy:
-#             setattr(result, k, copy.deepcopy(v, memo))
-#
-#     # set the VDP state, noting that this state too needs to be deep-copied to
-#     # prevent shared references between the two objects
-#     set_state(result, copy.deepcopy(vdp_state))
-#
-#     return result
 
 
 def format_value_list(val):

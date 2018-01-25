@@ -1037,8 +1037,6 @@ class StandardTaskTemplate(api.Task):
             # to set attributes on this value, which it can't on a built-in 
             # list
             return ResultsList()
-        head = self.inputs.vis[0]
-        tail = self.inputs.vis[1:]
 
         if isinstance(self.inputs, (StandardInputs, ModeInputs)):
             to_split = ('calphasetable', 'targetphasetable', 'offsetstable')
@@ -1054,6 +1052,8 @@ class StandardTaskTemplate(api.Task):
                     refant_tail = self.inputs.refant[1:]
                     self.inputs.refant = refant_head
 
+            head = self.inputs.vis[0]
+            tail = self.inputs.vis[1:]
             try:
                 LOG.trace('Setting VISLIST_RESET_KEY prior to task execution')
                 setattr(self.inputs, VISLIST_RESET_KEY, True)
@@ -1076,15 +1076,9 @@ class StandardTaskTemplate(api.Task):
 
         elif isinstance(self.inputs, vdp.InputsContainer):
             container = self.inputs
-
             LOG.info('Equivalent CASA call: %s', container._pipeline_casa_task)
 
-            LOG.todo('remove subtask_counter hack')
-            if self.__class__.__name__ == 'Priorcals':
-                container._context.subtask_counter += 1
-
             results = ResultsList()
-
             try:
                 for inputs in container:
                     self.inputs = inputs
@@ -1094,10 +1088,6 @@ class StandardTaskTemplate(api.Task):
                         results.extend(single_result)
                     else:
                         results.append(single_result)
-
-                    # TODO remove hack for parity with trunk once merged
-                    LOG.todo('remove subtask_counter hack for parity with trunk once merged')
-                    inputs.context.subtask_counter += 1
                 return results
             finally:
                 self.inputs = container
