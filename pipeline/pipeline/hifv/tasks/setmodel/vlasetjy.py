@@ -1,20 +1,17 @@
 from __future__ import absolute_import
-import ast
 import csv
 import os
-import re
-import string
-import types
 import math
+import numpy as np
 
 from pipeline.h.tasks.common import commonfluxresults
 import pipeline.infrastructure.casatools as casatools
 import pipeline.domain as domain
-import pipeline.domain.measures as measures
 from pipeline.hifv.heuristics import standard as standard
 import pipeline.infrastructure.basetask as basetask
 from pipeline.infrastructure import casa_tasks
 import pipeline.infrastructure as infrastructure
+import pipeline.infrastructure.vdp as vdp
 import pipeline.infrastructure.utils as utils
 
 from pipeline.hifv.heuristics import find_EVLA_band
@@ -23,6 +20,7 @@ from pipeline.hifv.heuristics import find_EVLA_band
 # http://iopscience.iop.org/article/10.1088/0067-0049/204/2/19/pdf
 
 LOG = infrastructure.get_logger(__name__)
+
 
 def find_standards(positions):
     """Function for finding standards from the original scripted EVLA pipeline
@@ -56,7 +54,7 @@ def find_standards(positions):
                     if (separation < MAX_SEPARATION):
                         fields_3C286.append(ii)
 
-    fields = [ fields_3C48, fields_3C138, fields_3C147, fields_3C286 ]
+    fields = [fields_3C48, fields_3C138, fields_3C147, fields_3C286]
     
     return fields
 
@@ -74,7 +72,7 @@ def standard_sources(vis):
     for ii in range(0,len(field_positions[0][0])):
         positions.append([field_positions[0][0][ii], field_positions[1][0][ii]])
 
-    standard_source_names = [ '3C48', '3C138', '3C147', '3C286' ]
+    standard_source_names = ['3C48', '3C138', '3C147', '3C286']
     standard_source_fields = find_standards(positions)
     
     standard_source_found = False
@@ -89,244 +87,207 @@ def standard_sources(vis):
     return standard_source_names, standard_source_fields
 
 
-class VLASetjyInputs(basetask.StandardInputs):
-    def __init__(self, context, output_dir=None,
-                 # standard setjy parameters 
-                 vis=None, field=None, spw=None, model=None, 
-                 scalebychan=None, fluxdensity=None, spix=None,
-                 reffreq=None, standard=None,
-                 # intent for calculating field name
-                 intent=None,
-                 # reference flux file
-                 reffile=None):
-        # set the properties to the values given as input arguments
-        self._init_properties(vars())
+class VLASetjyInputs(vdp.StandardInputs):
 
-    @staticmethod
-    def _get_casa_flux_density(flux):
-        iquv = [flux.I.to_units(measures.FluxDensityUnits.JANSKY),
-                flux.Q.to_units(measures.FluxDensityUnits.JANSKY),
-                flux.U.to_units(measures.FluxDensityUnits.JANSKY),
-                flux.V.to_units(measures.FluxDensityUnits.JANSKY) ]
-        return map(float, iquv)
-
-    @property
+    @vdp.VisDependentProperty
     def field(self):
-        # if field was explicitly set, return that value 
-        if self._field is not None:
-            return self._field
-        
-        # if invoked with multiple mses, return a list of fields
-        if type(self.vis) is types.ListType:
-            return self._handle_multiple_vis('field')
-        
-        # otherwise return each field in the current ms that has been observed
+
+        # Get field ids in the current ms that have been observed
         # with the desired intent
         fields = self.ms.get_fields(intent=self.intent)
-        field_names = set([f.name for f in fields])
-        return ','.join(field_names)
-    
-        # fields with different intents may have the same name. Check for this
-        # and return the IDs if necessary
+        unique_field_names = set([f.name for f in fields])
+        field_ids = set([f.id for f in fields])
+
+        # Fields with different intents may have the same name. Check for this
+        # and return the field ids rather than the names to resolve any
+        # ambiguities.
         if len(unique_field_names) is len(field_ids):
             return ','.join(unique_field_names)
         else:
             return ','.join([str(i) for i in field_ids])
 
-    @field.setter
-    def field(self, value):
-        self._field = value
+    intent = vdp.VisDependentProperty(default='AMPLITUDE')
 
-    @property
-    def fluxdensity(self):
-        # if flux density was explicitly set and is *not* -1 (which is 
-        # hard-coded as the default value in the task interface), return that
-        # value. 
-        if self._fluxdensity is not -1:
-            return self._fluxdensity
+    @vdp.VisDependentProperty
+    def refspectra(self):
 
-        # if invoked with multiple mses, return a list of flux densities
-        if type(self.vis) is types.ListType:
-            return self._handle_multiple_vis('fluxdensity')
+        # If flux density was explicitly set and is not equal to -1, which is
+        # hard-coded as the default value in the task interface return the
+        # default tuple which is composed of the reference frequency, the
+        # Stokes fluxdensity and the spectral index
+        if self.fluxdensity is not -1:
+            return (self.reffreq, self.fluxdensity, self.spix)
 
+        # There is no ms object.
         if not self.ms:
             return
 
-        # so _fluxdensity is -1, indicating we should do a flux lookup. The
-        # lookup order is: 
-        # 1) from file, unless it's a solar system object
-        # 2) from CASA
-        # We now read the reference flux value from a file
+        # The fluxdensity parameter  is set ot  -1 which indicates that we must do a
+        # flux lookup. The # lookup order is:
+        #     1) from file, unless it's a solar system object
+        #     2) from CASA
+
+        # TODO: Replace with reading directly from the context
+
+        # Read the reference flux values from a file
         ref_flux = []
         if os.path.exists(self.reffile):
             with open(self.reffile, 'rt') as f:
-                reader = csv.reader(f)
 
-                # first row is header row
+                # First row is header row
+                reader = csv.reader(f)
                 reader.next()
-        
+
+                # Loop over rows trying the new CSV format first
                 for row in reader:
                     try:
-                        (ms_name, field_id, spw_id, I, Q, U, V, comment) = row
+                        try:
+                            (ms_name, field_id, spw_id, I, Q, U, V, spix, comment) = row
+                        except:
+                            (ms_name, field_id, spw_id, I, Q, U, V, comment) = row
+                            spix = str(self.spix)
                     except ValueError:
                         LOG.warning('Invalid flux statement in %s: \'%s'
                                     '\'' % (self.reffile, row))
                         continue
 
+                    # Check that the entry is for the correct MS
                     if os.path.basename(ms_name) != self.ms.basename:
                         continue
 
+                    # Add the value
                     spw_id = int(spw_id)
-                    ref_flux.append((field_id, spw_id, float(I), float(Q), 
-                                     float(U), float(V)))
-        
+                    ref_flux.append((field_id, spw_id, float(I), float(Q),
+                                     float(U), float(V), float(spix)))
+
                     # TODO sort the flux values in spw order?
 
+        # Issue warning if the reference file was specified but not found.
         if not os.path.exists(self.reffile) and self.reffile not in ('', None):
-            LOG.warning('Flux reference file \'%s\' not found')
+            LOG.warning('Flux reference file not found: {!s}'.format(self.reffile))
 
-        # get the spectral window IDs for the spws specified by the inputs
+        # Get the spectral window ids for the spws specified by the inputs
         spws = self.ms.get_spectral_windows(self.spw)
         spw_ids = sorted(spw.id for spw in spws)
 
-        # in order to print flux densities in the same order as the fields, we
-        # need to get the flux density for each field in turn 
+        # In order to print flux densities in the same order as the fields, we
+        # must retrieve the flux density for each field in turn
         field_flux = []
         for field_arg in utils.safe_split(self.field):
-            # field names may resolve to multiple field IDs
+
+            # Field names may resolve to multiple field IDs
             fields = self.ms.get_fields(task_arg=field_arg, intent=self.intent)
             field_ids = set([str(field.id) for field in fields])
             field_names = set([field.name for field in fields])
 
-            flux_by_spw = [] 
+            # Find fluxes
+            flux_by_spw = []
             for spw_id in spw_ids:
-                flux = [[I, Q, U, V] 
-                        for (ref_field_id, ref_spw_id, I, Q, U, V) in ref_flux
-                        if (ref_field_id in field_ids
-                            or ref_field_id in field_names)
-                        and ref_spw_id == spw_id]
-                
-                # no flux measurements found for the requested field/spws, so do
-                # either a CASA model look-up (-1) or reset the flux to 1.                
+                reffreq = str(self.ms.get_spectral_window(spw_id).centre_frequency)
+                if self.normfluxes:
+                    flux = [(reffreq, [I / I, Q / I, U / I, V / I], spix)
+                            for (ref_field_id, ref_spw_id, I, Q, U, V, spix) in ref_flux
+                            if (ref_field_id in field_ids
+                                or ref_field_id in field_names)
+                            and ref_spw_id == spw_id]
+                else:
+                    flux = [(reffreq, [I, Q, U, V], spix)
+                            for (ref_field_id, ref_spw_id, I, Q, U, V, spix) in ref_flux
+                            if (ref_field_id in field_ids
+                                or ref_field_id in field_names)
+                            and ref_spw_id == spw_id]
+
+                # No flux measurements found for the requested field/spws, so do
+                # either a CASA model look-up (-1) or reset the flux to 1.
                 if not flux:
                     if any('AMPLITUDE' in f.intents for f in fields):
-                        flux = [-1]
+                        flux = (reffreq, -1, self.spix)
                     else:
-                        flux = [-1]  #originally set to [1]
+                        flux = (reffreq, [-1], self.spix)
 
-                # if this is a solar system calibrator, ignore any catalogue
+                # If this is a solar system calibrator, ignore any catalogue
                 # flux and request a CASA model lookup
                 if not field_names.isdisjoint(standard.Standard.ephemeris_fields):
                     LOG.debug('Ignoring records from file for solar system '
                               'calibrator')
-                    flux = [-1]
+                    flux = (reffreq, -1, 0.0)
 
                 flux_by_spw.append(flux[0] if len(flux) is 1 else flux)
 
-            field_flux.append(flux_by_spw[0] if len(flux_by_spw) is 1 
+            field_flux.append(flux_by_spw[0] if len(flux_by_spw) is 1
                               else flux_by_spw)
 
         return field_flux[0] if len(field_flux) is 1 else field_flux
 
-    @fluxdensity.setter
-    def fluxdensity(self, value):
-        # Multiple flux density values in the form of nested lists are
-        # required when multiple spws and fields are to be processed. This
-        # function recursively converts those nested list elements to floats.
-        def element_to_float(e):
-            if type(e) is types.ListType:
-                return [element_to_float(i) for i in e]
-            return float(e)
-
-        # default value is -1
-        if value is None:
-            value = -1
-        elif value is not -1:
-            value = [element_to_float(n) for n in ast.literal_eval(str(value))]        
-        
-        self._fluxdensity = value
-
-    @property
-    def intent(self):
-        if self._intent is not None:
-            return self._intent.replace('*', '')
-        return None            
-    
-    @intent.setter
-    def intent(self, value):
-        if value is None:
-            value = 'AMPLITUDE'
-        self._intent = string.replace(value, '*', '')
-
-    @property
+    @vdp.VisDependentProperty
     def reffile(self):
-        return self._reffile
-    
-    @reffile.setter
-    def reffile(self, value=None):
-        if value in (None, ''):
-            value = os.path.join(self.context.output_dir, 'flux.csv')
-        self._reffile = value
+        value = os.path.join(self.context.output_dir, 'flux.csv')
+        return value
 
-    @property
-    def reffreq(self):
-        return self._reffreq
+    normfluxes = vdp.VisDependentProperty(default=False)
+    reffreq = vdp.VisDependentProperty(default='1GHz')
+    fluxdensity = vdp.VisDependentProperty(default=-1)
+    spix = vdp.VisDependentProperty(default=0.0)
+    scalebychan = vdp.VisDependentProperty(default=True)
 
-    @reffreq.setter
-    def reffreq(self, value):
-        if value is None:
-            value = '1GHz'
-        self._reffreq = value
-
-    @property
-    def scalebychan(self):
-        return self._scalebychan
-
-    @scalebychan.setter
-    def scalebychan(self, value):
-        if value is None:
-            value = True
-        self._scalebychan = value
-
-    @property
-    def spix(self):
-        return self._spix
-
-    @spix.setter
-    def spix(self, value):
-        if value is None:
-            value = 0.0
-        self._spix = value
-
-    @property
+    @vdp.VisDependentProperty
     def standard(self):
-        # if invoked with multiple mses, return a list of standards
-        if type(self.vis) is types.ListType:
-            return self._handle_multiple_vis('standard')
-        
-        if not callable(self._standard):
-            return self._standard
-            
-        fields = utils.safe_split(self.field)
-        standards = [self._standard(field) for field in fields]
+
+        # Get the standard heuriistics function.
+        heu_standard = standard.Standard()
+
+        # The field may be an integer, but the standard heuristic operates on
+        # strings so determine the corresponding name of the fields
+        field_names = []
+        for field in utils.safe_split(self.field):
+            if str(field).isdigit():
+                matching_fields = self.ms.get_fields(field)
+                assert len(matching_fields) is 1
+                field_names.append(matching_fields[0].name)
+            else:
+                field_names.append(field)
+
+        standards = [heu_standard(field) for field in field_names]
         return standards[0] if len(standards) is 1 else standards
 
-    @standard.setter
-    def standard(self, value):
-        if value is None:
-            value = standard.Standard()
-        self._standard = value
-        
+    def __init__(self, context, output_dir=None, vis=None, field=None, intent=None, spw=None, model=None,
+                 scalebychan=None, fluxdensity=None, spix=None, reffreq=None, standard=None,
+                 refspectra=None, reffile=None, normfluxes=None):
+
+        super(VLASetjyInputs, self).__init__()
+
+        self.context = context
+        self.vis = vis
+        self.output_dir = output_dir
+        self.field = field
+        self.intent = intent
+        self.spw = spw
+        self.model = model
+        self.scalebychan = scalebychan
+        self.fluxdensity = fluxdensity
+        self.spix = spix
+        self.reffreq = reffreq
+        self.standard = standard
+        self.refspectra = refspectra
+        self.reffile = reffile
+        self.normfluxes = normfluxes
+
     def to_casa_args(self):
         d = super(VLASetjyInputs, self).to_casa_args()
+
+        d['fluxdensity'] = d['refspectra'][1]
+        try:
+            np.testing.assert_almost_equal(d['refspectra'][2], 0.0)
+        except:
+            d['reffreq'] = 'TOPO ' + d['refspectra'][0].replace(" ", "")
+            d['spix'] = d['refspectra'][2]
+
         # Filter out reffile. Note that the , is required
-        for ignore in ('reffile',):
+        for ignore in ('reffile', 'refspectra', 'normfluxes',):
             if ignore in d:
                 del d[ignore]
 
-        # Enable intent selection in CASA. Convert to CASA intent if
-        # necessary. Not required here.
-        # d['intent'] = utils.to_CASA_intent (self.ms, d['intent'])
+        # Enable intent selection in CASA.
         d['selectdata'] = True
 
         # Force usescratch to True for now
@@ -338,25 +299,6 @@ class VLASetjyInputs(basetask.StandardInputs):
 class VLASetjy(basetask.StandardTaskTemplate):
     Inputs = VLASetjyInputs
 
-    # SetJy outputs different log messages depending on the type of amplitude
-    # calibrator. These two patterns match the formats we've seen so far
-    _flux_patterns = (
-        # 2013-02-07 15:27:51 INFO setjy        0542+498 (fld ind 2) spw 0  [I=21.881, Q=0, U=0, V=0] Jy, (Perley-Butler 2010)
-        re.compile('\(fld ind (?P<field>\d+)\)'
-                   '\s+spw\s+(?P<spw>\d+)'
-                   '\s+\[I=(?P<I>[\d\.]+)'
-                   ', Q=(?P<Q>[\d\.]+)'
-                   ', U=(?P<U>[\d\.]+)'
-                   ', V=(?P<V>[\d\.]+)]'),
-    
-        # 2013-02-07 16:28:38 INFO setjy     Callisto: spw9 Flux:[I=20.043,Q=0.0,U=0.0,V=0.0] +/- [I=0.0,Q=0.0,U=0.0,V=0.0] Jy
-        re.compile('(?P<field>\S+): '
-                   'spw(?P<spw>\d+)\s+'
-                   'Flux:\[I=(?P<I>[\d\.]+),'
-                   'Q=(?P<Q>[\d\.]+),'
-                   'U=(?P<U>[\d\.]+),'
-                   'V=(?P<V>[\d\.]+)\]'))
-    
     def prepare(self):
         inputs = self.inputs
         result = commonfluxresults.FluxCalibrationResults(vis=inputs.vis) 
@@ -370,9 +312,9 @@ class VLASetjy(basetask.StandardTaskTemplate):
             return result
 
         # get the spectral windows for the spw inputs argument
-        # This is done later in the loop for the VLA
-        #print "Type of inputs.spw: ", inputs.spw, type(inputs.spw)
-        spws = [spw for spw in inputs.ms.get_spectral_windows(inputs.spw)]
+        # This is done later in the loop for the VLA, just keeping here for history memory
+        # print "Type of inputs.spw: ", inputs.spw, type(inputs.spw)
+        # spws = [spw for spw in inputs.ms.get_spectral_windows(inputs.spw)]
 
         # Multiple spectral windows spawn multiple setjy jobs. Set a unique
         # marker in the CASA log so that we can identify log entries from this
@@ -390,7 +332,7 @@ class VLASetjy(basetask.StandardTaskTemplate):
         spw2band = m.get_vla_spw2band()
         # bands = spw2band.values()
 
-        #Look in spectral window domain object as this information already exists!
+        # Look in spectral window domain object as this information already exists!
         with casatools.TableReader(self.inputs.vis+'/SPECTRAL_WINDOW') as table:
             channels = table.getcol('NUM_CHAN')
             originalBBClist = table.getcol('BBC_NO')
@@ -399,7 +341,7 @@ class VLASetjy(basetask.StandardTaskTemplate):
     
         center_frequencies = map(lambda rf, spwbw: rf + spwbw/2, reference_frequencies, spw_bandwidths)
 
-        LOG.info("STANDARD SOURCE FIELDS:")
+        # LOG.info("STANDARD SOURCE FIELDS:")
         # print standard_source_fields
 
         for i, fields in enumerate(standard_source_fields):
@@ -412,7 +354,6 @@ class VLASetjy(basetask.StandardTaskTemplate):
 
                     jobs = []
                     VLAspws = field_spws[myfield]
-                    #print 'VLAspws: ', VLAspws, type(VLAspws)
                     strlistVLAspws = ','.join(str(spw) for spw in VLAspws)
                     spws = [spw for spw in inputs.ms.get_spectral_windows(strlistVLAspws)]
 
@@ -425,11 +366,13 @@ class VLASetjy(basetask.StandardTaskTemplate):
                             LOG.info('Unable to get band from spw id - using reference frequency instead')
                             EVLA_band = find_EVLA_band(reference_frequency)
 
-                        LOG.info("Center freq for spw "+str(spw.id)+" = "+str(reference_frequency)+", observing band = "+EVLA_band)
+                        LOG.info("Center freq for spw " + str(spw.id) + " = "
+                                 + str(reference_frequency) + ", observing band = " + EVLA_band)
 
                         model_image = standard_source_names[i] + '_' + EVLA_band + '.im'
 
-                        LOG.info("Setting model for field "+str(m.get_fields()[myfield].id)+" spw "+str(spw.id)+" using "+model_image)
+                        LOG.info("Setting model for field " + str(m.get_fields()[myfield].id)
+                                 + " spw "+str(spw.id) + " using " + model_image)
 
                         task_args = {'vis'            : inputs.vis,
                                      'field'          : str(myfield),
@@ -449,12 +392,12 @@ class VLASetjy(basetask.StandardTaskTemplate):
                         # results so that user-provided calibrator fluxes are
                         # committed back to the domain objects
 
-                        if inputs.fluxdensity is not -1:
+                        if inputs.refspectra[1] is not -1:
                             try:
-                                (I,Q,U,V) = inputs.fluxdensity
+                                (I,Q,U,V) = inputs.refspectra[1]
                                 flux = domain.FluxMeasurement(spw_id=spw.id, I=I, Q=Q, U=U, V=V)
                             except:
-                                I = inputs.fluxdensity
+                                I = inputs.refspectra[1][0]
                                 flux = domain.FluxMeasurement(spw_id=spw.id, I=I)
                             result.measurements[str(myfield)].append(flux)
 
@@ -464,8 +407,8 @@ class VLASetjy(basetask.StandardTaskTemplate):
                         try:
                             setjy_dicts.append(self._executor.execute(job))
                         except:
-                            LOG.warn("SetJy issue with field id="+str(job.kw['field']) + " and spw=" +str(job.kw['spw']))
-
+                            LOG.warn("SetJy issue with field id=" + str(job.kw['field'])
+                                     + " and spw=" + str(job.kw['spw']))
 
         spw_seen = set()
         for setjy_dict in setjy_dicts:
