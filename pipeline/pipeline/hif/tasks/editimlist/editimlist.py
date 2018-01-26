@@ -174,7 +174,7 @@ class Editimlist(basetask.StandardTaskTemplate):
         # The default spw range for VLASS is 2~17. hif_makeimages() needs an csv list.
         # We set the target spw before the heuristics object because the heursitics class
         # uses it in initialization.
-        if 'VLASS-QL' == img_mode:
+        if 'VLASS-QL' == img_mode or 'VLASS-SE-CONT':
             if not inpdict['spw']:
                 target['spw'] = ','.join([str(x) for x in range(2, 18)])
                 inpdict['spw'] = target['spw']

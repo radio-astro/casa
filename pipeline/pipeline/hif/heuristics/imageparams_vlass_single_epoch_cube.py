@@ -12,17 +12,29 @@ class ImageParamsHeuristicsVlassSeCube(ImageParamsHeuristics):
 
     def __init__(self, vislist, spw, observing_run, imagename_prefix='', proj_params=None, contfile=None, linesfile=None):
         ImageParamsHeuristics.__init__(self, vislist, spw, observing_run, imagename_prefix, proj_params, contfile, linesfile)
-        self.imaging_mode = 'VLASS-SE'
+        self.imaging_mode = 'VLASS-SE-CUBE'
 
     # niter
     def niter_correction(self, niter, cell, imsize, residual_max, threshold):
-        return 20000
+        if niter:
+            return int(niter)
+        else:
+            return 20000
+
+    def rms_threshold(self, rms, nsigma):
+        try:
+            LOG.info('Threshold nsigma multiplier: %s', nsigma)
+            threshold = rms * float(nsigma)
+            LOG.info('Setting new threshold to [robust rms * nsigma]: {th}'.format(th=threshold))
+        except TypeError:
+            threshold = None
+        return threshold
 
     def deconvolver(self, specmode, spwspec):
         return 'mtmfs'
 
     def robust(self, beam=None):
-        return 1.0
+        return 1.0, 0.0, 0.0
 
     def gridder(self, intent, field):
         return 'mosaic'
@@ -33,8 +45,8 @@ class ImageParamsHeuristicsVlassSeCube(ImageParamsHeuristics):
     def imsize(self, fields=None, cell=None, primary_beam=None, sfpblimit=None, max_pixels=None, centreonly=None):
         return [11520, 11520]
 
-    def threshold(self):
-        return ''
+    def threshold_nsigma(self):
+        return 4.0
 
     def reffreq(self):
         return '3.0GHz'
@@ -74,6 +86,12 @@ class ImageParamsHeuristicsVlassSeCube(ImageParamsHeuristics):
 
     def pb_correction(self):
         return False
+
+    def conjbeams(self):
+        return False
+
+    def get_sensitivity(self, ms_do, field, spw, chansel, specmode, cell, imsize, weighting, robust, uvtaper):
+        return 0.0, None, None
 
     def find_fields(self, distance='0deg', phase_center=None, matchregex=''):
 
