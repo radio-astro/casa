@@ -30,7 +30,8 @@ class testBPdcalsInputs(vdp.StandardInputs):
 
 
 class testBPdcalsResults(basetask.Results):
-    def __init__(self, final=None, pool=None, preceding=None, gain_solint1=None, shortsol1=None, vis=None, bpdgain_touse=None):
+    def __init__(self, final=None, pool=None, preceding=None, gain_solint1=None,
+                 shortsol1=None, vis=None, bpdgain_touse=None):
 
         if final is None:
             final = []
@@ -58,7 +59,6 @@ class testBPdcalsResults(basetask.Results):
         
 class testBPdcals(basetask.StandardTaskTemplate):
     Inputs = testBPdcalsInputs
-
 
     def prepare(self):
 
@@ -133,7 +133,8 @@ class testBPdcals(basetask.StandardTaskTemplate):
             # context.callibrary._remove(context.callibrary._active, calfrom)
             # LOG.info("TESTBPDCALS DEBUG:  END CALLIBRARY")
 
-            ktype_delaycal_result = self._do_ktype_delaycal(caltable=ktypecaltable, addcaltable=gtypecaltable, context=context, RefAntOutput=RefAntOutput)
+            ktype_delaycal_result = self._do_ktype_delaycal(caltable=ktypecaltable, addcaltable=gtypecaltable,
+                                                            context=context, RefAntOutput=RefAntOutput)
             #flaggedSolnResult = getCalFlaggedSoln(ktype_delaycal_result.__dict__['inputs']['caltable'])
             flaggedSolnResult = getCalFlaggedSoln(ktypecaltable)
             (fracFlaggedSolns,RefAntOutput)  = self._check_flagSolns(flaggedSolnResult, RefAntOutput)
@@ -282,12 +283,13 @@ class testBPdcals(basetask.StandardTaskTemplate):
         if (self.inputs.weakbp == True):
             #LOG.info("USING WEAKBP HEURISTICS")
             interp = weakbp(self.inputs.vis, bpcaltable, context=context, RefAntOutput=RefAntOutput[0],
-                                            ktypecaltable=ktypecaltable, bpdgain_touse=bpdgain_touse, solint='inf', append=False)
+                            ktypecaltable=ktypecaltable, bpdgain_touse=bpdgain_touse, solint='inf', append=False)
         else:
             #LOG.info("Using REGULAR heuristics")
             interp = ''
-            bandpass_job = do_bandpass(self.inputs.vis, bpcaltable, context=context, RefAntOutput=RefAntOutput[0], spw='',
-                                            ktypecaltable=ktypecaltable, bpdgain_touse=bpdgain_touse, solint='inf', append=False)
+            bandpass_job = do_bandpass(self.inputs.vis, bpcaltable, context=context, RefAntOutput=RefAntOutput[0],
+                                       spw='', ktypecaltable=ktypecaltable, bpdgain_touse=bpdgain_touse,
+                                       solint='inf', append=False)
             self._executor.execute(bandpass_job)
 
             AllCalTables = sorted(self.inputs.context.callibrary.active.get_caltable())
@@ -324,7 +326,8 @@ class testBPdcals(basetask.StandardTaskTemplate):
         applycal_result = self._do_applycal(context=context, ktypecaltable=ktypecaltable, bpdgain_touse=bpdgain_touse,
                                             bpcaltable=bpcaltable, interp=interp)
 
-        return testBPdcalsResults(gain_solint1=gain_solint1, shortsol1=shortsol1, vis=self.inputs.vis, bpdgain_touse=bpdgain_touse)
+        return testBPdcalsResults(gain_solint1=gain_solint1, shortsol1=shortsol1, vis=self.inputs.vis,
+                                  bpdgain_touse=bpdgain_touse)
 
     def analyse(self, results):
         return results
