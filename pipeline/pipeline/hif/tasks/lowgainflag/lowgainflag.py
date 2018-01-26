@@ -42,6 +42,9 @@ class LowgainflagInputs(vdp.StandardInputs):
         bp_inputs = bandpass.PhcorBandpass.Inputs(context=self.context, vis=self.vis, intent=None)
         return bp_inputs.intent
 
+    # Flagging view is created if number of antennas in a set equals-or-exceeds
+    # the threshold.
+    min_nants_threshold = vdp.VisDependentProperty(default=5)
     niter = vdp.VisDependentProperty(default=1)
 
     @vdp.VisDependentProperty
@@ -69,7 +72,7 @@ class LowgainflagInputs(vdp.StandardInputs):
         return ','.join([str(spw.id) for spw in science_spws])
 
     def __init__(self, context, output_dir=None, vis=None, intent=None, spw=None, refant=None, flag_nmedian=None,
-                 fnm_lo_limit=None, fnm_hi_limit=None, niter=None):
+                 fnm_lo_limit=None, fnm_hi_limit=None, niter=None, min_nants_threshold=None):
         super(LowgainflagInputs, self).__init__()
 
         # pipeline inputs
@@ -82,6 +85,7 @@ class LowgainflagInputs(vdp.StandardInputs):
         self.intent = intent
         self.spw = spw
         self.refant = refant
+        self.min_nants_threshold = min_nants_threshold
 
         # flagging parameters
         self.flag_nmedian = flag_nmedian
@@ -110,7 +114,8 @@ class Lowgainflag(basetask.StandardTaskTemplate):
         # that is the basis for flagging.
         viewtask = LowgainflagView(
             context=inputs.context, vis=inputs.vis, intent=inputs.intent,
-            spw=inputs.spw, refant=inputs.refant)
+            spw=inputs.spw, refant=inputs.refant,
+            min_nants_threshold=inputs.min_nants_threshold)
 
         # Construct the task that will set any flags raised in the
         # underlying data.
@@ -368,13 +373,15 @@ class LowgainflagData(basetask.StandardTaskTemplate):
  
 class LowgainflagView(object):
 
-    def __init__(self, context, vis=None, intent=None, spw=None, refant=None):
+    def __init__(self, context, vis=None, intent=None, spw=None, refant=None,
+                 min_nants_threshold=None):
         
         self.context = context
         self.vis = vis
         self.intent = intent
         self.spw = spw
         self.refant = refant
+        self.min_nants_threshold = min_nants_threshold
 
     def __call__(self, data):
         
@@ -394,11 +401,9 @@ class LowgainflagView(object):
 
         return self.result
 
-    def calculate_view(self, table, min_nants_threshold=5):
+    def calculate_view(self, table):
         """
         table -- Name of gain table to be analysed.
-        min_nants_threshold -- flagging view is created if number of
-            antennas in a set equals-or-exceeds this threshold.
         """
 
         # Open gains caltable.
@@ -438,34 +443,35 @@ class LowgainflagView(object):
         # Identify set of unique antenna diameters present in MS.
         ant_diameters = {antenna.diameter for antenna in ms.antennas}
 
-        # Create flagging view for each spwid.
-        for spwid in spwids:
+        # Create separate flagging view for each set of antennas with
+        # same diameter.
+        for antdiam in ant_diameters:
+            # Identify antennas with current diameter.
+            antenna_ids = [antenna.id
+                           for antenna in ms.antennas
+                           if antenna.diameter == antdiam]
+            antenna_ids.sort()
 
-            # Create separate flagging view for each set of antennas with
-            # same diameter.
-            for antdiam in ant_diameters:
-                # Identify antennas with current diameter.
-                antenna_ids = [antenna.id
-                               for antenna in ms.antennas
-                               if antenna.diameter == antdiam]
-                antenna_ids.sort()
+            # Create translation of antenna ID to flagging view
+            # axis ID.
+            antid_to_axisid = {
+                ant_id: axis_id
+                for axis_id, ant_id in enumerate(antenna_ids)
+            }
+            nants = len(antenna_ids)
 
-                # Create translation of antenna ID to flagging view
-                # axis ID.
-                antid_to_axisid = {
-                    ant_id: axis_id
-                    for axis_id, ant_id in enumerate(antenna_ids)
-                }
-                nants = len(antenna_ids)
+            # If the number of antennas is below the threshold, then skip
+            # flagging for the set with current diameter.
+            if nants < self.min_nants_threshold:
+                LOG.warning(
+                    "Number of antennas with diameter of {:.1f} m is"
+                    " below the minimum threshold ({}), skipping"
+                    " flagging for these antennas (no flagging view"
+                    " created).".format(antdiam, self.min_nants_threshold))
+            else:
+                # Create flagging view for each spwid.
+                for spwid in spwids:
 
-                # If the number of antennas is below the threshold, then skip
-                # flagging for the set with current diameter.
-                if nants < min_nants_threshold:
-                    LOG.info("Number of antennas with diameter of {:.1f} m is"
-                             " below the minimum threshold ({}), skipping"
-                             " flagging for these antennas (no flagging view"
-                             " created).".format(antdiam, min_nants_threshold))
-                else:
                     # Initialize arrays for flagging view.
                     data = np.zeros([nants, len(times)])
                     flag = np.ones([nants, len(times)], np.bool)
