@@ -11,6 +11,7 @@ from casa_system import casa as casasys
 
 import pipeline as pipeline
 import pipeline.infrastructure as infrastructure
+import pipeline.infrastructure.vdp as vdp
 import pipeline.infrastructure.basetask as basetask
 from pipeline.infrastructure import casa_tasks
 from pipeline.h.tasks.exportdata import exportdata
@@ -34,13 +35,16 @@ class ExportvlassdataResults(basetask.Results):
         #    '\n\t'.join([ms.name for ms in self.mses]))
         return 'ExportvlassdataResults:'
 
-
 class ExportvlassdataInputs(exportdata.ExportDataInputs):
-    def __init__(self, context, output_dir=None, session=None, vis=None, exportmses=None,
-                 pprfile=None, calintents=None, calimages=None, targetimages=None,
-                 products_dir=None):
-        # set the properties to the values given as input arguments
-        self._init_properties(vars())
+    gainmap = vdp.VisDependentProperty(default=False)
+
+    def __init__(self, context, output_dir=None, session=None, vis=None, exportmses=None, pprfile=None, calintents=None,
+                 calimages=None, targetimages=None, products_dir=None, gainmap=None):
+        super(ExportvlassdataInputs, self).__init__(context, output_dir=output_dir, session=session, vis=vis,
+                                                  exportmses=exportmses, pprfile=pprfile, calintents=calintents,
+                                                  calimages=calimages, targetimages=targetimages,
+                                                  products_dir=products_dir)
+        self.gainmap = gainmap
 
 
 class Exportvlassdata(basetask.StandardTaskTemplate):
