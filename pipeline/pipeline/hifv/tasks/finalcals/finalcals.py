@@ -18,7 +18,7 @@ import scipy.optimize as scpo
 from pipeline.hif.tasks import gaincal
 from pipeline.hif.tasks import applycal
 from pipeline.hifv.heuristics import find_EVLA_band, getCalFlaggedSoln, getBCalStatistics
-from pipeline.hifv.tasks.setmodel.setmodel import find_standards, standard_sources
+from pipeline.hifv.tasks.setmodel.vlasetjy import find_standards, standard_sources
 from pipeline.hifv.heuristics import weakbp, do_bandpass
 
 LOG = infrastructure.get_logger(__name__)

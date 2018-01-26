@@ -2,14 +2,13 @@ from __future__ import absolute_import
 import math
 
 import pipeline.infrastructure as infrastructure
-import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.vdp as vdp
 from pipeline.infrastructure import casa_tasks
 from pipeline.hif.tasks.polarization import polarization
 import pipeline.hif.tasks.gaincal as gaincal
 import pipeline.hif.heuristics.findrefant as findrefant
 import pipeline.infrastructure.callibrary as callibrary
-from pipeline.hifv.tasks.setmodel.setmodel import find_standards, standard_sources
+from pipeline.hifv.tasks.setmodel.vlasetjy import find_standards, standard_sources
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -171,8 +170,6 @@ class Circfeedpolcal(polarization.Polarization):
             # Use the first pol angle field
             polanglefield = polanglefields[0].name
             LOG.info("More than one field with intent of POLANGLE.  Using field {!s}".format(polanglefield))
-
-
 
         # D-terms in 2MHz pieces, minsnr of 5.0
         LOG.info("Polcal D-terms using solint=\'inf,{!s}\'".format(self.inputs.Dterm_solint))
