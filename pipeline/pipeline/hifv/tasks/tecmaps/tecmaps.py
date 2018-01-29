@@ -1,10 +1,10 @@
 from __future__ import absolute_import
 from recipes import tec_maps
-import types
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.callibrary as callibrary
+import pipeline.infrastructure.vdp as vdp
 from pipeline.h.heuristics import caltable as caltable_heuristic
 from pipeline.infrastructure import casa_tasks
 
@@ -12,54 +12,30 @@ from pipeline.infrastructure import casa_tasks
 LOG = infrastructure.get_logger(__name__)
 
 
-class TecMapsInputs(basetask.StandardInputs):
-    def __init__(self, context, output_dir=None, vis=None, caltable=None, caltype=None, parameter=[]):
-        # set the properties to the values given as input arguments
-        self._init_properties(vars())
-        setattr(self, 'caltype', 'tecim')
-
-    @property
+class TecMapsInputs(vdp.StandardInputs):
+    @vdp.VisDependentProperty
     def caltable(self):
-        # The value of caltable is ms-dependent, so test for multiple
-        # measurement sets and listify the results if necessary
-        if type(self.vis) is types.ListType:
-            return self._handle_multiple_vis('caltable')
+        namer = caltable_heuristic.TecMapstable()
+        casa_args = self._get_task_args(ignore=('caltable',))
+        return namer.calculate(output_dir=self.output_dir, stage=self.context.stage, **casa_args)
 
-        # Get the name.
-        if callable(self._caltable):
-            casa_args = self._get_partial_task_args()
-            return self._caltable(output_dir=self.output_dir,
-                                  stage=self.context.stage, **casa_args)
-        return self._caltable
-
-    @caltable.setter
-    def caltable(self, value):
-        if value is None:
-            value = caltable_heuristic.TecMapstable()
-        self._caltable = value
-
-    @property
+    @vdp.VisDependentProperty
     def parameter(self):
-        return self._parameter
+        return []
 
-    @parameter.setter
-    def parameter(self, value):
-        if value is None:
-            value = []
-        self._parameter = value
+    def __init__(self, context, output_dir=None, vis=None, caltable=None, caltype=None, parameter=None):
+        super(TecMapsInputs, self).__init__()
+        self.context = context
+        self.output_dir = output_dir
+        self.vis = vis
+        self.parameter = parameter
+        self.caltable = caltable
+        self.caltype = caltype
 
-    # Avoids circular dependency on caltable.
-    # NOT SURE WHY THIS IS NECESSARY.
-    def _get_partial_task_args(self):
-        return {'vis': self.vis, 'caltype': self.caltype}
-
-    # Convert to CASA gencal task arguments.
     def to_casa_args(self):
-
-        return {'vis': self.vis,
-                'caltable': self.caltable,
-                'caltype': self.caltype,
-                'parameter': self.parameter}
+        args = super(TecMapsInputs, self).to_casa_args()
+        args['caltype'] = 'tecim'
+        return args
 
 
 class TecMapsResults(basetask.Results):
@@ -141,8 +117,8 @@ class TecMaps(basetask.StandardTaskTemplate):
         return result
 
     def _do_tecmaps(self):
-
-        #tec_image, tec_rms_image = tec_maps.create('vlass3C48.ms')
+        # Private class method for reference only
+        # tec_image, tec_rms_image = tec_maps.create('vlass3C48.ms')
         tec_maps.create(vis=self.vis, doplot=True, imname='iono')
         # gencal_job = casa_tasks.gencal(**gencal_args)
         gencal_job = casa_tasks.gencal(vis=self.vis, caltable='file.tec', caltype='tecim', infile='iono.IGS_TEC.im')

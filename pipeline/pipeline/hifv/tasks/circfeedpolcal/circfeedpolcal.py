@@ -58,7 +58,7 @@ class CircfeedpolcalResults(polarization.PolarizationResults):
         return 'CircfeedpolcalResults:'
 
 
-class CircfeedpolcalInputs(polarization.PolarizationInputs):
+class CircfeedpolcalInputs(vdp.StandardInputs):
     Dterm_solint = vdp.VisDependentProperty(default='2MHz')
     leakge_poltype = vdp.VisDependentProperty(default='')
     refantignore = vdp.VisDependentProperty(default='')
