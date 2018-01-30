@@ -6,6 +6,8 @@ import ast
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
+import pipeline.infrastructure.vdp as vdp
+
 from pipeline.infrastructure import casa_tasks
 import pipeline.infrastructure.imagelibrary as imagelibrary
 
@@ -59,18 +61,24 @@ class MakecutoutimagesResults(basetask.Results):
                 pass
 
     def __repr__(self):
-        # return 'MakesubimagesResults:\n\t{0}'.format(
-        #    '\n\t'.join([ms.name for ms in self.mses]))
         return 'MakecutoutimagesResults:'
 
 
-class MakecutoutimagesInputs(basetask.StandardInputs):
-    def __init__(self, context, vis=None, offsetblc=None, offsettrc=None):
-        # set the properties to the values given as input arguments
-        self._init_properties(vars())
+class MakecutoutimagesInputs(vdp.StandardInputs):
+    @vdp.VisDependentProperty
+    def offsetblc(self):
+        return []   # Units of arcseconds
 
-    offsetblc = basetask.property_with_default('offsetblc', [])  # Units of arcseconds
-    offsettrc = basetask.property_with_default('offsettrc', [])  # Units of arcseconds
+    @vdp.VisDependentProperty
+    def offsettrc(self):
+        return []   # Units of arcseconds
+
+    def __init__(self, context, vis=None, offsetblc=None, offsettrc=None):
+        super(MakecutoutimagesInputs, self).__init__()
+        self.context = context
+        self.vis = vis
+        self.offsetblc = offsetblc
+        self.offsettrc = offsettrc
 
 
 class Makecutoutimages(basetask.StandardTaskTemplate):
@@ -135,14 +143,14 @@ class Makecutoutimages(basetask.StandardTaskTemplate):
         imsizex = math.fabs(imhead_dict['refpix'][0]*imhead_dict['incr'][0]*(180.0/math.pi)*2)  # degrees
         imsizey = math.fabs(imhead_dict['refpix'][1]*imhead_dict['incr'][1]*(180.0/math.pi)*2)  # degrees
 
-        imageSizeX = 1.0  # degrees:  size of cutout
-        imageSizeY = 1.0  # degrees:  size of cutout
+        image_size_x = 1.0  # degrees:  size of cutout
+        image_size_y = 1.0  # degrees:  size of cutout
 
         # If less than or equal to 1 deg + 2 arcminute buffer, use the image size and no buffer
         buffer_deg = 2.0 / 60.0   # Units of degrees
         if imsizex <= (1.0 + buffer_deg):
-            imageSizeX = imsizex
-            imageSizeY = imsizey
+            image_size_x = imsizex
+            image_size_y = imsizey
             buffer_deg = 0.0
 
         imsize = [imhead_dict['shape'][0], imhead_dict['shape'][1]]  # pixels
@@ -150,14 +158,14 @@ class Makecutoutimages(basetask.StandardTaskTemplate):
         xcellsize = 3600.0 * (180.0 / math.pi) * math.fabs(imhead_dict['incr'][0])
         ycellsize = 3600.0 * (180.0 / math.pi) * math.fabs(imhead_dict['incr'][1])
 
-        fld_subim_sizeX = int(3600.0 * (imageSizeX + buffer_deg) / xcellsize)   # Cutout size with buffer in pixels
-        fld_subim_sizeY = int(3600.0 * (imageSizeY + buffer_deg) / ycellsize)   # Cutout size with buffer in pixels
+        fld_subim_size_x = int(3600.0 * (image_size_x + buffer_deg) / xcellsize)   # Cutout size with buffer in pixels
+        fld_subim_size_y = int(3600.0 * (image_size_y + buffer_deg) / ycellsize)   # Cutout size with buffer in pixels
 
         # equivalent blc,trc for extracting requested field, in pixels:
-        blcx = imsize[0] / 2 - (fld_subim_sizeX / 2)
-        blcy = imsize[1] / 2 - (fld_subim_sizeY / 2)
-        trcx = imsize[0] / 2 + (fld_subim_sizeX / 2) + 1
-        trcy = imsize[1] / 2 + (fld_subim_sizeY / 2) + 1
+        blcx = imsize[0] / 2 - (fld_subim_size_x / 2)
+        blcy = imsize[1] / 2 - (fld_subim_size_y / 2)
+        trcx = imsize[0] / 2 + (fld_subim_size_x / 2) + 1
+        trcy = imsize[1] / 2 + (fld_subim_size_y / 2) + 1
 
         if blcx < 0.0:
             blcx = 0
@@ -178,15 +186,15 @@ class Makecutoutimages(basetask.StandardTaskTemplate):
             if type(offsettrc) is str:
                 offsettrc = ast.literal_eval(offsettrc)
 
-            fld_subim_sizeXblc = int(3600.0 * (offsetblc[0] / 3600.0 + buffer_deg/2.0) / xcellsize)
-            fld_subim_sizeYblc = int(3600.0 * (offsetblc[1] / 3600.0 + buffer_deg/2.0) / ycellsize)
-            fld_subim_sizeXtrc = int(3600.0 * (offsettrc[0] / 3600.0 + buffer_deg/2.0) / xcellsize)
-            fld_subim_sizeYtrc = int(3600.0 * (offsettrc[1] / 3600.0 + buffer_deg/2.0) / ycellsize)
+            fld_subim_size_x_blc = int(3600.0 * (offsetblc[0] / 3600.0 + buffer_deg / 2.0) / xcellsize)
+            fld_subim_size_y_blc = int(3600.0 * (offsetblc[1] / 3600.0 + buffer_deg / 2.0) / ycellsize)
+            fld_subim_size_x_trc = int(3600.0 * (offsettrc[0] / 3600.0 + buffer_deg / 2.0) / xcellsize)
+            fld_subim_size_y_trc = int(3600.0 * (offsettrc[1] / 3600.0 + buffer_deg / 2.0) / ycellsize)
 
-            blcx = imsize[0] / 2 - fld_subim_sizeXblc
-            blcy = imsize[1] / 2 - fld_subim_sizeYblc
-            trcx = imsize[0] / 2 + fld_subim_sizeXtrc + 1
-            trcy = imsize[1] / 2 + fld_subim_sizeYtrc + 1
+            blcx = imsize[0] / 2 - fld_subim_size_x_blc
+            blcy = imsize[1] / 2 - fld_subim_size_y_blc
+            trcx = imsize[0] / 2 + fld_subim_size_x_trc + 1
+            trcy = imsize[1] / 2 + fld_subim_size_y_trc + 1
 
             if blcx < 0.0:
                 blcx = 0
