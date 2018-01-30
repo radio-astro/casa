@@ -263,7 +263,7 @@ class Editimlist(basetask.StandardTaskTemplate):
             if len(target['field']) > 0:
                 result.add_target(target)
             else:
-                raise
+                raise TypeError
         except TypeError:
             LOG.error('No fields to image.')
 
