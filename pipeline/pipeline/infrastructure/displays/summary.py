@@ -1,43 +1,30 @@
 from __future__ import absolute_import
+
 import datetime
-import os
 import operator
+import os
 
 import matplotlib.dates as dates
 import matplotlib.pyplot as pyplot
 import matplotlib.ticker as ticker
-import pylab
 import numpy as np
+import pylab
 
-import pipeline.infrastructure.renderer.logger as logger
 import pipeline.infrastructure as infrastructure
-import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.casatools as casatools
-#import pipeline.extern.analysis_scripts.analysisUtils as analysisUtils
+import pipeline.infrastructure.renderer.logger as logger
+import pipeline.infrastructure.utils as utils
+import pipeline.infrastructure.vdp as vdp
+from pipeline.infrastructure import casa_tasks
 from . import plotpwv
 from . import plotweather
 from . import plotmosaic
-#from pipeline.extern import analysis_scripts
-from pipeline.infrastructure import casa_tasks
-import pipeline.infrastructure.utils as utils
-import casa
 
 LOG = infrastructure.get_logger(__name__)
 DISABLE_PLOTMS = False
 
 ticker.TickHelper.MAXTICKS = 10000
 
-
-class SummaryDisplayInputs(basetask.StandardInputs):
-    def __init__(self, context, vis=None, output=None):
-        self._init_properties(vars())
-
-    @property
-    def output(self):
-        session_part = self.ms.session
-        ms_part = self.ms.basename
-        return os.path.join(self.context.report_dir, session_part, ms_part)
-        
 
 class AzElChart(object):
     def __init__(self, context, ms):
@@ -94,7 +81,7 @@ class AzElChart(object):
         return logger.Plot(self.figfile,
                            x_axis='Azimuth',
                            y_axis='Elevation',
-                           parameters={'vis' : self.ms.basename},
+                           parameters={'vis': self.ms.basename},
                            command=str(task))
 
 
@@ -111,8 +98,8 @@ class WeatherChart(object):
 
         LOG.debug('Creating new Weather plot')
         try:
-            #analysisUtils.plotWeather(vis=self.ms.name, figfile=self.figfile)
-            # based on the analysisUtils method
+            # Based on the analysisUtils method
+            # analysisUtils.plotWeather(vis=self.ms.name, figfile=self.figfile)
             plotweather.plotWeather(vis=self.ms.name, figfile=self.figfile)
         except:
             return None
@@ -159,21 +146,21 @@ class ElVsTimeChart(object):
             LOG.debug('Disabling ElVsTime plot due to problems with plotms')
             return None
     
-        #inputs based on analysisUtils.plotElevationSummary
-        task_args = {'vis'             : self.ms.name,
-                     'xaxis'           : 'time',
-                     'yaxis'           : 'elevation',
-                     'title'           : 'Elevation vs Time for %s' % self.ms.basename,
-                     'coloraxis'       : 'field',
-                     'avgchannel'      : '9000',
-                     'avgtime'         : '10',
-                     'antenna'         : '0&&*',
-                     'spw'             : self.spwlist,
-                     'plotfile'        : self.figfile,
-                     'clearplots'      : True,
-                     'showgui'         : False,
+        # Inputs based on analysisUtils.plotElevationSummary
+        task_args = {'vis': self.ms.name,
+                     'xaxis': 'time',
+                     'yaxis': 'elevation',
+                     'title': 'Elevation vs Time for %s' % self.ms.basename,
+                     'coloraxis': 'field',
+                     'avgchannel': '9000',
+                     'avgtime': '10',
+                     'antenna': '0&&*',
+                     'spw': self.spwlist,
+                     'plotfile': self.figfile,
+                     'clearplots': True,
+                     'showgui': False,
                      'customflaggedsymbol': True,
-                     'flaggedsymbolshape': 'autoscaling' }
+                     'flaggedsymbolshape': 'autoscaling'}
 
         task = casa_tasks.plotms(**task_args)
         if not os.path.exists(self.figfile):
@@ -196,43 +183,44 @@ class ElVsTimeChart(object):
                            command=str(task))
 
 
-class FieldVsTimeChartInputs(basetask.StandardInputs):
-    def __init__(self, context, vis=None, output=None):
-        self._init_properties(vars())
+class FieldVsTimeChartInputs(vdp.StandardInputs):
 
-    @property
+    @vdp.VisDependentProperty
     def output(self):
-        if self._output is not None:
-            return self._output
-
         session_part = self.ms.session
         ms_part = self.ms.basename
-        return os.path.join(self.context.report_dir, 
-                            'session%s' % session_part, 
-                            ms_part, 'field_vs_time.png')
-        
-    @output.setter
-    def output(self, value):
-        self._output = value
+        output = os.path.join(self.context.report_dir,
+                              'session%s' % session_part,
+                              ms_part, 'field_vs_time.png')
+        return output
+
+    def __init__(self, context, vis=None, output=None):
+        super(FieldVsTimeChartInputs, self).__init__()
+
+        self.context = context
+        self.vis = vis
+
+        self.output = output
 
 
 class FieldVsTimeChart(object):
     Inputs = FieldVsTimeChartInputs
 
     # http://matplotlib.org/examples/color/named_colors.html
-    _intent_colours = {'AMPLITUDE'   : 'green',
-                       'ATMOSPHERE'  : 'magenta',
-                       'BANDPASS'    : 'red',
-                       'CHECK'       : 'purple',
-                       'PHASE'       : 'cyan',
-                       'POINTING'    : 'yellow',
-                       'SIDEBAND'    : 'orange',
-                       'TARGET'      : 'blue',
-                       'WVR'         : 'lime',
+    _intent_colours = {'AMPLITUDE': 'green',
+                       'ATMOSPHERE': 'magenta',
+                       'BANDPASS': 'red',
+                       'CHECK': 'purple',
+                       'PHASE': 'cyan',
+                       'POINTING': 'yellow',
+                       'SIDEBAND': 'orange',
+                       'TARGET': 'blue',
+                       'WVR': 'lime',
                        'POLARIZATION': 'navy',
-                       'POLANGLE'    : 'mediumslateblue',
-                       'POLLEAKAGE'  : 'plum',
-                       'UNKNOWN'     : 'grey',}
+                       'POLANGLE': 'mediumslateblue',
+                       'POLLEAKAGE': 'plum',
+                       'UNKNOWN': 'grey',
+                       }
     
     def __init__(self, inputs):
         self.inputs = inputs
@@ -284,17 +272,17 @@ class FieldVsTimeChart(object):
 
         # set FIELD_ID axis ticks etc.
         if nfield < 11:
-            majorLocator = ticker.FixedLocator(np.arange(0, nfield+1))
-            minorLocator = ticker.MultipleLocator(1)
-            ax.yaxis.set_minor_locator(minorLocator)
+            major_locator = ticker.FixedLocator(np.arange(0, nfield+1))
+            minor_locator = ticker.MultipleLocator(1)
+            ax.yaxis.set_minor_locator(minor_locator)
         else:
-            majorLocator = ticker.FixedLocator(np.arange(0, nfield+1, 400))
-        ax.yaxis.set_major_locator(majorLocator)
+            major_locator = ticker.FixedLocator(np.arange(0, nfield+1, 400))
+        ax.yaxis.set_major_locator(major_locator)
         ax.grid(True)
 
         pylab.ylabel('Field ID')
-        majorFormatter = ticker.FormatStrFormatter('%d')
-        ax.yaxis.set_major_formatter(majorFormatter)
+        major_formatter = ticker.FormatStrFormatter('%d')
+        ax.yaxis.set_major_formatter(major_formatter)
 
         # plot key
         self._plot_key()
@@ -365,7 +353,7 @@ class FieldVsTimeChart(object):
         elif datemax - datemin < datetime.timedelta(days=7):
             # spans more than a day, less than a week
             days = dates.DayLocator()
-            hours = dates.HourLocator(np.arange(0,25,6))
+            hours = dates.HourLocator(np.arange(0, 25, 6))
             ax.xaxis.set_major_locator(days)
             ax.xaxis.set_major_formatter(dates.DateFormatter('%Y-%m-%d:%Hh'))
             ax.xaxis.set_minor_locator(hours)
@@ -381,42 +369,42 @@ class FieldVsTimeChart(object):
         figure.autofmt_xdate()
 
 
-class IntentVsTimeChartInputs(basetask.StandardInputs):
-    def __init__(self, context, vis=None, output=None):
-        self._init_properties(vars())
+class IntentVsTimeChartInputs(vdp.StandardInputs):
 
-    @property
+    @vdp.VisDependentProperty
     def output(self):
-        if self._output is not None:
-            return self._output
-
         session_part = self.ms.session
         ms_part = self.ms.basename
-        return os.path.join(self.context.report_dir, 
-                            'session%s' % session_part, 
-                            ms_part, 'intent_vs_time.png')
-        
-    @output.setter
-    def output(self, value):
-        self._output = value
+        output = os.path.join(self.context.report_dir,
+                              'session%s' % session_part,
+                              ms_part, 'intent_vs_time.png')
+        return output
+
+    def __init__(self, context, vis=None, output=None):
+        super(IntentVsTimeChartInputs, self).__init__()
+
+        self.context = context
+        self.vis = vis
+
+        self.output = output
 
 
 class IntentVsTimeChart(object):
     Inputs = IntentVsTimeChartInputs
 
     # http://matplotlib.org/examples/color/named_colors.html
-    _intent_colours = {'AMPLITUDE'    : ('green', 20),
-                       'ATMOSPHERE'   : ('magenta', 25),
-                       'BANDPASS'     : ('red', 15),
-                       'CHECK'        : ('purple',10),
-                       'PHASE'        : ('cyan', 5),
-                       'POINTING'     : ('yellow', 30),
-                       'SIDEBAND'     : ('orange', 35),
-                       'TARGET'       : ('blue', 0),
-                       'WVR'          : ('lime', 40),
-                       'POLARIZATION' : ('navy', 45),
-                       'POLANGLE'     : ('mediumslateblue', 50),
-                       'POLLEAKAGE'   : ('plum', 55),
+    _intent_colours = {'AMPLITUDE': ('green', 20),
+                       'ATMOSPHERE': ('magenta', 25),
+                       'BANDPASS': ('red', 15),
+                       'CHECK': ('purple', 10),
+                       'PHASE': ('cyan', 5),
+                       'POINTING': ('yellow', 30),
+                       'SIDEBAND': ('orange', 35),
+                       'TARGET': ('blue', 0),
+                       'WVR': ('lime', 40),
+                       'POLARIZATION': ('navy', 45),
+                       'POLANGLE': ('mediumslateblue', 50),
+                       'POLLEAKAGE': ('plum', 55),
                        }
     
     def __init__(self, inputs):
@@ -453,20 +441,22 @@ class IntentVsTimeChart(object):
                             'WVR', 'POLARIZATION', 'POLANGLE', 'POLLEAKAGE'])
 
         # set the labelling of the time axis
-        FieldVsTimeChart._set_time_axis(figure=fig, ax=ax, datemin=obs_start,
-          datemax=obs_end)
+        FieldVsTimeChart._set_time_axis(
+            figure=fig, ax=ax, datemin=obs_start, datemax=obs_end)
         ax.grid(True)
     
-        pyplot.title('Measurement set: ' + ms.basename + ' - Start time:' +
-          obs_start.strftime('%Y-%m-%dT%H:%M:%S') + ' End time:' + 
-          obs_end.strftime('%Y-%m-%dT%H:%M:%S'), fontsize = 12)
+        pyplot.title(
+            'Measurement set: ' + ms.basename + ' - Start time:' +
+            obs_start.strftime('%Y-%m-%dT%H:%M:%S') + ' End time:' +
+            obs_end.strftime('%Y-%m-%dT%H:%M:%S'), fontsize=12)
     
         fig.savefig(self.inputs.output)
         pylab.close()
 
         return self._get_plot_object()
         
-    def _in_minutes(self, dt):
+    @staticmethod
+    def _in_minutes(dt):
         return (dt.days * 86400 + dt.seconds + dt.microseconds * 1e-6) / 60.0 
 
     def _get_plot_object(self):
@@ -522,14 +512,14 @@ class MosaicChart(object):
 
         try:
             # based on the analysisUtils method
-            #analysisUtils.plotMosaic(self.ms.name, 
-                                     #sourceid=self.source.id,
-                                     #coord='rel',
-                                     #figfile=self.figfile)
+            # analysisUtils.plotMosaic(self.ms.name,
+            #                          sourceid=self.source.id,
+            #                          coord='rel',
+            #                          figfile=self.figfile)
             plotmosaic.plotMosaic(self.ms.name, 
-                                     sourceid=self.source.id,
-                                     coord='rel',
-                                     figfile=self.figfile)
+                                  sourceid=self.source.id,
+                                  coord='rel',
+                                  figfile=self.figfile)
 
             # plotMosaic does not close the plot! work around that
             # here rather than editing the code as we might lose the fix
@@ -631,14 +621,18 @@ class PlotAntsChart(object):
             circ.set_alpha(1.0)
             circ.set_facecolor([0.8, 0.8, 0.8])
             subpl.text(padpos[0]+antenna.diameter/2.0*1.3, padpos[1]+1, antenna.name)
-            if padpos[0] < xmin: xmin = padpos[0]
-            if padpos[0] > xmax: xmax = padpos[0]
-            if padpos[1] < ymin: ymin = padpos[1]
-            if padpos[1] > ymax: ymax = padpos[1]
+            if padpos[0] < xmin:
+                xmin = padpos[0]
+            if padpos[0] > xmax:
+                xmax = padpos[0]
+            if padpos[1] < ymin:
+                ymin = padpos[1]
+            if padpos[1] > ymax:
+                ymax = padpos[1]
 
         subpl.set_xlabel('X [m]')
         subpl.set_ylabel('Y [m]')
-        plotwidth = max(xmax-xmin, ymax-ymin) * 6./10. # extra 1/10 is the margin
+        plotwidth = max(xmax-xmin, ymax-ymin) * 6./10.  # extra 1/10 is the margin
         (xcenter, ycenter) = ((xmin+xmax)/2., (ymin+ymax)/2.)
         if xlimit is None:
             # subpl.set_xlim(xcenter-plotwidth, xcenter+plotwidth)
@@ -651,7 +645,8 @@ class PlotAntsChart(object):
         else:
             subpl.set_ylim(ylimit[0], ylimit[1])
 
-    def get_position(self, antenna):
+    @staticmethod
+    def get_position(antenna):
         # if self.ms.antenna_array.name == 'ALMA':
         #    # Arbitrarily shift ALMA coord so that central cluster comes
         #    # around (0, 0).
