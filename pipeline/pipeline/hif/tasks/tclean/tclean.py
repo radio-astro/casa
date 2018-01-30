@@ -1,187 +1,172 @@
+import commands
+import glob
 import os
 import shutil
-import glob
-import commands
 
-import pipeline.domain.measures as measures
-from pipeline.hif.heuristics import imageparams_factory
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.api as api
-import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.mpihelpers as mpihelpers
 import pipeline.infrastructure.pipelineqa as pipelineqa
 import pipeline.infrastructure.utils as utils
+import pipeline.infrastructure.vdp as vdp
+from pipeline.hif.heuristics import imageparams_factory
 from pipeline.infrastructure import casa_tasks
-from .imagecentrethresholdsequence import ImageCentreThresholdSequence
+from . import cleanbase
 from .automaskthresholdsequence import AutoMaskThresholdSequence
-from .manualmaskthresholdsequence import ManualMaskThresholdSequence
-from .nomaskthresholdsequence import NoMaskThresholdSequence
+from .imagecentrethresholdsequence import ImageCentreThresholdSequence
 from .iterativesequence import IterativeSequence
 from .iterativesequence2 import IterativeSequence2
-from . import cleanbase
+from .manualmaskthresholdsequence import ManualMaskThresholdSequence
+from .nomaskthresholdsequence import NoMaskThresholdSequence
 
 LOG = infrastructure.get_logger(__name__)
 
 
 class TcleanInputs(cleanbase.CleanBaseInputs):
-    def __init__(self, context, output_dir=None,
-                 vis=None, imagename=None, intent=None, field=None, spw=None,
-                 spwsel_lsrk=None, spwsel_topo=None,
-                 uvrange=None, specmode=None, gridder=None, deconvolver=None,
-                 nterms=None, outframe=None, imsize=None, cell=None,
-                 phasecenter=None, stokes=None, nchan=None, start=None,
-                 width=None, nbin=None, weighting=None,
-                 robust=None, noise=None, npixels=None,
-                 restoringbeam=None, hm_masking=None,
-                 hm_sidelobethreshold=None, hm_noisethreshold=None,
-                 hm_lownoisethreshold=None, hm_negativethreshold=None,
-                 hm_minbeamfrac=None, hm_growiterations=None,
-                 hm_cleaning=None, mask=None,
-                 niter=None, threshold=None, tlimit=None, masklimit=None,
-                 maxncleans=None, cleancontranges=None,
-                 parallel=None,
+    # simple properties ------------------------------------------------------------------------------------------------
+
+    cleancontranges = vdp.VisDependentProperty(default=False)
+    hm_cleaning = vdp.VisDependentProperty(default='rms')
+    masklimit = vdp.VisDependentProperty(default=4.0)
+    nsigma = vdp.VisDependentProperty(default=None)
+    reffreq = vdp.VisDependentProperty(default=None)
+    tlimit = vdp.VisDependentProperty(default=2.0)
+
+    # override CleanBaseInputs default value of 'auto'
+    hm_masking = vdp.VisDependentProperty(default='centralregion')
+
+    # properties requiring some logic ----------------------------------------------------------------------------------
+
+    @vdp.VisDependentProperty
+    def image_heuristics(self):
+        image_heuristics_factory = imageparams_factory.ImageParamsHeuristicsFactory()
+        return image_heuristics_factory.getHeuristics(
+            vislist=self.vis,
+            spw=self.spw,
+            observing_run=self.context.observing_run,
+            imagename_prefix=self.context.project_structure.ousstatus_entity_id,
+            proj_params=self.context.project_performance_parameters,
+            contfile=self.context.contfile,
+            linesfile=self.context.linesfile,
+            # TODO: imaging_mode should not be fixed
+            imaging_mode='ALMA'
+        )
+
+    imagename = vdp.VisDependentProperty(default='')
+    @imagename.convert
+    def imagename(self, value):
+        return value.replace('STAGENUMBER', str(self.context.stage))
+
+    maxncleans = vdp.VisDependentProperty(default=10)
+    @maxncleans.convert
+    def maxncleans(self, value):
+        # the original code ignored any user value and returned 10!
+        return 10
+
+    specmode = vdp.VisDependentProperty(default=None)
+    @specmode.convert
+    def specmode(self, value):
+        if value == 'repBW':
+            self.orig_specmode = 'repBW'
+            return 'cube'
+        self.orig_specmode = value
+        return value
+
+    @vdp.VisDependentProperty
+    def spwsel_lsrk(self):
+        # mutable object, so should not use VisDependentProperty(default={})
+        return {}
+
+    @vdp.VisDependentProperty
+    def spwsel_topo(self):
+        # mutable object, so should not use VisDependentProperty(default=[])
+        return []
+
+    @vdp.VisDependentProperty(null_input=[None, -999, -999.0])
+    def robust(self):
+        # For Cycle 5 we disable the robust heuristic
+        return 0.5
+
+        # if ',' in self.spw:
+        #     # TODO: Use real synthesized beam size
+        #     return self.image_heuristics.robust({
+        #         'major': '1.0arcsec',
+        #         'minor': '1.0arcsec',
+        #         'positionangle': '0.0deg'
+        #     })
+        #
+        # else:
+        #     robust = 0.0
+        #     spws = self.spw.split(',')
+        #     for _ in spws:
+        #         # TODO: Use real synthesized beam size
+        #         hm_robust = self.image_heuristics.robust({
+        #             'major': '1.0arcsec',
+        #             'minor': '1.0arcsec',
+        #             'positionangle': '0.0deg'
+        #         })
+        #         robust += hm_robust
+        #     robust /= len(spws)
+        #     return robust
+
+    @vdp.VisDependentProperty
+    def uvtaper(self):
+        # TODO: Use heuristic
+        return []
+
+    # class methods ----------------------------------------------------------------------------------------------------
+
+    def __init__(self, context, output_dir=None, vis=None, imagename=None, intent=None, field=None, spw=None,
+                 spwsel_lsrk=None, spwsel_topo=None, uvrange=None, specmode=None, gridder=None, deconvolver=None,
+                 nterms=None, outframe=None, imsize=None, cell=None, phasecenter=None, stokes=None, nchan=None,
+                 start=None, width=None, nbin=None, weighting=None, robust=None, noise=None, npixels=None,
+                 restoringbeam=None, hm_masking=None, hm_sidelobethreshold=None, hm_noisethreshold=None,
+                 hm_lownoisethreshold=None, hm_negativethreshold=None, hm_minbeamfrac=None, hm_growiterations=None,
+                 hm_cleaning=None, mask=None, niter=None, threshold=None, tlimit=None, masklimit=None, maxncleans=None,
+                 cleancontranges=None, parallel=None,
                  # Extra parameters not in the CLI task interface
-                 uvtaper=None, scales=None, nsigma=None,
-                 cycleniter=None, cyclefactor=None, sensitivity=None,
+                 uvtaper=None, scales=None, nsigma=None, cycleniter=None, cyclefactor=None, sensitivity=None,
                  reffreq=None, conjbeams=None,
                  # End of extra parameters
                  heuristics=None):
-        self._init_properties(vars())
-        if heuristics is not None:
-            self.image_heuristics = heuristics
-        else:
-            # Need a local heuristics object if called standalone
-            # TODO: imaging_mode should not be fixed
-            image_heuristics_factory = imageparams_factory.ImageParamsHeuristicsFactory()
-            self.image_heuristics = image_heuristics_factory.getHeuristics( \
-                vislist = vis, \
-                spw = spw, \
-                observing_run = self.context.observing_run, \
-                imagename_prefix = self.context.project_structure.ousstatus_entity_id, \
-                proj_params = self.context.project_performance_parameters, \
-                contfile = self.context.contfile, \
-                linesfile = self.context.linesfile, \
-                imaging_mode = 'ALMA')
+        super(TcleanInputs, self).__init__(context, output_dir=output_dir, vis=vis, imagename=imagename, intent=intent,
+                                           field=field, spw=spw, uvrange=uvrange, specmode=specmode, gridder=gridder,
+                                           deconvolver=deconvolver, uvtaper=uvtaper, nterms=nterms,
+                                           cycleniter=cycleniter, cyclefactor=cyclefactor, scales=scales,
+                                           outframe=outframe, imsize=imsize, cell=cell, phasecenter=phasecenter,
+                                           nchan=nchan, start=start, width=width, stokes=stokes, weighting=weighting,
+                                           robust=robust, noise=noise, npixels=npixels, restoringbeam=restoringbeam,
+                                           iter=iter, mask=mask, hm_masking=hm_masking,
+                                           hm_sidelobethreshold=hm_sidelobethreshold,
+                                           hm_noisethreshold=hm_noisethreshold,
+                                           hm_lownoisethreshold=hm_lownoisethreshold,
+                                           hm_negativethreshold=hm_negativethreshold, hm_minbeamfrac=hm_minbeamfrac,
+                                           hm_growiterations=hm_growiterations, niter=niter, threshold=threshold,
+                                           sensitivity=sensitivity, conjbeams=conjbeams, parallel=parallel,
+                                           heuristics=heuristics)
+
+        self.cleancontranges = cleancontranges
+        self.hm_cleaning = hm_cleaning
+        self.image_heuristics = heuristics
+        self.masklimit = masklimit
+        self.maxncleans = maxncleans
+        self.nbin = nbin
+        self.nsigma = nsigma
+        self.reffreq = reffreq
+        self.spwsel_lsrk = spwsel_lsrk
+        self.spwsel_topo = spwsel_topo
+        self.tlimit = tlimit
 
         # For MOM0/8_FC and cube RMS we need the LSRK frequency ranges in
         # various places
         self.cont_freq_ranges = ''
 
-    # Add extra getters and setters here
-    spwsel_lsrk = basetask.property_with_default('spwsel_lsrk', {})
-    spwsel_topo = basetask.property_with_default('spwsel_topo', [])
-    hm_cleaning = basetask.property_with_default('hm_cleaning', 'rms')
-    hm_masking = basetask.property_with_default('hm_masking', 'centralregion')
-    hm_sidelobethreshold = basetask.property_with_default('hm_sidelobethreshold', -999.0)
-    hm_noisethreshold = basetask.property_with_default('hm_noisethreshold', -999.0)
-    hm_lownoisethreshold = basetask.property_with_default('hm_lownoisethreshold', -999.0)
-    hm_negativethreshold = basetask.property_with_default('hm_negativethreshold', -999.0)
-    hm_minbeamfrac = basetask.property_with_default('hm_minbeamfrac', -999.0)
-    hm_growiterations = basetask.property_with_default('hm_growiterations', -999)
-    masklimit = basetask.property_with_default('masklimit', 4.0)
-    tlimit = basetask.property_with_default('tlimit', 2.0)
-    cleancontranges = basetask.property_with_default('cleancontranges', False)
 
-    @property
-    def imagename(self):
-        return self._imagename
-
-    @imagename.setter
-    def imagename(self, value):
-        if (value is None):
-            self._imagename = ''
-        else:
-            self._imagename = value.replace('STAGENUMBER', str(self.context.stage))
-
-    @property
-    def specmode(self):
-        return self._specmode
-
-    @specmode.setter
-    def specmode(self, value):
-        if value == 'repBW':
-            self.orig_specmode = 'repBW'
-            self._specmode = 'cube'
-        else:
-            self.orig_specmode = value
-            self._specmode = value
-
-    @property
-    def maxncleans(self):
-        if self._maxncleans is None:
-            return 10
-        return 10
-        return self._maxncleans
-
-    @maxncleans.setter
-    def maxncleans(self, value):
-        self._maxncleans = value
-
-    @property
-    def deconvolver(self):
-        return self._deconvolver
-
-    @deconvolver.setter
-    def deconvolver(self, value):
-        self._deconvolver = value
-
-    @property
-    def nterms(self):
-        return self._nterms
-
-    @nterms.setter
-    def nterms(self, value):
-        self._nterms = value
-
-    @property
-    def robust(self):
-        if self._robust == -999.0:
-            # For Cycle 5 we disable the robust heuristic
-            return 0.5
-            if (self.spw.find(',') == -1):
-                # TODO: Use real synthesized beam size
-                hm_robust = self.image_heuristics.robust({'major': '1.0arcsec', 'minor': '1.0arcsec', 'positionangle': '0.0deg'})
-                return hm_robust
-            else:
-                robust = 0.0
-                spws = self.spw.split(',')
-                for spw in spws:
-                    # TODO: Use real synthesized beam size
-                    hm_robust = self.image_heuristics.robust({'major': '1.0arcsec', 'minor': '1.0arcsec', 'positionangle': '0.0deg'})
-                    robust += hm_robust
-                robust /= len(spws)
-                return robust
-        else:
-            return self._robust
-
-    @robust.setter
-    def robust(self, value):
-        self._robust = value
-
-    @property
-    def uvtaper(self):
-        if self._uvtaper is None:
-            # TODO: Use heuristic
-            self._uvtaper = []
-
-        return self._uvtaper
-
-    @uvtaper.setter
-    def uvtaper(self, value):
-        self._uvtaper = value
-
-    @property
-    def sigma(self):
-        return self._sigma
-
-    @sigma.setter
-    def sigma(self, value):
-        self._sigma = value
-        
 # tell the infrastructure to give us mstransformed data when possible by
 # registering our preference for imaging measurement sets
 api.ImagingMeasurementSetsPreferred.register(TcleanInputs)
+
 
 class Tclean(cleanbase.CleanBase):
     Inputs = TcleanInputs
@@ -202,7 +187,6 @@ class Tclean(cleanbase.CleanBase):
                 shutil.copytree(image_name, newname)
 
     def prepare(self):
-        context = self.inputs.context
         inputs = self.inputs
 
         LOG.info('\nCleaning for intent "%s", field %s, spw %s\n',

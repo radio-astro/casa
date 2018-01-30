@@ -1,147 +1,160 @@
 from __future__ import absolute_import
 
 import os
-import re
-import shutil
 import types
-from math import sqrt
-
-import casadef
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.mpihelpers as mpihelpers
 import pipeline.infrastructure.utils as utils
+import pipeline.infrastructure.vdp as vdp
 from pipeline.infrastructure import casa_tasks
-import pipeline.domain.measures as measures
-
 from .resultobjects import TcleanResult
 
 LOG = infrastructure.get_logger(__name__)
 
 # The basic clean tasks classes. Clean performs a single clean run.
 
-class CleanBaseInputs(basetask.StandardInputs):
-    def __init__(self, context, output_dir=None, vis=None, imagename=None, datacolumn=None,
-                 intent=None, field=None, spw=None, spwsel=None, uvrange=None, orig_specmode=None, specmode=None,
-                 gridder=None, deconvolver=None, uvtaper=None,
-                 nterms=None, cycleniter=None, cyclefactor=None, scales=None,
-                 outframe=None, imsize=None, cell=None,
-                 phasecenter=None, nchan=None, start=None, width=None, stokes=None,
-                 weighting=None,
-                 robust=None, noise=None, npixels=None,
-                 restoringbeam=None, iter=None, mask=None, hm_masking=None,
-                 hm_sidelobethreshold=None, hm_noisethreshold=None,
-                 hm_lownoisethreshold=None, hm_negativethreshold=None,
-                 hm_minbeamfrac=None, hm_growiterations=None,
-                 pblimit=None, niter=None,
-                 threshold=None, sensitivity=None, reffreq=None, conjbeams=None,
-                 result=None, parallel=None,
-                 heuristics=None):
-        self._init_properties(vars())
-        self.heuristics = heuristics
 
-    deconvolver = basetask.property_with_default('deconvolver', '')
-    uvtaper = basetask.property_with_default('uvtaper', None)
-    nterms = basetask.property_with_default('nterms', None)
-    cycleniter = basetask.property_with_default('cycleniter', None)
-    cyclefactor = basetask.property_with_default('cyclefactor', None)
-    scales = basetask.property_with_default('scales', None)
-    field = basetask.property_with_default('field', '')
-    gridder = basetask.property_with_default('gridder', '')
-    imagename = basetask.property_with_default('imagename', '')
-    intent = basetask.property_with_default('intent', '')
-    iter = basetask.property_with_default('iter', 0)
-    mask = basetask.property_with_default('mask', '')
-    hm_masking = basetask.property_with_default('hm_masking', 'auto')
-    hm_sidelobethreshold = basetask.property_with_default('hm_sidelobethreshold', -999.0)
-    hm_noisethreshold = basetask.property_with_default('hm_noisethreshold', -999.0)
-    hm_lownoisethreshold = basetask.property_with_default('hm_lownoisethreshold', -999.0)
-    hm_negativethreshold = basetask.property_with_default('hm_negativethreshold', -999.0)
-    hm_minbeamfrac = basetask.property_with_default('hm_minbeamfrac', -999.0)
-    hm_growiterations = basetask.property_with_default('hm_growiterations', -999)
-    niter = basetask.property_with_default('niter', 5000)
-    noise = basetask.property_with_default('noise', '1.0Jy')
-    nchan = basetask.property_with_default('nchan', -1)
-    npixels = basetask.property_with_default('npixels', 0)
-    outframe = basetask.property_with_default('outframe', 'LSRK')
-    parallel = basetask.property_with_default('parallel', 'automatic')
-    phasecenter = basetask.property_with_default('phasecenter', '')
-    pblimit = basetask.property_with_default('pblimit', 0.2)
-    restoringbeam = basetask.property_with_default('restoringbeam', 'common')
-    robust = basetask.property_with_default('robust', -999.0)
-    sensitivity = basetask.property_with_default('sensitivity', None)
-    spwsel = basetask.property_with_default('spwsel', [])
-    start = basetask.property_with_default('start', '')
-    stokes = basetask.property_with_default('stokes', 'I')
-    threshold = basetask.property_with_default('threshold', None)
-    uvrange = basetask.property_with_default('uvrange', '')
-    weighting = basetask.property_with_default('weighting', 'briggs')
-    width = basetask.property_with_default('width', '')
-    orig_specmode = basetask.property_with_default('orig_specmode', '')
+class CleanBaseInputs(vdp.StandardInputs):
 
-    @property
-    def spw(self):
-        return self._spw
+    # simple properties ------------------------------------------------------------------------------------------------
 
-    @spw.setter
-    def spw(self, value):
-        if value is None:
-            mslist = self.context.observing_run.measurement_sets
-            spws = mslist[0].get_spectral_windows()
-            spwids = [spw.id for spw in spws]
-            value = ','.join(spwids)
-        self._spw = value
+    datacolumn = vdp.VisDependentProperty(default='')
+    deconvolver = vdp.VisDependentProperty(default='')
+    cyclefactor = vdp.VisDependentProperty(default=None)
+    cycleniter = vdp.VisDependentProperty(default=None)
+    field = vdp.VisDependentProperty(default='')
+    gridder = vdp.VisDependentProperty(default='')
+    imagename = vdp.VisDependentProperty(default='')
+    intent = vdp.VisDependentProperty(default='')
+    iter = vdp.VisDependentProperty(default=0)
+    mask = vdp.VisDependentProperty(default='')
+    hm_growiterations = vdp.VisDependentProperty(default=-999)
+    hm_lownoisethreshold = vdp.VisDependentProperty(default=-999.0)
+    hm_masking = vdp.VisDependentProperty(default='auto')
+    hm_minbeamfrac = vdp.VisDependentProperty(default=-999.0)
+    hm_negativethreshold = vdp.VisDependentProperty(default=-999.0)
+    hm_noisethreshold = vdp.VisDependentProperty(default=-999.0)
+    hm_sidelobethreshold = vdp.VisDependentProperty(default=-999.0)
+    nchan = vdp.VisDependentProperty(default=-1)
+    niter = vdp.VisDependentProperty(default=5000)
+    noise = vdp.VisDependentProperty(default='1.0Jy')
+    npixels = vdp.VisDependentProperty(default=0)
+    nterms = vdp.VisDependentProperty(default=None)
+    orig_specmode = vdp.VisDependentProperty(default='')
+    outframe = vdp.VisDependentProperty(default='LSRK')
+    parallel = vdp.VisDependentProperty(default='automatic')
+    pblimit = vdp.VisDependentProperty(default=0.2)
+    phasecenter = vdp.VisDependentProperty(default='')
+    restoringbeam = vdp.VisDependentProperty(default='common')
+    robust = vdp.VisDependentProperty(default=-999.0)
+    scales = vdp.VisDependentProperty(default=None)
+    sensitivity = vdp.VisDependentProperty(default=None)
+    start = vdp.VisDependentProperty(default='')
+    stokes = vdp.VisDependentProperty(default='I')
+    threshold = vdp.VisDependentProperty(default=None)
+    uvrange = vdp.VisDependentProperty(default='')
+    uvtaper = vdp.VisDependentProperty(default=None)
+    weighting = vdp.VisDependentProperty(default='briggs')
+    width = vdp.VisDependentProperty(default='')
 
-    @property
-    def specmode(self):
-        return self._specmode
+    # properties requiring some logic ----------------------------------------------------------------------------------
 
-    @specmode.setter
-    def specmode(self, value):
-        if value is None:
-            if 'TARGET' in self.intent:
-                value = 'cube'
-            else:
-                value = 'mfs'
-        self._specmode = value
-
-    @property
-    def imsize(self):
-        if self._imsize is None:
-            return []
-        elif type(self._imsize) is types.StringType:
-            if self._imsize[0] == '[':
-                temp = self._imsize.translate(None, '[]\'')
-            temp = temp.split(',')
-            self._imsize = map(int, temp)
-
-        return self._imsize
-
-    @imsize.setter
-    def imsize(self, value):
-        self._imsize = value
-
-    @property
+    @vdp.VisDependentProperty
     def cell(self):
-        return self._cell
+        return []
 
-    @cell.setter
-    def cell(self, value):
-        if value is None:
-            value = []
-        self._cell = value
+    @vdp.VisDependentProperty
+    def imsize(self):
+        return []
 
-    @property
-    def datacolumn(self):
-        return self._datacolumn
+    @imsize.convert
+    def imsize(self, value):
+        if isinstance(value, str) and value.startswith('['):
+            temp = value.translate(None, '[]\'')
+            temp = temp.split(',')
+            return map(int, temp)
+        return value
 
-    @datacolumn.setter
-    def datacolumn(self, value):
-        if value is None:
-            value = ''
-        self._datacolumn = value
+    @vdp.VisDependentProperty
+    def specmode(self):
+        if 'TARGET' in self.intent:
+            return 'cube'
+        return 'mfs'
+
+    @vdp.VisDependentProperty
+    def spw(self):
+        first_ms = self.context.observing_run.measurement_sets[0]
+        return ','.join([spw.id for spw in first_ms.get_spectral_windows()])
+
+    @vdp.VisDependentProperty
+    def spwsel(self):
+        return []
+
+    def __init__(self, context, output_dir=None, vis=None, imagename=None, datacolumn=None, intent=None, field=None,
+                 spw=None, spwsel=None, uvrange=None, orig_specmode=None, specmode=None, gridder=None, deconvolver=None,
+                 uvtaper=None, nterms=None, cycleniter=None, cyclefactor=None, scales=None, outframe=None, imsize=None,
+                 cell=None, phasecenter=None, nchan=None, start=None, width=None, stokes=None, weighting=None,
+                 robust=None, noise=None, npixels=None, restoringbeam=None, iter=None, mask=None, hm_masking=None,
+                 hm_sidelobethreshold=None, hm_noisethreshold=None, hm_lownoisethreshold=None,
+                 hm_negativethreshold=None, hm_minbeamfrac=None, hm_growiterations=None, pblimit=None, niter=None,
+                 threshold=None, sensitivity=None, reffreq=None, conjbeams=None, result=None, parallel=None,
+                 heuristics=None):
+        self.context = context
+        self.output_dir = output_dir
+        self.vis = vis
+
+        self.imagename = imagename
+        self.datacolumn = datacolumn
+        self.intent = intent
+        self.field = field
+        self.spw = spw
+        self.spwsel = spwsel
+        self.uvrange = uvrange
+        self.orig_specmode = orig_specmode
+        self.specmode = specmode
+        self.gridder = gridder
+        self.deconvolver = deconvolver
+        self.uvtaper = uvtaper
+        self.nterms = nterms
+        self.cycleniter = cycleniter
+        self.cyclefactor = cyclefactor
+        self.scales = scales
+        self.outframe = outframe
+        self.imsize = imsize
+        self.cell = cell
+        self.phasecenter = phasecenter
+        self.nchan = nchan
+        self.start = start
+        self.width = width
+        self.stokes = stokes
+        self.weighting = weighting
+        self.robust = robust
+        self.noise = noise
+        self.npixels = npixels
+        self.restoringbeam = restoringbeam
+        self.iter = iter
+        self.mask = mask
+
+        self.hm_masking = hm_masking
+        self.hm_sidelobethreshold = hm_sidelobethreshold
+        self.hm_noisethreshold = hm_noisethreshold
+        self.hm_lownoisethreshold = hm_lownoisethreshold
+        self.hm_negativethreshold = hm_negativethreshold
+        self.hm_minbeamfrac = hm_minbeamfrac
+        self.hm_growiterations = hm_growiterations
+
+        self.pblimit = pblimit
+        self.niter = niter
+        self.threshold = threshold
+        self.sensitivity = sensitivity
+        self.reffreq = reffreq
+        self.conjbeams = conjbeams
+        self.result = result
+        self.parallel = parallel
+        self.heuristics = heuristics
 
 
 class CleanBase(basetask.StandardTaskTemplate):
@@ -189,7 +202,7 @@ class CleanBase(basetask.StandardTaskTemplate):
             result = inputs.result
 
         try:
-            result = self._do_clean_cycle (scanidlist, result, iter=inputs.iter)
+            result = self._do_clean_cycle(scanidlist, result, iter=inputs.iter)
         except Exception, e:
             LOG.error('%s/%s/spw%s clean error: %s' % (inputs.field, inputs.intent, inputs.spw, str(e)))
             result.error = '%s/%s/spw%s clean error: %s' % (inputs.field, inputs.intent, inputs.spw, str(e))
@@ -206,7 +219,6 @@ class CleanBase(basetask.StandardTaskTemplate):
         if scanidlist is None:
             scanidlist = []
 
-        context = self.inputs.context
         inputs = self.inputs
 
         # Derive names of clean products for this iteration
