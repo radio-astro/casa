@@ -326,7 +326,7 @@ class Priorcals(basetask.StandardTaskTemplate):
     def _do_tecmaps(self):
         """Run tec_maps function"""
 
-        inputs = TecMaps.Inputs(self.inputs.context, output_dir='')
+        inputs = TecMaps.Inputs(self.inputs.context, vis=self.inputs.vis, output_dir='')
         task = TecMaps(inputs)
         return self._executor.execute(task)
 

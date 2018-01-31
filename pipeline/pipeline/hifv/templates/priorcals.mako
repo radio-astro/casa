@@ -126,13 +126,13 @@ using the CASA task <b>gencal</b>.</p>
 	    TEC Caltable written to:
 
 	    %for single_result in result:
-	        <p><b>${os.path.basename(single_result.tecmaps_result[0].inputs['caltable'])}</b></p>
+	        <p><b>${os.path.basename(single_result.tecmaps_result.inputs['caltable'])}</b></p>
         %endfor
         <br>
         TEC Images written to:
         %for single_result in result:
-	        <p><b>${single_result.tecmaps_result[0].tec_image}</b></p>
-	        <p><b>${single_result.tecmaps_result[0].tec_rms_image}</b></p>
+	        <p><b>${single_result.tecmaps_result.tec_image}</b></p>
+	        <p><b>${single_result.tecmaps_result.tec_rms_image}</b></p>
         %endfor
 
         <img src="${tec_plotfile}">
