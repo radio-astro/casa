@@ -289,7 +289,13 @@ If any are found then recalculate the wvr calibration with the 'wvrflag'
 parameter set to ignore their data and interpolate results from other 
 antennas according to 'maxdistm' and 'minnumants'.
 
-Fourth, if the overall QA score for the final wvr correction of a vis file 
+Fourth, after flagging, if the remaining unflagged antennas with WVR number
+fewer than 3, or represent a smaller fraction of antennas than the minimum
+threshold (ants_with_wvr_thresh), then the WVR calibration file is rejected
+and will not be merged into the context, i.e. not be used in subsequent
+calibration.
+
+Fifth, if the overall QA score for the final wvr correction of a vis file
 is greater than the value in 'accept_threshold' then make available the
 wvr calibration file for merging into the context and use in the 
 subsequent reduction.
