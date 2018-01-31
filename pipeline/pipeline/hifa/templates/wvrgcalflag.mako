@@ -37,7 +37,10 @@ subsequent pre-applys if it gives a tangible improvement.</p>
 <h2>Results</h2>
 
 %if not applications:
-<p>This measurement set does not contain any WVR data.</p>
+<p>This measurement set either does not contain any antennas with WVR data,
+or in the case of mixed-array does not contain enough antennas with WVR data
+(as set by the threshold parameter in inputs). WVR calibration and flagging has
+been skipped.</p>
 %endif
 
 % if flag_plots or phase_offset_summary_plots or baseline_summary_plots:

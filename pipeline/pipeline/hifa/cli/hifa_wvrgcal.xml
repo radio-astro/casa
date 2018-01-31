@@ -103,8 +103,8 @@ a QA score based on its effect on the interferometric data.
     </param>
 
     <param type="double" name="maxdistm">
-      <description>Maximum distance (m) of an antenna used for interpolation for a flagged antenna</description>
-      <value>500.</value>
+      <description>Maximum distance (m) of an antenna used for interpolation for a flagged antenna.</description>
+      <value></value>
     </param>
 
     <param type="int" name="minnumants">
@@ -323,7 +323,9 @@ scale -- Scale the entire phase correction by this factor.
 
 maxdistm -- Maximum distance in meters of an antenna used for interpolation
     from a flagged antenna.
-    default: 500
+
+    default: None, in which case it is set to 100m if >50% of antennas are 7m
+    antennas without WVR and otherwise set to 500m.
     example: 550
 
 minnumants -- Minimum number of nearby antennas (up to 3) used for

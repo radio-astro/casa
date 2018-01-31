@@ -41,7 +41,22 @@ class WvrgcalInputs(vdp.StandardInputs):
     hm_smooth = vdp.VisDependentProperty(default='automatic')
     hm_tie = vdp.VisDependentProperty(default='automatic')
     hm_toffset = vdp.VisDependentProperty(default='automatic')
-    maxdistm = vdp.VisDependentProperty(default=500.0)
+
+    @vdp.VisDependentProperty
+    def maxdistm(self):
+        # Identify fraction of antennas that are 7m.
+        nants_7m = len([ant
+                        for ant in self.ms.antennas
+                        if ant.diameter == 7.0])
+        frac = float(nants_7m) / len(self.ms.antennas)
+
+        # If more than 50% of the antennas are 7m, then set maxdistm to a
+        # lower value.
+        if frac > 0.5:
+            return 100.0
+        else:
+            return 500.0
+
     minnumants = vdp.VisDependentProperty(default=2)
     mingoodfrac = vdp.VisDependentProperty(default=0.8)
     nowvr_result = vdp.VisDependentProperty(default='', hidden=True)

@@ -29,6 +29,11 @@ Generate a gain table based on Water Vapour Radiometer data, interpolating over 
         <value></value>
     </param>
 
+    <param type="double" name="ants_with_wvr_thresh">
+        <description>Minimum fraction of unflagged antennas that need to have WVR for calibration to proceed.</description>
+        <value>0.2</value>
+    </param>
+
     <param type="string" name="hm_toffset">
         <description>Toffset computation heuristic method</description>
         <value>automatic</value>
@@ -103,7 +108,7 @@ Generate a gain table based on Water Vapour Radiometer data, interpolating over 
 
     <param type="double" name="maxdistm">
       <description>Maximum distance (m) of an antenna used for interpolation for a flagged antenna</description>
-      <value>500.</value>
+      <value></value>
     </param>
 
     <param type="int" name="minnumants">
@@ -260,8 +265,18 @@ Generate a gain table based on Water Vapour Radiometer data, interpolating over 
 
 <example>
 
-First, generate a gain table based on the Water Vapour Radiometer data in each
-vis file. 
+This task will first identify for each vis whether it includes at least 3
+antennas with Water Vapour Radiometer (WVR) data, and that the fraction of
+WVR antennas / all antennas exceeds the minimum threshold
+(ants_with_wvr_thresh).
+
+If there are not enough WVR antennas by number and/or fraction, then no WVR
+caltable is created and no WVR calibration will be applied to the corresponding
+vis. If there are enough WVR antennas, then the task proceeds as follows for
+each valid vis:
+
+First, generate a gain table based on the Water Vapour Radiometer data for
+each vis.
 
 Second, apply the wvr calibration to the data specified by 'flag_intent',
 calculate flagging 'views' showing the ratio 
@@ -279,67 +294,88 @@ is greater than the value in 'accept_threshold' then make available the
 wvr calibration file for merging into the context and use in the 
 subsequent reduction.
       
-vis -- List of input visibility files
+vis -- List of input visibility files.
+
     default: none, in which case the vis files to be used will be read
              from the context.
     example: vis=['ngc5921.ms']
 
-caltable -- List of output gain calibration tables
+caltable -- List of output gain calibration tables.
+
     default: none, in which case the names of the caltables will be
              generated automatically.
     example: caltable='ngc5921.wvr'
 
 offsetstable -- List of input temperature offsets table files to subtract from
-                WVR measurements before calculating phase corrections.
+    WVR measurements before calculating phase corrections.
+
     default: none, in which case no offsets are applied.
     example: offsetstable=['ngc5921.cloud_offsets']
 
+ants_with_wvr_thresh -- this threshold sets the minimum fraction of antennas
+    that should have WVR data for WVR calibration and flagging to proceed; the
+    same threshold is used to determine, after flagging, whether there remain
+    enough unflagged antennas with WVR data for the WVR calibration to be
+    applied.
+
+    default: 0.2
+    example: ants_with_wvr_thresh=0.5
+
 hm_toffset -- If 'manual', set the 'toffset' parameter to the user-specified value.
-          If 'automatic', set the 'toffset' parameter according to the
-          date of the MeasurementSet; toffset=-1 if before 2013-01-21T00:00:00
-          toffset=0 otherwise.
+    If 'automatic', set the 'toffset' parameter according to the
+    date of the MeasurementSet; toffset=-1 if before 2013-01-21T00:00:00
+    toffset=0 otherwise.
+
     default: 'automatic'
 
-toffset -- Time offset (sec) between interferometric and WVR data
+toffset -- Time offset (sec) between interferometric and WVR data.
+
     default: 0
 
 segsource -- If True calculate new atmospheric phase correction 
-             coefficients for each source, subject to the constraints of 
-             the 'tie' parameter. 'segsource' is forced to be True if 
-             the 'tie' parameter is set to a non-empty value by the 
-             user or by the automatic heuristic.
+    coefficients for each source, subject to the constraints of
+    the 'tie' parameter. 'segsource' is forced to be True if
+    the 'tie' parameter is set to a non-empty value by the
+    user or by the automatic heuristic.
+
     default: True
 
 hm_tie -- If 'manual', set the 'tie' parameter to the user-specified value.
-          If 'automatic', set the 'tie' parameter to include with the
-          target all calibrators that are within 15 degrees of it:
-          if no calibrators are that close then 'tie' is left empty.
+    If 'automatic', set the 'tie' parameter to include with the
+    target all calibrators that are within 15 degrees of it:
+    if no calibrators are that close then 'tie' is left empty.
+
     default: 'automatic'
 
 tie -- Use the same atmospheric phase correction coefficients when
-       calculating the wvr correction for all sources in the 'tie'. If 'tie'
-       is not empty then 'segsource' is forced to be True. Ignored unless
-       hm_tie='manual'.
+    calculating the wvr correction for all sources in the 'tie'. If 'tie'
+    is not empty then 'segsource' is forced to be True. Ignored unless
+    hm_tie='manual'.
+
     default: []
     example: ['3C273,NGC253', 'IC433,3C279']
 
 sourceflag -- Flag the WVR data for these source(s) as bad and do not produce
-    corrections for it. Requires segsource=True
+    corrections for it. Requires segsource=True.
+
     default: []
     example: ['3C273']
 
 nsol -- Number of solutions for phase correction coefficients during this
     observation, evenly distributed in time throughout the observation. It
     is used only if segsource=False because if segsource=True then the
-    coefficients are recomputed whenever the telescope moves to a new source
-    (within the limits imposed by 'tie').
+    coefficients are recomputed whenever the telescope moves to a new
+    source (within the limits imposed by 'tie').
+
     default: 1
 
-disperse -- Apply correction for dispersion
+disperse -- Apply correction for dispersion.
+
     default: False
 
 wvrflag -- Flag the WVR data for these antenna(s) as bad and replace its data
-    with interpolated values
+    with interpolated values.
+
     default: []
     example: ['DV03','DA05','PM02']           
 
@@ -350,29 +386,35 @@ hm_smooth -- If 'manual' set the 'smooth' parameter to the user-specified value.
 
 smooth -- Smooth WVR data on this timescale before calculating the correction.
     Ignored unless hm_smooth='manual'.
+
     default: ''
 
 scale -- Scale the entire phase correction by this factor.
+
     default: 1
 
 maxdistm -- Maximum distance in meters of an antenna used for interpolation
     from a flagged antenna.
-    default: 500
+
+    default: None, in which case it is set to 100m if >50% of antennas are 7m
+    antennas without WVR and otherwise set to 500m.
     example: 550
 
 minnumants -- Minimum number of nearby antennas (up to 3) used for
     interpolation from a flagged antenna.
+
     default: 2
     example: 3
 
-mingoodfrac -- Minimum fraction of good data per antenna
+mingoodfrac -- Minimum fraction of good data per antenna.
+
     default: 0.8
     example: 0.7
 
-refant -- Ranked comma delimited list of reference antennas
+refant -- Ranked comma delimited list of reference antennas.
+
     default: ''
     example: 'DV02,DV06'
-
 
 flag_intent -- The data intent(s) on whose wvr correction results the search
     for bad wvr antennas is to be based.
@@ -389,7 +431,7 @@ flag_intent -- The data intent(s) on whose wvr correction results the search
     the first in the list BANDPASS, PHASE, AMPLITUDE for which the
     MeasurementSet has data.
 
-    default ''
+    default: ''
 
 qa_intent -- The list of data intents on which the wvr correction is to be
     tried as a means of estimating its effectiveness.
@@ -408,15 +450,14 @@ qa_intent -- The list of data intents on which the wvr correction is to be
     a score &gt; 1 implies an improvement.
 
     If the overall score for a vis file is less than the value in
-    'accept_threshold' then the wvr calibration file is not made available 
-    for merging into the context for use in the subsequent reduction.
+    'accept_threshold' then the wvr calibration file is not made available for
+    merging into the context for use in the subsequent reduction.
 
     default: 'BANDPASS,PHASE'
 
-qa_bandpass_intent -- The data intent to use for the bandpass calibration
-    in the qa calculation. The default is blank to allow the
-    underlying bandpass task to select a sensible intent if the dataset
-    lacks BANDPASS data.
+qa_bandpass_intent -- The data intent to use for the bandpass calibration in
+    the qa calculation. The default is blank to allow the underlying bandpass
+    task to select a sensible intent if the dataset lacks BANDPASS data.
 
     default: ''
 

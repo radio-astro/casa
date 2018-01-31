@@ -11,7 +11,8 @@ LOG = infrastructure.get_logger(__name__)
 
 class WvrgcalflagResults(basetask.Results):
 
-    def __init__(self, vis, flaggerresult=None):
+    def __init__(self, vis, flaggerresult=None, too_few_wvr=False,
+                 too_few_wvr_post_flagging=False):
         """
         Construct and return a new WvrgcalflagResults.
         """
@@ -19,6 +20,8 @@ class WvrgcalflagResults(basetask.Results):
 
         self.vis = vis
         self.flaggerresult = flaggerresult
+        self.too_few_wvr = too_few_wvr
+        self.too_few_wvr_post_flagging = too_few_wvr_post_flagging
 
     def merge_with_context(self, context):
         # The results from the data task (Wvrgcal) are the only items to

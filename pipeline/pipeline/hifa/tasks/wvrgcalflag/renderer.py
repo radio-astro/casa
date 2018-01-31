@@ -59,15 +59,18 @@ class T2_4MDetailsWvrgcalflagRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
         baseline_detail_plots = {}
         wvrinfos = {}
         ms_non12 = []
+        ms_toofew12 = []
         for result in results:
             vis = os.path.basename(result.inputs['vis'])
             ms = context.observing_run.get_ms(vis)
 
-            # if there's no WVR data, the pool will be empty
-            if not result.flaggerresult.dataresult.pool:
-                # check if this MS is all 7m data. 
-                if all([a for a in ms.antennas if a.diameter != 12.0]):
+            # If there's no WVR data (empty dataresult)
+            if not result.flaggerresult.dataresult:
+                # Check if this MS only contains data for non-WVR antennas.
+                if len([a for a in ms.antennas if a.diameter != 12.0]) == len(ms.antennas):
                     ms_non12.append(os.path.basename(vis))
+                elif result.too_few_wvr:
+                    ms_toofew12.append(os.path.basename(vis))
                 continue
 
             applications.extend(self.get_wvr_applications(result.flaggerresult.dataresult))
@@ -158,6 +161,12 @@ class T2_4MDetailsWvrgcalflagRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
                    'using 12m antennas.'
                    '' % (utils.commafy(ms_non12, quotes=False, conjunction='or'),
                          'was' if len(ms_non12) is 1 else 'were'))
+            ctx['alerts_info'] = [msg]
+        elif ms_toofew12:
+            msg = ("No WVR correction computed for {}, which {} observed"
+                   " with too few 12m antennas."
+                   "".format(utils.commafy(ms_toofew12, quotes=False, conjunction='or'),
+                             'was' if len(ms_toofew12) is 1 else 'were'))
             ctx['alerts_info'] = [msg]
 
         # Phase vs time for the overview plot should be for the widest window

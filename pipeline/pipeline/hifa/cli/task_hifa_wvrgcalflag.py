@@ -10,8 +10,8 @@ def hifa_wvrgcalflag(
         scale=None, maxdistm=None, minnumants=None, mingoodfrac=None,
         refant=None, flag_intent=None, qa_intent=None,
         qa_bandpass_intent=None, accept_threshold=None, flag_hi=None,
-        fhi_limit=None, fhi_minsample=None, pipelinemode=None, dryrun=None,
-        acceptresults=None):
+        fhi_limit=None, fhi_minsample=None, ants_with_wvr_thresh=None,
+        pipelinemode=None, dryrun=None, acceptresults=None):
 
     # create a dictionary containing all the arguments given in the
     # constructor

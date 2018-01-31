@@ -2,6 +2,8 @@ from __future__ import absolute_import
 
 import inspect
 
+import numpy as np
+
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.logging as logging
@@ -25,6 +27,8 @@ class WvrgcalflagInputs(wvrgcal.WvrgcalInputs):
     """
     WvrgcalflagInputs defines the inputs for the Wvrgcalflag pipeline task.
     """
+    ants_with_wvr_nr_thresh = vdp.VisDependentProperty(default=3)
+    ants_with_wvr_thresh = vdp.VisDependentProperty(default=0.2)
     flag_hi = vdp.VisDependentProperty(default=True)
 
     @vdp.VisDependentProperty
@@ -55,7 +59,8 @@ class WvrgcalflagInputs(wvrgcal.WvrgcalInputs):
                  toffset=None, segsource=None, hm_tie=None, tie=None, sourceflag=None, nsol=None, disperse=None,
                  wvrflag=None, hm_smooth=None, smooth=None, scale=None, maxdistm=None, minnumants=None,
                  mingoodfrac=None, refant=None, flag_intent=None, qa_intent=None, qa_bandpass_intent=None,
-                 accept_threshold=None, flag_hi=None, fhi_limit=None, fhi_minsample=None):
+                 accept_threshold=None, flag_hi=None, fhi_limit=None, fhi_minsample=None, ants_with_wvr_thresh=None,
+                 ants_with_wvr_nr_thresh=None):
 
         super(WvrgcalflagInputs, self).__init__(
             context, output_dir=output_dir, vis=vis, caltable=caltable, offsetstable=offsetstable,
@@ -65,6 +70,8 @@ class WvrgcalflagInputs(wvrgcal.WvrgcalInputs):
             qa_bandpass_intent=qa_bandpass_intent, accept_threshold=accept_threshold)
 
         # solution parameters
+        self.ants_with_wvr_nr_thresh = ants_with_wvr_nr_thresh
+        self.ants_with_wvr_thresh = ants_with_wvr_thresh
         self.flag_intent = flag_intent
 
         # flagging parameters
@@ -77,6 +84,137 @@ class Wvrgcalflag(basetask.StandardTaskTemplate):
     Inputs = WvrgcalflagInputs
     
     def prepare(self):
+        inputs = self.inputs
+
+        # Identify number and fraction of antennas with WVR.
+        nr_ants_wvr, frac_ants_wvr = self._identify_ants_with_wvr()
+
+        # Evaluate whether there are enough antennas with WVR by number and
+        # fraction to be worth proceeding with calibration and flagging.
+        if (nr_ants_wvr < inputs.ants_with_wvr_nr_thresh or
+                frac_ants_wvr < self.inputs.ants_with_wvr_thresh):
+            # If there are too few antennas, return an empty result, with
+            # flag set to indicate that there were too few WVR antennas.
+            flaggerresult = viewflaggers.MatrixFlaggerResults(vis=inputs.vis)
+            result = WvrgcalflagResults(vis=inputs.vis,
+                                        flaggerresult=flaggerresult,
+                                        too_few_wvr=True)
+            # Log info message.
+            if nr_ants_wvr < inputs.ants_with_wvr_nr_thresh:
+                LOG.info("Number of antennas with WVR ({}) below the"
+                         " threshold ({}), skipping WVR calibration."
+                         "".format(nr_ants_wvr, inputs.ants_with_wvr_nr_thresh))
+            elif frac_ants_wvr < self.inputs.ants_with_wvr_thresh:
+                LOG.info("Fraction of antennas with WVR ({:.2f}) below the"
+                         " threshold of {}, skipping WVR calibration."
+                         "".format(frac_ants_wvr, self.inputs.ants_with_wvr_thresh))
+        else:
+            # If there are enough WVR antennas initially, run calibration
+            # and flagging.
+            flaggerresult = self._run_flagger()
+
+            # Attach flagging result to final result.
+            result = WvrgcalflagResults(vis=inputs.vis,
+                                        flaggerresult=flaggerresult)
+
+        return result
+
+    def analyse(self, result):
+        inputs = self.inputs
+
+        # If flagging results are not empty, it should contain a wvrg file
+        # that has been flagged as necessary. Evaluate the flagger result to
+        # check whether the WVR correction should still be applied.
+        if result.flaggerresult.dataresult:
+            # Identify number and fraction of unflagged antennas with WVR.
+            nr_ants_wvr, frac_ants_wvr = self._identify_unflagged_ants_with_wvr(result)
+
+            # If too few unflagged antennas with WVR remain (by number or
+            # fraction), then remove the calfile from the result so that it
+            # cannot be accepted into the context, and set flag in result
+            # to indicate too few WVR antennas remained.
+            if (nr_ants_wvr < inputs.ants_with_wvr_nr_thresh or
+                    frac_ants_wvr < inputs.ants_with_wvr_thresh):
+                result.flaggerresult.dataresult.final = []
+                result.too_few_wvr_post_flagging = True
+
+                # Log warning.
+                if nr_ants_wvr < inputs.ants_with_wvr_nr_thresh:
+                    LOG.warning(
+                        "After flagging, the number of unflagged antennas"
+                        " with WVR ({}) is below the threshold of {}, skipping"
+                        " WVR calibration.".format(nr_ants_wvr, inputs.ants_with_wvr_nr_thresh))
+                elif frac_ants_wvr < inputs.ants_with_wvr_thresh:
+                    LOG.warning(
+                        "After flagging, the fraction of unflagged antennas"
+                        " with WVR ({:.2f}) is below the threshold of {};"
+                        " wvrgcal file will not be applied."
+                        "".format(frac_ants_wvr, inputs.ants_with_wvr_thresh))
+
+            # If the associated qa score indicates that applying the WVR
+            # calibration will make things worse then remove the calfile from
+            # the result so that it cannot be accepted into the context.
+            elif result.flaggerresult.dataresult.qa_wvr.overall_score is not None \
+                    and result.flaggerresult.dataresult.qa_wvr.overall_score < inputs.accept_threshold:
+                LOG.warning('wvrgcal file has qa score ({0}) below'
+                            ' accept_threshold ({1}) and will not be'
+                            ' applied'.format(result.flaggerresult.dataresult.qa_wvr.overall_score,
+                                              inputs.accept_threshold))
+                result.flaggerresult.dataresult.final = []
+
+        return result
+
+    def _identify_ants_with_wvr(self):
+        """
+        Identify antennas with WVR, return as number and as fraction of all
+        antennas.
+        """
+        # Get the MS domain object.
+        ms = self.inputs.context.observing_run.get_ms(name=self.inputs.vis)
+
+        # Identify antennas with WVR as those whose name does not start with 'CM'.
+        ants_with_wvr = [antenna.name
+                         for antenna in ms.antennas
+                         if not antenna.name.startswith('CM')]
+        nr_ants_wvr = len(ants_with_wvr)
+        frac_ants_wvr = nr_ants_wvr / float(len(ms.antennas))
+
+        return nr_ants_wvr, frac_ants_wvr
+
+    def _identify_unflagged_ants_with_wvr(self, result):
+        """
+        Evaluate flagger result to identify remaining unflagged antennas with
+        WVR, return as a number and as a fraction of all antennas.
+
+        :param result: WvrgcalflagResults object
+        :return: (int, float): number of antennas, fraction of antennas.
+        """
+        # Get the MS domain object.
+        ms = self.inputs.context.observing_run.get_ms(name=self.inputs.vis)
+
+        # Only expect 1 flagging view for Wvrgcalflag.
+        view = result.flaggerresult.last(result.flaggerresult.descriptions()[0])
+
+        # Identify antennas fully flagged for all timestamps, mapping the
+        # array indices to the original antenna IDs using the flagging view
+        # x-axis data.
+        antids_fully_flagged = view.axes[0].data[
+            np.where(np.all(view.flag, axis=1))[0]]
+
+        # Identify antennas with WVR that also remain unflagged.
+        ants_with_wvr_and_unflagged = [
+            antenna.name
+            for antenna in ms.antennas
+            if not antenna.name.startswith('CM')
+            and antenna.id not in antids_fully_flagged
+        ]
+
+        nr_ants_wvr = len(ants_with_wvr_and_unflagged)
+        frac_ants_wvr = nr_ants_wvr / float(len(ms.antennas))
+
+        return nr_ants_wvr, frac_ants_wvr
+
+    def _run_flagger(self):
         inputs = self.inputs
 
         # Construct the task that will prepare/read the data necessary to
@@ -137,30 +275,7 @@ class Wvrgcalflag(basetask.StandardTaskTemplate):
         with logging.SuspendCapturingLogger():
             flaggerresult = self._executor.execute(flaggertask)
 
-        # Create final result.
-        result = WvrgcalflagResults(vis=inputs.vis,
-                                    flaggerresult=flaggerresult)
-
-        return result
-
-    def analyse(self, result):
-        inputs = self.inputs
-
-        # the result should now contain a wvrg file that has been
-        # 'flagged' as necessary. If the associated qa score indicates 
-        # that applying it will make things worse then remove the file from
-        # the result so that it cannot be accepted into the context.
-        if result.flaggerresult.dataresult.qa_wvr.overall_score is not None \
-                and result.flaggerresult.dataresult.qa_wvr.overall_score < inputs.accept_threshold:
-            LOG.warning('wvrgcal file has qa score ({0}) below'
-                        ' accept_threshold ({1}) and will not be'
-                        ' applied'.format(result.flaggerresult.dataresult.qa_wvr.overall_score,
-                                          inputs.accept_threshold))
-            # Set final set of CalApplications in dataresult back to empty
-            # list to prevent those from being accepted into context.
-            result.flaggerresult.dataresult.final = []
-
-        return result
+        return flaggerresult
 
 
 class WvrgcalflagDataInputs(vdp.StandardInputs):
