@@ -1,19 +1,18 @@
 from __future__ import absolute_import
+
 import collections
 import os
 
 import pipeline.infrastructure.logging as logging
-import pipeline.infrastructure.utils as utils
 import pipeline.infrastructure.pipelineqa as pqa
+import pipeline.infrastructure.utils as utils
 import pipeline.qa.scorecalculator as qacalc
-
-from . import solint
 from . import fluxboot
-
+from . import solint
 
 LOG = logging.get_logger(__name__)
 
-class SolintQAHandler(pqa.QAResultHandler):
+class SolintQAHandler(pqa.QAPlugin):
     result_cls = solint.SolintResults
     child_cls = None
     generating_task = solint.Solint
@@ -32,7 +31,7 @@ class SolintQAHandler(pqa.QAResultHandler):
         '''
         return qacalc.score_path_exists(output_dir, ms, 'Solint')
 
-class SolintListQAHandler(pqa.QAResultHandler):
+class SolintListQAHandler(pqa.QAPlugin):
     """
     QA handler for a list containing SolintResults.
     """
@@ -56,7 +55,7 @@ class SolintListQAHandler(pqa.QAResultHandler):
 
 
 
-class FluxbootQAHandler(pqa.QAResultHandler):
+class FluxbootQAHandler(pqa.QAPlugin):
     result_cls = fluxboot.FluxbootResults
     child_cls = None
     generating_task = fluxboot.Fluxboot
@@ -75,7 +74,7 @@ class FluxbootQAHandler(pqa.QAResultHandler):
         '''
         return qacalc.score_path_exists(output_dir, ms, 'Fluxboot')
 
-class FluxbootListQAHandler(pqa.QAResultHandler):
+class FluxbootListQAHandler(pqa.QAPlugin):
     """
     QA handler for a list containing FluxbootResults.
     """

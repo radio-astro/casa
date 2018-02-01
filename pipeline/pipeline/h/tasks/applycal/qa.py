@@ -1,18 +1,18 @@
 from __future__ import absolute_import
+
 import collections
 
-import pipeline.qa.scorecalculator as qacalc
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.pipelineqa as pqa
 import pipeline.infrastructure.utils as utils
-
-from ..exportdata import aqua
+import pipeline.qa.scorecalculator as qacalc
 from . import applycal
+from ..exportdata import aqua
 
 LOG = logging.get_logger(__name__)
 
 
-class ApplycalQAHandler(pqa.QAResultHandler):    
+class ApplycalQAHandler(pqa.QAPlugin):    
     result_cls = applycal.ApplycalResults
     child_cls = None
 
@@ -41,7 +41,7 @@ class ApplycalQAHandler(pqa.QAResultHandler):
         result.qa.pool[:] = scores
 
 
-class ApplycalListQAHandler(pqa.QAResultHandler):
+class ApplycalListQAHandler(pqa.QAPlugin):
     result_cls = collections.Iterable
     child_cls = applycal.ApplycalResults
 

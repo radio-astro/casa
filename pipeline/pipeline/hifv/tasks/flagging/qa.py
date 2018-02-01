@@ -1,19 +1,19 @@
 from __future__ import absolute_import
+
 import collections
 import os
 
 import pipeline.infrastructure.logging as logging
-import pipeline.infrastructure.utils as utils
 import pipeline.infrastructure.pipelineqa as pqa
+import pipeline.infrastructure.utils as utils
 import pipeline.qa.scorecalculator as qacalc
-
-from . import flagbaddeformatters
 from . import checkflag
+from . import flagbaddeformatters
 from . import targetflag
 
 LOG = logging.get_logger(__name__)
 
-class FlagBadDeformattersQAHandler(pqa.QAResultHandler):
+class FlagBadDeformattersQAHandler(pqa.QAPlugin):
     result_cls = flagbaddeformatters.FlagBadDeformattersResults
     child_cls = None
     generating_task = flagbaddeformatters.FlagBadDeformatters
@@ -32,7 +32,7 @@ class FlagBadDeformattersQAHandler(pqa.QAResultHandler):
         '''
         return qacalc.score_path_exists(output_dir, ms, 'Flag Bad Deformatters')
 
-class FlagBadDeformattersListQAHandler(pqa.QAResultHandler):
+class FlagBadDeformattersListQAHandler(pqa.QAPlugin):
     """
     QA handler for a list containing FlagBadDeformattersResults.
     """
@@ -53,7 +53,7 @@ class FlagBadDeformattersListQAHandler(pqa.QAResultHandler):
 
 
 
-class CheckflagQAHandler(pqa.QAResultHandler):
+class CheckflagQAHandler(pqa.QAPlugin):
     result_cls = checkflag.CheckflagResults
     child_cls = None
     generating_task = checkflag.Checkflag
@@ -72,7 +72,7 @@ class CheckflagQAHandler(pqa.QAResultHandler):
         '''
         return qacalc.score_path_exists(output_dir, ms, 'Checkflag')
 
-class CheckflagListQAHandler(pqa.QAResultHandler):
+class CheckflagListQAHandler(pqa.QAPlugin):
     """
     QA handler for a list containing CheckflagResults.
     """
@@ -92,7 +92,7 @@ class CheckflagListQAHandler(pqa.QAResultHandler):
 
 
 
-class TargetflagQAHandler(pqa.QAResultHandler):
+class TargetflagQAHandler(pqa.QAPlugin):
     result_cls = targetflag.TargetflagResults
     child_cls = None
     generating_task = targetflag.Targetflag
@@ -111,7 +111,7 @@ class TargetflagQAHandler(pqa.QAResultHandler):
         '''
         return qacalc.score_path_exists(output_dir, ms, 'Targetflag')
 
-class TargetflagListQAHandler(pqa.QAResultHandler):
+class TargetflagListQAHandler(pqa.QAPlugin):
     """
     QA handler for a list containing TargetflagResults.
     """

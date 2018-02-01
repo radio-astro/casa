@@ -4,13 +4,12 @@ import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.pipelineqa as pqa
 import pipeline.infrastructure.utils as utils
-
 from . import imageprecheck
 
 LOG = logging.get_logger(__name__)
 
 
-class ImagePreCheckQAHandler(pqa.QAResultHandler):    
+class ImagePreCheckQAHandler(pqa.QAPlugin):    
     result_cls = imageprecheck.ImagePreCheckResults
     child_cls = None
 
@@ -26,7 +25,7 @@ class ImagePreCheckQAHandler(pqa.QAResultHandler):
         result.qa.pool[:] = [pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg)]
 
 
-class ImagePreCheckListQAHandler(pqa.QAResultHandler):
+class ImagePreCheckListQAHandler(pqa.QAPlugin):
     result_cls = basetask.ResultsList
     child_cls = imageprecheck.ImagePreCheckResults
 

@@ -1,18 +1,18 @@
 from __future__ import absolute_import
+
 import collections
 
 import pipeline.infrastructure.logging as logging
-import pipeline.infrastructure.utils as utils
 import pipeline.infrastructure.pipelineqa as pqa
+import pipeline.infrastructure.utils as utils
 import pipeline.qa.scorecalculator as qacalc
-
-from . import gcorfluxscale
 from pipeline.h.tasks.common import commonfluxresults
+from . import gcorfluxscale
 
 LOG = logging.get_logger(__name__)
 
 
-class GcorFluxscaleQAHandler(pqa.QAResultHandler):
+class GcorFluxscaleQAHandler(pqa.QAPlugin):
     result_cls = commonfluxresults.FluxCalibrationResults
     child_cls = None
     generating_task = gcorfluxscale.GcorFluxscale
@@ -44,7 +44,7 @@ class GcorFluxscaleQAHandler(pqa.QAResultHandler):
         return qacalc.score_derived_fluxes_snr(ms,  measurements)
 
 
-class GcorFluxscaleListQAHandler(pqa.QAResultHandler):
+class GcorFluxscaleListQAHandler(pqa.QAPlugin):
     """
     QA handler for a list containing FluxCalibrationResults.
     """

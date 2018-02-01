@@ -1,17 +1,17 @@
 from __future__ import absolute_import
+
 import collections
 import os
 
 import pipeline.infrastructure.logging as logging
-import pipeline.infrastructure.utils as utils
 import pipeline.infrastructure.pipelineqa as pqa
+import pipeline.infrastructure.utils as utils
 import pipeline.qa.scorecalculator as qacalc
-
 from . import uvcontfit
 
 LOG = logging.get_logger(__name__)
 
-class UVcontFitQAHandler(pqa.QAResultHandler):
+class UVcontFitQAHandler(pqa.QAPlugin):
     result_cls = uvcontfit.UVcontFitResults
     child_cls = None
     generating_task = uvcontfit.UVcontFit
@@ -34,7 +34,7 @@ class UVcontFitQAHandler(pqa.QAResultHandler):
         return qacalc.score_path_exists(output_dir, caltable,
 	    'uv continuum fit table')
 
-class UVcontFitListQAHandler(pqa.QAResultHandler):
+class UVcontFitListQAHandler(pqa.QAPlugin):
     """
     QA handler for a list containing UVcontFitResults.
     """

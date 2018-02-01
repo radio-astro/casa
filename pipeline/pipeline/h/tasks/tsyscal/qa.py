@@ -1,4 +1,5 @@
 from __future__ import absolute_import
+
 import collections
 
 import pipeline.infrastructure.logging as logging
@@ -10,7 +11,7 @@ from . import resultobjects
 LOG = logging.get_logger(__name__)
 
 
-class TsyscalQAHandler(pqa.QAResultHandler):
+class TsyscalQAHandler(pqa.QAPlugin):
     result_cls = resultobjects.TsyscalResults
     child_cls = None
 
@@ -26,7 +27,7 @@ class TsyscalQAHandler(pqa.QAResultHandler):
         result.qa.all_unity_longmsg = 'No unmapped science windows in %s' % ms.basename 
 
 
-class TsyscalListQAHandler(pqa.QAResultHandler):
+class TsyscalListQAHandler(pqa.QAPlugin):
     """
     QA handler for a list containing TsyscalResults.
     """

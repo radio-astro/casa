@@ -1,19 +1,19 @@
 from __future__ import absolute_import
+
 import collections
 
 import pipeline.infrastructure.logging as logging
-import pipeline.infrastructure.utils as utils
 import pipeline.infrastructure.pipelineqa as pqa
+import pipeline.infrastructure.utils as utils
 import pipeline.qa.scorecalculator as qacalc
-
+# from ..common import commonfluxresults
+from pipeline.h.tasks.common import commonfluxresults
 from . import setjy
 from . import setmodel
-#from ..common import commonfluxresults
-from pipeline.h.tasks.common import commonfluxresults
 
 LOG = logging.get_logger(__name__)
 
-class SetModelsQAHandler(pqa.QAResultHandler):
+class SetModelsQAHandler(pqa.QAPlugin):
     result_cls = commonfluxresults.FluxCalibrationResults
     child_cls = None
     generating_task = setmodel.SetModels
@@ -55,7 +55,7 @@ class SetModelsQAHandler(pqa.QAResultHandler):
 	result.qa.all_unity_longmsg = 'No missing flux measurements in %s' % ms.basename 
 
 
-class SetjyQAHandler(pqa.QAResultHandler):
+class SetjyQAHandler(pqa.QAPlugin):
     result_cls = commonfluxresults.FluxCalibrationResults
     child_cls = None
     generating_task = setjy.Setjy
@@ -78,7 +78,7 @@ class SetjyQAHandler(pqa.QAResultHandler):
 	result.qa.all_unity_longmsg = 'No missing flux measurements in %s' % ms.basename 
 
 
-class SetjyListQAHandler(pqa.QAResultHandler):
+class SetjyListQAHandler(pqa.QAPlugin):
     """
     QA handler for a list containing FluxCalibrationResults.
     """
@@ -98,7 +98,7 @@ class SetjyListQAHandler(pqa.QAResultHandler):
                                                                     conjunction='or')
         result.qa.all_unity_longmsg = longmsg
 
-class SetModelsListQAHandler(pqa.QAResultHandler):
+class SetModelsListQAHandler(pqa.QAPlugin):
     """
     QA handler for a list containing FluxCalibrationResults.
     """

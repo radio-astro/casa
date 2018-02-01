@@ -1,4 +1,5 @@
 from __future__ import absolute_import
+
 import collections
 import os
 
@@ -6,14 +7,13 @@ import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.pipelineqa as pqa
 import pipeline.infrastructure.utils as utils
 import pipeline.qa.scorecalculator as qacalc
-
-from ..exportdata import aqua
 from . import resultobjects
+from ..exportdata import aqua
 
 LOG = logging.get_logger(__name__)
 
 
-class TsysflagQAHandler(pqa.QAResultHandler):    
+class TsysflagQAHandler(pqa.QAPlugin):
     """
     QA handler for an uncontained TsysflagResult.
     """
@@ -56,7 +56,7 @@ class TsysflagQAHandler(pqa.QAResultHandler):
         result.qa.all_unity_longmsg = 'No extra data was flagged in %s' % caltable
 
 
-class TsysflagListQAHandler(pqa.QAResultHandler):
+class TsysflagListQAHandler(pqa.QAPlugin):
     """
     QA handler for a list containing TsysflagResults.
     """

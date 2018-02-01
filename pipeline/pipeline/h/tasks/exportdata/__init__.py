@@ -1,16 +1,12 @@
 from __future__ import absolute_import
 
-import pipeline.infrastructure.pipelineqa as pipelineqa
+import pipeline.infrastructure.renderer.basetemplates as basetemplates
 import pipeline.infrastructure.renderer.qaadapter as qaadapter
 import pipeline.infrastructure.renderer.weblog as weblog
-import pipeline.infrastructure.renderer.basetemplates as basetemplates
-
 from . import exportdata
-from .exportdata import ExportData
 from . import qa
+from .exportdata import ExportData
 
-pipelineqa.registry.add_handler(qa.ExportDataQAHandler())
-pipelineqa.registry.add_handler(qa.ExportDataListQAHandler())
 qaadapter.registry.register_to_dataset_topic(exportdata.ExportDataResults)
 
 weblog.add_renderer(ExportData, 

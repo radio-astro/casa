@@ -1,15 +1,15 @@
 from __future__ import absolute_import
+
 import collections
 
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.pipelineqa as pqa
 import pipeline.infrastructure.utils as utils
-
 from . import k2jycal
 
 LOG = logging.get_logger(__name__)
 
-class SDK2JyCalQAHandler(pqa.QAResultHandler):
+class SDK2JyCalQAHandler(pqa.QAPlugin):
     result_cls = k2jycal.SDK2JyCalResults
     child_cls = None
 
@@ -23,7 +23,7 @@ class SDK2JyCalQAHandler(pqa.QAResultHandler):
         result.qa.pool.extend(scores)
         #result.qa.pool[:] = scores
 
-class SDK2JyCalListQAHandler(pqa.QAResultHandler):
+class SDK2JyCalListQAHandler(pqa.QAPlugin):
     result_cls = collections.Iterable
     child_cls = k2jycal.SDK2JyCalResults
 

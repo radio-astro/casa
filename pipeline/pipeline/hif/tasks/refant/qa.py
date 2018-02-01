@@ -1,16 +1,16 @@
 from __future__ import absolute_import
+
 import collections
 
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.pipelineqa as pqa
 import pipeline.infrastructure.utils as utils
-
 from . import referenceantenna
 
 LOG = logging.get_logger(__name__)
 
 
-class RefantQAHandler(pqa.QAResultHandler):    
+class RefantQAHandler(pqa.QAPlugin):    
     result_cls = referenceantenna.RefAntResults
     child_cls = None
 
@@ -36,7 +36,7 @@ class RefantQAHandler(pqa.QAResultHandler):
         result.qa.pool[:] = scores
 
 
-class RefantListQAHandler(pqa.QAResultHandler):
+class RefantListQAHandler(pqa.QAPlugin):
     result_cls = collections.Iterable
     child_cls = referenceantenna.RefAntResults
 

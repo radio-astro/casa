@@ -1,4 +1,5 @@
 from __future__ import absolute_import
+
 import abc
 import collections
 import operator
@@ -71,7 +72,7 @@ class QAScorePool(object):
         self._representative = value
 
 
-class QAResultHandler(object):
+class QAPlugin(object):
     __metaclass__ = abc.ABCMeta
 
     # the Results class this handler is expected to handle
@@ -111,6 +112,7 @@ class QAResultHandler(object):
 
 class QAHandler(object):
     def __init__(self):
+        self.__plugins_loaded = False
         self.__handlers = []
 
     def add_handler(self, handler):
@@ -126,6 +128,11 @@ class QAHandler(object):
         self.__handlers.append(handler)
 
     def do_qa(self, context, result):
+        if not self.__plugins_loaded:
+            for plugin_class in QAPlugin.__subclasses__():
+                self.add_handler(plugin_class())
+            self.__plugins_loaded = True
+
         # if this result is iterable, process the lower-level scalar results
         # first
         if isinstance(result, collections.Iterable):
@@ -141,4 +148,4 @@ class QAHandler(object):
                 handler.handle(context, result)
 
 
-registry = QAHandler()
+qa_registry = QAHandler()

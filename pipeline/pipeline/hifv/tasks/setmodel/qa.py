@@ -1,19 +1,19 @@
 from __future__ import absolute_import
+
 import collections
 
 import pipeline.infrastructure.logging as logging
-import pipeline.infrastructure.utils as utils
 import pipeline.infrastructure.pipelineqa as pqa
+import pipeline.infrastructure.utils as utils
 import pipeline.qa.scorecalculator as qacalc
-
-from . import vlasetjy
-#from pipeline.hif.tasks.common import commonfluxresults
+# from pipeline.hif.tasks.common import commonfluxresults
 from pipeline.h.tasks.common import commonfluxresults
+from . import vlasetjy
 
 LOG = logging.get_logger(__name__)
 
 
-class VLASetjyQAHandler(pqa.QAResultHandler):
+class VLASetjyQAHandler(pqa.QAPlugin):
     result_cls = commonfluxresults.FluxCalibrationResults
     child_cls = None
     generating_task = vlasetjy.VLASetjy
@@ -36,7 +36,7 @@ class VLASetjyQAHandler(pqa.QAResultHandler):
 	result.qa.all_unity_longmsg = 'No missing flux measurements in %s' % ms.basename 
 
 
-class VLASetjyListQAHandler(pqa.QAResultHandler):
+class VLASetjyListQAHandler(pqa.QAPlugin):
     """
     QA handler for a list containing FluxCalibrationResults.
     """

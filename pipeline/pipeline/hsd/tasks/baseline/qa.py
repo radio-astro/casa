@@ -7,13 +7,12 @@ import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.pipelineqa as pqa
 import pipeline.infrastructure.utils as utils
 import pipeline.qa.scorecalculator as qacalc
-
 from . import baseline
 
 LOG = logging.get_logger(__name__)
 
 
-class SDBaselineQAHandler(pqa.QAResultHandler):    
+class SDBaselineQAHandler(pqa.QAPlugin):    
     result_cls = baseline.SDBaselineResults
     child_cls = None
 
@@ -43,7 +42,7 @@ class SDBaselineQAHandler(pqa.QAResultHandler):
         result.qa.pool.extend(scores)
 
 
-class SDBaselineListQAHandler(pqa.QAResultHandler):
+class SDBaselineListQAHandler(pqa.QAPlugin):
     result_cls = basetask.ResultsList
     child_cls = baseline.SDBaselineResults
 

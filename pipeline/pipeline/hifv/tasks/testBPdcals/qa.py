@@ -1,18 +1,18 @@
 from __future__ import absolute_import
+
 import collections
 import os
 
 import pipeline.infrastructure.logging as logging
-import pipeline.infrastructure.utils as utils
 import pipeline.infrastructure.pipelineqa as pqa
+import pipeline.infrastructure.utils as utils
 import pipeline.qa.scorecalculator as qacalc
-
-from .testBPdcals import testBPdcalsResults
 from .testBPdcals import testBPdcals
+from .testBPdcals import testBPdcalsResults
 
 LOG = logging.get_logger(__name__)
 
-class testBPdcalsQAHandler(pqa.QAResultHandler):
+class testBPdcalsQAHandler(pqa.QAPlugin):
     result_cls = testBPdcalsResults
     child_cls = None
     generating_task = testBPdcals
@@ -31,7 +31,7 @@ class testBPdcalsQAHandler(pqa.QAResultHandler):
         '''
         return qacalc.score_path_exists(output_dir, ms, 'testBPdcals')
 
-class testBPdcalsListQAHandler(pqa.QAResultHandler):
+class testBPdcalsListQAHandler(pqa.QAPlugin):
     """
     QA handler for a list containing testBPdcalsResults.
     """

@@ -1,15 +1,11 @@
 from __future__ import absolute_import
+
 import pipeline.infrastructure.renderer.qaadapter as qaadapter
-import pipeline.infrastructure.pipelineqa as pipelineqa
 import pipeline.infrastructure.renderer.weblog as weblog
-
-from .k2jycal import SDK2JyCal
 from . import jyperkreader
-from . import renderer
 from . import qa
-
-pipelineqa.registry.add_handler(qa.SDK2JyCalQAHandler())
-pipelineqa.registry.add_handler(qa.SDK2JyCalListQAHandler())
+from . import renderer
+from .k2jycal import SDK2JyCal
 
 qaadapter.registry.register_to_calibration_topic(k2jycal.SDK2JyCalResults)
 

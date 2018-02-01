@@ -1,16 +1,17 @@
 from __future__ import absolute_import
+
 import collections
 
 import pipeline.infrastructure.logging as logging
-import pipeline.infrastructure.utils as utils
 import pipeline.infrastructure.pipelineqa as pqa
+import pipeline.infrastructure.utils as utils
 import pipeline.qa.scorecalculator as qacalc
 
 LOG = logging.get_logger(__name__)
 
 from . import spwphaseup
 
-class SpwPhaseupQAHandler(pqa.QAResultHandler):
+class SpwPhaseupQAHandler(pqa.QAPlugin):
     result_cls = spwphaseup.SpwPhaseupResults
     child_cls = None
     generating_task = spwphaseup.SpwPhaseup
@@ -43,7 +44,7 @@ class SpwPhaseupQAHandler(pqa.QAResultHandler):
         return qacalc.score_phaseup_mapping_fraction(ms, fullcombine, phaseup_spwmap)
 
 
-class SpwPhaseupListQAHandler(pqa.QAResultHandler):
+class SpwPhaseupListQAHandler(pqa.QAPlugin):
     """
     QA handler for a list containing SpwPhaseupResults.
     """

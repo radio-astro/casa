@@ -1,6 +1,6 @@
 from __future__ import absolute_import
+
 import collections
-import contextlib
 import os
 import shutil
 import tempfile
@@ -9,7 +9,6 @@ import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.pipelineqa as pqa
 import pipeline.infrastructure.utils as utils
 import pipeline.qa.bpcal as bpcal
-
 from . import common
 
 LOG = logging.get_logger(__name__)
@@ -86,7 +85,7 @@ class BandpassQAPool(pqa.QAScorePool):
         return '%s spw %s %s' % (antenna.name, spw_str, polarization)
 
 
-class BandpassQAHandler(pqa.QAResultHandler):    
+class BandpassQAHandler(pqa.QAPlugin):
     """
     QA handler for an uncontained BandpassResult.
     """
@@ -131,7 +130,7 @@ class BandpassQAHandler(pqa.QAResultHandler):
             result.qa.pool[:] = [pqa.QAScore(0.0, longmsg='No bandpass solution', shortmsg='No solution', vis=vis)]
 
 
-class BandpassListQAHandler(pqa.QAResultHandler):
+class BandpassListQAHandler(pqa.QAPlugin):
     """
     QA handler for a list containing BandpassResults.
     """

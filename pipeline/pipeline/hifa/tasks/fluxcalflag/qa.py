@@ -1,18 +1,18 @@
 from __future__ import absolute_import
+
 import collections
 
+import pipeline.h.tasks.exportdata.aqua as aqua
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.pipelineqa as pqa
 import pipeline.infrastructure.utils as utils
 import pipeline.qa.scorecalculator as qacalc
-
-import pipeline.h.tasks.exportdata.aqua as aqua
 from . import fluxcalflag
 
 LOG = logging.get_logger(__name__)
 
 
-class FluxcalflagQAHandler(pqa.QAResultHandler):    
+class FluxcalflagQAHandler(pqa.QAPlugin):    
     """
     QA handler for an uncontained FluxcalflagResult.
     """
@@ -51,7 +51,7 @@ class FluxcalflagQAHandler(pqa.QAResultHandler):
         return qacalc.score_refspw_mapping_fraction(ms, refspwmap)
 
 
-class FluxcalflagListQAHandler(pqa.QAResultHandler):
+class FluxcalflagListQAHandler(pqa.QAPlugin):
     """
     QA handler for a list containing FluxcalflagResults.
     """

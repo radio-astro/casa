@@ -1,6 +1,6 @@
 from __future__ import absolute_import
 
-#import pipeline.hif.tasks.importdata.importdata as importdata
+# import pipeline.hif.tasks.importdata.importdata as importdata
 import pipeline.h.tasks.importdata.importdata as importdata
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.pipelineqa as pqa
@@ -10,7 +10,7 @@ from . import almaimportdata
 LOG = logging.get_logger(__name__)
 
 
-class ALMAImportDataQAHandler(pqa.QAResultHandler):
+class ALMAImportDataQAHandler(pqa.QAPlugin):
     result_cls = importdata.ImportDataResults
     child_cls = None
     generating_task = almaimportdata.ALMAImportData

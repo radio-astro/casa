@@ -1,18 +1,18 @@
 from __future__ import absolute_import
+
 import collections
 
 import pipeline.infrastructure.logging as logging
-import pipeline.infrastructure.utils as utils
 import pipeline.infrastructure.pipelineqa as pqa
+import pipeline.infrastructure.utils as utils
 import pipeline.qa.scorecalculator as qacalc
-
-from . import almaantpos
 from pipeline.hif.tasks.antpos import antpos
+from . import almaantpos
 
 LOG = logging.get_logger(__name__)
 
 
-class ALMAAntposQAHandler(pqa.QAResultHandler):
+class ALMAAntposQAHandler(pqa.QAPlugin):
     result_cls = antpos.AntposResults
     child_cls = None
     generating_task = almaantpos.ALMAAntpos
@@ -37,7 +37,7 @@ class ALMAAntposQAHandler(pqa.QAResultHandler):
         return qacalc.score_number_antenna_offsets(ms, antenna, offsets)
 
 
-class ALMAAntposListQAHandler(pqa.QAResultHandler):
+class ALMAAntposListQAHandler(pqa.QAPlugin):
     """
     QA handler for a list containing AntResults.
     """

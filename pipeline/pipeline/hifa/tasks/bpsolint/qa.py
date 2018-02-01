@@ -1,17 +1,17 @@
 from __future__ import absolute_import
+
 import collections
 
 import pipeline.infrastructure.logging as logging
-import pipeline.infrastructure.utils as utils
 import pipeline.infrastructure.pipelineqa as pqa
+import pipeline.infrastructure.utils as utils
 import pipeline.qa.scorecalculator as qacalc
-
 from . import bpsolint
 
 LOG = logging.get_logger(__name__)
 
 
-class BpSolintQAHandler(pqa.QAResultHandler):
+class BpSolintQAHandler(pqa.QAPlugin):
     result_cls = bpsolint.BpSolintResults
     child_cls = None
     generating_task = bpsolint.BpSolint
@@ -68,7 +68,7 @@ class BpSolintQAHandler(pqa.QAResultHandler):
                                                     min_nsolutions)
 
     
-class BpSolintListQAHandler(pqa.QAResultHandler):
+class BpSolintListQAHandler(pqa.QAPlugin):
     """
     QA handler for a list containing BpSolintResults.
     """

@@ -1,4 +1,5 @@
 from __future__ import absolute_import
+
 import collections
 import os
 
@@ -6,7 +7,6 @@ import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.pipelineqa as pqa
 import pipeline.infrastructure.utils as utils
 import pipeline.qa.gpcal as gpcal
-
 from pipeline.hif.tasks.gaincal import common
 
 LOG = logging.get_logger(__name__)
@@ -66,7 +66,7 @@ class TimegaincalQAPool(pqa.QAScorePool):
         return total_score, total_table_name, total_field_name, total_ant_name, total_spw_name
 
 
-class TimegaincalQAHandler(pqa.QAResultHandler):
+class TimegaincalQAHandler(pqa.QAPlugin):
     """
     QA handler for an uncontained TimegaincalResult.
     """
@@ -100,7 +100,7 @@ class TimegaincalQAHandler(pqa.QAResultHandler):
             LOG.exception(e)
 
 
-class TimegaincalListQAHandler(pqa.QAResultHandler):
+class TimegaincalListQAHandler(pqa.QAPlugin):
     """
     QA handler for a list containing TimegaincalResults.
     """

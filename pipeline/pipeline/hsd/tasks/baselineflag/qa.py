@@ -1,17 +1,17 @@
 from __future__ import absolute_import
+
 import collections
 
-import pipeline.qa.scorecalculator as qacalc
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.pipelineqa as pqa
-
+import pipeline.qa.scorecalculator as qacalc
 from . import baselineflag
 from .renderer import accumulate_flag_per_source_spw
 
 LOG = logging.get_logger(__name__)
 
 
-class SDBLFlagListQAHandler(pqa.QAResultHandler):
+class SDBLFlagListQAHandler(pqa.QAPlugin):
     result_cls = collections.Iterable
     child_cls = baselineflag.SDBLFlagResults
 
@@ -30,7 +30,7 @@ class SDBLFlagListQAHandler(pqa.QAResultHandler):
         result.qa.pool[:] = scores
 
 
-class SDBLFlagQAHandler(pqa.QAResultHandler):
+class SDBLFlagQAHandler(pqa.QAPlugin):
     result_cls = baselineflag.SDBLFlagResults
     child_cls = None
 

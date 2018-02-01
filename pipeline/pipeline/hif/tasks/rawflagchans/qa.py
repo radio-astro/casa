@@ -1,18 +1,18 @@
 from __future__ import absolute_import
+
 import collections
 
+import pipeline.h.tasks.exportdata.aqua as aqua
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.pipelineqa as pqa
 import pipeline.infrastructure.utils as utils
 import pipeline.qa.scorecalculator as qacalc
-
-import pipeline.h.tasks.exportdata.aqua as aqua
 from . import resultobjects
 
 LOG = logging.get_logger(__name__)
 
 
-class RawflagchansQAHandler(pqa.QAResultHandler):    
+class RawflagchansQAHandler(pqa.QAPlugin):    
     """
     QA handler for an uncontained RawflagchansResult.
     """
@@ -46,7 +46,7 @@ class RawflagchansQAHandler(pqa.QAResultHandler):
         result.qa.all_unity_longmsg = 'No extra data was flagged in %s' % vis
 
 
-class RawflagchansListQAHandler(pqa.QAResultHandler):
+class RawflagchansListQAHandler(pqa.QAPlugin):
     """
     QA handler for a list containing RawflagchansResults.
     """

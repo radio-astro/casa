@@ -5,13 +5,12 @@ import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.pipelineqa as pqa
 import pipeline.infrastructure.utils as utils
 import pipeline.qa.scorecalculator as qacalc
-
 from . import resultobjects
 
 LOG = logging.get_logger(__name__)
 
 
-class BandpassflagQAHandler(pqa.QAResultHandler):
+class BandpassflagQAHandler(pqa.QAPlugin):
     """
     QA handler for an uncontained BandpassflagResults.
     """
@@ -23,10 +22,10 @@ class BandpassflagQAHandler(pqa.QAResultHandler):
         ms = context.observing_run.get_ms(vis)
 
         # Run correctedampflag QA on correctedampflag result.
-        pqa.registry.do_qa(context, result.cafresult)
+        pqa.qa_registry.do_qa(context, result.cafresult)
 
         # Run bandpass QA on bandpass result.
-        pqa.registry.do_qa(context, result.bpresult)
+        pqa.qa_registry.do_qa(context, result.bpresult)
 
         # Create bandpassflag specific score, set to a multiplication of
         # the representative score in correctedampflag QA pool and the
@@ -55,7 +54,7 @@ class BandpassflagQAHandler(pqa.QAResultHandler):
         result.qa.pool[:] = scores
 
 
-class BandpassflagListQAHandler(pqa.QAResultHandler):
+class BandpassflagListQAHandler(pqa.QAPlugin):
     """
     QA handler for a list containing BandpassflagResults.
     """

@@ -1,20 +1,19 @@
 from __future__ import absolute_import
+
 import collections
 import datetime
 import os
 
-from pipeline.infrastructure import casa_tasks, casatools
-
 import pipeline.infrastructure.logging as logging
-import pipeline.infrastructure.utils as utils
 import pipeline.infrastructure.pipelineqa as pqa
+import pipeline.infrastructure.utils as utils
 import pipeline.qa.scorecalculator as qacalc
-
+from pipeline.infrastructure import casa_tasks, casatools
 from . import importdata
 
 LOG = logging.get_logger(__name__)
 
-class VLAImportDataQAHandler(pqa.QAResultHandler):
+class VLAImportDataQAHandler(pqa.QAPlugin):
     result_cls = importdata.VLAImportDataResults
     child_cls = None
     generating_task = importdata.VLAImportData
@@ -160,7 +159,7 @@ class VLAImportDataQAHandler(pqa.QAResultHandler):
         return qacalc.score_ephemeris_coordinates(mses)
 
 
-class VLAImportDataListQAHandler(pqa.QAResultHandler):
+class VLAImportDataListQAHandler(pqa.QAPlugin):
     result_cls = collections.Iterable
     child_cls = importdata.VLAImportDataResults
 

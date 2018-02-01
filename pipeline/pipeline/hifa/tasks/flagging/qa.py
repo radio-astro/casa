@@ -1,4 +1,5 @@
 from __future__ import absolute_import
+
 import collections
 
 import pipeline.infrastructure.logging as logging
@@ -10,7 +11,7 @@ from . import flagtargetsalma
 LOG = logging.get_logger(__name__)
 
 
-class FlagTargetsALMAQAHandler(pqa.QAResultHandler):
+class FlagTargetsALMAQAHandler(pqa.QAPlugin):
     result_cls = flagtargetsalma.FlagTargetsALMAResults
     child_cls = None
 
@@ -30,7 +31,7 @@ class FlagTargetsALMAQAHandler(pqa.QAResultHandler):
         result.qa.pool[:] = scores
 
 
-class FlagTargetsALMAListQAHandler(pqa.QAResultHandler):
+class FlagTargetsALMAListQAHandler(pqa.QAPlugin):
     result_cls = collections.Iterable
     child_cls = flagtargetsalma.FlagTargetsALMAResults
 

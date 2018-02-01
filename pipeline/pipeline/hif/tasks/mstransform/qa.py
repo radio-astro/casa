@@ -1,17 +1,17 @@
 from __future__ import absolute_import
+
 import collections
 import os
 
 import pipeline.infrastructure.logging as logging
-import pipeline.infrastructure.utils as utils
 import pipeline.infrastructure.pipelineqa as pqa
+import pipeline.infrastructure.utils as utils
 import pipeline.qa.scorecalculator as qacalc
-
 from . import mstransform
 
 LOG = logging.get_logger(__name__)
 
-class MstransformQAHandler(pqa.QAResultHandler):
+class MstransformQAHandler(pqa.QAPlugin):
     result_cls = mstransform.MstransformResults
     child_cls = None
     generating_task = mstransform.Mstransform
@@ -32,7 +32,7 @@ class MstransformQAHandler(pqa.QAResultHandler):
         return qacalc.score_path_exists(output_dir, target_ms,
 	    'science target ms')
 
-class MstransformListQAHandler(pqa.QAResultHandler):
+class MstransformListQAHandler(pqa.QAPlugin):
     """
     QA handler for a list containing MstransformResults.
     """

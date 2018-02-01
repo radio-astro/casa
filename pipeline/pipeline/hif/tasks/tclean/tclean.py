@@ -488,7 +488,7 @@ class Tclean(cleanbase.CleanBase):
     def analyse(self, result):
         # Perform QA here if this is a sub-task
         context = self.inputs.context
-        pipelineqa.registry.do_qa(context, result)
+        pipelineqa.qa_registry.do_qa(context, result)
 
         return result
 

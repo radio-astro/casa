@@ -1,18 +1,17 @@
 from __future__ import absolute_import
+
 import collections
 import os
 
 import pipeline.infrastructure.logging as logging
-import pipeline.infrastructure.utils as utils
 import pipeline.infrastructure.pipelineqa as pqa
+import pipeline.infrastructure.utils as utils
 import pipeline.qa.scorecalculator as qacalc
-
 from . import plotsummary
-
 
 LOG = logging.get_logger(__name__)
 
-class PlotSummaryQAHandler(pqa.QAResultHandler):
+class PlotSummaryQAHandler(pqa.QAPlugin):
     result_cls = plotsummary.PlotSummaryResults
     child_cls = None
     generating_task = plotsummary.PlotSummary
@@ -31,7 +30,7 @@ class PlotSummaryQAHandler(pqa.QAResultHandler):
         '''
         return qacalc.score_path_exists(output_dir, ms, 'Plotsummary')
 
-class PlotSummaryListQAHandler(pqa.QAResultHandler):
+class PlotSummaryListQAHandler(pqa.QAPlugin):
     """
     QA handler for a list containing PlotSummaryResults.
     """

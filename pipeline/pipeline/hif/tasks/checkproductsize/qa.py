@@ -1,16 +1,16 @@
 from __future__ import absolute_import
+
 import collections
 
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.pipelineqa as pqa
 import pipeline.infrastructure.utils as utils
-
 from . import resultobjects
 
 LOG = logging.get_logger(__name__)
 
 
-class CheckProductSizeQAHandler(pqa.QAResultHandler):    
+class CheckProductSizeQAHandler(pqa.QAPlugin):    
     result_cls = resultobjects.CheckProductSizeResult
     child_cls = None
 
@@ -26,7 +26,7 @@ class CheckProductSizeQAHandler(pqa.QAResultHandler):
         result.qa.pool[:] = [pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg)]
 
 
-class CheckProductSizeListQAHandler(pqa.QAResultHandler):
+class CheckProductSizeListQAHandler(pqa.QAPlugin):
     result_cls = collections.Iterable
     child_cls = resultobjects.CheckProductSizeResult
 

@@ -1,18 +1,18 @@
 from __future__ import absolute_import
+
 import collections
 
-import pipeline.qa.scorecalculator as qacalc
+import pipeline.h.tasks.exportdata.aqua as aqua
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.pipelineqa as pqa
 import pipeline.infrastructure.utils as utils
-
-import pipeline.h.tasks.exportdata.aqua as aqua
+import pipeline.qa.scorecalculator as qacalc
 from . import resultobjects
 
 LOG = logging.get_logger(__name__)
 
 
-class LowgainflagQAHandler(pqa.QAResultHandler):    
+class LowgainflagQAHandler(pqa.QAPlugin):
     result_cls = resultobjects.LowgainflagResults
     child_cls = None
 
@@ -41,7 +41,7 @@ class LowgainflagQAHandler(pqa.QAResultHandler):
         result.qa.pool[:] = scores
 
 
-class LowgainflagListQAHandler(pqa.QAResultHandler):
+class LowgainflagListQAHandler(pqa.QAPlugin):
     result_cls = collections.Iterable
     child_cls = resultobjects.LowgainflagResults
 

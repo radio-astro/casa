@@ -1,23 +1,16 @@
 from __future__ import absolute_import
 
-import pipeline.infrastructure.renderer.basetemplates as basetemplates
-import pipeline.infrastructure.pipelineqa as pipelineqa
 import pipeline.infrastructure.renderer.qaadapter as qaadapter
 import pipeline.infrastructure.renderer.weblog as weblog
-
-from . import uvcontfit
-from .uvcontfit import UVcontFit
-
-from . import uvcontsub
-from .uvcontsub import UVcontSub
-#from ..applycal import applycal
+# from ..applycal import applycal
 from pipeline.h.tasks.applycal import applycal
-
 from . import qa
 from . import renderer
+from . import uvcontfit
+from . import uvcontsub
+from .uvcontfit import UVcontFit
+from .uvcontsub import UVcontSub
 
-pipelineqa.registry.add_handler(qa.UVcontFitQAHandler())
-pipelineqa.registry.add_handler(qa.UVcontFitListQAHandler())
 qaadapter.registry.register_to_dataset_topic(uvcontfit.UVcontFitResults)
 qaadapter.registry.register_to_dataset_topic(applycal.ApplycalResults)
 

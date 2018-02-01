@@ -5,13 +5,12 @@ import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.pipelineqa as pqa
 import pipeline.infrastructure.utils as utils
 import pipeline.qa.scorecalculator as qacalc
-
 from . import resultobjects
 
 LOG = logging.get_logger(__name__)
 
 
-class CorrectedampflagQAHandler(pqa.QAResultHandler):
+class CorrectedampflagQAHandler(pqa.QAPlugin):
     """
     QA handler for an uncontained CorrectedampflagResults.
     """
@@ -62,7 +61,7 @@ class CorrectedampflagQAHandler(pqa.QAResultHandler):
         result.qa.all_unity_longmsg = 'No extra data was flagged in %s' % vis
 
 
-class CorrectedampflagListQAHandler(pqa.QAResultHandler):
+class CorrectedampflagListQAHandler(pqa.QAPlugin):
     """
     QA handler for a list containing CorrectedampflagResults.
     """

@@ -1,16 +1,16 @@
 from __future__ import absolute_import
+
 import collections
 
 import pipeline.infrastructure.logging as logging
-import pipeline.infrastructure.utils as utils
 import pipeline.infrastructure.pipelineqa as pqa
+import pipeline.infrastructure.utils as utils
 import pipeline.qa.scorecalculator as qacalc
-
 from . import exportdata
 
 LOG = logging.get_logger(__name__)
 
-class ExportDataQAHandler(pqa.QAResultHandler):
+class ExportDataQAHandler(pqa.QAPlugin):
     result_cls = exportdata.ExportDataResults
     child_cls = None
     #generating_task = exportdata.ExportData
@@ -107,7 +107,7 @@ class ExportDataQAHandler(pqa.QAResultHandler):
         return qacalc.score_caltables_exist(products_dir, sessiondict)
 
 
-class ExportDataListQAHandler(pqa.QAResultHandler):
+class ExportDataListQAHandler(pqa.QAPlugin):
     """
     QA handler for a list containing ExportDataResults.
     """

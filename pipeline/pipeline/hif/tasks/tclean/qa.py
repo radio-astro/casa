@@ -1,23 +1,21 @@
 from __future__ import absolute_import
+
 import collections
+
+import numpy
+from casac import casac
 
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.pipelineqa as pqa
 import pipeline.infrastructure.utils as utils
-
-import pipeline.qa.utility.scorers as scorers
 import pipeline.qa.scorecalculator as scorecalc
-
+import pipeline.qa.utility.scorers as scorers
 from . import resultobjects
-
-from casac import casac
-
-import numpy
 
 LOG = logging.get_logger(__name__)
 
 
-class TcleanQAHandler(pqa.QAResultHandler):    
+class TcleanQAHandler(pqa.QAPlugin):    
     result_cls = resultobjects.TcleanResult
     child_cls = None
 
@@ -65,7 +63,7 @@ class TcleanQAHandler(pqa.QAResultHandler):
                 result.qa.pool.append (checkscore)
 
 
-class TcleanListQAHandler(pqa.QAResultHandler):
+class TcleanListQAHandler(pqa.QAPlugin):
     result_cls = collections.Iterable
     child_cls = resultobjects.TcleanResult
 

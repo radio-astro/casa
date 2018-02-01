@@ -10,13 +10,12 @@ import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.pipelineqa as pqa
 import pipeline.infrastructure.utils as utils
-
 from . import resultobjects
 
 LOG = logging.get_logger(__name__)
 
 
-class GfluxscaleflagQAHandler(pqa.QAResultHandler):
+class GfluxscaleflagQAHandler(pqa.QAPlugin):
     """
     QA handler for an uncontained GfluxscaleflagResults.
     """
@@ -26,14 +25,14 @@ class GfluxscaleflagQAHandler(pqa.QAResultHandler):
     def handle(self, context, result):
 
         # Run correctedampflag QA on correctedampflag result.
-        pqa.registry.do_qa(context, result.cafresult)
+        pqa.qa_registry.do_qa(context, result.cafresult)
 
         # Gather scores, store in result.
         scores = result.cafresult.qa.pool
         result.qa.pool[:] = scores
 
 
-class GfluxscaleflagListQAHandler(pqa.QAResultHandler):
+class GfluxscaleflagListQAHandler(pqa.QAPlugin):
     """
     QA handler for a list containing GfluxscaleflagResults.
     """

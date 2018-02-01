@@ -1,19 +1,19 @@
 from __future__ import absolute_import
+
 import collections
 import os
 
+import pipeline.h.tasks.exportdata.aqua as aqua
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.pipelineqa as pqa
 import pipeline.infrastructure.utils as utils
 import pipeline.qa.scorecalculator as qacalc
-
-import pipeline.h.tasks.exportdata.aqua as aqua
 from . import resultobjects
 
 LOG = logging.get_logger(__name__)
 
 
-class WvrgcalflagQAHandler(pqa.QAResultHandler):    
+class WvrgcalflagQAHandler(pqa.QAPlugin):    
     """
     QA handler for an uncontained WvrgcalflagResults.
     """
@@ -68,7 +68,7 @@ class WvrgcalflagQAHandler(pqa.QAResultHandler):
                 pass
     
 
-class WvrgcalflagListQAHandler(pqa.QAResultHandler):
+class WvrgcalflagListQAHandler(pqa.QAPlugin):
     """
     QA handler for a list containing WvrgcalflagResults.
     """

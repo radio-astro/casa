@@ -1,16 +1,12 @@
 from __future__ import absolute_import
+
 import pipeline.infrastructure.renderer.qaadapter as qaadapter
-import pipeline.infrastructure.pipelineqa as pipelineqa
 import pipeline.infrastructure.renderer.weblog as weblog
-import pipeline.infrastructure.renderer.basetemplates as super_renderer
-
 from . import baselineflag
-from .baselineflag import SDBLFlag
-from . import renderer
 from . import qa
+from . import renderer
+from .baselineflag import SDBLFlag
 
-pipelineqa.registry.add_handler(qa.SDBLFlagQAHandler())
-pipelineqa.registry.add_handler(qa.SDBLFlagListQAHandler())
 qaadapter.registry.register_to_flagging_topic(baselineflag.SDBLFlagResults)
 
 weblog.add_renderer(SDBLFlag, renderer.T2_4MDetailsBLFlagRenderer(), group_by=weblog.UNGROUPED)

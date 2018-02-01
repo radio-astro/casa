@@ -1,18 +1,18 @@
 from __future__ import absolute_import
+
 import collections
 
+import pipeline.h.tasks.exportdata.aqua as aqua
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.pipelineqa as pqa
 import pipeline.infrastructure.utils as utils
 import pipeline.qa.scorecalculator as qacalc
-
-import pipeline.h.tasks.exportdata.aqua as aqua
 from . import resultobjects
 
 LOG = logging.get_logger(__name__)
 
 
-class GainflagQAHandler(pqa.QAResultHandler):    
+class GainflagQAHandler(pqa.QAPlugin):    
     """
     QA handler for an uncontained GainflagResults.
     """
@@ -46,7 +46,7 @@ class GainflagQAHandler(pqa.QAResultHandler):
         result.qa.all_unity_longmsg = 'No extra data was flagged in %s' % vis
 
 
-class GainflagListQAHandler(pqa.QAResultHandler):
+class GainflagListQAHandler(pqa.QAPlugin):
     """
     QA handler for a list containing GainflagResults.
     """

@@ -1,16 +1,17 @@
 from __future__ import absolute_import
+
 import collections
 
-import pipeline.infrastructure.utils as utils
 import pipeline.infrastructure.pipelineqa as pqa
+import pipeline.infrastructure.utils as utils
 import pipeline.qa.scorecalculator as qacalc
-
 from . import gaincalsnr
+
 
 #LOG = logging.get_logger(__name__)
 
 
-class GaincalSnrQAHandler(pqa.QAResultHandler):
+class GaincalSnrQAHandler(pqa.QAPlugin):
     result_cls = gaincalsnr.GaincalSnrResults
     child_cls = None
     generating_task = gaincalsnr.GaincalSnr
@@ -45,7 +46,7 @@ class GaincalSnrQAHandler(pqa.QAResultHandler):
             snrs)
 
     
-class GaincalSnrListQAHandler(pqa.QAResultHandler):
+class GaincalSnrListQAHandler(pqa.QAPlugin):
     """
     QA handler for a list containing GaincalSnrResults.
     """

@@ -659,7 +659,7 @@ class Results(api.Results):
 
         # perform QA if accepting this result from a top-level task
         if task_completed:
-            pipelineqa.registry.do_qa(context, self)
+            pipelineqa.qa_registry.do_qa(context, self)
 
         if task_completed:
             # If accept() is called at the end of a task, create a proxy for

@@ -1,18 +1,18 @@
 from __future__ import absolute_import
+
 import collections
 
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.pipelineqa as pqa
 import pipeline.infrastructure.utils as utils
 import pipeline.qa.scorecalculator as qacalc
-
-from ..exportdata import aqua
 from . import flagdeterbase
+from ..exportdata import aqua
 
 LOG = logging.get_logger(__name__)
 
 
-class FlagDeterBaseQAHandler(pqa.QAResultHandler):
+class FlagDeterBaseQAHandler(pqa.QAPlugin):
     result_cls = flagdeterbase.FlagDeterBaseResults
     child_cls = None
 
@@ -31,7 +31,7 @@ class FlagDeterBaseQAHandler(pqa.QAResultHandler):
         result.qa.pool[:] = [score]
 
 
-class FlagDeterBaseListQAHandler(pqa.QAResultHandler):
+class FlagDeterBaseListQAHandler(pqa.QAPlugin):
     result_cls = collections.Iterable
     child_cls = flagdeterbase.FlagDeterBaseResults
 

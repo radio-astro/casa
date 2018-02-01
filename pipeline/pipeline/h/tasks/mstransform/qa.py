@@ -4,16 +4,15 @@ import os
 
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.logging as logging
-import pipeline.infrastructure.utils as utils
 import pipeline.infrastructure.pipelineqa as pqa
+import pipeline.infrastructure.utils as utils
 import pipeline.qa.scorecalculator as qacalc
-
 from . import mssplit
 
 LOG = logging.get_logger(__name__)
 
 
-class MsSplitQAHandler(pqa.QAResultHandler):
+class MsSplitQAHandler(pqa.QAPlugin):
     result_cls = mssplit.MsSplitResults
     child_cls = None
     generating_task = mssplit.MsSplit
@@ -34,7 +33,7 @@ class MsSplitQAHandler(pqa.QAResultHandler):
         return qacalc.score_path_exists(output_dir, target_ms,
 	    'science target ms')
 
-class MsSplitListQAHandler(pqa.QAResultHandler):
+class MsSplitListQAHandler(pqa.QAPlugin):
     """
     QA handler for a list containing MsSplitResults.
     """

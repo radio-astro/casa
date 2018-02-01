@@ -1,16 +1,16 @@
 from __future__ import absolute_import
+
 import collections
 
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.pipelineqa as pqa
 import pipeline.infrastructure.utils as utils
-
 from . import resultobjects
 
 LOG = logging.get_logger(__name__)
 
 
-class FindContQAHandler(pqa.QAResultHandler):    
+class FindContQAHandler(pqa.QAPlugin):    
     result_cls = resultobjects.FindContResult
     child_cls = None
 
@@ -26,7 +26,7 @@ class FindContQAHandler(pqa.QAResultHandler):
         result.qa.pool[:] = [pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg)]
 
 
-class FindContListQAHandler(pqa.QAResultHandler):
+class FindContListQAHandler(pqa.QAPlugin):
     result_cls = collections.Iterable
     child_cls = resultobjects.FindContResult
 
