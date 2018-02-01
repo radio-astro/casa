@@ -1,15 +1,16 @@
 from __future__ import absolute_import
+
 import os
 import shutil
-import types
 
 import pipeline.infrastructure as infrastructure
-import pipeline.infrastructure.vdp as vdp
 import pipeline.infrastructure.basetask as basetask
-from pipeline.infrastructure import casa_tasks
 import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.tablereader as tablereader
+import pipeline.infrastructure.vdp as vdp
 from pipeline.h.tasks.mstransform import mssplit
+from pipeline.infrastructure import casa_tasks
+from pipeline.infrastructure import task_registry
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -127,6 +128,7 @@ class TransformimagedataInputs(mssplit.MsSplitInputs):
         self.wtmode = wtmode
 
 
+@task_registry.set_equivalent_casa_task('hif_transformimagedata')
 class Transformimagedata(mssplit.MsSplit):
     Inputs = TransformimagedataInputs
 

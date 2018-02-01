@@ -1,15 +1,16 @@
 from __future__ import absolute_import
 
-import os
-import shutil
 import collections
 import glob
+import os
+import shutil
 import tarfile
 
-from . import almaifaqua
 import pipeline.h.tasks.common.manifest as manifest
-import pipeline.infrastructure as infrastructure
 import pipeline.h.tasks.exportdata.exportdata as exportdata
+import pipeline.infrastructure as infrastructure
+from pipeline.infrastructure import task_registry
+from . import almaifaqua
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -25,6 +26,8 @@ class ALMAExportDataInputs(exportdata.ExportDataInputs):
                                                    products_dir=products_dir)
 
 
+@task_registry.set_equivalent_casa_task('hifa_exportdata')
+@task_registry.set_casa_commands_comment('The output data products are computed.')
 class ALMAExportData(exportdata.ExportData):
 
     # link the accompanying inputs to this task

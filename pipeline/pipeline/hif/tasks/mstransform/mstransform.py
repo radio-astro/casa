@@ -1,6 +1,5 @@
 from __future__ import absolute_import
 
-import types
 import operator
 import os
 
@@ -10,6 +9,7 @@ import pipeline.infrastructure.callibrary as callibrary
 import pipeline.infrastructure.tablereader as tablereader
 import pipeline.infrastructure.vdp as vdp
 from pipeline.infrastructure import casa_tasks
+from pipeline.infrastructure import task_registry
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -132,6 +132,8 @@ class MstransformInputs(vdp.StandardInputs):
 
         return d
 
+
+@task_registry.set_equivalent_casa_task('hif_mstransform')
 class Mstransform(basetask.StandardTaskTemplate):
     Inputs = MstransformInputs
 

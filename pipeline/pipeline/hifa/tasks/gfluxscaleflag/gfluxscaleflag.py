@@ -17,6 +17,7 @@ from pipeline.hif.tasks import applycal
 from pipeline.hif.tasks import correctedampflag
 from pipeline.hif.tasks import gaincal
 from pipeline.infrastructure import casa_tasks
+from pipeline.infrastructure import task_registry
 from .resultobjects import GfluxscaleflagResults
 
 __all__ = [
@@ -144,6 +145,12 @@ class GfluxscaleflagInputs(vdp.StandardInputs):
         self.relaxed_factor = relaxed_factor
 
 
+@task_registry.set_equivalent_casa_task('hifa_gfluxscaleflag')
+@task_registry.set_casa_commands_comment(
+    'This task calls hif_correctedampflag to evaluate flagging heuristics on the phase calibrator and flux calibrator, '
+    'looking for outlier visibility points by statistically examining the scalar difference of corrected amplitudes '
+    'minus model amplitudes, and flagging those outliers.'
+)
 class Gfluxscaleflag(basetask.StandardTaskTemplate):
     Inputs = GfluxscaleflagInputs
 

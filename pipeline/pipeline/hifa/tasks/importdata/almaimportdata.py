@@ -1,10 +1,10 @@
 from __future__ import absolute_import
 
-import pipeline.infrastructure as infrastructure
-import pipeline.infrastructure.vdp as vdp
-
 import pipeline.h.tasks.importdata.fluxes as fluxes
 import pipeline.h.tasks.importdata.importdata as importdata
+import pipeline.infrastructure as infrastructure
+import pipeline.infrastructure.vdp as vdp
+from pipeline.infrastructure import task_registry
 from . import dbfluxes
 
 __all__ = [
@@ -30,6 +30,8 @@ class ALMAImportDataInputs(importdata.ImportDataInputs):
         self.dbservice = dbservice
 
 
+@task_registry.set_equivalent_casa_task('hifa_importdata')
+@task_registry.set_casa_commands_comment('If required, ASDMs are converted to MeasurementSets.')
 class ALMAImportData(importdata.ImportData):
     Inputs = ALMAImportDataInputs
 

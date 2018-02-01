@@ -16,6 +16,7 @@ from pipeline.h.tasks.common import commonhelpermethods
 from pipeline.h.tasks.common import commonresultobjects
 from pipeline.h.tasks.common import viewflaggers
 from pipeline.h.tasks.flagging.flagdatasetter import FlagdataSetter
+from pipeline.infrastructure import task_registry
 from .resultobjects import TsysflagResults, TsysflagspectraResults, TsysflagDataResults, TsysflagViewResults
 
 __all__ = [
@@ -107,6 +108,8 @@ class TsysflagInputs(vdp.StandardInputs):
         self.metric_order = metric_order
 
 
+@task_registry.set_equivalent_casa_task('h_tsysflag')
+@task_registry.set_casa_commands_comment('The Tsys calibration and spectral window map is computed.')
 class Tsysflag(basetask.StandardTaskTemplate):
     Inputs = TsysflagInputs
 

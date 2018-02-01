@@ -40,14 +40,15 @@ import ast
 import collections
 import gc
 import os
-import pkg_resources
 import traceback
-import pipeline.infrastructure.vdp as vdp
 import xml.etree.ElementTree as ElementTree
 
-import pipeline.infrastructure.logging as logging
-import pipeline.infrastructure.casataskdict as casataskdict
+import pkg_resources
+
 import pipeline.infrastructure.launcher as launcher
+import pipeline.infrastructure.logging as logging
+import pipeline.infrastructure.vdp as vdp
+from pipeline.infrastructure import task_registry
 
 LOG = logging.get_logger(__name__)
 
@@ -64,13 +65,6 @@ def _create_context(loglevel, plotlevel, name):
 def _get_context_name(procedure):
     root, _ = os.path.splitext(os.path.basename(procedure))
     return 'pipeline-%s' % root
-
-
-def _get_task_class(cli_command):
-    for k, v in casataskdict.classToCASATask.items():
-        if v == cli_command:
-            return k
-    raise KeyError('%s not registered in casataskdict' % cli_command)
 
 
 def _get_tasks(context, args, procedure):
@@ -101,7 +95,7 @@ def _get_tasks(context, args, procedure):
                 and cli_command == 'hif_exportdata':
             continue
 
-        task_class = _get_task_class(cli_command)
+        task_class = task_registry.get_pipeline_class(cli_command)
 
         task_args = {}
 

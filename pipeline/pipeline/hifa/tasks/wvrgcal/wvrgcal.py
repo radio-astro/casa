@@ -16,7 +16,7 @@ from pipeline.hif.tasks import gaincal
 from pipeline.hifa.heuristics import atm as atm_heuristic
 from pipeline.hifa.heuristics import wvrgcal as wvrgcal_heuristic
 from pipeline.hifa.tasks import bandpass
-from pipeline.infrastructure import casa_tasks
+from pipeline.infrastructure import casa_tasks, task_registry
 from . import resultobjects
 from . import wvrg_qa
 
@@ -140,6 +140,7 @@ class WvrgcalInputs(vdp.StandardInputs):
         self.nowvr_result = nowvr_result
 
 
+@task_registry.set_equivalent_casa_task('hifa_wvrgcal')
 class Wvrgcal(basetask.StandardTaskTemplate):
     Inputs = WvrgcalInputs
     

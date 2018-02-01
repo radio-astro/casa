@@ -5,10 +5,10 @@ Created on Dec 4, 2017
 """
 from __future__ import absolute_import
 
-import pipeline.infrastructure as infrastructure
-
 import pipeline.h.tasks.importdata.importdata as importdata
 import pipeline.hsd.tasks.importdata.importdata as sd_importdata
+import pipeline.infrastructure as infrastructure
+from pipeline.infrastructure import task_registry
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -57,6 +57,8 @@ class NROImportDataResults(sd_importdata.SDImportDataResults):
                 break
                
 
+@task_registry.set_equivalent_casa_task('hsdn_importdata')
+@task_registry.set_casa_commands_comment('Import Nobeyama MeasurementSets.')
 class NROImportData(sd_importdata.SDImportData):
     Inputs = NROImportDataInputs 
 

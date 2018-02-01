@@ -33,15 +33,17 @@ Todo:
 
 from __future__ import absolute_import
 from __future__ import print_function  # get python 3 print function
-import os
+
 import ast
+import os
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.api as api
 import pipeline.infrastructure.basetask as basetask
-from .resultobjects import EditimlistResult
-from pipeline.hif.tasks.makeimlist.cleantarget import CleanTarget
 from pipeline.hif.heuristics import imageparams_factory
+from pipeline.hif.tasks.makeimlist.cleantarget import CleanTarget
+from pipeline.infrastructure import task_registry
+from .resultobjects import EditimlistResult
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -104,6 +106,7 @@ class EditimlistInputs(basetask.StandardInputs):
 api.ImagingMeasurementSetsPreferred.register(EditimlistInputs)
 
 
+@task_registry.set_equivalent_casa_task('hif_editimlist')
 class Editimlist(basetask.StandardTaskTemplate):
     # 'Inputs' will be used later in execute_task().
     #   See h/cli/utils.py and infrastructure/argmagger.py

@@ -1,21 +1,12 @@
 from __future__ import absolute_import
+
 import abc
 import collections
 import datetime
 import inspect
-import itertools
-import functools
 import os
-try:
-    import cPickle as pickle
-except:
-    import pickle
 import pprint
 import re
-try:
-    import cStringIO as StringIO
-except:
-    import StringIO
 import textwrap
 import types
 import uuid
@@ -28,8 +19,18 @@ from . import launcher
 from . import logging
 from . import pipelineqa
 from . import project
+from . import task_registry
 from . import utils
 from . import vdp
+
+try:
+    import cPickle as pickle
+except:
+    import pickle
+try:
+    import cStringIO as StringIO
+except:
+    import StringIO
 
 LOG = logging.get_logger(__name__)
 
@@ -929,9 +930,10 @@ class StandardTaskTemplate(api.Task):
             # Set the task name, but only if this is a top-level task. This 
             # name will be prepended to every data product name as a sign of
             # their origin
-            from . import casataskdict
-            name = casataskdict.classToCASATask.get(self.__class__,
-                                                    self.__class__.__name__)
+            try:
+                name = task_registry.get_casa_task(self.__class__)
+            except KeyError:
+                name = self.__class__.__name__
             filenamer.NamingTemplate.task = name
             
             # initialise the subtask counter, which will be subsequently 
@@ -1181,12 +1183,8 @@ def _log_task(task, dry_run):
                             context.logs['casa_commands'])
     comment = ''
     
-    # run-time import as casataskdict loads in all tasks, some of which will
-    # extend classes inside this module
-    import pipeline.infrastructure.casataskdict as casataskdict
-
     if not os.path.exists(filename):
-        wrapped = textwrap.wrap('#\n# ' + casataskdict.CASA_COMMANDS_PROLOGUE,
+        wrapped = textwrap.wrap('# ' + _CASA_COMMANDS_PROLOGUE,
                                 subsequent_indent='# ',
                                 width=78,
                                 break_long_words=False)
@@ -1196,7 +1194,7 @@ def _log_task(task, dry_run):
     comment += '\n# %s\n#\n' % getattr(task.inputs, '_pipeline_casa_task', 'unknown pipeline task')
 
     # get the description of how this task functions and add it to the comment
-    comment += casataskdict.get_task_comment(task)
+    comment += task_registry.get_comment(task.__class__)
                         
     with open(filename, 'a') as cmdfile:
         cmdfile.write(comment)
@@ -1259,3 +1257,13 @@ finally:
     f = os.path.join(context.report_dir, context.logs['pipeline_script'])
     with open(f, 'w') as casatask_file: 
         casatask_file.write(template)
+
+
+_CASA_COMMANDS_PROLOGUE = (
+    'This file contains CASA commands run by the pipeline. Although all commands required to calibrate the data are '
+    'included here, this file cannot be executed, nor does it contain heuristic and flagging calculations performed by '
+    'pipeline code. This file is useful to understand which CASA commands are being run by each pipeline task. If one '
+    'wishes to re-run the pipeline, one should use the pipeline script linked on the front page or By Task page of the '
+    'weblog. Some stages may not have any commands listed here, e.g. hifa_importdata if conversion from ASDM to MS is '
+    'not required.'
+)

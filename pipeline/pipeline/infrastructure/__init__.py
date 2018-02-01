@@ -1,5 +1,10 @@
 from __future__ import absolute_import
+
 import sys
+
+# this goes first so that other infrastructure modules can reference the
+# task registry as .task_registry
+from .taskregistry import task_registry
 
 from . import api
 from . import callibrary
@@ -11,11 +16,10 @@ from . import jobrequest
 from . import logging
 from . import mpihelpers
 from . import utils
-
 from .callibrary import CalLibrary, CalTo, CalFrom, CalApplication, CalState
+from .jobrequest import JobRequest, casa_tasks
 from .launcher import Context, Pipeline
 from .logging import get_logger
-from .jobrequest import JobRequest, casa_tasks
 
 LOG = logging.get_logger(__name__)
 PLOT_LEVEL = '20'

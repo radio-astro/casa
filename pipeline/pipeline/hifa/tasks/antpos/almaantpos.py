@@ -1,8 +1,9 @@
 from __future__ import absolute_import
 
+import pipeline.hif.tasks.antpos.antpos as antpos
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.vdp as vdp
-import pipeline.hif.tasks.antpos.antpos as antpos
+from pipeline.infrastructure import task_registry
 
 __all__ = [
     'ALMAAntpos',
@@ -29,5 +30,6 @@ class ALMAAntposInputs(antpos.AntposInputs):
             antenna=antenna, offsets=offsets)
 
 
+@task_registry.set_equivalent_casa_task('hifa_antpos')
 class ALMAAntpos(antpos.Antpos):
     Inputs = ALMAAntposInputs

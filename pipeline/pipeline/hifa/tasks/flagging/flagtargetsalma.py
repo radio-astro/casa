@@ -1,6 +1,6 @@
 from __future__ import absolute_import
+
 import os
-import types
 import string
 
 import flaghelper
@@ -10,6 +10,7 @@ import pipeline.infrastructure.api as api
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.vdp as vdp
 from pipeline.infrastructure import casa_tasks
+from pipeline.infrastructure import task_registry
 
 # the logger for this module
 LOG = infrastructure.get_logger(__name__)
@@ -17,7 +18,7 @@ LOG = infrastructure.get_logger(__name__)
 __all__ = [
     'FlagTargetsALMA',
     'FlagTargetsALMAInputs',
-    'FlalgTargetsALMAFlagResults'
+    'FlagTargetsALMAFlagResults'
 ]
 
 
@@ -92,7 +93,6 @@ class FlagTargetsALMAInputs(vdp.StandardInputs):
         self.template = template
         self.filetemplate = filetemplate
 
-
     def to_casa_args(self):
         """
         Translate the input parameters of this class to task parameters 
@@ -111,6 +111,7 @@ class FlagTargetsALMAInputs(vdp.StandardInputs):
 # tell the infrastructure to prefentially apply the targets
 # flags to the split MS(s)
 api.ImagingMeasurementSetsPreferred.register(FlagTargetsALMAInputs)
+
 
 class FlagTargetsALMAResults(basetask.Results):
     def __init__(self, summaries, flagcmds):
@@ -147,6 +148,7 @@ class FlagTargetsALMAResults(basetask.Results):
         return s
 
 
+@task_registry.set_equivalent_casa_task('hifa_flagtargets')
 class FlagTargetsALMA(basetask.StandardTaskTemplate):
     """
     FlagTargetsALMA is a class for target flagging. It can perform

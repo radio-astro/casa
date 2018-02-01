@@ -12,6 +12,7 @@ import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.utils as utils
 import pipeline.infrastructure.vdp as vdp
 from pipeline.hif.heuristics import imageparams_factory
+from pipeline.infrastructure import task_registry
 from .cleantarget import CleanTarget
 from .resultobjects import MakeImListResult
 
@@ -146,6 +147,8 @@ class MakeImListInputs(vdp.StandardInputs):
 api.ImagingMeasurementSetsPreferred.register(MakeImListInputs)
 
 
+@task_registry.set_equivalent_casa_task('hif_makeimlist')
+@task_registry.set_casa_commands_comment('A list of target sources to be imaged is constructed.')
 class MakeImList(basetask.StandardTaskTemplate):
     Inputs = MakeImListInputs
 

@@ -14,6 +14,7 @@ import pipeline.infrastructure.vdp as vdp
 from pipeline.h.tasks.common import commonhelpermethods
 from pipeline.h.tasks.common.arrayflaggerbase import FlagCmd
 from pipeline.h.tasks.flagging.flagdatasetter import FlagdataSetter
+from pipeline.infrastructure import task_registry
 from .resultobjects import CorrectedampflagResults
 
 LOG = infrastructure.get_logger(__name__)
@@ -108,6 +109,12 @@ class CorrectedampflagInputs(vdp.StandardInputs):
         self.relaxed_factor = relaxed_factor
 
 
+@task_registry.set_equivalent_casa_task('hif_correctedampflag')
+@task_registry.set_casa_commands_comment(
+    'This task identifies, for one or more specified calibrator source intents, baselines and antennas with a '
+    'significant fraction of outlier integrations, by statistically examining the scalar difference of the corrected '
+    'amplitudes minus model amplitudes.'
+)
 class Correctedampflag(basetask.StandardTaskTemplate):
     Inputs = CorrectedampflagInputs
 

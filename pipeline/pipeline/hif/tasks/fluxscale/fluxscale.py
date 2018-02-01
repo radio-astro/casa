@@ -2,7 +2,6 @@ from __future__ import absolute_import
 
 import ast
 import re
-import types
 
 import numpy
 
@@ -15,6 +14,7 @@ from pipeline.h.heuristics import caltable as fcaltable
 from pipeline.h.heuristics import fieldnames as fieldnames
 from pipeline.h.tasks.common import commonfluxresults
 from pipeline.infrastructure import casa_tasks
+from pipeline.infrastructure import task_registry
 from .. import gaincal
 
 LOG = infrastructure.get_logger(__name__)
@@ -98,7 +98,8 @@ class FluxscaleInputs(vdp.StandardInputs):
         self.refintent = refintent
         self.transintent = transintent
 
-        
+
+@task_registry.set_equivalent_casa_task('hif_fluxscale')
 class Fluxscale(basetask.StandardTaskTemplate):
     Inputs = FluxscaleInputs
 

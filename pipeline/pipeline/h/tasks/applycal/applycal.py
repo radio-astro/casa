@@ -11,6 +11,7 @@ import pipeline.infrastructure.sessionutils as sessionutils
 import pipeline.infrastructure.utils as utils
 import pipeline.infrastructure.vdp as vdp
 from pipeline.infrastructure import casa_tasks
+from pipeline.infrastructure import task_registry
 from ...heuristics.fieldnames import IntentFieldnames
 
 __all__ = [
@@ -145,7 +146,8 @@ class ApplycalResults(basetask.Results):
                     vis=os.path.basename(caltable.vis))
         return s
 
-
+@task_registry.set_equivalent_casa_task('h_applycal')
+@task_registry.set_casa_commands_comment('Calibrations are applied to the data. Final flagging summaries are computed')
 class Applycal(basetask.StandardTaskTemplate):
     """
     Applycal executes CASA applycal tasks for the current active context
@@ -324,6 +326,7 @@ class HpcApplycalInputs(ApplycalInputs):
         self.parallel = parallel
 
 
+@task_registry.set_equivalent_casa_task('hpc_h_applycal')
 class HpcApplycal(sessionutils.ParallelTemplate):
     Inputs = HpcApplycalInputs
     Task = Applycal

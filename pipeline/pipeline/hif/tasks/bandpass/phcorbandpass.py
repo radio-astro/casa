@@ -1,15 +1,12 @@
 from __future__ import absolute_import
 
-import os
-
-import pipeline.infrastructure as infrastructure
-import pipeline.infrastructure.basetask as basetask
-import pipeline.infrastructure.vdp as vdp
-import pipeline.infrastructure.casatools as casatools
-
 import pipeline.domain.measures as measures
-from . import bandpassworker
+import pipeline.infrastructure as infrastructure
+import pipeline.infrastructure.casatools as casatools
+import pipeline.infrastructure.vdp as vdp
+from pipeline.infrastructure import task_registry
 from . import bandpassmode
+from . import bandpassworker
 from .. import gaincal
 
 LOG = infrastructure.get_logger(__name__)
@@ -28,6 +25,11 @@ class PhcorBandpassInputs(bandpassmode.BandpassModeInputs):
             phaseupbw=phaseupbw, phaseupsolint=phaseupsolint, solint=solint, **parameters)
 
 
+@task_registry.set_equivalent_casa_task('hif_bandpass')
+@task_registry.set_casa_commands_comment(
+    'The spectral response of each antenna is calibrated. A short-solint phase gain is calculated to remove '
+    'decorrelation of the bandpass calibrator before the bandpass is calculated.'
+)
 class PhcorBandpass(bandpassworker.BandpassWorker):
     Inputs = PhcorBandpassInputs
 

@@ -6,10 +6,10 @@ import types
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 from pipeline.h.tasks.restoredata import restoredata
-from ..importdata import importdata
+from pipeline.infrastructure import task_registry
 from ..finalcals import applycals
 from ..hanning import hanning
-
+from ..importdata import importdata
 
 # the logger for this module
 LOG = infrastructure.get_logger(__name__)
@@ -28,6 +28,7 @@ class VLARestoreDataInputs(restoredata.RestoreDataInputs):
     gainmap = basetask.property_with_default('gainmap', False)
 
 
+@task_registry.set_equivalent_casa_task('hifv_restoredata')
 class VLARestoreData(restoredata.RestoreData):
 
     Inputs = VLARestoreDataInputs

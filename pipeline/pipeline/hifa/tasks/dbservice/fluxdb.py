@@ -1,11 +1,12 @@
+import datetime
 import urllib
 from xml.dom import minidom
-import datetime
 
 import pipeline.infrastructure as infrastructure
-import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.basetask as basetask
+import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.vdp as vdp
+from pipeline.infrastructure import task_registry
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -47,7 +48,7 @@ class FluxdbResults(basetask.Results):
         LOG.info("FLUX CAL WEB SERVICE MERGING WITH CONTEXT")
 
     
-
+@task_registry.set_equivalent_casa_task('hifa_fluxdb')
 class Fluxdb(basetask.StandardTaskTemplate):
     Inputs = FluxdbInputs
     

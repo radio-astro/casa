@@ -1,28 +1,28 @@
 from __future__ import absolute_import
 
-import os
-import numpy
 import collections
-import types
 import itertools
+import os
+import types
 
-#import memory_profiler
+import numpy
 
 # import pipeline.infrastructure.mpihelpers as mpihelpers
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
+from pipeline.domain import DataTable
 # import pipeline.infrastructure.casatools as casatools
 from pipeline.hsd.heuristics import MaskDeviationHeuristic
-from pipeline.domain import DataTable
-
-from .. import common
-from ..common import utils
+from pipeline.infrastructure import task_registry
 from . import maskline
-from . import worker
 from . import plotter
+from . import worker
+from .. import common
 # from . import fitting
 from ..common import compress
+from ..common import utils
 
+# import memory_profiler
 _LOG = infrastructure.get_logger(__name__)
 LOG = utils.OnDemandStringParseLogger(_LOG)
 
@@ -108,6 +108,13 @@ class SDBaselineResults(common.SingleDishResults):
         return '\n'.join(['Reduction Group {0}: member {1}'.format(b['group_id'], b['members'])
                 for b in self.outcome['baselined']])
         
+
+@task_registry.set_equivalent_casa_task('hsd_baseline')
+@task_registry.set_casa_commands_comment(
+    'Subtracts spectral baseline by least-square fitting with N-sigma clipping. Spectral lines are automatically '
+    'detected and examined to determine the region that is masked to protect these features from the fit.\n'
+    'This stage performs a pipeline calculation without running any CASA commands to be put in this file.'
+)
 class SDBaseline(basetask.StandardTaskTemplate):
     Inputs = SDBaselineInputs
     

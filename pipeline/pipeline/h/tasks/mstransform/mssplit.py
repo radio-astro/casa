@@ -6,8 +6,9 @@ import shutil
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.tablereader as tablereader
-from pipeline.infrastructure import casa_tasks
 import pipeline.infrastructure.vdp as vdp
+from pipeline.infrastructure import casa_tasks
+from pipeline.infrastructure import task_registry
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -70,6 +71,10 @@ class MsSplitInputs(vdp.StandardInputs):
         return d
 
 
+@task_registry.set_equivalent_casa_task('h_mssplit')
+@task_registry.set_casa_commands_comment(
+    'The parent MS is split by field, intent, or spw and/or averaged by channel and time.'
+)
 class MsSplit(basetask.StandardTaskTemplate):
     Inputs = MsSplitInputs
 

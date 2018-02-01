@@ -12,6 +12,7 @@ import pipeline.infrastructure.utils as utils
 import pipeline.infrastructure.vdp as vdp
 from pipeline.hif.heuristics import imageparams_factory
 from pipeline.infrastructure import casa_tasks
+from pipeline.infrastructure import task_registry
 from . import cleanbase
 from .automaskthresholdsequence import AutoMaskThresholdSequence
 from .imagecentrethresholdsequence import ImageCentreThresholdSequence
@@ -168,6 +169,8 @@ class TcleanInputs(cleanbase.CleanBaseInputs):
 api.ImagingMeasurementSetsPreferred.register(TcleanInputs)
 
 
+@task_registry.set_equivalent_casa_task('hif_tclean')
+@task_registry.set_casa_commands_comment('A single target source is cleaned.')
 class Tclean(cleanbase.CleanBase):
     Inputs = TcleanInputs
 

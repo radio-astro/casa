@@ -1,13 +1,14 @@
 from __future__ import absolute_import
+
 import os
 import string
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
-import pipeline.infrastructure.utils as utils
 import pipeline.infrastructure.sessionutils as sessionutils
+import pipeline.infrastructure.utils as utils
 import pipeline.infrastructure.vdp as vdp
-
+from pipeline.infrastructure import task_registry
 from ...heuristics import findrefant
 
 __all__ = [
@@ -109,6 +110,12 @@ class RefAntResults(basetask.Results):
         return 'RefAntResults({!r}, {!r})'.format(self._vis, self._refant)
 
 
+@task_registry.set_equivalent_casa_task('hif_refant')
+@task_registry.set_casa_commands_comment(
+    'Antennas are prioritized and enumerated based on fraction flagged and position in the array. The best antenna is '
+    'used as a reference antenna unless it gets flagged, in which case the next-best antenna is used.\n'
+    'This stage performs a pipeline calculation without running any CASA commands to be put in this file.'
+)
 class RefAnt(basetask.StandardTaskTemplate):
     Inputs = RefAntInputs
 
@@ -155,6 +162,7 @@ class HpcRefAntInputs(RefAntInputs):
         self.parallel = parallel
 
 
+@task_registry.set_equivalent_casa_task('hpc_hif_refant')
 class HpcRefAnt(sessionutils.ParallelTemplate):
     Inputs = HpcRefAntInputs
     Task = RefAnt

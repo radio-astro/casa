@@ -1,16 +1,16 @@
 from __future__ import absolute_import
 
-import pipeline.infrastructure.basetask as basetask
-import pipeline.infrastructure.vdp as vdp
-import pipeline.infrastructure as infrastructure
-from pipeline.infrastructure import casa_tasks
-
 import numpy as np
 
+import pipeline.hif.heuristics.findrefant as findrefant
+import pipeline.infrastructure as infrastructure
+import pipeline.infrastructure.basetask as basetask
+import pipeline.infrastructure.vdp as vdp
 from pipeline.hif.tasks import gaincal
 from pipeline.hifv.heuristics import getCalFlaggedSoln
-import pipeline.hif.heuristics.findrefant as findrefant
 from pipeline.hifv.heuristics import weakbp, do_bandpass
+from pipeline.infrastructure import casa_tasks
+from pipeline.infrastructure import task_registry
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -47,6 +47,7 @@ class semiFinalBPdcalsResults(basetask.Results):
         self.bpdgain_touse = bpdgain_touse
 
 
+@task_registry.set_equivalent_casa_task('hifv_semiFinalBPdcals')
 class semiFinalBPdcals(basetask.StandardTaskTemplate):
     Inputs = semiFinalBPdcalsInputs
     

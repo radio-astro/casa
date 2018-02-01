@@ -2,11 +2,12 @@ from __future__ import absolute_import
 
 import os
 
+import pipeline.h.tasks.importdata.importdata as importdata
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.vdp as vdp
-import pipeline.h.tasks.importdata.importdata as importdata
 from pipeline.domain.datatable import absolute_path
+from pipeline.infrastructure import task_registry
 from . import inspection
 
 LOG = infrastructure.get_logger(__name__)
@@ -80,6 +81,8 @@ class SDImportDataResults(basetask.Results):
                 '\n\t'.join([ms.name for ms in self.mses]))
         
 
+@task_registry.set_equivalent_casa_task('hsd_importdata')
+@task_registry.set_casa_commands_comment('If required, ASDMs are converted to MeasurementSets.')
 class SDImportData(importdata.ImportData):
     Inputs = SDImportDataInputs 
     

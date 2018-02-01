@@ -5,10 +5,10 @@ import collections
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.callibrary as callibrary
 import pipeline.infrastructure.vdp as vdp
-from pipeline.infrastructure import casa_tasks
-
-from pipeline.hif.tasks import applycal
 from pipeline.h.tasks import applycal as happlycal
+from pipeline.hif.tasks import applycal
+from pipeline.infrastructure import casa_tasks
+from pipeline.infrastructure import task_registry
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -48,6 +48,7 @@ class ApplycalsInputs(applycal.IFApplycalInputs):
         return d
 
 
+@task_registry.set_equivalent_casa_task('hifv_applycals')
 class Applycals(applycal.IFApplycal):
     Inputs = ApplycalsInputs
 

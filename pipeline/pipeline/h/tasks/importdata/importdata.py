@@ -1,4 +1,5 @@
 from __future__ import absolute_import
+
 import contextlib
 import os
 import shutil
@@ -11,7 +12,7 @@ import pipeline.infrastructure.mpihelpers as mpihelpers
 import pipeline.infrastructure.tablereader as tablereader
 import pipeline.infrastructure.vdp as vdp
 from pipeline.infrastructure import casa_tasks
-
+from pipeline.infrastructure import task_registry
 from . import fluxes
 
 __all__ = [
@@ -89,6 +90,8 @@ class ImportDataResults(basetask.Results):
             '\n\t'.join([ms.name for ms in self.mses]))
 
 
+@task_registry.set_equivalent_casa_task('h_importdata')
+@task_registry.set_casa_commands_comment('If required, ASDMs are converted to MeasurementSets.')
 class ImportData(basetask.StandardTaskTemplate):
     Inputs = ImportDataInputs
 

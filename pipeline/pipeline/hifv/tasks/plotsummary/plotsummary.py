@@ -3,7 +3,7 @@ from __future__ import absolute_import
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.vdp as vdp
-
+from pipeline.infrastructure import task_registry
 from ..finalcals import applycals
 
 LOG = infrastructure.get_logger(__name__)
@@ -33,6 +33,7 @@ class PlotSummaryResults(basetask.Results):
         self.error = set()
 
 
+@task_registry.set_equivalent_casa_task('hifv_plotsummary')
 class PlotSummary(basetask.StandardTaskTemplate):
     Inputs = PlotSummaryInputs
 

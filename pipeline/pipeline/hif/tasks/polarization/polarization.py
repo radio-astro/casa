@@ -4,6 +4,7 @@ import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.vdp as vdp
 from pipeline.infrastructure import casa_tasks
+from pipeline.infrastructure import task_registry
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -37,6 +38,7 @@ class PolarizationInputs(vdp.StandardInputs):
         self.vis = vis
 
 
+@task_registry.set_equivalent_casa_task('hif_polarization')
 class Polarization(basetask.StandardTaskTemplate):
     Inputs = PolarizationInputs
 

@@ -11,8 +11,9 @@ import pipeline.infrastructure.vdp as vdp
 from pipeline.h.tasks.common import commonhelpermethods
 from pipeline.h.tasks.common import viewflaggers
 from pipeline.hifa.tasks import bandpass
-from .resultobjects import WvrgcalflagResults, WvrgcalflagViewResults
+from pipeline.infrastructure import task_registry
 from . import wvrgcalflagsetter
+from .resultobjects import WvrgcalflagResults, WvrgcalflagViewResults
 from ..wvrgcal import wvrgcal
 
 __all__ = [
@@ -80,6 +81,14 @@ class WvrgcalflagInputs(wvrgcal.WvrgcalInputs):
         self.fhi_minsample = fhi_minsample
 
 
+@task_registry.set_equivalent_casa_task('hifa_wvrgcalflag')
+@task_registry.set_casa_commands_comment(
+    'Water vapour radiometer corrections are calculated for each antenna. The quality of the correction is assessed by '
+    'comparing a phase gain solution calculated with and without the WVR correction. This requires calculation of a '
+    'temporary phase gain on the bandpass calibrator, a temporary bandpass using that temporary gain, followed by phase'
+    ' gains with the temporary bandpass, with and without the WVR correction. After that, some antennas are wvrflagged '
+    '(so that their WVR corrections are interpolated), and then the quality of the correction recalculated.'
+)
 class Wvrgcalflag(basetask.StandardTaskTemplate):
     Inputs = WvrgcalflagInputs
     

@@ -1,20 +1,22 @@
 from __future__ import absolute_import
+
 import csv
-import os
 import math
+import os
+
 import numpy as np
 
-from pipeline.h.tasks.common import commonfluxresults
-import pipeline.infrastructure.casatools as casatools
 import pipeline.domain as domain
-from pipeline.hifv.heuristics import standard as standard
-import pipeline.infrastructure.basetask as basetask
-from pipeline.infrastructure import casa_tasks
 import pipeline.infrastructure as infrastructure
-import pipeline.infrastructure.vdp as vdp
+import pipeline.infrastructure.basetask as basetask
+import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.utils as utils
-
+import pipeline.infrastructure.vdp as vdp
+from pipeline.h.tasks.common import commonfluxresults
 from pipeline.hifv.heuristics import find_EVLA_band
+from pipeline.hifv.heuristics import standard as standard
+from pipeline.infrastructure import casa_tasks
+from pipeline.infrastructure import task_registry
 
 # Paper
 # http://iopscience.iop.org/article/10.1088/0067-0049/204/2/19/pdf
@@ -296,6 +298,7 @@ class VLASetjyInputs(vdp.StandardInputs):
         return d
 
 
+@task_registry.set_equivalent_casa_task('hifv_vlasetjy')
 class VLASetjy(basetask.StandardTaskTemplate):
     Inputs = VLASetjyInputs
 

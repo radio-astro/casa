@@ -1,21 +1,23 @@
 from __future__ import absolute_import
+
 import collections
-import os
-import string
-import types
 import fnmatch
+import os
 import shutil
+import string
 import tarfile
+import types
 
 from casa_system import casa as casasys
 
 import pipeline as pipeline
 import pipeline.infrastructure as infrastructure
-import pipeline.infrastructure.vdp as vdp
 import pipeline.infrastructure.basetask as basetask
-from pipeline.infrastructure import casa_tasks
-from pipeline.h.tasks.exportdata import exportdata
+import pipeline.infrastructure.vdp as vdp
 from pipeline.h.tasks.common import manifest
+from pipeline.h.tasks.exportdata import exportdata
+from pipeline.infrastructure import casa_tasks
+from pipeline.infrastructure import task_registry
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -47,6 +49,7 @@ class ExportvlassdataInputs(exportdata.ExportDataInputs):
         self.gainmap = gainmap
 
 
+@task_registry.set_equivalent_casa_task('hifv_exportvlassdata')
 class Exportvlassdata(basetask.StandardTaskTemplate):
 
     Inputs = ExportvlassdataInputs

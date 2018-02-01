@@ -1,20 +1,15 @@
 from __future__ import absolute_import
 
-import os
-import types
 import copy
+import os
 
 import pipeline.infrastructure as infrastructure
-import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.callibrary as callibrary
 import pipeline.infrastructure.vdp as vdp
-
-from pipeline.h.heuristics import caltable as gcaltable
-
 from pipeline.hif.tasks.gaincal import common
-#from pipeline.hif.tasks.gaincal import gaincalmode
 from pipeline.hif.tasks.gaincal import gtypegaincal
 from pipeline.hifa.heuristics import exptimes as gexptimes
+from pipeline.infrastructure import task_registry
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -51,6 +46,9 @@ class TimeGaincalInputs(gtypegaincal.GTypeGaincalInputs):
         self.targetsolint = targetsolint
         self.targetminsnr = targetminsnr
 
+
+@task_registry.set_equivalent_casa_task('hifa_timegaincal')
+@task_registry.set_casa_commands_comment('Time dependent gain calibrations are computed.')
 class TimeGaincal(gtypegaincal.GTypeGaincal):
     Inputs = TimeGaincalInputs
 

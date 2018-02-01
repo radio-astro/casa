@@ -1,29 +1,31 @@
 from __future__ import absolute_import
 
-import os
-import numpy
-import itertools
 import collections
+import itertools
+import os
+
+import numpy
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.casatools as casatools
-import pipeline.infrastructure.sdfilenamer as filenamer
-from pipeline.h.tasks.common.sensitivity import Sensitivity
 import pipeline.infrastructure.imagelibrary as imagelibrary
+import pipeline.infrastructure.sdfilenamer as filenamer
 import pipeline.infrastructure.utils as utils
-from pipeline.infrastructure import casa_tasks
-#from pipeline.hif.heuristics import fieldnames
+from pipeline.extern import sensitivity_improvement
+# from pipeline.hif.heuristics import fieldnames
 from pipeline.h.heuristics import fieldnames
+from pipeline.h.tasks.common.sensitivity import Sensitivity
+from pipeline.infrastructure import casa_tasks
+from pipeline.infrastructure import task_registry
 from . import gridding
+from . import sdcombine
 from . import weighting
 from . import worker
-from . import sdcombine
 from .. import common
-from pipeline.extern import sensitivity_improvement
-from ..common import utils as sdutils
-from ..common import compress
 from ..baseline import baseline
+from ..common import compress
+from ..common import utils as sdutils
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -139,6 +141,8 @@ class SDImagingResults(basetask.ResultsList):
         super(SDImagingResults, self).merge_with_context(context)
 
 
+@task_registry.set_equivalent_casa_task('hsd_imaging')
+@task_registry.set_casa_commands_comment('Perform single dish imaging.')
 class SDImaging(basetask.StandardTaskTemplate):
     Inputs = SDImagingInputs
     # stokes to image and requred POLs for it

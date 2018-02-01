@@ -1,15 +1,16 @@
 from __future__ import absolute_import
-import os
+
+import ast
 import glob
 import math
-import ast
+import os
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
-import pipeline.infrastructure.vdp as vdp
-
-from pipeline.infrastructure import casa_tasks
 import pipeline.infrastructure.imagelibrary as imagelibrary
+import pipeline.infrastructure.vdp as vdp
+from pipeline.infrastructure import casa_tasks
+from pipeline.infrastructure import task_registry
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -81,6 +82,7 @@ class MakecutoutimagesInputs(vdp.StandardInputs):
         self.offsettrc = offsettrc
 
 
+@task_registry.set_equivalent_casa_task('hif_makecutoutimages')
 class Makecutoutimages(basetask.StandardTaskTemplate):
     Inputs = MakecutoutimagesInputs
 

@@ -8,7 +8,7 @@ import pipeline.infrastructure.imageparamsfilehandler as imageparamsfilehandler
 import pipeline.infrastructure.vdp as vdp
 from pipeline.h.tasks.common.sensitivity import Sensitivity
 from pipeline.hif.heuristics import imageparams_factory
-from pipeline.hifa.heuristics import imageprecheck
+from pipeline.infrastructure import task_registry
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -65,6 +65,7 @@ class ImagePreCheckInputs(vdp.StandardInputs):
         self.vis = vis
 
 
+@task_registry.set_equivalent_casa_task('hifa_imageprecheck')
 class ImagePreCheck(basetask.StandardTaskTemplate):
     Inputs = ImagePreCheckInputs
 

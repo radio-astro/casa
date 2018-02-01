@@ -1,4 +1,5 @@
 from __future__ import absolute_import
+
 import itertools
 import os
 
@@ -10,13 +11,11 @@ import pipeline.infrastructure.mpihelpers as mpihelpers
 import pipeline.infrastructure.sessionutils as sessionutils
 import pipeline.infrastructure.utils as utils
 import pipeline.infrastructure.vdp as vdp
-
-from pipeline.infrastructure import callibrary
-from ....hif.tasks.bandpass import bandpassworker
-from ....hif.tasks.bandpass import bandpassmode
-from ....hif.tasks.bandpass.common import BandpassResults
-from ....hif.tasks import gaincal
+from pipeline.infrastructure import callibrary, task_registry
 from ..bpsolint import bpsolint
+from ....hif.tasks import gaincal
+from ....hif.tasks.bandpass import bandpassmode, bandpassworker
+from ....hif.tasks.bandpass.common import BandpassResults
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -78,6 +77,11 @@ class ALMAPhcorBandpassInputs(bandpassmode.BandpassModeInputs):
         self.solint = solint
 
 
+@task_registry.set_equivalent_casa_task('hifa_bandpass')
+@task_registry.set_casa_commands_comment(
+    'The spectral response of each antenna is calibrated. A short-solint phase gain is calculated to remove '
+    'decorrelation of the bandpass calibrator before the bandpass is calculated.'
+)
 class ALMAPhcorBandpass(bandpassworker.BandpassWorker):
     Inputs = ALMAPhcorBandpassInputs
 
@@ -528,6 +532,7 @@ class SessionALMAPhcorBandpassInputs(ALMAPhcorBandpassInputs):
 BANDPASS_MISSING = '___BANDPASS_MISSING___'
 
 
+@task_registry.set_equivalent_casa_task('session_bandpass')
 class SessionALMAPhcorBandpass(basetask.StandardTaskTemplate):
     Inputs = SessionALMAPhcorBandpassInputs
 

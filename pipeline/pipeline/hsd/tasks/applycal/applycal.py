@@ -1,11 +1,12 @@
 from __future__ import absolute_import
+
 import os
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.vdp as vdp
-
-from pipeline.hsd.tasks.common import common
 from pipeline.h.tasks.applycal.applycal import Applycal, ApplycalInputs
+from pipeline.hsd.tasks.common import common
+from pipeline.infrastructure import task_registry
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -24,6 +25,8 @@ class SDApplycalInputs(ApplycalInputs):
                                                flagbackup=flagbackup, flagsum=flagsum, flagdetailedsum=flagdetailedsum)
 
 
+@task_registry.set_equivalent_casa_task('hsd_applycal')
+@task_registry.set_casa_commands_comment('Calibrations are applied to the data. Final flagging summaries are computed')
 class SDApplycal(Applycal, common.SingleDishTask):
     """
     Applycal executes CASA applycal tasks for the current context state,

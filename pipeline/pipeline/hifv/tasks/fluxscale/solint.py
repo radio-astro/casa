@@ -1,14 +1,15 @@
 from __future__ import absolute_import
 
-import pipeline.infrastructure.basetask as basetask
-from pipeline.infrastructure import casa_tasks
-import pipeline.infrastructure.casatools as casatools
-import pipeline.infrastructure as infrastructure
-import pipeline.infrastructure.vdp as vdp
-
-from pipeline.hifv.heuristics import getCalFlaggedSoln, getBCalStatistics
 import numpy as np
+
 import pipeline.hif.heuristics.findrefant as findrefant
+import pipeline.infrastructure as infrastructure
+import pipeline.infrastructure.basetask as basetask
+import pipeline.infrastructure.casatools as casatools
+import pipeline.infrastructure.vdp as vdp
+from pipeline.hifv.heuristics import getCalFlaggedSoln
+from pipeline.infrastructure import casa_tasks
+from pipeline.infrastructure import task_registry
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -64,6 +65,7 @@ class SolintResults(basetask.Results):
         context.evla['msinfo'][m.name].new_gain_solint1 = self.new_gain_solint1
 
 
+@task_registry.set_equivalent_casa_task('hifv_solint')
 class Solint(basetask.StandardTaskTemplate):
     Inputs = SolintInputs
     

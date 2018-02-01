@@ -1,8 +1,8 @@
 from __future__ import absolute_import
-import functools
-import shutil
 
 import collections
+import functools
+import shutil
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
@@ -16,6 +16,7 @@ from pipeline.hif.tasks import correctedampflag
 from pipeline.hif.tasks import gaincal
 from pipeline.hifa.tasks import bandpass
 from pipeline.infrastructure import casa_tasks
+from pipeline.infrastructure import task_registry
 from .resultobjects import BandpassflagResults
 from ..bandpass.almaphcorbandpass import ALMAPhcorBandpassInputs
 
@@ -104,6 +105,14 @@ class BandpassflagInputs(ALMAPhcorBandpassInputs):
         return d
 
 
+@task_registry.set_equivalent_casa_task('hifa_bandpassflag')
+@task_registry.set_casa_commands_comment(
+    'This task performs a preliminary bandpass solution and applies it, then calls hif_correctedampflag to evaluate the'
+    ' flagging heuristics, looking for outlier visibility points by statistically examining the scalar difference of '
+    'the corrected amplitudes minus model amplitudes, flagging those outliers, and then deriving a final bandpass '
+    'solution (if any flags were generated). The philosophy is that only outlier data points that have remained '
+    'outliers after calibration will be flagged. Note that the phase of the data is not assessed.'
+)
 class Bandpassflag(basetask.StandardTaskTemplate):
     Inputs = BandpassflagInputs
 

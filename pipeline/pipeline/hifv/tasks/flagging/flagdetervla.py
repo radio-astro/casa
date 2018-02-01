@@ -76,6 +76,7 @@ import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.vdp as vdp
 from pipeline.h.tasks.flagging import flagdeterbase
 from pipeline.infrastructure import casa_tasks
+from pipeline.infrastructure import task_registry
 
 # import pipeline.tasks.flagging.FlagDeterBase as gronk
 
@@ -341,6 +342,7 @@ class FlagDeterVLAResults(flagdeterbase.FlagDeterBaseResults):
 # ------------------------------------------------------------------------------
 
 
+@task_registry.set_equivalent_casa_task('hifv_flagdata')
 class FlagDeterVLA(flagdeterbase.FlagDeterBase):
 
     # Make the member functions of the FlagDeterVLAInputs() class member

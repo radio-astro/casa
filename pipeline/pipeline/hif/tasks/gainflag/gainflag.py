@@ -13,6 +13,7 @@ from pipeline.h.tasks.common import calibrationtableaccess as caltableaccess
 from pipeline.h.tasks.common import commonresultobjects
 from pipeline.h.tasks.common import viewflaggers
 from pipeline.h.tasks.flagging.flagdatasetter import FlagdataSetter
+from pipeline.infrastructure import task_registry
 from .resultobjects import GainflagResults
 from .resultobjects import GainflaggerDataResults
 from .resultobjects import GainflaggerResults
@@ -96,6 +97,14 @@ class GainflagInputs(vdp.StandardInputs):
         self.niter = niter
 
 
+@task_registry.set_equivalent_casa_task('hif_gainflag')
+@task_registry.set_casa_commands_comment(
+    'Sometimes antennas have significantly lower gain than nominal and/orhave a significantly larger spread in gain '
+    'than nominal. Even when calibrated, it is better for ALMA data to flag these antennas. The pipeline detects this '
+    'by calculating a short solint amplitude gain on the bandpass calibrator.  First, temporary phase and bandpass '
+    'solutions are calculated, and then that temporary bandpass is used to calculate a short solint phase and short '
+    'solint amplitude solution.'
+)
 class Gainflag(basetask.StandardTaskTemplate):
     Inputs = GainflagInputs
 

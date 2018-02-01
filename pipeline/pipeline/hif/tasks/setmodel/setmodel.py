@@ -1,15 +1,15 @@
 from __future__ import absolute_import
-import os
-import types
+
 import copy
+import os
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.utils as utils
 import pipeline.infrastructure.vdp as vdp
-
 from pipeline.h.heuristics import fieldnames as fieldnames
 from pipeline.h.tasks.common import commonfluxresults
+from pipeline.infrastructure import task_registry
 from . import setjy
 
 LOG = infrastructure.get_logger(__name__)
@@ -74,6 +74,7 @@ class SetModelsInputs(vdp.StandardInputs):
         self.scalebychan = scalebychan
 
 
+@task_registry.set_equivalent_casa_task('hif_setmodels')
 class SetModels(basetask.StandardTaskTemplate):
     Inputs = SetModelsInputs
 

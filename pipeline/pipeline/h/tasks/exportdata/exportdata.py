@@ -29,17 +29,17 @@ task = pipeline.tasks.exportdata.ExportData (inputs)
 """
 from __future__ import absolute_import
 
-import os
-import errno
-import tarfile
-import shutil
-import fnmatch
-import types
 import StringIO
-import copy
-import string
-import re
 import collections
+import copy
+import errno
+import fnmatch
+import os
+import re
+import shutil
+import string
+import tarfile
+import types
 
 from casa_system import casa as casasys
 
@@ -50,6 +50,7 @@ import pipeline.infrastructure.callibrary as callibrary
 import pipeline.infrastructure.imagelibrary as imagelibrary
 import pipeline.infrastructure.vdp as vdp
 from pipeline.infrastructure import casa_tasks
+from pipeline.infrastructure import task_registry
 from ..common import manifest
 
 # the logger for this module
@@ -191,6 +192,8 @@ class ExportDataResults(basetask.Results):
         return s
 
 
+@task_registry.set_equivalent_casa_task('h_exportdata')
+@task_registry.set_casa_commands_comment('The output data products are computed.')
 class ExportData(basetask.StandardTaskTemplate):
     """
     ExportData is the base class for exporting data to the products

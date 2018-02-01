@@ -1,4 +1,5 @@
 from __future__ import absolute_import
+
 import collections
 import operator
 import os
@@ -6,20 +7,20 @@ import uuid
 
 import scipy.stats as stats
 
-from pipeline.domain import FluxMeasurement
 import pipeline.domain.measures as measures
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
-import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.callibrary as callibrary
-import pipeline.infrastructure.vdp as vdp
+import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.sessionutils as sessionutils
-
-from pipeline.hif.tasks import gaincal
-from pipeline.infrastructure import mpihelpers
+import pipeline.infrastructure.vdp as vdp
+from pipeline.domain import FluxMeasurement
 from pipeline.h.tasks.common import commonfluxresults
+from pipeline.hif.tasks import gaincal
 from pipeline.hif.tasks.fluxscale import fluxscale
 from pipeline.hif.tasks.setmodel import setjy
+from pipeline.infrastructure import mpihelpers
+from pipeline.infrastructure import task_registry
 from . import fluxes
 from ... import heuristics
 
@@ -81,6 +82,10 @@ class GcorFluxscaleInputs(fluxscale.FluxscaleInputs):
         self.peak_fraction = peak_fraction
 
 
+@task_registry.set_equivalent_casa_task('hifa_gfluxscale')
+@task_registry.set_casa_commands_comment(
+    'The absolute flux calibration is transferred to secondary calibrator sources.'
+)
 class GcorFluxscale(basetask.StandardTaskTemplate):
     Inputs = GcorFluxscaleInputs
 
@@ -432,6 +437,7 @@ class SessionGcorFluxscaleInputs(GcorFluxscaleInputs):
 AMPLITUDE_MISSING = '__AMPLITUDE_MISSING__'
 
 
+@task_registry.set_equivalent_casa_task('session_gfluxscale')
 class SessionGcorFluxscale(basetask.StandardTaskTemplate):
     Inputs = SessionGcorFluxscaleInputs
 

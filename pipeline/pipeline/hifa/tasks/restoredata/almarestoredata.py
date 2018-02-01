@@ -3,6 +3,7 @@ from __future__ import absolute_import
 import pipeline.h.tasks.restoredata.restoredata as restoredata
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.vdp as vdp
+from pipeline.infrastructure import task_registry
 from ..importdata import almaimportdata
 
 LOG = infrastructure.get_logger(__name__)
@@ -19,6 +20,7 @@ class ALMARestoreDataInputs(restoredata.RestoreDataInputs):
                                                     ocorr_mode=ocorr_mode)
 
 
+@task_registry.set_equivalent_casa_task('hifa_restoredata')
 class ALMARestoreData(restoredata.RestoreData):
     Inputs = ALMARestoreDataInputs
 

@@ -1,18 +1,20 @@
 from __future__ import absolute_import
+
 import collections
 import os
 import shutil
+
 import numpy
 
+import pipeline.h.tasks.importdata.importdata as importdata
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.casatools as casatools
-from pipeline.infrastructure import casa_tasks
 import pipeline.infrastructure.mpihelpers as mpihelpers
 import pipeline.infrastructure.vdp as vdp
-
-import pipeline.h.tasks.importdata.importdata as importdata
 from pipeline.hifv.heuristics.vlascanheuristics import VLAScanHeuristics
+from pipeline.infrastructure import casa_tasks
+from pipeline.infrastructure import task_registry
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -103,6 +105,8 @@ class VLAImportDataResults(basetask.Results):
         return 'VLAImportDataResults:\n\t{0}'.format('\n\t'.join([ms.name for ms in self.mses]))
 
 
+@task_registry.set_equivalent_casa_task('hifv_importdata')
+@task_registry.set_casa_commands_comment('If required, ASDMs are converted to MeasurementSets.')
 class VLAImportData(importdata.ImportData):
     Inputs = VLAImportDataInputs
 

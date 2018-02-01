@@ -1,20 +1,21 @@
 from __future__ import absolute_import
 
-import pipeline.infrastructure.basetask as basetask
-from pipeline.infrastructure import casa_tasks
-import pipeline.infrastructure.casatools as casatools
-import pipeline.infrastructure as infrastructure
-import pipeline.infrastructure.vdp as vdp
-import pipeline.infrastructure.utils as utils
+import math
 
 import numpy as np
-import math
 import scipy as scp
 import scipy.optimize as scpo
 
-from pipeline.hifv.heuristics import find_EVLA_band, getCalFlaggedSoln, getBCalStatistics
-from pipeline.hifv.tasks.setmodel.vlasetjy import find_standards, standard_sources
 import pipeline.hif.heuristics.findrefant as findrefant
+import pipeline.infrastructure as infrastructure
+import pipeline.infrastructure.basetask as basetask
+import pipeline.infrastructure.casatools as casatools
+import pipeline.infrastructure.utils as utils
+import pipeline.infrastructure.vdp as vdp
+from pipeline.hifv.heuristics import find_EVLA_band
+from pipeline.hifv.tasks.setmodel.vlasetjy import standard_sources
+from pipeline.infrastructure import casa_tasks
+from pipeline.infrastructure import task_registry
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -91,6 +92,7 @@ class FluxbootResults(basetask.Results):
         context.evla['msinfo'][m.name].fbversion = self.fbversion
 
 
+@task_registry.set_equivalent_casa_task('hifv_fluxboot')
 class Fluxboot(basetask.StandardTaskTemplate):
     Inputs = FluxbootInputs
 

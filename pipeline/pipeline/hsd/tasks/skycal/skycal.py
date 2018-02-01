@@ -4,11 +4,12 @@ import os
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
-from pipeline.infrastructure import casa_tasks
-import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.callibrary as callibrary
+import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.sdfilenamer as filenamer
 import pipeline.infrastructure.vdp as vdp
+from pipeline.infrastructure import casa_tasks
+from pipeline.infrastructure import task_registry
 from .. import common
 
 LOG = infrastructure.get_logger(__name__)
@@ -90,6 +91,8 @@ class SDSkyCalResults(common.SingleDishResults):
         return str(self.outcome)
 
 
+@task_registry.set_equivalent_casa_task('hsd_skycal')
+@task_registry.set_casa_commands_comment('Generates sky calibration table according to calibration strategy.')
 class SDSkyCal(basetask.StandardTaskTemplate):
     Inputs = SDSkyCalInputs
 

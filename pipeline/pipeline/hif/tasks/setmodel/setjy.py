@@ -1,25 +1,20 @@
 from __future__ import absolute_import
-import ast
+
 import csv
-import datetime
-import os
-import string
-import types
-import numpy as np
 import decimal
+import os
 
-
-
-import pipeline.infrastructure.basetask as basetask
-import pipeline.infrastructure as infrastructure
-import pipeline.infrastructure.utils as utils
-import pipeline.infrastructure.vdp as vdp
-from pipeline.infrastructure import casa_tasks
+import numpy as np
 
 import pipeline.domain as domain
-import pipeline.domain.measures as measures
+import pipeline.infrastructure as infrastructure
+import pipeline.infrastructure.basetask as basetask
+import pipeline.infrastructure.utils as utils
+import pipeline.infrastructure.vdp as vdp
 from pipeline.h.tasks.common import commonfluxresults
 from pipeline.hif.heuristics import standard as standard
+from pipeline.infrastructure import casa_tasks
+from pipeline.infrastructure import task_registry
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -238,6 +233,11 @@ class SetjyInputs(vdp.StandardInputs):
         return d
 
 
+@task_registry.set_equivalent_casa_task('hif_setjy')
+@task_registry.set_casa_commands_comment(
+    'If the amplitude calibrator is a resolved solar system source, this uses a subset of antennas with short baselines'
+    ' (where the resolved source model is of highest quality).'
+)
 class Setjy(basetask.StandardTaskTemplate):
     Inputs = SetjyInputs
 

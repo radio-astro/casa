@@ -13,6 +13,7 @@ import pipeline.infrastructure.utils as utils
 import pipeline.infrastructure.vdp as vdp
 from pipeline.hif.heuristics import findcont
 from pipeline.infrastructure import casa_tasks
+from pipeline.infrastructure import task_registry
 from .resultobjects import FindContResult
 
 LOG = infrastructure.get_logger(__name__)
@@ -40,6 +41,7 @@ class FindContInputs(vdp.StandardInputs):
 api.ImagingMeasurementSetsPreferred.register(FindContInputs)
 
 
+@task_registry.set_equivalent_casa_task('hif_findcont')
 class FindCont(basetask.StandardTaskTemplate):
     Inputs = FindContInputs
 

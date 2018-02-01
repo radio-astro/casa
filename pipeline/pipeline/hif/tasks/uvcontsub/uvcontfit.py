@@ -13,9 +13,9 @@ import pipeline.infrastructure.callibrary as callibrary
 import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.contfilehandler as contfilehandler
 import pipeline.infrastructure.vdp as vdp
-from pipeline.infrastructure import casa_tasks
-
 from pipeline.h.heuristics import caltable as uvcaltable
+from pipeline.infrastructure import casa_tasks
+from pipeline.infrastructure import task_registry
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -151,6 +151,7 @@ class UVcontFitInputs(vdp.StandardInputs):
 api.ImagingMeasurementSetsPreferred.register(UVcontFitInputs)
 
 
+@task_registry.set_equivalent_casa_task('hif_uvcontfit')
 class UVcontFit(basetask.StandardTaskTemplate):
     Inputs = UVcontFitInputs
 

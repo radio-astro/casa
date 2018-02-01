@@ -1,10 +1,10 @@
 from __future__ import absolute_import
 
-import pipeline.infrastructure.basetask as basetask
-from pipeline.infrastructure import casa_tasks
 import pipeline.infrastructure as infrastructure
+import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.vdp as vdp
-
+from pipeline.infrastructure import casa_tasks
+from pipeline.infrastructure import task_registry
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -39,6 +39,7 @@ class CheckflagResults(basetask.Results):
         return s 
 
 
+@task_registry.set_equivalent_casa_task('hifv_checkflag')
 class Checkflag(basetask.StandardTaskTemplate):
     Inputs = CheckflagInputs
     

@@ -1,14 +1,16 @@
 from __future__ import absolute_import
+
 import math
 
-import pipeline.infrastructure as infrastructure
-import pipeline.infrastructure.vdp as vdp
-from pipeline.infrastructure import casa_tasks
-from pipeline.hif.tasks.polarization import polarization
-import pipeline.hif.tasks.gaincal as gaincal
 import pipeline.hif.heuristics.findrefant as findrefant
+import pipeline.hif.tasks.gaincal as gaincal
+import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.callibrary as callibrary
-from pipeline.hifv.tasks.setmodel.vlasetjy import find_standards, standard_sources
+import pipeline.infrastructure.vdp as vdp
+from pipeline.hif.tasks.polarization import polarization
+from pipeline.hifv.tasks.setmodel.vlasetjy import standard_sources
+from pipeline.infrastructure import casa_tasks
+from pipeline.infrastructure import task_registry
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -72,6 +74,7 @@ class CircfeedpolcalInputs(vdp.StandardInputs):
         self.leakge_poltype = leakage_poltype
 
 
+@task_registry.set_equivalent_casa_task('hifv_circfeedpolcal')
 class Circfeedpolcal(polarization.Polarization):
     Inputs = CircfeedpolcalInputs
 

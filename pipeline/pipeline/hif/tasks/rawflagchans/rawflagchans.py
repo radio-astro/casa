@@ -12,6 +12,7 @@ from pipeline.h.tasks.common import commonhelpermethods
 from pipeline.h.tasks.common import commonresultobjects
 from pipeline.h.tasks.common import viewflaggers
 from pipeline.h.tasks.flagging.flagdatasetter import FlagdataSetter
+from pipeline.infrastructure import task_registry
 from .resultobjects import RawflagchansResults, RawflagchansDataResults, RawflagchansViewResults
 
 __all__ = [
@@ -102,6 +103,7 @@ class RawflagchansInputs(vdp.StandardInputs):
         self.niter = niter
 
 
+@task_registry.set_equivalent_casa_task('hif_rawflagchans')
 class Rawflagchans(basetask.StandardTaskTemplate):
     Inputs = RawflagchansInputs
 

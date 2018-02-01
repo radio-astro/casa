@@ -1,10 +1,10 @@
 from __future__ import absolute_import
 import os
 
-
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
-from pipeline.infrastructure import casa_tasks
+import pipeline.infrastructure.vdp as vdp
+from pipeline.infrastructure import casa_tasks, task_registry
 from recipes import tec_maps
 
 LOG = infrastructure.get_logger(__name__)
@@ -32,12 +32,13 @@ class ${taskname.capitalize()}Results(basetask.Results):
         return '${taskname.capitalize()}Results:'
 
 
-class ${taskname.capitalize()}Inputs(basetask.StandardInputs):
+class ${taskname.capitalize()}Inputs(vdp.StandardInputs):
     def __init__(self, context, vis=None):
-        # set the properties to the values given as input arguments
-        self._init_properties(vars())
+        super(${taskname.capitalize()}Inputs, self).__init__()
 
 
+@task_registry.set_equivalent_casa_task('${package}_${taskname.lower()}')
+@task_registry.set_casa_commands_comment('Add your task description for inclusion in casa_commands.log')
 class ${taskname.capitalize()}(basetask.StandardTaskTemplate):
     Inputs = ${taskname.capitalize()}Inputs
 

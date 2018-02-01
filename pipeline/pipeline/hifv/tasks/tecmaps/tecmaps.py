@@ -1,5 +1,4 @@
 from __future__ import absolute_import
-from recipes import tec_maps
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
@@ -7,7 +6,8 @@ import pipeline.infrastructure.callibrary as callibrary
 import pipeline.infrastructure.vdp as vdp
 from pipeline.h.heuristics import caltable as caltable_heuristic
 from pipeline.infrastructure import casa_tasks
-
+from pipeline.infrastructure import task_registry
+from recipes import tec_maps
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -79,6 +79,7 @@ class TecMapsResults(basetask.Results):
         return s
 
 
+@task_registry.set_equivalent_casa_task('hifv_tecmaps')
 class TecMaps(basetask.StandardTaskTemplate):
     Inputs = TecMapsInputs
 

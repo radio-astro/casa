@@ -1,15 +1,16 @@
 from __future__ import absolute_import
-import string
-import types
-import sys
+
 import os
+import sys
+
 import numpy as np
 
-import pipeline.infrastructure.casatools as casatools
-import pipeline.infrastructure.basetask as basetask
-import pipeline.infrastructure.vdp as vdp
 import pipeline.infrastructure as infrastructure
+import pipeline.infrastructure.basetask as basetask
+import pipeline.infrastructure.casatools as casatools
+import pipeline.infrastructure.vdp as vdp
 from pipeline.infrastructure import casa_tasks
+from pipeline.infrastructure import task_registry
 from .solsyslinesdict import SolarSystemLineList
 
 __all__ = [
@@ -105,6 +106,10 @@ class FluxcalFlagResults(basetask.Results):
             return linelist
 
 
+@task_registry.set_equivalent_casa_task('hifa_fluxcalflag')
+@task_registry.set_casa_commands_comment(
+    'This stage performs a pipeline calculation without running any CASA commands to be put in this file.'
+)
 class FluxcalFlag(basetask.StandardTaskTemplate):
     Inputs = FluxcalFlagInputs
 

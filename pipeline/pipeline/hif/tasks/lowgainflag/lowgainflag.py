@@ -7,12 +7,13 @@ import numpy as np
 import pipeline.domain as domain
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
-import pipeline.infrastructure.vdp as vdp
 import pipeline.infrastructure.utils as utils
+import pipeline.infrastructure.vdp as vdp
 from pipeline.h.tasks.common import calibrationtableaccess as caltableaccess
 from pipeline.h.tasks.common import commonresultobjects
 from pipeline.h.tasks.common import viewflaggers
 from pipeline.h.tasks.flagging.flagdatasetter import FlagdataSetter
+from pipeline.infrastructure import task_registry
 from .resultobjects import LowgainflagDataResults
 from .resultobjects import LowgainflagResults
 from .resultobjects import LowgainflagViewResults
@@ -94,6 +95,13 @@ class LowgainflagInputs(vdp.StandardInputs):
         self.niter = niter
 
 
+@task_registry.set_equivalent_casa_task('hif_lowgainflag')
+@task_registry.set_casa_commands_comment(
+    'Sometimes antennas have significantly lower gain than nominal. Even when calibrated, it is better for ALMA data to'
+    ' flag these antennas. The pipeline detects this by calculating a long solint amplitude gain on the bandpass '
+    'calibrator.  First, temporary phase and bandpass solutions are calculated, and then that temporary bandpass is '
+    'used to calculate a short solint phase and long solint amplitude solution.'
+)
 class Lowgainflag(basetask.StandardTaskTemplate):
     Inputs = LowgainflagInputs
 

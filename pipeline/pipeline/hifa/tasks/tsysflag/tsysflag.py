@@ -2,6 +2,7 @@ from __future__ import absolute_import
 
 import pipeline.h.tasks.tsysflag.tsysflag as tsysflag
 import pipeline.infrastructure as infrastructure
+from pipeline.infrastructure import task_registry
 
 __all__ = [
     'Tsysflag',
@@ -34,5 +35,7 @@ class TsysflagInputs(tsysflag.TsysflagInputs):
             metric_order=metric_order, normalize_tsys=normalize_tsys)
 
 
+@task_registry.set_equivalent_casa_task('hifa_tsysflag')
+@task_registry.set_casa_commands_comment('The Tsys calibration and spectral window map is computed.')
 class Tsysflag(tsysflag.Tsysflag):
     Inputs = TsysflagInputs

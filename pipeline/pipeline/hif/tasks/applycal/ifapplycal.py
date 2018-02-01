@@ -4,6 +4,7 @@ import pipeline.h.tasks.applycal.applycal as applycal
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.sessionutils as sessionutils
 import pipeline.infrastructure.vdp as vdp
+from pipeline.infrastructure import task_registry
 
 __all__ = ['IFApplycal',
            'IFApplycalInputs',
@@ -23,6 +24,8 @@ class IFApplycalInputs(applycal.ApplycalInputs):
                                                flagbackup=flagbackup, flagsum=flagsum, flagdetailedsum=flagdetailedsum)
 
 
+@task_registry.set_equivalent_casa_task('hif_applycal')
+@task_registry.set_casa_commands_comment('Calibrations are applied to the data. Final flagging summaries are computed')
 class IFApplycal(applycal.Applycal):
     Inputs = IFApplycalInputs
 
@@ -43,6 +46,7 @@ class HpcIFApplycalInputs(IFApplycalInputs):
         self.parallel = parallel
 
 
+@task_registry.set_equivalent_casa_task('hpc_hif_applycal')
 class HpcIFApplycal(applycal.HpcApplycal):
     Inputs = HpcIFApplycalInputs
     Task = IFApplycal

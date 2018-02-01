@@ -4,17 +4,16 @@ import os
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
-import pipeline.infrastructure.vdp as vdp
-from pipeline.infrastructure import casa_tasks
 import pipeline.infrastructure.utils as utils
-#from pipeline.hif.heuristics import fieldnames
+import pipeline.infrastructure.vdp as vdp
+# from pipeline.hif.heuristics import fieldnames
 from pipeline.h.heuristics import fieldnames
-
-from .. import common
-from ..common import utils as sdutils
-
+from pipeline.infrastructure import casa_tasks
+from pipeline.infrastructure import task_registry
 from . import worker
 from .flagsummary import SDBLFlagSummary
+from .. import common
+from ..common import utils as sdutils
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -243,6 +242,12 @@ class SDBLFlagResults(common.SingleDishResults):
     def _outcome_name(self):
         return 'none'
 
+
+@task_registry.set_equivalent_casa_task('hsd_blflag')
+@task_registry.set_casa_commands_comment(
+    'Perform row-based flagging based on noise level and quality of spectral baseline subtraction.\n'
+    'This stage performs a pipeline calculation without running any CASA commands to be put in this file.'
+)
 class SDBLFlag(basetask.StandardTaskTemplate):
     """
     Single dish flagging class.

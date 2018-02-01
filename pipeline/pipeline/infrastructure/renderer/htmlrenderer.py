@@ -1,4 +1,5 @@
 from __future__ import absolute_import, division
+
 import collections
 import contextlib
 import datetime
@@ -6,28 +7,28 @@ import itertools
 import math
 import os
 import pydoc
-import pkg_resources
 import re
 import shutil
 import zipfile
 
-from casa_system import casa as casasys
 import mako
+import pkg_resources
+from casa_system import casa as casasys
 
 import pipeline as pipeline
 import pipeline.domain.measures as measures
 import pipeline.extern.adopted as adopted
 import pipeline.infrastructure as infrastructure
-import pipeline.infrastructure.casatools as casatools
-import pipeline.infrastructure.casataskdict as casataskdict
-import pipeline.infrastructure.displays.summary as summary
-import pipeline.infrastructure.displays.pointing as pointing
 import pipeline.infrastructure.basetask as basetask
+import pipeline.infrastructure.casatools as casatools
+import pipeline.infrastructure.displays.pointing as pointing
+import pipeline.infrastructure.displays.summary as summary
 import pipeline.infrastructure.logging as logging
+from pipeline.infrastructure import task_registry
 from pipeline.infrastructure.renderer.templates import resources
 from . import qaadapter
-from .. import utils
 from . import weblog
+from .. import utils
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -95,8 +96,11 @@ def get_task_name(result_obj, include_stage=True):
 
     if hasattr(result_obj, 'task'):
         task = result_obj.task
-        return '%s%s' % (stage,
-                         casataskdict.classToCASATask.get(task, task.__name__))
+        try:
+            casa_task = task_registry.get_casa_task(task)
+        except KeyError:
+            casa_task = task.__name__
+        return '%s%s' % (stage, casa_task)
 
     else:
         if not isinstance(result_obj, (list, basetask.ResultsList)):
@@ -114,8 +118,11 @@ def get_task_name(result_obj, include_stage=True):
             LOG.warning(msg)
             return msg
 
-        return '%s%s' % (stage,
-                         casataskdict.classToCASATask.get(task_cls, task_cls.__name__))
+        try:
+            casa_task = task_registry.get_casa_task(task_cls)
+        except KeyError:
+            casa_task = task_cls.__name__
+        return '%s%s' % (stage, casa_task)
 
 
 def get_stage_number(result_obj):

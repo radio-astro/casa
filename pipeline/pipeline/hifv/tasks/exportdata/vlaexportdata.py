@@ -6,6 +6,7 @@ import shutil
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.vdp as vdp
 from pipeline.h.tasks.exportdata import exportdata
+from pipeline.infrastructure import task_registry
 from . import vlaifaqua
 
 LOG = infrastructure.get_logger(__name__)
@@ -23,6 +24,7 @@ class VLAExportDataInputs(exportdata.ExportDataInputs):
         self.gainmap = gainmap
 
 
+@task_registry.set_equivalent_casa_task('hifv_exportdata')
 class VLAExportData(exportdata.ExportData):
 
     # link the accompanying inputs to this task

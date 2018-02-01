@@ -5,11 +5,12 @@ import types
 import pipeline.hif.tasks.gaincal as gaincal
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
-import pipeline.infrastructure.vdp as vdp
 import pipeline.infrastructure.callibrary as callibrary
+import pipeline.infrastructure.vdp as vdp
 from pipeline.h.heuristics import caltable as hcaltable
 from pipeline.hif.tasks.common import commoncalinputs
 from pipeline.infrastructure import casa_tasks
+from pipeline.infrastructure import task_registry
 from .almapolhelperscopy import *
 from .almapolhelpersfuture import *
 from .resultobjects import LinpolcalResult
@@ -151,6 +152,7 @@ class LinpolcalInputs(commoncalinputs.VdpCommonCalibrationInputs):
         self.minblperant = minblperant
 
 
+@task_registry.set_equivalent_casa_task('hifa_linpolcal')
 class Linpolcal(basetask.StandardTaskTemplate):
     Inputs = LinpolcalInputs
 

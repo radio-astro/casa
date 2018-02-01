@@ -1,4 +1,5 @@
 from __future__ import absolute_import
+
 import collections
 import copy
 import datetime
@@ -10,26 +11,16 @@ import itertools
 import math
 import operator
 import os
-import xml.dom.minidom as minidom
-
-try:
-    import cPickle as pickle
-except:
-    import pickle
 import platform
 import re
 import string
-try:
-    import cStringIO as StringIO
-except:
-    import StringIO
 import types
 import uuid
-import numpy as np
+import xml.dom.minidom as minidom
 
 import cachetools
+import numpy as np
 import pyparsing
-
 # for is_top_level_task
 from mpi4casa.MPIEnvironment import MPIEnvironment
 
@@ -38,6 +29,16 @@ from . import casatools
 from . import logging
 from . import mpihelpers
 from . import pipelineqa
+from . import task_registry
+
+try:
+    import cPickle as pickle
+except:
+    import pickle
+try:
+    import cStringIO as StringIO
+except:
+    import StringIO
 
 LOG = logging.get_logger(__name__)
 
@@ -1302,10 +1303,7 @@ def check_ppr(pprfile):
         False on error.
         True  on success.
     """
-
-    import pipeline.infrastructure.casataskdict as casataskdict
-
-    casatasks = set(casataskdict.CasaTaskDict.keys())
+    casatasks = {m.casa_task for m in task_registry.task_map}
     try:
         doc = minidom.parse(pprfile)
     except (IOError, Exception):

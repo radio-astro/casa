@@ -6,6 +6,7 @@ import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.vdp as vdp
 from pipeline.h.heuristics import caltable as caltable_heuristic
+from pipeline.infrastructure import task_registry
 from . import jyperkreader
 from . import worker
 
@@ -93,6 +94,8 @@ class SDK2JyCalResults(basetask.Results):
         return s
 
 
+@task_registry.set_equivalent_casa_task('hsd_k2jycal')
+@task_registry.set_casa_commands_comment('The Kelvin to Jy calibration tables are generated.')
 class SDK2JyCal(basetask.StandardTaskTemplate):
     Inputs = SDK2JyCalInputs    
 

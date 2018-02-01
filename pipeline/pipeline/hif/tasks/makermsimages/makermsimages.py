@@ -1,11 +1,13 @@
 from __future__ import absolute_import
-import os
+
 import glob
+import os
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
-from pipeline.infrastructure import casa_tasks
 import pipeline.infrastructure.imagelibrary as imagelibrary
+from pipeline.infrastructure import casa_tasks
+from pipeline.infrastructure import task_registry
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -68,6 +70,7 @@ class MakermsimagesInputs(basetask.StandardInputs):
         self._init_properties(vars())
 
 
+@task_registry.set_equivalent_casa_task('hif_makermsimages')
 class Makermsimages(basetask.StandardTaskTemplate):
     Inputs = MakermsimagesInputs
 

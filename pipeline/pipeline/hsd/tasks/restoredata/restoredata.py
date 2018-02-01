@@ -7,6 +7,7 @@ import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.vdp as vdp
+from pipeline.infrastructure import task_registry
 from .. import applycal
 from ..importdata import importdata as importdata
 
@@ -73,6 +74,7 @@ class SDRestoreDataResults(restoredata.RestoreDataResults):
             LOG.debug('msobj.k2jy_factor = {0}'.format(getattr(msobj, 'k2jy_factor', 'N/A')))
 
 
+@task_registry.set_equivalent_casa_task('hsd_restoredata')
 class SDRestoreData(restoredata.RestoreData):
     Inputs = SDRestoreDataInputs
 

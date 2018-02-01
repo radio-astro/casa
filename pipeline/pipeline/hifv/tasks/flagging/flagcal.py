@@ -1,10 +1,12 @@
 from __future__ import absolute_import
+
 import os
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.vdp as vdp
 from pipeline.infrastructure import casa_tasks
+from pipeline.infrastructure import task_registry
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -43,6 +45,7 @@ class FlagcalInputs(vdp.StandardInputs):
         self.clipminmax = clipminmax
 
 
+@task_registry.set_equivalent_casa_task('hifv_flagcal')
 class Flagcal(basetask.StandardTaskTemplate):
     Inputs = FlagcalInputs
 

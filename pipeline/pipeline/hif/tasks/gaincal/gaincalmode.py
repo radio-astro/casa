@@ -2,6 +2,7 @@ from __future__ import absolute_import
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
+from pipeline.infrastructure import task_registry
 from . import gsplinegaincal
 from . import gtypegaincal
 from . import ktypegaincal
@@ -18,5 +19,6 @@ class GaincalModeInputs(basetask.ModeInputs):
         super(GaincalModeInputs, self).__init__(context, mode, **parameters)
 
 
+@task_registry.set_equivalent_casa_task('hif_gaincal')
 class GaincalMode(basetask.ModeTask):
     Inputs = GaincalModeInputs

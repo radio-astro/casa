@@ -9,6 +9,7 @@ import pipeline.infrastructure.callibrary as callibrary
 import pipeline.infrastructure.vdp as vdp
 from pipeline.h.heuristics import caltable as acaltable
 from pipeline.infrastructure import casa_tasks
+from pipeline.infrastructure import task_registry
 
 __all__ = [
     'Antpos',
@@ -188,6 +189,7 @@ class AntposInputs(vdp.StandardInputs):
         return ','.join(antennas), parameters
 
 
+@task_registry.set_equivalent_casa_task('hif_antpos')
 class Antpos(basetask.StandardTaskTemplate):
     Inputs = AntposInputs    
 

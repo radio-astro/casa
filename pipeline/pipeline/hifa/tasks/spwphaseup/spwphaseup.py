@@ -1,19 +1,15 @@
 from __future__ import absolute_import
 
-import types
-
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.callibrary as callibrary
 import pipeline.infrastructure.vdp as vdp
-
-from pipeline.h.heuristics import caltable as gcaltable
-from pipeline.hif.tasks.gaincal import gaincalworker
 from pipeline.hif.tasks.gaincal import gtypegaincal
 from pipeline.hifa.heuristics.phasespwmap import combine_spwmap
 from pipeline.hifa.heuristics.phasespwmap import simple_n2wspwmap
 from pipeline.hifa.heuristics.phasespwmap import snr_n2wspwmap
 from pipeline.hifa.tasks.gaincalsnr import gaincalsnr
+from pipeline.infrastructure import task_registry
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -72,6 +68,8 @@ class SpwPhaseupInputs(gtypegaincal.GTypeGaincalInputs):
         self.minfracmaxbw = minfracmaxbw
         self.samebb = samebb
 
+
+@task_registry.set_equivalent_casa_task('hifa_spwphaseup')
 class SpwPhaseup(gtypegaincal.GTypeGaincal):
     Inputs = SpwPhaseupInputs
 

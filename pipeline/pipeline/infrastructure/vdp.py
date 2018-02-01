@@ -58,6 +58,7 @@ Examples:
     
 """
 from __future__ import absolute_import
+
 import collections
 import copy
 import inspect
@@ -69,6 +70,7 @@ from . import api
 from . import argmapper
 from . import launcher
 from . import logging
+from . import task_registry
 from . import utils
 
 __all__ = ['VisDependentProperty',
@@ -442,13 +444,11 @@ class InputsContainer(object):
 
     @property
     def _pipeline_casa_task(self):
-        # Map the Inputs class to the hif* equivalent. Note that
-        # classToCASATask maps Task classes, not Inputs classes, to their hif
-        # equivalent. However, Task.Inputs *does* point to an Inputs class so
-        # we can compare self against that.
-        import pipeline.infrastructure.casataskdict as ctd
-        casa_tasks = [casa_cls for task_cls, casa_cls in ctd.classToCASATask.items()
-                      if task_cls.Inputs is self._task_cls.Inputs]
+        # Map the Inputs class to the hif* equivalent. Note that registry maps
+        # maps Task classes, not Inputs classes, to their CASA task equivalent.
+        # However, Task.Inputs *does* point to an Inputs class so we can
+        # compare self against that.
+        casa_tasks = [m.casa_task for m in task_registry.task_map if m.pipeline_class.Inputs == self._task_cls.Inputs]
 
         if len(casa_tasks) is not 1:
             return

@@ -8,6 +8,7 @@ import pipeline.h.tasks.applycal.applycal as applycal
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.api as api
 import pipeline.infrastructure.vdp as vdp
+from pipeline.infrastructure import task_registry
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -27,6 +28,7 @@ class UVcontSubInputs(applycal.ApplycalInputs):
 api.ImagingMeasurementSetsPreferred.register(UVcontSubInputs)
 
 
+@task_registry.set_equivalent_casa_task('hif_uvcontsub')
 class UVcontSub(applycal.Applycal):
     Inputs = UVcontSubInputs
 

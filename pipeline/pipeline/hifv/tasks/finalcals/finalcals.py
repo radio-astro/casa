@@ -1,25 +1,24 @@
 from __future__ import absolute_import
 
-import pipeline.infrastructure.basetask as basetask
-from pipeline.infrastructure import casa_tasks
-import pipeline.infrastructure.casatools as casatools
-import pipeline.infrastructure as infrastructure
-import pipeline.hif.heuristics.findrefant as findrefant
-import pipeline.infrastructure.utils as utils
-import pipeline.infrastructure.callibrary as callibrary
-import pipeline.infrastructure.vdp as vdp
-
-import os
-import numpy as np
 import math
-import scipy as scp
-import scipy.optimize as scpo
+import os
 
+import numpy as np
+import scipy as scp
+
+import pipeline.hif.heuristics.findrefant as findrefant
+import pipeline.infrastructure as infrastructure
+import pipeline.infrastructure.basetask as basetask
+import pipeline.infrastructure.callibrary as callibrary
+import pipeline.infrastructure.casatools as casatools
+import pipeline.infrastructure.utils as utils
+import pipeline.infrastructure.vdp as vdp
 from pipeline.hif.tasks import gaincal
-from pipeline.hif.tasks import applycal
-from pipeline.hifv.heuristics import find_EVLA_band, getCalFlaggedSoln, getBCalStatistics
-from pipeline.hifv.tasks.setmodel.vlasetjy import find_standards, standard_sources
+from pipeline.hifv.heuristics import find_EVLA_band
 from pipeline.hifv.heuristics import weakbp, do_bandpass
+from pipeline.hifv.tasks.setmodel.vlasetjy import standard_sources
+from pipeline.infrastructure import casa_tasks
+from pipeline.infrastructure import task_registry
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -64,6 +63,7 @@ class FinalcalsResults(basetask.Results):
             context.callibrary.add(calapp.calto, calapp.calfrom)
 
 
+@task_registry.set_equivalent_casa_task('hifv_finalcals')
 class Finalcals(basetask.StandardTaskTemplate):
     Inputs = FinalcalsInputs
 

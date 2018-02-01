@@ -6,15 +6,11 @@ a generic pipeline task, save time and not miss any
 essential steps.
 """
 
-import errno
-import os
-import tempfile
-import shutil
-import re
-import sys
 import argparse
-
-import pipeline
+import os
+import shutil
+import sys
+import tempfile
 
 
 class NewTask():
@@ -167,56 +163,6 @@ class NewTask():
 
         shutil.copy(temp_init_file.name, package_init_file)
         os.unlink(temp_init_file.name)
-
-        # -----------------------------------------------------------------------------
-        # Add task to casataskdict
-        # -----------------------------------------------------------------------------
-
-        casa_task_dictionary_file = "{repo}/pipeline/infrastructure/casataskdict.py".format(repo=self.repository_path)
-
-        with open(casa_task_dictionary_file) as fd:
-            casataskdict_data = fd.readlines()
-
-        for idx, line in enumerate(casataskdict_data):
-            match = re.match('(\s+{area}_tasks.)([a-zA-Z]+)([^:]+)(:)'.format(area=area), line)
-            if task_name in line:
-                break
-
-            if match and match.group(2) > task_name.title():
-                casataskdict_data.insert(idx, "    {area}_tasks.{task_camel:24}"
-                                         ": '{area}_{task}',\n".format(area=area,
-                                                                       task_camel=task_name.title(),
-                                                                       task=task_name))
-                print('\tAdding {task} to classToCASATask in {ctd_file}'.format(task=task_name,
-                                                                                  ctd_file=casa_task_dictionary_file))
-                break
-
-        temp_taskdict_file1 = tempfile.NamedTemporaryFile(delete=False)
-        temp_taskdict_file2 = tempfile.NamedTemporaryFile(delete=False)
-        with open(temp_taskdict_file1.name, "w+") as fd:
-            fd.writelines(casataskdict_data)
-
-        with open(temp_taskdict_file1.name) as fd:
-            casataskdict_data = fd.readlines()
-
-        for idx, line in enumerate(casataskdict_data):
-            match = re.match("(\s+'{area}_)([a-zA-Z]+)(': ')".format(area=area), line)
-            if match and match.group(2) > task_name.title():
-                if task_name not in line:
-                    casataskdict_data.insert(idx, "    '{area}_{task}': "
-                                                  "'{task_camel}',\n".format(area=area,
-                                                                             task_camel=task_name.title(),
-                                                                             task=task_name))
-                    print('\tAdding {task} to CasaTaskDict in {ctd_file}'.format(task=task_name,
-                                                                               ctd_file=casa_task_dictionary_file))
-                break
-
-        with open(temp_taskdict_file2.name, "w+") as fd:
-            fd.writelines(casataskdict_data)
-
-        shutil.copy(temp_taskdict_file2.name, casa_task_dictionary_file)
-        os.unlink(temp_taskdict_file1.name)
-        os.unlink(temp_taskdict_file2.name)
 
         # -----------------------------------------------------------------------------
         # Say something about call library

@@ -1,13 +1,10 @@
 from __future__ import absolute_import
 
-import string
-import types
-
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.vdp as vdp
-
 from pipeline.hifa.heuristics import snr as snr_heuristics
+from pipeline.infrastructure import task_registry
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -83,6 +80,9 @@ class BpSolintInputs(vdp.StandardInputs):
          self.hm_natennas = hm_nantennas
          self.maxfracflagged = maxfracflagged
 
+
+@task_registry.set_equivalent_casa_task('hifa_bpsolint')
+@task_registry.set_casa_commands_comment('Compute the best per spw bandpass solution intervals.')
 class BpSolint(basetask.StandardTaskTemplate):
     Inputs = BpSolintInputs
 

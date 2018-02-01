@@ -2,9 +2,10 @@ from __future__ import absolute_import
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
+import pipeline.infrastructure.imagelibrary as imagelibrary
 import pipeline.infrastructure.vdp as vdp
 from pipeline.infrastructure import casa_tasks
-import pipeline.infrastructure.imagelibrary as imagelibrary
+from pipeline.infrastructure import task_registry
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -58,7 +59,7 @@ class PbcorInputs(vdp.StandardInputs):
         self.context = context
         self.vis = vis
 
-
+@task_registry.set_equivalent_casa_task('hifv_pbcor')
 class Pbcor(basetask.StandardTaskTemplate):
     Inputs = PbcorInputs
 

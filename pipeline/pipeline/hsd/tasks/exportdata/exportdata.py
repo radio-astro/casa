@@ -17,21 +17,22 @@ results = task.execute (dry_run = False)
 """
 from __future__ import absolute_import
 
-import os
-import tarfile
-import types
-import string
 import collections
 import itertools
+import os
 import shutil
+import string
+import tarfile
+import types
 
-from . import almasdaqua
-from pipeline.h.tasks.exportdata.aqua import export_to_disk as aqua_export_to_disk
 import pipeline.h.tasks.common.manifest as manifest
-import pipeline.infrastructure.basetask as basetask
-import pipeline.infrastructure as infrastructure
-import pipeline.infrastructure.sdfilenamer as filenamer
 import pipeline.h.tasks.exportdata.exportdata as exportdata
+import pipeline.infrastructure as infrastructure
+import pipeline.infrastructure.basetask as basetask
+import pipeline.infrastructure.sdfilenamer as filenamer
+from pipeline.h.tasks.exportdata.aqua import export_to_disk as aqua_export_to_disk
+from pipeline.infrastructure import task_registry
+from . import almasdaqua
 
 # the logger for this module
 LOG = infrastructure.get_logger(__name__)
@@ -42,6 +43,8 @@ class SDExportDataInputs(exportdata.ExportDataInputs):
     pass
 
 
+@task_registry.set_equivalent_casa_task('hsd_exportdata')
+@task_registry.set_casa_commands_comment('The output data products are computed.')
 class SDExportData(exportdata.ExportData):
     """
     SDExportData is the base class for exporting data to the products

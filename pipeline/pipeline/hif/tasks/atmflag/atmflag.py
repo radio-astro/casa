@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 
 import os
+
 import numpy as np
 
 import pipeline.infrastructure as infrastructure
@@ -10,6 +11,7 @@ import pipeline.infrastructure.vdp as vdp
 from pipeline.h.tasks.common import commonresultobjects
 from pipeline.h.tasks.common import viewflaggers
 from pipeline.h.tasks.flagging.flagdatasetter import FlagdataSetter
+from pipeline.infrastructure import task_registry
 from .resultobjects import AtmflagResults, AtmflagDataResults, AtmflagViewResults
 
 __all__ = [
@@ -52,6 +54,7 @@ class AtmflagInputs(vdp.StandardInputs):
         self.fnm_hi_limit = fnm_hi_limit
 
 
+@task_registry.set_equivalent_casa_task('hif_atmflag')
 class Atmflag(basetask.StandardTaskTemplate):
     Inputs = AtmflagInputs
 

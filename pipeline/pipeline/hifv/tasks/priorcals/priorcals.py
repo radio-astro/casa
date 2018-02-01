@@ -9,26 +9,23 @@ result.accept(context)
 """
 
 from __future__ import absolute_import
-import os
 
-import urllib2
 import datetime
+import os
+import urllib2
 
-from pipeline.h.heuristics import fieldnames
-import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
+import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.vdp as vdp
-from pipeline.infrastructure import casa_tasks
-from . import resultobjects
-
+from pipeline.hif.tasks.antpos import Antpos
 from pipeline.hifv.tasks.gaincurves import GainCurves
 from pipeline.hifv.tasks.opcal import Opcal
 from pipeline.hifv.tasks.rqcal import Rqcal
 from pipeline.hifv.tasks.swpowcal import Swpowcal
-from pipeline.hif.tasks.antpos import Antpos
 from pipeline.hifv.tasks.tecmaps import TecMaps
-from recipes import tec_maps
+from pipeline.infrastructure import task_registry
+from . import resultobjects
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -234,6 +231,7 @@ class PriorcalsInputs(vdp.StandardInputs):
         raise NotImplementedError
 
 
+@task_registry.set_equivalent_casa_task('hifv_priorcals')
 class Priorcals(basetask.StandardTaskTemplate):
     Inputs = PriorcalsInputs
 

@@ -1,11 +1,12 @@
 from __future__ import absolute_import
 
-from pipeline.hif.heuristics import checkproductsize
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.api as api
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.project as project
 import pipeline.infrastructure.vdp as vdp
+from pipeline.hif.heuristics import checkproductsize
+from pipeline.infrastructure import task_registry
 from .resultobjects import CheckProductSizeResult
 
 LOG = infrastructure.get_logger(__name__)
@@ -45,6 +46,7 @@ class CheckProductSizeInputs(vdp.StandardInputs):
 api.ImagingMeasurementSetsPreferred.register(CheckProductSizeInputs)
 
 
+@task_registry.set_equivalent_casa_task('hif_checkproductsize')
 class CheckProductSize(basetask.StandardTaskTemplate):
     Inputs = CheckProductSizeInputs
 

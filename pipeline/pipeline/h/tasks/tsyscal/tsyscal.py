@@ -7,6 +7,7 @@ import pipeline.infrastructure.vdp as vdp
 from pipeline.h.heuristics import caltable as caltable_heuristic
 from pipeline.h.heuristics.tsysspwmap import tsysspwmap
 from pipeline.infrastructure import casa_tasks
+from pipeline.infrastructure import task_registry
 from . import resultobjects
 
 __all__ = [
@@ -53,11 +54,14 @@ class TsyscalInputs(vdp.StandardInputs):
 
     # Convert to CASA gencal task arguments.
     def to_casa_args(self):
-        return {'vis': self.vis,
-                'caltable': self.caltable
-                }
+        return {
+            'vis': self.vis,
+            'caltable': self.caltable
+        }
 
 
+@task_registry.set_equivalent_casa_task('h_tsyscal')
+@task_registry.set_casa_commands_comment('The Tsys calibration and spectral window map is computed.')
 class Tsyscal(basetask.StandardTaskTemplate):
     Inputs = TsyscalInputs    
 

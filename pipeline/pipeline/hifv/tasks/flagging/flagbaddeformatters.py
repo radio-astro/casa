@@ -1,15 +1,13 @@
 from __future__ import absolute_import
 
-import pipeline.infrastructure.basetask as basetask
-from pipeline.infrastructure import casa_tasks
-import pipeline.infrastructure.casatools as casatools
-import pipeline.infrastructure as infrastructure
-import pipeline.infrastructure.vdp as vdp
-
-
 import collections
 
-from pipeline.hifv.heuristics import getCalFlaggedSoln, getBCalStatistics
+import pipeline.infrastructure as infrastructure
+import pipeline.infrastructure.basetask as basetask
+import pipeline.infrastructure.vdp as vdp
+from pipeline.hifv.heuristics import getBCalStatistics
+from pipeline.infrastructure import casa_tasks
+from pipeline.infrastructure import task_registry
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -47,6 +45,7 @@ class FlagBadDeformattersResults(basetask.Results):
         return s 
 
 
+@task_registry.set_equivalent_casa_task('hifv_flagbaddef')
 class FlagBadDeformatters(basetask.StandardTaskTemplate):
     Inputs = FlagBadDeformattersInputs
     

@@ -26,6 +26,7 @@ results = task.execute(dry_run=False)
 results.accept(context)
 """
 from __future__ import absolute_import
+
 import glob
 import os
 import re
@@ -37,16 +38,15 @@ import tempfile
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.vdp as vdp
+from pipeline.infrastructure import casa_tasks
+from pipeline.infrastructure import task_registry
 from .. import applycal
 from .. import importdata
-
 # Note:
 #    manifest.py should probably be moved to the common
 #    subdirectory once the workflow is proofed
 # from pipeline.h.tasks.exportdata import manifest
-from .. common import manifest
-
-from pipeline.infrastructure import casa_tasks
+from ..common import manifest
 
 # the logger for this module
 LOG = infrastructure.get_logger(__name__)
@@ -192,6 +192,7 @@ class RestoreDataResults(basetask.Results):
                 '\n\t'.join([ms.name for ms in self.mses]))
 
 
+@task_registry.set_equivalent_casa_task('h_restoredata')
 class RestoreData(basetask.StandardTaskTemplate):
     """
     RestoreData is the base class for restoring flagged and calibrated

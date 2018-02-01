@@ -9,6 +9,7 @@ import pipeline.infrastructure.api as api
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.mpihelpers as mpihelpers
 import pipeline.infrastructure.vdp as vdp
+from pipeline.infrastructure import task_registry
 from .resultobjects import MakeImagesResult
 from ..tclean import Tclean
 from ..tclean.resultobjects import TcleanResult
@@ -72,6 +73,8 @@ class MakeImagesInputs(vdp.StandardInputs):
 api.ImagingMeasurementSetsPreferred.register(MakeImagesInputs)
 
 
+@task_registry.set_equivalent_casa_task('hif_makeimages')
+@task_registry.set_casa_commands_comment('A list of target sources is cleaned.')
 class MakeImages(basetask.StandardTaskTemplate):
     Inputs = MakeImagesInputs
 
