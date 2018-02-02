@@ -102,7 +102,7 @@ a QA score based on its effect on the interferometric data.
 	<value>1.</value>
     </param>
 
-    <param type="double" name="maxdistm">
+    <param type="string" name="maxdistm">
       <description>Maximum distance (m) of an antenna used for interpolation for a flagged antenna.</description>
       <value></value>
     </param>

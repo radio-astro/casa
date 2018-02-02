@@ -57,6 +57,10 @@ class WvrgcalInputs(vdp.StandardInputs):
         else:
             return 500.0
 
+    @maxdistm.convert
+    def wvrflag(self, value):
+        return float(value)
+
     minnumants = vdp.VisDependentProperty(default=2)
     mingoodfrac = vdp.VisDependentProperty(default=0.8)
     nowvr_result = vdp.VisDependentProperty(default='', hidden=True)
