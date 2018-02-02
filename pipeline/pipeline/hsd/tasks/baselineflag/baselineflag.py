@@ -28,7 +28,7 @@ class SDBLFlagInputs(vdp.StandardInputs):
         return sdutils.to_bool(val)
 
     def __to_int(self, val):
-        return sdutils.to_bool(val)
+        return int(val)
     
     intent = vdp.VisDependentProperty(default='TARGET')
     iteration = vdp.VisDependentProperty(default=5, fconvert=__to_int)
@@ -175,9 +175,6 @@ class SDBLFlagInputs(vdp.StandardInputs):
         reload(SDFlagRule)
         self.FlagRuleDictionary = SDFlagRule.SDFlagRule
         # MUST NOT configure FlagRuleDictionary here.
-        # Constructor of vdp Inputs classes is called without 
-        # user task parameter values at first and then later updated
-        # with user defined values (see InputsContainer.__init__) 
 
     def _configureFlagRule(self):
         """A private method to convert input parameters to FlagRuleDictionary"""
@@ -193,31 +190,28 @@ class SDBLFlagInputs(vdp.StandardInputs):
         keys = ['Threshold', 'Nmean']
         for (k,v) in d.iteritems():
             (b,p) = v
-            # if b is vdp.VisDependentProperty.NULL:
-            #     # Don't touch operation flag but need to update thresholds.
-            #     for i in xrange(len(p)):
-            #         if p[i] is not vdp.VisDependentProperty.NULL:
-            #             self.FlagRuleDictionary[k][keys[i]] = p[i]
             if b == True:
                 self.activateFlagRule( k )
                 for i in xrange(len(p)):
                     self.FlagRuleDictionary[k][keys[i]] = p[i]
             elif b == False:
                 self.deactivateFlagRule( k )
+            else:
+                raise RuntimeError, "Invalid flag operation definition for %s" % k
 
     def activateFlagRule(self,key):
         """Activates a flag type specified by the input parameter in FlagRuleDictionary"""
         if(key in self.FlagRuleDictionary.keys()):
             self.FlagRuleDictionary[key]['isActive'] = True
         else:
-            print 'Error not in predefined Flagging Rules'
+            raise RuntimeError, 'Error: %s not in predefined Flagging Rules' % key
 
     def deactivateFlagRule(self,key):
         """Deactivates a flag type specified by the input parameter in FlagRuleDictionary"""
         if(key in self.FlagRuleDictionary.keys()):
             self.FlagRuleDictionary[key]['isActive'] = False
         else:
-            print 'Error not in predefined Flagging Rules'
+            raise RuntimeError, 'Error: %s not in predefined Flagging Rules' % key
 
         
 
@@ -275,11 +269,13 @@ class SDBLFlag(basetask.StandardTaskTemplate):
         in_pol = '' if inputs.pol in ['', '*'] else inputs.pol.split(',')
         clip_niteration = inputs.iteration
         reduction_group = context.observing_run.ms_reduction_group
-        # update FlagRuleDictionary
+        # configure FlagRuleDictionary
+        # this has to be done in runtime rather than in Inputs.__init__
+        # to accommodate later overwrite of parameters.
         inputs._configureFlagRule()
         flag_rule = inputs.FlagRuleDictionary
 
-        print("Flag Rule for %s: %s" % (cal_name, flag_rule))
+        LOG.debug("Flag Rule for %s: %s" % (cal_name, flag_rule))
 
 
         rowmap = None
