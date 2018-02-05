@@ -42,7 +42,7 @@ class WvrgcalInputs(vdp.StandardInputs):
     hm_tie = vdp.VisDependentProperty(default='automatic')
     hm_toffset = vdp.VisDependentProperty(default='automatic')
 
-    @vdp.VisDependentProperty
+    @vdp.VisDependentProperty(null_input=[None, '', -1, -1.0])
     def maxdistm(self):
         # Identify fraction of antennas that are 7m.
         nants_7m = len([ant
@@ -56,10 +56,6 @@ class WvrgcalInputs(vdp.StandardInputs):
             return 100.0
         else:
             return 500.0
-
-    @maxdistm.convert
-    def wvrflag(self, value):
-        return float(value)
 
     minnumants = vdp.VisDependentProperty(default=2)
     mingoodfrac = vdp.VisDependentProperty(default=0.8)
