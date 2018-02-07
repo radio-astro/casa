@@ -4,6 +4,7 @@ import glob
 import os
 
 import pipeline.infrastructure as infrastructure
+import pipeline.infrastructure.vdp as vdp
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.imagelibrary as imagelibrary
 from pipeline.infrastructure import casa_tasks
@@ -64,10 +65,12 @@ class MakermsimagesResults(basetask.Results):
         return 'MakermsimagesResults:'
 
 
-class MakermsimagesInputs(basetask.StandardInputs):
+class MakermsimagesInputs(vdp.StandardInputs):
     def __init__(self, context, vis=None):
+        super(MakermsimagesInputs, self).__init__()
         # set the properties to the values given as input arguments
-        self._init_properties(vars())
+        self.context = context
+        self.vis = vis
 
 
 @task_registry.set_equivalent_casa_task('hif_makermsimages')
