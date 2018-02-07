@@ -38,6 +38,7 @@ import ast
 import os
 
 import pipeline.infrastructure as infrastructure
+import pipeline.infrastructure.vdp as vdp
 import pipeline.infrastructure.api as api
 import pipeline.infrastructure.basetask as basetask
 from pipeline.hif.heuristics import imageparams_factory
@@ -48,44 +49,56 @@ from .resultobjects import EditimlistResult
 LOG = infrastructure.get_logger(__name__)
 
 
-class EditimlistInputs(basetask.StandardInputs):
+class EditimlistInputs(vdp.StandardInputs):
     def __init__(self, context, output_dir=None, vis=None,
-                 search_radius_arcsec=None,
-                 cell=None,
-                 conjbeams=None,
-                 cyclefactor=None,
-                 cycleniter=None,
-                 deconvolver=None,
-                 editmode=None,
-                 field=None,
-                 imaging_mode=None,
-                 imagename=None,
-                 imsize=None,
-                 intent=None,
-                 gridder=None,
-                 mask=None,
-                 nbin=None,
-                 nchan=None,
-                 niter=None,
-                 nterms=None,
-                 parameter_file=None,
-                 phasecenter=None,
-                 reffreq=None,
-                 robust=None,
-                 scales=None,
-                 specmode=None,
-                 spw=None,
-                 start=None,
-                 stokes=None,
-                 threshold=None,
-                 threshold_nsigma=None,
-                 uvtaper=None,
-                 uvrange=None,
-                 width=None,
-                 sensitivity=None,
-                 ):
+                 search_radius_arcsec=None, cell=None, conjbeams=None,
+                 cyclefactor=None, cycleniter=None, deconvolver=None,
+                 editmode=None, field=None, imaging_mode=None,
+                 imagename=None, imsize=None, intent=None, gridder=None,
+                 mask=None, nbin=None, nchan=None, niter=None, nterms=None,
+                 parameter_file=None, phasecenter=None, reffreq=None,
+                 robust=None, scales=None, specmode=None, spw=None,
+                 start=None, stokes=None, threshold=None, threshold_nsigma=None,
+                 uvtaper=None, uvrange=None, width=None, sensitivity=None):
 
-        self._init_properties(vars())
+        super(EditimlistInputs, self).__init__()
+        self.context = context
+        self.output_dir = output_dir
+        self.vis = vis
+
+        self.search_radius_arcsec = search_radius_arcsec
+        self.cell = cell
+        self.conjbeams = conjbeams
+        self.cyclefactor = cyclefactor
+        self.cycleniter = cycleniter
+        self.deconvolver = deconvolver
+        self.editmode = editmode
+        self.field = field
+        self.imaging_mode = imaging_mode
+        self.imagename = imagename
+        self.imsize = imsize
+        self.intent = intent
+        self.gridder = gridder
+        self.mask = mask
+        self.nbin = nbin
+        self.nchan = nchan
+        self.niter = niter
+        self.nterms = nterms
+        self.parameter_file = parameter_file
+        self.phasecenter = phasecenter
+        self.reffreq = reffreq
+        self.robust = robust
+        self.scales = scales
+        self.specmode = specmode
+        self.spw = spw
+        self.start = start
+        self.stokes = stokes
+        self.threshold = threshold
+        self.threshold_nsigma = threshold_nsigma
+        self.uvtaper = uvtaper
+        self.uvrange = uvrange
+        self.width = width
+        self.sensitivity = sensitivity
 
         keys_to_consider = ('field', 'intent', 'spw', 'cell', 'deconvolver', 'imsize',
                             'phasecenter', 'specmode', 'gridder', 'imagename', 'scales',
