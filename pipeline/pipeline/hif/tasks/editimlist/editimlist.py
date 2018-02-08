@@ -232,7 +232,16 @@ class Editimlist(basetask.StandardTaskTemplate):
         target['mask'] = th.mask() if not inpdict['mask'] else inpdict['mask']
         target['specmode'] = th.specmode() if not inpdict['specmode'] else inpdict['specmode']
         target['gridder'] = th.gridder(None, None) if not inpdict['gridder'] else inpdict['gridder']
-        buffer_arcsec = th.buffer_radius() if not inpdict['search_radius_arcsec'] else inpdict['search_radius_arcsec']
+        LOG.info('RADIUS')
+        LOG.info(repr(inpdict['search_radius_arcsec']))
+        LOG.info('default={d}'.format(d=not inpdict['search_radius_arcsec']
+                                        and not isinstance(inpdict['search_radius_arcsec'], float)
+                                        and not isinstance(inpdict['search_radius_arcsec'], int)))
+        buffer_arcsec = th.buffer_radius() \
+            if (not inpdict['search_radius_arcsec']
+                and not isinstance(inpdict['search_radius_arcsec'], float)
+                and not isinstance(inpdict['search_radius_arcsec'], int)) else inpdict['search_radius_arcsec']
+        LOG.info("{k} = {v}".format(k='search_radius', v=buffer_arcsec))
         result.capture_buffer_size(buffer_arcsec)
         target['cell'] = th.cell(None, None) if not inpdict['cell'] else inpdict['cell']
         target['imsize'] = th.imsize(None, None, None, None, None, None) if not inpdict['imsize'] else inpdict['imsize']
@@ -266,6 +275,7 @@ class Editimlist(basetask.StandardTaskTemplate):
                 mosaic_side_arcsec = 3600  # 1 degree
                 dist = (mosaic_side_arcsec / 2.) + float(buffer_arcsec)
                 dist_arcsec = str(dist) + 'arcsec'
+                LOG.info("{k} = {v}".format(k='dist_arcsec', v=dist_arcsec))
                 found_fields = target['heuristics'].find_fields(distance=dist_arcsec,
                                                                 phase_center=target['phasecenter'],
                                                                 matchregex=['^0', '^1', '^2'])
