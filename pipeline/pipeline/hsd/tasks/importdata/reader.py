@@ -30,6 +30,8 @@ def get_state_id(ms, spw, intent):
             msreader.msselect({'spw': spw, 'scanintent': obs_mode}, onlyparse=True)
             indices = msreader.msselectedindices()
             state_ids.update(indices['stateid'])
+            # Need to reset explicitly after CASA 5.3. See CAS-11088 for detail.
+            msreader.selectinit(reset=True)
     return numpy.fromiter(state_ids, dtype=numpy.int32)
         
 
