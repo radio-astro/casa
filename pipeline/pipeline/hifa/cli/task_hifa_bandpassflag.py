@@ -19,7 +19,7 @@ def hifa_bandpassflag(
     # constructor
     all_inputs = vars()
 
-    task_name = 'ALMABandpassflag'
+    task_name = 'Bandpassflag'
 
     ##########################################################################
     #                                                                        #
