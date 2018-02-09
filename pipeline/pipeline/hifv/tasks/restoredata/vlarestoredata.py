@@ -4,28 +4,32 @@ import os
 import types
 
 import pipeline.infrastructure as infrastructure
-import pipeline.infrastructure.basetask as basetask
+import pipeline.infrastructure.vdp as vdp
 from pipeline.h.tasks.restoredata import restoredata
 from pipeline.infrastructure import task_registry
 from ..finalcals import applycals
 from ..hanning import hanning
 from ..importdata import importdata
 
-# the logger for this module
 LOG = infrastructure.get_logger(__name__)
 
 
 class VLARestoreDataInputs(restoredata.RestoreDataInputs):
+    bdfflags = vdp.VisDependentProperty(default=False)
+    ocorr_mode = vdp.VisDependentProperty(default='co')
+    asis = vdp.VisDependentProperty(default='Receiver CalAtmosphere')
+    gainmap = vdp.VisDependentProperty(default=False)
+
     def __init__(self, context, copytoraw=None, products_dir=None, rawdata_dir=None,
                  output_dir=None, session=None, vis=None, bdfflags=None, lazy=None, asis=None,
                  ocorr_mode=None, gainmap=None):
-        # set the properties to the values given as input arguments
-        self._init_properties(vars())
+        super(VLARestoreDataInputs, self).__init__(context, copytoraw=copytoraw,
+                                                   products_dir=products_dir, rawdata_dir=rawdata_dir,
+                                                   output_dir=output_dir, session=session,
+                                                   vis=vis, bdfflags=bdfflags, lazy=lazy, asis=asis,
+                                                   ocorr_mode=ocorr_mode)
 
-    bdfflags = basetask.property_with_default('bdfflags', False)
-    ocorr_mode = basetask.property_with_default('ocorr_mode', 'co')
-    asis = basetask.property_with_default('asis', 'Receiver CalAtmosphere')
-    gainmap = basetask.property_with_default('gainmap', False)
+        self.gainmap = gainmap
 
 
 @task_registry.set_equivalent_casa_task('hifv_restoredata')
@@ -75,7 +79,7 @@ class VLARestoreData(restoredata.RestoreData):
         import_results = self._do_importasdm(sessionlist=sessionlist, vislist=vislist)
 
         for ms in self.inputs.context.observing_run.measurement_sets:
-            hanning_results = self._do_hanningsmooth(ms.name)
+            hanning_results = self._do_hanningsmooth()
 
         # Restore final MS.flagversions and flags
         flag_version_name = 'Pipeline_Final'
@@ -103,38 +107,30 @@ class VLARestoreData(restoredata.RestoreData):
     # now but should simplify parameters in future
     def _do_importasdm(self, sessionlist, vislist):
         inputs = self.inputs
-        importdata_inputs = importdata.VLAImportData.Inputs(inputs.context,
+        container = vdp.InputsContainer(importdata.VLAImportData, inputs.context,
             vis=vislist, session=sessionlist, save_flagonline=False,
             lazy=inputs.lazy, bdfflags=inputs.bdfflags,
             asis=inputs.asis, ocorr_mode=inputs.ocorr_mode)
-        importdata_task = importdata.VLAImportData(importdata_inputs)
+        importdata_task = importdata.VLAImportData(container)
         return self._executor.execute(importdata_task, merge=True)
 
-    def _do_hanningsmooth(self, vis):
-        # Currently for VLA hanning smoothing
-        inputs = self.inputs
-        hanning_inputs = hanning.Hanning.Inputs(inputs.context)
-        hanning_task = hanning.Hanning(hanning_inputs)
-
+    def _do_hanningsmooth(self):
+        container = vdp.InputsContainer(hanning.Hanning, self.inputs.context)
+        hanning_task = hanning.Hanning(container)
         return self._executor.execute(hanning_task, merge=True)
 
     def _do_applycal(self):
-        inputs = self.inputs
-        applycal_inputs = applycals.Applycals.Inputs(inputs.context)
-        # Set the following to keep the default behavior. No longer needed ?
-        # applycal_inputs.flagdetailedsum = True
 
-        # Overrides for VLA
-        applycal_inputs.intent = ''
-        applycal_inputs.field = ''
-        applycal_inputs.spw = ''
+        flagsum = True
+        flagdetailedsum = True
+        if self.inputs.gainmap:
+            flagsum = False
+            flagdetailedsum = False
 
-        applycal_inputs.gainmap = inputs.gainmap
-        if inputs.gainmap:
-            applycal_inputs.flagsum = False
-            applycal_inputs.flagdetailedsum =False
-
-        applycal_task = applycals.Applycals(applycal_inputs)
+        container = vdp.InputsContainer(applycals.Applycals, self.inputs.context, intent='',
+                                        field='', spw='', gainmap=self.inputs.gainmap,
+                                        flagsum=flagsum, flagdetailedsum=flagdetailedsum)
+        applycal_task = applycals.Applycals(container)
         return self._executor.execute(applycal_task, merge=True)
 
 
