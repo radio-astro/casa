@@ -4,9 +4,9 @@ import os
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
+import pipeline.infrastructure.sessionutils as sessionutils
 import pipeline.infrastructure.utils as utils
 import pipeline.infrastructure.vdp as vdp
-# from pipeline.hif.heuristics import fieldnames
 from pipeline.h.heuristics import fieldnames
 from pipeline.infrastructure import casa_tasks
 from pipeline.infrastructure import task_registry
@@ -221,17 +221,9 @@ class SDBLFlagResults(common.SingleDishResults):
     """
     def __init__(self, task=None, success=None, outcome=None):
         super(SDBLFlagResults, self).__init__(task, success, outcome)
-        ### WORKAROUND
-        #self.outcome = outcome
 
     def merge_with_context(self, context):
         super(SDBLFlagResults, self).merge_with_context(context)
-
-#         # replace and export datatable to merge updated data with context
-#         datatable = self.outcome.pop('datatable')
-#         datatable.exportdata(minimal=True)
-# 
-#         context.observing_run.datatable_instance = datatable
         
     def _outcome_name(self):
         return 'none'
@@ -242,7 +234,7 @@ class SDBLFlagResults(common.SingleDishResults):
     'Perform row-based flagging based on noise level and quality of spectral baseline subtraction.\n'
     'This stage performs a pipeline calculation without running any CASA commands to be put in this file.'
 )
-class SDBLFlag(basetask.StandardTaskTemplate):
+class SerialSDBLFlag(basetask.StandardTaskTemplate):
     """
     Single dish flagging class.
     """
@@ -374,3 +366,47 @@ class SDBLFlag(basetask.StandardTaskTemplate):
  
     def analyse(self, result):
         return result
+
+### Tier-0 parallelization
+class HpcSDBLFlagInputs(SDBLFlagInputs):
+    # use common implementation for parallel inputs argument
+    parallel = sessionutils.parallel_inputs_impl()
+
+    def __init__(self, context, output_dir=None,
+                 iteration=None, edge=None,
+                 flag_tsys=None, tsys_thresh=None,
+                 flag_weath=None, weath_thresh=None,
+                 flag_prfre=None, prfre_thresh=None,
+                 flag_pofre=None, pofre_thresh=None,
+                 flag_prfr=None, prfr_thresh=None,
+                 flag_pofr=None, pofr_thresh=None,
+                 flag_prfrm=None, prfrm_thresh=None, prfrm_nmean=None,
+                 flag_pofrm=None, pofrm_thresh=None, pofrm_nmean=None,
+                 flag_user=None, user_thresh=None, plotflag=None,
+                 infiles=None, antenna=None, field=None,
+                 spw=None, pol=None, parallel=None):
+        super(HpcSDBLFlagInputs, self).__init__(context, output_dir=output_dir,
+                 iteration=iteration, edge=edge,
+                 flag_tsys=flag_tsys, tsys_thresh=tsys_thresh,
+                 flag_weath=flag_weath, weath_thresh=weath_thresh,
+                 flag_prfre=flag_prfre, prfre_thresh=prfre_thresh,
+                 flag_pofre=flag_pofre, pofre_thresh=pofre_thresh,
+                 flag_prfr=flag_prfr, prfr_thresh=prfr_thresh,
+                 flag_pofr=flag_pofr, pofr_thresh=pofr_thresh,
+                 flag_prfrm=flag_prfrm, prfrm_thresh=prfrm_thresh, prfrm_nmean=prfrm_nmean,
+                 flag_pofrm=flag_pofrm, pofrm_thresh=pofrm_thresh, pofrm_nmean=pofrm_nmean,
+                 flag_user=flag_user, user_thresh=user_thresh, plotflag=plotflag,
+                 infiles=infiles, antenna=antenna, field=field, spw=spw, pol=pol)
+        self.parallel = parallel
+
+@task_registry.set_equivalent_casa_task('hpc_hsd_blflag')
+class HpcSDBLFlag(sessionutils.ParallelTemplate):
+    Inputs = HpcSDBLFlagInputs
+    Task = SerialSDBLFlag
+
+    def __init__(self, inputs):
+        super(HpcSDBLFlag, self).__init__(inputs)
+
+    def get_result_for_exception(self, vis, exception):
+        LOG.error('Error operating target flag for {!s}'.format(os.path.basename(vis)))
+        return SDBLFlagResults()

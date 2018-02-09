@@ -19,7 +19,7 @@ def hsd_blflag(iteration=None, edge=None, flag_tsys=None, tsys_thresh=None,
                  plotflag=None,
                  pipelinemode=None, infiles=None, antenna=None, 
                  field=None, spw=None, pol=None,
-                 dryrun=None, acceptresults=None):
+                 dryrun=None, acceptresults=None, parallel=None):
 
     # create a dictionary containing all the arguments given in the
     # constructor

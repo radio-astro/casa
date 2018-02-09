@@ -169,6 +169,16 @@
         <value>True</value>
     </param>
 
+    <param type="string" name="parallel" subparam="true">
+        <description>Execute using CASA HPC functionality, if available.</description>
+            <value>automatic</value>
+            <allowed kind="enum">
+                <value>automatic</value>
+                <value>true</value>
+                <value>false</value>
+            </allowed>
+    </param>
+
     <constraints>
         <when param="flag_tsys">
             <equals type="bool" value="True">
@@ -246,6 +256,7 @@
                 <default param="pol"><value type="string"></value></default>
                 <default param="dryrun"><value type="bool">False</value></default>
                 <default param="acceptresults"><value type="bool">True</value></default>
+                <default param="parallel"><value type="string">automatic</value></default>
             </equals>
             <equals type="string" value="getinputs">
                 <default param="infiles"><value type="stringArray"></value></default>
