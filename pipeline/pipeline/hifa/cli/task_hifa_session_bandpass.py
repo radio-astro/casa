@@ -10,11 +10,6 @@ def hifa_session_bandpass(vis=None, caltable=None, field=None, intent=None, spw=
                           solint=None, maxchannels=None, evenbpints=None, bpsnr=None, bpnsols=None, hm_bandtype=None,
                           combine=None, refant=None, solnorm=None, minblperant=None, minsnr=None, degamp=None,
                           degphase=None, pipelinemode=None, dryrun=None, acceptresults=None, parallel=None):
-    # create a dictionary containing all the arguments given in the
-    # constructor
-    all_inputs = vars()
-
-    task_name = 'SessionAlmaPhcorBandpass'
 
     ##########################################################################
     #                                                                        #
@@ -23,13 +18,17 @@ def hifa_session_bandpass(vis=None, caltable=None, field=None, intent=None, spw=
     #                                                                        #
     ##########################################################################
 
+    # create a dictionary containing all the arguments given in the
+    # constructor
+    all_inputs = vars()
+
     # get the name of this function for the weblog, eg. 'hif_flagdata'
-    fn_name = sys._getframe().f_code.co_name
+    task_name = sys._getframe().f_code.co_name
 
     # get the context on which this task operates
     context = utils.get_context()
 
-    # execute the task    
-    results = utils.execute_task(context, task_name, all_inputs, fn_name)
+    # execute the task
+    results = utils.execute_task(context, task_name, all_inputs)
 
     return results

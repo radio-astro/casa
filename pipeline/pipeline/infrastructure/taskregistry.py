@@ -55,7 +55,21 @@ class TaskRegistry(object):
         wrapped = textwrap.wrap('# ' + comment, subsequent_indent='# ', width=78, break_long_words=False)
         return '%s\n#\n' % '\n'.join(wrapped)
 
-    def get_pipeline_class(self, task_name):
+    def get_pipeline_class(self, name):
+        """
+        Get a pipeline class by name.
+
+        Raises KeyError if no mapping is found.
+
+        :param name: name of the pipeline class as a string
+        :return: pipeline class
+        """
+        matching = [c.pipeline_class for c in self.task_map if c.pipeline_class.__name__ == name]
+        if not matching:
+            raise KeyError('No pipeline class registered for {!s}'.format(name))
+        return matching[0]
+
+    def get_pipeline_class_for_task(self, task_name):
         """
         Get the pipeline class used to execute a CASA task.
 

@@ -161,7 +161,7 @@ def executeppr (pprXmlFile, importonly=True, dry_run=False, loglevel='info',
 
         # Execute the command
         try:
-            pipeline_task_class = task_registry.get_pipeline_class(casa_task)
+            pipeline_task_class = task_registry.get_pipeline_class_for_task(casa_task)
             pipeline_task_name = pipeline_task_class.__name__
             casatools.post_to_log("    Using python class ..." + pipeline_task_name, echo_to_screen=echo_to_screen)
 

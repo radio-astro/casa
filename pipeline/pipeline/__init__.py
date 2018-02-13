@@ -1,19 +1,10 @@
 from __future__ import absolute_import
-import imp
 import os
 import pkg_resources
 import webbrowser
 
 from . import environment
 from . import infrastructure
-
-from . import h
-from . import hco
-from . import hif
-from . import hsd
-from . import hifv
-from . import hifa
-from . import hsdn
 
 from .infrastructure import Pipeline, Context
 
@@ -23,35 +14,6 @@ from casa_stack_manip import stack_frame_find
 LOG = infrastructure.get_logger(__name__)
 
 __pipeline_documentation_weblink_alma__ = "http://almascience.org/documents-and-tools/pipeline-documentation-archive"
-
-# create a fake module containing all the tasks defined in 
-
-
-def _all_subclasses(cls):
-    """
-    Return a list of all subclasses that inherit directly or indirectly from
-    the given class.
-    """
-    return cls.__subclasses__() + [g for s in cls.__subclasses__()
-                                    for g in _all_subclasses(s)]
-
-
-def _get_unified_task_module(packages):
-    """
-    Create a new module containing all tasks in the given packages.
-    """
-    module = imp.new_module('pipeline.tasks')
-
-    task_classes = _all_subclasses(infrastructure.api.Task)
-    for pkg in packages:
-        tasks = dict((k, v) for k, v in pkg.__dict__.items()
-                     if v in task_classes)
-        for k, v in tasks.items():
-            LOG.trace('Importing %s from %s' % (k, pkg.__name__))
-            module.__dict__[k] = v
-    return module
-
-tasks = _get_unified_task_module([h.tasks, hif.tasks, hco.tasks, hsd.tasks, hifv.tasks, hifa.tasks, hsdn.tasks])
 
 
 def show_weblog(context):
@@ -85,7 +47,7 @@ def initcli():
 # def initcli():
 #     LOG.info('Initializing cli...')
 #     my_globals = stack_frame_find()
-#     for package in ['h', 'hif', 'hifa', 'hifv', 'hsd']:
+#     for package in ['h', 'hif', 'hifa', 'hifv', 'hsd', 'hsdn']:
 #         abs_package = 'pipeline.{package}.cli.{package}'.format(package=package)
 #         try:
 #             # buildmytasks writes output to packagename.py
@@ -113,6 +75,7 @@ def log_host_environment():
         LOG.info('Host environment: {!s}'.format(host_summary))
     except NotImplemented:
         pass
+
 
 log_host_environment()
 

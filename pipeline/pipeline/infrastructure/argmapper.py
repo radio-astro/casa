@@ -9,11 +9,12 @@ it converts from the CASA concept of null values ('', [], etc.) to the
 pipeline equivalent.
 """
 from __future__ import absolute_import
+
 import inspect
 import types
 
 from . import logging
-import pipeline
+from . import task_registry
 
 LOG = logging.get_logger(__name__)
 
@@ -21,14 +22,11 @@ LOG = logging.get_logger(__name__)
 # _altmapping holds the mapping for CASA arguments that should be given as a 
 # task input argument of a different name.
 _altmapping = {
-#    'Bandpass'      : {'hm_bandtype' : 'mode'},
-    'Gaincal'       : {'hm_gaintype' : 'mode'},
-#    'TimeGaincal'   : {'hm_gaintype' : 'mode'},
-#    'PhcorBandpass' : {'hm_bandtype' : 'mode'}
+    'hif_gaincal': {'hm_gaintype': 'mode'},
 }
 
 
-def convert_args(taskname, casa_args, convert_nulls=True):
+def convert_args(pipeline_cls, casa_args, convert_nulls=True):
     """
     Convert CASA arguments to pipeline Inputs arguments.
     
@@ -39,27 +37,26 @@ def convert_args(taskname, casa_args, convert_nulls=True):
     #. Remove any arguments not accepted by the Inputs constructor.
     #. Convert any CASA null values to pipeline null values.
     
-    :param taskname: the task name
-    :type taskname: string 
+    :param pipeline_cls: the pipeline Task class
+    :type pipeline_cls: class
     :param casa_args: the dictionary of CASA arguments and values
     :type casa_args: dict
     :rtype: dict
     """
-    # Get the task class, and from that the Inputs class 
-    task_cls = getattr(pipeline.tasks, taskname)
-    inputs_cls = task_cls.Inputs
+    casa_task = task_registry.get_casa_task(pipeline_cls)
+    inputs_cls = pipeline_cls.Inputs
 
     # If required, rename CASA pipeline arguments to their pipeline equivalent
-    if taskname in _altmapping:
-        mapping = _altmapping[taskname]
+    if casa_task in _altmapping:
+        mapping = _altmapping[casa_task]
         remapped = {}
         for k, v in casa_args.iteritems():
             name = mapping.get(k, k)
             if k != name and name in casa_args:
                 msg = ('Remapping %s for %s inputs overwrites an argument of '
-                       'the same name' % (name, taskname))
+                       'the same name' % (name, casa_task))
                 LOG.error(msg)
-                raise AttributeError, msg
+                raise AttributeError(msg)
             remapped[name] = v
     else:
         remapped = casa_args
@@ -76,7 +73,7 @@ def convert_args(taskname, casa_args, convert_nulls=True):
 
     # remove any arguments that are not accepted by the input constructor
     accepted = {}
-    accepted.update((k,v) for k, v in remapped.iteritems()
+    accepted.update((k, v) for k, v in remapped.iteritems()
                     if k in constructor_args)
 
     # convert any CASA empty string or empty lists to None, thus allowing the
@@ -87,8 +84,9 @@ def convert_args(taskname, casa_args, convert_nulls=True):
     else:
         converted = accepted
 
-    LOG.debug('Final arguments for %s: %s' % (taskname, converted))
+    LOG.debug('Final arguments for %s: %s' % (pipeline_cls.__name__, converted))
     return converted
+
 
 def _convert_null(val):
     # convert empty string to None
@@ -98,7 +96,7 @@ def _convert_null(val):
     # convert empty lists and ['', ''] etc to None
     if type(val) is types.ListType:
         no_nulls = [_convert_null(v) for v in val]
-        nones = [t==None for t in no_nulls]
+        nones = [t == None for t in no_nulls]
         if all(nones):
             return None
         else:
@@ -106,13 +104,14 @@ def _convert_null(val):
 
     return val
 
+
 def task_to_casa(taskname, task_args):
     if taskname not in _altmapping:
         return task_args
     
     # If required, rename CASA pipeline arguments to their pipeline equivalent
     casa_to_task = _altmapping[taskname]
-    d = dict((v,k) for k, v in casa_to_task.iteritems())
+    d = dict((v, k) for k, v in casa_to_task.iteritems())
     remapped = {}
     for k, v in task_args.iteritems():
         name = d.get(k, k)
@@ -120,10 +119,7 @@ def task_to_casa(taskname, task_args):
 
     return remapped
 
-def inputs_to_casa(inputs_cls, args):
-    for mod_entry in dir(pipeline.tasks):
-        task = getattr(pipeline.tasks, mod_entry)
-        task_inputs = getattr(task, 'Inputs', None)
-        if task_inputs == inputs_cls.__class__:        
-            return task_to_casa(mod_entry, args)
-    return args
+
+def inputs_to_casa(pipeline_cls, args):
+    casa_task = task_registry.get_casa_task(pipeline_cls)
+    return task_to_casa(casa_task, args)

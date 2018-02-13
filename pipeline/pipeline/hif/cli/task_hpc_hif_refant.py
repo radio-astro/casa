@@ -7,11 +7,6 @@ import pipeline.h.cli.utils as utils
 
 def hpc_hif_refant(vis=None, field=None, spw=None, intent=None, hm_refant=None, refant=None, geometry=None,
                    flagging=None, pipelinemode=None, dryrun=None, acceptresults=None, parallel=None, refantignore=None):
-    # create a dictionary containing all the arguments given in the
-    # constructor
-    all_inputs = vars()
-
-    task_name = 'HpcRefAnt'
 
     ##########################################################################
     #                                                                        #
@@ -20,13 +15,17 @@ def hpc_hif_refant(vis=None, field=None, spw=None, intent=None, hm_refant=None, 
     #                                                                        #
     ##########################################################################
 
+    # create a dictionary containing all the arguments given in the
+    # constructor
+    all_inputs = vars()
+
     # get the name of this function for the weblog, eg. 'hif_flagdata'
-    fn_name = sys._getframe().f_code.co_name
+    task_name = sys._getframe().f_code.co_name
 
     # get the context on which this task operates
     context = utils.get_context()
 
-    # execute the task    
-    results = utils.execute_task(context, task_name, all_inputs, fn_name)
+    # execute the task
+    results = utils.execute_task(context, task_name, all_inputs)
 
     return results

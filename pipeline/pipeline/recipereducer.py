@@ -95,7 +95,7 @@ def _get_tasks(context, args, procedure):
                 and cli_command == 'hif_exportdata':
             continue
 
-        task_class = task_registry.get_pipeline_class(cli_command)
+        task_class = task_registry.get_pipeline_class_for_task(cli_command)
 
         task_args = {}
 

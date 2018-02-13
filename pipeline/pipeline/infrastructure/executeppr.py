@@ -235,7 +235,7 @@ def executeppr (pprXmlFile, importonly=True, breakpoint='breakpoint',
 
         # Execute the command
         try:
-            pipeline_task_class = task_registry.get_pipeline_class(casa_task)
+            pipeline_task_class = task_registry.get_pipeline_class_for_task(casa_task)
             pipeline_task_name = pipeline_task_class.__name__
             casatools.post_to_log("    Using python class ..." + pipeline_task_name, echo_to_screen=echo_to_screen)
 
@@ -251,7 +251,7 @@ def executeppr (pprXmlFile, importonly=True, breakpoint='breakpoint',
                 task_args['vis'] = files
                 task_args['session'] = sessions
 
-            remapped_args = argmapper.convert_args(pipeline_task_name, task_args, convert_nulls=False)
+            remapped_args = argmapper.convert_args(pipeline_task_class, task_args, convert_nulls=False)
             inputs = vdp.InputsContainer(pipeline_task_class, context, **remapped_args)
             task = pipeline_task_class(inputs)
             results = task.execute(dry_run=False)

@@ -454,7 +454,7 @@ class InputsContainer(object):
             return
 
         # map Python Inputs arguments back to their CASA equivalent
-        remapped = argmapper.inputs_to_casa(self._task_cls.Inputs, self._initargs)
+        remapped = argmapper.inputs_to_casa(self._task_cls, self._initargs)
 
         # CAS-6299. Extra request from Liz:
         #

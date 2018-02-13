@@ -10,7 +10,7 @@ import pipeline.infrastructure.vdp as vdp
 
 import pipeline.h.cli.cli as cli
 import pipeline.h.heuristics as heuristics
-import pipeline
+from pipeline.infrastructure import task_registry
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -59,26 +59,26 @@ def get_heuristic(arg):
     return heuristics.EchoHeuristic(arg)
 
 
-def execute_task(context, taskname, casa_args, fn_name):
+def execute_task(context, casa_task, casa_args):
     pipelinemode = casa_args.get('pipelinemode', None)
     dry_run = casa_args.get('dryrun', None)
     accept_results = casa_args.get('acceptresults', True)
 
     # get the pipeline task inputs
-    task_inputs = _get_task_inputs(context, taskname, casa_args)
+    task_inputs = _get_task_inputs(casa_task, context, casa_args)
     
     # print them if necessary
     if pipelinemode == 'getinputs':
-        _print_inputs(taskname, casa_args, task_inputs)
+        _print_inputs(casa_task, casa_args, task_inputs)
         return None
 
     # Execute the class, collecting the results
-    results = _execute_task(taskname, fn_name, task_inputs, dry_run)
+    results = _execute_task(casa_task, task_inputs, dry_run)
 
     # write the command invoked (eg. hif_setjy) to the result so that the
     # weblog can print help from the XML task definition rather than the
     # python class
-    results.taskname = fn_name
+    results.taskname = casa_task
     
     # accept the results if desired
     if accept_results and not dry_run:
@@ -90,23 +90,23 @@ def execute_task(context, taskname, casa_args, fn_name):
     return results
 
 
-def _get_task_inputs(context, taskname, casa_args):
+def _get_task_inputs(casa_task, context, casa_args):
     # convert the CASA arguments to pipeline arguments, renaming and
     # converting as necessary.
-    task_args = argmapper.convert_args(taskname, casa_args) 
-    
-    inputs = vdp.InputsContainer(pipeline.tasks.__dict__[taskname], context, **task_args)
+    pipeline_task_class = task_registry.get_pipeline_class_for_task(casa_task)
+    task_args = argmapper.convert_args(pipeline_task_class, casa_args)
+    inputs = vdp.InputsContainer(pipeline_task_class, context, **task_args)
 
     return inputs
 
 
-def _execute_task(taskname, stagename, task_inputs, dry_run):
+def _execute_task(casa_task, task_inputs, dry_run):
     # Given the class and CASA name of the stage and the list
     # of stage arguments, compute and return the results.
 
     # Find the task and run it
-    task_cls = getattr(pipeline.tasks, taskname)
-    task = task_cls(task_inputs) 
+    pipeline_task_cls = task_registry.get_pipeline_class_for_task(casa_task)
+    task = pipeline_task_cls(task_inputs)
 
     # Reporting stuff goes here
 
@@ -123,17 +123,18 @@ def _merge_results(context, results):
         raise e    
 
 
-def _print_inputs(taskname, casa_args, task_inputs): 
-    task_args = argmapper.convert_args(taskname, casa_args)
+def _print_inputs(casa_task, casa_args, task_inputs):
+    pipeline_class = task_registry.get_pipeline_class_for_task(casa_task)
+    task_args = argmapper.convert_args(pipeline_class, casa_args)
 
     pipeline_perspective = {}
     for arg in task_args:
         if hasattr(task_inputs, arg):
             pipeline_perspective[arg] = getattr(task_inputs, arg)
 
-    casa_args = argmapper.task_to_casa(taskname, pipeline_perspective)
+    casa_args = argmapper.task_to_casa(casa_task, pipeline_perspective)
 
-    print 'Pipeline-derived inputs for %s task:' % taskname    
+    print('Pipeline-derived inputs for {!s}:'.format(casa_task))
     pprint.pprint(casa_args)
     
     # Resetting pipelinemode after a call to getinputs is not a good idea, as
