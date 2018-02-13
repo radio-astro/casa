@@ -1,4 +1,5 @@
 from __future__ import absolute_import
+import os
 
 import numpy as np
 
@@ -31,7 +32,8 @@ class testBPdcalsInputs(vdp.StandardInputs):
 
 class testBPdcalsResults(basetask.Results):
     def __init__(self, final=None, pool=None, preceding=None, gain_solint1=None,
-                 shortsol1=None, vis=None, bpdgain_touse=None):
+                 shortsol1=None, vis=None, bpdgain_touse=None, gtypecaltable=None,
+                 ktypecaltable=None, bpcaltable=None):
 
         if final is None:
             final = []
@@ -50,7 +52,10 @@ class testBPdcalsResults(basetask.Results):
         self.gain_solint1 = gain_solint1
         self.shortsol1 = shortsol1
         self.bpdgain_touse = bpdgain_touse
-        
+        self.gtypecaltable = gtypecaltable
+        self.ktypecaltable = ktypecaltable
+        self.bpcaltable = bpcaltable
+
     def merge_with_context(self, context):
         m = context.observing_run.get_ms(self.vis)
         context.evla['msinfo'][m.name].gain_solint1 = self.gain_solint1
@@ -64,12 +69,18 @@ class testBPdcals(basetask.StandardTaskTemplate):
     def prepare(self):
 
         self.parang = True
-        
-        gtypecaltable = 'testdelayinitialgain.g'
-        ktypecaltable = 'testdelay.k'
-        bpcaltable = 'testBPcal.b'
-        tablebase = 'testBPdinitialgain'
-        table_suffix = ['.g','3.g','10.g']
+        try:
+            stage_number = self.inputs.context.results[-1].read()[0].stage_number + 1
+        except Exception as e:
+            stage_number = self.inputs.context.results[-1].read().stage_number + 1
+
+        tableprefix = os.path.basename(self.inputs.vis) + '.' + 'hifv_testBPdcals.s'
+
+        gtypecaltable = tableprefix + str(stage_number) + '_1.' + 'testdelayinitialgain.tbl'
+        ktypecaltable = tableprefix + str(stage_number) + '_2.' + 'testdelay.tbl'
+        bpcaltable    = tableprefix + str(stage_number) + '_3.' + 'testBPcal.tbl'
+        tablebase     = tableprefix + str(stage_number) + '_4.' + 'testBPdinitialgain'
+        table_suffix = ['.tbl','3.tbl','10.tbl']
         soltimes = [1.0,3.0,10.0] 
         m = self.inputs.context.observing_run.get_ms(self.inputs.vis)
         soltimes = [m.get_vla_max_integration_time() * x for x in soltimes]
@@ -328,7 +339,8 @@ class testBPdcals(basetask.StandardTaskTemplate):
                                             bpcaltable=bpcaltable, interp=interp)
 
         return testBPdcalsResults(gain_solint1=gain_solint1, shortsol1=shortsol1, vis=self.inputs.vis,
-                                  bpdgain_touse=bpdgain_touse)
+                                  bpdgain_touse=bpdgain_touse, gtypecaltable=gtypecaltable,
+                                  ktypecaltable=ktypecaltable, bpcaltable=bpcaltable)
 
     def analyse(self, results):
         return results

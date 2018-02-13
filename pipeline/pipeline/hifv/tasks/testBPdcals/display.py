@@ -25,17 +25,14 @@ class testBPdcalsSummaryChart(object):
 
     def create_plot(self, prefix):
         figfile = self.get_figfile(prefix)
-        
-        context = self.context
-        bandpass_field_select_string = context.evla['msinfo'][self.ms.name].bandpass_field_select_string
-        bandpass_scan_select_string = context.evla['msinfo'][self.ms.name].bandpass_scan_select_string
+
+        bandpass_field_select_string = self.context.evla['msinfo'][self.ms.name].bandpass_field_select_string
+        bandpass_scan_select_string = self.context.evla['msinfo'][self.ms.name].bandpass_scan_select_string
         corrstring = self.ms.get_vla_corrstring()
-        delay_scan_select_string = context.evla['msinfo'][self.ms.name].delay_scan_select_string
-        
-        ms_active = self.ms.name
+        delay_scan_select_string = self.context.evla['msinfo'][self.ms.name].delay_scan_select_string
 
         if (prefix == 'BPcal'):
-            casa.plotms(vis=ms_active, xaxis='freq', yaxis='amp', ydatacolumn='corrected',  selectdata=True,
+            casa.plotms(vis=self.ms.name, xaxis='freq', yaxis='amp', ydatacolumn='corrected',  selectdata=True,
                         field=bandpass_field_select_string,    scan=bandpass_scan_select_string,
                         correlation=corrstring,  averagedata=True, avgtime='1e8', avgscan=True, transform=False,
                         extendflag=False, iteraxis='', coloraxis='antenna2',  plotrange=[], title='',
@@ -43,7 +40,7 @@ class testBPdcalsSummaryChart(object):
                         overwrite=True, clearplots=True, showgui=False)
 
         if ((delay_scan_select_string != bandpass_scan_select_string) and prefix == 'delaycal'):
-            casa.plotms(vis=ms_active, xaxis='freq',   yaxis='amp',  ydatacolumn='corrected',  selectdata=True,
+            casa.plotms(vis=self.ms.name, xaxis='freq',   yaxis='amp',  ydatacolumn='corrected',  selectdata=True,
                         scan=delay_scan_select_string,        correlation=corrstring,  averagedata=True,
                         avgtime='1e8',  avgscan=True, transform=False,  extendflag=False,  iteraxis='',
                         coloraxis='antenna2',  plotrange=[],  title='',  xlabel='',  ylabel='',  showmajorgrid=False,
@@ -56,10 +53,9 @@ class testBPdcalsSummaryChart(object):
 
     def get_plot_wrapper(self, prefix):
         figfile = self.get_figfile(prefix)
-        
-        context = self.context
-        bandpass_scan_select_string = context.evla['msinfo'][self.ms.name].bandpass_scan_select_string
-        delay_scan_select_string = context.evla['msinfo'][self.ms.name].delay_scan_select_string
+
+        bandpass_scan_select_string = self.context.evla['msinfo'][self.ms.name].bandpass_scan_select_string
+        delay_scan_select_string = self.context.evla['msinfo'][self.ms.name].delay_scan_select_string
 
         if (prefix == 'BPcal' or ((delay_scan_select_string != bandpass_scan_select_string) and prefix == 'delaycal')):
             wrapper = logger.Plot(figfile, x_axis='freq', y_axis='amp',
@@ -94,33 +90,48 @@ class testDelaysPerAntennaChart(object):
                                           'testdelays-%s.json' % self.ms)
 
     def plot(self):
-        context = self.context
-        result = self.result
-        
+
         numAntenna = len(self.ms.antennas)
         
         plots = []
         nplots = numAntenna
 
+        LOG.info("Plotting test delays")
+
         for ii in range(nplots):
 
-            filename='testdelay'+str(ii)+'.png'
+            filename = 'testdelay'+str(ii)+'.png'
             antPlot = str(ii)
             
-            stage = 'stage%s' % result.stage_number
-            stage_dir = os.path.join(context.report_dir, stage)
+            stage = 'stage%s' % self.result.stage_number
+            stage_dir = os.path.join(self.context.report_dir, stage)
             # construct the relative filename, eg. 'stageX/testdelay0.png'
             
             figfile = os.path.join(stage_dir, filename)
 
             if not os.path.exists(figfile):
                 try:
-                    LOG.info("Plotting test delays")
-                    casa.plotcal(caltable='testdelay.k', xaxis='freq', yaxis='delay', poln='',
-                                 field='', antenna=antPlot, spw='', timerange='', subplot=111, overplot=False,
-                                 clearpanel='Auto', iteration='antenna', plotrange=[], showflags=False,
-                                 plotsymbol='o', plotcolor='blue', markersize=5.0, fontsize=10.0,
-                                 showgui=False, figfile=figfile)
+
+                    # Get antenna name
+                    antName = antPlot
+                    if antPlot != '':
+                        domain_antennas = self.ms.get_antenna(antPlot)
+                        idents = [a.name if a.name else a.id for a in domain_antennas]
+                        antName = ','.join(idents)
+
+                    LOG.debug("Plotting test delays {!s}".format(antName))
+                    #casa.plotcal(caltable='testdelay.k', xaxis='freq', yaxis='delay', poln='',
+                    #             field='', antenna=antPlot, spw='', timerange='', subplot=111, overplot=False,
+                    #             clearpanel='Auto', iteration='antenna', plotrange=[], showflags=False,
+                    #             plotsymbol='o', plotcolor='blue', markersize=5.0, fontsize=10.0,
+                    #             showgui=False, figfile=figfile)
+
+                    casa.plotms(vis=self.result.ktypecaltable, xaxis='freq', yaxis='amp', field='',
+                                antenna=antPlot, spw='', timerange='',
+                                plotrange=[], coloraxis='spw',
+                                title='K table: {!s}   Antenna: {!s}'.format(self.result.ktypecaltable,antName),
+                                titlefont=8, xaxisfont=7, yaxisfont=7, showgui=False, plotfile=figfile)
+
                     # plots.append(figfile)
 
                 except:
@@ -129,14 +140,7 @@ class testDelaysPerAntennaChart(object):
                 LOG.debug('Using existing ' + filename + ' plot.')
             
             try:
-            
-                # Get antenna name
-                antName = antPlot
-                if antPlot != '':
-                    domain_antennas = self.ms.get_antenna(antPlot)
-                    idents = [a.name if a.name else a.id for a in domain_antennas]
-                    antName = ','.join(idents)
-            
+
                 plot = logger.Plot(figfile, x_axis='Frequency', y_axis='Delay', field='',
                                    parameters={ 'spw': '',
                                                 'pol': '',
@@ -163,15 +167,13 @@ class ampGainPerAntennaChart(object):
                                           'ampgain-%s.json' % self.ms)
 
     def plot(self):
-        context = self.context
-        result = self.result
-        
+
         numAntenna = len(self.ms.antennas)
 
         plots = []
         nplots=int(numAntenna/3)
 
-        with casatools.TableReader(result.bpdgain_touse) as tb:
+        with casatools.TableReader(self.result.bpdgain_touse) as tb:
             cpar = tb.getcol('CPARAM')
             flgs = tb.getcol('FLAG')
         amps = np.abs(cpar)
@@ -184,41 +186,49 @@ class ampGainPerAntennaChart(object):
 
         nplots = numAntenna
 
+        LOG.info("Plotting amplitude gain solutions")
+
         for ii in range(nplots):
 
             filename='testBPdinitialgainamp'+str(ii)+'.png'
             antPlot=str(ii)
             
-            stage = 'stage%s' % result.stage_number
-            stage_dir = os.path.join(context.report_dir, stage)
+            stage = 'stage%s' % self.result.stage_number
+            stage_dir = os.path.join(self.context.report_dir, stage)
             # construct the relative filename, eg. 'stageX/testdelay0.png'
             
             figfile = os.path.join(stage_dir, filename)
 
             if not os.path.exists(figfile):
                 try:
-                    LOG.info("Plotting amplitude gain solutions")
-                    casa.plotcal(caltable=result.bpdgain_touse, xaxis='time', yaxis='amp', poln='', field='',
-                                 antenna=antPlot, spw='', timerange='', subplot=111, overplot=False,
-                                 clearpanel='Auto', iteration='antenna', plotrange=[0,0,0,plotmax], showflags=False,
-                                 plotsymbol='o',plotcolor='blue',markersize=5.0,fontsize=10.0,
-                                 showgui=False,figfile=figfile)
+
+                    # Get antenna name
+                    antName = antPlot
+                    if antPlot != '':
+                        domain_antennas = self.ms.get_antenna(antPlot)
+                        idents = [a.name if a.name else a.id for a in domain_antennas]
+                        antName = ','.join(idents)
+
+                    LOG.debug("Plotting amplitude gain solutions "+antName)
+                    #casa.plotcal(caltable=self.result.bpdgain_touse, xaxis='time', yaxis='amp', poln='', field='',
+                    #             antenna=antPlot, spw='', timerange='', subplot=111, overplot=False,
+                    #             clearpanel='Auto', iteration='antenna', plotrange=[0,0,0,plotmax], showflags=False,
+                    #             plotsymbol='o',plotcolor='blue',markersize=5.0,fontsize=10.0,
+                    #             showgui=False,figfile=figfile)
                     #plots.append(figfile)
 
+                    casa.plotms(vis=self.result.bpdgain_touse, xaxis='time', yaxis='amp', field='',
+                                antenna=antPlot, spw='', timerange='',
+                                plotrange=[0.0, 0.0, 0.0, plotmax], coloraxis='spw',
+                                title='G table: {!s}   Antenna: {!s}'.format(self.result.bpdgain_touse, antName),
+                                titlefont=8, xaxisfont=7, yaxisfont=7, showgui=False, plotfile=figfile)
                 except:
                     LOG.warn("Unable to plot " + filename)
             else:
                 LOG.debug('Using existing ' + filename + ' plot.')
             
             try:
-            
-                #Get antenna name
-                antName = antPlot
-                if antPlot != '':
-                    domain_antennas = self.ms.get_antenna(antPlot)
-                    idents = [a.name if a.name else a.id for a in domain_antennas]
-                    antName = ','.join(idents)
-            
+
                 plot = logger.Plot(figfile, x_axis='Time', y_axis='Amp', field='',
                         parameters={ 'spw': '',
                         'pol': '',
@@ -266,6 +276,8 @@ class phaseGainPerAntennaChart(object):
 
         nplots = numAntenna
 
+        LOG.info("Plotting phase gain solutions")
+
         for ii in range(nplots):
 
             filename = 'testBPdinitialgainphase'+str(ii)+'.png'
@@ -279,12 +291,27 @@ class phaseGainPerAntennaChart(object):
 
             if not os.path.exists(figfile):
                 try:
-                    LOG.info("Plotting phase gain solutions")
-                    casa.plotcal(caltable=result.bpdgain_touse, xaxis='time', yaxis='phase', poln='', field='',
-                                 antenna=antPlot, spw='', timerange='',        subplot=111, overplot=False,
-                                 clearpanel='Auto', iteration='antenna',  plotrange=[0,0,-180,180], showflags=False,
-                                 plotsymbol='o-',        plotcolor='blue',  markersize=5.0, fontsize=10.0,
-                                 showgui=False, figfile=figfile)
+
+                    # Get antenna name
+                    antName = antPlot
+                    if antPlot != '':
+                        domain_antennas = self.ms.get_antenna(antPlot)
+                        idents = [a.name if a.name else a.id for a in domain_antennas]
+                        antName = ','.join(idents)
+
+                    LOG.debug("Plotting phase gain solutions {!s}".format(antName))
+                    #casa.plotcal(caltable=result.bpdgain_touse, xaxis='time', yaxis='phase', poln='', field='',
+                    #             antenna=antPlot, spw='', timerange='',        subplot=111, overplot=False,
+                    #             clearpanel='Auto', iteration='antenna',  plotrange=[0,0,-180,180], showflags=False,
+                    #             plotsymbol='o-',        plotcolor='blue',  markersize=5.0, fontsize=10.0,
+                    #             showgui=False, figfile=figfile)
+
+                    casa.plotms(vis=result.bpdgain_touse, xaxis='time', yaxis='phase', field='',
+                                antenna=antPlot, spw='', timerange='',
+                                coloraxis='spw', plotrange=[0,0,-180,180], symbolshape='circle',
+                                title='G table: {!s}   Antenna: {!s}'.format(result.bpdgain_touse, antName),
+                                titlefont=8, xaxisfont=7, yaxisfont=7, showgui=False, plotfile=figfile)
+
                     # plots.append(figfile)
 
                 except:
@@ -293,20 +320,13 @@ class phaseGainPerAntennaChart(object):
                 LOG.debug('Using existing ' + filename + ' plot.')
             
             try:
-            
-                # Get antenna name
-                antName = antPlot
-                if antPlot != '':
-                    domain_antennas = self.ms.get_antenna(antPlot)
-                    idents = [a.name if a.name else a.id for a in domain_antennas]
-                    antName = ','.join(idents)
-            
+
                 plot = logger.Plot(figfile, x_axis='Time', y_axis='Phase',field='',
-                        parameters={ 'spw': '',
-                        'pol': '',
-                        'ant': antName,
-                        'type': 'phasegain',
-                        'file': os.path.basename(figfile)})
+                                   parameters={ 'spw': '',
+                                                'pol': '',
+                                                'ant': antName,
+                                                'type': 'phasegain',
+                                                'file': os.path.basename(figfile)})
                 plots.append(plot)
             except:
                 LOG.warn("Unable to add plot to stack")
@@ -344,7 +364,7 @@ class bpSolAmpPerAntennaChart(object):
         plotmax = maxamp
         
         
-        with casatools.TableReader('testBPcal.b') as tb:
+        with casatools.TableReader(self.result.bpcaltable) as tb:
             dataVarCol = tb.getvarcol('CPARAM')
             flagVarCol = tb.getvarcol('FLAG')
     
@@ -374,7 +394,9 @@ class bpSolAmpPerAntennaChart(object):
         if ((numAntenna%3)>0):
             nplots = nplots + 1
 
-        nplots=numAntenna
+        nplots = numAntenna
+
+        LOG.info("Plotting amp bandpass solutions")
 
         for ii in range(nplots):
 
@@ -389,27 +411,33 @@ class bpSolAmpPerAntennaChart(object):
 
             if not os.path.exists(figfile):
                 try:
-                    LOG.info("Plotting amp bandpass solutions")
-                    casa.plotcal(caltable='testBPcal.b', xaxis='freq',  yaxis='amp', poln='', field='',
-                                 antenna=antPlot, spw='', timerange='', subplot=111, overplot=False,
-                                 clearpanel='Auto', iteration='antenna',  plotrange=[0,0,0,ampplotmax],
-                                 showflags=False, plotsymbol='o', plotcolor='blue',  markersize=5.0,
-                                 fontsize=10.0, showgui=False, figfile=figfile)
+
+                    # Get antenna name
+                    antName = antPlot
+                    if antPlot != '':
+                        domain_antennas = self.ms.get_antenna(antPlot)
+                        idents = [a.name if a.name else a.id for a in domain_antennas]
+                        antName = ','.join(idents)
+
+                    LOG.debug("Plotting amp bandpass solutions "+antName)
+                    #casa.plotcal(caltable='testBPcal.b', xaxis='freq',  yaxis='amp', poln='', field='',
+                    #             antenna=antPlot, spw='', timerange='', subplot=111, overplot=False,
+                    #             clearpanel='Auto', iteration='antenna',  plotrange=[0,0,0,ampplotmax],
+                    #             showflags=False, plotsymbol='o', plotcolor='blue',  markersize=5.0,
+                    #             fontsize=10.0, showgui=False, figfile=figfile)
                     # plots.append(figfile)
 
+                    casa.plotms(vis=self.result.bpcaltable, xaxis='freq', yaxis='amp', field='',
+                                antenna=antPlot, spw='', timerange='',
+                                coloraxis='spw', plotrange=[0,0,0,ampplotmax], symbolshape='circle',
+                                title='B table: {!s}   Antenna: {!s}'.format(self.result.bpcaltable, antName),
+                                titlefont=8, xaxisfont=7, yaxisfont=7, showgui=False, plotfile=figfile)
                 except:
                     LOG.warn("Unable to plot " + filename)
             else:
                 LOG.debug('Using existing ' + filename + ' plot.')
             
             try:
-            
-                # Get antenna name
-                antName = antPlot
-                if antPlot != '':
-                    domain_antennas = self.ms.get_antenna(antPlot)
-                    idents = [a.name if a.name else a.id for a in domain_antennas]
-                    antName = ','.join(idents)
             
                 plot = logger.Plot(figfile, x_axis='Freq', y_axis='Amp',field='',
                         parameters={ 'spw': '',
@@ -453,7 +481,7 @@ class bpSolPhasePerAntennaChart(object):
         maxamp = np.max(amps[good])
         plotmax = maxamp
         
-        with casatools.TableReader('testBPcal.b') as tb:
+        with casatools.TableReader(self.result.bpcaltable) as tb:
             dataVarCol = tb.getvarcol('CPARAM')
             flagVarCol = tb.getvarcol('FLAG')
     
@@ -485,6 +513,8 @@ class bpSolPhasePerAntennaChart(object):
 
         nplots = numAntenna
 
+        LOG.info("Plotting phase bandpass solutions")
+
         for ii in range(nplots):
 
             filename = 'testBPcal_phase'+str(ii)+'.png'
@@ -498,13 +528,28 @@ class bpSolPhasePerAntennaChart(object):
 
             if not os.path.exists(figfile):
                 try:
-                    LOG.info("Plotting phase bandpass solutions")
-                    casa.plotcal(caltable='testBPcal.b',  xaxis='freq', yaxis='phase', poln='',  field='',
-                                 antenna=antPlot, spw='',  timerange='', subplot=111,  overplot=False,
-                                 clearpanel='Auto', iteration='antenna',  plotrange=[0,0,-phaseplotmax,phaseplotmax],
-                                 showflags=False, plotsymbol='o', plotcolor='blue',  markersize=5.0,
-                                 fontsize=10.0,  showgui=False,  figfile=figfile)
+
+                    # Get antenna name
+                    antName = antPlot
+                    if antPlot != '':
+                        domain_antennas = self.ms.get_antenna(antPlot)
+                        idents = [a.name if a.name else a.id for a in domain_antennas]
+                        antName = ','.join(idents)
+
+                    LOG.debug("Plotting phase bandpass solutions "+antName)
+                    #casa.plotcal(caltable='testBPcal.b',  xaxis='freq', yaxis='phase', poln='',  field='',
+                    #             antenna=antPlot, spw='',  timerange='', subplot=111,  overplot=False,
+                    #             clearpanel='Auto', iteration='antenna',  plotrange=[0,0,-phaseplotmax,phaseplotmax],
+                    #             showflags=False, plotsymbol='o', plotcolor='blue',  markersize=5.0,
+                    #             fontsize=10.0,  showgui=False,  figfile=figfile)
                     #plots.append(figfile)
+
+                    casa.plotms(vis=self.result.bpcaltable, xaxis='freq', yaxis='phase', field='',
+                                antenna=antPlot, spw='', timerange='',
+                                coloraxis='spw', plotrange=[0,0,-phaseplotmax,phaseplotmax],
+                                symbolshape='circle',
+                                title='B table: {!s}   Antenna: {!s}'.format(self.result.bpcaltable, antName),
+                                titlefont=8, xaxisfont=7, yaxisfont=7, showgui=False, plotfile=figfile)
 
                 except:
                     LOG.warn("Unable to plot " + filename)
@@ -512,13 +557,6 @@ class bpSolPhasePerAntennaChart(object):
                 LOG.debug('Using existing ' + filename + ' plot.')
             
             try:
-            
-                # Get antenna name
-                antName = antPlot
-                if antPlot != '':
-                    domain_antennas = self.ms.get_antenna(antPlot)
-                    idents = [a.name if a.name else a.id for a in domain_antennas]
-                    antName = ','.join(idents)
             
                 plot = logger.Plot(figfile, x_axis='Freq', y_axis='Phase', field='',
                         parameters={ 'spw': '',

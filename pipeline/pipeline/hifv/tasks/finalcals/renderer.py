@@ -124,10 +124,10 @@ class T2_4MDetailsfinalcalsRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
         
         for result in results:
             
-            plotter = finalcalsdisplay.finalcalsSummaryChart(context, result)
-            plots = plotter.plot()
+            # plotter = finalcalsdisplay.finalcalsSummaryChart(context, result)
+            # plots = plotter.plot()
             ms = os.path.basename(result.inputs['vis'])
-            summary_plots[ms] = plots
+            summary_plots[ms] = None
             
             # generate testdelay plots and JSON file
             plotter = finalcalsdisplay.finalDelaysPerAntennaChart(context, result)

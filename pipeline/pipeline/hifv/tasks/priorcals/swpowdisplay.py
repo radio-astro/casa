@@ -17,7 +17,7 @@ class swpowSummaryChart(object):
         self.caltable = result.sw_result.final[0].gaintable
 
     def plot(self):
-        ##science_spws = self.ms.get_spectral_windows(science_windows_only=True)
+        # science_spws = self.ms.get_spectral_windows(science_windows_only=True)
         plots = [self.get_plot_wrapper('swpow_sample')]
         return [p for p in plots if p is not None]
 
@@ -72,7 +72,6 @@ class swpowPerAntennaChart(object):
         self.yaxis = yaxis
         self.caltable = result.sw_result.final[0].gaintable
 
-
         self.json = {}
         self.json_filename = os.path.join(context.report_dir,
                                           'stage%s' % result.stage_number,
@@ -82,16 +81,11 @@ class swpowPerAntennaChart(object):
         context = self.context
         result = self.result
         m = context.observing_run.measurement_sets[0]
-
         numAntenna = len(m.antennas)
-
         plots = []
 
         LOG.info("Plotting swpowcal charts for " + self.yaxis)
-
         nplots = numAntenna
-
-
 
         for ii in range(nplots):
 
@@ -115,15 +109,28 @@ class swpowPerAntennaChart(object):
                 if float(max(freqs)) >= 18000000000.0:
                     plotrange = [0,0,0,200]
 
-
             if not os.path.exists(figfile):
                 try:
-                    LOG.info("Switched Power Plot, using antenna={!s} and spw={!s}".format(antPlot,self.result.sw_result.spw))
-                    casa.plotcal(caltable=self.caltable, xaxis='time', yaxis=self.yaxis, poln='', field='',
-                                 antenna=antPlot, spw=self.result.sw_result.spw, timerange='', subplot=111, overplot=False, clearpanel='Auto',
-                                 iteration='antenna', plotrange=plotrange, showflags=False, plotsymbol='o',
-                                 plotcolor='blue', markersize=5.0, fontsize=10.0, showgui=False, figfile=figfile)
-                    # plots.append(figfile)
+                    # Get antenna name
+                    antName = antPlot
+                    if antPlot != '':
+                        domain_antennas = self.ms.get_antenna(antPlot)
+                        idents = [a.name if a.name else a.id for a in domain_antennas]
+                        antName = ','.join(idents)
+
+                    LOG.debug("Switched Power Plot, using antenna={!s} and spw={!s}".format(antName,
+                                                                                           self.result.sw_result.spw))
+                    #casa.plotcal(caltable=self.caltable, xaxis='time', yaxis=self.yaxis, poln='', field='',
+                    #             antenna=antPlot, spw=self.result.sw_result.spw, timerange='', subplot=111,
+                    #             overplot=False, clearpanel='Auto',
+                    #             iteration='antenna', plotrange=plotrange, showflags=False, plotsymbol='o',
+                    #             plotcolor='blue', markersize=5.0, fontsize=10.0, showgui=False, figfile=figfile)
+
+                    casa.plotms(vis=self.caltable, xaxis='time', yaxis=self.yaxis, field='',
+                                antenna=antPlot, spw=self.result.sw_result.spw, timerange='',
+                                plotrange=plotrange, coloraxis='spw',
+                                title='Switched Power  swpow.tbl   Antenna: {!s}'.format(antName),
+                                titlefont=8, xaxisfont=7, yaxisfont=7, showgui=False, plotfile=figfile)
 
                 except:
                     LOG.warn("Unable to plot " + filename)
@@ -131,16 +138,7 @@ class swpowPerAntennaChart(object):
                 LOG.debug('Using existing ' + filename + ' plot.')
 
             try:
-
-                # Get antenna name
-                antName = antPlot
-                if antPlot != '':
-                    domain_antennas = self.ms.get_antenna(antPlot)
-                    idents = [a.name if a.name else a.id for a in domain_antennas]
-                    antName = ','.join(idents)
-
-                plot = logger.Plot(figfile, x_axis='Time', y_axis=self.yaxis.title(),
-                                   field='',
+                plot = logger.Plot(figfile, x_axis='Time', y_axis=self.yaxis.title(), field='',
                                    parameters={'spw': '',
                                                'pol': '',
                                                'ant': antName,
@@ -152,5 +150,3 @@ class swpowPerAntennaChart(object):
                 plots.append(None)
 
         return [p for p in plots if p is not None]
-
-

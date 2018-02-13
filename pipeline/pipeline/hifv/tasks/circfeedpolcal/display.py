@@ -70,8 +70,6 @@ class PolarizationPlotCalChart(object):
         return wrapper
 
 
-
-
 class ampfreqPerAntennaChart(object):
     def __init__(self, context, result, caltable):
         self.context = context
@@ -98,11 +96,9 @@ class ampfreqPerAntennaChart(object):
 
         nplots = numAntenna
 
-
-
         for ii in range(nplots):
 
-            filename = 'ampfreq_'  + str(ii) + '.png'
+            filename = 'ampfreq_' + str(ii) + '.png'
             antPlot = str(ii)
 
             stage = 'stage%s' % result.stage_number
@@ -115,11 +111,23 @@ class ampfreqPerAntennaChart(object):
 
             if not os.path.exists(figfile):
                 try:
-                    casa.plotcal(caltable=self.caltable, xaxis='freq', yaxis='amp', poln='', field='',
-                                 antenna=antPlot, spw='', timerange='', subplot=111, overplot=False, clearpanel='Auto',
-                                 iteration='antenna', plotrange=plotrange, showflags=False, plotsymbol='o',
-                                 plotcolor='blue', markersize=5.0, fontsize=10.0, showgui=False, figfile=figfile)
-                    # plots.append(figfile)
+                    # Get antenna name
+                    antName = antPlot
+                    if antPlot != '':
+                        domain_antennas = self.ms.get_antenna(antPlot)
+                        idents = [a.name if a.name else a.id for a in domain_antennas]
+                        antName = ','.join(idents)
+
+                    #casa.plotcal(caltable=self.caltable, xaxis='freq', yaxis='amp', poln='', field='',
+                    #             antenna=antPlot, spw='', timerange='', subplot=111, overplot=False, clearpanel='Auto',
+                    #             iteration='antenna', plotrange=plotrange, showflags=False, plotsymbol='o',
+                    #             plotcolor='blue', markersize=5.0, fontsize=10.0, showgui=False, figfile=figfile)
+
+                    casa.plotms(vis=self.caltable, xaxis='freq', yaxis='amp', field='',
+                                antenna=antPlot, spw='', timerange='',
+                                plotrange=plotrange, coloraxis='spw',
+                                title='POL table: {!s}   Antenna: {!s}'.format(self.caltable, antName),
+                                titlefont=8, xaxisfont=7, yaxisfont=7, showgui=False, plotfile=figfile)
 
                 except:
                     LOG.warn("Unable to plot " + filename)
@@ -127,14 +135,6 @@ class ampfreqPerAntennaChart(object):
                 LOG.debug('Using existing ' + filename + ' plot.')
 
             try:
-
-                # Get antenna name
-                antName = antPlot
-                if antPlot != '':
-                    domain_antennas = self.ms.get_antenna(antPlot)
-                    idents = [a.name if a.name else a.id for a in domain_antennas]
-                    antName = ','.join(idents)
-
                 plot = logger.Plot(figfile, x_axis='Frequency', y_axis='Amplitude',
                                    field='',
                                    parameters={'spw': '',
@@ -148,6 +148,7 @@ class ampfreqPerAntennaChart(object):
                 plots.append(None)
 
         # Create a dummy plot to release the cal table
+        '''
         scratchfile = 'scratchpol.g'
         shutil.copytree(self.caltable, scratchfile)
         casa.plotcal(caltable=scratchfile,
@@ -158,5 +159,6 @@ class ampfreqPerAntennaChart(object):
                      showflags=False, plotsymbol='o-', plotcolor='blue',
                      markersize=5.0, fontsize=10.0, showgui=False, figfile="scratchpol.png")
         shutil.rmtree(scratchfile)
+        '''
 
         return [p for p in plots if p is not None]

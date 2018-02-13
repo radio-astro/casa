@@ -38,23 +38,20 @@ class testgainsSummaryChart(object):
                      fontsize=10.0, showgui=False, figfile=figfile)
 
     def get_figfile(self, prefix):
-        return os.path.join(self.context.report_dir, 
-                            'stage%s' % self.result.stage_number, 
+        return os.path.join(self.context.report_dir,
+                            'stage%s' % self.result.stage_number,
                             'testgains'+prefix+'-%s-summary.png' % self.ms.basename)
 
     def get_plot_wrapper(self, prefix):
         figfile = self.get_figfile(prefix)
 
-        wrapper = logger.Plot(figfile,
-                              x_axis='freq',
-                              y_axis='amp',
+        wrapper = logger.Plot(figfile, x_axis='freq', y_axis='amp',
                               parameters={'vis'      : self.ms.basename,
                                           'type'     : prefix,
                                           'spw'      : ''})
 
         if not os.path.exists(figfile):
-            LOG.trace('testgains summary plot not found. Creating new '
-                      'plot.')
+            LOG.trace('testgains summary plot not found. Creating new plot.')
             try:
                 self.create_plot(prefix)
             except Exception as ex:
@@ -82,19 +79,10 @@ class testgainsPerAntennaChart(object):
         context = self.context
         result = self.result
         m = context.observing_run.measurement_sets[0]
-
         numAntenna = len(m.antennas)
-        
-        ms_active = m.name
-        
         plots = []
         
-        LOG.info("Plotting gain solutions")
-    
-        nplots = int(numAntenna/3)
-
-        if ((numAntenna%3)>0):
-            nplots = nplots + 1
+        LOG.info("Plotting testgain solutions")
 
         with casatools.TableReader(result.bpdgain_touse) as tb:
             cpar = tb.getcol('CPARAM')
@@ -104,17 +92,11 @@ class testgainsPerAntennaChart(object):
         maxamp = np.max(amps[good])
         plotmax = maxamp
 
-        if ((numAntenna%3)>0):
-            nplots = nplots + 1
-
-        nplots=numAntenna
+        nplots = numAntenna
 
         for ii in range(nplots):
 
-            filename='testgaincal_'+self.yaxis+str(ii)+'.png'
-            # ###syscommand='rm -rf '+filename
-            # ###os.system(syscommand)
-            # antPlot=str(ii*3)+'~'+str(ii*3+2)
+            filename='testgaincal_' + self.yaxis + str(ii) + '.png'
             antPlot = str(ii)
             
             stage = 'stage%s' % result.stage_number
@@ -133,12 +115,25 @@ class testgainsPerAntennaChart(object):
             
             if not os.path.exists(figfile):
                 try:
-                    casa.plotcal(caltable=result.bpdgain_touse,  xaxis='time', yaxis=self.yaxis,
-                                 poln='', field='', antenna=antPlot, spw='', timerange='',
-                                 subplot=111,  overplot=False, clearpanel='Auto',  iteration='antenna',
-                                 plotrange=plotrange,  showflags=False, plotsymbol=plotsymbol,
-                                 plotcolor='blue', markersize=5.0,  fontsize=10.0, showgui=False, figfile=figfile)
-                    # plots.append(figfile)
+
+                    # Get antenna name
+                    antName = antPlot
+                    if antPlot != '':
+                        domain_antennas = self.ms.get_antenna(antPlot)
+                        idents = [a.name if a.name else a.id for a in domain_antennas]
+                        antName = ','.join(idents)
+
+                    #casa.plotcal(caltable=result.bpdgain_touse,  xaxis='time', yaxis=self.yaxis,
+                    #             poln='', field='', antenna=antPlot, spw='', timerange='',
+                    #             subplot=111,  overplot=False, clearpanel='Auto',  iteration='antenna',
+                    #             plotrange=plotrange,  showflags=False, plotsymbol=plotsymbol,
+                    #             plotcolor='blue', markersize=5.0,  fontsize=10.0, showgui=False, figfile=figfile)
+
+                    casa.plotms(vis=result.bpdgain_touse, xaxis='time', yaxis=self.yaxis, field='',
+                                antenna=antPlot, spw='', timerange='',
+                                plotrange=plotrange, coloraxis='spw',
+                                title='G table: {!s}   Antenna: {!s}'.format(result.bpdgain_touse, antName),
+                                titlefont=8, xaxisfont=7, yaxisfont=7, showgui=False, plotfile=figfile)
 
                 except:
                     LOG.warn("Unable to plot " + filename)
@@ -146,15 +141,7 @@ class testgainsPerAntennaChart(object):
                 LOG.debug('Using existing ' + filename + ' plot.')
             
             try:
-                # Get antenna name
-                antName = antPlot
-                if antPlot != '':
-                    domain_antennas = self.ms.get_antenna(antPlot)
-                    idents = [a.name if a.name else a.id for a in domain_antennas]
-                    antName = ','.join(idents)
-            
-                plot = logger.Plot(figfile, x_axis='Time', y_axis=self.yaxis.title(),
-                                   field='',
+                plot = logger.Plot(figfile, x_axis='Time', y_axis=self.yaxis.title(), field='',
                                    parameters={'spw': '',
                                                'pol': '',
                                                'ant': antName,
@@ -166,6 +153,7 @@ class testgainsPerAntennaChart(object):
                 plots.append(None)
 
         # Create a dummy plot to release the cal table
+        '''
         scratchfile = 'scratch.g'
         shutil.copytree(result.bpdgain_touse, scratchfile)
         casa.plotcal(caltable=scratchfile,
@@ -176,5 +164,6 @@ class testgainsPerAntennaChart(object):
                      showflags=False, plotsymbol='o-', plotcolor='blue',
                      markersize=5.0, fontsize=10.0, showgui=False, figfile="scratch.png")
         shutil.rmtree(scratchfile)
+        '''
 
         return [p for p in plots if p is not None]

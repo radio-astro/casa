@@ -61,7 +61,7 @@ class FlagBadDeformatters(basetask.StandardTaskTemplate):
                        'nspwlimit': 4,      # Number of spw per baseband to trigger flagging entire baseband
                        'doflagundernspwlimit': True,  # Flag individual spws when below nspwlimit
                        'doflagemptyspws': False,  # Flag data for spws with no unflagged channel solutions in any poln?
-                       'calBPtablename': 'testBPcal.b',  # Define the table to run this on
+                       'calBPtablename': self.inputs.context.results[-1].read()[0].bpcaltable,  # Define the table to run this on
                        'flagreason': 'bad_deformatters_amp or RFI'}  # Define the REASON given for the flags
         
         (result_amp, amp_collection) = self._do_flag_baddeformatters(**method_args)
@@ -74,7 +74,7 @@ class FlagBadDeformatters(basetask.StandardTaskTemplate):
                        'nspwlimit': 4,
                        'doflagundernspwlimit': True,
                        'doflagemptyspws': False,
-                       'calBPtablename': 'testBPcal.b',
+                       'calBPtablename': self.inputs.context.results[-1].read()[0].bpcaltable,
                        'flagreason': 'bad_deformatters_phase or RFI'}
         
         (result_phase, phase_collection) = self._do_flag_baddeformatters(**method_args)
