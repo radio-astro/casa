@@ -39,7 +39,10 @@ def _get_science_goal_value(science_goals, goal_keyword):
         keyword = science_goal.split('=')[0].replace(' ', '')
         if keyword != goal_keyword:
             continue
-        value = science_goal.split('=')[1].replace(' ', '')
+        if keyword == 'representativeSource':
+            value = science_goal.split('=')[1].lstrip().rstrip()
+        else:
+            value = science_goal.split('=')[1].replace(' ', '')
         return value
     return value
 
