@@ -19,7 +19,13 @@ import pipeline.domain.measures as measures
 			    <thead>
 			        <tr>
 			            <th scope="col" rowspan="2">ID</th>
-			            <th scope="col" rowspan="2">Type</th>
+			            <%
+						spwtypelabel='<th scope="col" rowspan="2">Type</th>'
+						if 'VLA' in pcontext.project_summary.telescope:
+					                spwtypelabel=''
+						endif
+						%>
+						${spwtypelabel}
 			            <th scope="col" colspan="3">Frequency ${'(%s)' % (ms.get_spectral_windows()[0].frame)}</th>
 			            <th scope="col" rowspan="2">Bandwidth ${'(%s)' % (ms.get_spectral_windows()[0].frame)}</th>
 			            <th scope="col" rowspan="2">Transitions</th>
@@ -47,7 +53,13 @@ import pipeline.domain.measures as measures
 					% for spw in ms.get_spectral_windows(science_windows_only=True):
 					<tr>
 					  <td>${spw.id}</td>
-					  <td>${spw.type}</td>
+			            <%
+						spwtypeentry='<td>'+str(spw.type)+'</td>'
+						if 'VLA' in pcontext.project_summary.telescope:
+					                spwtypeentry=''
+						endif
+						%>
+						${spwtypeentry}
 					  <td>${str(spw.min_frequency)}</td>
 					  <td>${str(spw.centre_frequency)}</td>
 					  <td>${str(spw.max_frequency)}</td>
@@ -82,7 +94,13 @@ import pipeline.domain.measures as measures
 			    <thead>
 			        <tr>
 			            <th scope="col" rowspan="2">ID</th>
-			            <th scope="col" rowspan="2">Type</th>
+			            <%
+						spwtypelabel='<th scope="col" rowspan="2">Type</th>'
+						if 'VLA' in pcontext.project_summary.telescope:
+						            spwtypelabel=''
+						endif
+						%>
+						${spwtypelabel}
 			            <th scope="col" colspan="3">Frequency ${'(%s)' % (ms.get_spectral_windows()[0].frame)}</th>
 			            <th scope="col" rowspan="2">Bandwidth ${'(%s)' % (ms.get_spectral_windows()[0].frame)}</th>
 			            <th scope="col" rowspan="2">Transitions</th>
@@ -111,7 +129,13 @@ import pipeline.domain.measures as measures
 					% for spw in ms.get_spectral_windows(science_windows_only=False):
 					<tr>
 						<td>${spw.id}</td>
-						<td>${spw.type}</td>
+			            <%
+						spwtypeentry='<td>'+str(spw.type)+'</td>'
+						if 'VLA' in pcontext.project_summary.telescope:
+					                spwtypeentry=''
+						endif
+						%>
+						${spwtypeentry}
 						<td>${str(spw.min_frequency)}</td>
 						<td>${str(spw.centre_frequency)}</td>
 						<td>${str(spw.max_frequency)}</td>
