@@ -29,11 +29,16 @@ class swpowSummaryChart(object):
         plotmax = 100
 
         # Dummy plot
-        casa.plotcal(caltable=self.caltable, xaxis='time', yaxis='amp', poln='', field='', antenna=antPlot,
-                     spw='',
-                     timerange='', subplot=311, overplot=False, clearpanel='Auto', iteration='antenna',
-                     plotrange=[0, 0, 0, plotmax], showflags=False, plotsymbol='o', plotcolor='blue', markersize=5.0,
-                     fontsize=10.0, showgui=False, figfile=figfile)
+        #casa.plotcal(caltable=self.caltable, xaxis='time', yaxis='amp', poln='', field='', antenna=antPlot,
+        #             spw='',
+        #             timerange='', subplot=311, overplot=False, clearpanel='Auto', iteration='antenna',
+        #             plotrange=[0, 0, 0, plotmax], showflags=False, plotsymbol='o', plotcolor='blue', markersize=5.0,
+        #             fontsize=10.0, showgui=False, figfile=figfile)
+        casa.plotms(vis=self.caltable, xaxis='time', yaxis='amp', field='',
+                    antenna=antPlot, spw='', timerange='',
+                    plotrange=[0,0,0,plotmax], coloraxis='spw',
+                    title='Switched Power  swpow.tbl   Antenna: {!s}'.format('0~2'),
+                    titlefont=8, xaxisfont=7, yaxisfont=7, showgui=False, plotfile=figfile)
 
     def get_figfile(self, prefix):
         return os.path.join(self.context.report_dir,

@@ -110,9 +110,9 @@ class T2_4MDetailspriorcalsRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
             opacity_plots[ms] = plots
 
             plotter = swpowdisplay.swpowSummaryChart(context, result)
-            plots = plotter.plot()
+            # plots = plotter.plot()
             ms = os.path.basename(result.inputs['vis'])
-            summary_plots[ms] = plots
+            summary_plots[ms] = None
 
             
             # generate switched power plots and JSON file
