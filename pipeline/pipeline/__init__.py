@@ -8,6 +8,13 @@ from . import infrastructure
 
 from .infrastructure import Pipeline, Context
 
+import pipeline.h
+import pipeline.hif
+import pipeline.hifa
+import pipeline.hsd
+import pipeline.hifv
+import pipeline.hsdn
+
 from .domain import measures
 from casa_stack_manip import stack_frame_find
 
