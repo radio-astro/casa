@@ -296,8 +296,10 @@ class Editimlist(basetask.StandardTaskTemplate):
                 if 'VLASS-SE-CUBE' == img_mode:
                     pols = imlist_entry['stokes']
                     spws = imlist_entry['spw'].split(',')
+                    imagename = imlist_entry['imagename']
                     for spw in spws:
                         imlist_entry['spw'] = spw
+                        imlist_entry['imagename'] = imagename + '.spw' + spw
                         for pol in pols:
                             imlist_entry['stokes'] = pol
                             # we make a deepcopy to get a unique object for each target
