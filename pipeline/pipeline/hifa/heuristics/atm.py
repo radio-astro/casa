@@ -5,9 +5,9 @@ import os
 import numpy as np
 
 import pipeline.infrastructure as infrastructure
-import pipeline.infrastructure.utils as utils
 import pipeline.infrastructure.casatools as casatools
 from pipeline.domain import measures
+from pipeline.h.heuristics import tsysspwmap
 from pipeline.h.tasks.common import calibrationtableaccess as caltableaccess
 from pipeline.h.tasks.common import commonresultobjects
 
@@ -120,55 +120,59 @@ class AtmHeuristics(object):
         self.calculated = True
 
     def _calculate_median_tsys(self, table, intent):
+        ms = self.context.observing_run.get_ms(name=self.vis)
 
-        # Get the Tsys spw map by retrieving it from the first tsys CalFrom
-        # that is present in the callibrary.
-        spwmap = utils.get_calfroms(self.context, self.vis, 'tsys')[0].spwmap
+        # Get the Tsys spw map from caltable.
+        unmapped, mapped = tsysspwmap(ms, table)
 
         # Get list of science spw ids to consider.
-        sci_spwids = np.array([spw.id for spw in self.science_spws])
-        mapped_spwids = np.array([spwmap[spwid] for spwid in sci_spwids])
-
-        # Compute mapping from Tsys spwid to corresponding science spw.
-        tsys_to_sci_spwmap = {spwmap[spwid]: spwid for spwid in sci_spwids}
-
-        # Get field ids to consider, based on intents used for QA.
-        ms = self.context.observing_run.get_ms(name=self.vis)
-        fieldids = [field.id
-                    for field in ms.get_fields(intent=intent)]
+        sci_spwids = [spw.id for spw in self.science_spws]
 
         # Initialize dictionary of Tsys measurements per science spw.
         tsys = {spwid: [] for spwid in sci_spwids}
 
-        # Load the tsys caltable to assess.
-        tsystable = caltableaccess.CalibrationTableDataFiller.getcal(
-            table)
+        # Identify which science spws have been mapped to a Tsys.
+        sci_spw_mapped = [spwid for spwid in sci_spwids if spwid not in unmapped]
 
-        # Go through each row:
-        for row in tsystable.rows:
+        # Only go through the Tsys caltable if there were any mapped science
+        # spws.
+        if sci_spw_mapped:
+            # Compute a translation dictionary from Tsys spw to corresponding
+            # science spw.
+            tsys_to_sci_spwmap = {mapped[spwid]: spwid for spwid in sci_spw_mapped}
 
-            # Get spw for current.
-            row_spwid = row.get('SPECTRAL_WINDOW_ID')
+            # Get field ids to consider, based on intents used for QA.
+            fieldids = [field.id for field in ms.get_fields(intent=intent)]
 
-            # Extract info from rows matching the spws and fields (intents) to
-            # consider.
-            if row_spwid in mapped_spwids and row.get('FIELD_ID') in fieldids:
+            # Load the tsys caltable to assess.
+            tsystable = caltableaccess.CalibrationTableDataFiller.getcal(table)
 
-                # Get tsys spectrum and corresponding flags.
-                spec = row.get('FPARAM')
-                flag = row.get('FLAG')
+            # Go through each row of Tsys caltable:
+            for row in tsystable.rows:
+                # Get spw for current row.
+                row_spwid = row.get('SPECTRAL_WINDOW_ID')
 
-                # Add unflagged tsys measurements to overall list for this spw.
-                tsys[tsys_to_sci_spwmap[row_spwid]].extend(list(spec[np.logical_not(flag)]))
+                # Extract info from rows matching the spws and fields
+                # (intents) to consider.
+                if row_spwid in tsys_to_sci_spwmap.keys() and row.get('FIELD_ID') in fieldids:
+                    # Get tsys spectrum and corresponding flags.
+                    spec = row.get('FPARAM')
+                    flag = row.get('FLAG')
 
-        # Calculate median for each spw.
-        med_tsys = {spwid: np.median(tsys[spwid]) for spwid in sci_spwids}
+                    # Add unflagged tsys measurements to overall list for this
+                    # spw.
+                    tsys[tsys_to_sci_spwmap[row_spwid]].extend(list(spec[np.logical_not(flag)]))
 
-        return med_tsys
+        # Calculate median for each spw; for each spwid where no Tsys was
+        # available, this will be NaN.
+        median_tsys = {spwid: np.median(tsys[spwid]) for spwid in sci_spwids}
+
+        return median_tsys
 
     def spwid_rank_by_frequency(self):
-        """Return the spw id of the science spw with highest centre
-           frequency.
+        """
+        Return the spw id of the science spw with highest centre
+        frequency.
         """
         # construction of spw_freqs assumes freqs for all spws have
         # in same units
@@ -249,11 +253,13 @@ class AtmHeuristics(object):
             return None
 
         # If no median Tsys could be calculated for any spw (e.g. due to
-        # flagging), then return without ranked list.
+        # flagging, or due to science spws not being mapped to corresponding
+        # Tsys spws), then return without ranked list.
         if not np.any(np.isfinite(median_tsys.values())):
             LOG.warning("No valid median Tsys values found for spws for {} "
-                        "(too much flagging?); cannot rank spws by Tsys "
-                        "and bandwidth.".format(os.path.basename(self.vis)))
+                        "(Too much flagging? Science spws not mapped to Tsys "
+                        "spws?); cannot rank spws by Tsys and bandwidth."
+                        "".format(os.path.basename(self.vis)))
             return None
 
         # Initialize the metric, get spwids.
