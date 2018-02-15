@@ -142,7 +142,7 @@ task_to_run = 'hifa_tsysflag'
 import pipeline
 from pipeline.infrastructure import task_registry
 context = pipeline.Pipeline(context='last', loglevel='info', plotlevel='default').context
-taskclass = task_registry.get_pipeline_class(task_to_run)
+taskclass = task_registry.get_pipeline_class_for_task(task_to_run)
 inputs = pipeline.infrastructure.vdp.InputsContainer(taskclass, context)
 task = taskclass(inputs)
 result = task.execute(dry_run=False)
