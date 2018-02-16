@@ -13,13 +13,19 @@ LOG = infrastructure.get_logger(__name__)
 class ObservingRun(object):
     def __init__(self):        
         self.measurement_sets = []
+        self.virtual_science_spw_ids = {}
 
     def add_measurement_set(self, ms):
         if ms.basename in [m.basename for m in self.measurement_sets]:
             msg = '{0} is already in the pipeline context'.format(ms.name)
             LOG.error(msg)
             raise Exception, msg
-        
+
+        # Initialise virtual science spw IDs from first MS 
+        if self.measurement_sets == []:
+            self.virtual_science_spw_ids = \
+                dict((s.id, s.name) for s in ms.get_spectral_windows(science_windows_only=True))
+
         self.measurement_sets.append(ms)
             
     def get_ms(self, name=None, intent=None):
