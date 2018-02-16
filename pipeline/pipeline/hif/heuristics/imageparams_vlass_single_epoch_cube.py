@@ -82,7 +82,7 @@ class ImageParamsHeuristicsVlassSeCube(ImageParamsHeuristics):
         return 2
 
     def stokes(self):
-        return 'I'
+        return 'IQU'
 
     def pb_correction(self):
         return False
