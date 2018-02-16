@@ -62,13 +62,6 @@ class SDBLFlagInputs(vdp.StandardInputs):
     def infiles(self, value):
         self.vis = value
         return value
-
-    @vdp.VisDependentProperty
-    def msid_list(self):
-        """
-        Returns MS index in context observing run specified as infiles.
-        """
-        return self.context.observing_run.measurement_sets.index(self.ms)
     
     @iteration.convert
     def iteration(self, value):
