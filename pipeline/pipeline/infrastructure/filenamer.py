@@ -1,7 +1,10 @@
 from __future__ import absolute_import
+
 import os
 import shutil
 import string
+
+from . import utils
 
 _valid_chars = "_.-+%s%s" % (string.ascii_letters, string.digits)
 
@@ -196,7 +199,7 @@ def sort_spws(unsorted):
     if type(unsorted) != str or ',' not in unsorted:
         return unsorted
     vals = unsorted.split(',')
-    return ','.join(sorted(vals))
+    return ','.join(utils.numericSort(vals))
 
 
 class NamingTemplate(object):
