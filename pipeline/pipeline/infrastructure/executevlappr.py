@@ -176,7 +176,7 @@ def executeppr (pprXmlFile, importonly=True, dry_run=False, loglevel='info',
             elif pipeline_task_name == 'SDImportData':
                 task_args['infiles'] = files
 
-            remapped_args = argmapper.convert_args(pipeline_task_name, task_args, convert_nulls=False)
+            remapped_args = argmapper.convert_args(pipeline_task_class, task_args, convert_nulls=False)
             inputs = vdp.InputsContainer(pipeline_task_class, context, **remapped_args)
 
             spectral_mode = False
