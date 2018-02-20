@@ -224,6 +224,118 @@ class PlotcalLeaf(object):
         return casa_tasks.plotcal(**task_args) 
 
 
+class PlotmsCalLeaf(object):
+    """
+    Class to execute plotms and return a plot wrapper. It passes the spw and
+    ant arguments through to plotms without further manipulation, creating
+    exactly one plot. 
+    """
+    def __init__(self, context, result, calapp, xaxis, yaxis, spw='', ant='',
+                 pol='', plotrange=[], coloraxis=''):
+        self._context = context
+        self._result = result
+
+        self._calapp = calapp
+        self._caltable = calapp.gaintable   
+        self._vis = calapp.vis
+
+        self._xaxis = xaxis
+        self._yaxis = yaxis
+
+        self._spw = spw
+        self._intent = calapp.intent
+
+        # use antenna name rather than ID if possible
+        if ant != '':
+            ms = self._context.observing_run.get_ms(self._vis)
+            domain_antennas = ms.get_antenna(ant)
+            idents = [a.name if a.name else a.id for a in domain_antennas]
+            ant = ','.join(idents)
+        self._ant = ant
+
+        self._figfile = self._get_figfile()
+        self._plotrange = plotrange
+        self._coloraxis = coloraxis
+
+    def plot(self):
+        try:
+            plots = [self._get_plot_wrapper()]
+            return [p for p in plots if p is not None]
+        finally:
+            pass
+            # NOT applicable for plotms
+            # plotcal with time as x axis seems to leave matplotlib
+            # in an open state. Work around this by closing pyplot
+            # after each call.
+            # pyplot.close()
+            
+    def _get_figfile(self):
+        fileparts = {
+            'caltable' : os.path.basename(self._calapp.gaintable),
+            'x'        : self._xaxis,
+            'y'        : self._yaxis,
+            'spw'      : '' if self._spw == '' else 'spw%0.2d-' % int(self._spw),
+            'ant'      : '' if self._ant == '' else 'ant%s-' % self._ant.replace(',','_'),
+            'intent'   : '' if self._intent == '' else '%s-' % self._intent.replace(',','_')
+        }
+        png = '{caltable}-{spw}{ant}{intent}{y}_vs_{x}.png'.format(**fileparts)
+
+        return os.path.join(self._context.report_dir, 
+                            'stage%s' % self._result.stage_number,
+                            png)
+
+    def _get_plot_wrapper(self):
+        task = self._create_task()
+
+        if not os.path.exists(self._figfile):
+            LOG.trace('Creating new plot: %s' % self._figfile)
+            try:
+                task.execute(dry_run=False)
+            except Exception as ex:
+                LOG.error('Could not create plot %s' % self._figfile)
+                LOG.exception(ex)
+                return None
+
+        parameters={'vis': os.path.basename(self._vis),
+                    'caltable': self._caltable}
+
+        for attr in ['spw', 'ant', 'intent']:
+            val = getattr(self, '_%s' % attr)
+            if val != '':
+                parameters[attr] = val 
+            
+        wrapper = logger.Plot(self._figfile,
+                              x_axis=self._xaxis,
+                              y_axis=self._yaxis,
+                              parameters=parameters,
+                              command=str(task))
+            
+        return wrapper
+
+    def _create_task(self):
+        #task_args = {'caltable'  : self._caltable,
+                     #'xaxis'     : self._xaxis,
+                     #'yaxis'     : self._yaxis,
+                     #'showgui'   : False,
+                     #'spw'       : str(self._spw),
+                     #'antenna'   : self._ant,
+                     #'figfile'   : self._figfile,
+                     #'plotrange' : self._plotrange}
+
+        task_args = {'vis'       : self._caltable,
+                     'xaxis'     : self._xaxis,
+                     'yaxis'     : self._yaxis,
+                     'showgui'   : False,
+                     'clearplots': True,
+                     'spw'       : str(self._spw),
+                     'antenna'   : self._ant,
+                     'plotfile'  : self._figfile,
+                     'plotrange' : self._plotrange,
+                     'coloraxis' : self._coloraxis}
+
+        #return casa_tasks.plotcal(**task_args) 
+        return casa_tasks.plotms(**task_args) 
+
 class PlotbandpassLeaf(object):
     """
     Class to execute plotbandpass and return a plot wrapper. It passes the spw
@@ -488,6 +600,19 @@ class PlotcalSpwComposite(SpwComposite):
 
 class PlotcalAntSpwComposite(AntSpwComposite):
     leaf_class = PlotcalSpwComposite
+
+
+
+class PlotmsCalAntComposite(AntComposite):
+    leaf_class = PlotmsCalLeaf
+
+
+class PlotmsCalSpwComposite(SpwComposite):
+    leaf_class = PlotmsCalLeaf
+
+
+class PlotmsCalAntSpwComposite(AntSpwComposite):
+    leaf_class = PlotmsCalSpwComposite
 
 
 class PlotbandpassAntComposite(AntComposite):
