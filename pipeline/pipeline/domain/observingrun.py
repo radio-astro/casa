@@ -14,6 +14,7 @@ class ObservingRun(object):
     def __init__(self):        
         self.measurement_sets = []
         self.virtual_science_spw_ids = {}
+        self.virtual_science_spw_names = {}
 
     def add_measurement_set(self, ms):
         if ms.basename in [m.basename for m in self.measurement_sets]:
@@ -25,6 +26,8 @@ class ObservingRun(object):
         if self.measurement_sets == []:
             self.virtual_science_spw_ids = \
                 dict((s.id, s.name) for s in ms.get_spectral_windows(science_windows_only=True))
+            self.virtual_science_spw_names = \
+                dict((s.name, s.id) for s in ms.get_spectral_windows(science_windows_only=True))
 
         self.measurement_sets.append(ms)
             
@@ -111,7 +114,25 @@ class ObservingRun(object):
             match = [f for f in match if f.name in names] 
 
         return match
-    
+
+    def get_real_spw_id_by_name(self, target_ms, spw_name):
+        """
+        :param target_ms: the MS to map spw_name to
+        :type target_ms: domain.MeasurementSet
+        :param spw_name: the spw name to convert
+        """
+        spw_id = None
+        for spw in target_ms.spectral_windows:
+            if spw.name == spw_name:
+                spw_id = spw.id
+        return spw_id
+
+    def get_virtual_spw_id_by_name(self, spw_name):
+        """
+        :param spw_name: the spw name to convert
+        """
+        return self.virtual_science_spw_names.get(spw_name, None)
+
     @property
     def start_time(self):
         if not self.measurement_sets:

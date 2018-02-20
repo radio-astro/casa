@@ -289,19 +289,6 @@ def remap_spw_str(source_ms, target_ms, spws):
     return ','.join([str(i) for i in l])
 
 
-def get_spw_id(target_ms, spw_name):
-    """
-    :param target_ms: the MS to map spw_name to
-    :type target_ms: domain.MeasurementSet
-    :param spw_name: the spw name to convert
-    """
-    spw_id = None
-    for spw in target_ms.spectral_windows:
-        if spw.name == spw_name:
-            spw_id = spw.id
-    return spw_id
-
-
 class ParallelTemplate(basetask.StandardTaskTemplate):
     @abc.abstractproperty
     def Task(self):
