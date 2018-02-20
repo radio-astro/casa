@@ -450,7 +450,6 @@ class CalibrationTable(NamingTemplate):
         """
         return self.extension('pcal')
 
-    @property
     def flux_cal(self):
         """Set the filename extension as appropriate for a flux
         calibration.
