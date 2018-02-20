@@ -1,7 +1,5 @@
 from __future__ import absolute_import
 
-import types
-
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.vdp as vdp
@@ -18,21 +16,12 @@ LOG = infrastructure.get_logger(__name__)
 class TargetflagInputs(vdp.StandardInputs):
     @vdp.VisDependentProperty
     def intents(self):
-        if type(self.vis) is types.ListType:
-            return self._handle_multiple_vis('intents')
-
-        if self.intents is not None:
-            return self.intents
 
         # return just the unwanted intents that are present in the MS
         # intents_to_flag = set(['POINTING','FOCUS','ATMOSPHERE','SIDEBAND','UNKNOWN', 'SYSTEM_CONFIGURATION'])
         # return ''
-        intents_to_flag = set(['*CALIBRATE*', '*TARGET*'])
+        intents_to_flag = {'*CALIBRATE*', '*TARGET*'}
         return ','.join(self.ms.intents.intersection(intents_to_flag))
-
-    @intents.convert
-    def intents(self, value):
-        return value
 
     def __init__(self, context, vis=None, intents=None):
         super(TargetflagInputs, self).__init__()
