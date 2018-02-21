@@ -1313,6 +1313,10 @@ class ValidateLineRaster(basetask.StandardTaskTemplate):
                     LOG.trace('------03------ iteration={}', iteration)
                     # effective components of FitData
                     effective = [i for i in xrange(len(FitData)) if FitData[i][4] == 1]
+
+                    # assertion
+                    assert len(effective) > 0
+                    
                     # prepare data for SVD fit
                     #xdata = numpy.array([FitData[i][2] for i in effective], dtype=numpy.float64)
                     #ydata = numpy.array([FitData[i][3] for i in effective], dtype=numpy.float64)
@@ -1428,7 +1432,8 @@ class ValidateLineRaster(basetask.StandardTaskTemplate):
                         npdiff = numpy.array(Diff)[effective]
                         Threshold = npdiff.mean()
                         Threshold += sqrt(numpy.square(npdiff - Threshold).mean()) * self.nsigma
-                    else: Threshold *= 2.0
+                    else: 
+                        Threshold = Diff[effective[0]] * 2.0
                     LOG.trace('Diff = {}', [Diff[i] for i in effective])
                     LOG.trace('2D Fit Threshold = {}', Threshold)
 
