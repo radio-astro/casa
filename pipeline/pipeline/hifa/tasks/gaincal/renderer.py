@@ -84,32 +84,42 @@ class T2_4MDetailsGaincalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
             calapps = result.final
 
             # generate amp vs time plots
-            plotter = gaincal_displays.GaincalAmpVsTimeSummaryChart(context, result, 
+            #plotter = gaincal_displays.GaincalAmpVsTimeSummaryChart(context, result, 
+            #                                                        calapps, 'TARGET')
+            plotter = gaincal_displays.GaincalAmpVsTimeSummaryChart2(context, result, 
                                                                     calapps, 'TARGET')
             amp_vs_time_summaries[vis] = plotter.plot()
 
             # generate phase vs time plots
-            plotter = gaincal_displays.GaincalPhaseVsTimeSummaryChart(context, result,
+            #plotter = gaincal_displays.GaincalPhaseVsTimeSummaryChart(context, result,
+            #                                                          calapps, 'TARGET')
+            plotter = gaincal_displays.GaincalPhaseVsTimeSummaryChart2(context, result,
                                                                       calapps, 'TARGET')
             phase_vs_time_summaries[vis] = plotter.plot()
 
             # generate diagnostic phase vs time plots for bandpass solution, i.e. 
             # with solint=int
-            plotter = gaincal_displays.GaincalPhaseVsTimeSummaryChart(context, result,
+            #plotter = gaincal_displays.GaincalPhaseVsTimeSummaryChart(context, result,
+            #                                                          calapps, 'BANDPASS')
+            plotter = gaincal_displays.GaincalPhaseVsTimeSummaryChart2(context, result,
                                                                       calapps, 'BANDPASS')
             diagnostic_phase_vs_time_summaries[vis] = plotter.plot()
 
             # generate diagnostic amp vs time plots for bandpass solution, 
             # pointing to the diagnostic calapps outside result.final
             calapps = result.calampresult.final
-            plotter = gaincal_displays.GaincalAmpVsTimeSummaryChart(context, result, 
+            #plotter = gaincal_displays.GaincalAmpVsTimeSummaryChart(context, result, 
+            #                                                        calapps, '')
+            plotter = gaincal_displays.GaincalAmpVsTimeSummaryChart2(context, result, 
                                                                     calapps, '')
             diagnostic_amp_vs_time_summaries[vis] = plotter.plot()
 
             # generate diganostic phase offset vs time plots
             if result.phaseoffsetresult is not None:
                 calapps = result.phaseoffsetresult.final
-                plotter = gaincal_displays.GaincalPhaseVsTimeSummaryChart(context, result, 
+                #plotter = gaincal_displays.GaincalPhaseVsTimeSummaryChart(context, result, 
+                #                                                    calapps, '')
+                plotter = gaincal_displays.GaincalPhaseVsTimeSummaryChart2(context, result, 
                                                                     calapps, '')
                 diagnostic_phaseoffset_vs_time_summaries[vis] = plotter.plot()
 
@@ -117,7 +127,9 @@ class T2_4MDetailsGaincalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                 calapps = result.final
 
                 # phase vs time plots
-                plotter = gaincal_displays.GaincalPhaseVsTimeDetailChart(context, result,
+                #plotter = gaincal_displays.GaincalPhaseVsTimeDetailChart(context, result,
+                #                                                         calapps, 'TARGET')
+                plotter = gaincal_displays.GaincalPhaseVsTimeDetailChart2(context, result,
                                                                          calapps, 'TARGET')
                 phase_vs_time_details[vis] = plotter.plot()
                 renderer = GaincalPhaseVsTimePlotRenderer(context, result, 
@@ -127,7 +139,9 @@ class T2_4MDetailsGaincalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                     phase_vs_time_subpages[vis] = renderer.path
 
                 # amp vs time plots
-                plotter = gaincal_displays.GaincalAmpVsTimeDetailChart(context, result,
+                #plotter = gaincal_displays.GaincalAmpVsTimeDetailChart(context, result,
+                #                                                       calapps, 'TARGET')
+                plotter = gaincal_displays.GaincalAmpVsTimeDetailChart2(context, result,
                                                                        calapps, 'TARGET')
                 amp_vs_time_details[vis] = plotter.plot()
                 renderer = GaincalAmpVsTimePlotRenderer(context, result, 
@@ -137,7 +151,9 @@ class T2_4MDetailsGaincalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                     amp_vs_time_subpages[vis] = renderer.path
 
                 # phase vs time for solint=int
-                plotter = gaincal_displays.GaincalPhaseVsTimeDetailChart(context, result,
+                #plotter = gaincal_displays.GaincalPhaseVsTimeDetailChart(context, result,
+                #                                                         calapps, 'BANDPASS')
+                plotter = gaincal_displays.GaincalPhaseVsTimeDetailChart2(context, result,
                                                                          calapps, 'BANDPASS')
                 diagnostic_phase_vs_time_details[vis] = plotter.plot()
                 renderer = GaincalPhaseVsTimeDiagnosticPlotRenderer(context,
@@ -148,7 +164,9 @@ class T2_4MDetailsGaincalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
 
                 # amp vs time plots for solint=int
                 calapps = result.calampresult.final
-                plotter = gaincal_displays.GaincalAmpVsTimeDetailChart(context, result,
+                #plotter = gaincal_displays.GaincalAmpVsTimeDetailChart(context, result,
+                #                                                       calapps, '')
+                plotter = gaincal_displays.GaincalAmpVsTimeDetailChart2(context, result,
                                                                        calapps, '')
                 diagnostic_amp_vs_time_details[vis] = plotter.plot()
                 renderer = GaincalAmpVsTimeDiagnosticPlotRenderer(context, 
@@ -160,7 +178,9 @@ class T2_4MDetailsGaincalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                 # diagnostic phaseoffset vs time plots for solint=inf
                 if result.phaseoffsetresult is not None:
                     calapps = result.phaseoffsetresult.final
-                    plotter = gaincal_displays.GaincalPhaseVsTimeDetailChart(context, result,
+                    #plotter = gaincal_displays.GaincalPhaseVsTimeDetailChart(context, result,
+                    #                                                   calapps, '')
+                    plotter = gaincal_displays.GaincalPhaseVsTimeDetailChart2(context, result,
                                                                        calapps, '')
                     diagnostic_phaseoffset_vs_time_details[vis] = plotter.plot()
                     renderer = GaincalPhaseOffsetVsTimeDiagnosticPlotRenderer(context, 
