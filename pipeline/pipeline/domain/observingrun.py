@@ -115,11 +115,12 @@ class ObservingRun(object):
 
         return match
 
-    def get_real_spw_id_by_name(self, target_ms, spw_name):
+    def get_real_spw_id_by_name(self, spw_name, target_ms):
         """
+        :param spw_name: the spw name to convert
+        :type spw_name: string
         :param target_ms: the MS to map spw_name to
         :type target_ms: domain.MeasurementSet
-        :param spw_name: the spw name to convert
         """
         spw_id = None
         for spw in target_ms.spectral_windows:
@@ -130,8 +131,45 @@ class ObservingRun(object):
     def get_virtual_spw_id_by_name(self, spw_name):
         """
         :param spw_name: the spw name to convert
+        :type spw_name: string
         """
         return self.virtual_science_spw_names.get(spw_name, None)
+
+    def virtual2real_spw_id(self, spw_id, target_ms):
+        """
+        :param spw_id: the spw id to convert
+        :type spw_id: integer
+        :param target_ms: the MS to map spw_id to
+        :type target_ms: domain.MeasurementSet
+        """
+        return self.get_real_spw_id_by_name(self.virtual_science_spw_ids.get(spw_id, None), target_ms)
+
+    def real2virtual_spw_id(self, spw_id, target_ms):
+        """
+        :param spw_id: the spw id to convert
+        :type spw_id: integer
+        :param target_ms: the MS to map spw_id to
+        :type target_ms: domain.MeasurementSet
+        """
+        return self.get_virtual_spw_id_by_name(target_ms.get_spectral_window(spw_id).name)
+
+    def get_real_spwsel(self, spwsel, vis):
+        """
+        :param spwsel: the list of spw selections to convert
+        :type spwsel: list of strings
+        :param vis: the list of MS names to map spwsel to
+        :type vis: list of MS names
+        """
+        real_spwsel = []
+        for spwsel_item, ms_name in zip(spwsel, vis):
+            if spwsel_item.find(':') == -1:
+                real_spw_id = self.virtual2real_spw_id(int(spwsel_item), self.get_ms(ms_name))
+                real_spwsel.append(str(real_spw_id))
+            else:
+                virtual_spw_id, selection = spwsel_item.split(':')
+                real_spw_id = self.virtual2real_spw_id(int(virtual_spw_id), self.get_ms(ms_name))
+                real_spwsel.append('%s:%s' % (str(real_spw_id), selection))
+        return real_spwsel
 
     @property
     def start_time(self):
