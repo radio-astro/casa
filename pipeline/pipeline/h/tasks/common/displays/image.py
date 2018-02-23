@@ -82,7 +82,7 @@ class ImageDisplay(object):
             'file': '' if result.filename is None else 'File_%s' % os.path.basename(result.filename),
             'intent': '' if result.intent == '' else 'Intent_%s' % result.intent.replace(',', '_'),
             'fieldname': '' if result.fieldname == '' else 'Field_%s' % result.fieldname.replace(',', '_'),
-            'fieldid': '' if result.field_id is None else 'ID_%s' % result.field_id.replace(',', '_'),
+            'fieldid': '' if result.field_id is None else 'ID_%s' % str(result.field_id).replace(',', '_'),
             'pol': '' if result.pol is None else 'Pol_%s' % result.pol.replace(',', '_'),
         }
 
