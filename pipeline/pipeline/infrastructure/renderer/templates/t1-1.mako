@@ -119,7 +119,7 @@ $(document).ready(function() {
                 </tr>
                 <tr>
                     <th>CASA Version</th>
-                    <td>${casa_version} r${casa_revision}</td>
+                    <td>${casa_version}</td>
                     <td></td>
                     <td></td>
                 </tr>

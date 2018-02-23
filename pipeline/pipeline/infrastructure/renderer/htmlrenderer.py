@@ -345,10 +345,7 @@ class T1_1Renderer(RendererBase):
 
         return {
             'pcontext': context,
-            # 'casa_version': get_casa_version(),
             'casa_version': casasys['build']['version'],
-            # 'casa_revision': casadef.subversion_revision,
-            'casa_revision': casasys['build']['number'],
             'pipeline_revision': pipeline.revision,
             'pipeline_doclink': pipeline_doclink,
             'obs_start': obs_start.strftime(out_fmt),
