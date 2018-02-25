@@ -643,6 +643,9 @@ class SDImaging(basetask.StandardTaskTemplate):
                         LOG.info("Estimate RMS in representative bandwidth: %fkHz (native: %fkHz)" % \
                                  (cqa.getvalue(cqa.convert(cqa.quantity(rep_bw), 'kHz')), chan_width*1.e-3))
                         factor = sensitivity_improvement.sensitivityImprovement(ref_ms.name, rep_spwid, cqa.tos(rep_bw))
+                        if factor is None:
+                            LOG.warn('No image RMS improvement because representative bandwidth is narrower than native width')
+                            factor = 1.0
                         LOG.info("Image RMS improvement of factor %f estimated. %f => %f [Jy/beam]" % (factor, image_rms, image_rms/factor))
                         image_rms = image_rms/factor
                         chan_width = numpy.abs(cqa.getvalue(cqa.convert(cqa.quantity(rep_bw), 'Hz'))[0])
