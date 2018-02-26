@@ -219,7 +219,6 @@ class CleanBase(basetask.StandardTaskTemplate):
         if scanidlist is None:
             scanidlist = []
 
-        context = self.inputs.context
         inputs = self.inputs
 
         # Derive names of clean products for this iteration
@@ -253,16 +252,13 @@ class CleanBase(basetask.StandardTaskTemplate):
         parallel = all([mpihelpers.parse_mpi_input_parameter(inputs.parallel),
                         'TARGET' in inputs.intent])
 
-        # Need to translate the virtual spw IDs to real ones
-        real_spwsel = context.observing_run.get_real_spwsel(inputs.spwsel, inputs.vis)
-
         # Common tclean parameters
         tclean_job_parameters = {
             'vis':           inputs.vis,
             'imagename':     '%s.%s.iter%s' % (os.path.basename(inputs.imagename), inputs.stokes, iter),
             'datacolumn':    inputs.datacolumn,
             'field':         inputs.field,
-            'spw':           real_spwsel,
+            'spw':           inputs.spwsel,
             'intent':        utils.to_CASA_intent(inputs.ms[0], inputs.intent),
             'specmode':      inputs.specmode if inputs.specmode != 'cont' else 'mfs',
             'gridder':       inputs.gridder,

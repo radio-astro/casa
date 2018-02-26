@@ -189,12 +189,10 @@ class FindCont(basetask.StandardTaskTemplate):
 
                     parallel = mpihelpers.parse_mpi_input_parameter(inputs.parallel)
 
-                    real_spwsel = context.observing_run.get_real_spwsel([str(spwid)]*len(vislist), vislist)
-
                     # Need to make an LSRK cube to get the real ranges in the source
                     # frame. The LSRK ranges will need to be translated to the
                     # individual TOPO ranges for the involved MSs.
-                    job = casa_tasks.tclean(vis=vislist, imagename=findcont_basename, datacolumn=datacolumn, spw=real_spwsel,
+                    job = casa_tasks.tclean(vis=vislist, imagename=findcont_basename, datacolumn=datacolumn, spw=spwid,
                                             intent=utils.to_CASA_intent(inputs.ms[0], target['intent']),
                                             field=target['field'], start=start, width=width, nchan=nchan,
                                             outframe='LSRK', scan=scanidlist, specmode='cube', gridder=gridder,
