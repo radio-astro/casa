@@ -22,7 +22,7 @@ LOG = infrastructure.get_logger(__name__)
 class FindContInputs(vdp.StandardInputs):
     parallel = vdp.VisDependentProperty(default='automatic')
 
-    @vdp.VisDependentProperty
+    @vdp.VisDependentProperty(null_input=['', None, {}])
     def target_list(self):
         return copy.deepcopy(self.context.clean_list_pending)
 
