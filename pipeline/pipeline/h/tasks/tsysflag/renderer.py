@@ -12,11 +12,10 @@ import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.renderer.basetemplates as basetemplates
 import pipeline.infrastructure.renderer.rendererutils as rendererutils
 import pipeline.infrastructure.utils as utils
-from pipeline.h.tasks.common.displays import slice as slice
-from pipeline.h.tasks.common.displays import image as image
-#import pipeline.infrastructure.displays as displays
-from pipeline.h.tasks.common.displays import tsys as tsys
 from pipeline.h.tasks.common import calibrationtableaccess as caltableaccess
+from pipeline.h.tasks.common.displays import image as image
+from pipeline.h.tasks.common.displays import slice as slice_display
+from pipeline.h.tasks.common.displays import tsys as tsys
 from pipeline.h.tasks.tsyscal import renderer as tsyscalrenderer
 
 LOG = logging.get_logger(__name__)
@@ -82,14 +81,12 @@ class T2_4MDetailsTsysflagRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                 lastflag = lastflag[-1]
             lastresult = result.components[lastflag]
 
-            #plotter = displays.TsysSummaryChart(context, lastresult)
             plotter = tsys.TsysSummaryChart(context, lastresult)
             plots = plotter.plot()
             vis = os.path.basename(lastresult.inputs['vis'])
             summary_plots[vis] = plots
 
             # generate per-antenna plots
-            #plotter = displays.TsysPerAntennaChart(context, lastresult)
             plotter = tsys.TsysPerAntennaChart(context, lastresult)
             per_antenna_plots = plotter.plot()
 
@@ -172,7 +169,8 @@ class T2_4MDetailsTsysflagRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
 
         return htmlreports
 
-    def _write_flagcmd_to_disk(self, weblog_dir, result, component=''):
+    @staticmethod
+    def _write_flagcmd_to_disk(weblog_dir, result, component=''):
         tablename = os.path.basename(result.table)
         filename = os.path.join(
             weblog_dir, '%s%s-flag_commands.txt' % (tablename, component))
@@ -186,7 +184,8 @@ class T2_4MDetailsTsysflagRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
 
         return filename
 
-    def _write_report_to_disk(self, weblog_dir, result, component=''):
+    @staticmethod
+    def _write_report_to_disk(weblog_dir, result, component=''):
         # now write printTsysFlags output to a report file
         tablename = os.path.basename(result.table)
         filename = os.path.join(weblog_dir,
@@ -215,7 +214,8 @@ class T2_4MDetailsTsysflagRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
 
         return utils.dict_merge(by_intent, by_spw)
 
-    def _flags_by_intent(self, ms, summaries):
+    @staticmethod
+    def _flags_by_intent(ms, summaries):
         # create a dictionary of fields per observing intent, eg. 'PHASE':['3C273']
         intent_fields = {}
         for intent in ('BANDPASS', 'PHASE', 'AMPLITUDE', 'TARGET', 'ATMOSPHERE'):
@@ -256,7 +256,8 @@ class T2_4MDetailsTsysflagRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                 
         return total 
     
-    def _flags_by_spws(self, summaries):
+    @staticmethod
+    def _flags_by_spws(summaries):
         total = collections.defaultdict(dict)
     
         previous_summary = None
@@ -284,70 +285,6 @@ class T2_4MDetailsTsysflagRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
         return total
 
 
-class TsysSpectraPlotRenderer(basetemplates.JsonPlotRenderer):
-    def __init__(self, context, result, component):
-        stage = 'stage%s' % result.stage_number
-        dirname = os.path.join(context.report_dir, stage)
-
-        plots = []
-        r = result.components[component]
-
-        # plot Tsys spectra that were flagged
-        for flagcmd in r.flagcmds():
-            for description in r.descriptions():
-                tsysspectra = r.first(description).children.get('tsysspectra')
-                if tsysspectra is None:
-                    continue
-        
-                for tsys_desc in tsysspectra.descriptions():
-                    tsysspectrum = tsysspectra.first(tsys_desc)
-        
-                    if not flagcmd.match(tsysspectrum):
-                        continue
-        
-                    # have found flagged spectrum, now get
-                    # associated median spectrum
-                    medians = r.last(description).children.get('tsysmedians')
-        
-                    for median_desc in medians.descriptions():
-                        median_spectrum = medians.first(median_desc)
-                        if median_spectrum.ant is None or median_spectrum.ant[0] == tsysspectrum.ant[0]:
-                            # do the plot
-                            #plots.extend(displays.SliceDisplay().plot(
-                            plots.extend(slice.SliceDisplay().plot(
-                              context=context, results=tsysspectra,
-                              description_to_plot=tsys_desc,
-                              overplot_spectrum=median_spectrum,
-                              reportdir=dirname, plotbad=False))
-                            break
-
-        if not plots:
-            raise TypeError('No spectra found for %s component' % component)
-
-        x_axis = plots[0].x_axis
-        y_axis = plots[0].y_axis
-
-        vis = os.path.basename(result.inputs['vis'])
-        self._vis = vis
-        outfile = '%s-%s_vs_%s-%s.html' % (vis, y_axis, x_axis, component)
-        outfile = filenamer.sanitize(outfile)
-        
-        y_axis = y_axis.replace('Tsys', 'T<sub>sys</sub>')
-        title = '%s vs %s plots for %s' % (y_axis, x_axis, vis)
-        self.shorttitle = '%s vs %s' % (y_axis, x_axis)
-
-        template = extra_templates[component]
-        super(TsysSpectraPlotRenderer, self).__init__(
-                template, context, result, plots, title, outfile)
-        
-    def update_json_dict(self, d, plot):
-        if 'intent' in plot.parameters:
-            d['intent'] = plot.parameters['intent']
-        if 'vis' not in plot.parameters:
-            plot.parameters['vis'] = self._vis
-            d['vis'] = self._vis
-
-
 def plot_slice_displays(name_of_metric, context, result_for_metric, reportdir):
     """
     Create Slice plots for the given Tsys metric.
@@ -358,8 +295,7 @@ def plot_slice_displays(name_of_metric, context, result_for_metric, reportdir):
     :param reportdir: destination directory for plots
     :return: list of Plot objects
     """
-    #plotter = displays.slice.SliceDisplay()
-    plotter = slice.SliceDisplay()
+    plotter = slice_display.SliceDisplay()
     plots = plotter.plot(context, result_for_metric, reportdir=reportdir, plotbad=False,
                          plot_only_flagged=True, prefix=name_of_metric)
 
@@ -369,7 +305,6 @@ def plot_slice_displays(name_of_metric, context, result_for_metric, reportdir):
 
 
 def plot_image_displays(name_of_metric, context, result_for_metric, reportdir):
-    #plotter = displays.image.ImageDisplay()
     plotter = image.ImageDisplay()
     plots = plotter.plot(context, result_for_metric, reportdir=reportdir, prefix=name_of_metric)
 
@@ -401,8 +336,7 @@ def plot_tsys_spectra(name_of_metric, context, result_for_metric, reportdir):
                     median_spectrum = medians.first(median_desc)
                     if median_spectrum.ant is None or median_spectrum.ant[0] == tsysspectrum.ant[0]:
                         # do the plot
-                        #plotter = displays.SliceDisplay()
-                        plotter = slice.SliceDisplay()
+                        plotter = slice_display.SliceDisplay()
                         plots.extend(plotter.plot(
                             context=context, results=tsysspectra,
                             description_to_plot=tsys_desc,
