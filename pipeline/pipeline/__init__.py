@@ -31,35 +31,37 @@ def show_weblog(context):
     webbrowser.open('file://' + index_html)
 
 
-# def initcli():
-#     print "Initializing cli..."
-#     mypath = pkg_resources.resource_filename(__name__, '')
-#     hifpath = mypath + "/hif/cli/hif.py"
-#     hpath = mypath + "/h/cli/h.py"
-#     hsdpath = mypath + "/hsd/cli/hsd.py"
-#     hifapath = mypath + "/hifa/cli/hifa.py"
-#     hifvpath = mypath + "/hifv/cli/hifv.py"
-#     hsdnpath = mypath + "/hsdn/cli/hsdn.py"
-#     myglobals = stack_frame_find()
+#def initcli():
+#    print "Initializing cli..."
+#    mypath = pkg_resources.resource_filename(__name__, '')
+#    hifpath = mypath + "/hif/cli/hif.py"
+#    hpath = mypath + "/h/cli/h.py"
+#    hsdpath = mypath + "/hsd/cli/hsd.py"
+#    hifapath = mypath + "/hifa/cli/hifa.py"
+#    hifvpath = mypath + "/hifv/cli/hifv.py"
+#    hsdnpath = mypath + "/hsdn/cli/hsdn.py"
+#    myglobals = stack_frame_find()
 #
-#     execfile(hpath, myglobals)
-#     execfile(hifpath, myglobals)
-#     execfile(hsdpath, myglobals)
-#     execfile(hifapath, myglobals)
-#     execfile(hifvpath, myglobals)
-#     execfile(hsdnpath, myglobals)
-#     # exec('import pipeline.infrastructure.executeppr', myglobals)
+#    execfile(hpath, myglobals)
+#    execfile(hifpath, myglobals)
+#    execfile(hsdpath, myglobals)
+#    execfile(hifapath, myglobals)
+#    execfile(hifvpath, myglobals)
+#    execfile(hsdnpath, myglobals)
+#    # exec('import pipeline.infrastructure.executeppr', myglobals)
 
 
 def initcli():
     LOG.info('Initializing cli...')
     my_globals = stack_frame_find()
     for package in ['h', 'hif', 'hifa', 'hifv', 'hsd', 'hsdn']:
-        abs_package = 'pipeline.{package}.cli.{package}'.format(package=package)
+        #abs_package = 'pipeline.{package}.cli.{package}'.format(package=package)
+        abs_package = 'pipeline.{package}.cli'.format(package=package)
         try:
             # buildmytasks writes output to packagename.py
             path_to_cli = pkg_resources.resource_filename(abs_package, '{!s}.py'.format(package))
         except ImportError as e:
+            print 'IMPORT ERROR '
             LOG.debug('Import error: {!s}'.format(e))
             LOG.info('No tasks found for package: {!s}'.format(package))
         else:
