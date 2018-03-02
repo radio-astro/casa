@@ -414,6 +414,9 @@ class SpectralWindowTable(object):
             else:
                 transitions = ['Unknown']
 
+            if spw_name in [None, '']:
+                spw_name = 'spw_%s' % str(i)
+
             spw = domain.SpectralWindow(i, spw_name, spw_type, bandwidth,
                     ref_freq, mean_freq, chan_freqs, chan_widths,
                     chan_effective_bws, sideband, baseband, transitions=transitions)
