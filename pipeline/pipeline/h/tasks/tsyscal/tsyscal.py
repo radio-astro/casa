@@ -6,9 +6,11 @@ import pipeline.infrastructure.callibrary as callibrary
 import pipeline.infrastructure.vdp as vdp
 from pipeline.h.heuristics import caltable as caltable_heuristic
 from pipeline.h.heuristics.tsysspwmap import tsysspwmap
+from pipeline.h.heuristics.tsysspwmap import tsysnospwmap
 from pipeline.infrastructure import casa_tasks
 from pipeline.infrastructure import task_registry
 from . import resultobjects
+import sys
 
 __all__ = [
     'Tsyscal',
@@ -80,9 +82,14 @@ class Tsyscal(basetask.StandardTaskTemplate):
 
         LOG.todo('tsysspwmap heuristic re-reads measurement set!')
         LOG.todo('tsysspwmap heuristic won\'t handle missing file')
-        nospwmap, spwmap = tsysspwmap(
-            ms=inputs.ms, tsystable=gencal_args['caltable'],
-            tsysChanTol=inputs.chantol)
+
+        if inputs.ms.antenna_array.name == "NRO":
+            nospwmap = []
+            spwmap = tsysnospwmap(inputs.ms)
+        else:
+            nospwmap, spwmap = tsysspwmap(
+                ms=inputs.ms, tsystable=gencal_args['caltable'],
+                tsysChanTol=inputs.chantol)
 
         callist = []
         calto = callibrary.CalTo(vis=inputs.vis)
