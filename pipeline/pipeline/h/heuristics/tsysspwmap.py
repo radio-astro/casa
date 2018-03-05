@@ -6,6 +6,7 @@
 #  v1.0 (scorder, gmoellen, jkern; 2012Apr26) == initial version
 #  v1.1 (gmoellen; 2013Mar07) Lots of improvements from Eric Villard
 #  v1.2 (ldavis; 2013May15) Ported to pipeline
+#  v1.3 (ayoshino; 2018Mar15) Ported to pipeline
 #
 # This script defines several functions useful for ALMA Tsys processing.
 #
@@ -185,3 +186,9 @@ def tsysspwmap(ms, tsystable, trim=True, relax=False, tsysChanTol=1):
         LOG.info('Computed tsysspwmap is: '+str(applyCalSpwMap))
         # return spwWithoutMatch, applyCalSpwMap
         return unmatched_science_spws, applyCalSpwMap
+
+
+def tsysnospwmap(ms):
+    LOG.info('Mapping process between Tsys windows and Science windows is not specially needed, because the ids of Tsys windows are the same as those of Science windows for Nobeyama data.')
+    spwMaps = [spw.id for spw in ms.get_spectral_windows()]
+    return spwMaps
