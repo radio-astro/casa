@@ -224,7 +224,7 @@ class Editimlist(basetask.StandardTaskTemplate):
             imlist_entry['nsigma'] = th.threshold_nsigma()
 
         imlist_entry['stokes'] = th.stokes() if not inpdict['stokes'] else inpdict['stokes']
-        imlist_entry['conjbeams'] = th.conjbeams()  # if not inpdict['conjbeams'] else inpdict['conjbeams']
+        imlist_entry['conjbeams'] = th.conjbeams() if not inpdict['conjbeams'] else inpdict['conjbeams']
         imlist_entry['reffreq'] = th.reffreq() if not inpdict['reffreq'] else inpdict['reffreq']
         imlist_entry['niter'] = th.niter_correction(None, None, None, None, None) if not inpdict['niter'] else inpdict['niter']
         imlist_entry['cyclefactor'] = th.cyclefactor() if not inpdict['cyclefactor'] else inpdict['cyclefactor']
