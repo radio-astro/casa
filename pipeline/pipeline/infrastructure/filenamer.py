@@ -745,12 +745,6 @@ class FluxCalibrationTable(CalibrationTable):
         self.flux_cal()
 
 
-class FocusCalibrationTable(CalibrationTable):
-    def __init__(self, other=None):
-        super(FocusCalibrationTable, self).__init__(other)
-        self.focus_cal()
-
-
 class GainCalibrationTable(CalibrationTable):
     def __init__(self, other=None):
         super(GainCalibrationTable, self).__init__(other)
@@ -810,9 +804,6 @@ if __name__ == '__main__':
     print log.get_filename()
 
     x = CalibrationTable(log).phase_only_gain_cal().spectral_window(4).polarization('Y')
-    print x.get_filename()
-
-    x = FocusCalibrationTable(x)
     print x.get_filename()
 
     x.polarization('X').spectral_window(3)
