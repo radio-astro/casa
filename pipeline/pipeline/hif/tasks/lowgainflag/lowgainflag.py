@@ -257,33 +257,36 @@ class Lowgainflag(basetask.StandardTaskTemplate):
                 if ant in ants_to_demote_as_refant
             }
 
-            # Create string for log message.
-            ant_msg = utils.commafy(refants_to_demote, quotes=False)
+            # If the intersection is not empty, then there are existing
+            # refants that need to be demoted.
+            if refants_to_demote:
+                # Create string for log message.
+                ant_msg = utils.commafy(refants_to_demote, quotes=False)
 
-            # Check if the list of refants-to-demote comprises all
-            # refants, in which case the re-ordering of refants is
-            # skipped.
-            if refants_to_demote == set(refant):
+                # Check if the list of refants-to-demote comprises all
+                # refants, in which case the re-ordering of refants is
+                # skipped.
+                if refants_to_demote == set(refant):
 
-                # Log warning that refant list should have been updated, but
-                # will not be updated so as to avoid an empty refant list.
-                LOG.warning(
-                    '{} - the following antennas are fully flagged '
-                    'for one or more spws, but since these comprise all '
-                    'refants, the refant list is *NOT* updated to '
-                    're-order these to the end of the refant list: '
-                    '{}'.format(ms.basename, ant_msg))
-            else:
-                # Log a warning if any antennas are to be demoted from
-                # the refant list.
-                LOG.warning(
-                    '{} - the following antennas are moved to the end '
-                    'of the refant list because they are fully '
-                    'flagged for one or more spws: '
-                    '{}'.format(ms.basename, ant_msg))
+                    # Log warning that refant list should have been updated, but
+                    # will not be updated so as to avoid an empty refant list.
+                    LOG.warning(
+                        '{} - the following antennas are fully flagged '
+                        'for one or more spws, but since these comprise all '
+                        'refants, the refant list is *NOT* updated to '
+                        're-order these to the end of the refant list: '
+                        '{}'.format(ms.basename, ant_msg))
+                else:
+                    # Log a warning if any antennas are to be demoted from
+                    # the refant list.
+                    LOG.warning(
+                        '{} - the following antennas are moved to the end '
+                        'of the refant list because they are fully '
+                        'flagged for one or more spws: '
+                        '{}'.format(ms.basename, ant_msg))
 
-                # Update result to set the refants to demote:
-                result.refants_to_demote = refants_to_demote
+                    # Update result to set the refants to demote:
+                    result.refants_to_demote = refants_to_demote
 
         # If no list of reference antennas was registered with the MS,
         # raise a warning.
