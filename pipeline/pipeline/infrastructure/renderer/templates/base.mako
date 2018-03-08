@@ -40,7 +40,7 @@ import pipeline.infrastructure.renderer.htmlrenderer as hr
 <link rel="stylesheet" href="${self.attr.rsc_path}resources/${self.attr.css_file}" type="text/css" media="screen" />
  
 <!--  Add purl-JS URL parsing extension -->
-<script src="${self.attr.rsc_path}resources/js/purl-2.2.1.js"></script>
+<script src="${self.attr.rsc_path}resources/js/purl.js"></script>
 
 <!--  add FontAwesome -->
 <link rel="stylesheet" href="${self.attr.rsc_path}resources/css/font-awesome.min.css">
