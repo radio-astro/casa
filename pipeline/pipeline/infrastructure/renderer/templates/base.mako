@@ -20,7 +20,7 @@ import pipeline.infrastructure.renderer.htmlrenderer as hr
 <link href="${self.attr.rsc_path}resources/css/bootstrap.min.css" rel="stylesheet">
  -->
 <link href="${self.attr.rsc_path}resources/css/pipeline.min.css" rel="stylesheet">
-<script src="${self.attr.rsc_path}resources/js/bootstrap.min.js"></script>
+<script src="${self.attr.rsc_path}resources/js/bootstrap.js"></script>
 <!-- for now, adopt the bootstrap 2 theme  -->
 
 
