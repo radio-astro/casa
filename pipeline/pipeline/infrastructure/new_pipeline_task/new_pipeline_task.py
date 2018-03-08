@@ -70,7 +70,7 @@ class NewTask():
         print('\tCreating {f}'.format(f=task_dir))
         try:
             os.mkdir(task_dir)
-        except OSError, ee:
+        except OSError as ee:
             if ee.errno == 17:
                 pass
             else:
@@ -103,7 +103,7 @@ class NewTask():
 
         print('\tCreating {f}'.format(f=module_file))
         with open(module_file, 'w+') as fd:
-            fd.writelines(module_template.render(taskname=task_name))
+            fd.writelines(module_template.render(package=area, taskname=task_name))
 
         print('\tCreating {f}'.format(f=init_file))
         with open(init_file, 'w+') as fd:

@@ -11,20 +11,15 @@ LOG = infrastructure.get_logger(__name__)
 
 
 class ${taskname.capitalize()}Results(basetask.Results):
-    def __init__(self, final=[], pool=[], preceding=[]):
+    def __init__(self):
         super(${taskname.capitalize()}Results, self).__init__()
-        self.pool = pool[:]
-        self.final = final[:]
-        self.preceding = preceding[:]
-        self.error = set()
+        self.pipeline_casa_task = '${taskname.capitalize()}'
 
     def merge_with_context(self, context):
         """
         See :method:`~pipeline.infrastructure.api.Results.merge_with_context`
         """
-        if not self.final:
-            LOG.warn('No ${taskname.lower()} results')
-            return
+        return
 
     def __repr__(self):
         #return '${taskname.capitalize()}Results:\n\t{0}'.format(
@@ -34,8 +29,8 @@ class ${taskname.capitalize()}Results(basetask.Results):
 
 class ${taskname.capitalize()}Inputs(vdp.StandardInputs):
     def __init__(self, context, vis=None):
-        super(${taskname.capitalize()}Inputs, self).__init__()
-
+        self.context = context
+        self.vis = vis
 
 @task_registry.set_equivalent_casa_task('${package}_${taskname.lower()}')
 @task_registry.set_casa_commands_comment('Add your task description for inclusion in casa_commands.log')
