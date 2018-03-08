@@ -86,7 +86,7 @@ def format_options(options):
 <script src="${self.attr.rsc_path}resources/js/select2.min.js"></script>
 
 <!-- include required files and styles for histograms -->
-<script src="${self.attr.rsc_path}resources/js/d3.min.js"></script>
+<script src="${self.attr.rsc_path}resources/js/d3.v3.min.js"></script>
 <script src="${self.attr.rsc_path}resources/js/pipeline.js"></script>
 
 <script>
