@@ -1675,24 +1675,21 @@ class WebLogGenerator(object):
 
     @staticmethod
     def unpack_bootstrap(distfile, outdir):
-        zip_file = zipfile.ZipFile(distfile, 'r')
-        for member in zip_file.namelist():
-            filename = os.path.basename(member)
-            # skip directories
-            if not filename:
-                continue
-            
-            # omit the first component ('dest') from the destination paths 
-            # caution! this doesn't work if the path is absolute
-            parts = member.split(os.path.sep)
-            relocated = os.path.sep.join(parts[1:])
-            
-            # copy file
-            source = zip_file.open(member)
-            target = file(os.path.join(outdir, relocated), 'wb')
-            with source, target:
-                LOG.trace('Bootstrap copy: %s -> %s', source, target)
-                shutil.copyfileobj(source, target)
+        js_output_dir = os.path.join(outdir, 'js')
+        css_output_dir = os.path.join(outdir, 'css')
+        fonts_output_dir = os.path.join(outdir, 'fonts')
+
+        with zipfile.ZipFile(distfile, 'r') as z:
+            for zip_info in z.infolist():
+                if zip_info.filename.endswith('bootstrap.js'):
+                    zip_info.filename = os.path.basename(zip_info.filename)
+                    z.extract(zip_info, js_output_dir)
+                elif zip_info.filename.endswith('bootstrap.css'):
+                    zip_info.filename = os.path.basename(zip_info.filename)
+                    z.extract(zip_info, css_output_dir)
+                elif 'glyphicons' in zip_info.filename:
+                    zip_info.filename = os.path.basename(zip_info.filename)
+                    z.extract(zip_info, fonts_output_dir)
 
     @staticmethod
     def render(context):
