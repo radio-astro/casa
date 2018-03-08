@@ -1670,7 +1670,7 @@ class WebLogGenerator(object):
         z = zipfile.ZipFile(infile, 'r')        
         z.extractall(outdir)
 
-        distfile = os.path.join(src, 'bootstrap-3.3.5-dist.zip')
+        distfile = os.path.join(src, 'bootstrap-3.3.7-dist.zip')
         WebLogGenerator.unpack_bootstrap(distfile, outdir)
 
     @staticmethod
