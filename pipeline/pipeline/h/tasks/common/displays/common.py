@@ -133,7 +133,10 @@ class PlotcalLeaf(object):
     exactly one plot. 
     """
     def __init__(self, context, result, calapp, xaxis, yaxis, spw='', ant='',
-                 pol='', plotrange=[]):
+                 pol='', plotrange=None):
+        if plotrange is None:
+            plotrange = []
+
         self._context = context
         self._result = result
 
@@ -174,8 +177,8 @@ class PlotcalLeaf(object):
             'x'        : self._xaxis,
             'y'        : self._yaxis,
             'spw'      : '' if self._spw == '' else 'spw%0.2d-' % int(self._spw),
-            'ant'      : '' if self._ant == '' else 'ant%s-' % self._ant.replace(',','_'),
-            'intent'   : '' if self._intent == '' else '%s-' % self._intent.replace(',','_')
+            'ant'      : '' if self._ant == '' else 'ant%s-' % self._ant.replace(',', '_'),
+            'intent'   : '' if self._intent == '' else '%s-' % self._intent.replace(',', '_')
         }
         png = '{caltable}-{spw}{ant}{intent}{y}_vs_{x}.png'.format(**fileparts)
 
@@ -195,8 +198,8 @@ class PlotcalLeaf(object):
                 LOG.exception(ex)
                 return None
 
-        parameters={'vis': os.path.basename(self._vis),
-                    'caltable': self._caltable}
+        parameters = {'vis': os.path.basename(self._vis),
+                      'caltable': self._caltable}
 
         for attr in ['spw', 'ant', 'intent']:
             val = getattr(self, '_%s' % attr)
@@ -257,6 +260,12 @@ class PlotmsCalLeaf(object):
         self._plotrange = plotrange
         self._coloraxis = coloraxis
 
+        self._title = "{}".format(os.path.basename(self._vis).split('.')[0])
+        if spw:
+            self._title += ' spw {}'.format(spw)
+        if ant:
+            self._title += ' {}'.format(ant)
+
     def plot(self):
         try:
             plots = [self._get_plot_wrapper()]
@@ -275,8 +284,8 @@ class PlotmsCalLeaf(object):
             'x'        : self._xaxis,
             'y'        : self._yaxis,
             'spw'      : '' if self._spw == '' else 'spw%0.2d-' % int(self._spw),
-            'ant'      : '' if self._ant == '' else 'ant%s-' % self._ant.replace(',','_'),
-            'intent'   : '' if self._intent == '' else '%s-' % self._intent.replace(',','_')
+            'ant'      : '' if self._ant == '' else 'ant%s-' % self._ant.replace(',', '_'),
+            'intent'   : '' if self._intent == '' else '%s-' % self._intent.replace(',', '_')
         }
         png = '{caltable}-{spw}{ant}{intent}{y}_vs_{x}.png'.format(**fileparts)
 
@@ -331,10 +340,12 @@ class PlotmsCalLeaf(object):
                      'antenna'   : self._ant,
                      'plotfile'  : self._figfile,
                      'plotrange' : self._plotrange,
-                     'coloraxis' : self._coloraxis}
+                     'coloraxis' : self._coloraxis,
+                     'title'     : self._title}
 
         #return casa_tasks.plotcal(**task_args) 
         return casa_tasks.plotms(**task_args) 
+
 
 class PlotbandpassLeaf(object):
     """
@@ -423,8 +434,8 @@ class PlotbandpassLeaf(object):
                 LOG.exception(ex)
                 return None
 
-        parameters={'vis'      : self._vis,
-                    'caltable' : self._caltable}        
+        parameters = {'vis': self._vis,
+                      'caltable': self._caltable}
 
         for attr in ['spw', 'ant', 'intent', 'pol']:
             val = getattr(self, '_%s' % attr)
@@ -497,7 +508,7 @@ class PolComposite(LeafComposite):
         pol_range = range(num_pols)
         children = [self.leaf_class(context, result, calapp, xaxis, yaxis,
                                     spw=spw, ant=ant, pol=pol, **kwargs)
-                                    for pol in pol_range]
+                    for pol in pol_range]
         super(PolComposite, self).__init__(children)
 
     
@@ -516,7 +527,7 @@ class SpwComposite(LeafComposite):
         caltable_spws = [int(spw) for spw in table_spws]
         children = [self.leaf_class(context, result, calapp, xaxis, yaxis,
                                     spw=spw, ant=ant, pol=pol, **kwargs)
-                                    for spw in caltable_spws]
+                    for spw in caltable_spws]
         super(SpwComposite, self).__init__(children)
 
 
@@ -535,7 +546,7 @@ class AntComposite(LeafComposite):
         caltable_antennas = [int(ant) for ant in table_ants]
         children = [self.leaf_class(context, result, calapp, xaxis, yaxis,
                                     ant=ant, spw=spw, pol=pol, **kwargs)
-                                    for ant in caltable_antennas]
+                    for ant in caltable_antennas]
         super(AntComposite, self).__init__(children)
 
 
@@ -552,7 +563,7 @@ class AntSpwComposite(LeafComposite):
         caltable_antennas = [int(ant) for ant in table_ants]
         children = [self.leaf_class(context, result, calapp, xaxis, yaxis,
                                     ant=ant, pol=pol, **kwargs)
-                                    for ant in caltable_antennas]
+                    for ant in caltable_antennas]
         super(AntSpwComposite, self).__init__(children)
 
 
@@ -569,7 +580,7 @@ class SpwPolComposite(LeafComposite):
         caltable_spws = [int(spw) for spw in table_spws]
         children = [self.leaf_class(context, result, calapp, xaxis, yaxis,
                                     spw=spw, ant=ant, **kwargs)
-                                    for spw in caltable_spws]
+                    for spw in caltable_spws]
         super(SpwPolComposite, self).__init__(children)
 
 
@@ -586,7 +597,7 @@ class AntSpwPolComposite(LeafComposite):
         caltable_antennas = [int(ant) for ant in table_ants]
         children = [self.leaf_class(context, result, calapp, xaxis, yaxis,
                                     ant=ant, **kwargs)
-                                    for ant in caltable_antennas]
+                    for ant in caltable_antennas]
         super(AntSpwPolComposite, self).__init__(children)
 
 
@@ -600,7 +611,6 @@ class PlotcalSpwComposite(SpwComposite):
 
 class PlotcalAntSpwComposite(AntSpwComposite):
     leaf_class = PlotcalSpwComposite
-
 
 
 class PlotmsCalAntComposite(AntComposite):
@@ -759,7 +769,6 @@ class CaltableWrapper(object):
         mask = (antenna_mask == 1) & (spw_mask == 1) & (scan_mask == 1)
 
         # find data for the selection mask 
-        #data = self.data[:,:,mask]
         data = self.data[mask]
         time = self.time[mask]
         antenna = self.antenna[mask]
@@ -1055,18 +1064,18 @@ class PlotBase(object):
         """
         Get the plot symbol and colour for this polarization and bandtype.
         """
-        d = {'BEFORE' : {'L' : ('-', 'orange', 0.6),
-                         'R' : ('--', 'sandybrown', 0.6),
-                         'X' : ('-', 'lightslategray', 0.6),
-                         'Y' : ('--', 'lightslategray', 0.6),
-                         'XX' : ('-', 'lightslategray', 0.6),
-                         'YY' : ('--', 'lightslategray', 0.6)},
-             'AFTER' : {'L' : ('-', 'green', 0.6),
-                        'R' : ('-', 'red', 0.6),
-                        'X' : ('-', 'green', 0.6),
-                        'Y' : ('-', 'red', 0.6),
-                        'XX' : ('-', 'green', 0.6),
-                        'YY' : ('-', 'red', 0.6)}}
+        d = {'BEFORE': {'L': ('-', 'orange', 0.6),
+                        'R': ('--', 'sandybrown', 0.6),
+                        'X': ('-', 'lightslategray', 0.6),
+                        'Y': ('--', 'lightslategray', 0.6),
+                        'XX': ('-', 'lightslategray', 0.6),
+                        'YY': ('--', 'lightslategray', 0.6)},
+             'AFTER': {'L': ('-', 'green', 0.6),
+                       'R': ('-', 'red', 0.6),
+                       'X': ('-', 'green', 0.6),
+                       'Y': ('-', 'red', 0.6),
+                       'XX': ('-', 'green', 0.6),
+                       'YY': ('-', 'red', 0.6)}}
     
         return d.get(state, {}).get(pol, ('x', 'grey'))
 
@@ -1098,10 +1107,11 @@ class PlotBase(object):
         qa_intents = self._get_qa_intents()
         return [scan for scan in self.ms.scans 
                 if not qa_intents.isdisjoint(scan.intents)]
-    
-# linux matplotlib is stuck on v0.99.3, which is missing the subplots function    
+
+
+# linux matplotlib is stuck on v0.99.3, which is missing the subplots function
 def subplots(nrows=1, ncols=1, sharex=False, sharey=False, squeeze=True,
-                subplot_kw=None, **fig_kw):
+             subplot_kw=None, **fig_kw):
     """Create a figure with a set of subplots already made.
 
     This utility wrapper makes it convenient to create common layouts of
@@ -1203,23 +1213,19 @@ def subplots(nrows=1, ncols=1, sharex=False, sharey=False, squeeze=True,
     for i in range(1, nplots):
         axarr[i] = fig.add_subplot(nrows, ncols, i+1, **subplot_kw)
 
-
-
     # returned axis array will be always 2-d, even if nrows=ncols=1
     axarr = axarr.reshape(nrows, ncols)
 
-
     # turn off redundant tick labeling
-    if sharex and nrows>1:
+    if sharex and nrows > 1:
         # turn off all but the bottom row
-        for ax in axarr[:-1,:].flat:
+        for ax in axarr[:-1, :].flat:
             for label in ax.get_xticklabels():
                 label.set_visible(False)
 
-
-    if sharey and ncols>1:
+    if sharey and ncols > 1:
         # turn off all but the first column
-        for ax in axarr[:,1:].flat:
+        for ax in axarr[:, 1:].flat:
             for label in ax.get_yticklabels():
                 label.set_visible(False)
 
@@ -1227,8 +1233,8 @@ def subplots(nrows=1, ncols=1, sharex=False, sharey=False, squeeze=True,
         # Reshape the array to have the final desired dimension (nrow,ncol),
         # though discarding unneeded dimensions that equal 1.  If we only have
         # one subplot, just return it instead of a 1-element array.
-        if nplots==1:
-            ret = fig, axarr[0,0]
+        if nplots == 1:
+            ret = fig, axarr[0, 0]
         else:
             ret = fig, axarr.squeeze()
     else:
