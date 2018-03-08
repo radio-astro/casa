@@ -14,35 +14,6 @@ from pipeline.hif.tasks.common import commoncalinputs
 LOG = infrastructure.get_logger(__name__)
 
 
-class CommonGaincalInputs(commoncalinputs.CommonCalibrationInputs):
-    # simple vis-independent properties with default values
-    calmode = basetask.property_with_default('calmode', 'ap')
-
-    @property
-    def caltable(self):
-        # The value of caltable is ms-dependent, so test for multiple
-        # measurement sets and listify the results if necessary
-        if type(self.vis) is types.ListType:
-            return self._handle_multiple_vis('caltable')
-        return super(CommonGaincalInputs, self).caltable
-
-    @caltable.setter
-    def caltable(self, value):
-        if value is None:
-            value = gcaltable.GaincalCaltable()
-        self._caltable = value
-
-    @property
-    def intent(self):
-        return self._intent
-
-    @intent.setter
-    def intent(self, value):
-        if value is None:
-            value = 'PHASE,AMPLITUDE,BANDPASS'
-        self._intent = str(value).replace('*', '')
-
-
 class VdpCommonGaincalInputs(commoncalinputs.VdpCommonCalibrationInputs):
     """
     CommonGaincalInputs is the base class for defines inputs that are common
