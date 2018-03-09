@@ -11,10 +11,10 @@ from . import utils
 from . import vdp
 
 __all__ = [
-    'as_list'
+    'as_list',
     'group_into_sessions',
     'parallel_inputs_impl',
-    'ParallelTemplate'
+    'ParallelTemplate',
     'remap_spw_int',
     'remap_spw_str',
     'VDPTaskFactory',
