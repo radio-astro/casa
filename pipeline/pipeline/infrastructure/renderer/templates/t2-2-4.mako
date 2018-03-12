@@ -2,6 +2,11 @@
 import os
 %>
 <html>
+<head>
+    <script>
+        lazyload();
+    </script>
+</head>
 <body>
 
 <div class="page-header">
@@ -18,7 +23,8 @@ import os
 		  	<div class="thumbnail">
 				<a href="${os.path.relpath(azel_plot.abspath, pcontext.report_dir)}"
 				   data-fancybox>
-					<img src="${os.path.relpath(azel_plot.thumbnail, pcontext.report_dir)}"
+					<img class="lazyload"
+                         data-src="${os.path.relpath(azel_plot.thumbnail, pcontext.report_dir)}"
 						 title="AzEl for ${ms.basename}"
 						 alt="AzEl Details for ${ms.basename}" />
 			    </a>
@@ -39,7 +45,8 @@ import os
 		  	<div class="thumbnail">
 				<a href="${os.path.relpath(el_vs_time_plot.abspath, pcontext.report_dir)}"
 				   data-fancybox>
-					<img src="${os.path.relpath(el_vs_time_plot.thumbnail, pcontext.report_dir)}"
+					<img class="lazyload"
+                         data-src="${os.path.relpath(el_vs_time_plot.thumbnail, pcontext.report_dir)}"
 						 title="ElTime for ${ms.basename}"
 						 alt="ElTime Details for ${ms.basename}" />
 			    </a>

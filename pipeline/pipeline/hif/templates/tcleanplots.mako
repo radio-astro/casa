@@ -75,10 +75,10 @@ def get_plot(plots, field, spw, i, colname):
                        data-caption="${columns[colname][1]}<br>Iteration ${i}"
 	                   data-fancybox="iteration-${colname}"
 	                   >
-	                   <img src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
+	                   <img data-src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
 	                   		title="Iteration ${i}: ${columns[colname][1]}"
 	                   		alt="Iteration ${i}: ${columns[colname][1]}"
-	                   		class="img-responsive">
+	                   		class="lazyload img-responsive">
 	                </a>
 	            </div>
 	            % endif
@@ -107,10 +107,10 @@ def get_plot(plots, field, spw, i, colname):
 		                       href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
                                data-caption="${columns[colname][1]}"
 		                       title="${columns[colname][1]}">
-								<img src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
+								<img data-src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
 									 title="${columns[colname][1]}"
 								     alt="${columns[colname][1]}"]
-								     class="img-responsive">
+								     class="lazyload img-responsive">
 							</a>
 							<div class="caption">
 								<p class="text-center">${columns[colname][1]}</p>
@@ -124,38 +124,3 @@ def get_plot(plots, field, spw, i, colname):
 	</tbody>
 </table>
 </div>
-
-<%doc>
-<div class="row">
-    <div class="col-md-11 col-md-offset-1">
-    % for colname in ['flux', 'psf', 'model']:
-        <div class="col-md-4">
-            % if colname == 'model':
-	            <!-- model plots are associated with the final iteration -->
-                <% 
-                lastiter = sorted(plots_dict[field][spw].keys())[-1]
-                plot = get_plot(plots_dict, field, spw, lastiter, colname)
-                %>
-            % else:
-	            <!-- flux and PSF plots are associated with iteration 0 -->
-                <% plot = get_plot(plots_dict, field, spw, 0, colname) %>
-            % endif
-            % if plot is not None:
-                <div class="thumbnail">
-                    <a data-fancybox
-                       href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
-                       title="${columns[colname][1]}">
-						<img src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
-							 title="${columns[colname][1]}"
-						     alt="${columns[colname][1]}">
-					</a>
-					<div class="caption">
-						<p class="text-center">${columns[colname][1]}</p>
-               		</div>
-         		</div>
-            % endif
-        </div><!-- /div span4 -->
-    % endfor <!-- /colname loop -->
-	</div>
-</div>
-</%doc>

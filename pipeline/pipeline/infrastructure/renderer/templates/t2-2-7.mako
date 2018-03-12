@@ -2,6 +2,11 @@
 import os
 %>
 <html>
+<head>
+    <script>
+        lazyload();
+    </script>
+</head>
 <body>
 
 <div class="page-header">
@@ -51,7 +56,8 @@ def get_field_name(plot):
 						   title='Antenna: ${plot.parameters["antenna"]}<br>
 						          Field: ${plot.parameters["field"]}<br>
 						          Intent: ${plot.parameters["intent"]}'>
-							<img src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
+							<img class="lazyload"
+                                 data-src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
 								 title="Telescope pointing for antenna ${antenna_name(plot)}"
 								 alt="Telescope pointing for antenna ${antenna_name(plot)}" />
 					    </a>

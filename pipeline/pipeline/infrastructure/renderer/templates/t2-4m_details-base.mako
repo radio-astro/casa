@@ -52,6 +52,10 @@ def format_notification(tr_class, alert, msg, icon_class=None):
     return '<tr class="%s"><td>%s<strong>%s</strong> %s</td></tr>' % (tr_class, icon, alert, msg)
 %>
 <html>
+    <script>
+        lazyload();
+    </script>
+</head>
 
 <%def name="plot_group(plot_dict, url_fn, data_spw=False, data_field=False, data_baseband=False, data_tsysspw=False,
                        data_vis=False, title_id=None, transmission=None, rel_fn=None, break_rows_by='',
@@ -144,7 +148,8 @@ def format_notification(tr_class, alert, msg, icon_class=None):
                        data-caption="${caller.fancybox_caption(transmission_plot).strip()}"
                        % endif
                        data-plotCommandTarget="#plotcmd-${hash(transmission_plot.abspath)}">
-                        <img src="${transmission_thumbnail_relpath}"
+                        <img class="lazyload"
+                             data-src="${transmission_thumbnail_relpath}"
                              % if hasattr(caller, 'transmission_mouseover'):
                              title="${caller.transmission_mouseover(transmission_plot)}"
                              % endif
@@ -183,7 +188,8 @@ def format_notification(tr_class, alert, msg, icon_class=None):
                            data-plotCommandTarget="#plotcmd-${hash(plot.abspath)}"
                        % endif
                     >
-                        <img src="${thumbnail_relpath}"
+                        <img class="lazyload"
+                             data-src="${thumbnail_relpath}"
                            % if hasattr(caller, 'mouseover'):
                              title="${caller.mouseover(plot)}"
                            % endif

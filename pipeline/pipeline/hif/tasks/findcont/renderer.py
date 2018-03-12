@@ -109,10 +109,10 @@ class T2_4MDetailsFindContRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                 '   title="{title}"'
                 '   data-fancybox="{rel}"'
                 '   data-caption="{title}">'
-                '    <img src="{thumbnail}"'
+                '    <img data-src="{thumbnail}"'
                 '         title="{title}"'
                 '         alt="{alt}"'
-                '         class="img-responsive">'
+                '         class="lazyload img-responsive">'
                 '</a>'.format(**html_args))
 
         return html

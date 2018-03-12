@@ -3,6 +3,11 @@ import os
 import pipeline.infrastructure.renderer.htmlrenderer as hr
 %>
 <html>
+<head>
+    <script>
+        lazyload();
+    </script>
+</head>
 <body>
 
 <div class="page-header">
@@ -95,7 +100,8 @@ import pipeline.infrastructure.renderer.htmlrenderer as hr
 		<div class="thumbnail">
 			<a href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
 			   data-fancybox>
-				<img src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
+				<img class="lazyload"
+                     data-src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
 					 title="Mosaic Pointings for ${source.name} in ${ms.basename}"
 					 alt="Mosaic Pointings for ${source.name} in ${ms.basename}" />
 			</a>

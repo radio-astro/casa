@@ -90,7 +90,8 @@ except:
                            title='<div class="pull-left">Iteration: ${row.plot.parameters['iter']}<br>
                                   Spw: ${row.plot.parameters["spw"]}<br>
                                   Field: ${cgi.escape(row.field, True)}</div><div class="pull-right"><a href="${fullsize_relpath}">Full Size</a></div>'>
-                          <img src="${thumbnail_relpath}"
+                          <img class="lazyload"
+                               data-src="${thumbnail_relpath}"
                                title="Iteration ${row.plot.parameters['iter']}: image"
                                alt="Iteration ${row.plot.parameters['iter']}: image"
                                class="img-thumbnail img-responsive">

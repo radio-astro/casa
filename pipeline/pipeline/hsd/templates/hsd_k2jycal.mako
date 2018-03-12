@@ -35,7 +35,8 @@ combination whose conversion factor is in each bin.
             	<a href="${fullsize_relpath}"
                    data-fancybox
                    title='<div>Receiver: ${plot.parameters['receiver']}<br>Spw: ${plot.parameters['spw']}<br></div>'>
-                	<img src="${thumbnail_relpath}"
+                	<img class="lazyload"
+                         data-src="${thumbnail_relpath}"
                          title="Click to show histrogram of Jy/K factors of spw ${plot.parameters['spw']}">
                 </a>
 

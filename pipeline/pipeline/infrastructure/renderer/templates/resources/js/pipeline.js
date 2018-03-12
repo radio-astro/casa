@@ -358,6 +358,8 @@ pipeline.pages = pipeline.pages || function() {
             $('div.thumbnail:visible > a').fancybox({
                 selector : 'div.thumbnail:visible > a'
             });
+
+            lazyload();
         };
 
         return innerModule;
@@ -390,6 +392,8 @@ pipeline.pages = pipeline.pages || function() {
                 // store the new state
                 pipeline.history.pushState();
             });
+
+            lazyload();
         };
 
         return innerModule;

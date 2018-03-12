@@ -75,7 +75,8 @@ line detection stage.</p>
 	            <div class="thumbnail">
 	                <a href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
 	                   data-fancybox="thumbs">
-	                    <img src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
+	                    <img class="lazyload"
+                             data-src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
 	                         title="Sparse Profile Map for Spectral Window ${plot.parameters['spw']} before Baseline Subtraction">
 	                </a>
 	
@@ -116,7 +117,8 @@ line detection stage.</p>
 	            <div class="thumbnail">
 	                <a href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
 	                   data-fancybox=="thumbs">
-	                    <img src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
+	                    <img class="lazyload"
+                             data-src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
 	                         title="Sparse Profile Map for Spectral Window ${plot.parameters['spw']} after Baseline Subtraction">
 	                </a>
 	
@@ -160,8 +162,9 @@ line detection stage.</p>
 			  	<div class="thumbnail">
                     <a href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
                        data-fancybox="thumbs">
-                       <img src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
-                             title="${plots['title']} for Spectral Window ${plot.parameters['spw']} Field ${plot.field}">
+                       <img class="lazyload"
+                            data-src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
+                            title="${plots['title']} for Spectral Window ${plot.parameters['spw']} Field ${plot.field}">
                     </a>
                     <div class="caption">
                         <h4>
@@ -192,8 +195,9 @@ line detection stage.</p>
 			  	<div class="thumbnail">
                     <a href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
                        data-fancybox="thumbs">
-                       <img src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
-                             title="${plots['title']} for Spectral Window ${plot.parameters['spw']}">
+                       <img class="lazyload"
+                            data-src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
+                            title="${plots['title']} for Spectral Window ${plot.parameters['spw']}">
                     </a>
 					<div class="caption">
 						<h4>Spectral Window ${plot.parameters['spw']}</h4>

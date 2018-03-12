@@ -7,6 +7,9 @@ import os
 <head>
     <!--  Add image holder library for missing plots -->
     <script src="${self.attr.rsc_path}resources/js/holder.js"></script>
+    <script>
+        lazyload();
+    </script>
 </head>
 <body>
 <div class="page-header">
@@ -49,7 +52,8 @@ import os
 		  	<div class="thumbnail">
 				<a href="${os.path.relpath(intent_vs_time.abspath, pcontext.report_dir)}"
 				   data-fancybox>
-					<img src="${os.path.relpath(intent_vs_time.thumbnail, pcontext.report_dir)}"
+					<img class="lazyload"
+                         data-src="${os.path.relpath(intent_vs_time.thumbnail, pcontext.report_dir)}"
 						 title="Intent vs. Time for ${ms.basename}"
 						 alt="Intent vs. Time for ${ms.basename}" />
 			    </a>
@@ -64,7 +68,8 @@ import os
 		  	<div class="thumbnail">
 				<a href="${os.path.relpath(field_vs_time.abspath, pcontext.report_dir)}"
 				   data-fancybox>
-					<img src="${os.path.relpath(field_vs_time.thumbnail, pcontext.report_dir)}"
+					<img class="lazyload"
+                         data-src="${os.path.relpath(field_vs_time.thumbnail, pcontext.report_dir)}"
 						 title="Field vs. Time for ${ms.basename}"
 						 alt="Field vs. Time for ${ms.basename}" />
 			    </a>
@@ -176,7 +181,8 @@ import os
 		  	<div class="thumbnail">
 				<a href="${os.path.relpath(weather_plot.abspath, pcontext.report_dir)}"
 				   data-fancybox>
-					<img src="${os.path.relpath(weather_plot.thumbnail, pcontext.report_dir)}"
+					<img class="lazyload"
+                         data-src="${os.path.relpath(weather_plot.thumbnail, pcontext.report_dir)}"
 						 title="Weather Details for ${ms.basename}"
 						 alt="Weather Details for ${ms.basename}" />
 			    </a>
@@ -198,7 +204,8 @@ import os
 		  	<div class="thumbnail">
 				<a href="${os.path.relpath(pwv_plot.abspath, pcontext.report_dir)}"
 				   data-fancybox>
-					<img src="${os.path.relpath(pwv_plot.thumbnail, pcontext.report_dir)}"
+					<img class="lazyload"
+                         data-src="${os.path.relpath(pwv_plot.thumbnail, pcontext.report_dir)}"
 						 title="PWV Details for ${ms.basename}"
 						 alt="PWV Details for ${ms.basename}" />
 			    </a>
@@ -225,9 +232,10 @@ import os
 		    <div class="thumbnail">
 		        <a href="${os.path.relpath(pointing_plot.abspath, pcontext.report_dir)}"
 		           data-fancybox>
-		           <img src="${os.path.relpath(pointing_plot.thumbnail, pcontext.report_dir)}"
-		               title="Telescope Pointing for ${ms.basename} Field ${pointing_plot.parameters['field']}"
-		               alt="Telescope Pointing for ${ms.basename} Field ${pointing_plot.parameters['field']}" />
+		           <img class="lazyload"
+                        data-src="${os.path.relpath(pointing_plot.thumbnail, pcontext.report_dir)}"
+		                title="Telescope Pointing for ${ms.basename} Field ${pointing_plot.parameters['field']}"
+		                alt="Telescope Pointing for ${ms.basename} Field ${pointing_plot.parameters['field']}" />
 		        </a>
 		        <div class="caption">
 		            <h4>Telescope Pointing Plot</h4>

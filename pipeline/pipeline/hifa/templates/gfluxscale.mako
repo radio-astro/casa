@@ -186,7 +186,8 @@ def rx_for_plot(plot):
 			                              ${"All antennas." if plot.parameters.get("ant","") == "" else "Antennas: "+str(plot.parameters["ant"])+"."}<br>
 			                              Flux calibrator fields: ${plot.parameters["field"]}.</div>'
 			                       data-fancybox="amp_vs_uv-${ms}">
-			                        <img src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
+			                        <img class="lazyload"
+                                         data-src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
 			                             title="Click to show amplitude vs UV plot for Baseband ${plot.parameters['baseband']}">
 			                    </a>
 			                    <div class="caption">
@@ -214,7 +215,8 @@ def rx_for_plot(plot):
 			                              ${"All antennas." if antplot.parameters.get("ant","") == "" else "Antennas: "+str(antplot.parameters["ant"])+"."}<br>
 			                              Flux calibrator fields: ${antplot.parameters["field"]}.</div>'
 			                       data-fancybox="amp_vs_uv-${ms}">
-			                        <img src="${os.path.relpath(antplot.thumbnail, pcontext.report_dir)}"
+			                        <img class="lazyload"
+                                         data-src="${os.path.relpath(antplot.thumbnail, pcontext.report_dir)}"
 			                             title="Click to show amplitude vs UV plot for Baseband ${antplot.parameters['baseband']}">
 			                    </a>
 			                    <div class="caption">

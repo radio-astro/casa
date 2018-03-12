@@ -168,7 +168,8 @@ see detailed plots per spectral window and antenna.</p>
 				<a href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
                    data-fancybox="plots-${ms}"
                    data-plotCommandTarget="#plotcmd-${hash(plot.abspath)}">
-					<img src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
+					<img class="lazyload"
+                         data-src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
                          title="Click to show amplitude vs time plot">
 				</a>
 				<div class="caption">
@@ -224,9 +225,9 @@ see detailed plots per spectral window and antenna.</p>
 				<a href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
                    data-fancybox="plots-${ms}"
                    data-plotCommandTarget="#plotcmd-${hash(plot.abspath)}">
-					<img src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
-                         title="Click to show amplitude vs time plot"
-                         data-thumbnail="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}">
+					<img class="lazyload"
+                         data-src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
+                         title="Click to show amplitude vs time plot">
 				</a>
 				<div class="caption">
 					<h5>Typical antenna (${plot.parameters['ant']})
@@ -301,8 +302,9 @@ see detailed plots per spectral window and antenna.</p>
 				<a href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
 	               data-fancybox="plots-${ms}"
                    data-plotCommandTarget="#plotcmd-${hash(plot.abspath)}">
-					<img src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
-	                        title="Click to show phase vs frequency plot">
+					<img class="lazyload"
+                         data-src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
+	                     title="Click to show phase vs frequency plot">
 				</a>
 				<div class="caption">
 					<h5>Typical antenna (${plot.parameters['ant']})

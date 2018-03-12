@@ -2,6 +2,11 @@
 import os
 %>
 <html>
+<head>
+    <script>
+        lazyload();
+    </script>
+</head>
 <body>
 
 <div class="page-header">
@@ -14,7 +19,8 @@ import os
 	  	<div class="thumbnail">
 			<a href="${os.path.relpath(weather_plot.abspath, pcontext.report_dir)}"
 			   data-fancybox>
-				<img src="${os.path.relpath(weather_plot.thumbnail, pcontext.report_dir)}"
+				<img class="lazyload"
+                     data-src="${os.path.relpath(weather_plot.thumbnail, pcontext.report_dir)}"
 					 title="Weather Details for ${ms.basename}"
 					 alt="Weather Details for ${ms.basename}" />
 		    </a>

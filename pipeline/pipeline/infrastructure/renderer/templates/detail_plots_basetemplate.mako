@@ -171,7 +171,8 @@ $(document).ready(function () {
                        data-caption='<div>${caller.fancybox_caption(plot)}</div>'
                        % endif
                        data-plotCommandTarget="#plotcmd-${hash(plot.abspath)}">
-                        <img src="${thumbnail_relpath}"
+                        <img class="lazyload"
+                             data-src="${thumbnail_relpath}"
                              % if hasattr(caller, 'mouseover'):
                              title="${caller.mouseover(plot)}"
                              % endif

@@ -102,7 +102,8 @@ import os
  	        <div class="col-md-3">
 	            <div class="thumbnail">
 	                <a href="${img_path}" data-fancybox="thumbs">
-	                    <img src="${thumbnail_path}"
+	                    <img class="lazyload"
+                             data-src="${thumbnail_path}"
 	                         title="Sky level summary for Field ${field}, Spw ${spw}">
 	                </a>
 	                <div class="caption">
@@ -140,7 +141,8 @@ import os
  	        <div class="col-md-3">
 	            <div class="thumbnail">
 	                <a href="${img_path}" data-fancybox="thumbs">
-	                    <img src="${thumbnail_path}"
+	                    <img class="lazyload"
+                             data-src="${thumbnail_path}"
 	                         title="Sky level summary for Field ${field}, Spw ${spw}">
 	                </a>
 	                <div class="caption">

@@ -4,6 +4,11 @@ import os.path
 import pipeline.infrastructure.renderer.htmlrenderer as hr
 %>
 <html>
+<head>
+    <script>
+        lazyload();
+    </script>
+</head>
 <body>
 
 <div class="page-header">
@@ -25,7 +30,8 @@ import pipeline.infrastructure.renderer.htmlrenderer as hr
 					  	<div class="thumbnail">
 							<a href="${os.path.relpath(plot_ants.abspath, pcontext.report_dir)}"
 							   data-fancybox>
-								<img src="${os.path.relpath(plot_ants.thumbnail, pcontext.report_dir)}"
+								<img class="lazyload"
+                                     data-src="${os.path.relpath(plot_ants.thumbnail, pcontext.report_dir)}"
 									 title="Antenna Latitude vs. Antenna Longitude for ${ms.basename}"
 	 							     alt="Antenna Latitude vs. Antenna Longitude for ${ms.basename}"/>
 						    </a>
@@ -41,7 +47,8 @@ import pipeline.infrastructure.renderer.htmlrenderer as hr
 					  	<div class="thumbnail">
 							<a href="${os.path.relpath(plot_ants_plog.abspath, pcontext.report_dir)}"
 							   data-fancybox>
-								<img src="${os.path.relpath(plot_ants_plog.thumbnail, pcontext.report_dir)}"
+								<img class="lazyload"
+                                     data-src="${os.path.relpath(plot_ants_plog.thumbnail, pcontext.report_dir)}"
 									 title="Antenna Positions (polar-logarithmic) for ${ms.basename}"
 	 								 alt="Antenna Positions (polar-logarithmic) for ${ms.basename}"/>
 						    </a>
