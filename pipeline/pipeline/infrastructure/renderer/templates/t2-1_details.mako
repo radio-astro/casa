@@ -3,16 +3,12 @@ rsc_path = "./"
 
 import os
 %>
-
-<script>
-$(document).ready(function(){
-	$(".fancybox").fancybox();
-});
-</script>
-
-<!--  Add image holder library for missing plots -->
-<script src="${self.attr.rsc_path}resources/js/holder.js"></script>
-
+<html>
+<head>
+    <!--  Add image holder library for missing plots -->
+    <script src="${self.attr.rsc_path}resources/js/holder.js"></script>
+</head>
+<body>
 <div class="page-header">
 <h1>Overview of '${ms.basename}'</h1>
 </div>
@@ -52,7 +48,7 @@ $(document).ready(function(){
 		<div class="col-md-6">
 		  	<div class="thumbnail">
 				<a href="${os.path.relpath(intent_vs_time.abspath, pcontext.report_dir)}"
-				   class="fancybox">
+				   data-fancybox>
 					<img src="${os.path.relpath(intent_vs_time.thumbnail, pcontext.report_dir)}"
 						 title="Intent vs. Time for ${ms.basename}"
 						 alt="Intent vs. Time for ${ms.basename}" />
@@ -67,7 +63,7 @@ $(document).ready(function(){
 		<div class="col-md-6">		
 		  	<div class="thumbnail">
 				<a href="${os.path.relpath(field_vs_time.abspath, pcontext.report_dir)}"
-				   class="fancybox">
+				   data-fancybox>
 					<img src="${os.path.relpath(field_vs_time.thumbnail, pcontext.report_dir)}"
 						 title="Field vs. Time for ${ms.basename}"
 						 alt="Field vs. Time for ${ms.basename}" />
@@ -173,13 +169,13 @@ $(document).ready(function(){
             </div>
         </div>
         % else:
-		<a href="${os.path.relpath(weather_plot.abspath, pcontext.report_dir)}" class="fancybox">
+		<a href="${os.path.relpath(weather_plot.abspath, pcontext.report_dir)}" data-fancybox>
 			<h3>Weather</h3>
 		</a>
 		<div class="col-md-6">
 		  	<div class="thumbnail">
 				<a href="${os.path.relpath(weather_plot.abspath, pcontext.report_dir)}"
-				   class="fancybox">
+				   data-fancybox>
 					<img src="${os.path.relpath(weather_plot.thumbnail, pcontext.report_dir)}"
 						 title="Weather Details for ${ms.basename}"
 						 alt="Weather Details for ${ms.basename}" />
@@ -195,13 +191,13 @@ $(document).ready(function(){
 	% if pcontext.project_summary.telescope.lower() in ('alma') and pwv_plot is not None:
 	
 	<div class="col-md-6">
-		<a href="${os.path.relpath(pwv_plot.abspath, pcontext.report_dir)}" class="fancybox">
+		<a href="${os.path.relpath(pwv_plot.abspath, pcontext.report_dir)}" data-fancybox>
 			<h3>PWV</h3>
 		</a>
 		<div class="col-md-6">
 		  	<div class="thumbnail">
 				<a href="${os.path.relpath(pwv_plot.abspath, pcontext.report_dir)}"
-				   class="fancybox">
+				   data-fancybox>
 					<img src="${os.path.relpath(pwv_plot.thumbnail, pcontext.report_dir)}"
 						 title="PWV Details for ${ms.basename}"
 						 alt="PWV Details for ${ms.basename}" />
@@ -228,7 +224,7 @@ $(document).ready(function(){
 		<div class="col-md-6">
 		    <div class="thumbnail">
 		        <a href="${os.path.relpath(pointing_plot.abspath, pcontext.report_dir)}"
-		            class="fancybox">
+		           data-fancybox>
 		           <img src="${os.path.relpath(pointing_plot.thumbnail, pcontext.report_dir)}"
 		               title="Telescope Pointing for ${ms.basename} Field ${pointing_plot.parameters['field']}"
 		               alt="Telescope Pointing for ${ms.basename} Field ${pointing_plot.parameters['field']}" />
@@ -243,22 +239,5 @@ $(document).ready(function(){
 	% endif
 </div>
 
-<!-- 
-<div class="fancybox-overlay fancybox-overlay-fixed" style="width: auto; height: auto; display: block; ">
-	<div class="fancybox-wrap fancybox-desktop fancybox-type-image fancybox-opened" tabindex="-1" style="width: 912px; height: auto; position: absolute; top: 20px; left: 205px; opacity: 1; overflow: visible; ">
-		<div class="fancybox-skin" style="padding: 15px; width: auto; height: auto; ">
-			<div class="fancybox-outer">
-				<div class="fancybox-inner" style="overflow: visible; width: 584px; height: 376px;">
-					<img class="fancybox-image" src="sessionSession_default/vla_m81.avg.raw/intent_vs_time.png" alt="" style="width:50%; height: 50%; float:right">
-					<img class="fancybox-image" src="sessionSession_default/vla_m81.avg.raw/field_vs_time.png" alt="" style="width:50%; height: 50%; float:right">
-					<img class="fancybox-image" src="sessionSession_default/vla_m81.avg.raw/intent_vs_time.png" alt="" style="width:50%; height: 50%;  float:right">
-					<img class="fancybox-image" src="sessionSession_default/vla_m81.avg.raw/intent_vs_time.png" alt="" style="width:50%; height: 50%; float:right">
-				</div>
-				<a title="Previous" class="fancybox-nav fancybox-prev" href="javascript:;"><span></span></a>
-				<a title="Next" class="fancybox-nav fancybox-next" href="javascript:;"><span></span></a>
-			</div>
-			<a title="Close" class="fancybox-item fancybox-close" href="javascript:;"></a>
-		</div>
-	</div>
-</div>
- -->
+</body>
+</html>

@@ -10,26 +10,6 @@ import os
 
 <script src="${self.attr.rsc_path}resources/js/pipeline.js"></script>
 
-<script>
-$(document).ready(function() {
-    $(".fancybox").fancybox({
-        type: 'image',
-        prevEffect: 'none',
-        nextEffect: 'none',
-        loop: false,
-        helpers: {
-            title: {
-                type: 'outside'
-            },
-            thumbs: {
-                width: 50,
-                height: 50,
-            }
-        }
-    });
-});
-</script>
-
 <p>This task generates a sky calibration table, a collection of OFF spectra for single dish data calibration.</p>
 
 <h2>Contents</h2>
@@ -121,10 +101,9 @@ $(document).ready(function() {
             %>
  	        <div class="col-md-3">
 	            <div class="thumbnail">
-	                <a href="${img_path}" class="fancybox" rel="thumbs">
+	                <a href="${img_path}" data-fancybox="thumbs">
 	                    <img src="${thumbnail_path}"
-	                         title="Sky level summary for Field ${field}, Spw ${spw}"
-	                         data-thumbnail="${thumbnail_path}">
+	                         title="Sky level summary for Field ${field}, Spw ${spw}">
 	                </a>
 	                <div class="caption">
 	                    <h4>
@@ -160,10 +139,9 @@ $(document).ready(function() {
             %>
  	        <div class="col-md-3">
 	            <div class="thumbnail">
-	                <a href="${img_path}" class="fancybox" rel="thumbs">
+	                <a href="${img_path}" data-fancybox="thumbs">
 	                    <img src="${thumbnail_path}"
-	                         title="Sky level summary for Field ${field}, Spw ${spw}"
-	                         data-thumbnail="${thumbnail_path}">
+	                         title="Sky level summary for Field ${field}, Spw ${spw}">
 	                </a>
 	                <div class="caption">
 	                    <h4>

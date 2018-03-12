@@ -2,6 +2,8 @@ from __future__ import absolute_import
 
 import cgi
 import itertools
+import xml.dom.minidom as minidom
+import xml.etree.ElementTree as ET
 
 import numpy as np
 
@@ -9,6 +11,7 @@ import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.utils as utils
+
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -178,27 +181,7 @@ def get_plot_command_markup(ctx, command):
     stripped = command.replace('%s/' % ctx.report_dir, '')
     stripped = stripped.replace('%s/' % ctx.output_dir, '')
     escaped = cgi.escape(stripped, True).replace('\'', '&#39;')
-
-    btn = '''<a data-toggle="modal" data-target=".plot-command-modal">Plot command</a>
-
-<div class="modal fade plot-command-modal">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title">Plot command</h4>
-      </div>
-      <div class="modal-body">
-        <p>%s</p>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-      </div>
-    </div><!-- /.modal-content -->
-  </div><!-- /.modal-dialog -->
-</div><!-- /.modal -->''' % escaped
-
-    return btn
+    return escaped
 
 
 def format_shortmsg(pqascore):

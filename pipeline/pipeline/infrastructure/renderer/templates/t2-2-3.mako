@@ -3,6 +3,9 @@ rsc_path = "../../"
 import os.path
 import pipeline.infrastructure.renderer.htmlrenderer as hr
 %>
+<html>
+<body>
+
 <div class="page-header">
 	<h1>Antenna Setup Details<button class="btn btn-default pull-right" onclick="javascript:window.history.back();">Back</button></h1>
 </div>
@@ -21,10 +24,10 @@ import pipeline.infrastructure.renderer.htmlrenderer as hr
 					<div class="col-md-3">
 					  	<div class="thumbnail">
 							<a href="${os.path.relpath(plot_ants.abspath, pcontext.report_dir)}"
-							   class="fancybox">
+							   data-fancybox>
 								<img src="${os.path.relpath(plot_ants.thumbnail, pcontext.report_dir)}"
 									 title="Antenna Latitude vs. Antenna Longitude for ${ms.basename}"
-	 								     alt="Antenna Latitude vs. Antenna Longitude for ${ms.basename}"/>
+	 							     alt="Antenna Latitude vs. Antenna Longitude for ${ms.basename}"/>
 						    </a>
 						    <div class="caption">
 								<h4>Antenna Position</h4>
@@ -37,10 +40,10 @@ import pipeline.infrastructure.renderer.htmlrenderer as hr
 					<div class="col-md-3">
 					  	<div class="thumbnail">
 							<a href="${os.path.relpath(plot_ants_plog.abspath, pcontext.report_dir)}"
-							   class="fancybox">
+							   data-fancybox>
 								<img src="${os.path.relpath(plot_ants_plog.thumbnail, pcontext.report_dir)}"
 									 title="Antenna Positions (polar-logarithmic) for ${ms.basename}"
-	 								     alt="Antenna Positions (polar-logarithmic) for ${ms.basename}"/>
+	 								 alt="Antenna Positions (polar-logarithmic) for ${ms.basename}"/>
 						    </a>
 						    <div class="caption">
 								<h4>Antenna Position</h4>
@@ -151,3 +154,6 @@ import pipeline.infrastructure.renderer.htmlrenderer as hr
 		</div>
 	</div>
 </div>
+
+</body>
+</html>

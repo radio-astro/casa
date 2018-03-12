@@ -1,6 +1,9 @@
 <%!
 import os
 %>
+<html>
+<body>
+
 <div class="page-header">
 	<h1>Telescope Pointing Details for ${ms.basename}<button class="btn btn-default pull-right" onclick="javascript:window.history.back();">Back</button></h1>
 </div>
@@ -34,7 +37,8 @@ def get_field_name(plot):
 	% for plots in zip(target_pointing, whole_pointing):
 		% for plot in plots:
 			<div class="col-md-6">
-				<a href="${os.path.relpath(plot.abspath, pcontext.report_dir)}" class="fancybox"
+				<a href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
+                   data-fancybox
                    title='Antenna: ${plot.parameters["antenna"]}<br>
 						  Field: ${plot.parameters["field"]}<br>
 						  Intent: ${plot.parameters["intent"]}'>
@@ -43,7 +47,7 @@ def get_field_name(plot):
 				<div class="col-md-6">
 				  	<div class="thumbnail">
 						<a href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
-						   class="fancybox"
+						   data-fancybox
 						   title='Antenna: ${plot.parameters["antenna"]}<br>
 						          Field: ${plot.parameters["field"]}<br>
 						          Intent: ${plot.parameters["intent"]}'>
@@ -62,12 +66,5 @@ def get_field_name(plot):
 % endif
 </div>
 
-
-
-
-
-
-
-
-
-
+</body>
+</html>

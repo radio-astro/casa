@@ -12,7 +12,6 @@ import pipeline.infrastructure.filenamer as filenamer
 import pipeline.infrastructure.renderer.logger as logger
 import pipeline.infrastructure.renderer.htmlrenderer as hr
 import pipeline.infrastructure.renderer.rendererutils as hrutils
-import pipeline.infrastructure.renderer.sharedrenderer as sharedrenderer
 
 LOG = infrastructure.get_logger(__name__)
 %>

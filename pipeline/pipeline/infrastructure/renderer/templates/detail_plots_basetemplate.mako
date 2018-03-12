@@ -166,17 +166,32 @@ $(document).ready(function () {
                 %>
                 <div class="thumbnail">
                     <a href="${fullsize_relpath}"
-                       class="fancybox"
+                       data-fancybox="group"
                        % if hasattr(caller, 'fancybox_caption'):
-                       title='<div class="pull-left">${caller.fancybox_caption(plot)}</div><div class="pull-right"><a href="${fullsize_relpath}">Full Size</a><br>${rendererutils.get_plot_command_markup(pcontext, plot.command)}</div>'
+                       data-caption='<div>${caller.fancybox_caption(plot)}</div>'
                        % endif
-                       data-thumbnail="${thumbnail_relpath}">
+                       data-plotCommandTarget="#plotcmd-${hash(plot.abspath)}">
                         <img src="${thumbnail_relpath}"
                              % if hasattr(caller, 'mouseover'):
                              title="${caller.mouseover(plot)}"
                              % endif
-                             data-thumbnail="${thumbnail_relpath}">
+                             >
                     </a>
+
+                    <div id="plotcmd-${hash(plot.abspath)}" class="modal-content pipeline-plotcommand" style="display:none;">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-fancybox-close aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                            <h4 class="modal-title">Plot Command</h4>
+                        </div>
+                        <div class="modal-body" data-selectable="true">
+                            <p>${rendererutils.get_plot_command_markup(pcontext, plot.command)}</p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-default" data-fancybox-close>Close</button>
+                        </div>
+                    </div>
 
                     <div class="caption">
                     % if hasattr(caller, 'caption_title'):

@@ -8,8 +8,6 @@ import os
 
 <%block name="title">Generate Baseline tables and subtract spectral baseline</%block>
 
-<script src="${self.attr.rsc_path}resources/js/pipeline.js"></script>
-
 <script>
 $(document).ready(function() {
     // return a function that sets the SPW text field to the given spw
@@ -28,22 +26,6 @@ $(document).ready(function() {
         var o = $(v);
         var spw = o.data("spw");
         o.data("callback", createSpwSetter(spw));
-    });
-
-    $(".fancybox").fancybox({
-        type: 'image',
-        prevEffect: 'none',
-        nextEffect: 'none',
-        loop: false,
-        helpers: {
-            title: {
-                type: 'outside'
-            },
-            thumbs: {
-                width: 50,
-                height: 50,
-            }
-        }
     });
 });
 </script>
@@ -92,11 +74,9 @@ line detection stage.</p>
 	        <div class="col-md-3">
 	            <div class="thumbnail">
 	                <a href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
-	                   class="fancybox"
-	                   rel="thumbs">
+	                   data-fancybox="thumbs">
 	                    <img src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
-	                         title="Sparse Profile Map for Spectral Window ${plot.parameters['spw']} before Baseline Subtraction"
-	                         data-thumbnail="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}">
+	                         title="Sparse Profile Map for Spectral Window ${plot.parameters['spw']} before Baseline Subtraction">
 	                </a>
 	
 	                <div class="caption">
@@ -135,11 +115,9 @@ line detection stage.</p>
 	        <div class="col-md-3">
 	            <div class="thumbnail">
 	                <a href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
-	                   class="fancybox"
-	                   rel="thumbs">
+	                   data-fancybox=="thumbs">
 	                    <img src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
-	                         title="Sparse Profile Map for Spectral Window ${plot.parameters['spw']} after Baseline Subtraction"
-	                         data-thumbnail="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}">
+	                         title="Sparse Profile Map for Spectral Window ${plot.parameters['spw']} after Baseline Subtraction">
 	                </a>
 	
 	                <div class="caption">
@@ -181,11 +159,9 @@ line detection stage.</p>
 			<div class="col-md-3">
 			  	<div class="thumbnail">
                     <a href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
-                       class="fancybox"
-                       rel="thumbs">
+                       data-fancybox="thumbs">
                        <img src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
-                             title="${plots['title']} for Spectral Window ${plot.parameters['spw']} Field ${plot.field}"
-                             data-thumbnail="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}">
+                             title="${plots['title']} for Spectral Window ${plot.parameters['spw']} Field ${plot.field}">
                     </a>
                     <div class="caption">
                         <h4>
@@ -215,11 +191,9 @@ line detection stage.</p>
 			<div class="col-md-3">
 			  	<div class="thumbnail">
                     <a href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
-                       class="fancybox"
-                       rel="thumbs">
+                       data-fancybox="thumbs">
                        <img src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
-                             title="${plots['title']} for Spectral Window ${plot.parameters['spw']}"
-                             data-thumbnail="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}">
+                             title="${plots['title']} for Spectral Window ${plot.parameters['spw']}">
                     </a>
 					<div class="caption">
 						<h4>Spectral Window ${plot.parameters['spw']}</h4>

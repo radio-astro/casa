@@ -1666,12 +1666,25 @@ class WebLogGenerator(object):
                         ignore=ignore_fn)
 
         # unzip fancybox to output directory
-        infile = os.path.join(src, 'fancybox-2.1.5.zip')
-        z = zipfile.ZipFile(infile, 'r')        
-        z.extractall(outdir)
+        distfile = os.path.join(src, 'fancybox-master.zip')
+        WebLogGenerator.unpack_fancybox(distfile, outdir)
 
         distfile = os.path.join(src, 'bootstrap-3.3.7-dist.zip')
         WebLogGenerator.unpack_bootstrap(distfile, outdir)
+
+    @staticmethod
+    def unpack_fancybox(distfile, outdir):
+        js_output_dir = os.path.join(outdir, 'js')
+        css_output_dir = os.path.join(outdir, 'css')
+
+        with zipfile.ZipFile(distfile, 'r') as z:
+            for zip_info in z.infolist():
+                if zip_info.filename.endswith('jquery.fancybox.js'):
+                    zip_info.filename = os.path.basename(zip_info.filename)
+                    z.extract(zip_info, js_output_dir)
+                elif zip_info.filename.endswith('jquery.fancybox.css'):
+                    zip_info.filename = os.path.basename(zip_info.filename)
+                    z.extract(zip_info, css_output_dir)
 
     @staticmethod
     def unpack_bootstrap(distfile, outdir):

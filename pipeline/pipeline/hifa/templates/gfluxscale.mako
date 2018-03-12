@@ -65,26 +65,6 @@ def rx_for_plot(plot):
 
 <script src="${self.attr.rsc_path}resources/js/pipeline.js"></script>
 
-<script>
-$(document).ready(function() {
-    $(".fancybox").fancybox({
-        type: 'image',
-        prevEffect: 'none',
-        nextEffect: 'none',
-        loop: false,
-        helpers: {
-            title: {
-                type: 'outside'
-            },
-            thumbs: {
-                width: 50,
-                height: 50
-            }
-        }
-    });
-});
-</script>
-
 <%block name="title">Phased-up fluxscale</%block>
 
 <h2>Results</h2>
@@ -201,17 +181,13 @@ $(document).ready(function() {
 			            % if os.path.exists(plot.thumbnail):
 			                <div class="thumbnail">
 			                    <a href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
-			                       class="fancybox"
-								   title='<div class="pull-left">Baseband ${plot.parameters["baseband"]} (spw ${plot.parameters["spw"]}).<br>
+								   title='<div>Baseband ${plot.parameters["baseband"]} (spw ${plot.parameters["spw"]}).<br>
 			                              Receiver bands: ${utils.commafy(plot.parameters["receiver"], False)}.<br>
 			                              ${"All antennas." if plot.parameters.get("ant","") == "" else "Antennas: "+str(plot.parameters["ant"])+"."}<br>
-			                              Flux calibrator fields: ${plot.parameters["field"]}.</div>
-			                              <div class="pull-right"><a href="${os.path.relpath(plot.abspath, pcontext.report_dir)}">Full Size</a><br>
-			                              ${rendererutils.get_plot_command_markup(pcontext, plot.command)}</div>'
-			                       rel="amp_vs_uv-${ms}">
+			                              Flux calibrator fields: ${plot.parameters["field"]}.</div>'
+			                       data-fancybox="amp_vs_uv-${ms}">
 			                        <img src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
-			                             title="Click to show amplitude vs UV plot for Baseband ${plot.parameters['baseband']}"
-			                             data-thumbnail="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}">
+			                             title="Click to show amplitude vs UV plot for Baseband ${plot.parameters['baseband']}">
 			                    </a>
 			                    <div class="caption">
 									<h4>Baseband ${plot.parameters['baseband']}</h4>
@@ -233,17 +209,13 @@ $(document).ready(function() {
 			            % if os.path.exists(antplot.thumbnail):
 			                <div class="thumbnail">
 			                    <a href="${os.path.relpath(antplot.abspath, pcontext.report_dir)}"
-			                       class="fancybox"
 								   title='<div class="pull-left">Baseband ${antplot.parameters["baseband"]} (spw ${antplot.parameters["spw"]}).<br>
 			                              Receiver bands: ${utils.commafy(antplot.parameters["receiver"], False)}.<br>
 			                              ${"All antennas." if antplot.parameters.get("ant","") == "" else "Antennas: "+str(antplot.parameters["ant"])+"."}<br>
-			                              Flux calibrator fields: ${antplot.parameters["field"]}.</div>
-			                              <div class="pull-right"><a href="${os.path.relpath(antplot.abspath, pcontext.report_dir)}">Full Size</a><br>
-			                              ${rendererutils.get_plot_command_markup(pcontext, antplot.command)}</div>'
-			                       rel="amp_vs_uv-${ms}">
+			                              Flux calibrator fields: ${antplot.parameters["field"]}.</div>'
+			                       data-fancybox="amp_vs_uv-${ms}">
 			                        <img src="${os.path.relpath(antplot.thumbnail, pcontext.report_dir)}"
-			                             title="Click to show amplitude vs UV plot for Baseband ${antplot.parameters['baseband']}"
-			                             data-thumbnail="${os.path.relpath(antplot.thumbnail, pcontext.report_dir)}">
+			                             title="Click to show amplitude vs UV plot for Baseband ${antplot.parameters['baseband']}">
 			                    </a>
 			                    <div class="caption">
 									<h4>Baseband ${antplot.parameters['baseband']}</h4>

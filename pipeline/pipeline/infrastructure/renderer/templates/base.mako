@@ -13,7 +13,7 @@ import pipeline.infrastructure.renderer.htmlrenderer as hr
 <%block name="head">
 
 <!-- Add jQuery library -->
-<script src="${self.attr.rsc_path}resources/js/jquery-2.1.3.min.js"></script>
+<script src="${self.attr.rsc_path}resources/js/jquery-3.3.1.js"></script>
 
 <!-- bootstrap 3 -->
 <!-- 
@@ -23,19 +23,9 @@ import pipeline.infrastructure.renderer.htmlrenderer as hr
 <script src="${self.attr.rsc_path}resources/js/bootstrap.js"></script>
 <!-- for now, adopt the bootstrap 2 theme  -->
 
-
-<!-- Add mousewheel plugin (this is optional) -->
-<script src="${self.attr.rsc_path}resources/fancybox/lib/jquery.mousewheel-3.0.6.pack.js"></script>
-
-<link rel="stylesheet" href="${self.attr.rsc_path}resources/fancybox/source/jquery.fancybox.css" type="text/css" media="screen" />
-<script src="${self.attr.rsc_path}resources/fancybox/source/jquery.fancybox.pack.js"></script>
-
-<link rel="stylesheet" href="${self.attr.rsc_path}resources/fancybox/source/helpers/jquery.fancybox-buttons.css" type="text/css" media="screen" />
-<script src="${self.attr.rsc_path}resources/fancybox/source/helpers/jquery.fancybox-buttons.js"></script>
-<script src="${self.attr.rsc_path}resources/fancybox/source/helpers/jquery.fancybox-media.js"></script>
-
-<link rel="stylesheet" href="${self.attr.rsc_path}resources/fancybox/source/helpers/jquery.fancybox-thumbs.css" type="text/css" media="screen" />
-<script src="${self.attr.rsc_path}resources/fancybox/source/helpers/jquery.fancybox-thumbs.js"></script>
+<link rel="stylesheet" href="${self.attr.rsc_path}resources/css/jquery.fancybox.css" type="text/css" media="screen" />
+<script src="${self.attr.rsc_path}resources/js/jquery.fancybox.js"></script>
+<script src="${self.attr.rsc_path}resources/js/plotcmd.js"></script>
 
 <link rel="stylesheet" href="${self.attr.rsc_path}resources/${self.attr.css_file}" type="text/css" media="screen" />
  

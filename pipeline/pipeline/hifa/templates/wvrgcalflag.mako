@@ -8,26 +8,6 @@ import pipeline.infrastructure.filenamer as filenamer
 
 <script src="${self.attr.rsc_path}resources/js/pipeline.js"></script>
 
-<script>
-$(document).ready(function() {
-    $(".fancybox").fancybox({
-        type: 'image',
-        prevEffect: 'none',
-        nextEffect: 'none',
-        loop: false,
-        helpers: {
-            title: {
-                type: 'outside'
-            },
-            thumbs: {
-                width: 50,
-                height: 50,
-            }
-        }
-    });
-});
-</script>
-
 <%block name="title">WVR Calibration and Flagging</%block>
 
 <p>This task checks whether the WVR radiometers are working as intended,

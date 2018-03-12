@@ -21,28 +21,6 @@ colorder = ['image', 'residual', 'cleanmask']
 <%inherit file="t2-4m_details-base.mako"/>
 
 <script src="${self.attr.rsc_path}resources/js/pipeline.js"></script>
-<script>
-$(document).ready(function(){
-    $(".fancybox").fancybox({
-        type: 'image',
-        prevEffect: 'none',
-        nextEffect: 'none',
-        loop: false,
-        helpers: {
-            title: {
-                type: 'outside'
-            },
-            thumbs: {
-                width: 50,
-                height: 50,
-            }
-        },
-    	beforeShow : function() {
-        	this.title = $(this.element).attr('title');
-       	},
-    });
-});
-</script>
 
 <%block name="header" />
 
@@ -106,18 +84,15 @@ except:
                     %else:
                     <td rowspan="11">
                     %endif
-                        <a class="fancybox"
-                           href="${fullsize_relpath}"
-                           rel="clean-summary-images"
+                        <a href="${fullsize_relpath}"
+                           data-fancybox="clean-summary-images"
                            title='<div class="pull-left">Iteration: ${row.plot.parameters['iter']}<br>
                                   Spw: ${row.plot.parameters['spw']}<br>
-                                  Field: ${cgi.escape(row.field, True)}</div><div class="pull-right"><a href="${fullsize_relpath}">Full Size</a></div>'
-                           data-thumbnail="${thumbnail_relpath}">
+                                  Field: ${cgi.escape(row.field, True)}</div><div class="pull-right"><a href="${fullsize_relpath}">Full Size</a></div>'>
                           <img src="${thumbnail_relpath}"
                                title="Iteration ${row.plot.parameters['iter']}: image"
                                alt="Iteration ${row.plot.parameters['iter']}: image"
-                               class="img-thumbnail img-responsive"
-                               data-thumbnail="${thumbnail_relpath}">
+                               class="img-thumbnail img-responsive">
                         </a>
                         <div class="caption">
                             <p>

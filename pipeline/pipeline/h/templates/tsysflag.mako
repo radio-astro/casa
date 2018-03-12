@@ -46,26 +46,6 @@ extra_plot_desc = {'nmedian'    : ' shows the spectra flagged in',
 
 <script src="${self.attr.rsc_path}resources/js/pipeline.js"></script>
 
-<script>
-$(document).ready(function() {
-    $(".fancybox").fancybox({
-        type: 'image',
-        prevEffect: 'none',
-        nextEffect: 'none',
-        loop: false,
-        helpers: {
-            title: {
-                type: 'outside'
-            },
-            thumbs: {
-                width: 50,
-                height: 50,
-            }
-        }     
-    });
-});
-</script>
-
 % if any([msg for msg in task_incomplete_msg.values()]):
   <h2>Error report</h2>
   

@@ -10,29 +10,6 @@ import pipeline.infrastructure.renderer.htmlrenderer as hr
 
 <script src="${self.attr.rsc_path}resources/js/pipeline.js"></script>
 
-<script>
-$(document).ready(function() {
-    $(".fancybox").fancybox({
-        type: 'image',
-        prevEffect: 'none',
-        nextEffect: 'none',
-        loop: false,
-        helpers: {
-            title: {
-                type: 'outside'
-            },
-            thumbs: {
-                width: 50,
-                height: 50,
-            }
-        },
-        beforeShow : function() {
-                this.title = $(this.element).attr('title');
-        },
-    });
-});
-</script>
-
 <%
 cqa = casatools.quanta
 real_repr_target = result[0].real_repr_target

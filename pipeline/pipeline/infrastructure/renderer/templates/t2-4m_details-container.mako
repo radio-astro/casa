@@ -2,18 +2,21 @@
 rsc_path = ""
 import pipeline.infrastructure.renderer.rendererutils as rendererutils
 %>
+<html>
+<head>
+    <script>
+        $(document).ready(function () {
+            pipeline.pages.t2_4m_details_container.ready();
+        });
+    </script>
+</head>
 
-<script>
-$(document).ready(function() {
-	pipeline.pages.t2_4m_details_container.ready();
-});
-</script>
-
+<body>
 % if container_urls:
 <nav id="ms_selector" class="navbar navbar-fixed-top navbar-inverse col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2">
 	<div class="container-fluid">
         <div class="navbar-header">
-            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-ex1-collapse">  
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-ex1-collapse">
                 <span class="sr-only">Toggle navigation</span>
                 <span class="icon-bar"></span>
                 <span class="icon-bar"></span>
@@ -40,7 +43,7 @@ $(document).ready(function() {
                     </ul>
                 </li>
             </ul>
-	    <div>	
+	    </div>
 		<p id="container-active" class="navbar-text navbar-right navbar-projectcode">Currently viewing ${active_ms}</p>
 	</div>
 </nav>
@@ -48,3 +51,6 @@ $(document).ready(function() {
 
 <div id="session_container">
 </div>
+
+</body>
+</html>

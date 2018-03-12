@@ -56,65 +56,6 @@ def spws_for_baseband(plot):
 
 <script src="${self.attr.rsc_path}resources/js/pipeline.js"></script>
 
-<script>
-$(document).ready(function(){
-    // return a function that sets the select text field to the given value
-    var createSelectSetter = function(val, element_id) {
-    	return function() {
-    		var vals = val.toString().split(',');
-    		// trigger a change event, otherwise the filters are not changed
-            $(element_id).select2("val", vals).trigger("change");
-        };
-    };
-
-    // create a callback function for each overview plot that will select the
-    // appropriate spw once the page has loaded
-    $(".thumbnail a").each(function (i, v) {
-        var o = $(v);
-        var spw = o.data("spw");
-        var field = o.data("field");
-        var baseband = o.data("baseband");
-        var callbacks = [];
-        if (typeof field !== 'undefined') {
-        	callbacks.push(createSelectSetter(field, "#select-field"));
-        }
-        if (typeof spw !== 'undefined') {
-        	callbacks.push(createSelectSetter(spw, "#select-spw"));
-        }
-        if (typeof baseband !== 'undefined') {
-        	callbacks.push(createSelectSetter(baseband, "#select-baseband"));
-        }
-	    o.data("callback", callbacks);
-    });
-
-    $(".fancybox").fancybox({
-        type: 'image',
-        prevEffect: 'none',
-        nextEffect: 'none',
-        loop: false,
-        helpers: {
-            title: {
-                type: 'outside'
-            },
-            thumbs: {
-                width: 50,
-                height: 50,
-            }
-        },
-    	beforeShow : function() {
-        	this.title = $(this.element).attr('title');
-       	}
-    });
-
-	$('.caltable_filename').tooltip({
-	    'selector': '',
-	    'placement': 'left',
-	    'container':'body'
-	  });
-});
-</script>
-
-
 <%
 # these functions are defined in template scope so we have access to the flags
 # and agents context objects

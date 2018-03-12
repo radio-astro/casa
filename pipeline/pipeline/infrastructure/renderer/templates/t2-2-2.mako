@@ -2,6 +2,9 @@
 import pipeline.infrastructure.renderer.htmlrenderer as hr
 import pipeline.domain.measures as measures
 %>
+<html>
+<body>
+
 <div class="page-header">
 	<h1>Spectral Setup Details<button class="btn btn-default pull-right" onclick="javascript:window.history.back();">Back</button></h1>
 </div>
@@ -172,3 +175,6 @@ import pipeline.domain.measures as measures
 		</div>
 	</div>
 </div>
+
+</body>
+</html>

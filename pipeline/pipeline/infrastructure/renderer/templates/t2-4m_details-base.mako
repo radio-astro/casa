@@ -51,6 +51,7 @@ def format_notification(tr_class, alert, msg, icon_class=None):
         icon = ''
     return '<tr class="%s"><td>%s<strong>%s</strong> %s</td></tr>' % (tr_class, icon, alert, msg)
 %>
+<html>
 
 <%def name="plot_group(plot_dict, url_fn, data_spw=False, data_field=False, data_baseband=False, data_tsysspw=False,
                        data_vis=False, title_id=None, transmission=None, rel_fn=None, break_rows_by='',
@@ -138,39 +139,73 @@ def format_notification(tr_class, alert, msg, icon_class=None):
                 <div class="thumbnail">
                     % if transmission_plot:
                     <a href="${transmission_fullsize_relpath}"
-                       class="fancybox"
-                       rel="${'transmission-%s-%s'.format(ms, intent)}"
+                       data-fancybox="${'transmission-%s-%s'.format(ms, intent)}"
                        % if hasattr(caller, 'fancybox_caption'):
-                       title='<div class="pull-left">${caller.fancybox_caption(transmission_plot)}</div><div class="pull-right"><a href="${transmission_fullsize_relpath}">Full Size</a><br>${rendererutils.get_plot_command_markup(pcontext, transmission_plot.command)}</div>'
+                       data-caption="${caller.fancybox_caption(transmission_plot).strip()}"
                        % endif
-                       data-thumbnail="${transmission_thumbnail_relpath}">
+                       data-plotCommandTarget="#plotcmd-${hash(transmission_plot.abspath)}">
                         <img src="${transmission_thumbnail_relpath}"
                              % if hasattr(caller, 'transmission_mouseover'):
                              title="${caller.transmission_mouseover(transmission_plot)}"
                              % endif
-                             data-thumbnail="${transmission_thumbnail_relpath}">
+                             >
                     </a>
                     <br>
+
+                    <div id="plotcmd-${hash(transmission_plot.abspath)}" class="modal-content pipeline-plotcommand" style="display:none;">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-fancybox-close aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                            <h4 class="modal-title">Plot Command</h4>
+                        </div>
+                        <div class="modal-body" data-selectable="true">
+                            <p>${rendererutils.get_plot_command_markup(pcontext, transmission_plot.command)}</p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-default" data-fancybox-close>Close</button>
+                        </div>
+                    </div>
                     % endif
+
                     <a href="${fullsize_relpath}"
-                       class="fancybox"
                        % if rel_fn:
-                       rel="${rel_fn(plot)}"
+                           data-fancybox="${rel_fn(plot)}"
                        % elif relurl:
-                       rel="${relurl}"
+                           data-fancybox="${relurl}"
                        % else:
-                       rel="${caller.title()}"
+                           data-fancybox="${caller.title()}"
                        % endif
                        % if hasattr(caller, 'fancybox_caption'):
-                       title='<div class="pull-left">${caller.fancybox_caption(plot)}</div><div class="pull-right"><a href="${fullsize_relpath}">Full Size</a><br>${rendererutils.get_plot_command_markup(pcontext, plot.command)}</div>'
+                           data-caption="${caller.fancybox_caption(plot).strip()}"
                        % endif
-                       data-thumbnail="${thumbnail_relpath}">
+                       % if plot.command:
+                           data-plotCommandTarget="#plotcmd-${hash(plot.abspath)}"
+                       % endif
+                    >
                         <img src="${thumbnail_relpath}"
-                             % if hasattr(caller, 'mouseover'):
+                           % if hasattr(caller, 'mouseover'):
                              title="${caller.mouseover(plot)}"
-                             % endif
-                             data-thumbnail="${thumbnail_relpath}">
+                           % endif
+                        >
                     </a>
+
+                    % if plot.command:
+                    <div id="plotcmd-${hash(plot.abspath)}" class="modal-content pipeline-plotcommand" style="display:none;">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-fancybox-close aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                            <h4 class="modal-title">Plot Command</h4>
+                        </div>
+                        <div class="modal-body" data-selectable="true">
+                            <p>${rendererutils.get_plot_command_markup(pcontext, plot.command)}</p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-default" data-fancybox-close>Close</button>
+                        </div>
+                    </div>
+                    % endif
 
                     <div class="caption">
                         <h4>
@@ -310,6 +345,7 @@ ${next.body()}
                         <td>${qascore.longmsg}</td>
                     </tr>
                     % endfor
+                    </tbody>
                 </table>
                 % else:
                     No pipeline QA for this task.
@@ -388,3 +424,5 @@ ${next.body()}
     </div>
 </div>
 % endif
+
+</html>

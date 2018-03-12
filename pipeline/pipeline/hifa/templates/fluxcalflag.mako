@@ -36,8 +36,8 @@ def format_spwmap(spwmap, scispws):
 		<tr>
 			<td>${os.path.basename(r._vis)}</td>
 			<td>${format_spwmap(r._refspwmap, r._science_spw_ids)}</td>
-			<td>${'<br>'.join(['field=%s line=%s spw=%d:%d~%d' % (line.fieldname, line.species, line.spwid, line.chanrange[0], line.chanrange[1]) for line in r._fluxcal_linelist])}</td>
-			<td>${'<br>'.join([str(cmd) for cmd in r._fluxcal_flagcmds])}</td>
+			<td>${'<br/>'.join(['field=%s line=%s spw=%d:%d~%d' % (line.fieldname, line.species, line.spwid, line.chanrange[0], line.chanrange[1]) for line in r._fluxcal_linelist])}</td>
+			<td>${'<br/>'.join([str(cmd) for cmd in r._fluxcal_flagcmds])}</td>
 		</tr>
 		%endfor
 	</tbody>

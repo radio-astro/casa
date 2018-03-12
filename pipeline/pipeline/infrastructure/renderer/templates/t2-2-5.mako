@@ -1,6 +1,9 @@
 <%!
 import os
 %>
+<html>
+<body>
+
 <div class="page-header">
 	<h1>Weather Details<button class="btn btn-default pull-right" onclick="javascript:window.history.back();">Back</button></h1>
 </div>
@@ -10,7 +13,7 @@ import os
 	<li class="span3">
 	  	<div class="thumbnail">
 			<a href="${os.path.relpath(weather_plot.abspath, pcontext.report_dir)}"
-			   class="fancybox">
+			   data-fancybox>
 				<img src="${os.path.relpath(weather_plot.thumbnail, pcontext.report_dir)}"
 					 title="Weather Details for ${ms.basename}"
 					 alt="Weather Details for ${ms.basename}" />
@@ -25,3 +28,6 @@ import os
 % else:
 <p class="alert alert-error">No weather plot available.</p>
 % endif
+
+</body>
+</html>

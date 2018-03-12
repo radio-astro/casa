@@ -2,6 +2,9 @@
 import pipeline.infrastructure.renderer.htmlrenderer as hr
 import pipeline.infrastructure.utils as utils
 %>
+<html>
+<body>
+
 <div class="page-header">
 	<h1>Scan Details<button class="btn btn-default pull-right" onclick="javascript:window.history.back();">Back</button></h1>
 </div>
@@ -82,3 +85,6 @@ import pipeline.infrastructure.utils as utils
 	</div>
 
 </div>
+
+</body>
+</html>

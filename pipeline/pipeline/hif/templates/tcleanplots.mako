@@ -70,13 +70,11 @@ def get_plot(plots, field, spw, i, colname):
 	            <!-- use bootstrap markup for thumbnails -->
 	            % if plot is not None:
 	            <div class="thumbnail">
-	                <a class="fancybox"
-	                   href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
+	                <a href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
 	                   title="Iteration ${i}: ${columns[colname][1]}"
-	                   % if colname in ['pbcorimage', 'residual']:
-	                   rel="iteration"                   
-	                   % endif	
-	                   data-thumbnail="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}">
+                       data-caption="${columns[colname][1]}<br>Iteration ${i}"
+	                   data-fancybox="iteration-${colname}"
+	                   >
 	                   <img src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
 	                   		title="Iteration ${i}: ${columns[colname][1]}"
 	                   		alt="Iteration ${i}: ${columns[colname][1]}"
@@ -105,10 +103,10 @@ def get_plot(plots, field, spw, i, colname):
 		            % endif
 		            % if plot is not None:
 		                <div class="thumbnail">
-		                    <a class="fancybox"
+		                    <a data-fancybox
 		                       href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
-		                       title="${columns[colname][1]}"
-		                       data-thumbnail="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}">									   
+                               data-caption="${columns[colname][1]}"
+		                       title="${columns[colname][1]}">
 								<img src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
 									 title="${columns[colname][1]}"
 								     alt="${columns[colname][1]}"]
@@ -144,10 +142,9 @@ def get_plot(plots, field, spw, i, colname):
             % endif
             % if plot is not None:
                 <div class="thumbnail">
-                    <a class="fancybox"
+                    <a data-fancybox
                        href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
-                       title="${columns[colname][1]}"
-                       data-thumbnail="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}">									   
+                       title="${columns[colname][1]}">
 						<img src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
 							 title="${columns[colname][1]}"
 						     alt="${columns[colname][1]}">

@@ -102,18 +102,13 @@ class T2_4MDetailsFindContRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
             'thumbnail': thumbnail_relpath,
             'title': title,
             'alt': title,
-            'a_title': ('<div class="pull-left">%s</div>'
-                        '<div class="pull-right">'
-                        '<a href="%s">Full Size</a>'
-                        '</div>' % (title, fullsize_relpath)),
             'rel': 'findcont_plots_%s' % field
         }
 
-        html = ('<a class="fancybox" '
-                '   href="{fullsize}"'
-                '   title=\'{a_title}\''
-                '   rel=\'{rel}\''
-                '   data-thumbnail="{thumbnail}">'
+        html = ('<a href="{fullsize}"'
+                '   title="{title}"'
+                '   data-fancybox="{rel}"'
+                '   data-caption="{title}">'
                 '    <img src="{thumbnail}"'
                 '         title="{title}"'
                 '         alt="{alt}"'

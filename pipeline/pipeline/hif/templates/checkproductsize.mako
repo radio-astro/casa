@@ -1,26 +1,3 @@
-<script>
-$(document).ready(function() {
-    $(".fancybox").fancybox({
-        type: 'image',
-        prevEffect: 'none',
-        nextEffect: 'none',
-        loop: false,
-        helpers: {
-            title: {
-                type: 'outside'
-            },
-            thumbs: {
-                width: 50,
-                height: 50,
-            }
-        },
-    	beforeShow : function() {
-        	this.title = $(this.element).attr('title');
-       	},
-    });
-});
-</script>
-
 <%inherit file="t2-4m_details-base.mako"/>
 <%block name="header" />
 

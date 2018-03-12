@@ -2,6 +2,7 @@
 rsc_path = ""
 import os
 import pipeline.infrastructure.utils as utils
+import pipeline.infrastructure.renderer.rendererutils as rendererutils
 
 # method to output flagging percentages neatly
 def percent_flagged(flagsummary):
@@ -35,29 +36,6 @@ def num_lines(relpath):
 %>
 
 <%inherit file="t2-4m_details-base.mako"/>
-<script src="${self.attr.rsc_path}resources/js/pipeline.js"></script>
-<script>
-$(document).ready(function(){
-    $(".fancybox").fancybox({
-        type: 'image',
-        prevEffect: 'none',
-        nextEffect: 'none',
-        loop: false,
-        helpers: {
-            title: {
-                type: 'outside'
-            },
-            thumbs: {
-                width: 50,
-                height: 50,
-            }
-        },
-    	beforeShow : function() {
-        	this.title = $(this.element).attr('title');
-       	},
-    });
-});
-</script>
 
 <%block name="header" />
 
@@ -279,9 +257,8 @@ $(document).ready(function(){
                     <div class="col-md-6">
                         % if plot is None or not os.path.exists(plot.thumbnail):
                         <a href="${os.path.relpath(os.path.join(dirname, amp_subpages[ms]), pcontext.report_dir)}"
-                           class="fancybox"
-                           rel="plots-${ms}">
-                            <img data-src="holder.js/255x188/text:Not Available">
+         	               data-fancybox="plots-${ms}">
+                           <img data-src="holder.js/255x188/text:Not Available">
                         </a>
                         <div class="caption">
                             <h5>Reference antenna
@@ -295,11 +272,10 @@ $(document).ready(function(){
                         </div>
                         % else:
                         <a href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
-                           class="fancybox"
-                           rel="plots-${ms}">
+        	               data-fancybox="plots-${ms}"
+                           data-plotCommandTarget="#plotcmd-${hash(plot.abspath)}">
                             <img src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
-                                 title="Click to show amplitude vs time plot"
-                                 data-thumbnail="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}">
+                                 title="Click to show amplitude vs time plot">
                         </a>
                         <div class="caption">
                             <h5>
@@ -314,6 +290,20 @@ $(document).ready(function(){
                             (${plot.parameters['ant']}). Click the link above to show
                             detailed plots for ${plot.parameters['ant']}.</p>
                         </div>
+                        <div id="plotcmd-${hash(plot.abspath)}" class="modal-content pipeline-plotcommand" style="display:none;">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-fancybox-close aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                                <h4 class="modal-title">Plot Command</h4>
+                            </div>
+                            <div class="modal-body" data-selectable="true">
+                                <p>${rendererutils.get_plot_command_markup(pcontext, plot.command)}</p>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-default" data-fancybox-close>Close</button>
+                            </div>
+                        </div>
                         % endif
                     </div>
 
@@ -323,8 +313,7 @@ $(document).ready(function(){
                     <div class="col-md-6">
                         % if plot is None or not os.path.exists(plot.thumbnail):
                         <a href="${os.path.relpath(os.path.join(dirname, amp_subpages[ms]), pcontext.report_dir)}"
-                           class="fancybox"
-                           rel="plots-${ms}">
+        	               data-fancybox="plots-${ms}">
                             <img data-src="holder.js/255x188/text:Not Available">
                         </a>
                         <div class="caption">
@@ -339,8 +328,8 @@ $(document).ready(function(){
                         </div>
                         % else:
                         <a href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
-                           class="fancybox"
-                           rel="plots-${ms}">
+                           data-fancybox="plots-${ms}"
+                           data-plotCommandTarget="#plotcmd-${hash(plot.abspath)}">
                             <img src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
                                  title="Click to show amplitude vs time plot"
                                  data-thumbnail="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}">
@@ -358,6 +347,20 @@ $(document).ready(function(){
                             (${plot.parameters['ant']}). Click the link above to show
                             detailed plots for ${plot.parameters['ant']}.</p>
                             <p>NB. random antenna until scores are working</p>
+                        </div>
+                        <div id="plotcmd-${hash(plot.abspath)}" class="modal-content pipeline-plotcommand" style="display:none;">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-fancybox-close aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                                <h4 class="modal-title">Plot Command</h4>
+                            </div>
+                            <div class="modal-body" data-selectable="true">
+                                <p>${rendererutils.get_plot_command_markup(pcontext, plot.command)}</p>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-default" data-fancybox-close>Close</button>
+                            </div>
                         </div>
                         % endif
                     </div>
@@ -388,8 +391,7 @@ $(document).ready(function(){
                     <div class="col-md-12">
                         % if plot is None or not os.path.exists(plot.thumbnail):
                         <a href="${os.path.relpath(os.path.join(dirname, phase_subpages[ms]), pcontext.report_dir)}"
-                           class="fancybox"
-                           rel="plots-${ms}">
+                           data-fancybox="plots-${ms}">
                             <img data-src="holder.js/255x188/text:Not Available">
                         </a>
                         <div class="caption">
@@ -403,11 +405,10 @@ $(document).ready(function(){
                         </div>
                         % else:
                         <a href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
-                              class="fancybox"
-                              rel="plots-${ms}">
+        	               data-fancybox="plots-${ms}"
+                           data-plotCommandTarget="#plotcmd-${hash(plot.abspath)}">
                             <img src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
-                                    title="Click to show phase vs frequency plot"
-                                    data-thumbnail="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}">
+                                 title="Click to show phase vs frequency plot">
                         </a>
                         <div class="caption">
                             <h5>Typical antenna (${plot.parameters['ant']})
@@ -421,6 +422,20 @@ $(document).ready(function(){
                             <p>Phase vs frequency for a typical antenna
                             (${plot.parameters['ant']}). Click the link above to show
                             detailed plots for ${plot.parameters['ant']}.</p>
+                        </div>
+                        <div id="plotcmd-${hash(plot.abspath)}" class="modal-content pipeline-plotcommand" style="display:none;">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-fancybox-close aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                                <h4 class="modal-title">Plot Command</h4>
+                            </div>
+                            <div class="modal-body" data-selectable="true">
+                                <p>${rendererutils.get_plot_command_markup(pcontext, plot.command)}</p>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-default" data-fancybox-close>Close</button>
+                            </div>
                         </div>
                         % endif
                     </div>

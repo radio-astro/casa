@@ -8,30 +8,7 @@ import pipeline.infrastructure.utils as utils
 
 <%block name="title">T<sub>sys</sub> Calibration</%block>
 
-<script>
-$(document).ready(function() {
-    $(".fancybox").fancybox({
-        type: 'image',
-        prevEffect: 'none',
-        nextEffect: 'none',
-        loop: false,
-        helpers: {
-            title: {
-                type: 'outside'
-            },
-            thumbs: {
-                width: 50,
-                height: 50,
-            }
-        },
-    	beforeShow : function() {
-        	this.title = $(this.element).attr('title');
-       	}
-    }); 
-});
-</script>
-
-<p>This task generates a T<sub>sys</sub> calibration table, mapping each 
+<p>This task generates a T<sub>sys</sub> calibration table, mapping each
 science spectral window to the T<sub>sys</sub> window that overlaps in 
 frequency.</p>
 
@@ -74,10 +51,7 @@ frequency.</p>
 
 	<%def name="mouseover(plot)">Click to show Tsys vs frequency for Tsys spw ${plot.parameters['tsys_spw']}</%def>
 
-	<%def name="fancybox_caption(plot)">
-		T<sub>sys</sub> spw: ${plot.parameters['tsys_spw']}<br/>
-		Science spws: ${', '.join([str(i) for i in plot.parameters['spw']])}
-	</%def>
+	<%def name="fancybox_caption(plot)">T<sub>sys</sub> spw: ${plot.parameters['tsys_spw']}<br/>Science spws: ${', '.join([str(i) for i in plot.parameters['spw']])}</%def>
 
 	<%def name="caption_title(plot)">
 		T<sub>sys</sub> spw ${plot.parameters['tsys_spw']}

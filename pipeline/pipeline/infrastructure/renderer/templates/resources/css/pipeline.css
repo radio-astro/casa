@@ -7034,3 +7034,26 @@ th.rotate > div {
   margin: -60px 0 0;
   /* negative fixed header height */
 }
+
+@media all and (min-width: 800px) {
+  .fancybox-thumbs {
+    top: auto;
+    width: auto;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 95px;
+    padding: 10px 10px 5px 10px;
+    box-sizing: border-box;
+    background: rgba(0, 0, 0, 0.3);
+  }
+
+  .fancybox-show-thumbs .fancybox-inner {
+    right: 0;
+    bottom: 95px;
+  }
+
+  .pipeline-plotcommand {
+    margin: 44px 44px;
+  }
+}

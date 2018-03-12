@@ -33,12 +33,10 @@ combination whose conversion factor is in each bin.
 
             <div class="thumbnail">
             	<a href="${fullsize_relpath}"
-                	class="fancybox"
-                    title='<div class="pull-left">Receiver: ${plot.parameters['receiver']}<br>Spw: ${plot.parameters['spw']}<br></div><div class="pull-right"><a href="${fullsize_relpath}">Full Size</a></div>'
-                    data-thumbnail="${thumbnail_relpath}">
+                   data-fancybox
+                   title='<div>Receiver: ${plot.parameters['receiver']}<br>Spw: ${plot.parameters['spw']}<br></div>'>
                 	<img src="${thumbnail_relpath}"
-                        title="Click to show histrogram of Jy/K factors of spw ${plot.parameters['spw']}"
-                      	data-thumbnail="${thumbnail_relpath}">
+                         title="Click to show histrogram of Jy/K factors of spw ${plot.parameters['spw']}">
                 </a>
 
                 <div class="caption">

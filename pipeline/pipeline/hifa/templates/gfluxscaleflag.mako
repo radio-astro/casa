@@ -37,28 +37,6 @@ def num_lines(relpath):
 
 <%inherit file="t2-4m_details-base.mako"/>
 <script src="${self.attr.rsc_path}resources/js/pipeline.js"></script>
-<script>
-$(document).ready(function(){
-    $(".fancybox").fancybox({
-        type: 'image',
-        prevEffect: 'none',
-        nextEffect: 'none',
-        loop: false,
-        helpers: {
-            title: {
-                type: 'outside'
-            },
-            thumbs: {
-                width: 50,
-                height: 50,
-            }
-        },
-    	beforeShow : function() {
-        	this.title = $(this.element).attr('title');
-       	},
-    });
-});
-</script>
 
 <%block name="header" />
 

@@ -68,22 +68,6 @@ $(document).ready(function() {
         var pol = o.data("pol");
         o.data("callback", createMixedSetter(spw, ant, pol));
     });
-
-    $(".fancybox").fancybox({
-        type: 'image',
-        prevEffect: 'none',
-        nextEffect: 'none',
-        loop: false,
-        helpers: {
-            title: {
-                type: 'outside'
-            },
-            thumbs: {
-                width: 50,
-                height: 50,
-            }
-        }
-    });
 });
 </script>
 
@@ -158,13 +142,10 @@ It generates an image combined spectral data from whole antenna as well as image
 	        <div class="col-md-3">
 	            <div class="thumbnail">
 	                <a href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
-	                   class="fancybox"
-                       title='<div class="pull-left">Profile Map<br>SPW ${plot.parameters['spw']}<br>Source ${field}</div>'
-	                   rel="thumbs"
-	                   data-thumbnail="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}">
+	                   title='<div class="pull-left">Profile Map<br>SPW ${plot.parameters['spw']}<br>Source ${field}</div>'
+	                   data-fancybox="thumbs">
 	                    <img src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
-	                         title="Profile map summary for Spectral Window ${plot.parameters['spw']}"
-	                         data-thumbnail="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}">
+	                         title="Profile map summary for Spectral Window ${plot.parameters['spw']}">
 	                </a>
 	
 	                <div class="caption">
@@ -223,13 +204,10 @@ It generates an image combined spectral data from whole antenna as well as image
 	            <div class="col-md-3">
 	                <div class="thumbnail">
 	                    <a href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
-	                       class="fancybox"
 	                       title='<div class="pull-left">${plots['title']}<br>SPW ${plot.parameters['spw']}<br>Source ${field}</div>'
-	                       rel="thumbs"
-	                   	   data-thumbnail="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}">
+	                       data-fancybox="thumbs">
 	                        <img src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
-	                             title="${plots['title']} for Spectral Window ${plot.parameters['spw']}"
-	                             data-thumbnail="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}">
+	                             title="${plots['title']} for Spectral Window ${plot.parameters['spw']}">
 	                    </a>
 	
 	                    <div class="caption">

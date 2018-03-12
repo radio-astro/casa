@@ -82,25 +82,6 @@ $(document).ready(function(){
 	    o.data("callback", callbacks);
     });
 
-    $(".fancybox").fancybox({
-        type: 'image',
-        prevEffect: 'none',
-        nextEffect: 'none',
-        loop: false,
-        helpers: {
-            title: {
-                type: 'outside'
-            },
-            thumbs: {
-                width: 50,
-                height: 50,
-            }
-        },
-    	beforeShow : function() {
-        	this.title = $(this.element).attr('title');
-       	}    
-    }); 
-	
 	$('.caltable_filename').tooltip({
 	    'selector': '',
 	    'placement': 'left',

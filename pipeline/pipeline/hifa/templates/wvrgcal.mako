@@ -10,7 +10,6 @@ import pipeline.infrastructure.displays as displays
 import pipeline.infrastructure.filenamer as filenamer
 import pipeline.infrastructure.renderer.logger as logger
 import pipeline.infrastructure.renderer.htmlrenderer as hr
-import pipeline.infrastructure.renderer.sharedrenderer as sharedrenderer
 
 %>
 <%inherit file="t2-4m_details-base.mako"/>

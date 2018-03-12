@@ -192,6 +192,88 @@ pipeline.pages = pipeline.pages || function() {
             pipeline.fakeframe.load(href, onSuccess);
         };
 
+        var setFancyboxDefaults = function() {
+            $.fancybox.defaults.caption = function(instance, item) {
+                var caption;
+
+                // first try to get the override caption from the anchor itself
+                caption = $(this).data('caption');
+                if (caption !== undefined) {
+                    return caption;
+                }
+
+                // otherwise, duplicate the caption element, converting any anchors
+                caption = $(this).siblings('div.caption');
+                if (caption === undefined) {
+                    // no override or caption element.
+                    return '';
+                }
+
+                var orig_nodes = $('<div/>').html(caption.clone()).contents();
+                orig_nodes.find('a').replaceWith(function(){
+                    return $("<span>" + $(this).html() + "</span>");
+                });
+                return orig_nodes.html();
+            };
+
+            $.fancybox.defaults.thumbs.autoStart = true;
+            $.fancybox.defaults.thumbs.axis = 'x';
+
+            // Space around image, ignored if zoomed-in or viewport width is smaller than 800px
+            $.fancybox.defaults.margin = [44, 0, 22, 0];
+
+            // Should display navigation arrows at the screen edges
+            $.fancybox.defaults.arrows = true;
+
+            // Should display infobar (counter and arrows at the top)
+            $.fancybox.defaults.infobar = true;
+
+            // Should display toolbar (buttons at the top)
+            $.fancybox.defaults.toolbar = true;
+
+            // What buttons should appear in the top right corner.
+            // Buttons will be created using templates from `btnTpl` option
+            // and they will be placed into toolbar (class="fancybox-toolbar"` element)
+            $.fancybox.defaults.buttons = [
+                'slideShow',
+                'plotCommand',
+                'fullScreen',
+                // 'thumbs',
+                // 'share',
+                'download',
+                'zoom',
+                'close'
+            ];
+
+            // Open/close animation type
+            // Possible values:
+            //   false            - disable
+            //   "zoom"           - zoom images from/to thumbnail
+            //   "fade"
+            //   "zoom-in-out"
+            //
+            // $.fancybox.defaults.animationEffect = 'zoom';
+
+            // Duration in ms for open/close animation
+            $.fancybox.defaults.animationDuration = 250;
+
+            // Transition effect between slides
+            //
+            // Possible values:
+            //   false            - disable
+            //   "fade'
+            //   "slide'
+            //   "circular'
+            //   "tube'
+            //   "zoom-in-out'
+            //   "rotate'
+            //
+            $.fancybox.defaults.transitionEffect = false;
+
+            // Detect "idle" time in seconds
+            $.fancybox.defaults.idleTime = 3;
+        };
+
         innerModule.ready = function() {
             History.Adapter.bind(window, 'statechange', function(event) { // Note: We are using statechange instead of popstate
                 var state = History.getState(); // Note: We are using History.getState() instead of event.state
@@ -224,6 +306,7 @@ pipeline.pages = pipeline.pages || function() {
             });
 
             f();
+            setFancyboxDefaults();
         };
 
         return innerModule;
@@ -272,13 +355,8 @@ pipeline.pages = pipeline.pages || function() {
         var innerModule = {};
 
         innerModule.ready = function() {
-            // add on-click handler to our thumbnails to launch FancyBox with the
-            // relevant thumbnails
-            $("div.thumbnail a").click(function (evt) {
-                evt.preventDefault();
-                var target = this.href;
-                UTILS.launchFancybox(target);
-                return false;
+            $('div.thumbnail:visible > a').fancybox({
+                selector : 'div.thumbnail:visible > a'
             });
         };
 
@@ -291,32 +369,6 @@ pipeline.pages = pipeline.pages || function() {
         innerModule.ready = function() {
             // add on-click handler to our thumbnails to launch FancyBox with the
             // relevant thumbnails
-            $(".fancybox").fancybox({
-                type: 'image',
-                prevEffect: 'none',
-                nextEffect: 'none',
-                loop: false,
-                helpers: {
-                    title: {
-                        type: 'outside'
-                    },
-                    thumbs: {
-                        width: 50,
-                        height: 50,
-                    }
-                },
-                beforeShow: function () {
-                    this.title = $(this.element).attr('title');
-                }
-            });
-
-            // $("div.thumbnail a").click(function (evt) {
-            //     evt.preventDefault();
-            //     var target = this.href;
-            //     UTILS.launchFancybox(target);
-            //     return false;
-            // });
-
             $("button.replace").click(function(evt) {
                 evt.preventDefault();
 
@@ -849,7 +901,7 @@ pipeline.history = pipeline.history || (function() {
 
     module.pushState = function(title) {
         var newState = { componentState : module.getComponentState() };
-        newUrl = getUrl(newState);
+        var newUrl = getUrl(newState);
         title = title || pipeline.sidebar.getTaskName();
         History.debug("Pushing new state: " + JSON.stringify(newState));
         try {
@@ -862,7 +914,7 @@ pipeline.history = pipeline.history || (function() {
 
     module.replaceState = function(title) {
         var oldState = { componentState : module.getComponentState() };
-        newUrl = getUrl(oldState);
+        var newUrl = getUrl(oldState);
         title = title || pipeline.sidebar.getTaskName();
         History.debug("Updating current state: " + JSON.stringify(oldState));
         try {
@@ -885,51 +937,6 @@ pipeline.history = pipeline.history || (function() {
 
 UTILS = (function() {
     var module = {};
-
-    module.launchFancybox = function(target) {
-        var fullsize = [];
-        var thumbnailImg;
-        var fullsizeToThumbs = {};
-        var index = 0;
-
-        $("div.thumbnail:visible a").each(function() {
-            var mainImage = this.href; // Find Image href
-            var title = this.title; // Find Image title
-            if (mainImage == target) {
-                index = fullsize.length;
-            }
-            fullsize.push({
-                href: mainImage,
-                title: title
-            });
-            thumbnailImg = $(this).children("img:first")[0].src;
-            fullsizeToThumbs[mainImage] = thumbnailImg;
-        });
-
-        $.fancybox(fullsize, {
-            type: 'image',
-            index: index,
-            prevEffect: 'none',
-            nextEffect: 'none',
-            loop: false,
-            helpers: {
-                title: {
-                    type: 'outside'
-                },
-                thumbs: {
-                    width: 50,
-                    height: 50,
-                    source: function(current) {
-                        var href = current.href;
-                        return fullsizeToThumbs[href];
-                    }
-                }
-            },
-            afterLoad: function() {
-                $('#cmdmodal').modal();
-            }
-        });
-    };
 
     /**
      * Adds 0 left margin to the first thumbnail on each row that don't get it via CSS rules.

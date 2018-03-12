@@ -50,41 +50,15 @@ def sanitise(url):
 
 <script src="${self.attr.rsc_path}resources/js/pipeline.js"></script>
 
-<script>
-$(document).ready(function() {
-    $(".fancybox").fancybox({
-        type: 'image',
-        prevEffect: 'none',
-        nextEffect: 'none',
-        loop: false,
-        helpers: {
-            title: {
-                type: 'outside'
-            },
-            thumbs: {
-                width: 50,
-                height: 50,
-            }
-        }
-    });
-});
-</script>
-
-
 <%block name="title">Flux calibration database service</%block>
 
-
-
-
 <h2>Results</h2>
-
 
 <p>Flux calibration database connection</p>
 
 <p><font color="red">Red columns</font> are from the ms and are used as inputs.</p>
 <p><b>Black values</b> are from the DB flux service response.</p>
 <p><font color="blue">Blue values</font> are from Todd Hunter's analysisUtils (au).</p>
-
 
 <table class="table table-bordered table-striped" summary="Flux calibration database">
 	<caption>Results from database request</caption>

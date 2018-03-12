@@ -15,7 +15,7 @@ total_keys = {
 
 def template_agent_header1(agent):
 	span = 'col' if agent in ('template') else 'row'
-	return '<th %sspan=2>%s</th>' % (span, agent_description[agent])
+	return '<th %sspan="2">%s</th>' % (span, agent_description[agent])
 
 def template_agent_header2(agent):
 	if agent in ('template'):
@@ -33,25 +33,6 @@ def get_template_agents(agents):
 <script src="${self.attr.rsc_path}resources/js/pipeline.js"></script>
 <script>
 $(document).ready(function(){
-    $(".fancybox").fancybox({
-        type: 'image',
-        prevEffect: 'none',
-        nextEffect: 'none',
-        loop: false,
-        helpers: {
-            title: {
-                type: 'outside'
-            },
-            thumbs: {
-                width: 50,
-                height: 50
-            }
-        },
-    	beforeShow : function() {
-        	this.title = $(this.element).attr('title');
-       	}
-    });
-
     $("th.rotate").each(function(){ $(this).height($(this).find('span').width() + 8) });
 });
 </script>

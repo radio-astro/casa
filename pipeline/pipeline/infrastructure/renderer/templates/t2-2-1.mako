@@ -2,11 +2,8 @@
 import os
 import pipeline.infrastructure.renderer.htmlrenderer as hr
 %>
-<script>
-$(document).ready(function() {
-	$(".fancybox").fancybox();
-});
-</script>
+<html>
+<body>
 
 <div class="page-header">
 	<h1>Spatial Setup Details<button class="btn btn-default pull-right" onclick="javascript:window.history.back();">Back</button></h1>
@@ -97,7 +94,7 @@ $(document).ready(function() {
 	<li>
 		<div class="thumbnail">
 			<a href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
-			   class="fancybox">
+			   data-fancybox>
 				<img src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
 					 title="Mosaic Pointings for ${source.name} in ${ms.basename}"
 					 alt="Mosaic Pointings for ${source.name} in ${ms.basename}" />
@@ -111,3 +108,6 @@ $(document).ready(function() {
 	% endfor
 </ul>
 % endif
+
+</body>
+</html>
