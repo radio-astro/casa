@@ -21,6 +21,9 @@ def _get_imaging_mode(context, result):
         pass
     except KeyError:
         pass
+    except TypeError:
+        # TypeError: argument of type 'NoneType' is not iterable
+        pass
 
     return None
 
