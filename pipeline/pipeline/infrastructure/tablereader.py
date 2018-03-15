@@ -315,12 +315,18 @@ class MeasurementSetReader(object):
             with casatools.MSReader(ms.name) as openms:
                 for dd in ms.data_descriptions:
                     openms.selectinit(reset=True)
-                    openms.selectinit(datadescid=dd.id)
-                    ms_info = openms.getdata(['axis_info','time'])
+                    # CAS-11207: from ~CASA 5.3pre89 onwards, getdata fails if
+                    # the data selection does not select any datadd is
+                    # missing. To compensate for this, selectinit now returns
+                    # a boolean that indicates the status of data selection
+                    # (True = selection contains data); this can be used to
+                    # check that the subsequent getdata call will succeed.
+                    if openms.selectinit(datadescid=dd.id):
+                        ms_info = openms.getdata(['axis_info','time'])
 
-                    dd.obs_time = numpy.mean(ms_info['time'])
-                    dd.chan_freq = ms_info['axis_info']['freq_axis']['chan_freq'].tolist()
-                    dd.corr_axis = ms_info['axis_info']['corr_axis'].tolist()
+                        dd.obs_time = numpy.mean(ms_info['time'])
+                        dd.chan_freq = ms_info['axis_info']['freq_axis']['chan_freq'].tolist()
+                        dd.corr_axis = ms_info['axis_info']['corr_axis'].tolist()
     
             # now back to pure MSMD calls
             LOG.info('Linking fields to states...')
