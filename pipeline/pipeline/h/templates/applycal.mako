@@ -61,7 +61,6 @@ def rx_for_plot(plot):
 %>
 <%inherit file="t2-4m_details-base.mako"/>
 
-<script src="${self.attr.rsc_path}resources/js/pipeline.js"></script>
 <script>
 $(document).ready(function(){
 	$('.caltable_filename').tooltip({
@@ -287,7 +286,6 @@ def format_spwmap(spwmap, scispws):
 				  data_field="${True}"
 				  data_spw="${True}"
                   data_vis="${True}"
-                  transmission="${transmission_plots}"
 				  title_id="calampvsfreq"
                   break_rows_by="intent,field"
                   sort_row_by="baseband,spw">
@@ -299,13 +297,10 @@ def format_spwmap(spwmap, scispws):
 	<%def name="preamble()">
 		Plots of calibrated amplitude vs frequency for all antennas and
 		correlations, coloured by antenna. The atmospheric transmission
-        for each spectral window is displayed above each plot, calculated
-        using data from the first scan of each calibrator type.
+        for each spectral window is overlayed on each plot in pink.
 	</%def>
 
 	<%def name="mouseover(plot)">Click to show amplitude vs frequency for spw ${plot.parameters['spw']}</%def>
-
-	<%def name="transmission_mouseover(plot)">Click to show atmospheric transmission for spw ${plot.parameters['spw']}</%def>
 
 	<%def name="fancybox_caption(plot)">
 		Receiver: ${utils.commafy(plot.parameters['receiver'], quotes=False)}<br>
@@ -587,7 +582,6 @@ def format_spwmap(spwmap, scispws):
 				  data_spw="${True}"
 				  data_field="${True}"
                   data_vis="${True}"
-                  transmission="${transmission_plots}"
 				  title_id="scicalampvsfreq"
                   break_rows_by="intent,field"
                   sort_row_by="baseband,spw">
@@ -602,8 +596,7 @@ def format_spwmap(spwmap, scispws):
 		science field in each measurement set. The science field displayed
 		here is the one with the brightest average amplitude over all spectral
 		windows. The atmospheric transmission for each spectral window is
-        displayed above each plot, calculated using data from the first scan
-        with science target intent in each measurement set.</p>
+        overlayed on each plot in pink.</p>
 
 		<p>Note: due to a technical problem with visstat, the science field
 		displayed here not the brightest field for the source but the first 
@@ -611,8 +604,7 @@ def format_spwmap(spwmap, scispws):
 	% else: #Single dish (source = field, so far)
 		<p>Calibrated amplitude vs frequency plots of each source in each 
 		measurement set.The atmospheric transmission for each spectral window is
-        displayed above each plot, calculated using data from the first scan
-        with science target intent in each measurement set.</p>
+        overlayed on each plot in pink.</p>
 	% endif
 		
 		<p>Data are plotted for all antennas and correlations, with different
@@ -620,8 +612,6 @@ def format_spwmap(spwmap, scispws):
 	</%def>
 
 	<%def name="mouseover(plot)">Click to show amplitude vs frequency for spw ${plot.parameters['spw']}</%def>
-
-    <%def name="transmission_mouseover(plot)">Click to show atmospheric transmission for spw ${plot.parameters['spw']}</%def>
 
 	<%def name="fancybox_caption(plot)">
 		Receiver: ${utils.commafy(plot.parameters['receiver'], quotes=False)}<br>

@@ -606,7 +606,8 @@ class AmpVsFrequencySummaryChart(SpwSummaryChart):
             'plotrange': [0, 0, 0, 0],
             'correlation': '',
             'coloraxis': 'antenna1',
-            'overwrite': True
+            'overwrite': True,
+            'showatm': True,
         }
         plot_args.update(kwargs)
 
@@ -741,7 +742,8 @@ class AmpVsFrequencyDetailChart(FieldSpwAntDetailChart):
             'avgantenna': False,
             'plotrange': [0, 0, 0, 0],
             'coloraxis': 'corr',
-            'overwrite': True
+            'overwrite': True,
+            'showatm': True,
         }
         plot_args.update(**overrides)
 
@@ -964,7 +966,8 @@ class RealVsFrequencySummaryChart(SpwSummaryChart):
             'plotrange': [0, 0, 0, 0],
             'correlation': '',
             'coloraxis': 'antenna1',
-            'overwrite': True
+            'overwrite': True,
+            'showatm': True
         }
         plot_args.update(kwargs)
 

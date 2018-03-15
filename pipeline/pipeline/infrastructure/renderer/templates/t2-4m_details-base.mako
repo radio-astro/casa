@@ -52,14 +52,14 @@ def format_notification(tr_class, alert, msg, icon_class=None):
     return '<tr class="%s"><td>%s<strong>%s</strong> %s</td></tr>' % (tr_class, icon, alert, msg)
 %>
 <html>
+<head>
     <script>
         lazyload();
     </script>
 </head>
 
 <%def name="plot_group(plot_dict, url_fn, data_spw=False, data_field=False, data_baseband=False, data_tsysspw=False,
-                       data_vis=False, title_id=None, transmission=None, rel_fn=None, break_rows_by='',
-                       sort_row_by='')">
+                       data_vis=False, title_id=None, rel_fn=None, break_rows_by='', sort_row_by='')">
 % if plot_dict:
     % if title_id:
         <h3 id="${title_id}" class="jumptarget">${caller.title()}</h3>
@@ -80,11 +80,6 @@ def format_notification(tr_class, alert, msg, icon_class=None):
                 subpage_exists = os.path.exists(subpage_abspath)
             else:
                 subpage_exists = false
-
-            if transmission:
-                ms_transmission_plots = transmission.get(ms, {})
-            else:
-                ms_transmission_plots = {}
         %>
 
         <h4>
@@ -120,59 +115,9 @@ def format_notification(tr_class, alert, msg, icon_class=None):
                 <%
                     fullsize_relpath = os.path.relpath(plot.abspath, pcontext.report_dir)
                     thumbnail_relpath = os.path.relpath(plot.thumbnail, pcontext.report_dir)
-
-                    if intent in ms_transmission_plots:
-                        transmission_plots = [p for p in ms_transmission_plots.get(intent, [])
-                                              if p.parameters['spw'] == plot.parameters['spw']]
-
-                        if intent == 'TARGET':
-                            transmission_plots = [p for p in transmission_plots
-                                                  if p.parameters['field'] == plot.parameters['field']]
-
-                        if len(transmission_plots) is 1:
-                            transmission_plot = transmission_plots[0]
-                            if os.path.exists(transmission_plot.thumbnail):
-                                transmission_fullsize_relpath = os.path.relpath(transmission_plot.abspath, pcontext.report_dir)
-                                transmission_thumbnail_relpath = os.path.relpath(transmission_plot.thumbnail, pcontext.report_dir)
-                            else:
-                                transmission_plot = False
-                    else:
-                        transmission_plot = False
                 %>
 
                 <div class="thumbnail">
-                    % if transmission_plot:
-                    <a href="${transmission_fullsize_relpath}"
-                       data-fancybox="${'transmission-%s-%s'.format(ms, intent)}"
-                       % if hasattr(caller, 'fancybox_caption'):
-                       data-caption="${caller.fancybox_caption(transmission_plot).strip()}"
-                       % endif
-                       data-plotCommandTarget="#plotcmd-${hash(transmission_plot.abspath)}">
-                        <img class="lazyload"
-                             data-src="${transmission_thumbnail_relpath}"
-                             % if hasattr(caller, 'transmission_mouseover'):
-                             title="${caller.transmission_mouseover(transmission_plot)}"
-                             % endif
-                             >
-                    </a>
-                    <br>
-
-                    <div id="plotcmd-${hash(transmission_plot.abspath)}" class="modal-content pipeline-plotcommand" style="display:none;">
-                        <div class="modal-header">
-                            <button type="button" class="close" data-fancybox-close aria-label="Close">
-                                <span aria-hidden="true">&times;</span>
-                            </button>
-                            <h4 class="modal-title">Plot Command</h4>
-                        </div>
-                        <div class="modal-body" data-selectable="true">
-                            <p>${rendererutils.get_plot_command_markup(pcontext, transmission_plot.command)}</p>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-default" data-fancybox-close>Close</button>
-                        </div>
-                    </div>
-                    % endif
-
                     <a href="${fullsize_relpath}"
                        % if rel_fn:
                            data-fancybox="${rel_fn(plot)}"

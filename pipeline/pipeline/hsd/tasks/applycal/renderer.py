@@ -71,27 +71,12 @@ class T2_4MDetailsSDApplycalRenderer(T2_4MDetailsApplycalRenderer,
             'filesizes': filesizes
         })
 
-        transmission_plots = self.create_transmission_plots(context, result)
-        
-        # # these dicts map vis to the hrefs of the detail pages
-        # amp_vs_time_subpages = {}
-
-        # amp_vs_time_summary_plots, amp_vs_time_subpages = self.create_plots(
-        #     context,
-        #     result,
-        #     applycal.AmpVsTimeSummaryChart,
-        #     ['TARGET']
-        # )
-
         # CAS-5970: add science target plots to the applycal page
         (science_amp_vs_freq_summary_plots, uv_max) = self.create_single_dish_science_plots(context, result)
 
         ctx.update({
-#            'amp_vs_time_plots': amp_vs_time_summary_plots,
             'science_amp_vs_freq_plots': science_amp_vs_freq_summary_plots,
             'uv_max': uv_max,
-#            'amp_vs_time_subpages': amp_vs_time_subpages,
-            'transmission_plots': transmission_plots
         })
         
     def create_single_dish_science_plots(self, context, results):
