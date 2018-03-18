@@ -10,7 +10,7 @@ LOG = infrastructure.get_logger(__name__)
 
 
 class ALMARestoreDataInputs(restoredata.RestoreDataInputs):
-    asis = vdp.VisDependentProperty('SBSummary ExecBlock Antenna Station Receiver Source CalAtmosphere CalWVR')
+    asis = vdp.VisDependentProperty(default='SBSummary ExecBlock Antenna Station Receiver Source CalAtmosphere CalWVR')
 
     def __init__(self, context, copytoraw=None, products_dir=None, rawdata_dir=None, output_dir=None, session=None,
                  vis=None, bdfflags=None, lazy=None, asis=None, ocorr_mode=None):
@@ -28,6 +28,7 @@ class ALMARestoreData(restoredata.RestoreData):
     # now but should simplify parameters in future
     def _do_importasdm(self, sessionlist, vislist):
         inputs = self.inputs
+
         container = vdp.InputsContainer(almaimportdata.ALMAImportData, inputs.context, vis=vislist, session=sessionlist,
                                         save_flagonline=False, lazy=inputs.lazy, bdfflags=inputs.bdfflags,
                                         dbservice=False, asis=inputs.asis, ocorr_mode=inputs.ocorr_mode)
