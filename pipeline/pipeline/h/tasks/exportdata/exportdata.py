@@ -302,7 +302,8 @@ class ExportData(basetask.StandardTaskTemplate):
             inputs.exportmses,
             [os.path.basename(image) for image in calimages_fitslist],
             [os.path.basename(image) for image in targetimages_fitslist])
-        casa_pipe_manifest = self._export_pipe_manifest(inputs.context, oussid,
+        #casa_pipe_manifest = self._export_pipe_manifest(inputs.context, oussid,
+        casa_pipe_manifest = self._export_pipe_manifest(inputs.context, prefix,
             'pipeline_manifest.xml', inputs.products_dir, pipemanifest)
         result.manifest=os.path.basename(casa_pipe_manifest)
 
