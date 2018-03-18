@@ -15,8 +15,8 @@ LOG = infrastructure.get_logger(__name__)
 
 
 class SDRestoreDataInputs(restoredata.RestoreDataInputs):
-    asis = vdp.VisDependentProperty('SBSummary ExecBlock Antenna Station Receiver Source CalAtmosphere CalWVR')
-    ocorr_mode = vdp.VisDependentProperty('ao')
+    asis = vdp.VisDependentProperty(default='SBSummary ExecBlock Antenna Station Receiver Source CalAtmosphere CalWVR')
+    ocorr_mode = vdp.VisDependentProperty(default='ao')
 
     def __init__(self, context, copytoraw=None, products_dir=None, rawdata_dir=None, output_dir=None, session=None,
                  vis=None, bdfflags=None, lazy=None, asis=None, ocorr_mode=None):
