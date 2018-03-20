@@ -7,8 +7,6 @@ import pipeline.infrastructure.renderer.htmlrenderer as hr
 
 <%block name="title">Flux density bootstrapping and spectral index fitting</%block>
 
-<script src="${self.attr.rsc_path}resources/js/pipeline.js"></script>
-
 <p>Make a gain table that includes gain and opacity corrections for final amp cal and for flux density bootstrapping.</p>
 <p>Fit the spectral index of calibrators with a power-law and put the fit in the model column.</p>
 

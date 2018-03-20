@@ -48,8 +48,6 @@ def spws_for_baseband(plot):
 %>
 <%inherit file="t2-4m_details-base.mako"/>
 
-<script src="${self.attr.rsc_path}resources/js/pipeline.js"></script>
-
 <%block name="title">Set model flux</%block>
 
 <h2>Results</h2>

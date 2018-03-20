@@ -7,8 +7,6 @@ import pipeline.infrastructure.renderer.htmlrenderer as hr
 
 <%block name="title">Semi-final delay and bandpass calibrations</%block>
 
-<script src="${self.attr.rsc_path}resources/js/pipeline.js"></script>
-
 <p>Perform semi-final delay and bandpass calibrations, as the spectral index
 of the bandpass calibrator has not yet been determined.</p>
 

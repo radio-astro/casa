@@ -9,7 +9,6 @@ import os
 import pydoc
 import re
 import shutil
-import zipfile
 
 import mako
 import pkg_resources
@@ -224,9 +223,14 @@ class RendererBase(object):
         if os.path.exists(path) and not cls.rerender(context):
             return
 
+        path_to_resources_pkg = pkg_resources.resource_filename(resources.__name__, '')
+        path_to_js = os.path.join(path_to_resources_pkg, 'js', 'pipeline_common.min.js')
+        use_minified_js = os.path.exists(path_to_js)
+
         with cls.get_file(context) as fileobj:
             template = weblog.TEMPLATE_LOOKUP.get_template(cls.template)
             display_context = cls.get_display_context(context)
+            display_context['use_minified_js'] = use_minified_js
             fileobj.write(template.render(**display_context))
 
 
@@ -1488,7 +1492,11 @@ class T2_4MDetailsRenderer(object):
         LOG.trace('Path for %s is %s', result.__class__.__name__, path)
         force_rerender = getattr(renderer, 'always_rerender', False)
         debug_cls = renderer.__class__ in DEBUG_CLASSES
-        force_rerender = force_rerender or debug_cls # or result.stage_number in (9,)
+
+        rerender_stages = [int(s)
+                           for s in os.environ.get('WEBLOG_RERENDER_STAGES', '').split(',')
+                           if s != '']
+        force_rerender = force_rerender or debug_cls or result.stage_number in rerender_stages
 
         if force_rerender:
             LOG.trace('Forcing rerendering for %s', renderer.__class__.__name__)
@@ -1664,45 +1672,6 @@ class WebLogGenerator(object):
                         dst, 
                         symlinks=False, 
                         ignore=ignore_fn)
-
-        # unzip fancybox to output directory
-        distfile = os.path.join(src, 'fancybox-master.zip')
-        WebLogGenerator.unpack_fancybox(distfile, outdir)
-
-        distfile = os.path.join(src, 'bootstrap-3.3.7-dist.zip')
-        WebLogGenerator.unpack_bootstrap(distfile, outdir)
-
-    @staticmethod
-    def unpack_fancybox(distfile, outdir):
-        js_output_dir = os.path.join(outdir, 'js')
-        css_output_dir = os.path.join(outdir, 'css')
-
-        with zipfile.ZipFile(distfile, 'r') as z:
-            for zip_info in z.infolist():
-                if zip_info.filename.endswith('jquery.fancybox.js'):
-                    zip_info.filename = os.path.basename(zip_info.filename)
-                    z.extract(zip_info, js_output_dir)
-                elif zip_info.filename.endswith('jquery.fancybox.css'):
-                    zip_info.filename = os.path.basename(zip_info.filename)
-                    z.extract(zip_info, css_output_dir)
-
-    @staticmethod
-    def unpack_bootstrap(distfile, outdir):
-        js_output_dir = os.path.join(outdir, 'js')
-        css_output_dir = os.path.join(outdir, 'css')
-        fonts_output_dir = os.path.join(outdir, 'fonts')
-
-        with zipfile.ZipFile(distfile, 'r') as z:
-            for zip_info in z.infolist():
-                if zip_info.filename.endswith('bootstrap.js'):
-                    zip_info.filename = os.path.basename(zip_info.filename)
-                    z.extract(zip_info, js_output_dir)
-                elif zip_info.filename.endswith('bootstrap.css'):
-                    zip_info.filename = os.path.basename(zip_info.filename)
-                    z.extract(zip_info, css_output_dir)
-                elif 'glyphicons' in zip_info.filename:
-                    zip_info.filename = os.path.basename(zip_info.filename)
-                    z.extract(zip_info, fonts_output_dir)
 
     @staticmethod
     def render(context):

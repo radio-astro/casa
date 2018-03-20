@@ -8,8 +8,6 @@ import os
 
 <%block name="title">Single-Dish Sky Calibration</%block>
 
-<script src="${self.attr.rsc_path}resources/js/pipeline.js"></script>
-
 <p>This task generates a sky calibration table, a collection of OFF spectra for single dish data calibration.</p>
 
 <h2>Contents</h2>

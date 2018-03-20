@@ -7,8 +7,6 @@ import pipeline.infrastructure.renderer.htmlrenderer as hr
 
 <%block name="title">Final calibration tables</%block>
 
-<script src="${self.attr.rsc_path}resources/js/pipeline.js"></script>
-
 <p>Make the final calibration tables.</p>
 
 % for ms in summary_plots:

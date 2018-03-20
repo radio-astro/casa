@@ -7,11 +7,11 @@ import pipeline.infrastructure.renderer.htmlrenderer as hr
 
 <%block name="title">Make Cutout Images</%block>
 
-<script src="${self.attr.rsc_path}resources/js/pipeline.js"></script>
-
+% if not use_minified_js:
 <link href="${self.attr.rsc_path}resources/css/select2.css" rel="stylesheet"/>
 <link href="${self.attr.rsc_path}resources/css/select2-bootstrap.css" rel="stylesheet"/>
-<script src="${self.attr.rsc_path}resources/js/select2.min.js"></script>
+<script src="${self.attr.rsc_path}resources/js/select2.js"></script>
+% endif
 
 <script>
 $(document).ready(function() {
@@ -19,7 +19,7 @@ $(document).ready(function() {
     var createSpwSetter = function(spw) {
         return function() {
             // trigger a change event, otherwise the filters are not changed
-            $("#select-spw").select2("val", [spw]).trigger("change");
+            $("#select-spw").val([spw]).trigger("change");
         };
     };
 

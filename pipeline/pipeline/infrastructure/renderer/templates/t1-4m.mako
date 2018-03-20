@@ -8,9 +8,6 @@ import pipeline.infrastructure.utils as utils
 %>
 <%inherit file="base.mako"/>
 
-<!-- include pipeline JS for access to UTILS module -->
-<script src="${self.attr.rsc_path}resources/js/pipeline.js"></script>
-
 <script>
 $(document).ready(function() {
 	pipeline.pages.t1_4m.ready();

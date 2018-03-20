@@ -4,9 +4,6 @@ import os
 import pipeline.infrastructure.renderer.htmlrenderer as hr
 %>
 
-<!-- include required files and styles for histograms -->
-<script src="${self.attr.rsc_path}resources/js/pipeline.js"></script>
-
 <div class="page-header">
 	<h1>Test Delay Plots<button class="btn btn-default pull-right" onClick="javascript:window.history.back();">Back</button></h1>
 </div>

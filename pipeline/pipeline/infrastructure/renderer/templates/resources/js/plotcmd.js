@@ -1,10 +1,7 @@
 // ==========================================================================
 //
 // Show CASA plot command
-// Enables slideshow functionality
-//
-// Example of usage:
-// $.fancybox.getInstance().SlideShow.start()
+// Enables overlay showing plot command
 //
 // ==========================================================================
 ;(function (document, $) {
@@ -130,7 +127,7 @@
                     type : 'inline',
                     opts : {
                         smallBtn : false,
-                        buttons : false,
+                        buttons : false
                     }
                 });
             }

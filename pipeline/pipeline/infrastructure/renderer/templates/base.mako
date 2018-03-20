@@ -10,42 +10,39 @@ import pipeline.infrastructure.renderer.htmlrenderer as hr
 <head>
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
-<%block name="head">
+    <%block name="head">
+        % if use_minified_js:
+            <script src="${self.attr.rsc_path}resources/js/pipeline_common.min.js"></script>
+            <link rel="stylesheet" href="${self.attr.rsc_path}resources/css/all.min.css" type="text/css"/>
 
-<!-- Add jQuery library -->
-<script src="${self.attr.rsc_path}resources/js/jquery-3.3.1.js"></script>
+        % else:
+            <!-- Add jQuery library -->
+            <script src="${self.attr.rsc_path}resources/js/jquery-3.3.1.js"></script>
+            <script src="${self.attr.rsc_path}resources/js/bootstrap.js"></script>
 
-<!-- bootstrap 3 -->
-<!-- 
-<link href="${self.attr.rsc_path}resources/css/bootstrap.min.css" rel="stylesheet">
- -->
-<link href="${self.attr.rsc_path}resources/css/pipeline.min.css" rel="stylesheet">
-<script src="${self.attr.rsc_path}resources/js/bootstrap.js"></script>
-<!-- for now, adopt the bootstrap 2 theme  -->
+            <!-- Add lazy image loading library -->
+            <script src="${self.attr.rsc_path}resources/js/lazyload.js"></script>
 
-<link rel="stylesheet" href="${self.attr.rsc_path}resources/css/jquery.fancybox.css" type="text/css" media="screen" />
-<script src="${self.attr.rsc_path}resources/js/jquery.fancybox.js"></script>
-<script src="${self.attr.rsc_path}resources/js/plotcmd.js"></script>
+            <!--  Add purl-JS URL parsing extension -->
+            <script src="${self.attr.rsc_path}resources/js/purl.js"></script>
 
-<!-- Add lazy image loading library -->
-<script src="${self.attr.rsc_path}resources/js/lazyload.js"></script>
+            <!-- Add fancybox and pipeline fancybox extension -->
+            <link rel="stylesheet" href="${self.attr.rsc_path}resources/css/jquery.fancybox.css" type="text/css"
+                  media="screen"/>
+            <script src="${self.attr.rsc_path}resources/js/jquery.fancybox.js"></script>
+            <script src="${self.attr.rsc_path}resources/js/plotcmd.js"></script>
 
-<link rel="stylesheet" href="${self.attr.rsc_path}resources/${self.attr.css_file}" type="text/css" media="screen" />
- 
-<!--  Add purl-JS URL parsing extension -->
-<script src="${self.attr.rsc_path}resources/js/purl.js"></script>
+            <!--  Add image holder library for missing plots -->
+            <script src="${self.attr.rsc_path}resources/js/holder.js"></script>
 
-<!--  add FontAwesome -->
-<link rel="stylesheet" href="${self.attr.rsc_path}resources/css/font-awesome.min.css">
+            <!--  add FontAwesome -->
+            <link rel="stylesheet" href="${self.attr.rsc_path}resources/css/font-awesome.css">
 
-<!--  Add image holder library for missing plots -->
-<script src="${self.attr.rsc_path}resources/js/holder.js"></script>
+            <script src="${self.attr.rsc_path}resources/js/pipeline.js"></script>
+            <link href="${self.attr.rsc_path}resources/css/pipeline.css" rel="stylesheet" type="text/css">
 
-<!-- add History.js for HTML5 history manipulation -->
-<script src="${self.attr.rsc_path}resources/js/history.js"></script>
-<script src="${self.attr.rsc_path}resources/js/history.adapter.jquery.js"></script>
-
-</%block>
+        % endif
+    </%block>
 
 <title>
 % if pcontext.project_summary.proposal_code != '':

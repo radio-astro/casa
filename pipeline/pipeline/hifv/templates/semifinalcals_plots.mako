@@ -4,8 +4,6 @@ import os
 import pipeline.infrastructure.renderer.htmlrenderer as hr
 %>
 
-<script src="${self.attr.rsc_path}resources/js/pipeline.js"></script>
-
 <div class="page-header">
 	<h1>Semi-finalcals ${plots[0].parameters['type'].title()} Plots<button class="btn btn-default pull-right" onClick="javascript:window.history.back();">Back</button></h1>
 </div>

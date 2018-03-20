@@ -7,8 +7,6 @@ import pipeline.infrastructure.renderer.htmlrenderer as hr
 
 <%block name="title">Linfeedpolcal</%block>
 
-<script src="${self.attr.rsc_path}resources/js/pipeline.js"></script>
-
 <script>
 $(document).ready(function() {
     // return a function that sets the SPW text field to the given spw

@@ -40,10 +40,10 @@ pipeline.pages = pipeline.pages || function() {
         var innerModule = {};
 
         innerModule.ready = function() {
-            History.Adapter.bind(window, 'statechange', function(event) { // Note: We are using statechange instead of popstate
-                var state = History.getState(); // Note: We are using History.getState() instead of event.state
-                History.debug("statechange: " + JSON.stringify(state.data));
-                pipeline.history.setComponentState(state.data["componentState"]);
+            $(window).on("popstate", function(event) { // Note: We are using statechange instead of popstate
+                var state = window.history.state; // Note: We are using History.getState() instead of event.state
+                // console.log("popstate: " + JSON.stringify(state));
+                pipeline.history.setComponentState(state["componentState"]);
             });
 
             pipeline.appContainer.redirectPreAnchorTarget();
@@ -86,13 +86,13 @@ pipeline.pages = pipeline.pages || function() {
         };
 
         innerModule.ready = function() {
-            History.Adapter.bind(window, 'statechange', function(event) { // Note: We are using statechange instead of popstate
-                var state = History.getState(); // Note: We are using History.getState() instead of event.state
-                History.debug("statechange: " + JSON.stringify(state.data));
-                pipeline.history.setComponentState(state.data["componentState"]);
+            $(window).on("popstate", function(event) { // Note: We are using statechange instead of popstate
+                var state = window.history.state; // Note: We are using History.getState() instead of event.state
+                // console.log("popstate: " + JSON.stringify(state));
+                pipeline.history.setComponentState(state["componentState"]);
             });
 
-            $('ul.nav-sidebar li a').click(function(evt) {
+            $('ul.nav-sidebar li a').on("click", function(evt) {
                 evt.preventDefault();
 
                 pipeline.history.replaceState();
@@ -275,13 +275,13 @@ pipeline.pages = pipeline.pages || function() {
         };
 
         innerModule.ready = function() {
-            History.Adapter.bind(window, 'statechange', function(event) { // Note: We are using statechange instead of popstate
-                var state = History.getState(); // Note: We are using History.getState() instead of event.state
-                History.debug("statechange: " + JSON.stringify(state.data));
-                pipeline.history.setComponentState(state.data["componentState"]);
+            $(window).on("popstate", function(event) { // Note: We are using statechange instead of popstate
+                var state = window.history.state; // Note: We are using History.getState() instead of event.state
+                // console.log("popstate: " + JSON.stringify(state));
+                pipeline.history.setComponentState(state["componentState"]);
             });
 
-            $("ul.nav-sidebar li a").click(function(evt) {
+            $("ul.nav-sidebar li a").on("click", function(evt) {
                 evt.preventDefault();
 
                 pipeline.history.replaceState();
@@ -323,7 +323,7 @@ pipeline.pages = pipeline.pages || function() {
                 });
             });
 
-            $("li.menu-item a.replace").click(function(evt) {
+            $("li.menu-item a.replace").on("click", function(evt) {
                 evt.preventDefault();
 
                 // take a snapshot of the current state so we can restore the page on
@@ -354,9 +354,9 @@ pipeline.pages = pipeline.pages || function() {
     module.detail_plots = function() {
         var innerModule = {};
 
-        innerModule.ready = function() {
+        innerModule.ready = function () {
             $('div.thumbnail:visible > a').fancybox({
-                selector : 'div.thumbnail:visible > a'
+                selector: 'div.thumbnail:visible > a'
             });
 
             lazyload();
@@ -371,7 +371,7 @@ pipeline.pages = pipeline.pages || function() {
         innerModule.ready = function() {
             // add on-click handler to our thumbnails to launch FancyBox with the
             // relevant thumbnails
-            $("button.replace").click(function(evt) {
+            $("button.replace").on("click", function(evt) {
                 evt.preventDefault();
 
                 // take a snapshot of the current state so we can restore the page on
@@ -557,7 +557,7 @@ pipeline.appContainer = pipeline.appContainer || (function() {
     module.redirectPreAnchorTarget = function() {
         var target = module.getSelector();
 
-        $(target).find("a.replace-pre").click(function(evt) {
+        $(target).find("a.replace-pre").on("click", function(evt) {
             evt.preventDefault();
 
             // take a snapshot of the current state so we can restore the page on
@@ -650,7 +650,7 @@ pipeline.msselector = pipeline.msselector || (function() {
     };
 
     /* Return true if the selector offers more than one choice */
-    holdsMultipleAnchors = function() {
+    var holdsMultipleAnchors = function() {
         var numAnchors = $(module.getSelector() + " a.replace").length;
         return (numAnchors > 1);
     };
@@ -686,14 +686,14 @@ pipeline.msselector = pipeline.msselector || (function() {
         setSelectedLabel(state["selected"]);
     };
 
-    setSelectedLabel = function(text) {
+    var setSelectedLabel = function(text) {
         // set the 'currently viewing MS123' text
         selected = text;
         var label = "Currently viewing " + selected;
         $("#container-active").text(label);
     };
 
-    getTargetAnchor = function(targetText) {
+    var getTargetAnchor = function(targetText) {
         var targetAnchor;
 
         $("li.menu-item a.replace").each(function(k,v) {
@@ -766,20 +766,43 @@ pipeline.detailsframe = pipeline.detailsframe || (function() {
         var d = {};
         var getId = function(o) { return o.id; };
 
-        $("select.select2").each(function() {
-            var selected = $(this).select2("data").map(getId);
-            d[this.id] = selected;
+        $("select.select2").each(function(i, obj) {
+            // do not try to get selection before select2 is activated
+            if ($(obj).hasClass("select2-hidden-accessible")) {
+                var selected = $(obj).select2("data").map(getId);
+                d[obj.id] = selected;
+            }
         });
 
         return d;
     };
 
-    module.setFilters = function(state) {
-        for (var key in state) {
-            if (state.hasOwnProperty(key)) {
-                $("#" + key).each(function() { $(this).select2("val", state[key]).trigger("change") });
+    module.setFilters = function (state) {
+        // select2 must be activated before filters can be set, but select2
+        // can only safely be initialised once the DOM is ready
+        $(document).ready(function () {
+            module.initSelect2();
+
+            for (var key in state) {
+                if (state.hasOwnProperty(key))
+                    $("#" + key).each(function (i, obj) {
+                        $(obj).val(state[key]).trigger("change");
+                    });
             }
-        }
+        });
+    };
+
+    module.initSelect2 = function () {
+        $('select.select2').each(function(i, obj) {
+            if (!$(obj).hasClass("select2-hidden-accessible")) {
+                $(obj).select2({
+                    theme: "bootstrap"
+                });
+                $(obj).on("change", function () {
+                    pipeline.history.replaceState();
+                });
+            }
+        });
     };
 
     module.addPreMarkup = function(pageTitle) {
@@ -865,7 +888,7 @@ pipeline.history = pipeline.history || (function() {
 //	module.replaceState();
 //});
 
-    History.options.debug = true;
+    // History.options.debug = false;
 
     var module = {};
     var manipulatingState = false;
@@ -889,7 +912,7 @@ pipeline.history = pipeline.history || (function() {
         // updating the history to reflect the current component state would
         // trigger an event, which would trigger a setComponentState.
         if (manipulatingState) {
-            History.debug("Bypassing setComponentState");
+            // console.log("Bypassing setComponentState");
             return;
         }
 
@@ -907,10 +930,12 @@ pipeline.history = pipeline.history || (function() {
         var newState = { componentState : module.getComponentState() };
         var newUrl = getUrl(newState);
         title = title || pipeline.sidebar.getTaskName();
-        History.debug("Pushing new state: " + JSON.stringify(newState));
+        // console.log("Pushing new state: " + JSON.stringify(newState));
         try {
             manipulatingState = true;
-            History.pushState(newState, title, newUrl);
+            window.history.pushState(newState, title, newUrl);
+        } catch (err) {
+            // console.log("Oops: " + err);
         } finally {
             manipulatingState = false;
         }
@@ -920,10 +945,12 @@ pipeline.history = pipeline.history || (function() {
         var oldState = { componentState : module.getComponentState() };
         var newUrl = getUrl(oldState);
         title = title || pipeline.sidebar.getTaskName();
-        History.debug("Updating current state: " + JSON.stringify(oldState));
+        // console.log("Updating current state: " + JSON.stringify(oldState));
         try {
             manipulatingState = true;
-            History.replaceState(oldState, title, newUrl);
+            window.history.replaceState(oldState, title, newUrl);
+        } catch (err) {
+            // console.log("Oops: " + err);
         } finally {
             manipulatingState = false;
         }
@@ -939,7 +966,7 @@ pipeline.history = pipeline.history || (function() {
 })();
 
 
-UTILS = (function() {
+var UTILS = (function() {
     var module = {};
 
     /**
@@ -971,49 +998,51 @@ UTILS = (function() {
     };
 
     module.redirectAnchorTarget = function(target) {
-        $(target).find("a.replace").click(function(evt) {
-            evt.preventDefault();
+        $(target).find("a.replace").each(function() {
+            $(this).on("click", function(evt) {
+                evt.preventDefault();
 
-            // take a snapshot of the current state so we can restore the page on
-            // return.
-            pipeline.history.replaceState();
+                // take a snapshot of the current state so we can restore the page on
+                // return.
+                pipeline.history.replaceState();
 
-            var onSuccess = [function() {
-                pipeline.msselector.setVisible(false);
-                pipeline.history.pushState();
+                var onSuccess = [function() {
+                    pipeline.msselector.setVisible(false);
+                    pipeline.history.pushState();
 
-                // load the desired filter state for the new page from HTML5 local
-                // storage
-                var state = localStorage.getItem('newFilterState');
-                if (state) {
-                    var o = JSON.parse(state);
-                    pipeline.detailsframe.setFilters(o);
-                    localStorage.removeItem('newFilterState');
+                    // load the desired filter state for the new page from HTML5 local
+                    // storage
+                    var state = localStorage.getItem('newFilterState');
+                    if (state) {
+                        var o = JSON.parse(state);
+                        pipeline.detailsframe.setFilters(o);
+                        localStorage.removeItem('newFilterState');
+                    }
+                }];
+
+                var callbackFn = $(this).data("callback");
+                if (callbackFn) {
+                    if (callbackFn instanceof Array) {
+                        // hacky js version of list.extend()
+                        onSuccess.push.apply(onSuccess, callbackFn);
+                    } else {
+                        onSuccess.push(callbackFn);
+                    }
                 }
-            }];
 
-            var callbackFn = $(this).data("callback");
-            if (callbackFn) {
-                if (callbackFn instanceof Array) {
-                    // hacky js version of list.extend()
-                    onSuccess.push.apply(onSuccess, callbackFn);
-                } else {
-                    onSuccess.push(callbackFn);
-                }
-            }
+                // extract and save the desired filter state from the element,
+                // ready for loading in the secondary page
+                var filterState = UTILS.getFilterStateFromElement(this);
+                var jsonFilterState = JSON.stringify(filterState);
+                localStorage.setItem('newFilterState', jsonFilterState);
 
-            // extract and save the desired filter state from the element,
-            // ready for loading in the secondary page
-            var filterState = UTILS.getFilterStateFromElement(this);
-            var jsonFilterState = JSON.stringify(filterState);
-            localStorage.setItem('newFilterState', jsonFilterState);
-
-            pipeline.detailsframe.load(this.href, onSuccess);
+                pipeline.detailsframe.load(this.href, onSuccess);
+            });
         });
     };
 
     module.redirectPreAnchorTarget = function(target) {
-        $(target).find("a.replace-pre").click(function(evt) {
+        $(target).find("a.replace-pre").on("click", function(evt) {
             evt.preventDefault();
 
             // take a snapshot of the current state so we can restore the page on
@@ -1035,12 +1064,12 @@ UTILS = (function() {
     module.loadContent = function(target, href, onSuccess) {
         $(target).html("<div class=\"page-header\"><h1><span class=\"glyphicon glyphicon-refresh spinning\" style=\"vertical-align:top\"></span> Loading...</h1></div>");
         $(target).load(href, function(response, status, xhr) {
-            if (status == "error") {
+            if (status === "error") {
                 var msg = "Error loading " + href + ":\n";
                 $(target).html(msg + xhr.status + " " + xhr.statusText);
-            };
+            }
 
-            if (status == "success") {
+            if (status === "success") {
                 if (onSuccess) {
                     // keep compatibility with scalar callback function
                     if (onSuccess instanceof Array) {
@@ -1090,7 +1119,7 @@ UTILS = (function() {
                 score;
 
             if ((filter === undefined) || ($(anchor).parent().is(filter))) {
-                png_scores_dict = scores_dict[png];
+                var png_scores_dict = scores_dict[png];
                 scores = scores.concat(module.getScoresForKey(png_scores_dict, key));
             }
         }
@@ -1133,7 +1162,7 @@ UTILS = (function() {
     return module;
 })();
 
-FILTERS = (function() {
+var FILTERS = (function() {
     var module = {};
 
     module.FilterPipeline = function() {
@@ -1273,7 +1302,7 @@ FILTERS = (function() {
     module.createMatchFilter = function(key, element) {
         var filter = new FILTERS.MatchFilter(key);
 
-        $(element).change(function(e) {
+        $(element).on("change", function(e) {
             // get the spectral windows that were selected
             var selected = [];
             $(element + ' option:selected').each(function() {
@@ -1289,7 +1318,7 @@ FILTERS = (function() {
     return module;
 })();
 
-PLOTS = function() {
+var PLOTS = function() {
     var module = {};
 
     module.xAxisLabels = {
@@ -1445,7 +1474,7 @@ PLOTS = function() {
             // resize brush if selected
             if (brush) {
                 oldBrushExtent = brush.extent();
-            };
+            }
 
             if (brush) {
                 var rebrush = function() {
@@ -1580,7 +1609,7 @@ PLOTS = function() {
 
             xAxisLine.attr("x2", width-1);
             histObject.duration(0).plot();
-            xAxisLabel.attr("transform", "translate(" + (width / 2) + " ," + (height + margin.bottom) + ")")
+            xAxisLabel.attr("transform", "translate(" + (width / 2) + " ," + (height + margin.bottom) + ")");
 
             context.select(".brush").call(brush.extent(brush.extent()));
         };
@@ -1606,7 +1635,7 @@ PLOTS = function() {
                 .delay(function(d, i) { return i * 10; })
                 .attr("y", function(d) { return y(d.y) + 6; })
                 .text(function(d) { return formatCount(d.y) });
-        }
+        };
 
         histObject.duration = function(x) {
             if (!arguments.length) return duration;
@@ -1635,7 +1664,7 @@ PLOTS = function() {
     return module;
 }();
 
-ALL_IN_ONE = function() {
+var ALL_IN_ONE = function() {
     var module = {};
 
     var createHistogramGetter = function(scores_dict, key, nBins) {
@@ -1651,8 +1680,7 @@ ALL_IN_ONE = function() {
 
         that.getSelectedDataHistogram = function() {
             var visibleScores = UTILS.getData(scores_dict, key, ":visible");
-            var visibleHistogram = histogram(visibleScores);
-            return visibleHistogram;
+            return histogram(visibleScores);
         };
 
         that.getAllDataHistogram = function() {
@@ -1661,7 +1689,7 @@ ALL_IN_ONE = function() {
 
         that.getExtent = function() {
             return extent;
-        }
+        };
 
         return that;
     };
@@ -1693,7 +1721,7 @@ ALL_IN_ONE = function() {
 
         // refill the histogram to the size of the parent element when the
         // window, and thus the parent span width, changes.
-        $(window).resize(UTILS.debounce(function() {
+        $(window).on("resize", UTILS.debounce(function() {
             histogram.resize();
         }, 125));
 
@@ -1701,7 +1729,7 @@ ALL_IN_ONE = function() {
             "histogram": histogram,
             "filter": filter
         };
-    }
+    };
 
     return module;
 }();

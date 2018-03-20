@@ -81,22 +81,23 @@ def format_options(options):
 
 %>
 
-<link href="${self.attr.rsc_path}resources/css/select2.css" rel="stylesheet"/>
-<link href="${self.attr.rsc_path}resources/css/select2-bootstrap.css" rel="stylesheet"/>
-<script src="${self.attr.rsc_path}resources/js/select2.min.js"></script>
+% if use_minified_js:
+    <script src="${self.attr.rsc_path}resources/js/pipeline_plots.min.js"></script>
 
-<!-- include required files and styles for histograms -->
-<script src="${self.attr.rsc_path}resources/js/d3.v3.min.js"></script>
-<script src="${self.attr.rsc_path}resources/js/pipeline.js"></script>
+% else:
+    <link href="${self.attr.rsc_path}resources/css/select2.css" rel="stylesheet"/>
+    <link href="${self.attr.rsc_path}resources/css/select2-bootstrap.css" rel="stylesheet"/>
+    <script src="${self.attr.rsc_path}resources/js/select2.js"></script>
+
+    <!-- include required files and styles for histograms -->
+    <script src="${self.attr.rsc_path}resources/js/d3.v3.js"></script>
+% endif
 
 <script>
 $(document).ready(function () {
+    pipeline.pages.detail_plots.ready();
+
     var scores_dict = $('#scores').data('scores');
-
-    // activate the input fields for spw, antenna, etc.
-    $('.select2').select2();
-
-    $('select.select2').on("change", function() { pipeline.history.replaceState(); });
 
     // create a new filter pipeline, and tell it to filter based on the scores
     // in the scores_dict JSON dictionary that is set in the template.
@@ -119,15 +120,13 @@ $(document).ready(function () {
 
     // link histogram ranges to the range checkbox
     var rangeCheckbox = $("input#rangeCheckbox");
-    rangeCheckbox.click(function() {
+    rangeCheckbox.on("click", function() {
         var state = rangeCheckbox.prop("checked");
         charts.forEach(function(chart) {
             chart.histogram.duration(1000).plotExtent(state);
         });
     });
 % endif
-
-    pipeline.pages.detail_plots.ready();
 });
 </script>
 

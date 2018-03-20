@@ -42,7 +42,6 @@ def get_template_agents(agents):
 %>
 <%inherit file="t2-4m_details-base.mako"/>
 
-<script src="${self.attr.rsc_path}resources/js/pipeline.js"></script>
 <script>
 $(document).ready(function(){
     $("th.rotate").each(function(){ $(this).height($(this).find('span').width() + 8) });

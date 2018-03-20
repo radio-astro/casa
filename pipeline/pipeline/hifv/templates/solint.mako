@@ -7,8 +7,6 @@ import pipeline.infrastructure.renderer.htmlrenderer as hr
 
 <%block name="title">Solution Interval and test gain calibrations</%block>
 
-<script src="${self.attr.rsc_path}resources/js/pipeline.js"></script>
-
 <p>Determine the solution interval for a scan-average equivalent and do test gain calibrations to establish a short solution interval.</p>
 
 % for ms in summary_plots:

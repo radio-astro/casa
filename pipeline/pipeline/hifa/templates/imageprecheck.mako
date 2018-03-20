@@ -8,8 +8,6 @@ import pipeline.infrastructure.renderer.htmlrenderer as hr
 
 <%block name="title">Image Pre-Check</%block>
 
-<script src="${self.attr.rsc_path}resources/js/pipeline.js"></script>
-
 <%
 cqa = casatools.quanta
 real_repr_target = result[0].real_repr_target

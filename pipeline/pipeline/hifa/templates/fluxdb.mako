@@ -48,8 +48,6 @@ def sanitise(url):
 %>
 <%inherit file="t2-4m_details-base.mako"/>
 
-<script src="${self.attr.rsc_path}resources/js/pipeline.js"></script>
-
 <%block name="title">Flux calibration database service</%block>
 
 <h2>Results</h2>

@@ -8,9 +8,11 @@ import contextlib
 import json
 import math
 import os
+import pkg_resources
 
 import pipeline.infrastructure.logging as logging
 from . import weblog
+from .templates import resources
 
 LOG = logging.get_logger(__name__)
 
@@ -127,9 +129,16 @@ class CommonRenderer(object):
         self.dirname = os.path.join(context.report_dir, stage)
 
     def render(self):
-        mako_context = {'pcontext': self.context,
-                        'result': self.result,
-                        'dirname': self.dirname}
+        path_to_resources_pkg = pkg_resources.resource_filename(resources.__name__, '')
+        path_to_js = os.path.join(path_to_resources_pkg, 'js', 'pipeline_plots.min.js')
+        use_minified_js = os.path.exists(path_to_js)
+
+        mako_context = {
+            'pcontext': self.context,
+            'result': self.result,
+            'dirname': self.dirname,
+            'use_minified_js': use_minified_js
+        }
         self.update_mako_context(mako_context)
         t = weblog.TEMPLATE_LOOKUP.get_template(self.uri)
         return t.render(**mako_context)

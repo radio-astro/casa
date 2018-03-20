@@ -7041,7 +7041,7 @@ th.rotate > div {
     width: auto;
     bottom: 0;
     left: 0;
-    right: 0;
+    right : 0;
     height: 95px;
     padding: 10px 10px 5px 10px;
     box-sizing: border-box;
@@ -7052,8 +7052,8 @@ th.rotate > div {
     right: 0;
     bottom: 95px;
   }
+}
 
-  .pipeline-plotcommand {
-    margin: 44px 44px;
-  }
+.pipeline-plotcommand {
+  margin: 44px 44px;
 }

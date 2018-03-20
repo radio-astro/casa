@@ -35,8 +35,6 @@ def get_mapped_scispws(ms):
 
 <%block name="title">Gain Calibration</%block>
 
-<script src="${self.attr.rsc_path}resources/js/pipeline.js"></script>
-
 <p>This task creates gain solutions for each measurement set.</p>
 
 <ul>

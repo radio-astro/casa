@@ -20,8 +20,6 @@ colorder = ['image', 'residual', 'cleanmask']
 %>
 <%inherit file="t2-4m_details-base.mako"/>
 
-<script src="${self.attr.rsc_path}resources/js/pipeline.js"></script>
-
 <%block name="header" />
 
 <%block name="title">

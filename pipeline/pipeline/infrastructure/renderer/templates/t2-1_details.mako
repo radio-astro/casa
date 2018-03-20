@@ -5,8 +5,6 @@ import os
 %>
 <html>
 <head>
-    <!--  Add image holder library for missing plots -->
-    <script src="${self.attr.rsc_path}resources/js/holder.js"></script>
     <script>
         lazyload();
     </script>

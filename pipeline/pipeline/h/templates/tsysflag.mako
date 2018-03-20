@@ -44,8 +44,6 @@ extra_plot_desc = {'nmedian'    : ' shows the spectra flagged in',
 <%inherit file="t2-4m_details-base.mako"/>
 <%block name="title">Flag T<sub>sys</sub> calibration</%block>
 
-<script src="${self.attr.rsc_path}resources/js/pipeline.js"></script>
-
 % if any([msg for msg in task_incomplete_msg.values()]):
   <h2>Error report</h2>
   

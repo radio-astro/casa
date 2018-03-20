@@ -7,7 +7,5 @@ import pipeline.infrastructure.renderer.htmlrenderer as hr
 
 <%block name="title">Hanning Smoothing</%block>
 
-<script src="${self.attr.rsc_path}resources/js/pipeline.js"></script>
-
 <p>Hanning Smoothing</p>
 

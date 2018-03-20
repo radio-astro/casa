@@ -7,8 +7,6 @@ import pipeline.infrastructure.renderer.htmlrenderer as hr
 
 <%block name="title">Flagcal</%block>
 
-<script src="${self.attr.rsc_path}resources/js/pipeline.js"></script>
-
 % for single_result in result:
     <p>Caltable <b>${single_result.inputs['caltable']}</b> flagged with clipminmax=[${','.join([str(x) for x in single_result.inputs['clipminmax']])}].
 

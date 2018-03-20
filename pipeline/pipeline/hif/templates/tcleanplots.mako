@@ -17,7 +17,6 @@ def get_plot(plots, field, spw, i, colname):
 	except KeyError:
 		return None
 %>
-<script src="${self.attr.rsc_path}resources/js/pipeline.js"></script>
 <script>
     pipeline.pages.tclean_plots.ready();
 </script>

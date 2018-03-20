@@ -54,8 +54,6 @@ def spws_for_baseband(plot):
 
 <%block name="title">Plot Summary</%block>
 
-<script src="${self.attr.rsc_path}resources/js/pipeline.js"></script>
-
 <%
 # these functions are defined in template scope so we have access to the flags
 # and agents context objects

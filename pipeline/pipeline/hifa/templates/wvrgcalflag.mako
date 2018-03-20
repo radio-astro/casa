@@ -6,8 +6,6 @@ import pipeline.infrastructure.filenamer as filenamer
 <%inherit file="t2-4m_details-base.mako"/>
 <%block name="header" />
 
-<script src="${self.attr.rsc_path}resources/js/pipeline.js"></script>
-
 <%block name="title">WVR Calibration and Flagging</%block>
 
 <p>This task checks whether the WVR radiometers are working as intended,

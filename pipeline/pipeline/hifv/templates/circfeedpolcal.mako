@@ -8,8 +8,6 @@ import pipeline.infrastructure.renderer.htmlrenderer as hr
 
 <%block name="title">Circular Feed Polarization Calibration</%block>
 
-<script src="${self.attr.rsc_path}resources/js/pipeline.js"></script>
-
 <ul>
 %for single_result in result:
 

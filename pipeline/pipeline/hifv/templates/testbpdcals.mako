@@ -7,8 +7,6 @@ import pipeline.infrastructure.renderer.htmlrenderer as hr
 
 <%block name="title">Initial test calibrations</%block>
 
-<script src="${self.attr.rsc_path}resources/js/pipeline.js"></script>
-
 <p>Initial test calibrations using bandpass and delay calibrators</p>
 
 % for ms in summary_plots:

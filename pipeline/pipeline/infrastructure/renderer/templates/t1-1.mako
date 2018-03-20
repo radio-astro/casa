@@ -33,8 +33,6 @@ def tablerow_cmp(tr1, tr2):
 %>
 <%inherit file="base.mako"/>
 
-<script src="${self.attr.rsc_path}resources/js/pipeline.js"></script>
-
 <script>
 $(document).ready(function() {
     pipeline.pages.t1_1.ready();
