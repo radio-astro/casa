@@ -155,7 +155,7 @@ class PlotmsLeaf(object):
         # replacing them with the hash of the component          
         if len(png) > 251:  # 255 - '.png'
             png_hash = str(hash(png))
-            LOG.info('Truncating plot filename to avoid filesystem limit.\n'
+            LOG.info('Renaming plot to avoid exceeding filesystem limit on filename length.\n'
                      'Old: %s\nNew: %s', png, png_hash)
             png = '%s.png' % png_hash
 

@@ -418,8 +418,8 @@ class RMSOffsetVsRefAntDistanceChart(PhaseVsBaselineChart):
         # the hash of the component.
         if len(png) > 251:  # 255 - '.png'
             png_hash = str(hash(png))
-            LOG.info('Truncating plot filename to avoid filesystem limit.\n'
-                     'Result: %s -> %s', png, png_hash)
+            LOG.info('Renaming plot to avoid exceeding filesystem limit on filename length.\n'
+                     'Old: %s\nNew: %s', png, png_hash)
             png = '%s.png' % png_hash
 
         return os.path.join(self.context.report_dir, 'stage%s' % self.result.stage_number, png)
