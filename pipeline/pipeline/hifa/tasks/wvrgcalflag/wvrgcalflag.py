@@ -131,10 +131,9 @@ class Wvrgcalflag(basetask.StandardTaskTemplate):
     def analyse(self, result):
         inputs = self.inputs
 
-        # If flagging results are not empty, it should contain a wvrg file
-        # that has been flagged as necessary. Evaluate the flagger result to
+        # If flagging views are available, then evaluate the flagger result to
         # check whether the WVR correction should still be applied.
-        if result.flaggerresult.dataresult:
+        if result.flaggerresult.viewresult and result.flaggerresult.viewresult.descriptions():
             # Identify number and fraction of unflagged antennas with WVR.
             nr_ants_wvr, frac_ants_wvr = self._identify_unflagged_ants_with_wvr(result)
 
