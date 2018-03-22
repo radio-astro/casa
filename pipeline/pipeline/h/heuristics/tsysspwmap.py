@@ -110,85 +110,86 @@ def tsysspwmap(ms, tsystable, trim=True, relax=False, tsysChanTol=1):
 
     spwMaps = []
 
-    # Get the spectral windows with entries in the solution table
-    with casatools.TableReader(tsystable) as table:
-        measuredTsysSpw = numpy.unique(table.getcol("SPECTRAL_WINDOW_ID"))
+        # Case of Nobeyama(=NRO) data
+    if ms.antenna_array.name == "NRO":
+        LOG.debug('Mapping process between Tsys windows and Science windows is not specially needed.')
+        unmatched_science_spws = []
+        spwMaps = [spw.id for spw in ms.get_spectral_windows()]
+        return unmatched_science_spws, spwMaps
+    else:
+        # Get the spectral windows with entries in the solution table
+        with casatools.TableReader(tsystable) as table:
+            measuredTsysSpw = numpy.unique(table.getcol("SPECTRAL_WINDOW_ID"))
 
-    # Get the frequency ranges for the allowed 
-    with casatools.TableReader("%s/SPECTRAL_WINDOW" % tsystable) as table:
-        for i in measuredTsysSpw:
-            spwMap = SpwMap(i)
-            chanFreqs = table.getcell("CHAN_FREQ", i)
-            if len(chanFreqs) > 1:
-                chanWidth = abs(chanFreqs[1]-chanFreqs[0])
-            else:
-                chanWidth = table.getcell('EFFECTIVE_BW', i)
-            spwMap.chanWidth = chanWidth
-            spwMap.validFreqRange = [chanFreqs.min()-0.5*chanWidth,
-                                     chanFreqs.max()+0.5*chanWidth]
-            spwMaps.append(spwMap)
-
-    # Now loop through the main table's spectral window table
-    # to map the spectral windows as desired.
-    vis = ms.name
-    with casatools.TableReader("%s/SPECTRAL_WINDOW" % vis) as table:
-        it = table.nrows()
-
-    for j in spwMaps:
-        with casatools.TableReader("%s/SPECTRAL_WINDOW" % vis) as table:
-            j.bbNo = table.getcell("BBC_NO", j.calSpwId)
-        for i in range(it):
-            with casatools.TableReader("%s/SPECTRAL_WINDOW" % vis) as table:
+        # Get the frequency ranges for the allowed 
+        with casatools.TableReader("%s/SPECTRAL_WINDOW" % tsystable) as table:
+            for i in measuredTsysSpw:
+                spwMap = SpwMap(i)
                 chanFreqs = table.getcell("CHAN_FREQ", i)
                 if len(chanFreqs) > 1:
-                    chanWidth = table.getcell("CHAN_WIDTH", i)[0]
-                    freqMin = chanFreqs.min()-0.5*chanWidth
-                    freqMax = chanFreqs.max()+0.5*chanWidth
+                    chanWidth = abs(chanFreqs[1]-chanFreqs[0])
                 else:
-                    chanWidth = table.getcell("CHAN_WIDTH", i)
-                    freqMin = chanFreqs-0.5*chanWidth
-                    freqMax = chanFreqs+0.5*chanWidth
-                msSpw = SpwInfo(table, i)
-                if j.bbNo == msSpw.values['BBC_NO']:
-                    if freqMin >= j.validFreqRange[0]-tsysChanTol*j.chanWidth and \
-                       freqMax <= j.validFreqRange[1]+tsysChanTol*j.chanWidth:
-                        j.mapsToSpw.append(i)
+                    chanWidth = table.getcell('EFFECTIVE_BW', i)
+                spwMap.chanWidth = chanWidth
+                spwMap.validFreqRange = [chanFreqs.min()-0.5*chanWidth,
+                                         chanFreqs.max()+0.5*chanWidth]
+                spwMaps.append(spwMap)
 
-    applyCalSpwMap = []
-    spwWithoutMatch = []
-    with casatools.TableReader("%s/SPECTRAL_WINDOW" % vis) as table:
-        for i in range(it):
-            useSpw = None
-            for j in spwMaps:
-                if i in j.mapsToSpw:
-                    if useSpw is not None:
-                        if table.getcell("BBC_NO") == j.bbNo:
-                            useSpw = j.calSpwId
+        # Now loop through the main table's spectral window table
+        # to map the spectral windows as desired.
+        vis = ms.name
+        with casatools.TableReader("%s/SPECTRAL_WINDOW" % vis) as table:
+            it = table.nrows()
+
+        for j in spwMaps:
+            with casatools.TableReader("%s/SPECTRAL_WINDOW" % vis) as table:
+                j.bbNo = table.getcell("BBC_NO", j.calSpwId)
+            for i in range(it):
+                with casatools.TableReader("%s/SPECTRAL_WINDOW" % vis) as table:
+                    chanFreqs = table.getcell("CHAN_FREQ", i)
+                    if len(chanFreqs) > 1:
+                        chanWidth = table.getcell("CHAN_WIDTH", i)[0]
+                        freqMin = chanFreqs.min()-0.5*chanWidth
+                        freqMax = chanFreqs.max()+0.5*chanWidth
                     else:
-                        useSpw = j.calSpwId
-            if useSpw is None:
-                useSpw = i
-                spwWithoutMatch.append(i)
-            applyCalSpwMap.append(int(useSpw))        
+                        chanWidth = table.getcell("CHAN_WIDTH", i)
+                        freqMin = chanFreqs-0.5*chanWidth
+                        freqMax = chanFreqs+0.5*chanWidth
+                    msSpw = SpwInfo(table, i)
+                    if j.bbNo == msSpw.values['BBC_NO']:
+                        if freqMin >= j.validFreqRange[0]-tsysChanTol*j.chanWidth and \
+                            freqMax <= j.validFreqRange[1]+tsysChanTol*j.chanWidth:
+                            j.mapsToSpw.append(i)
 
-    science_window_ids = list(set([spw.id for spw in ms.get_spectral_windows(science_windows_only=True)]))
-    unmatched_science_spws = list(set(spwWithoutMatch).intersection(science_window_ids))
+        applyCalSpwMap = []
+        spwWithoutMatch = []
+        with casatools.TableReader("%s/SPECTRAL_WINDOW" % vis) as table:
+            for i in range(it):
+                useSpw = None
+                for j in spwMaps:
+                    if i in j.mapsToSpw:
+                        if useSpw is not None:
+                            if table.getcell("BBC_NO") == j.bbNo:
+                                useSpw = j.calSpwId
+                        else:
+                            useSpw = j.calSpwId
+                if useSpw is None:
+                    useSpw = i
+                    spwWithoutMatch.append(i)
+                applyCalSpwMap.append(int(useSpw))        
 
-    if len(unmatched_science_spws) != 0:
-        no_match = utils.commafy(unmatched_science_spws, False)
-        LOG.info('No Tsys match found for spws %s.' % no_match) 
+        science_window_ids = list(set([spw.id for spw in ms.get_spectral_windows(science_windows_only=True)]))
+        unmatched_science_spws = list(set(spwWithoutMatch).intersection(science_window_ids))
 
-    if trim:
-        LOG.info('Computed tsysspwmap is: '+str(trimSpwmap(applyCalSpwMap)))
-        # return spwWithoutMatch, trimSpwmap(applyCalSpwMap)
-        return unmatched_science_spws, trimSpwmap(applyCalSpwMap)
-    else:
-        LOG.info('Computed tsysspwmap is: '+str(applyCalSpwMap))
-        # return spwWithoutMatch, applyCalSpwMap
-        return unmatched_science_spws, applyCalSpwMap
+        if len(unmatched_science_spws) != 0:
+            no_match = utils.commafy(unmatched_science_spws, False)
+            LOG.info('No Tsys match found for spws %s.' % no_match) 
 
-
-def tsysnospwmap(ms):
-    LOG.info('Mapping process between Tsys windows and Science windows is not specially needed, because the ids of Tsys windows are the same as those of Science windows for Nobeyama data.')
-    spwMaps = [spw.id for spw in ms.get_spectral_windows()]
-    return spwMaps
+        if trim:
+            LOG.info('Computed tsysspwmap is: '+str(trimSpwmap(applyCalSpwMap)))
+            # return spwWithoutMatch, trimSpwmap(applyCalSpwMap)
+            return unmatched_science_spws, trimSpwmap(applyCalSpwMap)
+        else:
+            LOG.info('Computed tsysspwmap is: '+str(applyCalSpwMap))
+            # return spwWithoutMatch, applyCalSpwMap
+            return unmatched_science_spws, applyCalSpwMap
