@@ -43,7 +43,7 @@ class UVcontSub(applycal.Applycal):
         try:
             # Set cluster to serial mode for this applycal
             if infrastructure.mpihelpers.is_mpi_ready():
-                ParallelTaskHelper.bypassParallelProcessing(2)
+                ParallelTaskHelper.bypassParallelProcessing(1)
 
             return super(UVcontSub, self).prepare()
 
