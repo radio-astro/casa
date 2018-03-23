@@ -31,8 +31,12 @@ $(document).ready(function() {
 	</div><!-- /.span3 -->		
 
 	<%
-	first_session_name = sessions[0].name
-	first_ms_name = sessions[0].mses[0].basename
+    if len(sessions) > 0:
+        first_session_name = sessions[0].name
+        first_ms_name = sessions[0].mses[0].basename
+    else:
+        first_session_name = "None"
+        first_ms_name = "None"
 	%>
 	<div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main" 
 	     id="session_container"

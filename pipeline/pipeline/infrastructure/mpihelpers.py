@@ -63,8 +63,9 @@ class AsyncTask(object):
         if response['successful']:
             return response['ret']
         else:
-            # TODO add traceback to exception
-            raise PipelineError('Failure executing job')
+            err_msg = "Failure executing job on MPI server {}, " \
+                      "with traceback\n {}".format(response['server'], response['traceback'])
+            raise PipelineError(err_msg)
 
 
 class SyncTask(object):

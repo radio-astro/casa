@@ -49,6 +49,7 @@ import pipeline.infrastructure.launcher as launcher
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.vdp as vdp
 from pipeline.infrastructure import task_registry
+from pipeline.infrastructure import utils
 
 LOG = logging.get_logger(__name__)
 
@@ -177,9 +178,14 @@ def reduce(vis=None, infiles=None, procedure='procedure_hifa_calimage.xml',
                 result = task.execute(dry_run=False)
                 result.accept(context)
 
+                tracebacks = utils.get_tracebacks(result)
                 if result.stage_number is exitstage:
                     break
-            except:
+                elif len(tracebacks) > 0:
+                    break
+            except Exception as ex:
+                # Log message if an exception occurred that was not handled by
+                # standardtask template (not turned into failed task result).
                 LOG.error('Error executing pipeline task %s.' % task._hif_call)
                 traceback.print_exc()
                 return context

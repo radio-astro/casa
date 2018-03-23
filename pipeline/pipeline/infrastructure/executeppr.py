@@ -267,6 +267,17 @@ def executeppr (pprXmlFile, importonly=True, breakpoint='breakpoint',
             finally:
                 gc.collect()
 
+            # Stop execution if result is a failed task result or a list
+            # containing a failed task result.
+            tracebacks = utils.get_tracebacks(results)
+            if len(tracebacks) > 0:
+                casatools.post_to_log("Unexpected error encountered during {}".format(pipeline_task_name),
+                                      echo_to_screen=echo_to_screen)
+                for tb in tracebacks:
+                    casatools.post_to_log("{}".format(tb), echo_to_screen=echo_to_screen)
+                errorfile = utils.write_errorexit_file(workingDir, 'errorexit', 'txt')
+                break
+
             if pipeline_task_name == 'ImportData' and importonly:
                 casatools.post_to_log(
                     "Terminating execution after running " + pipeline_task_name,
@@ -296,9 +307,10 @@ def executeppr (pprXmlFile, importonly=True, breakpoint='breakpoint',
                 break
 
         except Exception, e:
-            errstr=traceback.format_exc()
-            casatools.post_to_log (errstr,
-                echo_to_screen=echo_to_screen)
+            # Log message if an exception occurred that was not handled by
+            # standardtask template (not turned into failed task result).
+            errstr = traceback.format_exc()
+            casatools.post_to_log(errstr, echo_to_screen=echo_to_screen)
             errorfile = utils.write_errorexit_file(workingDir, 'errorexit', 'txt')
             break
 

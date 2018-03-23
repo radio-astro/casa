@@ -32,7 +32,7 @@ from .. import utils
 LOG = infrastructure.get_logger(__name__)
 
 
-def get_task_description(result_obj, context):
+def get_task_description(result_obj, context, include_stage=True):
     if not isinstance(result_obj, (list, basetask.ResultsList)):
         return get_task_description([result_obj, ], context)
 
@@ -41,44 +41,69 @@ def get_task_description(result_obj, context):
         LOG.error(msg)
         return msg
 
-    task_cls = getattr(result_obj[0], 'task', None)
-    if task_cls is None:
-        results_cls = result_obj[0].__class__.__name__
-        msg = 'No task registered on results of type %s' % results_cls
-        LOG.warning(msg)
-        return msg
-
     description = None
 
-    if hasattr(result_obj, 'metadata'):
-        metadata = result_obj.metadata
-    elif hasattr(result_obj[0], 'metadata'):
-        metadata = result_obj[0].metadata
+    # Check if any of the results in the list are FailedTaskResults, handle as
+    # special case:
+    if any([isinstance(result, basetask.FailedTaskResults)
+            for result in result_obj]):
+        # Find failed task result
+        for result in result_obj:
+            if isinstance(result, basetask.FailedTaskResults):
+                # Extract original task class from failed result.
+                task_cls = result.origtask.inputs._task_cls
+
+                # Try to extract task description from renderer belonging to
+                # original task.
+                try:
+                    renderer = weblog.get_renderer(task_cls, context, result)
+                except KeyError:
+                    LOG.error('No renderer registered for task %s'.format(task_cls.__name__))
+                    raise
+                else:
+                    description = getattr(renderer, 'description', None)
+                break
     else:
-        LOG.trace('No metadata property found on result for task {!s}'.format(task_cls.__name__))
-        metadata = {}
+        # If there was no FailedResult, then use first result to represent the
+        # the task.
+        task_cls = getattr(result_obj[0], 'task', None)
+        if task_cls is None:
+            results_cls = result_obj[0].__class__.__name__
+            msg = 'No task registered on results of type %s' % results_cls
+            LOG.warning(msg)
+            return msg
 
-    if 'long description' in metadata:
-        description = metadata['long description']
-
-    if not description:
-        try:
-            # taking index 0 should be safe as entry to function ensures
-            # result_obj is a list
-            renderer = weblog.get_renderer(task_cls, context, result_obj[0])
-        except KeyError:
-            LOG.error('No renderer registered for task %s'.format(task_cls.__name__))
-            raise
+        if hasattr(result_obj, 'metadata'):
+            metadata = result_obj.metadata
+        elif hasattr(result_obj[0], 'metadata'):
+            metadata = result_obj[0].metadata
         else:
-            description = getattr(renderer, 'description', None)
+            LOG.trace('No metadata property found on result for task {!s}'.format(task_cls.__name__))
+            metadata = {}
+
+        if 'long description' in metadata:
+            description = metadata['long description']
+
+        if not description:
+            try:
+                # taking index 0 should be safe as entry to function ensures
+                # result_obj is a list
+                renderer = weblog.get_renderer(task_cls, context, result_obj[0])
+            except KeyError:
+                LOG.error('No renderer registered for task %s'.format(task_cls.__name__))
+                raise
+            else:
+                description = getattr(renderer, 'description', None)
 
     if description is None:
-        description = _get_task_description_for_class(task_cls)    
+        description = _get_task_description_for_class(task_cls)
+
+    stage = '%s. ' % get_stage_number(result_obj) if include_stage else ''
 
     d = {'description': description,
          'task_name': get_task_name(result_obj, include_stage=False),
-         'stage': get_stage_number(result_obj)}
-    return '{stage}. <strong>{task_name}</strong>: {description}'.format(**d)
+         'stage': stage}
+    return '{stage}<strong>{task_name}</strong>: {description}'.format(**d)
 
 
 def _get_task_description_for_class(task_cls):
@@ -94,13 +119,22 @@ def get_task_name(result_obj, include_stage=True):
     stage = '%s. ' % get_stage_number(result_obj) if include_stage else ''
 
     if hasattr(result_obj, 'task'):
-        task = result_obj.task
+        if isinstance(result_obj, basetask.FailedTaskResults):
+            task_cls = result_obj.origtask.inputs._task_cls
+        else:
+            task_cls = result_obj.task
         try:
-            casa_task = task_registry.get_casa_task(task)
+            casa_task = task_registry.get_casa_task(task_cls)
         except KeyError:
-            casa_task = task.__name__
-        return '%s%s' % (stage, casa_task)
+            casa_task = task_cls.__name__
 
+        # Prepend stage number to task name.
+        s = '%s%s' % (stage, casa_task)
+
+        if isinstance(result_obj, basetask.FailedTaskResults):
+            s += ' (failed)'
+
+        return s
     else:
         if not isinstance(result_obj, (list, basetask.ResultsList)):
             return get_task_name([result_obj, ])
@@ -110,18 +144,35 @@ def get_task_name(result_obj, include_stage=True):
             LOG.error(msg)
             return msg
 
-        task_cls = result_obj[0].task
+        # Take task class from first result in result list.
+        if isinstance(result_obj[0], basetask.FailedTaskResults):
+            task_cls = result_obj[0].origtask.inputs._task_cls
+        else:
+            task_cls = result_obj[0].task
+
         if task_cls is None:
             results_cls = result_obj[0].__class__.__name__
             msg = 'No task registered on results of type %s' % results_cls
             LOG.warning(msg)
             return msg
 
+        # Get the task name from the task registry, otherwise use the CASA
+        # class name.
         try:
             casa_task = task_registry.get_casa_task(task_cls)
         except KeyError:
             casa_task = task_cls.__name__
-        return '%s%s' % (stage, casa_task)
+
+        # Prepend stage number to task name.
+        s = '%s%s' % (stage, casa_task)
+
+        # Append a label to task name if any of the results in the task result
+        # list indicates that the task encountered a failure.
+        if any([isinstance(result, basetask.FailedTaskResults)
+                for result in result_obj]):
+            s += ' (failed)'
+
+        return s
 
 
 def get_stage_number(result_obj):
@@ -276,7 +327,13 @@ class T1_1Renderer(RendererBase):
 #         qaresults = qaadapter.ResultsToQAAdapter(context.results)
 
         out_fmt = '%Y-%m-%d %H:%M:%S'
-        
+
+        # Convert timestamps, if available:
+        obs_start_fmt = obs_start.strftime(out_fmt) if obs_start else "n/a"
+        obs_end_fmt = obs_end.strftime(out_fmt) if obs_end else "n/a"
+        exec_start_fmt = exec_start.strftime(out_fmt) if exec_start else "n/a"
+        exec_end_fmt = exec_end.strftime(out_fmt) if exec_end else "n/a"
+
         # Set link to pipeline documentation depending on which observatory
         # this context is for.
         observatory = context.project_summary.telescope
@@ -352,11 +409,11 @@ class T1_1Renderer(RendererBase):
             'casa_version': casasys['build']['version'],
             'pipeline_revision': pipeline.revision,
             'pipeline_doclink': pipeline_doclink,
-            'obs_start': obs_start.strftime(out_fmt),
-            'obs_end': obs_end.strftime(out_fmt),
+            'obs_start': obs_start_fmt,
+            'obs_end': obs_end_fmt,
             'array_names': utils.commafy(array_names),
-            'exec_start': exec_start.strftime(out_fmt),
-            'exec_end': exec_end.strftime(out_fmt),
+            'exec_start': exec_start_fmt,
+            'exec_end': exec_end_fmt,
             'exec_duration': str(exec_duration),
             'project_uids': project_uids,
             'schedblock_uids': schedblock_uids,
@@ -1440,7 +1497,10 @@ class T2_4MDetailsRenderer(object):
                 task_result = wrap_in_resultslist(task_result)
             
             # find the renderer appropriate to the task..
-            task = task_result[0].task
+            if any(isinstance(result, basetask.FailedTaskResults) for result in task_result):
+                task = basetask.FailedTask
+            else:
+                task = task_result[0].task
             try:
                 renderer = weblog.get_renderer(task, context, task_result)
             except KeyError:
@@ -1536,7 +1596,10 @@ def wrap_in_resultslist(task_result):
     # toggles work off the CASA task name.
     for attr in ['qa', 'pipeline_casa_task', 'logrecords']:
         if hasattr(task_result, 'qa'):
-            setattr(l, attr, getattr(task_result, attr))
+            try:
+                setattr(l, attr, getattr(task_result, attr))
+            except AttributeError:
+                pass
 
     return l
 

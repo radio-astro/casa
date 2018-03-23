@@ -134,7 +134,9 @@ def format_score(pqascore):
 
 
 def get_symbol_badge(result):
-    if get_errors_badge(result):
+    if get_failures_badge(result):
+        symbol = '<span class="glyphicon glyphicon-minus-sign alert-danger transparent-bg" aria-hidden="true"></span>'
+    elif get_errors_badge(result):
         symbol = '<span class="glyphicon glyphicon-remove-sign alert-danger transparent-bg" aria-hidden="true"></span>' 
     elif get_warnings_badge(result):
         symbol = '<span class="glyphicon glyphicon-exclamation-sign alert-warning transparent-bg" aria-hidden="true"></span>' 
@@ -142,12 +144,20 @@ def get_symbol_badge(result):
         symbol = '<span class="glyphicon glyphicon-question-sign alert-info transparent-bg" aria-hidden="true"></span>' 
     else:
         return '<span class="glyphicon glyphicon-none" aria-hidden="true"></span>'
-        
     return symbol
 
 
+def get_failures_badge(result):
+    failure_tracebacks = utils.get_tracebacks(result)
+    n = len(failure_tracebacks)
+    if n > 0:
+        return '<span class="badge alert-important pull-right">%s</span>' % n
+    else:
+        return ''
+
+
 def get_warnings_badge(result):
-    warning_logrecords = utils.get_logrecords(result, logging.WARNING) 
+    warning_logrecords = utils.get_logrecords(result, logging.WARNING)
     warning_qascores = utils.get_qascores(result, SCORE_THRESHOLD_ERROR, SCORE_THRESHOLD_WARNING)
     l = len(warning_logrecords) + len(warning_qascores)
     if l > 0:

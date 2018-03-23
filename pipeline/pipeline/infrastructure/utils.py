@@ -588,6 +588,21 @@ def is_top_level_task():
     return task_depth() is  1
 
 
+def get_tracebacks(result):
+    """
+    Get the tracebacks for the result, from any failures that may have
+    occurred during the task.
+
+    :param result: a result or result list.
+    :return: list of tracebacks as strings.
+    """
+    if isinstance(result, collections.Iterable):
+        tracebacks = [get_tracebacks(r) for r in result]
+    else:
+        tracebacks = [getattr(result, "tb", [])]
+    return list(flatten(tracebacks))
+
+
 def get_logrecords(result, loglevel):
     """
     Get the logrecords for the result, removing any duplicates

@@ -11,6 +11,7 @@ import os
 import pkg_resources
 
 import pipeline.infrastructure.logging as logging
+import pipeline.infrastructure.utils as utils
 from . import weblog
 from .templates import resources
 
@@ -59,6 +60,27 @@ class T2_4MDetailsDefaultRenderer(object):
             return None
 
         return os.path.relpath(stagelog_path, context.report_dir)
+
+
+class T2_4MDetailsFailedTaskRenderer(T2_4MDetailsDefaultRenderer):
+    """
+    Renders detailed HTML output for a failed task.
+    """
+    def __init__(self, uri='t2-4m_details-failed.mako',
+                 description='Failed task',
+                 always_rerender=False):
+        super(T2_4MDetailsFailedTaskRenderer, self).__init__(
+            uri=uri, description=description, always_rerender=always_rerender)
+
+    def update_mako_context(self, mako_context, pipeline_context, results):
+
+        # Collect tracebacks from all failed results in result list.
+        tracebacks = utils.get_tracebacks(results)
+
+        # Update the mako context.
+        mako_context.update({
+            'tracebacks': tracebacks,
+        })
 
 
 def time_order_dicts(mako_context, pipeline_context):

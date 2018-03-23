@@ -8,6 +8,7 @@ import os
 import pprint
 import re
 import textwrap
+import traceback
 import types
 import uuid
 
@@ -728,6 +729,24 @@ class Results(api.Results):
         return False
 
 
+class FailedTaskResults(Results):
+    """
+    FailedTaskResults represents a results object for a task that encountered
+    an exception during execution.
+    """
+    def __init__(self, origtask, exception, tb):
+        super(FailedTaskResults, self).__init__()
+        self.exception = exception
+        self.origtask = origtask
+        self.task = FailedTask
+        self.tb = tb
+
+    def __repr__(self):
+        s = "FailedTaskResults:\n"\
+             "\toriginal task: {}\n".format(self.origtask.inputs._task_cls.__name__)
+        return s
+
+
 class ResultsProxy(object):
     def __init__(self, context):
         self._context = context
@@ -998,6 +1017,32 @@ class StandardTaskTemplate(api.Task):
 
             return result
 
+        except Exception as ex:
+            # Created a special result object for the failed task, but only if
+            # this is a top-level task; otherwise, raise the exception higher
+            # up.
+            if utils.is_top_level_task():
+                # Get the task name from the task registry, otherwise use the
+                # task class name.
+                try:
+                    name = task_registry.get_casa_task(self.__class__)
+                except KeyError:
+                    name = self.__class__.__name__
+
+                # Log error message.
+                tb = traceback.format_exc()
+                LOG.error('Error executing pipeline task %s.' % name)
+                LOG.error(tb)
+
+                # Create a special result object representing the failed task.
+                result = FailedTaskResults(self, ex, tb)
+
+                # add the log records to the result
+                result.logrecords = handler.buffer[:]
+
+                return result
+            else:
+                raise
         finally:
             # restore the context to the original context
             self.inputs = original_inputs
@@ -1114,6 +1159,12 @@ class StandardTaskTemplate(api.Task):
                 handled[name] = ht
 
         return handled
+
+
+class FailedTask(StandardTaskTemplate):
+    def __init__(self, context):
+        inputs = vdp.InputsContainer(self, context)
+        super(FailedTask, self).__init__(inputs)
 
 
 class Executor(object):
