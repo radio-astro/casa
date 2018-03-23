@@ -171,5 +171,5 @@ class HpcRefAnt(sessionutils.ParallelTemplate):
         super(HpcRefAnt, self).__init__(inputs)
 
     def get_result_for_exception(self, vis, result):
-        LOG.error('No reference antenna selected for {!s}'.format(os.path.basename(vis)))
-        return RefAntResults(vis=vis, refant='')
+        failed_result = basetask.FailedTaskResults(self, result, result.message)
+        return failed_result
