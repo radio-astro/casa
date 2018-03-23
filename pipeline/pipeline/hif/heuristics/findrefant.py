@@ -34,7 +34,6 @@ import numpy
 
 from casac import casac
 
-import pipeline.infrastructure.api as api
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.casatools as casatools
 from pipeline.infrastructure import casa_tasks
@@ -882,9 +881,7 @@ class RefAntFlagging:
 
 # ------------------------------------------------------------------------------
 
-    def _get_good( self ):
-
-
+    def _get_good(self):
         '''
         # Create the local version of the flag tool and open the MS
 
@@ -909,13 +906,10 @@ class RefAntFlagging:
         d = fgLoc.run()
         fgLoc.done()
 
-
         # Delete the local version of the flag tool
-
         del fgLoc
-
         '''
-        #Update April 2015 to use the flagging task instead of the agent flagger
+        # Update April 2015 to use the flagging task instead of the agent flagger
         task_args = {'vis'          : self.vis,
                      'mode'         : 'summary',
                      'field'        : self.field,
@@ -929,26 +923,24 @@ class RefAntFlagging:
 
         d = task.execute()
 
-
-
-        # Calculate the number of good data for each antenna and return
-        # them
-
-        #Agent flagger way
-        #antenna = d['report0']['antenna']
-
-        #Flagtask way
-        antenna = d['antenna']
-
-
+        # Calculate the number of good data for each antenna and return them
         good = dict()
 
-        for a in antenna.keys():
-            good[a] = antenna[a]['total'] - antenna[a]['flagged']
+        # Agent flagger way
+        # antenna = d['report0']['antenna']
 
-        #print "GOOD: ", good
+        # Flagtask way
+        try:
+            antenna = d['antenna']
 
-        return( good )
+            for a in antenna.keys():
+                good[a] = antenna[a]['total'] - antenna[a]['flagged']
+        except:
+            msg = "The CASA 'flagdata' task returned invalid " \
+                  "results, unable to rank based on flagging score."
+            raise Exception(msg)
+
+        return good
 
 # ------------------------------------------------------------------------------
 
@@ -985,23 +977,25 @@ class RefAntFlagging:
 
     def _calc_score( self, good ):
 
-        # Get the number of good data, calculate the fraction of good
-        # data, and calculate the good and bad weights
-
-        nGood = numpy.array( good.values(), numpy.float )
-        fGood = nGood / float( numpy.max(nGood) )
-
-        wGood = fGood * len(nGood)
-        wBad = ( 1.0 - fGood ) * len(nGood)
-
-
-        # Calculate the score for each antenna and return them
-
         score = dict()
 
-        names = good.keys()
-        rName = range( len(wGood) )
+        if good:
+            # Get the number of good data, calculate the fraction of good
+            # data, and calculate the good and bad weights
 
-        for n in rName: score[names[n]] = wGood[n]
+            nGood = numpy.array( good.values(), numpy.float )
+            fGood = nGood / float( numpy.max(nGood) )
+
+            wGood = fGood * len(nGood)
+            wBad = ( 1.0 - fGood ) * len(nGood)
+
+
+            # Calculate the score for each antenna and return them
+
+            names = good.keys()
+            rName = range( len(wGood) )
+
+            for n in rName:
+                score[names[n]] = wGood[n]
 
         return score
