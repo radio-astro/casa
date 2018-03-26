@@ -1594,6 +1594,37 @@ def score_caltables_exist(filedir, sessiondict):
 
 
 @log_qa
+def score_images_exist (filesdir, imaging_products_only, calimages, targetimages):
+    if imaging_products_only:
+        if len(targetimages) <= 0:
+            score = 0.0
+            metric = 0
+            longmsg = 'No target images were exported'
+            shortmsg = 'No target images exported'
+        else:
+            score = 1.0
+            metric = len(targetimages)
+            longmsg = '%d target images were exported' % (len(targetimages))
+            shortmsg = 'Target images exported'
+    else:
+        if len(targetimages) <= 0 and len(calimages) <= 0:
+            score = 0.0
+            metric = 0
+            longmsg = 'No images were exported'
+            shortmsg = 'No images exported'
+        else:
+            score = 1.0
+            metric = len(calimages) + len(targetimages)
+            longmsg = '%d images were exported' % (len(calimages) + len(targetimages))
+            shortmsg = 'Images exported'
+
+    origin = pqa.QAOrigin(metric_name='score_images_exist',
+                          metric_score=metric,
+                          metric_units='Number of exported images')
+
+    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg, origin=origin)
+
+@log_qa
 def score_sd_line_detection(group_id_list, spw_id_list, lines_list):
     detected_spw = []
     detected_group = []
