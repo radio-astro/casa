@@ -28,3 +28,4 @@ from .circfeedpolcal import Circfeedpolcal
 from .flagging import Flagcal
 from .pbcor import Pbcor
 from .exportvlassdata import Exportvlassdata
+from .syspower import Syspower
