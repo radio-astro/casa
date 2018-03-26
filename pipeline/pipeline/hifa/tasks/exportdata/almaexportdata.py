@@ -6,10 +6,12 @@ import os
 import shutil
 import tarfile
 
+from pipeline.infrastructure import task_registry
+import pipeline.infrastructure.vdp as vdp
+
 import pipeline.h.tasks.common.manifest as manifest
 import pipeline.h.tasks.exportdata.exportdata as exportdata
 import pipeline.infrastructure as infrastructure
-from pipeline.infrastructure import task_registry
 from . import almaifaqua
 
 LOG = infrastructure.get_logger(__name__)
@@ -18,12 +20,15 @@ AuxFileProducts = collections.namedtuple('AuxFileProducts', 'flux_file antenna_f
 
 
 class ALMAExportDataInputs(exportdata.ExportDataInputs):
+
+    imaging_products_only = vdp.VisDependentProperty(default=False)
+
     def __init__(self, context, output_dir=None, session=None, vis=None, exportmses=None, pprfile=None, calintents=None,
-                 calimages=None, targetimages=None, products_dir=None):
+                 calimages=None, targetimages=None, products_dir=None, imaging_products_only=None):
         super(ALMAExportDataInputs, self).__init__(context, output_dir=output_dir, session=session, vis=vis,
                                                    exportmses=exportmses, pprfile=pprfile, calintents=calintents,
                                                    calimages=calimages, targetimages=targetimages,
-                                                   products_dir=products_dir)
+                                                   products_dir=products_dir, imaging_products_only=imaging_products_only)
 
 
 @task_registry.set_equivalent_casa_task('hifa_exportdata')
@@ -40,9 +45,11 @@ class ALMAExportData(exportdata.ExportData):
         oussid = self.get_oussid(self.inputs.context)
 
         # Make the imaging vislist and the sessions lists.
+        #     Force this regardless of the value of imaging_only_products
         session_list, session_names, session_vislists, vislist = super(ALMAExportData, self)._make_lists(
-            self.inputs.context, self.inputs.session, self.inputs.vis, imaging=True)
+            self.inputs.context, self.inputs.session, self.inputs.vis, imaging_only_mses=True)
 
+        # Depends on the existence of imaging mses
         if vislist:
             # Export the auxiliary caltables if any
             #    These are currently the uvcontinuum fit tables.
@@ -69,7 +76,7 @@ class ALMAExportData(exportdata.ExportData):
         else:
             prefix = oussid + '.' + recipe_name
         auxfproducts = self._do_auxiliary_products(
-            self.inputs.context, prefix, self.inputs.output_dir, self.inputs.products_dir)
+            self.inputs.context, prefix, self.inputs.output_dir, self.inputs.products_dir, vislist, self.inputs.imaging_products_only)
 
         # Export the AQUA report
         aquareport_name = 'pipeline_aquareport.xml'
@@ -113,14 +120,19 @@ class ALMAExportData(exportdata.ExportData):
 
         return visdict
 
-    def _do_auxiliary_products(self, context, oussid, output_dir, products_dir):
+    def _do_auxiliary_products(self, context, oussid, output_dir, products_dir, vislist, imaging_products_only):
         """
         Generate the auxiliary products
         """
 
-        fluxfile_name = 'flux.csv'
-        antposfile_name = 'antennapos.csv'
-        contfile_name = 'cont.dat'
+        if imaging_products_only:
+            contfile_name = 'cont.dat'
+            fluxfile_name = 'Undefined'
+            antposfile_name = 'Undefined'
+        else:
+            fluxfile_name = 'flux.csv'
+            antposfile_name = 'antennapos.csv'
+            contfile_name = 'cont.dat'
         empty = True
 
         # Get the flux, antenna position, and continuum subtraction
@@ -139,7 +151,13 @@ class ALMAExportData(exportdata.ExportData):
         #    how flags will or will not be stored back into the ASDM
 
         targetflags_filelist = []
-        for file_name in glob.glob('*.flag*template.txt'):
+        if self.inputs.imaging_products_only:
+            flags_file_list = glob.glob('*.flagtargetstemplate.txt')
+        elif not vislist:
+            flags_file_list = glob.glob('*.flagtemplate.txt')
+        else:
+            flags_file_list = glob.glob('*.flag*template.txt')
+        for file_name in flags_file_list:
             flags_file = os.path.join(output_dir, file_name)
             if os.path.exists(flags_file):
                 empty = False
@@ -168,7 +186,8 @@ class ALMAExportData(exportdata.ExportData):
                     tar.add(flux_file, arcname=os.path.basename(flux_file))
                     LOG.info('Saving auxiliary data product %s in %s', os.path.basename(flux_file), tarfilename)
                 else:
-                    LOG.info('Auxiliary data product %s does not exist', os.path.basename(flux_file))
+                    if fluxfile_name != 'Undefined':
+                        LOG.warn('Auxiliary data product %s does not exist', os.path.basename(flux_file))
                     flux_file = 'Undefined'
 
                 # Save antenna positions file
@@ -176,7 +195,8 @@ class ALMAExportData(exportdata.ExportData):
                     tar.add(antpos_file, arcname=os.path.basename(antpos_file))
                     LOG.info('Saving auxiliary data product %s in %s', os.path.basename(antpos_file), tarfilename)
                 else:
-                    LOG.info('Auxiliary data product %s does not exist', os.path.basename(antpos_file))
+                    if antposfile_name != 'Undefined':
+                        LOG.warn('Auxiliary data product %s does not exist', os.path.basename(antpos_file))
                     antpos_file = 'Undefined'
 
                 # Save continuum regions file
@@ -299,6 +319,8 @@ finally:
         if aux_caltablesdict:
             for session_name in aux_caltablesdict:
                 session = pipemanifest.get_session(ouss, session_name)
+                if session is None:
+                   session = pipemanifest.set_session(ouss, session_name)
                 pipemanifest.add_auxcaltables(session, aux_caltablesdict[session_name][1])
                 for vis_name in aux_caltablesdict[session_name][0]:
                     pipemanifest.add_auxasdm(session, vis_name, aux_calapplysdict[vis_name])
