@@ -186,14 +186,32 @@ class MstransformResults(basetask.Results):
             return
 
         target = context.observing_run
+
+        # Adding mses to context
         for ms in self.mses:
             LOG.info('Adding {} to context'.format(ms.name))
             target.add_measurement_set(ms)
 
+        # Create targets flagging template file if it does not already exist
+        for ms in self.mses:
+            if not ms.is_imaging_ms:
+                continue
+            template_flagsfile = os.path.join(self.inputs['output_dir'], os.path.splitext(os.path.basename(self.vis))[0] + '.flagtargetstemplate.txt')
+            self._make_template_flagfile(template_flagsfile, 'User flagging commands file for the imaging pipeline')
+
+        # Initialize callibrary
         for ms in self.mses:
             calto = callibrary.CalTo(vis=ms.name)
             LOG.info('Registering {} with callibrary'.format(ms.name))
             context.callibrary.add(calto, [])
+
+    def _make_template_flagfile(self, outfile, titlestr):
+        # Create a new file if overwrite is true and the file
+        # does not already exist.
+        if not os.path.exists(outfile):
+            template_text = FLAGGING_TEMPLATE_HEADER.replace('___TITLESTR___', titlestr)
+            with open(outfile, 'w') as f:
+                f.writelines(template_text)
 
     def __str__(self):
         # Format the Mstransform results.
@@ -206,3 +224,16 @@ class MstransformResults(basetask.Results):
 
     def __repr__(self):
         return 'MstranformResults({}, {})'.format(os.path.basename(self.vis), os.path.basename(self.outputvis))
+
+FLAGGING_TEMPLATE_HEADER = '''#
+# ___TITLESTR___
+#
+# Examples
+# Note: Do not put spaces inside the reason string !
+#
+# mode='manual' correlation='YY' antenna='DV01;DV08;DA43;DA48&DV23' spw='21:1920~2880' autocorr=False reason='bad_channels'
+# mode='manual' spw='25:0~3;122~127' reason='stage8_2'
+# mode='manual' antenna='DV07' timerange='2013/01/31/08:09:55.248~2013/01/31/08:10:01.296' reason='quack'
+#
+'''
+
