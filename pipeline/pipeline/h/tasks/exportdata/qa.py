@@ -17,8 +17,7 @@ class ExportDataQAHandler(pqa.QAPlugin):
 
     def handle(self, context, result):
 
-	# Check for existance of field / spw combinations for which
-	# the derived fluxes are missing.
+	# Check for existance of core pipeline products 
         score1 = self._ppr_exists(result.inputs['products_dir'],
 	    result.pprequest)
         score2 = self._weblog_exists(result.inputs['products_dir'],
@@ -31,6 +30,9 @@ class ExportDataQAHandler(pqa.QAPlugin):
         if result.inputs['exportmses']:
 	    score5 = self._mses_exist (result.inputs['products_dir'], result.visdict)
             scores = [score1, score2, score3, score4, score5]
+        elif result.inputs['imaging_products_only']:
+	    score5 = self._images_exist (result.inputs['products_dir'], result.inputs['imaging_products_only'], result.calimages[1], result.targetimages[1])
+            scores = [score1, score2, score3, score4, score5]
         else:
             score5 = self._restorescript_exists(result.inputs['products_dir'],
 	        result.restorescript)
@@ -40,7 +42,8 @@ class ExportDataQAHandler(pqa.QAPlugin):
 	        result.visdict)
 	    score8 = self._caltables_exist (result.inputs['products_dir'],
 	        result.sessiondict)
-            scores = [score1, score2, score3, score4, score5, score6, score7, score8]
+	    score9 = self._images_exist (result.inputs['products_dir'], result.inputs['imaging_products_only'], result.calimages[1], result.targetimages[1])
+            scores = [score1, score2, score3, score4, score5, score6, score7, score8, score9]
 	    
         result.qa.pool[:] = scores
 	result.qa.all_unity_longmsg = \
@@ -105,6 +108,12 @@ class ExportDataQAHandler(pqa.QAPlugin):
         Check for the existence of the session / caltables files
         '''
         return qacalc.score_caltables_exist(products_dir, sessiondict)
+
+    def _images_exist(self, products_dir, imaging_products_only, calimages, targetimages):
+        '''
+        Check for the existence of the calibrator and / or targer images
+        '''
+        return qacalc.score_images_exist(products_dir, imaging_products_only, calimages, targetimages)
 
 
 class ExportDataListQAHandler(pqa.QAPlugin):
