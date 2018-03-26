@@ -5,8 +5,8 @@ from taskinit import casalog
 import pipeline.h.cli.utils as utils
 
 
-def h_exportdata(vis=None, session=None, pprfile=None, exportmses=None,
-    calintents=None, calimages=None, targetimages=None, products_dir=None,
+def h_exportdata(vis=None, session=None, pprfile=None, imaging_products_only=None,
+    exportmses=None, calintents=None, calimages=None, targetimages=None, products_dir=None,
     pipelinemode=None, dryrun=None, acceptresults=None):
 
     ##########################################################################

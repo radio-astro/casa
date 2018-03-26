@@ -19,6 +19,11 @@
 	<value></value>
     </param>
 
+    <param type="bool" name="imaging_products_only">
+	<description>Export the science target image products only</description>
+	<value>False</value>
+    </param>
+
     <param type="bool" name="exportmses">
 	<description>Export MeasurementSets instead of flags and caltables</description>
 	<value>False</value>
