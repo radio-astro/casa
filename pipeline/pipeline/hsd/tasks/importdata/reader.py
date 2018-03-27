@@ -180,7 +180,7 @@ class MetaDataReader(object):
             for irow in index:
                 iprogress += 1
                 if iprogress >= nprogress and iprogress % nprogress == 0:
-                    print '%s/%s'%(iprogress,nrow)
+                    print('{}/{}'.format(iprogress, nrow))
                 row = rows[irow]
                 mjd_in_sec = Tmjd[irow]
                 antenna_id = Tant[irow]

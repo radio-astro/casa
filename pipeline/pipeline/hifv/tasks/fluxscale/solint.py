@@ -84,7 +84,7 @@ class Solint(basetask.StandardTaskTemplate):
         m = self.inputs.context.observing_run.get_ms(self.inputs.vis)
         # soltimes = [self.inputs.context.evla['msinfo'][m.name].int_time * x for x in soltimes]
         soltimes = [m.get_vla_max_integration_time() * x for x in soltimes]
-        print soltimes
+        print(soltimes)
         
         solints = ['int', str(soltimes[1])+'s', str(soltimes[2])+'s']
         soltime = soltimes[0]
@@ -290,7 +290,7 @@ class Solint(basetask.StandardTaskTemplate):
             phase_scan_list = self.inputs.context.evla['msinfo'][m.name].phase_scan_select_string.split(',')
             phase_scan_list = [int(i) for i in phase_scan_list]
 
-            print phase_scan_list
+            print(phase_scan_list)
             
             for kk in range(len(phase_scan_list)):
                 ii = phase_scan_list[kk]
@@ -313,28 +313,26 @@ class Solint(basetask.StandardTaskTemplate):
                     
                     if ((kk > 0) and (phase_scan_list[kk-1] == ii-1) and (set(new_spws) == set(old_spws)) and (new_field == old_field)):
                         # if contiguous scans, just increase the time on the previous one
-                        print "End time, old begin time", end_time, old_begin_time
+                        print("End time, old begin time {} {}".format(end_time, old_begin_time))
                         durations[-1] = 86400*(end_time - old_begin_time)
                         # print "first durations: ", durations
                     else:
-                        print "End time, begin time", end_time, begin_time
+                        print("End time, begin time {} {}".format(end_time, begin_time))
                         durations.append(86400*(end_time - begin_time))
                         old_begin_time = begin_time
-                        print "append durations, old, begin:", durations, old_begin_time, begin_time
+                        print("append durations, old, begin:".format(durations, old_begin_time, begin_time))
                     LOG.info("Scan "+str(ii)+" has "+str(durations[-1])+"s on source")
                     old_spws = new_spws
                     old_field = new_field
                 
                 except KeyError:
                     LOG.warn("WARNING: scan "+str(ii)+" is completely flagged and missing from " + calMs)
-              
-              
+
         longsolint = (np.max(durations))*1.01
         gain_solint2=str(longsolint)+'s'
                    
         return (longsolint, gain_solint2)
 
-    
     def _do_gtype_testgains(self, calMs, caltable, solint='int', context=None, combtime='scan', refAnt=None):
 
         m = self.inputs.context.observing_run.get_ms(self.inputs.vis)

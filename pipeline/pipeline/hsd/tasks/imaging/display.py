@@ -729,7 +729,7 @@ class SDChannelMapDisplay(SDImageDisplay):
                 else:                       Vmin = scale_min
 
                 if Vmax == 0 and Vmin == 0: 
-                    print "No data to create channel maps. Check the flagging criteria."
+                    print("No data to create channel maps. Check the flagging criteria.")
                     return plot_list
 
                 for i in xrange(NMap):
@@ -1154,7 +1154,7 @@ class SDSpectralMapDisplay(SDImageDisplay):
                     Npanel += 1
             del data, mask2d
         del ROWS
-        print("Returning %d plots from spectralmap" % len(plot_list))
+        print("Returning {} plots from spectralmap".format(len(plot_list)))
         return plot_list
 
         

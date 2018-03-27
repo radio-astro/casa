@@ -17,6 +17,7 @@ JPL_HORIZONS_ID = {'ALMA': '-7',
                    'geocentric': '500'
 }
 
+
 def plotMosaic(vis='',sourceid='',figfile='', coord='relative', skipsource=-1,
                doplot=True, help=False):
   """
@@ -32,20 +33,20 @@ def plotmosaic(vis='',sourceid='',figfile='', coord='relative', skipsource=-1,
   """
 
   if (help):
-      print "Usage: plotmosaic(vis, sourceid='', figfile='', coord='relative',"
-      print "                  skipsource=-1, doplot=True, help=False)"
-      print "  The sourceid may be either an integer, integer string, or the string name"
-      print "     of the source but it cannot be a list."
-      print "  If doplot=False, then the central field ID is returned as an integer. "
-      print "     Otherwise, a list is returned: "
-      print "         [central field,  maxRA, minRA, minDec, maxDec]"
-      print "     where the angles are in units of arcsec relative to the center."
-      print "  If coord='absolute', then nothing is returned."
+      print("Usage: plotmosaic(vis, sourceid='', figfile='', coord='relative',")
+      print("                  skipsource=-1, doplot=True, help=False)")
+      print("  The sourceid may be either an integer, integer string, or the string name")
+      print("     of the source but it cannot be a list.")
+      print("  If doplot=False, then the central field ID is returned as an integer. ")
+      print("     Otherwise, a list is returned: ")
+      print("         [central field,  maxRA, minRA, minDec, maxDec]")
+      print("     where the angles are in units of arcsec relative to the center.")
+      print("  If coord='absolute', then nothing is returned.")
       return
 
   # open the ms table
   if (coord.find('abs') < 0 and coord.find('rel') < 0):
-      print "Invalid option for coord, must be either 'rel'ative or 'abs'olute."
+      print("Invalid option for coord, must be either 'rel'ative or 'abs'olute.")
       return
 
   mytb = casac.table()
@@ -53,7 +54,7 @@ def plotmosaic(vis='',sourceid='',figfile='', coord='relative', skipsource=-1,
       fieldTable = vis+'/FIELD'
       mytb.open(fieldTable)
   except:
-      print "Could not open table = %s" % fieldTable 
+      print("Could not open table = %s" % fieldTable) 
       return
 
   delayDir = mytb.getcol('DELAY_DIR')
@@ -68,16 +69,16 @@ def plotmosaic(vis='',sourceid='',figfile='', coord='relative', skipsource=-1,
           srcs=np.unique(sourceID[matches])
           nsrcs=len(srcs)
           if (nsrcs>1):
-              print "More than one source ID matches this name: ",sourceID
-              print "Try again using one of these."
+              print("More than one source ID matches this name: {}".format(sourceID))
+              print("Try again using one of these.")
               return
           elif (nsrcs==0):
               if (sourceid != ''):
-                  print "No sources match this name = %s" % sourceid
-                  print "Available sources = ",np.unique(name)
+                  print("No sources match this name = %s" % sourceid)
+                  print("Available sources = {}".format(np.unique(name)))
                   return
               else:
-                  print "No source specified in the second argument, so plotting all sources."
+                  print("No source specified in the second argument, so plotting all sources.")
           else:
               sourceid = srcs[0]
 
@@ -89,9 +90,9 @@ def plotmosaic(vis='',sourceid='',figfile='', coord='relative', skipsource=-1,
       matches = np.where(fields != skipsource)[0]
       fields = fields[matches]
       if (len(fields) < 1):
-          print "No fields contain source ID = ", sourceid
+          print("No fields contain source ID = {}".format(sourceid))
           return
-      print "Field IDs with matching source ID = ", fields
+      print("Field IDs with matching source ID = {}".format(fields))
   name = mytb.getcol('NAME')
   mytb.close()
 
@@ -99,7 +100,7 @@ def plotmosaic(vis='',sourceid='',figfile='', coord='relative', skipsource=-1,
       antennaTable = vis+'/ANTENNA'
       mytb.open(antennaTable)
   except:
-      print "Could not open table = %s" % antennaTable 
+      print("Could not open table = %s" % antennaTable) 
       return
 
   dishDiameter = np.unique(mytb.getcol('DISH_DIAMETER'))
@@ -112,12 +113,12 @@ def plotmosaic(vis='',sourceid='',figfile='', coord='relative', skipsource=-1,
       refFreqs = mytb.getcol('REF_FREQUENCY')
       mytb.close()
   except:
-      print "Could not open table = %s" % antennaTable 
-      print "Will not print primary beam circles"
+      print("Could not open table = %s" % antennaTable) 
+      print("Will not print primary beam circles")
       titleString = vis.split('/')[-1]
       dishDiameter =  [0]
   [latitude,longitude,obs] = getObservatoryLatLong('ALMA') 
-  print "Got longitude = %.3f deg" % (longitude)
+  print("Got longitude = %.3f deg" % (longitude))
 
   if (3840 in num_chan):
       matches = np.where(num_chan == 3840)[0]
@@ -125,7 +126,7 @@ def plotmosaic(vis='',sourceid='',figfile='', coord='relative', skipsource=-1,
       matches = np.where(num_chan > 4)[0]  # this kills the WVR and channel averaged data
    
   meanRefFreq = np.mean(refFreqs[matches])
-  print "Mean frequency = %f GHz" % (meanRefFreq*1e-9)
+  print("Mean frequency = %f GHz" % (meanRefFreq*1e-9))
   lambdaMeters = c_mks / meanRefFreq
   ra = delayDir[0,:][0]*12/math.pi
   dec = delayDir[1,:][0]*180/math.pi
@@ -142,14 +143,14 @@ def plotmosaic(vis='',sourceid='',figfile='', coord='relative', skipsource=-1,
 
   markersize = 4
   #print "Found %d pointings" % (shape(ra)[0])
-  print "Found %d pointings" % (np.shape(ra)[0])
+  print("Found %d pointings" % (np.shape(ra)[0]))
   [centralField,smallestSeparation] = findNearestField(ra[fields],dec[fields],
                                           raAverageDegrees, decAverageDegrees)
   # This next step is crucial, as it converts from the field number 
   # determined from a subset list back to the full list.
   centralField = fields[centralField]
   
-  print "Field %d is closest to the center of the area covered (%.1f arcsec away)." % (centralField,smallestSeparation*3600)
+  print("Field %d is closest to the center of the area covered (%.1f arcsec away)." % (centralField,smallestSeparation*3600))
   if (doplot==False):
       return(centralField)
 
@@ -225,7 +226,7 @@ def plotmosaic(vis='',sourceid='',figfile='', coord='relative', skipsource=-1,
     pb.ylim(y0,y1)
     pb.axis('equal')
   else:
-    print "Invalid option for coord, must be either 'rel'ative or 'abs'olute."
+    print("Invalid option for coord, must be either 'rel'ative or 'abs'olute.")
     return
 
   #yFormatter = ScalarFormatter(useOffset=False)
@@ -240,23 +241,24 @@ def plotmosaic(vis='',sourceid='',figfile='', coord='relative', skipsource=-1,
   if (figfile==True):
       try:
         pb.savefig(autoFigureName)
-        print "Wrote file = %s" % (autoFigureName)
+        print("Wrote file = %s" % (autoFigureName))
       except:
-        print "WARNING:  Could not save plot file.  Do you have write permission here?"
+        print("WARNING:  Could not save plot file.  Do you have write permission here?")
   elif (len(figfile) > 0):
       try:
         pb.savefig(figfile)
-        print "Wrote file = %s" % (figfile)
+        print("Wrote file = %s" % (figfile))
       except:
-        print "WARNING:  Could not save plot file.  Do you have write permission here?"
+        print("WARNING:  Could not save plot file.  Do you have write permission here?")
   else:
-        print "To save a plot, re-run with either:"
-        print "  plotmosaic('%s',figfile=True) to produce the automatic name=%s" % (vis,autoFigureName)
-        print "  plotmosaic('%s',figfile='myname.png')" % (vis)
+        print("To save a plot, re-run with either:")
+        print("  plotmosaic('%s',figfile=True) to produce the automatic name=%s" % (vis, autoFigureName))
+        print("  plotmosaic('%s',figfile='myname.png')" % (vis))
   if (coord.find('rel')>=0):
       return mosaicInfo
   else:
       return
+
 
 def listAvailableObservatories():
         mytb = casac.table()
@@ -268,11 +270,12 @@ def listAvailableObservatories():
             for N in Name:
                 ns += N + "  "
                 if (len(ns) > 70):
-                    print ns
+                    print(ns)
                     ns = ''
             mytb.close()
         except:
-            print "Could not open table = %s" % (repotable)
+            print("Could not open table = %s" % (repotable))
+
 
 def getObservatoryLatLong(observatory='', help=False):
      """
@@ -280,10 +283,10 @@ def getObservatoryLatLong(observatory='', help=False):
      in degrees for the specified observatory name string.
      """
      if (help):
-        print "Opens the casa table of known observatories and returns the latitude"
-        print "and longitude in degrees for the specified observatory (default=ALMA)."
-        print "Usage: getObservatoryLatLong(observatory='ALMA')"
-        print "Usage: getObservatoryLatLong(observatory=-7)"
+        print("Opens the casa table of known observatories and returns the latitude")
+        print("and longitude in degrees for the specified observatory (default=ALMA).")
+        print("Usage: getObservatoryLatLong(observatory='ALMA')")
+        print("Usage: getObservatoryLatLong(observatory=-7)")
         listAvailableObservatories()
         return
 
@@ -292,7 +295,7 @@ def getObservatoryLatLong(observatory='', help=False):
      try:
         mytb.open(repotable)
      except:
-        print "Could not open table = %s, returning ALMA coordinates instead" % (repotable)
+        print("Could not open table = %s, returning ALMA coordinates instead" % (repotable))
         longitude = -67.7549  # ALMA
         latitude = -23.0229   # ALMA
         observatory = 'ALMA'
@@ -302,17 +305,17 @@ def getObservatoryLatLong(observatory='', help=False):
          if (str(observatory) in JPL_HORIZONS_ID.values()):
              observatory = JPL_HORIZONS_ID.keys()[JPL_HORIZONS_ID.values().index(str(observatory))]
          else:
-            print "Did not recognize observatory='%s', using ALMA instead." % (observatory)
+            print("Did not recognize observatory='%s', using ALMA instead." % (observatory))
             observatory = 'ALMA'
              
      Name = mytb.getcol('Name')
      matches = np.where(np.array(Name)==observatory)
      if (len(matches) < 1 and str(observatory).find('500') < 0):
-            print "Names = ", Name
-            print "Did not find observatory='%s', using ALMA instead." % (observatory)
+            print("Names = {}".format(Name))
+            print("Did not find observatory='%s', using ALMA instead." % (observatory))
             for n in Name:
                 if (n.find(observatory) >= 0):
-                    print "Partial match: ", n
+                    print("Partial match: {}".format(n))
             observatory = 'ALMA'
             longitude = -67.7549  # ALMA
             latitude = -23.0229   # ALMA
@@ -327,6 +330,7 @@ def getObservatoryLatLong(observatory='', help=False):
      mytb.close()
          
      return([latitude,longitude,observatory])
+
 
 def findNearestField(ra, dec, raAverageDegrees, decAverageDegrees):
     """
@@ -377,13 +381,13 @@ def primaryBeamArcsec(vis='', spw='', frequency='',wavelength='', diameter=12.0,
   """
   
   if (help == True):
-      print "Usage: primaryBeamArcsec(vis='', spw='', frequency='',wavelength='', diameter=12.0, verbose=False, help=False)"
-      print "Implements the formula: 1.18 * lambda / D.  Specify one of the following combinations:"
-      print "     1) vis and spw (uses median dish diameter)"
-      print "     2) frequency in GHz (assumes 12m)"
-      print "     3) wavelength in mm (assumes 12m)"
-      print "     4) frequency in GHz and diameter"
-      print "     5) wavelength in mm and diameter"
+      print("Usage: primaryBeamArcsec(vis='', spw='', frequency='',wavelength='', diameter=12.0, verbose=False, help=False)")
+      print("Implements the formula: 1.18 * lambda / D.  Specify one of the following combinations:")
+      print("     1) vis and spw (uses median dish diameter)")
+      print("     2) frequency in GHz (assumes 12m)")
+      print("     3) wavelength in mm (assumes 12m)")
+      print("     4) frequency in GHz and diameter")
+      print("     5) wavelength in mm and diameter")
       return (0)
 
   mytb = casac.table()
@@ -393,7 +397,7 @@ def primaryBeamArcsec(vis='', spw='', frequency='',wavelength='', diameter=12.0,
           antennaTable = vis+'/ANTENNA'
           mytb.open(antennaTable)
       except:
-          print "Could not open table = %s" % antennaTable 
+          print("Could not open table = %s" % antennaTable) 
           return(0)
       diameter = np.median(np.unique(mytb.getcol('DISH_DIAMETER')))
       mytb.close()
@@ -405,17 +409,17 @@ def primaryBeamArcsec(vis='', spw='', frequency='',wavelength='', diameter=12.0,
           refFreqs = mytb.getcol('REF_FREQUENCY')
           mytb.close()
       except:
-          print "Could not open table = %s" % antennaTable 
+          print("Could not open table = %s" % antennaTable) 
           return(0)
 
       frequencyHz = refFreqs[spw]
       frequency = frequencyHz*1e-9
       if (verbose):
-          print "Found frequency = %f GHz and dish diameter = %.1fm" % (frequency,diameter)
+          print("Found frequency = %f GHz and dish diameter = %.1fm" % (frequency, diameter))
 
   else:
       if (frequency != '' and wavelength != ''):
-          print "You must specify either frequency or wavelength, not both!"
+          print("You must specify either frequency or wavelength, not both!")
           return(0)
 
   if (frequency != ''):
@@ -423,7 +427,7 @@ def primaryBeamArcsec(vis='', spw='', frequency='',wavelength='', diameter=12.0,
   elif (wavelength != ''):
       lambdaMeters = wavelength*0.001
   else:
-      print "You must specify either frequency (in GHz) or wavelength (in mm)"
+      print("You must specify either frequency (in GHz) or wavelength (in mm)")
       return(0)
 
   return(1.18*lambdaMeters*3600*180/diameter/math.pi)
@@ -436,4 +440,3 @@ def resizeFonts(adesc, fontsize):
     adesc.xaxis.set_major_formatter(yFormat)
     pb.setp(adesc.get_xticklabels(), fontsize=fontsize)
     pb.setp(adesc.get_yticklabels(), fontsize=fontsize)
-

@@ -340,7 +340,7 @@ class Fluxboot(basetask.StandardTaskTemplate):
                 bands = bands_from_spw
                 
             unique_bands = list(np.unique(bands))
-            print unique_bands
+            print(unique_bands)
             for band in unique_bands:
                 lfreqs = []
                 lfds = []
@@ -385,7 +385,7 @@ class Fluxboot(basetask.StandardTaskTemplate):
                 # to curve_fit, is better.
                 #
                 
-                print lfds
+                print(lfds)
                 
                 if len(lfds) < 2:
                     aa = lfds[0]

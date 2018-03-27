@@ -56,7 +56,7 @@ class PositionAngle(api.Heuristic):
 
         with casatools.MSReader(measurement_set_name, nomodify=False) as ms:
             for spw in range(channel_freq_column.shape[1]):
-                print 'spw=' + str(spw)
+                print('spw={}'.format(spw))
                 ms.select({'field_id': [field.id], 'data_desc_id': [spw]})
                 mdata = ms.getdata('model_data')
                 if not mdata:

@@ -78,19 +78,19 @@ def qufromgain(caltable,badspw=[],paoffset=0.0):
     # _geodetic_ latitude
     latr=me.measure(mpos,'WGS84')['m1']['value']
 
-    print 'Latitude = ',latr*180/pi
+    print("Latitude = {}".format(latr*180/pi))
 
     tb.open(caltable+'/FIELD')
     nfld=tb.nrows()
     dirs=tb.getcol('DELAY_DIR')[:,0,:]
     tb.close()
-    print 'Found as many as '+str(nfld)+' fields.'
+    print('Found as many as {} fields.'.format(nfld))
 
     tb.open(caltable+'/SPECTRAL_WINDOW')
     nspw=tb.nrows()
     bandnames=[x.split('#')[0].split('_')[-1] for x in tb.getcol('NAME')]
     tb.close()
-    print 'Found as many as '+str(nspw)+' spws.'
+    print('Found as many as {} spws.'.format(nspw))
 
     R=pl.zeros((nspw,nfld))
     Q=pl.zeros((nspw,nfld))
@@ -164,15 +164,17 @@ def qufromgain(caltable,badspw=[],paoffset=0.0):
                 P=sqrt(Q[ispw,ifld]**2+U[ispw,ifld]**2)
                 X=0.5*atan2(U[ispw,ifld],Q[ispw,ifld])*180/pi
 
-                print 'Fld=',ifld,'Spw=',ispw,'(B='+str(bandnames[ispw])+', PA offset='+str(bandpa(bandnames[ispw])*180./pi)+'deg)','Gx/Gy=',R[ispw,ifld],'Q=',Q[ispw,ifld],'U=',U[ispw,ifld],'P=',P,'X=',X
-                
+                print("Fld={} Spw={} (B={}, PA offset={} deg) Gx/Gy={} Q={} U={} P={} X={}"
+                      "".format(ifld, ispw, bandnames[ispw], bandpa(bandnames[ispw])*180./pi, R[ispw, ifld],
+                                Q[ispw, ifld], U[ispw, ifld], P, X))
+
             else:
                 mask[ispw,ifld]=False
 
             st.close()
 
         if sum(mask[:,ifld])>0:
-            print 'For field id = ',ifld,' there are ',sum(mask[:,ifld]),'good spws.'
+            print('For field id = {} there are {} good spws.'.format(ifld, sum(mask[:, ifld])))
 
             Qm=pl.mean(Q[mask[:,ifld],ifld])
             Um=pl.mean(U[mask[:,ifld],ifld])
@@ -181,7 +183,7 @@ def qufromgain(caltable,badspw=[],paoffset=0.0):
             Ue=pl.std(U[mask[:,ifld],ifld])
             Pm=sqrt(Qm**2+Um**2)
             Xm=0.5*atan2(Um,Qm)*180/pi
-            print 'Spw mean: Fld=', ifld,'Q=',Qm,'U=',Um,'(rms=',Qe,Ue,')','P=',Pm,'X=',Xm
+            print('Spw mean: Fld={} Q={} U={} (rms={} {}) P={} X={}'.format(ifld, Qm, Um, Qe, Ue, Pm, Xm))
 
     tb.close()
 
@@ -199,7 +201,7 @@ def xyamb(xytab,qu,xyout=''):
         os.system('cp -r '+xytab+' '+xyout)
 
     QUexp=complex(qu[0],qu[1])
-    print 'Expected QU = ',qu   # , '  (',pl.angle(QUexp)*180/pi,')'
+    print('Expected QU = {}'.format(qu))
 
     tb.open(xyout,nomodify=False)
 
@@ -216,7 +218,7 @@ def xyamb(xytab,qu,xyout=''):
             c=st.getcol('CPARAM')
             fl=st.getcol('FLAG')
             xyph0=pl.angle(pl.mean(c[0,:,:][pl.logical_not(fl[0,:,:])]),True)
-            print 'Spw = '+str(ispw)+': Found QU = '+str(QU[:,ispw])  # +'   ('+str(pl.angle(qufound)*180/pi)+')'
+            print('Spw = {}: Found QU = {}'.format(ispw, QU[:, ispw]))
             #if ( (abs(q)>0.0 and abs(qu[0])>0.0 and (q/qu[0])<0.0) or
             #     (abs(u)>0.0 and abs(qu[1])>0.0 and (u/qu[1])<0.0) ):
             if ( pl.absolute(pl.angle(qufound/QUexp)*180/pi)>90.0 ):
@@ -224,9 +226,9 @@ def xyamb(xytab,qu,xyout=''):
                 xyph1=pl.angle(pl.mean(c[0,:,:][pl.logical_not(fl[0,:,:])]),True)
                 st.putcol('CPARAM',c)
                 QU[:,ispw]*=-1
-                print '   ...CONVERTING X-Y phase from '+str(xyph0)+' to '+str(xyph1)+' deg'
+                print('   ...CONVERTING X-Y phase from {} to {} deg'.format(xyph0, xyph1))
             else:
-                print '      ...KEEPING X-Y phase '+str(xyph0)+' deg'
+                print('      ...KEEPING X-Y phase {} deg'.format(xyph0))
             st.close()
     QUr={}
     QUr['QU']=QU
@@ -237,10 +239,11 @@ def xyamb(xytab,qu,xyout=''):
     Pm=pl.sqrt(QUm[0]**2+QUm[1]**2)
     Xm=0.5*atan2(QUm[1],QUm[0])*180/pi
 
-    print 'Ambiguity resolved (spw mean): Q=',QUm[0],'U=',QUm[1],'(rms=',QUe[0],QUe[1],')','P=',Pm,'X=',Xm
+    print('Ambiguity resolved (spw mean): Q={} U={} (rms={} {}) P={} X={}'
+          ''.format(QUm[0], QUm[1], QUe[0], QUe[1], Pm, Xm))
 
     stokes=[1.0,QUm[0],QUm[1],0.0]
-    print 'Returning the following Stokes vector: '+str(stokes)
+    print('Returning the following Stokes vector: {}'.format(stokes))
     
     return stokes
 
@@ -304,7 +307,7 @@ def fixfeedpa(vis,defband='',forceband=''):
     spwnames=tb.getcol('NAME')
     tb.close()
     if len(forceband)>0:
-        print 'Forcing band = ',forceband
+        print('Forcing band = {}'.format(forceband))
         spwnames[:]=forceband
         defband=forceband
     tb.open(vis+'/FEED',nomodify=F)
@@ -316,10 +319,10 @@ def fixfeedpa(vis,defband='',forceband=''):
     spwmask=pl.logical_not(spwmask)
     if (sum(spwmask)>0):
         if (len(defband)>0):
-            print 'NB: Setting spwid=-1 rows in FEED table to RECEPTOR_ANGLE for band='+str(defband)
+            print('NB: Setting spwid=-1 rows in FEED table to RECEPTOR_ANGLE for band={}'.format(defband))
             ra[0,spwmask]=bandpa(defband)
         else:
-            print 'NB: Setting spwid=-1 rows in FEED table to RECEPTOR_ANGLE=(0,pi/2)'
+            print('NB: Setting spwid=-1 rows in FEED table to RECEPTOR_ANGLE=(0,pi/2)')
     ra[1,:]=ra[0,:]+(pi/2.)
     tb.putcol('RECEPTOR_ANGLE',ra)
     tb.close()
@@ -348,10 +351,10 @@ def fillsplitconcat(asdms,outvis,spw='',intent='',field='',dotsys=False,dowvr=Fa
         fillms=tmpdir+sdm+'.ms'
         # only fill if not already present
         if (len(glob.glob(fillms))<1):
-            print 'Filling '+sdmpath+' to '+fillms
+            print('Filling {} to {}'.format(sdmpath, fillms))
             importasdm(asdm=sdmpath,vis=fillms)
         else:
-            print 'Found '+fillms+' already filled.'
+            print('Found {} already filled.'.format(fillms))
 
         if dotsys or dowvr:
             gaintable=[]
@@ -385,7 +388,7 @@ def fillsplitconcat(asdms,outvis,spw='',intent='',field='',dotsys=False,dowvr=Fa
             # and not already split
             splitms=tmpdir+sdm+'.split_'+spw.replace('*','')+'_'+intent.replace('*','').replace(',','-')+'.ms'
             if (len(glob.glob(splitms))<1):
-                print '  Splitting spw=\''+spw+'\' from '+fillms+' into '+splitms
+                print("  Splitting spw='{}' from {} into {}".format(spw, fillms, splitms))
                 dc='data'
                 if dotsys or dowvr:
                     dc='corrected'
@@ -395,21 +398,21 @@ def fillsplitconcat(asdms,outvis,spw='',intent='',field='',dotsys=False,dowvr=Fa
                     # only if split successful (spw might not select anything or import failed)
                     splitlist.append(splitms)
                 else:
-                    print 'split failed on '+str(fillms)+'; continuing without it'
+                    print('split failed on {}; continuing without it'.format(fillms))
             else:
                 splitlist.append(splitms)
-                print '  Found '+splitms+' already split.'
+                print('  Found {} already split.'.format(splitms))
         else:
             # the filled ms is what we will concat
             splitlist.append(fillms)
     
     if len(splitlist)>1:
-        print 'Concat-ing: ',splitlist,' to ',outvis
+        print('Concat-ing: {} to {}'.format(splitlist, outvis))
         concat(vis=splitlist,concatvis=outvis)
 
     else:
         if len(splitlist[0])>0:
-            print 'Renaming: ',splitlist[0],' to ',outvis
+            print('Renaming: {} to {}'.format(splitlist[0], outvis))
             os.rename(splitlist[0],outvis)
         else:
             raise Exception, 'No data was generated by filling/splitting/concat-ing'
@@ -423,7 +426,7 @@ def scanbystate(vis,undo=False):
     tb.open(vis,nomodify=False)
     scans=tb.getcol('SCAN_NUMBER')
     states=tb.getcol('STATE_ID')
-    print 'Unique STATE_IDs = ',str(pl.unique(states))
+    print('Unique STATE_IDs = {}'.format(pl.unique(states)))
     maxstate=states.max()
 
     if undo:
@@ -433,12 +436,12 @@ def scanbystate(vis,undo=False):
             raise Exception, 'Apparently, nothing to undo'
         scans-=states
         scans/=d
-        print 'New SCAN_NUMBER = (SCAN_NUMBER - STATE_ID) / '+str(d)
+        print('New SCAN_NUMBER = (SCAN_NUMBER - STATE_ID) / {}'.format(d))
     else:
         m=10**int(floor(log10(states.max())+1.0))
         scans*=m
         scans+=states
-        print 'New SCAN_NUMBER = SCAN_NUMBER * '+str(m)+' + STATE_ID'
+        print('New SCAN_NUMBER = SCAN_NUMBER * {} + STATE_ID'.format(m))
 
     tb.putcol('SCAN_NUMBER',scans)
     tb.close()

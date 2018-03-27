@@ -231,7 +231,7 @@ class DetectLine(basetask.StandardTaskTemplate):
         return result
     
     def plot_detectrange(self, sp, protected, fname):
-        print protected, fname
+        print(protected, fname)
         PL.clf()
         PL.plot(sp)
         ymin,ymax = PL.ylim()

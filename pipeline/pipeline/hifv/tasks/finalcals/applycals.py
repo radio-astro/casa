@@ -359,9 +359,9 @@ class Applycals(applycal.IFApplycal):
             applycalgroups[gainfieldkey].extend(targetscans)
 
         for gainfield, scanlist in applycalgroups.iteritems():
-            print "Applycal Group"
-            print "\tGainfield....", gainfield
-            print "\t\tScanList...", ','.join(scanlist)
-            print " "
+            print("Applycal Group")
+            print("\tGainfield.... {}".format(gainfield))
+            print("\t\tScanList... {}".format(','.join(scanlist)))
+            print(" ")
 
         return applycalgroups

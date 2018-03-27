@@ -34,18 +34,18 @@ def minparallelresponse(caltable, gqu):
     # _geodetic_ latitude
     latr=me.measure(mpos,'WGS84')['m1']['value']
 
-    print 'Latitude = ',latr*180/pi
+    print('Latitude = {}'.format(latr*180/pi))
 
     tb.open(caltable+'/FIELD')
     nfld=tb.nrows()
     dirs=tb.getcol('DELAY_DIR')[:,0,:]
     tb.close()
-    print 'Found as many as '+str(nfld)+' fields.'
+    print('Found as many as {} fields.'.format(nfld))
 
     tb.open(caltable+'/SPECTRAL_WINDOW')
     nspw=tb.nrows()
     tb.close()
-    print 'Found as many as '+str(nspw)+' spws.'
+    print('Found as many as {} spws.'.format(nspw))
 
     minscan = {}
     tb.open(caltable)

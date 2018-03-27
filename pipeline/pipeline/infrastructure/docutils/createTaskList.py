@@ -13,6 +13,8 @@
 #    tasklist/index.html is top page for the task list.
 #
 ###
+from __future__ import print_function
+
 import os
 import commands
 import time
@@ -93,7 +95,7 @@ class taskutil( object ):
     def getshortdescription( self, task ):
         shortdesc='No description'
         if not ( task in self.tasks ):
-            print task+' does not exist.'
+            print('{} does not exist.'.format(task))
             return shortdesc
         xmlfile=self.taskdir+'/'+task+'.xml'
         import xml.dom.minidom as DOM
@@ -108,7 +110,7 @@ class taskutil( object ):
     def gettaskdescription( self, task ):
         docstr = ''
         if not ( task in self.tasks ):
-            print task+' does not exist.'
+            print('{} does not exist.'.format(task))
             return docstr
         xmlfile=self.taskdir+'/'+task+'.xml'
         import xml.dom.minidom as DOM
@@ -127,7 +129,7 @@ class taskutil( object ):
         #print 'task = ', task
         paramlist=[]
         if not ( task in self.tasks ):
-            print task+' does not exist.'
+            print('{} does not exist.'.format(task))
             return paramlist
         xmlfile=self.taskdir+'/'+task+'.xml'
         import xml.dom.minidom as DOM
@@ -142,7 +144,6 @@ class taskutil( object ):
             typekey=keys.index('type')
             values=attr.values()
             name=values[namekey].value.encode('UTF-8')
-            #print '   ',name
             myproperty={}
             ptype=values[typekey].value.encode('UTF-8')
             defaults=childs[i].getElementsByTagName('value')[0]
@@ -180,57 +181,56 @@ class taskutil( object ):
         htmlfile='tasklist.html'
         tasklist=self.gettasklist()
         f=open( outdir+'/'+htmlfile, 'w' )
-        print >> f, '<HTML><BODY>'
-        print >> f, '<H1>Summary of {0} and parameters</H1>'.format(get_task_description(self.prefix))
-        print >> f, '<HR>'
+        print('<HTML><BODY>', file=f)
+        print('<H1>Summary of {0} and parameters</H1>'.format(get_task_description(self.prefix)), file=f)
+        print('<HR>', file=f)
         for i in xrange(len(tasklist)):
-            print >> f, '<H3><A NAME="%s">%s</A></H3>'%(tasklist[i],tasklist[i])
-            print >> f, '<DL>'
+            print('<H3><A NAME="%s">%s</A></H3>'%(tasklist[i],tasklist[i]), file=f)
+            print('<DL>', file=f)
             
             # task description
             #print tasklist[i], docstring
-            print >> f, '<DT> <B>Task Description</B><BR>'
-            print >> f, '<DD><BR>'
+            print('<DT> <B>Task Description</B><BR>', file=f)
+            print('<DD><BR>', file=f)
             docstring=self.gettaskdescription( tasklist[i] )
             ## replace ' ' with '&nbsp;' at the beggining of the each line
             docstring=self._processstring( docstring )
-            print >> f, docstring
+            print(docstring, file=f)
             ## alternative: use <PRE> tag
             #print >> f, '<PRE>'
             #print >> f, self._replacelfcode( docstring )
             #print >> f, '</PRE>'
-            print >> f, '</DL><BR>'
+            print('</DL><BR>', file=f)
 
             # parameter list
             paramlist=self.getparamlist( tasklist[i] )
-            print >> f, '<DT> <B>Parameter List</B><BR>'
-            print >> f, '<DD><P>'
+            print('<DT> <B>Parameter List</B><BR>', file=f)
+            print('<DD><P>', file=f)
             if len(paramlist) == 0:
-                print >> f, 'No parameter<P>'
+                print('No parameter<P>', file=f)
             else:
-                print >> f, '<TABLE BORDER="1">'
+                print('<TABLE BORDER="1">', file=f)
                 keys=paramlist[0].keys()
                 keys.sort()
                 line=''
                 for j in xrange(len(keys)):
                     truekey=keys[j][2:]
                     line=line+'<TH ALIGN="left">%s</TH>'%truekey
-                print >> f, '<TR>%s</TR>'%line
+                print('<TR>%s</TR>'%line, file=f)
                 for j in xrange(len(paramlist)):
                     line=''
                     for k in xrange(len(keys)):
                         line=line+'<TD ALIGN="left">%s</TD>'%paramlist[j][keys[k]]
-                    print >> f, '<TR>%s</TR>'%line
-                print >> f, '</TABLE><P>'
+                    print('<TR>%s</TR>'%line, file=f)
+                print('</TABLE><P>', file=f)
 
-            print >> f, '<P ALIGN="left"><A HREF="../index.html">Back</A><P>'
-            print >> f, '<HR>'
-        #print >> f, '<HR>'
-        print >> f, '<SMALL>'
-        print >> f, 'Created at %s UTC<BR>'%(time.asctime(time.gmtime()))
-        print >> f, 'This page is automatically generated from XML interface definition files.'
-        print >> f, '</SMALL>'
-        print >> f, '</BODY></HTML>'
+            print('<P ALIGN="left"><A HREF="../index.html">Back</A><P>', file=f)
+            print('<HR>', file=f)
+        print('<SMALL>', file=f)
+        print('Created at %s UTC<BR>'%(time.asctime(time.gmtime())), file=f)
+        print('This page is automatically generated from XML interface definition files.', file=f)
+        print('</SMALL>', file=f)
+        print('</BODY></HTML>', file=f)
         f.close()
 
 class taskutil2( taskutil ):
@@ -243,11 +243,9 @@ class taskutil2( taskutil ):
         self.tasks = []
         for i in xrange(len(tasks)):
             task=os.path.basename(tasks[i]).replace('.xml','')
-            #print 'task=',task
             if self.prefix is None or \
                re.match('%s_.*'%(self.prefix),task) is not None:
                 #task[:len(self.prefix)] == self.prefix:
-                #print 'added', task 
                 self.tasks.append(task)
         
 
@@ -289,7 +287,7 @@ class hetaskutil( object ):
             if task in tasklist[key]:
                 target=key
         if target is None:
-            print task+' does not exist.'
+            print('{} does not exist.'.format(task))
             return paramlist
         paramlist=self.tasks[target].getparamlist( task )
         return paramlist
@@ -306,28 +304,28 @@ class hetaskutil( object ):
             else:
                 basedirs[key]='h_tasklist'
         for key in self.keys:
-            print 'creating %s...'%(key.lower())
+            print('creating %s...'%(key.lower()))
             outdirs[key]=os.path.join(outdir,basedirs[key])
             self.tasks[key].createHTML( outdir=outdirs[key] )
         htmlfile=outdir+'/index.html'
         f=open( htmlfile, 'w' )
-        print >> f, '<HTML><BODY>'
-        print >> f, '<H1>List of Heuristics Tasks</H1>'
-        print >> f, '<HR>'
+        print('<HTML><BODY>', file=f)
+        print('<H1>List of Heuristics Tasks</H1>', file=f)
+        print('<HR>', file=f)
         for key in self.keys:
-            print >> f, '<H3>%s</H3>'%self.tasks[key].title 
-            print >> f, '%s tasks available.<BR><BR>'%len(tasklist[key])
-            print >> f, '<TABLE>'
-            print >> f, '<TR><TH ALIGN="left">task name</TH><TH ALIGN="left">description</TH></TR>'
+            print('<H3>%s</H3>'%self.tasks[key].title, file=f) 
+            print('%s tasks available.<BR><BR>'%len(tasklist[key]), file=f)
+            print('<TABLE>', file=f)
+            print('<TR><TH ALIGN="left">task name</TH><TH ALIGN="left">description</TH></TR>', file=f)
             for i in xrange(len(tasklist[key])):
-                print >> f, '<TR><TD><A HREF="./%s/tasklist.html#%s">%s</A></TD><TD>%s</TD></TR>'%(basedirs[key],tasklist[key][i],tasklist[key][i],self.tasks[key].getshortdescription(tasklist[key][i]))
-            print >> f, '</TABLE>'
-        print >> f, '<HR>'
-        print >> f, '<SMALL>'
-        print >> f, 'Created at %s UTC<BR>'%(time.asctime(time.gmtime()))
-        print >> f, 'This page is automatically generated from XML interface definition files.'
-        print >> f, '</SMALL>'
-        print >> f, '</BODY></HTML>'
+                print('<TR><TD><A HREF="./%s/tasklist.html#%s">%s</A></TD><TD>%s</TD></TR>'%(basedirs[key],tasklist[key][i],tasklist[key][i],self.tasks[key].getshortdescription(tasklist[key][i])), file=f)
+            print('</TABLE>', file=f)
+        print('<HR>', file=f)
+        print('<SMALL>', file=f)
+        print('Created at %s UTC<BR>'%(time.asctime(time.gmtime())), file=f)
+        print('This page is automatically generated from XML interface definition files.', file=f)
+        print('</SMALL>', file=f)
+        print('</BODY></HTML>', file=f)
         f.close()
 
 class hetaskutil2( hetaskutil ):
@@ -355,7 +353,7 @@ def create2( dirname=None ):
     if dirname is None:
         # assume that this file is located at pipeline/infrastructure/docutils
         dirname = '/' + os.path.join(*(__file__.split('/')[:-3]))
-    print 'pipeline directory is %s'%(dirname)
+    print('pipeline directory is %s'%(dirname))
     het=hetaskutil2(dirname=dirname)
     het.createtasklist()
     het.createHTML()
@@ -364,7 +362,7 @@ def create3(dirname=None):
     if dirname is None:
         # assume that this file is located at pipeline/infrastructure/docutils
         dirname = '/' + os.path.join(*(__file__.split('/')[:-3]))
-    print 'pipeline directory is %s'%(dirname)
+    print('pipeline directory is %s'%(dirname))
     het=hetaskutil3(dirname=dirname)
     het.createtasklist()
     het.createHTML()

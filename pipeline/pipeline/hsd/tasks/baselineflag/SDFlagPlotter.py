@@ -1,8 +1,10 @@
-'''
+"""
 Created on 2013/07/02
 
 @author: kana
-'''
+"""
+from __future__ import print_function
+
 #import numpy as NP
 import pylab as PL
 #import math
@@ -15,6 +17,7 @@ MATPLOTLIB_FIGURE_ID = [8904, 8905, 8906, 8907, 8908, 8909, 8910, 8911, 8912, 89
 DPIDetail = 130
 FIGSIZE_INCHES = (7.0, 2.8)
     
+
 def StatisticsPlot(PlotData, FigFileDir=False, FigFileRoot=False):
     # PlotData = {
     #             row:  [row], # row number of the spectrum
@@ -41,10 +44,10 @@ def StatisticsPlot(PlotData, FigFileDir=False, FigFileRoot=False):
             BrowserFile = open(FigFileDir+'listofplots.txt', 'a')
         else:
             BrowserFile = open(FigFileDir+'listofplots.txt', 'w')
-            print >> BrowserFile, 'TITLE: BF_Stat'
-            print >> BrowserFile, 'FIELDS: Stat IF POL Iteration Page'
-            print >> BrowserFile, 'COMMENT: Statistics of spectra'
-        print >> BrowserFile, FigFileRoot+'.png' 
+            print('TITLE: BF_Stat', file=BrowserFile)
+            print('FIELDS: Stat IF POL Iteration Page', file=BrowserFile)
+            print('COMMENT: Statistics of spectra', file=BrowserFile)
+        print(FigFileRoot+'.png', file=BrowserFile) 
         BrowserFile.close()
 
     PL.cla()

@@ -219,8 +219,8 @@ class WeightMS(basetask.StandardTaskTemplate):
                 if nrow > 2:
                     argmax = data.argmax(axis=2)
                     argmin = data.argmin(axis=2)
-                    print argmax.tolist()
-                    print argmin.tolist()
+                    print(argmax.tolist())
+                    print(argmin.tolist())
                     flag = tsel.getcol('FLAG')
                     for ipol in xrange(npol):
                         maxrow = argmax[ipol]
@@ -230,5 +230,3 @@ class WeightMS(basetask.StandardTaskTemplate):
                             flag[ipol, ichan, minrow[ichan]] = True
                     tsel.putcol('FLAG', flag)
                 tsel.close()
-
-    

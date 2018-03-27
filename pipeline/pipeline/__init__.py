@@ -61,7 +61,7 @@ def initcli():
             # buildmytasks writes output to packagename.py
             path_to_cli = pkg_resources.resource_filename(abs_package, '{!s}.py'.format(package))
         except ImportError as e:
-            print 'IMPORT ERROR '
+            print('IMPORT ERROR')
             LOG.debug('Import error: {!s}'.format(e))
             LOG.info('No tasks found for package: {!s}'.format(package))
         else:

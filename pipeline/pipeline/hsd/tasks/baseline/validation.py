@@ -1,12 +1,14 @@
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
+
+import math
+import sys
+import time
+from math import sqrt
 
 import numpy
-import math
-from math import sqrt
-import time
-import scipy.cluster.vq as VQ
-import scipy.cluster.hierarchy as HIERARCHY
 import numpy.linalg as LA
+import scipy.cluster.hierarchy as HIERARCHY
+import scipy.cluster.vq as VQ
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
@@ -432,8 +434,8 @@ class ValidateLineRaster(basetask.StandardTaskTemplate):
         # Sort lines and Category by LineCenter: lines[][0]
         LineIndex = numpy.argsort([line[0] for line in Bestlines[:Ncluster]])
         lines = [Bestlines[i] for i in LineIndex]
-        print 'Ncluster, lines:', Ncluster, lines
-        print 'LineIndex:', LineIndex
+        print('Ncluster, lines: {} {}'.format(Ncluster, lines))
+        print('LineIndex: {}'.format(LineIndex))
 
         ### 2011/05/17 anti-scaling of the line width
         Region2[:,0] = Region2[:,0] * self.CLUSTER_WHITEN
@@ -441,8 +443,8 @@ class ValidateLineRaster(basetask.StandardTaskTemplate):
             lines[Nc][1] *= self.CLUSTER_WHITEN
 
         LineIndex2 = numpy.argsort(LineIndex)
-        print 'LineIndex2:', LineIndex2
-        print 'BestCategory:', BestCategory
+        print('LineIndex2: {}'.format(LineIndex2))
+        print('BestCategory: {}'.format(BestCategory))
 
         #for i in range(len(BestCategory)): category[i] = LineIndex2[BestCategory[i]]
         category = [LineIndex2[bc] for bc in BestCategory]
@@ -836,15 +838,15 @@ class ValidateLineRaster(basetask.StandardTaskTemplate):
         Ncluster = Category.max()
         LOG.debug('nThreshold = {}, method = {}', nThreshold, method)
         LOG.debug('Init Threshold = {}, Init Ncluster = {}', Threshold, Ncluster)
-        print 'Init Threshold:', Threshold,
-        print '\tInit Ncluster:', Ncluster
+        print('Init Threshold: {}'.format(Threshold), end=' ')
+        print('\tInit Ncluster: {}'.format(Ncluster))
 
         IDX = numpy.array([x for x in xrange(len(Data))])
         for k in range(Ncluster):
             C = Category.max()
             NewData = Data[Category==(k+1)] # Category starts with 1 (not 0)
             if(len(NewData) < 2):
-                print 'skip(%d): %d' % (k, len(NewData))
+                print('skip(%d): %d' % (k, len(NewData)))
                 continue # LinkMatrix = ()
             NewIDX = IDX[Category==(k+1)]
             LinkMatrix = H_Clustering(NewData) # selected linkage method
@@ -862,15 +864,15 @@ class ValidateLineRaster(basetask.StandardTaskTemplate):
             #NewThreshold = MedianDistance + Nthreshold ** 1.3 * Stddev
             #NewThreshold = MedianDistance + Nthreshold * Stddev
             LOG.debug('Threshold({}): {}', k, NewThreshold)
-            print 'Threshold(%d): %.1f' % (k, NewThreshold),
+            print('Threshold(%d): %.1f' % (k, NewThreshold), end=' ')
             NewCategory = HIERARCHY.fcluster(LinkMatrix, NewThreshold, criterion='distance')
             NewNcluster = NewCategory.max()
             LOG.debug('NewCluster({}): {}', k, NewNcluster)
-            print '\tNewNcluster(%d): %d' % (k, NewNcluster),
-            print '\t# of Members(%d): %d: ' % (k, ((Category==k+1)*1).sum()),
+            print('\tNewNcluster(%d): %d' % (k, NewNcluster), end=' ')
+            print('\t# of Members(%d): %d: ' % (k, ((Category == k+1)*1).sum()), end=' ')
             for kk in range(NewNcluster):
-                print ((NewCategory==kk+1)*1).sum(),
-            print ''
+                print(((NewCategory == kk+1)*1).sum(), end=' ')
+            print('')
             if NewNcluster > 1:
                 for i in range(len(NewData)):
                     if NewCategory[i] > 1:
@@ -926,7 +928,7 @@ class ValidateLineRaster(basetask.StandardTaskTemplate):
             Factor = numpy.ones(NumParam, numpy.float)
             Ndata = len(Data)
         else:
-            print "Data should be 2-dimensional...exit..."
+            print("Data should be 2-dimensional...exit...")
             sys.exit(0)
         del Obs, OrderList
         return (Data)

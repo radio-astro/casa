@@ -89,7 +89,7 @@ class T2_4MDetailsBandpassRenderer(baserenderer.T2_4MDetailsBandpassRenderer):
                 to_intent = 'ALL'
 
             for origin in calapp.origin:
-                print origin
+                print(origin)
                 spws = origin.inputs['spw'].split(',')
 
                 solint = origin.inputs['solint']

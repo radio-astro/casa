@@ -476,10 +476,10 @@ def buildscans(msfile):
     try:
         ms.open(msfile,nomodify=True)
     except:
-        print "ERROR: failed to open ms tool on file "+msfile
+        print("ERROR: failed to open ms tool on file {}".format(msfile))
         exit(1)
 
-    print 'Getting scansummary from MS'
+    print('Getting scansummary from MS')
     # get the scan summary using ms.getscansummary method
     #mysc = ms.getscansummary()
     scd = ms.getscansummary()
@@ -497,7 +497,7 @@ def buildscans(msfile):
     ddspwlist = ddspwarr.tolist()
     ddpollist = ddpolarr.tolist()
     ndd = len(ddspwlist)
-    print 'Found '+str(ndd)+' DataDescription IDs'
+    print('Found {} DataDescription IDs'.format(ndd))
     #
     # The SPECTRAL_WINDOW table
     tb.open(msfile+"/SPECTRAL_WINDOW")
@@ -512,7 +512,7 @@ def buildscans(msfile):
         spwlookup[isp]['nchan'] = nchanarr[isp]
         spwlookup[isp]['name'] = str( spwnamearr[isp] )
         spwlookup[isp]['reffreq'] = reffreqarr[isp]
-    print 'Extracted information for '+str(nspw)+' SpectralWindows'
+    print('Extracted information for {} SpectralWindows'.format(nspw))
     #
     # Now the polarizations (number of correlations in each pol id
     tb.open(msfile+"/POLARIZATION")
@@ -538,7 +538,7 @@ def buildscans(msfile):
     # for alma this would be 9,10,11,12 for XX,XY,YX,YY respectively
     # cordesc are the strings associated with the types (enum for casa)
     tb.close()
-    print 'Extracted information for '+str(npols)+' Polarization Setups'
+    print('Extracted information for {} Polarization Setups'.format(npols))
     #
     # Build the DD index
     #
@@ -566,7 +566,7 @@ def buildscans(msfile):
     intentlist = intentarr.tolist()
     subscanlist = subscanarr.tolist()
     nstates = intentlist.__len__()
-    print 'Found '+str(nstates)+' StateIds'
+    print('Found {} StateIds'.format(nstates))
     #
     # Now get FIELD table directions
     tb.open(msfile+"/FIELD")
@@ -602,7 +602,7 @@ def buildscans(msfile):
         rect = ms.getdata(["time","field_id","scan_number"],ifraxis=True)
         nt = rect['time'].shape[0]
         ntottimes+=nt
-        print 'Found '+str(nt)+' times in DD='+str(idd)
+        print('Found {} times in DD={}'.format(nt, idd))
         #
         timdict[idd] = {}
         timdict[idd]['time'] = rect['time']
@@ -625,7 +625,7 @@ def buildscans(msfile):
                 ddscantimes[isc][idd] = [tim]
         
     #
-    print 'Found total '+str(ntottimes)+' times'
+    print('Found total {} times'.format(ntottimes))
 
     ms.close()
 
@@ -643,7 +643,7 @@ def buildscans(msfile):
     scanlist.sort()
 
     nscans = len(scanlist)
-    print 'Found '+str(nscans)+' scans min='+str(min(scanlist))+' max='+str(max(scanlist))
+    print('Found {} scans min={} max={}'.format(nscans, min(scanlist), max(scanlist)))
 
     scantimes = []
     scandict = {}
@@ -718,10 +718,10 @@ def buildscans(msfile):
             scandict['Scans'][isc]['times'][idd] = ddscantimes[isc][idd]
         
     mysize = scandict.__sizeof__()
-    print 'Size of scandict in memory is '+str(mysize)+' bytes'
+    print('Size of scandict in memory is {} bytes'.format(mysize))
     
     return scandict
-# Done
+
 
 def getBCalStatistics(calTable,innerbuff=0.1):
     """
@@ -975,9 +975,9 @@ def getBCalStatistics(calTable,innerbuff=0.1):
     # Check that this is a B Jones table
     caltype = mytb.getkeyword('VisCal')
     if caltype=='B Jones':
-        print 'This is a B Jones table, proceeding'
+        print('This is a B Jones table, proceeding')
     else:
-        print 'This is NOT a B Jones table, aborting'
+        print('This is NOT a B Jones table, aborting')
         return outDict
     
     antCol = mytb.getcol('ANTENNA1')
@@ -1030,10 +1030,10 @@ def getBCalStatistics(calTable,innerbuff=0.1):
             rxBasebandDict[rx] = {}
             rxBasebandDict[rx][bb] = [ispw]
     
-    print 'Found '+str(len(rxbands))+' Rx bands'
+    print('Found {} Rx bands'.format(len(rxbands)))
     for rx in rxBasebandDict.keys():
         bblist = rxBasebandDict[rx].keys()
-        print 'Rx band '+str(rx)+' has basebands: '+str(bblist)
+        print('Rx band {} has basebands: {}'.format(rx, bblist))
 
     # Initialize a list to hold the results
     # Get shape of FLAG
@@ -1291,12 +1291,12 @@ def getBCalStatistics(calTable,innerbuff=0.1):
     outDict['rxBasebandDict'] = rxBasebandDict
         
     # Print summary
-    print 'Within all channels:'
-    print 'Found '+str(ntotal)+' total solutions with '+str(ngood)+' good (unflagged)'
-    print 'Within inner '+str(fcrange[1]-fcrange[0])+' of channels:'
-    print 'Found '+str(ninner)+' total solutions with '+str(ninnergood)+' good (unflagged)'
-    print ''
-    print '        AntID      AntName      Rx-band      Baseband    min/max(all)  min/max(inner) ALERT?'
+    print('Within all channels:')
+    print('Found {} total solutions with {} good (unflagged)'.format(ntotal, ngood))
+    print('Within inner {} of channels:'.format(fcrange[1]-fcrange[0]))
+    print('Found {} total solutions with {} good (unflagged)'.format(ninner, ninnergood))
+    print('')
+    print('        AntID      AntName      Rx-band      Baseband    min/max(all)  min/max(inner) ALERT?')
     #
     # Print more?
     if doprintall:
@@ -1318,14 +1318,12 @@ def getBCalStatistics(calTable,innerbuff=0.1):
                         yrat = -1
                     #
                     if yrat<0.05:
-                        print ' %12s %12s %12s %12s  %12.4f  %12.4f *** ' % (ant,antName,rx,bb,xrat,yrat)
+                        print(' %12s %12s %12s %12s  %12.4f  %12.4f *** ' % (ant, antName, rx, bb, xrat, yrat))
                     elif yrat<0.1:
-                        print ' %12s %12s %12s %12s  %12.4f  %12.4f ** ' % (ant,antName,rx,bb,xrat,yrat)
+                        print(' %12s %12s %12s %12s  %12.4f  %12.4f ** ' % (ant, antName, rx, bb, xrat, yrat))
                     elif yrat<0.2:
-                        print ' %12s %12s %12s %12s  %12.4f  %12.4f * ' % (ant,antName,rx,bb,xrat,yrat)
+                        print(' %12s %12s %12s %12s  %12.4f  %12.4f * ' % (ant, antName, rx, bb, xrat, yrat))
                     else:
-                        print ' %12s %12s %12s %12s  %12.4f  %12.4f ' % (ant,antName,rx,bb,xrat,yrat)
+                        print(' %12s %12s %12s %12s  %12.4f  %12.4f ' % (ant, antName, rx, bb, xrat, yrat))
     
     return outDict
-
-

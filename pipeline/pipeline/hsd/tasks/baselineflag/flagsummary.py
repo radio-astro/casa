@@ -1,4 +1,5 @@
 from __future__ import absolute_import
+from __future__ import print_function
 
 import os
 import numpy
@@ -342,41 +343,41 @@ class SDBLFlagSummary(object):
             pol_name = ddobj.corr_axis[polid]
             
             Out = open(Filename, 'w')
-            print >> Out, '<body>'
-            print >> Out, '<p class="ttl">Data Summary</p>'
+            print('<body>', file=Out)
+            print('<p class="ttl">Data Summary</p>', file=Out)
             # A table of data summary
-            print >> Out, '<table border="0"  cellpadding="3">'
-            print >> Out, '<tr align="left" class="stp"><th>%s</th><th>:</th><th>%s</th></tr>' % ('Name', asdm)
-            print >> Out, '<tr align="left" class="stp"><th>%s</th><th>:</th><th>%s</th></tr>' % ('Antenna', ant_name)
-            print >> Out, '<tr align="left" class="stp"><th>%s</th><th>:</th><th>%s</th></tr>' % ('Field', field_name)
-            print >> Out, '<tr align="left" class="stp"><th>%s</th><th>:</th><th>%s</th></tr>' % ('Spw ID', spwid)
-            print >> Out, '<tr align="left" class="stp"><th>%s</th><th>:</th><th>%s</th></tr>' % ('Pol', pol_name)
-            print >> Out, '</table>\n'
+            print('<table border="0"  cellpadding="3">', file=Out)
+            print('<tr align="left" class="stp"><th>%s</th><th>:</th><th>%s</th></tr>' % ('Name', asdm), file=Out)
+            print('<tr align="left" class="stp"><th>%s</th><th>:</th><th>%s</th></tr>' % ('Antenna', ant_name), file=Out)
+            print('<tr align="left" class="stp"><th>%s</th><th>:</th><th>%s</th></tr>' % ('Field', field_name), file=Out)
+            print('<tr align="left" class="stp"><th>%s</th><th>:</th><th>%s</th></tr>' % ('Spw ID', spwid), file=Out)
+            print('<tr align="left" class="stp"><th>%s</th><th>:</th><th>%s</th></tr>' % ('Pol', pol_name), file=Out)
+            print('</table>\n', file=Out)
             
-            print >> Out, '<HR><p class="ttl">Flagging Status</p>'
+            print('<HR><p class="ttl">Flagging Status</p>', file=Out)
             # A table of flag statistics summary
-            print >> Out, '<table border="1">'
-            print >> Out, '<tr align="center" class="stt"><th>&nbsp</th><th>isActive?</th><th>SigmaThreshold<th>Flagged spectra</th><th>Flagged ratio(%)</th></tr>'
-            print >> Out, _format_table_row_html('User', FlagRule_local['UserFlag']['isActive'], FlagRule_local['UserFlag']['Threshold'], len(FlaggedRowsCategory[2]), NROW)
-            print >> Out, _format_table_row_html('Weather', FlagRule_local['WeatherFlag']['isActive'], FlagRule_local['WeatherFlag']['Threshold'], len(FlaggedRowsCategory[1]), NROW)
-            print >> Out, _format_table_row_html('Tsys', FlagRule_local['TsysFlag']['isActive'], FlagRule_local['TsysFlag']['Threshold'], len(FlaggedRowsCategory[0]), NROW)
-            print >> Out, _format_table_row_html('Online', True, "-", len(FlaggedRowsCategory[3]), NROW)
-            print >> Out, _format_table_row_html('RMS baseline (pre-fit)', FlagRule_local['RmsPreFitFlag']['isActive'], FlagRule_local['RmsPreFitFlag']['Threshold'], len(FlaggedRowsCategory[5]), NROW)
-            print >> Out, _format_table_row_html('RMS baseline (post-fit)', FlagRule_local['RmsPostFitFlag']['isActive'], FlagRule_local['RmsPostFitFlag']['Threshold'], len(FlaggedRowsCategory[4]), NROW)
-            print >> Out, _format_table_row_html('Running Mean (pre-fit)', FlagRule_local['RunMeanPreFitFlag']['isActive'], FlagRule_local['RunMeanPreFitFlag']['Threshold'], len(FlaggedRowsCategory[7]), NROW)
-            print >> Out, _format_table_row_html('Running Mean (post-fit)', FlagRule_local['RunMeanPostFitFlag']['isActive'], FlagRule_local['RunMeanPostFitFlag']['Threshold'], len(FlaggedRowsCategory[6]), NROW)
-            print >> Out, _format_table_row_html('Expected RMS (pre-fit)', FlagRule_local['RmsExpectedPreFitFlag']['isActive'], FlagRule_local['RmsExpectedPreFitFlag']['Threshold'], len(FlaggedRowsCategory[9]), NROW)
-            print >> Out, _format_table_row_html('Expected RMS (post-fit)', FlagRule_local['RmsExpectedPostFitFlag']['isActive'], FlagRule_local['RmsExpectedPostFitFlag']['Threshold'], len(FlaggedRowsCategory[8]), NROW)
-            print >> Out, '<tr align="center" class="stt"><th>%s</th><th>%s</th><th>%s</th><th>%s</th><th>%.1f</th></tr>' % ('Total Flagged', '-', '-', len(FlaggedRows), len(FlaggedRows)*100.0/NROW)
-            print >> Out, '<tr><td colspan=4>%s</td></tr>' % ("Note: flags in grey background are permanent, <br> which are not reverted or changed during the iteration cycles.") 
-            print >> Out, '</table>\n'
+            print('<table border="1">', file=Out)
+            print('<tr align="center" class="stt"><th>&nbsp</th><th>isActive?</th><th>SigmaThreshold<th>Flagged spectra</th><th>Flagged ratio(%)</th></tr>', file=Out)
+            print(_format_table_row_html('User', FlagRule_local['UserFlag']['isActive'], FlagRule_local['UserFlag']['Threshold'], len(FlaggedRowsCategory[2]), NROW), file=Out)
+            print(_format_table_row_html('Weather', FlagRule_local['WeatherFlag']['isActive'], FlagRule_local['WeatherFlag']['Threshold'], len(FlaggedRowsCategory[1]), NROW), file=Out)
+            print(_format_table_row_html('Tsys', FlagRule_local['TsysFlag']['isActive'], FlagRule_local['TsysFlag']['Threshold'], len(FlaggedRowsCategory[0]), NROW), file=Out)
+            print(_format_table_row_html('Online', True, "-", len(FlaggedRowsCategory[3]), NROW), file=Out)
+            print(_format_table_row_html('RMS baseline (pre-fit)', FlagRule_local['RmsPreFitFlag']['isActive'], FlagRule_local['RmsPreFitFlag']['Threshold'], len(FlaggedRowsCategory[5]), NROW), file=Out)
+            print(_format_table_row_html('RMS baseline (post-fit)', FlagRule_local['RmsPostFitFlag']['isActive'], FlagRule_local['RmsPostFitFlag']['Threshold'], len(FlaggedRowsCategory[4]), NROW), file=Out)
+            print(_format_table_row_html('Running Mean (pre-fit)', FlagRule_local['RunMeanPreFitFlag']['isActive'], FlagRule_local['RunMeanPreFitFlag']['Threshold'], len(FlaggedRowsCategory[7]), NROW), file=Out)
+            print(_format_table_row_html('Running Mean (post-fit)', FlagRule_local['RunMeanPostFitFlag']['isActive'], FlagRule_local['RunMeanPostFitFlag']['Threshold'], len(FlaggedRowsCategory[6]), NROW), file=Out)
+            print(_format_table_row_html('Expected RMS (pre-fit)', FlagRule_local['RmsExpectedPreFitFlag']['isActive'], FlagRule_local['RmsExpectedPreFitFlag']['Threshold'], len(FlaggedRowsCategory[9]), NROW), file=Out)
+            print(_format_table_row_html('Expected RMS (post-fit)', FlagRule_local['RmsExpectedPostFitFlag']['isActive'], FlagRule_local['RmsExpectedPostFitFlag']['Threshold'], len(FlaggedRowsCategory[8]), NROW), file=Out)
+            print('<tr align="center" class="stt"><th>%s</th><th>%s</th><th>%s</th><th>%s</th><th>%.1f</th></tr>' % ('Total Flagged', '-', '-', len(FlaggedRows), len(FlaggedRows)*100.0/NROW), file=Out)
+            print('<tr><td colspan=4>%s</td></tr>' % ("Note: flags in grey background are permanent, <br> which are not reverted or changed during the iteration cycles."), file=Out) 
+            print('</table>\n', file=Out)
             # NOTE for not is_baselined
-            if not is_baselined: print >> Out, 'ATTENTION: flag by post-fit spectra are skipped due to absence of baseline-fitting in previous stages.\n'
+            if not is_baselined: print('ATTENTION: flag by post-fit spectra are skipped due to absence of baseline-fitting in previous stages.\n', file=Out)
             # Plot figures
-            print >> Out, '<HR>\nNote to all the plots below: short green vertical lines indicate position gaps; short cyan vertical lines indicate time gaps\n<HR>'
+            print('<HR>\nNote to all the plots below: short green vertical lines indicate position gaps; short cyan vertical lines indicate time gaps\n<HR>', file=Out)
             for name in plots:
-                print >> Out, '<img src="%s/%s">\n<HR>' % (relpath, name)
-            print >> Out, '</body>'
+                print('<img src="%s/%s">\n<HR>' % (relpath, name), file=Out)
+            print('</body>', file=Out)
             Out.close()
 
         # User flag

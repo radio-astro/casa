@@ -4,7 +4,6 @@ import sys
 import os
 import numpy
 import contextlib
-import re
 import time
 import collections
 import functools
@@ -17,6 +16,7 @@ import pipeline.infrastructure.casatools as casatools
 from pipeline.domain.datatable import OnlineFlagIndex
 
 _LOG = infrastructure.get_logger(__name__)
+
 
 class OnDemandStringParseLogger(object):
     PRIORITY_MAP = {'warn': 'warning'}
@@ -58,7 +58,9 @@ class OnDemandStringParseLogger(object):
     def trace(self, msg_template, *args, **kwargs):
         self._post('trace', msg_template, *args, **kwargs)
         
+
 LOG = OnDemandStringParseLogger(_LOG)
+
 
 def profiler(func):
     @functools.wraps(func)
@@ -74,6 +76,7 @@ def profiler(func):
         return result
     return wrapper
 
+
 def asdm_name(scantable_object):
     """
     Return ASDM name that target scantable belongs to.
@@ -83,6 +86,7 @@ def asdm_name(scantable_object):
        - MS name is <uid>.ms
     """
     return asdm_name_from_ms(scantable_object.ms)
+
 
 def asdm_name_from_ms(ms_domain):
     """
@@ -96,6 +100,7 @@ def asdm_name_from_ms(ms_domain):
     asdm = ms_basename[:index_for_suffix] if index_for_suffix > 0 \
            else ms_basename
     return asdm
+
 
 def get_parent_ms_idx(context, msname):
     """
@@ -115,6 +120,7 @@ def get_parent_ms_idx(context, msname):
             break
     return idx_found    
 
+
 def get_parent_ms_name(context, msname):
     """
     Returns name of corresponding parent ms in context
@@ -123,6 +129,7 @@ def get_parent_ms_name(context, msname):
     """
     idx = get_parent_ms_idx(context, msname)
     return context.observing_run.measurement_sets[idx].name if idx >=0 else ""
+
 
 ####
 # ProgressTimer
@@ -146,20 +153,21 @@ class ProgressTimer(object):
             # should be integer
             self.LogLevel = LogLevel
         if self.LogLevel >= logging.INFO:
-            print '\n|' + '='*((length-8)/2) + ' 100% ' + '='*((length-8)/2) + '|'
+            print('\n|{} 100% {}|'.format('='*((length-8)/2), '='*((length-8)/2)))
 
     def __del__(self):
         if self.LogLevel >= logging.INFO:
-            print '\n'
+            print('\n')
 
     def count(self, increment=1):
         if self.LogLevel >= logging.INFO:
             self.curCount += increment
             newLevel = int(self.curCount * self.scale)
             if newLevel != self.currentLevel:
-                print '\b' + '*' * (newLevel - self.currentLevel),
+                print('\b{}'.format('*' * (newLevel - self.currentLevel)))
                 sys.stdout.flush()
                 self.currentLevel = newLevel
+
 
 # parse edge parameter to tuple
 def parseEdge(edge):
@@ -175,6 +183,7 @@ def parseEdge(edge):
     else:
         (EdgeL, EdgeR) = edge[:2]
     return(EdgeL, EdgeR)
+
 
 def mjd_to_datestring( t, unit='sec' ):
     """
@@ -220,6 +229,7 @@ def to_list(s):
     else:
         return [s]
 
+
 def to_bool(s):
     if s is None:
         return None
@@ -235,6 +245,7 @@ def to_bool(s):
     else:
         return bool(s)
 
+
 def to_numeric(s):
     if s is None:
         return None
@@ -246,21 +257,25 @@ def to_numeric(s):
     else:
         return s
 
+
 def get_mask_from_flagtra(flagtra):
     """Convert FLAGTRA (unsigned char) to a mask array (1=valid, 0=flagged)"""
     return (numpy.asarray(flagtra) == 0).astype(int)
+
 
 def iterate_group_member(group_desc, member_id_list):
     for mid in member_id_list:
         member = group_desc[mid]
         yield member.ms, member.field_id, member.antenna_id, member.spw_id
         
-def get_index_list_for_ms(datatable, vis_list, antennaid_list, fieldid_list, 
+
+def get_index_list_for_ms(datatable, vis_list, antennaid_list, fieldid_list,
                           spwid_list, srctype=None):
     return numpy.fromiter(_get_index_list_for_ms(datatable, vis_list, antennaid_list, fieldid_list, 
                                                 spwid_list, srctype), dtype=numpy.int64)
     
-def _get_index_list_for_ms(datatable, vis_list, antennaid_list, fieldid_list, 
+
+def _get_index_list_for_ms(datatable, vis_list, antennaid_list, fieldid_list,
                           spwid_list, srctype=None):
     # use time_table instead of data selection
     #online_flag = datatable.getcolslice('FLAG_PERMANENT', [0, OnlineFlagIndex], [-1, OnlineFlagIndex], 1)[0]
@@ -276,6 +291,7 @@ def _get_index_list_for_ms(datatable, vis_list, antennaid_list, fieldid_list,
                 if any(online_flag == 1):
                     yield row  
                       
+
 def get_index_list_for_ms2(datatable, group_desc, member_list, srctype=None):
     # use time_table instead of data selection
     #online_flag = datatable.getcolslice('FLAG_PERMANENT', [0, OnlineFlagIndex], [-1, OnlineFlagIndex], 1)[0]
@@ -292,6 +308,7 @@ def get_index_list_for_ms2(datatable, group_desc, member_list, srctype=None):
                 if any(online_flag == 1):
                     yield row    
                
+
 def get_valid_ms_members(group_desc, msname_filter, ant_selection, field_selection, spw_selection):
     for member_id in xrange(len(group_desc)):
         member = group_desc[member_id]
@@ -314,6 +331,7 @@ def get_valid_ms_members(group_desc, msname_filter, ant_selection, field_selecti
             (len(fieldsel) == 0 or field_id in fieldsel) and \
             (len(antsel) == 0 or ant_id in antsel):
                 yield member_id
+
 
 def get_valid_ms_members2(group_desc, ms_filter, ant_selection, field_selection, spw_selection):
     for member_id in xrange(len(group_desc)):
@@ -338,12 +356,14 @@ def get_valid_ms_members2(group_desc, ms_filter, ant_selection, field_selection,
               (antsel.size == 0 or ant_id in antsel):
                 yield member_id
 
+
 def _collect_logrecords(logger):
     capture_handlers = [h for h in logger.handlers if h.__class__.__name__ == 'CapturingHandler']
     logrecords = []
     for handler in capture_handlers:
         logrecords.extend(handler.buffer[:])
     return logrecords
+
 
 @contextlib.contextmanager
 def TableSelector(name, query):
@@ -352,11 +372,13 @@ def TableSelector(name, query):
         yield tsel
         tsel.close()
     
-# dictionary that always returns key         
+
+# dictionary that always returns key
 class EchoDictionary(dict):
     def __getitem__(self, x):
         return x
     
+
 def make_row_map_for_baselined_ms(ms, table_container=None):
     """
     Make row mapping between calibrated MS and baselined MS.
@@ -375,6 +397,7 @@ def make_row_map_for_baselined_ms(ms, table_container=None):
         derived_tb = table_container.tb2
     
     return make_row_map(ms, work_data, src_tb, derived_tb)
+
 
 #@profiler
 def make_row_map(src_ms, derived_vis, src_tb=None, derived_tb=None):
@@ -620,11 +643,13 @@ def make_row_map(src_ms, derived_vis, src_tb=None, derived_tb=None):
 
     return rowmap
 
+
 class SpwSimpleView(object):
     def __init__(self, spwid, name):
         self.id = spwid
         self.name = name
         
+
 class SpwDetailedView(object):
     def __init__(self, spwid, name, num_channels, ref_frequency, min_frequency, max_frequency):
         self.id = spwid
@@ -634,11 +659,13 @@ class SpwDetailedView(object):
         self.min_frequency = min_frequency
         self.max_frequency = max_frequency
 
+
 def get_spw_names(vis):
     with casatools.TableReader(os.path.join(vis, 'SPECTRAL_WINDOW')) as tb:
         gen = (SpwSimpleView(i, tb.getcell('NAME', i)) for i in xrange(tb.nrows()))
         spws = list(gen)
     return spws
+
 
 def get_spw_properties(vis):
     with casatools.TableReader(os.path.join(vis, 'SPECTRAL_WINDOW')) as tb:
@@ -654,6 +681,7 @@ def get_spw_properties(vis):
             spws.append(SpwDetailedView(irow, name, nchan, ref_freq, min_freq, max_freq))
     return spws
 
+
 #@profiler
 def __read_table(reader, method, vis):
     if reader is None:
@@ -663,9 +691,11 @@ def __read_table(reader, method, vis):
             result = method(readerobj)
     return result
 
+
 def _read_table(reader, table, vis):
     rows = __read_table(reader, table._read_table, vis)
     return rows
+
 
 #@profiler
 def make_spwid_map(srcvis, dstvis):
@@ -711,6 +741,7 @@ def make_spwid_map(srcvis, dstvis):
     return spwid_map
     
 
+
 #@profiler
 def make_polid_map(srcvis, dstvis):
     src_rows = _read_polarization_table(srcvis)
@@ -727,6 +758,7 @@ def make_polid_map(srcvis, dstvis):
     LOG.trace('polid_map = %s'%(polid_map))
     return polid_map
 
+
 #@profiler
 def make_ddid_map(vis):
     with casatools.TableReader(os.path.join(vis, 'DATA_DESCRIPTION')) as tb:
@@ -737,6 +769,7 @@ def make_ddid_map(vis):
     for ddid in xrange(num_ddids):
         ddid_map[(pol_ids[ddid], spw_ids[ddid])] = ddid
     return ddid_map
+
 
 def get_datacolumn_name(vis):
     colname_candidates = ['CORRECTED_DATA', 'FLOAT_DATA', 'DATA']
@@ -750,6 +783,7 @@ def get_datacolumn_name(vis):
     assert colname is not None
     return colname
 
+
 # helper functions for parallel execution
 def create_serial_job(task_cls, task_args, context):
     inputs = task_cls.Inputs(context, **task_args)
@@ -757,6 +791,7 @@ def create_serial_job(task_cls, task_args, context):
     job = mpihelpers.SyncTask(task)
     LOG.debug('Serial Job: %s'%(task))
     return job
+
 
 def create_parallel_job(task_cls, task_args, context):
     context_path = os.path.join(context.output_dir, context.name + '.context')

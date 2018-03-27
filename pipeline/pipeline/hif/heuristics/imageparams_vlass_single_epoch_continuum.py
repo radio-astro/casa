@@ -116,20 +116,20 @@ class ImageParamsHeuristicsVlassSeCont(ImageParamsHeuristics):
             qrad = qa.convert(qdist, 'rad')
             maxrad = qrad['value']
         except:
-            print('ERROR: cannot parse distance ', distance)
+            print('ERROR: cannot parse distance {}'.format(distance))
             return
 
         try:
             tb.open(msfile + '/FIELD')
         except:
-            print('ERROR: could not open ' + msfile + '/FIELD')
+            print('ERROR: could not open {}/FIELD'.format(msfile))
             return
         field_dirs = tb.getcol('PHASE_DIR')
         field_names = tb.getcol('NAME')
         tb.close()
 
         (nd, ni, nf) = field_dirs.shape
-        print('Found ' + str(nf) + ' fields')
+        print('Found {} fields'.format(nf))
 
         # compile field dictionaries
         ddirs = {}
@@ -152,10 +152,10 @@ class ImageParamsHeuristicsVlassSeCont(ImageParamsHeuristics):
                 flookup[fn].append(i)
             else:
                 flookup[fn] = [i]
-        print('Cataloged ' + str(nf) + ' fields')
+        print('Cataloged {} fields'.format(nf))
 
         # Construct offset separations in ra,dec
-        print('Looking for fields with maximum separation ' + distance)
+        print('Looking for fields with maximum separation {}'.format(distance))
         nreject = 0
         skipmatch = matchregex == '' or matchregex == []
         for i in range(nf):
@@ -190,8 +190,8 @@ class ImageParamsHeuristicsVlassSeCont(ImageParamsHeuristics):
                         else:
                             nreject += 1
 
-        print('Found ' + str(len(fieldlist)) + ' fields within ' + distance)
+        print('Found {} fields within {}'.format(len(fieldlist), distance))
         if not skipmatch:
-            print('Rejected ' + str(nreject) + ' distance matches for regex')
+            print('Rejected {} distance matches for regex'.format(nreject))
 
         return fieldlist

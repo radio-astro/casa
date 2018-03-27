@@ -68,24 +68,21 @@ import casa
 def polcal( in_table, out_dir ):
 
 	# Calculate the polarization calibration statistics
-
 	try:
 		polcal_stats = polcal_calc( in_table )
 	except:
 		msg = 'polcal.polcal: Calculating polarization calibration '
 		msg += 'statistics failed.\n'
-		print msg
+		print(msg)
 		raise
 
-
 	# Write the polarization calibration statistics to the table
-
 	out_table_root = os.path.basename( os.path.splitext( in_table )[0] )
 	out_table = out_dir + '/' + out_table_root + '.polcal.stats'
 
 	if os.path.exists( out_table ):
 		msg = 'polcal.polcal: Output file already exists.\n'
-		print msg
+		print(msg)
 		raise
 
 	try:
@@ -93,11 +90,8 @@ def polcal( in_table, out_dir ):
 	except:
 		msg = 'polcal.polcal: Writing polarization calibration '
 		msg += 'statistics failed.\n'
-		print msg
+		print(msg)
 		raise
-
-
-	# Return True
 
 	return True
 

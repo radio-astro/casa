@@ -378,7 +378,7 @@ class Fluxboot2(basetask.StandardTaskTemplate):
                 bands = bands_from_spw
 
             unique_bands = list(np.unique(bands))
-            print unique_bands
+            print(unique_bands)
 
             fieldobject = m.get_fields(source)
             fieldid = str(fieldobject[0].id)
@@ -427,7 +427,7 @@ class Fluxboot2(basetask.StandardTaskTemplate):
                 # to curve_fit, is better.
                 #
 
-                print lfds
+                print(lfds)
 
                 if len(lfds) < 2:
                     aa = lfds[0]

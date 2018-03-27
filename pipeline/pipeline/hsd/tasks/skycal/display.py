@@ -74,9 +74,9 @@ class SingleDishSkyCalAmpVsFreqSummaryChart(common.PlotbandpassDetailBase, Singl
 
         wrappers = []
         for spw_id, figfile in self._figfile.iteritems():
-            print 'create plot for', spw_id
+            print('create plot for {}'.format(spw_id))
             if os.path.exists(figfile):
-                print figfile, 'exists'
+                print('{} exists'.format(figfile))
                 task = self.create_task(spw_id, '')
                 wrapper = logger.Plot(figfile,
                                       x_axis=self._xaxis,

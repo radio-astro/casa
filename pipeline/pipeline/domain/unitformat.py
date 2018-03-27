@@ -179,55 +179,53 @@ if __name__ == '__main__':
     x15mb = 15728640L
     x300mb = 314572800L
     x40gb = 42949672960L
-    print file_size.format(x722b)
-    print file_size.format(x498kb)
-    print file_size.format(x498kb + x722b)
-    print file_size.format(x15mb)
-    print file_size.format(x15mb + x498kb + x722b)
-    print file_size.format(x300mb)
-    print file_size.format(x300mb + x15mb + x498kb + x722b)
-    print file_size.format(x40gb)
-    print file_size.format(x40gb + x300mb + x15mb + x498kb + x722b)
+    print(file_size.format(x722b))
+    print(file_size.format(x498kb))
+    print(file_size.format(x498kb + x722b))
+    print(file_size.format(x15mb))
+    print(file_size.format(x15mb + x498kb + x722b))
+    print(file_size.format(x300mb))
+    print(file_size.format(x300mb + x15mb + x498kb + x722b))
+    print(file_size.format(x40gb))
+    print(file_size.format(x40gb + x300mb + x15mb + x498kb + x722b))
 
     # print some lengths
     x315um = 0.000315
     x867mm = 0.867
     x128m = 128
-    print distance.format(x315um)
-    print distance.format(x867mm)
-    print distance.format(x128m)
-    print distance.format(x128m + x867mm)
+    print(distance.format(x315um))
+    print(distance.format(x867mm))
+    print(distance.format(x128m))
+    print(distance.format(x128m + x867mm))
 
     x300deg = 300.0
     x3deg = 3.0
     x3minArc = 0.05
     x9secArc = 0.0025
     x1d25secArc = 1/3600/25
-    print arc.format(x300deg)
-    print arc.format(x3deg)
-    print arc.format(x3minArc)
-    print arc.format(x9secArc)
-    print arc.format(x1d25secArc)
+    print(arc.format(x300deg))
+    print(arc.format(x3deg))
+    print(arc.format(x3minArc))
+    print(arc.format(x9secArc))
+    print(arc.format(x1d25secArc))
 
     x1maspm = 1.0
     x1aspm = 1000.0
     x1ampm = 1000*60.0
     x1degpm = 1000*3600.0
-    print proper_motion.format(x1maspm)
-    print proper_motion.format(x1aspm)
-    print proper_motion.format(x1ampm)
-    print proper_motion.format(x1degpm)
+    print(proper_motion.format(x1maspm))
+    print(proper_motion.format(x1aspm))
+    print(proper_motion.format(x1ampm))
+    print(proper_motion.format(x1degpm))
 
     x218ms = 0.218
     x18s = 18
     x2m = 120
     x3h = 10800
-    print time.format(x218ms)
-    print time.format(x18s)
-    print time.format(x218ms + x18s)
-    print time.format(x2m)
-    print time.format(x2m + x18s)
-    print time.format(x3h)
-    print time.format(x2m + x18s)
-    
-    
+    print(time.format(x218ms))
+    print(time.format(x18s))
+    print(time.format(x218ms + x18s))
+    print(time.format(x2m))
+    print(time.format(x2m + x18s))
+    print(time.format(x3h))
+    print(time.format(x2m + x18s))

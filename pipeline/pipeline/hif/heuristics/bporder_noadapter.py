@@ -24,7 +24,7 @@ class BPOrder:
         data - 'view' of calibration gains in numpy complex array[antenna,channel]
         flag - flags associated with data array bool[antenna,channel]
         """
-        print 'in getbandpassview'
+        print('in getbandpassview')
 
         spw = int(spw)
 
@@ -37,7 +37,7 @@ class BPOrder:
         maxantennaid = max([antenna.id for antenna in msobject.antennas])
 
         if dryrun:
-            print maxantennaid, nchannels
+            print(maxantennaid, nchannels)
             data = np.ones([maxantennaid+1, nchannels], np.complex)
             flag = np.zeros([maxantennaid+1, nchannels], np.bool),
             return data, flag
@@ -68,7 +68,7 @@ class BPOrder:
             antenna1 = subtable.getcol('ANTENNA1')
             gain = subtable.getcol('GAIN')[:,:nchannels,:]
             cal_flag = subtable.getcol('FLAG')[:,:nchannels,:]
-	    subtable.close()
+            subtable.close()
 
             # average the polarization results
 
@@ -78,9 +78,7 @@ class BPOrder:
             for i in range(np.shape(gain)[2]):
                 antenna = antenna1[i]
                 if antenna > maxantennaid:
-                    print \
-                     '    Antenna1 %s from file %s is outside antenna range' % (
-                     antenna, table)
+                    print('    Antenna1 {} from file {} is outside antenna range'.format(antenna, table))
                     continue
 
                 for p in range(npol):
@@ -119,9 +117,8 @@ class BPOrder:
             order = max(2, 3*i)
         return order
 
-
     def getorders(self, **kwargs):
-        print kwargs
+        print(kwargs)
 
         dryrun = kwargs.pop('dryrun')
 
@@ -130,8 +127,8 @@ class BPOrder:
         if self._amporder is None:
             channelbpr = 'channel.tbl'
             ms = kwargs.pop('ms')
-            print 'ms', ms
-            print 'name', ms.name
+            print('ms {}'.format(ms))
+            print('name {}'.format(ms.name))
             kwargs['vis'] = ms.name
             self._jobs.extend([
                 casa_tasks.comment('#'),

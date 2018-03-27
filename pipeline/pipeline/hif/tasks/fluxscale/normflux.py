@@ -137,7 +137,7 @@ class NormaliseFlux(basetask.StandardTaskTemplate):
                 # current spw ID and average them together
                 fds_in_spw = [fd for fd in all_fds 
                   if fd.spw_id == spw_id]
-                print 'normflux', spw_id, fds_in_spw
+                print('normflux {} {}'.format(spw_id, fds_in_spw))
                 if not fds_in_spw:
                     continue
 
@@ -147,7 +147,7 @@ class NormaliseFlux(basetask.StandardTaskTemplate):
                 for fd in fds_in_spw:
                     fd_sum = fd_sum + fd
                 fd_avg = fd_sum / (len(fds_in_spw))
-                print 'fd_avg', fd_avg
+                print('fd_avg {}'.format(fd_avg))
 
                 averaged[field_name].append(fd_avg)
 

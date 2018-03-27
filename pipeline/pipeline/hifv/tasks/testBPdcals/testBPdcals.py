@@ -97,7 +97,7 @@ class testBPdcals(basetask.StandardTaskTemplate):
         
         RefAntOutput = refantobj.calculate()
         
-        print "RefAntOutput: ", RefAntOutput
+        print("RefAntOutput: {}".format(RefAntOutput))
         
         gtype_delaycal_result = self._do_gtype_delaycal(caltable=gtypecaltable,
                                                         context=context, RefAntOutput=RefAntOutput)
@@ -490,7 +490,7 @@ class testBPdcals(basetask.StandardTaskTemplate):
         critfrac = m.get_vla_critfrac()
 
         if (fracFlaggedSolns > critfrac):
-            print RefAntOutput
+            print(RefAntOutput)
             # RefAntOutput.pop(0)
             RefAntOutput = np.delete(RefAntOutput,0)
             self.inputs.context.observing_run.measurement_sets[0].reference_antenna = ','.join(RefAntOutput)

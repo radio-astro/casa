@@ -245,9 +245,10 @@ class ExportData(basetask.StandardTaskTemplate):
         result = ExportDataResults()
 
         # Make the standard vislist and the sessions lists. 
-        #    These lists are constructed for the calibration mses only no matter the value of inputs.imaging_products_only 
-        session_list, session_names, session_vislists, vislist = self._make_lists(inputs.context, inputs.session,
-            inputs.vis, imaging_only_mses=False)
+        #    These lists are constructed for the calibration mses only no matter the value of
+        #    inputs.imaging_products_only
+        session_list, session_names, session_vislists, vislist = self._make_lists(
+            inputs.context, inputs.session, inputs.vis, imaging_only_mses=False)
 
         # Export the standard per OUS file products
         #    The pipeline processing request
@@ -260,9 +261,9 @@ class ExportData(basetask.StandardTaskTemplate):
             prefix = oussid
         else:
             prefix = oussid + '.' + recipe_name
-        stdfproducts = self._do_standard_ous_products(inputs.context, inputs.exportmses,
-            prefix, inputs.pprfile, session_list, vislist, inputs.output_dir, inputs.products_dir,
-            imaging_only_mses=inputs.imaging_products_only)
+        stdfproducts = self._do_standard_ous_products(
+            inputs.context, inputs.exportmses, prefix, inputs.pprfile, session_list, vislist, inputs.output_dir,
+            inputs.products_dir, imaging_only_mses=inputs.imaging_products_only)
         if stdfproducts.ppr_file:
             result.pprequest = os.path.basename(stdfproducts.ppr_file)
         result.weblog = os.path.basename(stdfproducts.weblog_file)
@@ -322,7 +323,6 @@ class ExportData(basetask.StandardTaskTemplate):
         # Return the results object, which will be used for the weblog
         return result
 
-
     def analyse(self, results):
         """
         Analyse the results of the export data operation.
@@ -354,7 +354,6 @@ class ExportData(basetask.StandardTaskTemplate):
         return oussid
 
     def get_recipename (self, context):
-
         """
         Get the recipe name
         """
@@ -371,9 +370,7 @@ class ExportData(basetask.StandardTaskTemplate):
 
         return recipe_name
 
-
     def _make_lists (self, context, session, vis, imaging_only_mses=False):
-
         '''
         Create the vis and sessions lists
         '''
@@ -394,9 +391,8 @@ class ExportData(basetask.StandardTaskTemplate):
 
         return session_list, session_names, session_vislists, vislist
 
-    def _do_standard_ous_products(self, context, exportmses, oussid, pprfile, session_list, vislist, output_dir, products_dir,
-        imaging_only_mses=False):
-
+    def _do_standard_ous_products(self, context, exportmses, oussid, pprfile, session_list, vislist, output_dir,
+                                  products_dir, imaging_only_mses=False):
         '''
         Generate the per ous standard products
         '''
@@ -459,8 +455,7 @@ class ExportData(basetask.StandardTaskTemplate):
 
         return visdict
 
-    def _do_standard_ms_products (self, context, vislist, products_dir):
-
+    def _do_standard_ms_products(self, context, vislist, products_dir):
         '''
         Generate the per ms standard products
         '''
@@ -499,8 +494,8 @@ class ExportData(basetask.StandardTaskTemplate):
 
         return visdict
 
-    def _do_standard_session_products (self, context, oussid, session_names, session_vislists, products_dir, imaging=False):
-
+    def _do_standard_session_products(self, context, oussid, session_names, session_vislists, products_dir,
+                                      imaging=False):
         '''
         Generate the per ms standard products
         '''
@@ -523,9 +518,8 @@ class ExportData(basetask.StandardTaskTemplate):
 
         return sessiondict
 
-    def _make_pipe_manifest (self, context, oussid, stdfproducts, sessiondict,
-        visdict, exportmses, calimages, targetimages):
-
+    def _make_pipe_manifest (self, context, oussid, stdfproducts, sessiondict, visdict, exportmses, calimages,
+                             targetimages):
         '''
         Generate the manifest file
         '''
@@ -568,7 +562,6 @@ class ExportData(basetask.StandardTaskTemplate):
         else:
             pipemanifest.add_restorescript (ouss, os.path.basename(stdfproducts.casa_restore_script))
 
-
         # Add the calibrator images
         pipemanifest.add_images (ouss, calimages, 'calibrator')
 
@@ -585,8 +578,7 @@ class ExportData(basetask.StandardTaskTemplate):
         pipemanifest = manifest.PipelineManifest(oussid)
         return pipemanifest
 
-    def _export_pprfile (self, context, output_dir, products_dir, oussid, pprfile):
-
+    def _export_pprfile(self, context, output_dir, products_dir, oussid, pprfile):
         # Prepare the search template for the pipeline processing request file.
         #    Was a template in the past
         #    Forced to one file now but keep the template structure for the moment
@@ -626,8 +618,7 @@ class ExportData(basetask.StandardTaskTemplate):
 
         return pprmatchesout
 
-    def _export_final_ms (self, context, vis, products_dir):
-
+    def _export_final_ms(self, context, vis, products_dir):
         """
         Save the ms to a compressed tarfile in products.
         """
@@ -657,9 +648,7 @@ class ExportData(basetask.StandardTaskTemplate):
 
         return tarfilename
 
-
-    def _save_final_flagversion (self, vis, flag_version_name):
-
+    def _save_final_flagversion(self, vis, flag_version_name):
         """
         Save the final flags to a final flag version.
         """
@@ -671,9 +660,8 @@ class ExportData(basetask.StandardTaskTemplate):
                                            mode='save', versionname=flag_version_name)
             self._executor.execute (task)
 
-    def _export_final_flagversion (self, context, vis, flag_version_name,
-                                   products_dir):
-
+    def _export_final_flagversion(self, context, vis, flag_version_name,
+                                  products_dir):
         """
         Save the final flags version to a compressed tarfile in products.
         """
@@ -763,12 +751,11 @@ class ExportData(basetask.StandardTaskTemplate):
         return applyfile_name
 
     def _get_sessions (self, context, sessions, vis):
-
         """
-    Return a list of sessions where each element of the list contains
-    the  vis files associated with that session. In future this routine
-    will be driven by the context but for now use the user defined sessions
-    """
+        Return a list of sessions where each element of the list contains
+        the vis files associated with that session. In future this routine
+        will be driven by the context but for now use the user defined sessions
+        """
 
         # If the input session list is empty put all the visibility files
         # in the same session.
@@ -864,7 +851,7 @@ class ExportData(basetask.StandardTaskTemplate):
             # Restore the original current working directory
             os.chdir(cwd)
 
-    def _export_weblog (self, context, products_dir, oussid):
+    def _export_weblog(self, context, products_dir, oussid):
 
         """
         Save the processing web log to a tarfile
@@ -897,7 +884,7 @@ class ExportData(basetask.StandardTaskTemplate):
 
         return tarfilename
 
-    def _export_casa_commands_log (self, context, casalog_name, products_dir, oussid):
+    def _export_casa_commands_log(self, context, casalog_name, products_dir, oussid):
 
         """
         Save the CASA commands file.
@@ -921,9 +908,7 @@ class ExportData(basetask.StandardTaskTemplate):
 
         return os.path.basename(out_casalog_file)
 
-
     def _export_casa_restore_script (self, context, script_name, products_dir, oussid, vislist, session_list):
-
         """
         Save the CASA restore scropt.
         """
@@ -957,7 +942,6 @@ class ExportData(basetask.StandardTaskTemplate):
             tmpvislist.append(filename)
         task_string = "    hif_restoredata (vis=%s, session=%s, ocorr_mode='%s')" % (tmpvislist, session_list, ocorr_mode)
 
-
         template = '''__rethrow_casa_exceptions = True
 h_init()
 try:
@@ -977,7 +961,6 @@ finally:
         return os.path.basename (out_script_file)
 
     def _export_casa_script (self, context, casascript_name, products_dir, oussid):
-
         """
         Save the CASA script.
         """
@@ -1033,13 +1016,11 @@ finally:
 
         return fitsfile
 
-    def _export_images (self, context, calimages, calintents, images,
-                        products_dir):
-
+    def _export_images(self, context, calimages, calintents, images,
+                       products_dir):
         """
         Export the images to FITS files.
         """
-
 
         # Create the image list
         images_list = []
@@ -1149,7 +1130,7 @@ finally:
         # Convert to FITS.
         fits_list = []
         for image in images_list:
-            print 'Working on', image
+            print('Working on {}'.format(image))
             fitsfile = self._fitsfile(products_dir, image)
             LOG.info('Saving final image %s to FITS file %s' % \
                      (os.path.basename(image), os.path.basename(fitsfile)))
@@ -1161,8 +1142,6 @@ finally:
                 self._executor.execute (task)
                 fits_list.append(fitsfile)
 
-
         new_cleanlist = copy.deepcopy(cleanlist)
 
         return new_cleanlist, fits_list
-

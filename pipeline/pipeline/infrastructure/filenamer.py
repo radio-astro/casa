@@ -801,23 +801,23 @@ class WvrgCalibrationTable(CalibrationTable):
 
 if __name__ == '__main__':
     log = CASALog()
-    print log.get_filename()
+    print(log.get_filename())
 
     x = CalibrationTable(log).phase_only_gain_cal().spectral_window(4).polarization('Y')
-    print x.get_filename()
+    print(x.get_filename())
 
     x.polarization('X').spectral_window(3)
-    print x.get_filename()
+    print(x.get_filename())
 
     # log = Image().source('NGC312')
-    # print log.get_filename()
+    # print(log.get_filename())
     # log = Image().source('NGC312').intent('gain').spectral_image()
-    # print log.get_filename()
+    # print(log.get_filename())
     # log = Image().project(
     #    'pcode').obs_unit_set('uid').source('3C454').gain().polarization('I').clean().spectral_image()
-    # print log.get_filename()
+    # print(log.get_filename())
     # log = CalibrationTable().project_code(
     #    'pcode').asdm('uid://X02/X3D737/X1').spectral_window(1).polarization('X').channel_fit().bandpass_cal()
-    # print log.get_filename()
+    # print(log.get_filename())
     # a = ASDM(log)
-    # print a.get_filename()
+    # print(a.get_filename())

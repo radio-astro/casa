@@ -357,7 +357,8 @@ class RasterGridding(GriddingBase):
         MinDEC = (MinDEC + MaxDEC) / 2.0 - (NGridDEC - 1) / 2.0 * GridSpacing
 
         for y in xrange(NGridDEC):
-            if NROW > 10000: print 'Progress:', y, '/', NGridDEC, '(', NGridRA, ')', ' : ', time.ctime()
+            if NROW > 10000:
+                print('Progress: {}/{} ({}) : {}'.format(y, NGridDEC, NGridRA, time.ctime()))
             DEC = MinDEC + GridSpacing * y
             DeltaDEC = decs - DEC
             SelectD = numpy.where(numpy.logical_and(DeltaDEC < CombineRadius, DeltaDEC > -CombineRadius))[0]

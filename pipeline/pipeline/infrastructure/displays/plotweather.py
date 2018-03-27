@@ -22,11 +22,11 @@ def plotWeather(vis='', figfile='', station=[], help=False):
     present in the data.  The default plot file name will be 'vis'.weather.png.
     """
     if (help):
-        print "plotWeather(vis='', figfile='', station=[])"
-        print "  Plots pressure, temperature, relative humidity, wind speed and direction."
-        print "Station can be a single integer or integer string, or a list of two integers."
-        print "The default empty list means to plot the data form up to 2 of the stations"
-        print "present in the data.  The default plot file name will be 'vis'.weather.png."
+        print("plotWeather(vis='', figfile='', station=[])")
+        print("  Plots pressure, temperature, relative humidity, wind speed and direction.")
+        print("Station can be a single integer or integer string, or a list of two integers.")
+        print("The default empty list means to plot the data form up to 2 of the stations")
+        print("present in the data.  The default plot file name will be 'vis'.weather.png.")
         return
 
     myfontsize = 8
@@ -35,7 +35,7 @@ def plotWeather(vis='', figfile='', station=[], help=False):
         mytb = casac.table()
         mytb.open("%s/WEATHER" % vis)
     except:
-        print "Could not open WEATHER table.  Did you importasdm with asis='*'?"
+        print("Could not open WEATHER table.  Did you importasdm with asis='*'?")
         return
 
     available_cols = mytb.colnames()
@@ -55,28 +55,28 @@ def plotWeather(vis='', figfile='', station=[], help=False):
     if (station != []):
         if (type(station) == int):
             if (station not in uniqueStations):
-                print "Station %d is not in the data.  Present are: "%station, uniqueStations
+                print("Station %d is not in the data.  Present are: " % station, uniqueStations)
                 return
             uniqueStations = [station]
         elif (type(station) == list):
             if (len(station) > 2):
-                print "Only 2 stations can be overlaid."
+                print("Only 2 stations can be overlaid.")
                 return
             if (station[0] not in uniqueStations):
-                print "Station %d is not in the data.  Present are: "%station[0], uniqueStations
+                print("Station %d is not in the data.  Present are: " % station[0], uniqueStations)
                 return
             if (station[1] not in uniqueStations):
-                print "Station %d is not in the data.  Present are: "%station[1], uniqueStations
+                print("Station %d is not in the data.  Present are: " % station[1], uniqueStations)
                 return
             uniqueStations = station
         elif (type(station) == str):
             if (station.isdigit()):
                 if (int(station) not in uniqueStations):
-                    print "Station %s is not in the data.  Present are: "%station, uniqueStations
+                    print("Station %s is not in the data.  Present are: " % station, uniqueStations)
                     return
                 uniqueStations = [int(station)]
             else:
-                print "Invalid station ID, it must be an integer, or list of integers."
+                print("Invalid station ID, it must be an integer, or list of integers.")
                 return
             
     if (len(uniqueStations) > 1):
@@ -117,10 +117,10 @@ def plotWeather(vis='', figfile='', station=[], help=False):
             # dew point is all zero so it was not measured, so cap the rH at small non-zero value
             relativeHumidity = 0.001 * np.ones(len(relativeHumidity))
         else:
-            print "Replacing zeros in relative humidity with value computed from dew point and temperature."
+            print("Replacing zeros in relative humidity with value computed from dew point and temperature.")
             dewPointWVP = computeWVP(dewPoint)
             ambientWVP = computeWVP(temperature)
-            print "dWVP=%f, aWVP=%f" % (dewPointWVP[0],ambientWVP[0])
+            print("dWVP=%f, aWVP=%f" % (dewPointWVP[0], ambientWVP[0]))
             relativeHumidity = 100*(dewPointWVP/ambientWVP)
 
     mytb.close()
@@ -263,7 +263,8 @@ def plotWeather(vis='', figfile='', station=[], help=False):
         weatherFile = figfile
     pb.savefig(weatherFile)
     pb.draw()
-    print "Wrote file = %s" % (weatherFile)
+    print("Wrote file = %s" % (weatherFile))
+
 
 def mjdSecondsListToDateTime(mjdsecList):
     """
@@ -288,6 +289,7 @@ def mjdSecondsListToDateTime(mjdsecList):
     myme.done()
 
     return(dt)
+
 
 def mjdSecondsToMJDandUT(mjdsec):
     """

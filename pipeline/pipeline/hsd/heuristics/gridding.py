@@ -131,7 +131,7 @@ class MultiPointGrid(GenerateGrid):
                 pointing_list.append([m,[i]])
             else:
                 pointing_list[found][1].append(i)
-            print 'finished %s len(pointing_list) = %s'%(i,len(pointing_list))
+            print('finished %s len(pointing_list) = %s'%(i,len(pointing_list)))
         
 ##         grid_list = []
 ##         for p in pointing_list:

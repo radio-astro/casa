@@ -42,7 +42,7 @@ class PbcorResults(basetask.Results):
                   imageplot=pbcoritem['imageplot'])
                 context.pbcorimlist.add_item(imageitem)
                 if 'TARGET' in pbcoritem['sourcetype']:
-                    print 'ADDED IMAGE ITEM'
+                    print('ADDED IMAGE ITEM')
                     context.pbcorimlist.add_item(imageitem)
             except:
                 pass
@@ -58,6 +58,7 @@ class PbcorInputs(vdp.StandardInputs):
         super(PbcorInputs, self).__init__()
         self.context = context
         self.vis = vis
+
 
 @task_registry.set_equivalent_casa_task('hifv_pbcor')
 class Pbcor(basetask.StandardTaskTemplate):

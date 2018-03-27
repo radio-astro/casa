@@ -18,7 +18,7 @@ class LinpolcalResult(basetask.Results):
         self.error = set()
 
     def merge_with_context(self, context):
-        print 'LinpolCalResult.merge_with_context'
+        print('LinpolCalResult.merge_with_context')
         if not self.final:
             LOG.error('No results to merge')
             return
@@ -32,10 +32,9 @@ class LinpolcalResult(basetask.Results):
     def __repr__(self):
         s = 'LinpolcalResult:\n'
         for calapplication in self.final:
-            print calapplication
+            print(calapplication)
             s += '\tBest caltable for spw #{spw} in {vis} is {name}\n'.format(
               spw=calapplication.spw, 
               vis=os.path.basename(calapplication.vis),
               name=calapplication.gaintable)
         return s
-

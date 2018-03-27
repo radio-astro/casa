@@ -1653,7 +1653,7 @@ def trim_nd(tree, selection):
     :param selection: the sequence of data selections for each dimension
     :return:
     """
-    # print 'tree=%s\nselection=%s' % (tree, selection)
+    # print('tree={}\nselection={}'.format(tree, selection))
     root = trim(tree, selection[0])
 
     if len(selection) > 1:
@@ -2262,7 +2262,7 @@ def trim_to_valid_data_selection(calstate, vis=None):
                 for spw_ranges, field_tuple in spw_tuple:
                     for field_ranges, intent_ranges in field_tuple:
                         tree_intervals = (antenna_ranges, spw_ranges, field_ranges, intent_ranges)
-                        # print 'Shaping to {!r}'.format(tree_intervals)
+                        # print('Shaping to {!r}'.format(tree_intervals))
                         new_root |= trim_nd(antenna_tree, tree_intervals)
 
         results[vis] = new_root
@@ -2312,7 +2312,7 @@ def _print_dimensions(calstate):
                         intent_ranges = (intent_interval.begin, intent_interval.end)
 
                         tree_intervals = (os.path.basename(vis), antenna_ranges, spw_ranges, field_ranges, intent_ranges)
-                        print '{!r}'.format(tree_intervals)
+                        print('{!r}'.format(tree_intervals))
 
 
 def get_calto_from_inputs(inputs):

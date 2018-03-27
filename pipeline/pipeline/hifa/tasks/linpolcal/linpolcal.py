@@ -182,7 +182,7 @@ class Linpolcal(basetask.StandardTaskTemplate):
 
         # Need a heuristic to specify best scan to use
         best_scan = minparallelresponse(caltable=inputs.g0table, gqu=gqu)
-        print 'best scan', best_scan
+        print('best scan {}'.format(best_scan))
         result.best_delay_scan = best_scan
         # best_scan dict is indexed by field id
         ms = inputs.context.observing_run.get_ms(inputs.vis)

@@ -3,7 +3,6 @@ Verify a new CASA pipeline task.
 
 The purpose of this check a newly created pipeline task.
 """
-
 import os
 import sys
 import argparse
@@ -53,8 +52,10 @@ class NewTask():
         # ---------------------------
         #  execute the task
         # ---------------------------
-        inputs = eval('pipeline.{area}.tasks.{task}.{captask}.Inputs(context)'.format(area=area, task=task_name, captask=task_name.capitalize()))
-        task = eval('pipeline.{area}.tasks.{task}.{captask}(inputs)'.format(area=area, task=task_name, captask=task_name.capitalize()))
+        inputs = eval('pipeline.{area}.tasks.{task}.{captask}.Inputs(context)'.format(
+            area=area, task=task_name, captask=task_name.capitalize()))
+        task = eval('pipeline.{area}.tasks.{task}.{captask}(inputs)'.format(
+            area=area, task=task_name, captask=task_name.capitalize()))
         result = task.execute(dry_run=False)
         result.accept(context)
         context.save()
@@ -68,6 +69,7 @@ class NewTask():
         except NameError as ee:
             print('ERROR: {msg}'.format(msg=ee.message))
             print('\tTry using runsetup to register the new task with CASA first.')
+
 
 if __name__ == '__main__':
 

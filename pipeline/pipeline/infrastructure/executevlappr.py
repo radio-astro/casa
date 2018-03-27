@@ -260,11 +260,11 @@ def _getFirstRequest (pprXmlFile):
     # Count the processing requests.
     numRequests = _getNumRequests(pprObject=pprObject)
     if (numRequests <= 0):
-        print "Terminating execution: No valid processing requests"
+        print("Terminating execution: No valid processing requests")
         return info, relativePath, intentsDict, asdmList, commandsList
     elif (numRequests > 1):
-        print "Warning: More than one processing request"
-    print 'Number of processing requests: ', numRequests
+        print("Warning: More than one processing request")
+    print('Number of processing requests: ', numRequests)
 
     # Get brief project summary
     info = _getProjectSummary(pprObject)
@@ -275,14 +275,14 @@ def _getFirstRequest (pprXmlFile):
     # Get the intents dictionary
     numIntents, intentsDict  = _getIntents (pprObject=pprObject,
         requestId=0, numRequests=numRequests) 
-    print 'Number of intents: ', numIntents
-    print 'Intents dictionary: ', intentsDict
+    print('Number of intents: {}'.format(numIntents))
+    print('Intents dictionary: {}'.format(intentsDict))
 
     # Get the commands list
     procedureName, numCommands, commandsList  = _getCommands (pprObject=pprObject,
         requestId=0, numRequests=numRequests) 
-    print 'Number of commands: ', numCommands
-    print 'Commands list: ', commandsList
+    print('Number of commands: {}'.format(numCommands))
+    print('Commands list: {}'.format(commandsList))
 
     # Count the scheduling block sets. Normally there should be only
     # one although the schema allows multiple sets. Check for this 
@@ -290,19 +290,19 @@ def _getFirstRequest (pprXmlFile):
     numSbSets = _getNumSchedBlockSets(pprObject=pprObject,
         requestId=0, numRequests=numRequests)
     if (numSbSets <= 0):
-        print "Terminating execution: No valid scheduling block sets"
+        print("Terminating execution: No valid scheduling block sets")
         return info, relativePath, intentsDict, asdmList, commandsList
     elif (numSbSets > 1):
-        print "Warning: More than one scheduling block set"
-    print 'Number of scheduling block sets: ', numSbSets
+        print("Warning: More than one scheduling block set")
+    print('Number of scheduling block sets: {}'.format(numSbSets))
 
     # Get the ASDM list
     relativePath, numAsdms, asdmList = _getAsdmList (pprObject=pprObject,
         sbsetId=0, numSbSets=numSbSets, requestId=0,
         numRequests=numRequests)
-    print 'Relative path: ', relativePath
-    print 'Number of Asdms: ', numAsdms
-    print 'ASDM list: ', asdmList
+    print('Relative path: {}'.format(relativePath))
+    print('Number of Asdms: {}'.format(numAsdms))
+    print('ASDM list: {}'.format(asdmList))
 
     return info, structure, relativePath, intentsDict, asdmList, procedureName, commandsList
 

@@ -738,8 +738,8 @@ class FlagDeterVLA(flagdeterbase.FlagDeterBase):
 
         baseband_cmd = ''
 
-        print bottomSPW
-        print topSPW
+        print(bottomSPW)
+        print(topSPW)
         
         if (bottomSPW != ''):
             SPWtoflag = bottomSPW + ',' + topSPW
