@@ -317,37 +317,37 @@ def buildscans(msfile, scd):
 
     with casatools.MSReader(msfile) as ms:
 
-	for idd in range(ndd):
-	    # Select this DD (after reset if needed)
-	    if idd>0: ms.selectinit(reset=True)
-	    ms.selectinit(idd)
-	    #recf = ms.getdata(["flag"])
-	    #(nx,nc,ni) = recf['flag'].shape
-	    # get the times
-	    rect = ms.getdata(["time","field_id","scan_number"],ifraxis=True)
-	    nt = rect['time'].shape[0]
-	    ntottimes+=nt
-	    print 'Found '+str(nt)+' times in DD='+str(idd)
-	    #
-	    timdict[idd] = {}
-	    timdict[idd]['time'] = rect['time']
-	    timdict[idd]['field_id'] = rect['field_id']
-	    timdict[idd]['scan_number'] = rect['scan_number']
-	    #
-	    for it in range(nt):
-		isc = rect['scan_number'][it]
-		tim = rect['time'][it]
-		if ddlookup.has_key(isc):
-		    if ddlookup[isc].count(idd)<1:
-			ddlookup[isc].append(idd)
-		    if ddscantimes[isc].has_key(idd):
-			ddscantimes[isc][idd].append(tim)
-		    else:
-			ddscantimes[isc][idd] = [tim]
-		else:
-		    ddlookup[isc] = [idd]
-		    ddscantimes[isc] = {}
-		    ddscantimes[isc][idd] = [tim]
+        for idd in range(ndd):
+            # Select this DD (after reset if needed)
+            if idd>0: ms.selectinit(reset=True)
+            ms.selectinit(idd)
+            #recf = ms.getdata(["flag"])
+            #(nx,nc,ni) = recf['flag'].shape
+            # get the times
+            rect = ms.getdata(["time","field_id","scan_number"],ifraxis=True)
+            nt = rect['time'].shape[0]
+            ntottimes+=nt
+            print 'Found '+str(nt)+' times in DD='+str(idd)
+            #
+            timdict[idd] = {}
+            timdict[idd]['time'] = rect['time']
+            timdict[idd]['field_id'] = rect['field_id']
+            timdict[idd]['scan_number'] = rect['scan_number']
+            #
+            for it in range(nt):
+                isc = rect['scan_number'][it]
+                tim = rect['time'][it]
+                if ddlookup.has_key(isc):
+                    if ddlookup[isc].count(idd)<1:
+                        ddlookup[isc].append(idd)
+                    if ddscantimes[isc].has_key(idd):
+                        ddscantimes[isc][idd].append(tim)
+                    else:
+                        ddscantimes[isc][idd] = [tim]
+                else:
+                    ddlookup[isc] = [idd]
+                    ddscantimes[isc] = {}
+                    ddscantimes[isc][idd] = [tim]
 
     #
     ####print 'Found total '+str(ntottimes)+' times'
