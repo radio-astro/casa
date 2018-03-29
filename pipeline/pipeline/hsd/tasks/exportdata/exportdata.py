@@ -69,7 +69,7 @@ class SDExportData(exportdata.ExportData):
 
         # Make the imaging vislist and the sessions lists.
         session_list, session_names, session_vislists, vislist = self._make_lists(self.inputs.context,
-            self.inputs.session, self.inputs.vis, imaging=True)
+            self.inputs.session, self.inputs.vis, imaging_only_mses=True)
         
         LOG.info('vislist={}'.format(vislist))
 
@@ -107,7 +107,7 @@ class SDExportData(exportdata.ExportData):
 
         return results
 
-    def _make_lists (self, context, session, vis, imaging=False):
+    def _make_lists (self, context, session, vis, imaging_only_mses=False):
         """
         Create the vis and sessions lists
         """
