@@ -79,9 +79,9 @@ class ALMAExportData(exportdata.ExportData):
             self.inputs.context, prefix, self.inputs.output_dir, self.inputs.products_dir, vislist, self.inputs.imaging_products_only)
 
         # Export the AQUA report
-        #aquareport_name = 'pipeline_aquareport.xml'
-        aquareport_name = prefix + '.' + 'pipeline_aquareport.xml'
-        pipe_aqua_reportfile = self._export_aqua_report(self.inputs.context, oussid, aquareport_name,
+        aquareport_name = 'pipeline_aquareport.xml'
+        #aquareport_name = prefix + '.' + 'pipeline_aquareport.xml'
+        pipe_aqua_reportfile = self._export_aqua_report(self.inputs.context, prefix, aquareport_name,
                                                         self.inputs.products_dir)
 
         # Update the manifest
