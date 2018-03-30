@@ -92,11 +92,16 @@ class SDExportData(exportdata.ExportData):
         #    The antenna positions file
         #    The continuum regions file
         #    The target flagging file
+        recipe_name = self.get_recipename(self.inputs.context)
+        if not recipe_name:
+            prefix = oussid
+        else:
+            prefix = oussid + '.' + recipe_name
         auxfproducts =  self._do_auxiliary_products(self.inputs.context, oussid, self.inputs.output_dir, self.inputs.products_dir)
 
         # Export the AQUA report
         aquareport_name = 'pipeline_aquareport.xml'
-        pipe_aqua_reportfile = self._export_aqua_report(self.inputs.context, oussid, aquareport_name,
+        pipe_aqua_reportfile = self._export_aqua_report(self.inputs.context, prefix, aquareport_name,
                                                         self.inputs.products_dir)
 
         # Update the manifest
