@@ -250,10 +250,10 @@ class RestoreData(basetask.StandardTaskTemplate):
         #   but it is maintained for testing purposes.
         if inputs.copytoraw:
             self._do_copy_manifest_toraw('*pipeline_manifest.xml')
-            pipemanifest = self._do_get_manifest('*pipeline_manifest.xml')
+            pipemanifest = self._do_get_manifest('*pipeline_manifest.xml', '*cal*pipeline_manifest.xml')
             self._do_copytoraw(pipemanifest)
         else:
-            pipemanifest = self._do_get_manifest('*pipeline_manifest.xml')
+            pipemanifest = self._do_get_manifest('*pipeline_manifest.xml', '*cal*pipeline_manifest.xml')
 
         # Convert ASDMS assumed to be on disk in rawdata_dir. After this step
         # has been completed the MS and MS.flagversions directories will exist
@@ -310,7 +310,7 @@ class RestoreData(basetask.StandardTaskTemplate):
             shutil.copy(manifestfile, os.path.join(inputs.rawdata_dir,
                                                    os.path.basename(manifestfile)))
 
-    def _do_get_manifest(self, template):
+    def _do_get_manifest(self, template1, template2):
 
         """
         Get the pipeline manifest object
@@ -319,7 +319,13 @@ class RestoreData(basetask.StandardTaskTemplate):
         inputs = self.inputs
 
         # Get the list of files in the rawdata directory
-        manifestfiles = glob.glob(os.path.join(inputs.rawdata_dir, template))
+        #   First find all the manifest files of any kind
+        #   If there is more than one file in that list then try the more restrictive template
+        manifestfiles = glob.glob(os.path.join(inputs.rawdata_dir, template1))
+        if len(manifestfiles) > 1:
+            manifestfiles2 = glob.glob(os.path.join(inputs.rawdata_dir, template2))
+            if len(manifestfiles2) > 0 and len(manifestfiles2) < len(manifestfiles):
+                manifestfiles = manifestfiles2
 
         # Parse manifest file if it exists.
         if len(manifestfiles) > 0:
