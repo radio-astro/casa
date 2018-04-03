@@ -10,6 +10,7 @@ import pipeline.infrastructure.vdp as vdp
 from pipeline.h.heuristics import fieldnames
 from pipeline.infrastructure import casa_tasks
 from pipeline.infrastructure import task_registry
+from pipeline.domain.datatable import DataTableImpl as DataTable
 from . import worker
 from .flagsummary import SDBLFlagSummary
 from .. import common
@@ -218,6 +219,10 @@ class SDBLFlagResults(common.SingleDishResults):
     def merge_with_context(self, context):
         super(SDBLFlagResults, self).merge_with_context(context)
         
+        # merge RW table cache 
+        datatable = DataTable(context.observing_run.ms_datatable_name, readonly=False)
+        datatable.merge_cache()
+        
     def _outcome_name(self):
         return 'none'
 
@@ -277,6 +282,10 @@ class SerialSDBLFlag(basetask.StandardTaskTemplate):
                                                    spwcorr=True, fieldcnt=True,
                                                    name='before')
         stats_before = self._executor.execute(flagdata_summary_job)
+        
+        # clear RW table cache in DataTable
+        datatable = DataTable(context.observing_run.ms_datatable_name, readonly=False)
+        datatable.clear_cache()
 
         # loop over reduction group (spw and source combination)
         flagResult = []
