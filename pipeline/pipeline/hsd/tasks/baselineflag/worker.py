@@ -194,6 +194,7 @@ class SDBLFlagWorker(basetask.StandardTaskTemplate):
 
         flagSummary = []
         dirty_rows = []
+        with_masklist = False
         # loop over members (practically, per antenna loop in an MS)
         for (msobj,antid,fieldid,spwid,pollist) in itertools.izip(ms_list, antid_list, fieldid_list, spwid_list, pols_list):
             LOG.debug('Performing flag for %s Antenna %d Field %d Spw %d'%(msobj.basename,antid,fieldid,spwid))
@@ -234,6 +235,8 @@ class SDBLFlagWorker(basetask.StandardTaskTemplate):
                 flagRule_local['RmsPostFitFlag']['isActive'] = False
                 flagRule_local['RunMeanPostFitFlag']['isActive'] = False
                 flagRule_local['RmsExpectedPostFitFlag']['isActive'] = False
+                # include MASKLIST to cache
+                with_masklist = True
             elif rowmap is None:
                 rowmap = sdutils.make_row_map_for_baselined_ms(msobj, container)
             LOG.debug("FLAGRULE = %s" % str(flagRule_local))
@@ -301,7 +304,7 @@ class SDBLFlagWorker(basetask.StandardTaskTemplate):
         #datatable.exportdata(minimal=True)
         dirty_rows = numpy.asarray(dirty_rows)
         dirty_rows.sort()
-        datatable.cache_rwtable(self, dirty_rows)
+        datatable.cache_rwtable(self, dirty_rows, with_masklist)
 
         result = SDBLFlagWorkerResults(task=self.__class__,
                                        success=True,

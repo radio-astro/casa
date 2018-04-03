@@ -428,38 +428,72 @@ class DataTableImpl( object ):
             if os.path.exists(full_path):
                 shutil.rmtree(full_path)
         
-    def cache_rwtable(self, task, dirty_rows):
+    def cache_rwtable(self, task, dirty_rows, with_masklist=False):
         """
         export only RW table to the disk.
         
         task -- caller task instance (will be used to construct cache table name)
         dirty_rows -- list of row numbers for updated rows
+        with_masklist -- include MASKLIST column as part of a cache
         
         """
         name = self.rwtable_cache_name(task)
-        tbloc = self.tb2.copy(name, deep=True, valuecopy=True, returnobject=True)
+        tbloc = self.tb2.copy(name, deep=True, valuecopy=True, returnobject=True)#, norows=True)
         tbloc.close()
         
         tbloc.open(name, nomodify=False)
         tbloc.putkeyword('DIRTY_ROWS', dirty_rows)
+        tbloc.putkeyword('WITH_MASKLIST', with_masklist)
         tbloc.close()
         
     def merge_cache(self):
         cols = ['STATISTICS', 'NMASK', 'FLAG', 'FLAG_PERMANENT', 'FLAG_SUMMARY']
         
         try:
+            nrow_chunk = 2000
             for f in self.list_cache():
                 full_path = os.path.join(self.plaintable, f)
                 with casatools.TableReader(full_path) as cache:
                     dirty_rows = cache.getkeyword('DIRTY_ROWS')
+                    with_masklist = cache.getkeyword('WITH_MASKLIST')
                     masklist_cache = DataTableColumnMaskList(cache)
                     masklist_dst = self.cols['MASKLIST']
-                    for row in dirty_rows:
-                        for col in cols:
-                            data = cache.getcell(col, int(row))
-                            self.tb2.putcell(col, int(row), data)
-                        data = masklist_cache.getcell(row)
-                        masklist_dst.putcell(row, data)
+                    # compute number of chunks
+                    nrow = dirty_rows.max() - dirty_rows.min() + 1
+                    nchunk = nrow / nrow_chunk 
+                    mod = nrow % nrow_chunk
+                    chunks = [nrow_chunk] * nchunk + [mod]
+                    #LOG.info('chunks={0} (nrow {1})'.format(chunks, nrow))
+                    # for each column
+                    for col in cols:
+                        start_row = dirty_rows.min()
+                        for size_chunk in chunks:
+                            #LOG.info('start_row {0}, size_chunk {1}'.format(start_row, size_chunk))
+                            # read chunk
+                            chunk_src = cache.getcol(col, startrow=start_row, nrow=size_chunk)
+                            chunk_dst = self.tb2.getcol(col, startrow=start_row, nrow=size_chunk)
+
+                            # update chunk
+                            chunk_min = start_row
+                            chunk_max = start_row + size_chunk - 1
+                            target_rows = dirty_rows[numpy.logical_and(chunk_min <= dirty_rows, 
+                                                                       dirty_rows <= chunk_max)]
+                            for row in target_rows:
+                                chunk_index = row - start_row
+                                #LOG.info('row {0}, chunk_index {1}'.format(row, chunk_index))
+                                chunk_dst[...,chunk_index] = chunk_src[...,chunk_index]
+                            
+                            # flush chunk
+                            self.tb2.putcol(col, chunk_dst, startrow=start_row, nrow=size_chunk)
+                            
+                            # increment start_row
+                            start_row += size_chunk
+                            
+                    # merge MASKLIST if necessary
+                    if with_masklist is True:
+                        for index, row in enumerate(dirty_rows):
+                            data = masklist_cache.getcell(index)
+                            masklist_dst.putcell(row, data)
                 
             self.exportdata(minimal=True)
         except:
