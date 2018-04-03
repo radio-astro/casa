@@ -1085,7 +1085,7 @@ class StandardTaskTemplate(api.Task):
             # list
             return ResultsList()
 
-        if isinstance(self.inputs, (StandardInputs, ModeInputs)):
+        if isinstance(self.inputs, (StandardInputs, ModeInputs, vdp.StandardInputs, vdp.ModeInputs)):
             to_split = ('calphasetable', 'targetphasetable', 'offsetstable')
             split_properties = self._get_handled_headtails(to_split)
 
