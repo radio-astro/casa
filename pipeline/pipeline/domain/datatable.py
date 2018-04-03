@@ -162,6 +162,8 @@ class DataTableImpl( object ):
                            0,        1,        2
     Note for Flags: 1 is valid, 0 is invalid
     """ 
+    CACHE_PREFIX = 'cacheRW'
+    
     @classmethod
     def get_rotable_name(cls, datatable_name):
         return os.path.join(datatable_name, 'RO')
@@ -401,6 +403,72 @@ class DataTableImpl( object ):
                                valuecopy=True, returnobject=True )
         tbloc.close()
         self.plaintable = abspath
+        
+    def rwtable_cache_name(self, task):
+        dt_path = self.plaintable
+        prefix = self.CACHE_PREFIX
+        task_hash = hash(task)
+        timestamp = time.strftime('%Y%m%d-%H%M%S')
+        rwtable_name = None
+        while rwtable_name is None:
+            name = os.path.join(dt_path, '{0}{1}-{2}'.format(prefix, task_hash, timestamp))
+            if os.path.exists(name):
+                task_hash += 1
+                timestamp = time.strftime('%Y%m%D-%H%M%S')
+            else:
+                rwtable_name = name
+        return name
+    
+    def list_cache(self):
+        return [f for f in os.listdir(self.plaintable) if f.startswith(self.CACHE_PREFIX)]
+    
+    def clear_cache(self):
+        for f in self.list_cache():
+            full_path = os.path.join(self.plaintable, f)
+            if os.path.exists(full_path):
+                shutil.rmtree(full_path)
+        
+    def cache_rwtable(self, task, dirty_rows):
+        """
+        export only RW table to the disk.
+        
+        task -- caller task instance (will be used to construct cache table name)
+        dirty_rows -- list of row numbers for updated rows
+        
+        """
+        name = self.rwtable_cache_name(task)
+        tbloc = self.tb2.copy(name, deep=True, valuecopy=True, returnobject=True)
+        tbloc.close()
+        
+        tbloc.open(name, nomodify=False)
+        tbloc.putkeyword('DIRTY_ROWS', dirty_rows)
+        tbloc.close()
+        
+    def merge_cache(self):
+        cols = ['STATISTICS', 'NMASK', 'FLAG', 'FLAG_PERMANENT', 'FLAG_SUMMARY']
+        
+        try:
+            for f in self.list_cache():
+                full_path = os.path.join(self.plaintable, f)
+                with casatools.TableReader(full_path) as cache:
+                    dirty_rows = cache.getkeyword('DIRTY_ROWS')
+                    masklist_cache = DataTableColumnMaskList(cache)
+                    masklist_dst = self.cols['MASKLIST']
+                    for row in dirty_rows:
+                        for col in cols:
+                            data = cache.getcell(col, int(row))
+                            self.tb2.putcell(col, int(row), data)
+                        data = masklist_cache.getcell(row)
+                        masklist_dst.putcell(row, data)
+                
+            self.exportdata(minimal=True)
+        except:
+            import traceback
+            LOG.error(traceback.format_exc())
+            raise
+        finally:
+            self.clear_cache()
+ 
 
     def _create( self, readonly=False ):
         self._close()
