@@ -558,12 +558,12 @@ class DataTableImpl( object ):
         self._close()
         abspath = absolute_path(name)
         if not minimal or abspath != self.plaintable:
-            #with casatools.TableReader(os.path.join(name,'RO')) as tb:
-            #    self.tb1 = tb.copy( self.memtable1, deep=True,
-            #                        valuecopy=True, memorytable=True,
-            #                        returnobject=True )
-            self.tb1 = casatools.casac.table()
-            self.tb1.open(os.path.join(name, 'RO'), nomodify=False)
+            with casatools.TableReader(os.path.join(name,'RO')) as tb:
+                self.tb1 = tb.copy( self.memtable1, deep=True,
+                                    valuecopy=True, memorytable=True,
+                                    returnobject=True )
+#             self.tb1 = casatools.casac.table()
+#             self.tb1.open(os.path.join(name, 'RO'), nomodify=False)
         with casatools.TableReader(os.path.join(name,'RW')) as tb:
             self.tb2 = tb.copy( self.memtable2, deep=True,
                                 valuecopy=True, memorytable=True,
