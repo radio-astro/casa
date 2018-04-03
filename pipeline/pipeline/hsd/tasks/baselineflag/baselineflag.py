@@ -244,6 +244,13 @@ class SerialSDBLFlag(basetask.StandardTaskTemplate):
     ##################################################    
     Inputs = SDBLFlagInputs
 
+    def __init__(self, inputs):
+        super(SerialSDBLFlag, self).__init__(inputs)
+        
+        # clear RW table cache in DataTable
+        datatable = DataTable(inputs.context.observing_run.ms_datatable_name, readonly=False)
+        datatable.clear_cache()
+
     def prepare(self):
         """
         Iterates over reduction group and invoke flagdata worker function in each clip_niteration.
@@ -283,10 +290,6 @@ class SerialSDBLFlag(basetask.StandardTaskTemplate):
                                                    name='before')
         stats_before = self._executor.execute(flagdata_summary_job)
         
-        # clear RW table cache in DataTable
-        datatable = DataTable(context.observing_run.ms_datatable_name, readonly=False)
-        datatable.clear_cache()
-
         # loop over reduction group (spw and source combination)
         flagResult = []
         for (group_id,group_desc) in reduction_group.iteritems():
@@ -408,6 +411,11 @@ class HpcSDBLFlag(sessionutils.ParallelTemplate):
 
     def __init__(self, inputs):
         super(HpcSDBLFlag, self).__init__(inputs)
+        
+        # clear RW table cache in DataTable
+        datatable = DataTable(inputs.context.observing_run.ms_datatable_name, readonly=False)
+        datatable.clear_cache()
+
 
     def get_result_for_exception(self, vis, exception):
         LOG.error('Error operating target flag for {!s}'.format(os.path.basename(vis)))
