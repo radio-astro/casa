@@ -193,6 +193,7 @@ class SDBLFlagWorker(basetask.StandardTaskTemplate):
 #         namer.spectral_window(spwid)
 
         flagSummary = []
+        dirty_rows = []
         # loop over members (practically, per antenna loop in an MS)
         for (msobj,antid,fieldid,spwid,pollist) in itertools.izip(ms_list, antid_list, fieldid_list, spwid_list, pols_list):
             LOG.debug('Performing flag for %s Antenna %d Field %d Spw %d'%(msobj.basename,antid,fieldid,spwid))
@@ -276,6 +277,9 @@ class SDBLFlagWorker(basetask.StandardTaskTemplate):
                                     'field': fieldid, 'spw': spwid, 'pol': pol,
                                     'result_threshold': final_thres,
                                     'baselined': is_baselined})
+                
+                # update a list of updated DataTable rows ("dirty" rows)
+                dirty_rows.extend(dt_idx)
             # Generate flag command file
             filename = ("%s_ant%d_field%d_spw%d_blflag.txt" % \
                         (os.path.basename(msobj.work_data), antid, fieldid, spwid))
@@ -294,7 +298,10 @@ class SDBLFlagWorker(basetask.StandardTaskTemplate):
         end_time = time.time()
         LOG.info('PROFILE execute: elapsed time is %s sec'%(end_time-start_time))
         # Need to flush changes to disk
-        datatable.exportdata(minimal=True)
+        #datatable.exportdata(minimal=True)
+        dirty_rows = numpy.asarray(dirty_rows)
+        dirty_rows.sort()
+        datatable.cache_rwtable(self, dirty_rows)
 
         result = SDBLFlagWorkerResults(task=self.__class__,
                                        success=True,
