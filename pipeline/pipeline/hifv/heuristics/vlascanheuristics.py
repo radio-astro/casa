@@ -1093,12 +1093,14 @@ class VLAScanHeuristics(object):
             # CALIBRATE_AMPLI intent for anything.
             # There is an implicit assumption here that we only have one
             # observation in the MS
+            # Changed April 2018 so that all flux scans and fields require FLUX,
+            #   even prior to 2013.
             if casatools.quanta.le(msmd.timerangeforobs(0)['begin']['m0'],
                       casatools.quanta.quantity("2012/02/21 12:00:00")):
                 self.flux_scan_select_string = \
-                    buildSelectionString(msmd.scansforintent("CALIBRATE_AMPLI*"))
+                    buildSelectionString(msmd.scansforintent("CALIBRATE_FLUX*"))
                 self.flux_field_select_string = \
-                    buildSelectionString(msmd.fieldsforintent("CALIBRATE_AMPLI*"))
+                    buildSelectionString(msmd.fieldsforintent("CALIBRATE_FLUX*"))
             else:
                 self.flux_scan_select_string = \
                     buildSelectionString(msmd.scansforintent("CALIBRATE_FLUX*"))
