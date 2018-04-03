@@ -183,6 +183,9 @@ class VDPTaskFactory(object):
         try:
             inputs.vis = vis
             task_args = inputs.as_dict()
+            # support for single-dish tasks
+            if task_args.has_key('infiles'):
+                task_args['infiles'] = task_args['vis']
         finally:
             inputs.vis = original_vis
 
