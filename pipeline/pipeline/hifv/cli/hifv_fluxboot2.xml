@@ -19,6 +19,11 @@
         <value></value>
     </param>
 
+    <param type="int" name="fitorder">
+        <description>order of spectral fitting</description>
+        <value>1</value>
+    </param>
+
     <param type="string" name="pipelinemode">
 	<description>The pipeline operating mode</description>
 	<value>automatic</value>
@@ -86,6 +91,11 @@ vis -- List of visibility data files. These may be ASDMs, tar files of ASDMs,
    example: vis=['X227.ms', 'asdms.tar.gz']
 
 caltable -- string name of flagged caltable
+
+fitorder -- Polynomial order of the spectral fitting for valid flux densities
+               with multiple spws.  Currently only support 1 (spectral index only) or
+               2 (spectral index and curvature).  It falls back to a lower fitorder if
+               there are not enough solutions to fit with the requested fitorder.
 
 refantignore -- string list to be ignored as reference antennas.
     default: ''

@@ -5,7 +5,7 @@ from taskinit import casalog
 import pipeline.h.cli.utils as utils
 
 
-def hifv_fluxboot2(vis=None, caltable=None, pipelinemode=None, dryrun=None, acceptresults=None, refantignore=None):
+def hifv_fluxboot2(vis=None, caltable=None, fitorder=None, pipelinemode=None, dryrun=None, acceptresults=None, refantignore=None):
 
     ##########################################################################
     #                                                                        #

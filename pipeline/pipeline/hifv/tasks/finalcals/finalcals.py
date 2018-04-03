@@ -872,7 +872,7 @@ class Finalcals(basetask.StandardTaskTemplate):
                              'listmodels': False,
                              'scalebychan': True,
                              'fluxdensity': [fluxscale_result[fieldid]['fitFluxd'], 0, 0, 0],
-                             'spix': fluxscale_result[fieldid]['spidx'][1],
+                             'spix': list(fluxscale_result[fieldid]['spidx'][1:3]),
                              'reffreq': str(fluxscale_result[fieldid]['fitRefFreq']) + 'Hz',
                              'standard': 'manual',
                              'usescratch': True}

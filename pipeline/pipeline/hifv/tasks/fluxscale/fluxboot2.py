@@ -26,13 +26,19 @@ class Fluxboot2Inputs(vdp.StandardInputs):
     """
     caltable = vdp.VisDependentProperty(default=None)
     refantignore = vdp.VisDependentProperty(default='')
+    fitorder = vdp.VisDependentProperty(default=1)
 
-    def __init__(self, context, vis=None, caltable=None, refantignore=None):
+    def __init__(self, context, vis=None, caltable=None, refantignore=None, fitorder=None):
+
+        if fitorder is None:
+            fitorder = 1
+
         super(Fluxboot2Inputs, self).__init__()
         self.context = context
         self.vis = vis
         self.caltable = caltable
         self.refantignore = refantignore
+        self.fitorder = fitorder
         self.spix = 0.0
         self.sources = []
         self.flux_densities = []
@@ -264,12 +270,13 @@ class Fluxboot2(basetask.StandardTaskTemplate):
         fluxcalfields = flux_field_select_string
 
         task_args = {'vis': calMs,
-                     'caltable': caltable,
-                     'fluxtable': 'fluxgaincalFcal.g',
-                     'reference': [fluxcalfields],
-                     'transfer': [''],
-                     'append': False,
-                     'refspwmap': [-1]}
+                     'caltable'  : caltable,
+                     'fluxtable' : 'fluxgaincalFcal.g',
+                     'reference' : [fluxcalfields],
+                     'transfer'  : [''],
+                     'append'    : False,
+                     'refspwmap' : [-1],
+                     'fitorder'  : self.inputs.fitorder}
 
         job = casa_tasks.fluxscale(**task_args)
 
@@ -572,7 +579,7 @@ class Fluxboot2(basetask.StandardTaskTemplate):
                          'listmodels': False,
                          'scalebychan': True,
                          'fluxdensity': [fluxscale_result[fieldid]['fitFluxd'], 0, 0, 0],
-                         'spix': fluxscale_result[fieldid]['spidx'][1],
+                         'spix': list(fluxscale_result[fieldid]['spidx'][1:3]),
                          'reffreq': str(fluxscale_result[fieldid]['fitRefFreq']) + 'Hz',
                          'standard': 'manual',
                          'usescratch': True}
