@@ -186,8 +186,12 @@ class Tclean(cleanbase.CleanBase):
                 os.system(mkcmd)
                 self.copy_products(os.path.join(image_name, old_pname), os.path.join(newname, new_pname))
             else:
-                LOG.info('Copying %s to %s' % (image_name, newname))
-                shutil.copytree(image_name, newname)
+                if 'summaryplot.png' in image_name:
+                    LOG.info('Copying %s to %s' % (image_name, newname))
+                    shutil.copyfile(image_name, newname)
+                else:
+                    LOG.info('Copying %s to %s' % (image_name, newname))
+                    shutil.copytree(image_name, newname)
 
     def prepare(self):
         inputs = self.inputs
@@ -500,10 +504,8 @@ class Tclean(cleanbase.CleanBase):
         # Compute the dirty image
         LOG.info('Compute the dirty image')
         iter = 0
-        result = self._do_clean(iter=iter, stokes='I', cleanmask='', niter=0,
-                                threshold='0.0mJy',
-                                sensitivity=sequence_manager.sensitivity,
-                                result=None)
+        result = self._do_clean(iter=iter, cleanmask='', niter=0, threshold='0.0mJy',
+                                sensitivity=sequence_manager.sensitivity, result=None)
 
         # Determine masking limits depending on PB
         extension = '.tt0' if result.multiterm else ''
@@ -573,6 +575,8 @@ class Tclean(cleanbase.CleanBase):
 
             if inputs.hm_masking == 'auto':
                 new_cleanmask = '%s.iter%s.mask' % (rootname, iter)
+            elif inputs.hm_masking == 'manual':
+                new_cleanmask = inputs.mask
             else:
                 new_cleanmask = '%s.iter%s.cleanmask' % (rootname, iter)
 
@@ -616,10 +620,8 @@ class Tclean(cleanbase.CleanBase):
             LOG.info('    Threshold %s', seq_result.threshold)
             LOG.info('    Niter %s', seq_result.niter)
 
-            result = self._do_clean(iter=iter, stokes='I',
-                    cleanmask=new_cleanmask, niter=seq_result.niter,
-                    threshold=threshold,
-                    sensitivity=sequence_manager.sensitivity, result=result)
+            result = self._do_clean(iter=iter, cleanmask=new_cleanmask, niter=seq_result.niter, threshold=threshold,
+                                    sensitivity=sequence_manager.sensitivity, result=result)
 
             # Give the result to the clean 'sequencer'
             model_sum, \
@@ -692,6 +694,29 @@ class Tclean(cleanbase.CleanBase):
             # Up the iteration counter
             iter += 1
 
+        if iter == 2 and 'VLASS-SE' in self.image_heuristics.imaging_mode:
+            # Use previous iterations's products as starting point
+            old_pname = '%s.iter%s' % (rootname, iter-1)
+            new_pname = '%s.iter%s' % (rootname, iter)
+            self.copy_products(os.path.basename(old_pname), os.path.basename(new_pname))
+
+            rms_threshold = self.image_heuristics.rms_threshold(residual_robust_rms, inputs.nsigma)
+            if rms_threshold:
+                if inputs.threshold:
+                    LOG.warn("Both the 'threshold' and 'threshold_nsigma' were specified.")
+                    LOG.warn('Setting new threshold to max of input threshold and scaled MAD * nsigma.')
+                    LOG.info("    Input 'threshold' = {tt}".format(tt=inputs.threshold))
+                    LOG.info("    Input 'threshold_nsigma' = {ns}".format(ns=inputs.nsigma))
+                    LOG.info("    Scaled MAD * 'threshold_nsigma' = {ts}".format(ts=rms_threshold))
+                    LOG.info('    max(threshold, scaled MAD * nsigma)= {nt}'.format(nt=max(inputs.threshold, rms_threshold)))
+                    sequence_manager.threshold = max(inputs.threshold, rms_threshold)
+                else:
+                    sequence_manager.threshold = rms_threshold
+
+            LOG.info('Final VLASS single epoch tclean call with no mask')
+            result = self._do_clean(iter=iter, cleanmask='', niter=seq_result.niter, threshold=threshold,
+                                    sensitivity=sequence_manager.sensitivity, result=result)
+
         # If specmode is "cube", create from the non-pbcorrected cube
         # after continuum subtraction an image of the moment 0 / 8 integrated
         # intensity for the line-free channels.
@@ -700,7 +725,7 @@ class Tclean(cleanbase.CleanBase):
 
         return result
 
-    def _do_clean(self, iter, stokes, cleanmask, niter, threshold, sensitivity, result):
+    def _do_clean(self, iter, cleanmask, niter, threshold, sensitivity, result):
         """
         Do basic cleaning.
         """

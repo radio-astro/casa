@@ -37,12 +37,21 @@ class ManualMaskThresholdSequence(BaseCleanSequence):
             tbTool.open(self.mask)
             tbTool.copy(new_cleanmask)
             tbTool.done()
+            LOG.info('Copyied {} to {}'.format(self.mask, new_cleanmask))
 
             self.result.cleanmask = new_cleanmask
             self.result.threshold = self.threshold
             self.result.sensitivity = self.sensitivity
             self.result.niter =  self.niter
             self.result.iterating = True
+
+        elif self.iter == 1:
+            self.result.cleanmask = ''
+            self.result.threshold = self.threshold
+            self.result.sensitivity = self.sensitivity
+            self.result.niter = self.niter
+            self.result.iterating = False
+
         else:
             self.result.cleanmask = ''
             self.result.threshold = '0.0mJy'

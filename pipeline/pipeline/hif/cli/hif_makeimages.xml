@@ -59,6 +59,7 @@ Compute clean results from a list of specified targets.
          <value>psf</value>
          <value>psfiter</value>
          <value>none</value>
+         <value>manual</value>
          <value></value>
        </allowed>
   </param>
