@@ -47,3 +47,20 @@ $(document).ready(function() {
 
 <p>Syspower</p>
 
+%if syspowerspgain_subpages:
+
+        <h2>Sys power plots</h2>
+        Switched Power table written to:
+        %for single_result in result:
+	        <p><b>${os.path.basename(single_result.gaintable)}</b></p>
+        %endfor
+        This table has been modified.
+
+        %for ms in summary_plots.keys():
+
+            <h4>Syspower Plots:
+                <a class="replace" href="${os.path.relpath(os.path.join(dirname, syspowerspgain_subpages[ms]), pcontext.report_dir)}">Syspower SPgain plots</a> |
+            </h4>
+
+        %endfor
+    %endif

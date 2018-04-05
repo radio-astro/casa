@@ -16,6 +16,7 @@ from pipeline.infrastructure import casa_tasks, task_registry
 
 LOG = infrastructure.get_logger(__name__)
 
+
 # old
 #  scipy.signal.savgol_filter(x, window_length, polyorder, deriv=0, delta=1.0, axis=-1, mode='interp', cval=0.0)
 
@@ -88,13 +89,20 @@ def savitzky_golay(y, window_size, order, deriv=0, rate=1):
     firstvals = y[0] - np.abs( y[1:half_window+1][::-1] - y[0] )
     lastvals = y[-1] + np.abs(y[-half_window-1:-1][::-1] - y[-1])
     y = np.concatenate((firstvals, y, lastvals))
+
     return np.convolve( m[::-1], y, mode='valid')
 
 
 class SyspowerResults(basetask.Results):
-    def __init__(self):
+    def __init__(self, gaintable=None):
+
+        if gaintable is None:
+            gaintable = ''
+
         super(SyspowerResults, self).__init__()
+
         self.pipeline_casa_task = 'Syspower'
+        self.gaintable = gaintable
 
     def merge_with_context(self, context):
         """
@@ -197,7 +205,7 @@ class Syspower(basetask.StandardTaskTemplate):
                 flux_hits = np.where((times >= np.min(flux_times)) & (times <= np.max(flux_times)))[0]
 
                 for pol in [0, 1]:
-                    print i, j, pol, hits2
+                    LOG.info(str(i) + ' ' + str(j) + ' ' + str(pol) + ' ' + str(hits2))
                     dat_raw[i, j, pol, hits2] = p_diff[pol, hits]
                     dat_flux[i, j, pol] = np.median(pdrq[pol, hits][flux_hits])
                     dat_rq[i, j, pol, hits2] = rq[pol, hits]
@@ -310,7 +318,7 @@ class Syspower(basetask.StandardTaskTemplate):
             except:
                 LOG.warn('error writing final RQ table - switched power will not be applied')
 
-        return SyspowerResults()
+        return SyspowerResults(gaintable=rq_table)
 
     def analyse(self, results):
         return results
