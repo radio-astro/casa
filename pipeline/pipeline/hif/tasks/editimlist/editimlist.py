@@ -38,6 +38,7 @@ import ast
 import os
 import copy
 
+import pipeline.domain.measures as measures
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.vdp as vdp
 import pipeline.infrastructure.api as api
@@ -198,7 +199,23 @@ class Editimlist(basetask.StandardTaskTemplate):
             if not inpdict['spw']:
                 imlist_entry['spw'] = ','.join([str(x) for x in range(2, 18)])
             else:
-                imlist_entry['spw'] = inpdict['spw']
+                if 'MHz' in inpdict['spw']:
+                    # map the center frequencies (MHz) to spw ids
+                    cfreq_spw = {}
+                    spws = ms.get_spectral_windows(science_windows_only=True)
+                    for spw_ii in spws:
+                        centre_freq = int(spw_ii.centre_frequency.to_units(measures.FrequencyUnits.MEGAHERTZ))
+                        spwid = spw_ii.id
+                        cfreq_spw[centre_freq] = spwid
+
+                    user_freqs = inpdict['spw'].split(',')
+                    spws = []
+                    for uf in user_freqs:
+                        uf_int = int(uf.replace('MHz', ''))
+                        spws.append(cfreq_spw[uf_int])
+                    imlist_entry['spw'] = ','.join([str(x) for x in spws])
+                else:
+                    imlist_entry['spw'] = inpdict['spw']
         else:
             imlist_entry['spw'] = inpdict['spw']
 
