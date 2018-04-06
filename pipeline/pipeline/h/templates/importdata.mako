@@ -67,7 +67,7 @@ ${'is' if num_mses == 1 else 'are'} summarised below.</p>
 <p>The following flux densities were imported into the pipeline context:</p>
 <table class="table table-bordered table-striped table-condensed"
 	   summary="Flux density results">
-	<caption>Flux densities imported from the ASDM.  Online flux catalog values are used when available.</caption>
+	<caption>Flux densities imported from the ASDM.  Online flux catalog values are used when available for ALMA.</caption>
     <thead>
 	    <tr>
 	        <th scope="col" rowspan="2">Measurement Set</th>
@@ -75,6 +75,7 @@ ${'is' if num_mses == 1 else 'are'} summarised below.</p>
 	        <th scope="col" rowspan="2">SpW</th>
 	        <th scope="col" colspan="4">Flux Density</th>
 	        <th scope="col" rowspan="2">Spix</th>
+	        <th scope="col" rowspan="2">Age Of Nearest <p>Monitor Point (days)</th>
 	    </tr>
 	    <tr>
 	        <th scope="col">I</th>

@@ -163,7 +163,7 @@ def get_measurement (ms, spw_id, frequency_text, flux_text):
         LOG.info('Closest flux measurement for {!s} spw {!s} falls outside'
                  'spw, {!s} distant from spectral window centre'.format(ms.basename, spw_id, min_delta))
 
-    m = domain.FluxMeasurement(spw_id, *mean_iquv, origin='Source.xml')
+    m = domain.FluxMeasurement(spw_id, *mean_iquv, origin=('Source.xml','','N/A'))
 
     return m
 
@@ -251,7 +251,9 @@ def export_flux_from_context(context, filename=None):
                     (I, Q, U, V) = flux.casa_flux_density
                     comment = 'intent=' + ','.join(sorted(field.intents))
                     writer.writerow((ms.basename, field.id, flux.spw_id,
-                                     I, Q, U, V, float(flux.spix), comment + ' #' + flux.origin))
+                                     I, Q, U, V, float(flux.spix),
+                                     comment + ' #' + flux.origin[0]
+                                     + flux.origin[1] + '  ageOfNearestMonitorPoint: ' + flux.origin[2]))
                     counter += 1
 
         LOG.info('Exported %s flux measurements to %s' % (counter, filename))
@@ -306,7 +308,8 @@ def export_flux_from_result(results, context, filename='flux.csv'):
                         comment = "\'"+utils.dequote(field.name)+"\'" + ' ' + 'intent=' + ','.join(sorted(field.intents))
 
                         writer.writerow((ms_basename, field_id, m.spw_id,
-                                         I, Q, U, V, float(m.spix), comment+' #'+m.origin))
+                                         I, Q, U, V, float(m.spix), comment+' #'+m.origin[0]
+                                         + m.origin[1] + '  ageOfNearestMonitorPoint: ' + m.origin[2]))
                         counter += 1
 
         LOG.info('Exported %s flux measurements to %s' % (counter, abspath))
@@ -326,15 +329,17 @@ def import_flux(output_dir, observing_run, filename=None):
         reader.next()
 
         counter = 0
+        ageString = 'ageOfNearestMonitorPoint: '
         for row in reader:
             try:
                 try:
-                    (ms_name, field_id, spw_id, I, Q, U, V, spix, _) = row
+                    (ms_name, field_id, spw_id, I, Q, U, V, spix, extra) = row
                     spix = decimal.Decimal(spix)
                 except:
-                    (ms_name, field_id, spw_id, I, Q, U, V, __) = row
+                    (ms_name, field_id, spw_id, I, Q, U, V, extra) = row
                     spix = decimal.Decimal('0.0')
                 spw_id = int(spw_id)
+                ageNMP = extra[extra.index(ageString) + len(ageString):]
                 try:
                     ms = observing_run.get_ms(ms_name)
                 except KeyError:
@@ -346,7 +351,7 @@ def import_flux(output_dir, observing_run, filename=None):
                     continue
 
                 fields = ms.get_fields(field_id)
-                measurement = domain.FluxMeasurement(spw_id, I, Q, U, V, spix)
+                measurement = domain.FluxMeasurement(spw_id, I, Q, U, V, spix, origin=('', '', ageNMP))
 
                 # A single field identifier could map to multiple field objects,
                 # but the flux should be the same for all, so we iterate..

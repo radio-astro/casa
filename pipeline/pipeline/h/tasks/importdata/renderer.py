@@ -36,7 +36,6 @@ class T2_4MDetailsImportDataRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
         for r in setjy_results:
             measurements.extend(r.measurements)
 
-
         num_mses = reduce(operator.add, [len(r.mses) for r in result])
 
         flux_table_rows = make_flux_table(pipeline_context, setjy_results)
@@ -56,16 +55,16 @@ class T2_4MDetailsImportDataRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
 
             fluxcsv_files[ms.basename] = os.path.join('stage%s' % result.stage_number, fluxcsv_filename)
 
-        mako_context.update({'flux_imported' : True if measurements else False,
-                           'flux_table_rows' : flux_table_rows,
-                         'repsource_defined' : True if repsource_table_rows else False,
-                      'repsource_table_rows' : repsource_table_rows,
-                             'num_mses'      : num_mses,
-                             'fluxcsv_files' : fluxcsv_files,
-                             'weblog_dir'    : weblog_dir})
+        mako_context.update({'flux_imported'        : True if measurements else False,
+                             'flux_table_rows'      : flux_table_rows,
+                             'repsource_defined'    : True if repsource_table_rows else False,
+                             'repsource_table_rows' : repsource_table_rows,
+                             'num_mses'             : num_mses,
+                             'fluxcsv_files'        : fluxcsv_files,
+                             'weblog_dir'           : weblog_dir})
 
 
-FluxTR = collections.namedtuple('FluxTR', 'vis field spw i q u v spix')
+FluxTR = collections.namedtuple('FluxTR', 'vis field spw i q u v spix ageNMP')
 
 
 def make_flux_table(context, results):
@@ -95,9 +94,9 @@ def make_flux_table(context, results):
                                     
                 tr = FluxTR(vis_cell, field_cell, measurement.spw_id, 
                             fluxes['I'], fluxes['Q'], fluxes['U'], fluxes['V'],
-                            measurement.spix)
+                            measurement.spix, measurement.origin[2])
                 rows.append(tr)
-    
+
     return utils.merge_td_columns(rows)
 
 # Leave old defintion which includes the spw frequency in place 

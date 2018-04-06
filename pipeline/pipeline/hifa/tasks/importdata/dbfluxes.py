@@ -124,7 +124,8 @@ def read_fluxes_db(ms):
             fluxdict = fluxservice(serviceurl, ms, frequency, source_name)
             f = fluxdict['fluxdensity']
             spix = fluxdict['spectralindex']
-            origin = 'Source.xml'
+            ageNMP = fluxdict['ageOfNearestMonitorPoint']
+            origin = ('Source.xml','','N/A')
 
             # Filter for problem values.
             #    If there are problem values revert to the ASDM values
@@ -139,7 +140,7 @@ def read_fluxes_db(ms):
                         LOG.info("         Online catalog Spectral Index: {!s}".format(str(spix)))
                         LOG.info("         Unusable online catalog information.")
                         LOG.info("---------------------------------------------")
-                        origin = 'Source.xml'
+                        origin = ('Source.xml','','N/A')
                     m = msource
                 else:
                     if int(spw_id) in science_spw_ids:
@@ -149,7 +150,7 @@ def read_fluxes_db(ms):
                         LOG.info("         Online catalog Spectral Index: {!s}".format(str(spix)))
                         LOG.info("         Unusable online catalog information.")
                         LOG.info("---------------------------------------------")
-                        origin = 'Source.xml'
+                        origin = ('Source.xml','','N/A')
                     continue
             else:
                 if msource is None:
@@ -158,11 +159,12 @@ def read_fluxes_db(ms):
                         LOG.info("Source: {!s} spw: {!s} {!s}    Online catalog Flux: {!s} Jy"
                             "".format(source_name, spw_id, asdmmessage, f))
                         LOG.info("         Online catalog Spectral Index: {!s}".format(str(spix)))
+                        LOG.info("         ageOfNearestMonitorPoint: {!s}".format(str(ageNMP)))
                     iquv_db = (measures.FluxDensity(float(f), measures.FluxDensityUnits.JANSKY),
                         measures.FluxDensity(0.0, measures.FluxDensityUnits.JANSKY),
                         measures.FluxDensity(0.0, measures.FluxDensityUnits.JANSKY),
                         measures.FluxDensity(0.0, measures.FluxDensityUnits.JANSKY))
-                    origin = 'DB query {!s}'.format(utcnow)
+                    origin = ('DB query ', '{!s}'.format(utcnow), str(ageNMP))
                 # Use ASDM polarization values if any
                 else:
                     if int(spw_id) in science_spw_ids:
@@ -170,12 +172,13 @@ def read_fluxes_db(ms):
                         LOG.info("Source: {!s} spw: {!s} {!s}    Online catalog Flux: {!s} Jy"
                             "".format(source_name, spw_id, asdmmessage, f))
                         LOG.info("         Online catalog Spectral Index: {!s}".format(str(spix)))
-                    #iquv_db = (measures.FluxDensity(float(f), measures.FluxDensityUnits.JANSKY),
+                        LOG.info("         ageOfNearestMonitorPoint: {!s}".format(str(ageNMP)))
+                    # iquv_db = (measures.FluxDensity(float(f), measures.FluxDensityUnits.JANSKY),
                     iquv_db = (measures.FluxDensity(float(f), measures.FluxDensityUnits.JANSKY),
                         measures.FluxDensity(float(msource.Q.value), measures.FluxDensityUnits.JANSKY),
                         measures.FluxDensity(float(msource.U.value), measures.FluxDensityUnits.JANSKY),
                         measures.FluxDensity(float(msource.V.value), measures.FluxDensityUnits.JANSKY))
-                    origin = 'DB query {!s}'.format(utcnow)
+                    origin = ('DB query ', '{!s}'.format(utcnow), str(ageNMP))
 
                 m = domain.FluxMeasurement(spw_id, *iquv_db, spix=decimal.Decimal('%0.3f' % float(spix)),
                                            origin=origin)
@@ -218,6 +221,8 @@ def flux_nosourcexml(ms):
 
                 f = fluxdict['fluxdensity']
                 spix = fluxdict['spectralindex']
+                ageNMP = fluxdict['ageOfNearestMonitorPoint']
+
                 iquv_db = (measures.FluxDensity(float(f), measures.FluxDensityUnits.JANSKY),
                        measures.FluxDensity(0.0, measures.FluxDensityUnits.JANSKY),
                        measures.FluxDensity(0.0, measures.FluxDensityUnits.JANSKY),
@@ -225,7 +230,7 @@ def flux_nosourcexml(ms):
                 utcnow = datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC")
                 m = domain.FluxMeasurement(spw_id, *iquv_db,
                                            spix=decimal.Decimal('%0.3f' % float(spix)),
-                                           origin='DB query {!s}'.format(utcnow))
+                                           origin=('DB query ','{!s}'.format(utcnow), str(ageNMP)))
                 result[source].append(m)
             except:
                 LOG.debug("    No flux catalog values for source " + str(source.name) + "  spw:" + str(spw_id))
@@ -282,10 +287,9 @@ def fluxservice (serviceurl, ms, frequency, sourcename):
         rowdict['error4'] = row[9].childNodes[0].nodeValue
         rowdict['warning'] = row[10].childNodes[0].nodeValue
         rowdict['notms'] = row[11].childNodes[0].nodeValue
-        #rowdict['verbose'] = row[12].childNodes[0].nodeValue
+        rowdict['ageOfNearestMonitorPoint'] = row[12].childNodes[0].nodeValue
+        # rowdict['verbose'] = row[12].childNodes[0].nodeValue
         rowdict['url'] = serviceurl + '?%s' % urlparams
-
-
 
     return rowdict
 

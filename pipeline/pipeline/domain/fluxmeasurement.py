@@ -18,7 +18,7 @@ class FluxMeasurement():
         self.V = self._to_flux_density(V)
         self.spix = self._to_decimal(spix)
         if origin is None:
-            self.origin = ''
+            self.origin = ('', '', 'N/A')  # Origin, Date, ageOfNearestMonitorPoint
         else:
             self.origin = origin
         
