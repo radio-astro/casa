@@ -29,11 +29,6 @@ Generate a gain table based on Water Vapour Radiometer data, interpolating over 
         <value></value>
     </param>
 
-    <param type="double" name="ants_with_wvr_thresh">
-        <description>Minimum fraction of unflagged antennas that need to have WVR for calibration to proceed.</description>
-        <value>0.2</value>
-    </param>
-
     <param type="string" name="hm_toffset">
         <description>Toffset computation heuristic method</description>
         <value>automatic</value>
@@ -164,6 +159,11 @@ Generate a gain table based on Water Vapour Radiometer data, interpolating over 
     <param type="int" name="fhi_minsample" subparam="true">
         <description>Minimum number of samples for valid MAD estimate</description>
         <value>5</value>
+    </param>
+
+    <param type="double" name="ants_with_wvr_thresh">
+        <description>Minimum fraction of unflagged antennas that need to have WVR for calibration to proceed.</description>
+        <value>0.2</value>
     </param>
 
     <param type="string" name="pipelinemode">
@@ -318,15 +318,6 @@ offsetstable -- List of input temperature offsets table files to subtract from
     default: none, in which case no offsets are applied.
     example: offsetstable=['ngc5921.cloud_offsets']
 
-ants_with_wvr_thresh -- this threshold sets the minimum fraction of antennas
-    that should have WVR data for WVR calibration and flagging to proceed; the
-    same threshold is used to determine, after flagging, whether there remain
-    enough unflagged antennas with WVR data for the WVR calibration to be
-    applied.
-
-    default: 0.2
-    example: ants_with_wvr_thresh=0.5
-
 hm_toffset -- If 'manual', set the 'toffset' parameter to the user-specified value.
     If 'automatic', set the 'toffset' parameter according to the
     date of the MeasurementSet; toffset=-1 if before 2013-01-21T00:00:00
@@ -473,12 +464,21 @@ accept_threshold -- The phase-rms improvement ratio
 
     default: 1.0
 
+ants_with_wvr_thresh -- this threshold sets the minimum fraction of antennas
+    that should have WVR data for WVR calibration and flagging to proceed; the
+    same threshold is used to determine, after flagging, whether there remain
+    enough unflagged antennas with WVR data for the WVR calibration to be
+    applied.
+
+    default: 0.2
+    example: ants_with_wvr_thresh=0.5
+
 
 Example
 
 1. Compute the WVR calibration for all the MeasurementSets.
 
-    hifa_wvrgcalflag (hm_tie='automatic')
+    hifa_wvrgcalflag(hm_tie='automatic')
 
 </example>
 

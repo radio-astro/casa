@@ -37,7 +37,7 @@ class WvrgcalflagInputs(wvrgcal.WvrgcalInputs):
         bp_inputs = bandpass.ALMAPhcorBandpass.Inputs(context=self.context, vis=self.vis, intent=None)
         return bp_inputs.intent
 
-    fhi_limit = vdp.VisDependentProperty(default=10)
+    fhi_limit = vdp.VisDependentProperty(default=10.0)
     fhi_minsample = vdp.VisDependentProperty(default=5)
 
     @vdp.VisDependentProperty
