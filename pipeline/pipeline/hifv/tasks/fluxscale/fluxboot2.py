@@ -439,6 +439,7 @@ class Fluxboot2(basetask.StandardTaskTemplate):
                 if len(lfds) < 2:
                     aa = lfds[0]
                     bb = 0.0
+                    curvature = 0.0
                     SNR = 0.0
                     bberr = 0.0
                 else:
@@ -458,7 +459,9 @@ class Fluxboot2(basetask.StandardTaskTemplate):
                     # Use result from fluxscale, not from fitting function
                     aa = fluxscale_result[fieldid]['spidx'][0]
                     bb = fluxscale_result[fieldid]['spidx'][1]
+                    curvature = fluxscale_result[fieldid]['spidx'][2]
                     bberr = fluxscale_result[fieldid]['spidxerr'][1]
+                    curvatureerr = fluxscale_result[fieldid]['spidxerr'][2]
 
                     #
                     # the fit is of the form:
@@ -503,13 +506,16 @@ class Fluxboot2(basetask.StandardTaskTemplate):
                 fluxdensity = fitflx
                 spix = bb
                 spixerr = bberr
-                results.append([source, uspws, fluxdensity, spix, SNR, reffreq])
+                results.append([source, uspws, fluxdensity, spix, SNR, reffreq, curvature])
                 LOG.info(source + ' ' + band + ' fluxscale fitted spectral index = ' + str(spix) + '+/-' + str(spixerr))
-                spindex_results.append({'source': source,
-                                        'band': band,
-                                        'spix': str(spix),
-                                        'spixerr': str(spixerr),
-                                        'SNR': str(SNR)})
+                spindex_results.append({'source'       : source,
+                                        'band'         : band,
+                                        'spix'         : str(spix),
+                                        'spixerr'      : str(spixerr),
+                                        'SNR'          : str(SNR),
+                                        'curvature'    : str(curvature),
+                                        'curvatureerr' : str(curvatureerr),
+                                        'fitorder'     : str(self.inputs.fitorder)})
                 LOG.info("Frequency, data, error, and fitted data:")
                 # Sort arrays based on frequency
                 lfreqs_orig = lfreqs
@@ -551,6 +557,7 @@ class Fluxboot2(basetask.StandardTaskTemplate):
                 '''
 
         self.spix = spix
+        self.curvature = curvature
 
         LOG.info("Setting fluxscale power-law fit in the model column")
 

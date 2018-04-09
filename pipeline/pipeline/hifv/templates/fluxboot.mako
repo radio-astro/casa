@@ -50,6 +50,8 @@ import pipeline.infrastructure.renderer.htmlrenderer as hr
 	        <th scope="col" rowspan="2">Source</th>
 	        <th scope="col" rowspan="2">Band</th>
 		    <th scope="col" rowspan="2">Fitted Spectral Index</th>
+		    <th scope="col" rowspan="2">Fitted Curvature</th>
+		    <th scope="col" rowspan="2">Fit Order</th>
 	    </tr>
 
 	</thead>
@@ -61,8 +63,9 @@ import pipeline.infrastructure.renderer.htmlrenderer as hr
 		<tr>
 		    <td>${row['source']}</td>
 			<td>${row['band']}</td>
-			<td>${'{0:.4f}'.format(float(row['spix']))}+/- ${'{0:.4f}'.format(float(row['spixerr']))}</td>
-
+			<td>${'{0:.4f}'.format(float(row['spix']))}  +/-  ${'{0:.4f}'.format(float(row['spixerr']))}</td>
+			<td>${'{0:.4f}'.format(float(row['curvature']))}  +/-  ${'{0:.4f}'.format(float(row['curvatureerr']))}</td>
+            <td>${row['fitorder']}</td>
 		</tr>
 
     % endfor

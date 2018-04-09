@@ -392,6 +392,8 @@ class Fluxboot(basetask.StandardTaskTemplate):
                     bb = 0.0
                     bberr = 0.0
                     SNR = 0.0
+                    curvature = 0.0
+                    curvatureerr = 0.0
                 else:
                     alfds = scp.array(lfds)
                     alerrs = scp.array(lerrs)
@@ -403,6 +405,9 @@ class Fluxboot(basetask.StandardTaskTemplate):
                     aa = pfinal[0]
                     bb = pfinal[1]
                     bberr = 0.0
+
+                    curvature = 0.0
+                    curvatureerr = 0.0
         
                     #
                     # the fit is of the form:
@@ -432,11 +437,14 @@ class Fluxboot(basetask.StandardTaskTemplate):
                 spixerr = bberr
                 results.append([ source, uspws, fluxdensity, spix, SNR, reffreq ])
                 LOG.info(source + ' ' + band + ' fitted spectral index & SNR = ' + str(spix) + ' ' + str(SNR))
-                spindex_results.append({'source'  : source,
-                                        'band'    : band,
-                                        'spix'    : str(spix),
-                                        'spixerr' : str(spixerr),
-                                        'SNR'     : str(SNR)})
+                spindex_results.append({'source'      : source,
+                                        'band'        : band,
+                                        'spix'        : str(spix),
+                                        'spixerr'     : str(spixerr),
+                                        'SNR'         : str(SNR),
+                                        'curvature'   : str(curvature),
+                                        'curvatureerr': str(curvatureerr),
+                                        'fitorder'    : str(1)})
                 LOG.info("Frequency, data, error, and fitted data:")
                 # Sort arrays based on frequency
                 lfreqs_orig = lfreqs
@@ -454,8 +462,8 @@ class Fluxboot(basetask.StandardTaskTemplate):
                                            'error': str(fderr),
                                            'fitteddata': str(SS)})
 
-
         self.spix = spix
+        self.curvature = curvature
         
         LOG.info("Setting power-law fit in the model column")
         
