@@ -11,7 +11,7 @@ from . import fluxboot
 from . import renderer
 from . import fluxboot2
 
-from . import qa
+# from . import qa
 
 #pipelineqa.registry.add_handler(qa.SolintQAHandler())
 #pipelineqa.registry.add_handler(qa.SolintListQAHandler())

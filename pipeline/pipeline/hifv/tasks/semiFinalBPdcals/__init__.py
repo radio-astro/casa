@@ -8,7 +8,7 @@ from .semiFinalBPdcals import semiFinalBPdcalsResults
 
 from . import renderer
 
-from . import qa
+# from . import qa
 
 #pipelineqa.registry.add_handler(qa.semiFinalBPdcalsQAHandler())
 #pipelineqa.registry.add_handler(qa.semiFinalBPdcalsListQAHandler())

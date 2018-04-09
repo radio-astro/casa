@@ -7,7 +7,7 @@ from .testBPdcals import testBPdcals
 from .testBPdcals import testBPdcalsResults
 from . import renderer
 
-from . import qa
+# from . import qa
 
 #pipelineqa.registry.add_handler(qa.testBPdcalsQAHandler())
 #pipelineqa.registry.add_handler(qa.testBPdcalsListQAHandler())

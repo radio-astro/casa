@@ -8,7 +8,7 @@ import pipeline.infrastructure.renderer.weblog as weblog
 from .hanning import Hanning
 from . import hanning
 
-from . import qa
+# from . import qa
 
 #pipelineqa.registry.add_handler(qa.HanningQAHandler())
 #pipelineqa.registry.add_handler(qa.HanningListQAHandler())

@@ -10,7 +10,7 @@ from .applycals import Applycals
 from . import finalcals
 from . import renderer
 
-from . import qa
+# from . import qa
 
 #pipelineqa.registry.add_handler(qa.FinalcalsQAHandler())
 #pipelineqa.registry.add_handler(qa.FinalcalsListQAHandler())

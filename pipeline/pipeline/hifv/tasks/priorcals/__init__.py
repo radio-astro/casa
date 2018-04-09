@@ -9,7 +9,7 @@ from . import priorcals
 from . import renderer
 from . import resultobjects
 
-from . import qa
+# from . import qa
 
 #pipelineqa.registry.add_handler(qa.PriorcalsQAHandler())
 #pipelineqa.registry.add_handler(qa.PriorcalsListQAHandler())

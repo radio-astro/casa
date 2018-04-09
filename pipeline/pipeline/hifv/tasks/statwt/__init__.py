@@ -7,7 +7,7 @@ import pipeline.infrastructure.renderer.weblog as weblog
 from .statwt import Statwt
 from . import statwt
 
-from . import qa
+# from . import qa
 
 #pipelineqa.registry.add_handler(qa.StatwtQAHandler())
 #pipelineqa.registry.add_handler(qa.StatwtListQAHandler())

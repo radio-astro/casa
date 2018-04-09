@@ -9,7 +9,7 @@ from . import checkflag
 from . import targetflag
 from . import renderer
 
-from . import qa
+# from . import qa
 
 from .flagdetervla import FlagDeterVLA
 from .flagbaddeformatters import FlagBadDeformatters

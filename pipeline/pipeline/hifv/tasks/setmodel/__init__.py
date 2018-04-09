@@ -6,7 +6,7 @@ import pipeline.infrastructure.renderer.weblog as weblog
 
 from .vlasetjy import VLASetjy
 #from .setmodel import SetModel
-from . import qa
+# from . import qa
 from . import renderer
 
 #pipelineqa.registry.add_handler(qa.VLASetjyQAHandler())
