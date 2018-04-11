@@ -304,7 +304,10 @@ class SDBLFlagWorker(basetask.StandardTaskTemplate):
         #datatable.exportdata(minimal=True)
         dirty_rows = numpy.asarray(dirty_rows)
         dirty_rows.sort()
-        datatable.cache_rwtable(self, dirty_rows, with_masklist)
+        cols = ['STATISTICS', 'NMASK', 'FLAG', 'FLAG_PERMANENT', 'FLAG_SUMMARY']
+        if with_masklist is True:
+            cols.append('MASKLIST')
+        datatable.export_rwtable_exclusive(dirty_rows, cols)
 
         result = SDBLFlagWorkerResults(task=self.__class__,
                                        success=True,
