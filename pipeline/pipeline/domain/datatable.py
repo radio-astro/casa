@@ -162,8 +162,6 @@ class DataTableImpl( object ):
                            0,        1,        2
     Note for Flags: 1 is valid, 0 is invalid
     """ 
-    CACHE_PREFIX = 'cacheRW'
-    
     @classmethod
     def get_rotable_name(cls, datatable_name):
         return os.path.join(datatable_name, 'RO')
@@ -404,106 +402,94 @@ class DataTableImpl( object ):
         tbloc.close()
         self.plaintable = abspath
         
-    def rwtable_cache_name(self, task):
-        dt_path = self.plaintable
-        prefix = self.CACHE_PREFIX
-        task_hash = hash(task)
-        timestamp = time.strftime('%Y%m%d-%H%M%S')
-        rwtable_name = None
-        while rwtable_name is None:
-            name = os.path.join(dt_path, '{0}{1}-{2}'.format(prefix, task_hash, timestamp))
-            if os.path.exists(name):
-                task_hash += 1
-                timestamp = time.strftime('%Y%m%D-%H%M%S')
-            else:
-                rwtable_name = name
-        return name
-    
-    def list_cache(self):
-        return [f for f in os.listdir(self.plaintable) if f.startswith(self.CACHE_PREFIX)]
-    
-    def clear_cache(self):
-        for f in self.list_cache():
-            full_path = os.path.join(self.plaintable, f)
-            if os.path.exists(full_path):
-                shutil.rmtree(full_path)
-        
-    def cache_rwtable(self, task, dirty_rows, with_masklist=False):
+    def export_rwtable_exclusive(self, dirty_rows=None, cols=None):
         """
-        export only RW table to the disk.
+        Export "on-memory" RW table to the one on disk. 
         
-        task -- caller task instance (will be used to construct cache table name)
-        dirty_rows -- list of row numbers for updated rows
-        with_masklist -- include MASKLIST column as part of a cache
+        To support parallel operation, the method will acquire a lock for RW table 
+        to ensure the operation in one process doesn't overwrite the changes made by 
+        other processes.
         
+        dirty_rows -- list of row numbers that are updated. If None, everything 
+                      including unchanged rows will be flushed. Default is None.
+        cols -- list of columns that are updated. If None, all rows will be flushed. 
+                default is None. 
         """
-        name = self.rwtable_cache_name(task)
-        tbloc = self.tb2.copy(name, deep=True, valuecopy=True, returnobject=True)#, norows=True)
-        tbloc.close()
+        # RW table name
+        rwtable = self.get_rwtable_name(self.plaintable)
         
-        tbloc.open(name, nomodify=False)
-        tbloc.putkeyword('DIRTY_ROWS', dirty_rows)
-        tbloc.putkeyword('WITH_MASKLIST', with_masklist)
-        tbloc.close()
+        # list of ordinary columns
+        ordinary_cols = set(['STATISTICS', 'FLAG', 'FLAG_PERMANENT',
+                             'FLAG_SUMMARY', 'NMASK', 'POSGRP'])
+        intersects = ordinary_cols.intersection(cols)
         
-    def merge_cache(self):
-        cols = ['STATISTICS', 'NMASK', 'FLAG', 'FLAG_PERMANENT', 'FLAG_SUMMARY']
-        
-        try:
-            nrow_chunk = 2000
-            for f in self.list_cache():
-                full_path = os.path.join(self.plaintable, f)
-                with casatools.TableReader(full_path) as cache:
-                    dirty_rows = cache.getkeyword('DIRTY_ROWS')
-                    with_masklist = cache.getkeyword('WITH_MASKLIST')
-                    masklist_cache = DataTableColumnMaskList(cache)
-                    masklist_dst = self.cols['MASKLIST']
-                    # compute number of chunks
-                    nrow = dirty_rows.max() - dirty_rows.min() + 1
-                    nchunk = nrow / nrow_chunk 
-                    mod = nrow % nrow_chunk
-                    chunks = [nrow_chunk] * nchunk + [mod]
-                    #LOG.info('chunks={0} (nrow {1})'.format(chunks, nrow))
-                    # for each column
-                    for col in cols:
-                        start_row = dirty_rows.min()
-                        for size_chunk in chunks:
-                            #LOG.info('start_row {0}, size_chunk {1}'.format(start_row, size_chunk))
-                            # read chunk
-                            chunk_src = cache.getcol(col, startrow=start_row, nrow=size_chunk)
-                            chunk_dst = self.tb2.getcol(col, startrow=start_row, nrow=size_chunk)
+        # columns with special care
+        with_masklist = 'MASKLIST' in cols
+        with_nochange = 'NOCHANGE' in cols
+     
+        # open table
+        with casatools.TableReader(rwtable, nomodify=False, lockoptions={'option':'user'}) as tb:
+            # lock table
+            tb.lock()
+            LOG.info('Process {0} have acquired a lock for RW table'.format(os.getpid()))
+            
+            if dirty_rows is None:
+                # process all rows
+                dirty_rows = xrange(tb.nrows())
+            
+            try:
+                nrow_chunk = 2000
+                # compute number of chunks
+                nrow = dirty_rows.max() - dirty_rows.min() + 1
+                nchunk = nrow / nrow_chunk 
+                mod = nrow % nrow_chunk
+                chunks = [nrow_chunk] * nchunk + [mod]
+                #LOG.info('chunks={0} (nrow {1})'.format(chunks, nrow))
+                # for each column
+                for col in intersects:
+                    start_row = dirty_rows.min()
+                    for size_chunk in chunks:
+                        #LOG.info('start_row {0}, size_chunk {1}'.format(start_row, size_chunk))
+                        # read chunk
+                        chunk_src = self.tb2.getcol(col, startrow=start_row, nrow=size_chunk)
+                        chunk_dst = tb.getcol(col, startrow=start_row, nrow=size_chunk)
 
-                            # update chunk
-                            chunk_min = start_row
-                            chunk_max = start_row + size_chunk - 1
-                            target_rows = dirty_rows[numpy.logical_and(chunk_min <= dirty_rows, 
-                                                                       dirty_rows <= chunk_max)]
-                            for row in target_rows:
-                                chunk_index = row - start_row
-                                #LOG.info('row {0}, chunk_index {1}'.format(row, chunk_index))
-                                chunk_dst[...,chunk_index] = chunk_src[...,chunk_index]
-                            
-                            # flush chunk
-                            self.tb2.putcol(col, chunk_dst, startrow=start_row, nrow=size_chunk)
-                            
-                            # increment start_row
-                            start_row += size_chunk
-                            
-                    # merge MASKLIST if necessary
-                    if with_masklist is True:
-                        for index, row in enumerate(dirty_rows):
-                            data = masklist_cache.getcell(index)
-                            masklist_dst.putcell(row, data)
+                        # update chunk
+                        chunk_min = start_row
+                        chunk_max = start_row + size_chunk - 1
+                        target_rows = dirty_rows[numpy.logical_and(chunk_min <= dirty_rows, 
+                                                                   dirty_rows <= chunk_max)]
+                        for row in target_rows:
+                            chunk_index = row - start_row
+                            #LOG.info('row {0}, chunk_index {1}'.format(row, chunk_index))
+                            chunk_dst[...,chunk_index] = chunk_src[...,chunk_index]
+                        
+                        # flush chunk
+                        tb.putcol(col, chunk_dst, startrow=start_row, nrow=size_chunk)
+                        
+                        # increment start_row
+                        start_row += size_chunk
+                        
+                # merge MASKLIST if necessary
+                if with_masklist is True:
+                    src = self.cols['MASKLIST']
+                    dst = DataTableColumnMaskList(tb)
+                    for index, row in enumerate(dirty_rows):
+                        data = src.getcell(index)
+                        dst.putcell(row, data)
+
+                if with_nochange is True:
+                    src = self.cols['NOCHANGE']
+                    dst = DataTableColumnNoChange(tb)
+                    for index, row in enumerate(dirty_rows):
+                        data = src.getcell(index)
+                        dst.putcell(row, data)
+            
+            finally:
+                # the table lock must eventually be released 
+                LOG.info('Process {0} is going to release a lock for RW table'.format(os.getpid()))
+                tb.unlock()
                 
-            self.exportdata(minimal=True)
-        except:
-            import traceback
-            LOG.error(traceback.format_exc())
-            raise
-        finally:
-            self.clear_cache()
- 
-
     def _create( self, readonly=False ):
         self._close()
         create_table(self.tb1, self.memtable1, TABLEDESC_RO, 'memory', self.nrow)
