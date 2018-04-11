@@ -10,7 +10,6 @@ import pipeline.infrastructure.vdp as vdp
 from pipeline.h.heuristics import fieldnames
 from pipeline.infrastructure import casa_tasks
 from pipeline.infrastructure import task_registry
-from pipeline.domain.datatable import DataTableImpl as DataTable
 from . import worker
 from .flagsummary import SDBLFlagSummary
 from .. import common
@@ -219,10 +218,6 @@ class SDBLFlagResults(common.SingleDishResults):
     def merge_with_context(self, context):
         super(SDBLFlagResults, self).merge_with_context(context)
         
-        # merge RW table cache 
-        datatable = DataTable(context.observing_run.ms_datatable_name, readonly=False)
-        datatable.merge_cache()
-        
     def _outcome_name(self):
         return 'none'
 
@@ -243,13 +238,6 @@ class SerialSDBLFlag(basetask.StandardTaskTemplate):
     # holds "an" MS instance to be processed.
     ##################################################    
     Inputs = SDBLFlagInputs
-
-    def __init__(self, inputs):
-        super(SerialSDBLFlag, self).__init__(inputs)
-        
-        # clear RW table cache in DataTable
-        datatable = DataTable(inputs.context.observing_run.ms_datatable_name, readonly=False)
-        datatable.clear_cache()
 
     def prepare(self):
         """
@@ -367,10 +355,9 @@ class SerialSDBLFlag(basetask.StandardTaskTemplate):
                                     outcome=outcome)
         return results
  
- 
- 
     def analyse(self, result):
         return result
+
 
 ### Tier-0 parallelization
 class HpcSDBLFlagInputs(SDBLFlagInputs):
@@ -404,6 +391,7 @@ class HpcSDBLFlagInputs(SDBLFlagInputs):
                  infiles=infiles, antenna=antenna, field=field, spw=spw, pol=pol)
         self.parallel = parallel
 
+
 @task_registry.set_equivalent_casa_task('hpc_hsd_blflag')
 class HpcSDBLFlag(sessionutils.ParallelTemplate):
     Inputs = HpcSDBLFlagInputs
@@ -411,11 +399,6 @@ class HpcSDBLFlag(sessionutils.ParallelTemplate):
 
     def __init__(self, inputs):
         super(HpcSDBLFlag, self).__init__(inputs)
-        
-        # clear RW table cache in DataTable
-        datatable = DataTable(inputs.context.observing_run.ms_datatable_name, readonly=False)
-        datatable.clear_cache()
-
 
     def get_result_for_exception(self, vis, exception):
         LOG.error('Error operating target flag for {!s}'.format(os.path.basename(vis)))
