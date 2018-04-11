@@ -336,8 +336,8 @@ class MakeImList(basetask.StandardTaskTemplate):
         # if phase center not set then use heuristic code to calculate the
         # centers for each field
         phasecenter = inputs.phasecenter
+        phasecenters = {}
         if phasecenter == '':
-            phasecenters = {}
             for field_intent in field_intent_list:
                 try:
                     gridder = self.heuristics.gridder(field_intent[1], field_intent[0])
@@ -353,6 +353,9 @@ class MakeImList(basetask.StandardTaskTemplate):
                     # problem defining center
                     LOG.warn(e)
                     pass
+        else:
+            for field_intent in field_intent_list:
+                phasecenters[field_intent[0]] = phasecenter
 
         # if imsize not set then use heuristic code to calculate the
         # centers for each field/spwspec
