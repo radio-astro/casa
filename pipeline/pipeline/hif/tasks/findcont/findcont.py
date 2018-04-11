@@ -206,8 +206,9 @@ class FindCont(basetask.StandardTaskTemplate):
                     # Try detecting continuum frequency ranges
                     spw_transitions = context.observing_run.measurement_sets[0].get_spectral_window(spwid).transitions
                     single_continuum = 'Single_Continuum' in spw_transitions
-                    cont_range, png = findcont_heuristics.find_continuum('%s.residual' % findcont_basename,
-                                                                         singleContinuum=single_continuum)
+                    cont_range, png = findcont_heuristics.find_continuum(dirty_cube = '%s.residual' % findcont_basename,
+                                                                         pb_cube = '%s.pb' % findcont_basename,
+                                                                         single_continuum = single_continuum)
                     cont_ranges['fields'][source_name][spwid] = cont_range
 
                     source_continuum_ranges[spwid] = {
