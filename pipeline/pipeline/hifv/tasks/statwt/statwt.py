@@ -59,7 +59,6 @@ class Statwt(basetask.StandardTaskTemplate):
 
         if fielddict == {}:
             task_args = {'vis'          : self.inputs.vis,
-                         'dorms'        : False,
                          'fitspw'       : '',
                          'fitcorr'      : '',
                          'combine'      : '',
@@ -68,14 +67,13 @@ class Statwt(basetask.StandardTaskTemplate):
                          'spw'          : '',
                          'datacolumn'   : 'corrected'}
                      
-            job = casa_tasks.statwt(**task_args)
+            job = casa_tasks.statwt2(**task_args)
             
             return self._executor.execute(job)
 
         if fielddict != {}:
             for field in fielddict.keys():
                 task_args = {'vis'          : self.inputs.vis,
-                         'dorms'        : False,
                          'fitspw'       : fielddict[field],
                          'fitcorr'      : '',
                          'combine'      : '',
@@ -84,7 +82,7 @@ class Statwt(basetask.StandardTaskTemplate):
                          'spw'          : '',
                          'datacolumn'   : 'corrected'}
 
-                job = casa_tasks.statwt(**task_args)
+                job = casa_tasks.statwt2(**task_args)
 
                 statwt_result = self._executor.execute(job)
 

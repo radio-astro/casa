@@ -49,6 +49,7 @@ import polcal_cli
 import setjy_pg
 import split_cli
 import statwt_cli
+import statwt2_cli
 import tclean_pg
 import wvrgcal_cli
 import visstat_cli
@@ -502,6 +503,9 @@ class CASATaskJobGenerator(object):
 
     def statwt(self, *v, **k):
         return self._get_job(statwt_cli.statwt_cli, *v, **k)
+
+    def statwt2(self, *v, **k):
+        return self._get_job(statwt2_cli.statwt2_cli, *v, **k)
 
     def tclean(self, *v, **k):
         return self._get_job(tclean_pg.tclean_pg, *v, **k)
