@@ -29,6 +29,11 @@
 	<value></value>
     </param>
 
+    <param type="bool" name="mbdkcross">
+	<description>Run gaincal KCROSS grouped by baseband</description>
+	<value>True</value>
+    </param>
+
 
     <param type="string" name="pipelinemode">
 	<description>The pipeline operating mode</description>
@@ -103,6 +108,9 @@ refantignore -- string list to be ignored as reference antennas.
 
 leakage_poltype -- string of poltype to use for override in the first polcal execution
     default: ''   (blank means the task heuristics will decide what poltype to use)
+
+mbdkcross -- run gaincal KCROSS grouped by basenad
+    default: False
 
 pipelinemode -- The pipeline operating mode. In 'automatic' mode the pipeline
    determines the values of all context defined pipeline inputs

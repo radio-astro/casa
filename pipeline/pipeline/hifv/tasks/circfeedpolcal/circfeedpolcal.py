@@ -1,6 +1,8 @@
 from __future__ import absolute_import
 
+import os
 import math
+import collections
 
 import pipeline.hif.heuristics.findrefant as findrefant
 import pipeline.hif.tasks.gaincal as gaincal
@@ -62,16 +64,19 @@ class CircfeedpolcalResults(polarization.PolarizationResults):
 
 class CircfeedpolcalInputs(vdp.StandardInputs):
     Dterm_solint = vdp.VisDependentProperty(default='2MHz')
-    leakge_poltype = vdp.VisDependentProperty(default='')
     refantignore = vdp.VisDependentProperty(default='')
+    leakge_poltype = vdp.VisDependentProperty(default='')
+    mbdkcross = vdp.VisDependentProperty(default=True)
 
-    def __init__(self, context, vis=None, Dterm_solint=None, refantignore=None, leakage_poltype=None):
+    def __init__(self, context, vis=None, Dterm_solint=None, refantignore=None, leakage_poltype=None,
+                 mbdkcross=None):
         super(CircfeedpolcalInputs, self).__init__()
         self.context = context
         self.vis = vis
         self.Dterm_solint = Dterm_solint
         self.refantignore = refantignore
-        self.leakge_poltype = leakage_poltype
+        self.leakage_poltype = leakage_poltype
+        self.mbdkcross = mbdkcross
 
 
 @task_registry.set_equivalent_casa_task('hifv_circfeedpolcal')
@@ -111,9 +116,9 @@ class Circfeedpolcal(polarization.Polarization):
         # setjy for amplitude/flux calibrator (VLASS 3C286 or 3C48)
         fluxcalfieldname, fluxcalfieldid, fluxcal = self._do_setjy()
 
-        tablesToAdd = ((self.inputs.vis + '.kcross', 'kcross'),
-                       (self.inputs.vis + '.D2', 'polarization'),
-                       (self.inputs.vis + '.X1', 'polarization'))
+        tablesToAdd = ((self.inputs.vis + '.kcross', 'kcross', self.do_spwmap()),
+                       (self.inputs.vis + '.D2', 'polarization',[]),
+                       (self.inputs.vis + '.X1', 'polarization',[]))
 
         # D-terms   - do we need this?
         # self.do_polcal(self.inputs.vis+'.D1', 'D+QU',field='',
@@ -122,7 +127,17 @@ class Circfeedpolcal(polarization.Polarization):
         #               solint='inf')
 
         # First pass R-L delay
-        self.do_gaincal(tablesToAdd[0][0], field=fluxcalfieldname)
+
+        spwmap = [] # Default for KCROSS table
+        if self.inputs.mbdkcross:
+            # baseband_spws = [spw.id for spw in m.get_spectral_windows(science_windows_only=True)]
+            baseband_spws = self.vla_basebands()
+            for spws in baseband_spws:
+                LOG.info("Executing gaincal on baseband with spws={!s}".format(spws))
+                self.do_gaincal(tablesToAdd[0][0], field=fluxcalfieldname, spw=spws, combine='scan,spw')
+                spwmap = [self.do_spwmap()]
+        else:
+            self.do_gaincal(tablesToAdd[0][0], field=fluxcalfieldname)
 
         # Determine number of scans with POLLEAKGE intent and use the first POLLEAKAGE FIELD
         polleakagefield = ''
@@ -176,18 +191,20 @@ class Circfeedpolcal(polarization.Polarization):
 
         # D-terms in 2MHz pieces, minsnr of 5.0
         LOG.info("Polcal D-terms using solint=\'inf,{!s}\'".format(self.inputs.Dterm_solint))
-        self.do_polcal(tablesToAdd[1][0], poltype=poltype, field=polleakagefield,
+
+        self.do_polcal(tablesToAdd[1][0], kcrosstable=tablesToAdd[0][0], poltype=poltype, field=polleakagefield,
                        intent='CALIBRATE_POL_LEAKAGE#UNSPECIFIED',
-                       gainfield=[''], spwmap=[], solint='inf,{!s}'.format(self.inputs.Dterm_solint), minsnr=5.0)
+                       gainfield=[''], kcrossspwmap=spwmap, solint='inf,{!s}'.format(self.inputs.Dterm_solint), minsnr=5.0)
 
         # 2MHz pieces, minsnr of 3.0
-        self.do_polcal(tablesToAdd[2][0], poltype='Xf', field=polanglefield,
+        self.do_polcal(tablesToAdd[2][0], kcrosstable=tablesToAdd[0][0], poltype='Xf', field=polanglefield,
                        intent='CALIBRATE_POL_ANGLE#UNSPECIFIED',
-                       gainfield=[''], spwmap=[], solint='inf,2MHz', minsnr=3.0)
+                       gainfield=[''], kcrossspwmap=spwmap, solint='inf,2MHz', minsnr=3.0)
 
-        for (addcaltable, caltype) in tablesToAdd:
+        for (addcaltable, caltype, spwmap) in tablesToAdd:
             calto = callibrary.CalTo(self.inputs.vis)
-            calfrom = callibrary.CalFrom(gaintable=addcaltable, interp='', calwt=False, caltype=caltype)
+            calfrom = callibrary.CalFrom(gaintable=addcaltable, interp='', calwt=False,
+                                         caltype=caltype, spwmap=spwmap)
             calapp = callibrary.CalApplication(calto, calfrom)
             self.callist.append(calapp)
 
@@ -197,10 +214,15 @@ class Circfeedpolcal(polarization.Polarization):
                               'polanglefield'    : polanglefield,
                               'polleakagefield'  : polleakagefield}
 
-    def do_gaincal(self, caltable, field=''):
+    def do_gaincal(self, caltable, field='', spw='', combine='scan'):
 
         m = self.inputs.context.observing_run.get_ms(self.inputs.vis)
         minBL_for_cal = m.vla_minbaselineforcal()
+
+        append = False
+        if os.path.exists(caltable):
+            append = True
+            LOG.info("{!s} exists.  Appending to caltable.".format(caltable))
 
         # Similar inputs to hifa/linpolcal.py
         task_inputs = gaincal.GTypeGaincal.Inputs(self.inputs.context,
@@ -210,22 +232,22 @@ class Circfeedpolcal(polarization.Polarization):
                                                   field=field,
                                                   intent='',
                                                   scan='',
-                                                  spw='',
+                                                  spw=spw,
                                                   solint='inf',
                                                   gaintype='KCROSS',
-                                                  combine='scan',
+                                                  combine=combine,
                                                   refant=self.RefAntOutput[0].lower(),
                                                   minblperant=minBL_for_cal,
                                                   parang=True,
-                                                  append=False)
+                                                  append=append)
 
         gaincal_task = gaincal.GTypeGaincal(task_inputs)
         result = self._executor.execute(gaincal_task, merge=True)
 
         return result
 
-    def do_polcal(self, caltable, poltype='', field='', intent='',
-                  gainfield=[''], spwmap=[], solint='inf', minsnr=5.0):
+    def do_polcal(self, caltable, kcrosstable='', poltype='', field='', intent='',
+                  gainfield=[''], kcrossspwmap=[], solint='inf', minsnr=5.0):
 
         GainTables = []
 
@@ -239,6 +261,13 @@ class Circfeedpolcal(polarization.Polarization):
         GainTables = GainTables[0]
         m = self.inputs.context.observing_run.get_ms(self.inputs.vis)
         minBL_for_cal = m.vla_minbaselineforcal()
+
+        spwmap=[]
+        for gaintable in GainTables:
+            if gaintable in kcrosstable:
+                spwmap.append(kcrossspwmap)
+            else:
+                spwmap.append([])
 
         task_args = {'vis': self.inputs.vis,
                      'caltable'   : caltable,
@@ -374,4 +403,46 @@ class Circfeedpolcal(polarization.Polarization):
             return None
 
         return fluxcalfieldname, fluxcalfieldid, fluxcal
+
+    def vla_basebands(self):
+
+        vlabasebands = []
+        m = self.inputs.context.observing_run.get_ms(self.inputs.vis)
+
+        banddict = collections.defaultdict(lambda: collections.defaultdict(list))
+
+        for spw in m.get_spectral_windows():
+            try:
+                band = spw.name.split('#')[0].split('_')[1]
+                baseband = spw.name.split('#')[1]
+                banddict[band][baseband].append({str(spw.id): (spw.min_frequency, spw.max_frequency)})
+            except:
+                LOG.warn("Baseband name cannot be parsed.")
+
+        for band in banddict.keys():
+            basebands = banddict[band].keys()
+            for baseband in basebands:
+                spws = []
+                for spwitem in banddict[band][baseband]:
+                    spws.append(spwitem.keys()[0])
+                vlabasebands.append(','.join(spws))
+
+        return vlabasebands
+
+    def do_spwmap(self):
+        """
+        Returns: spwmap for use with gaintable in callibrary (polcal and applycal)
+        """
+
+        vlabasebands = self.vla_basebands()
+
+        spwmap = []
+
+        for spwstr in vlabasebands:
+            spwlist = [int(spw) for spw in spwstr.split(',')]
+            basebandmap = [spwlist[0]] * len(spwlist)
+            spwmap.extend(basebandmap)
+
+        return spwmap
+
 
