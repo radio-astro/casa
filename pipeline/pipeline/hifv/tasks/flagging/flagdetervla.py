@@ -499,8 +499,6 @@ class FlagDeterVLA(flagdeterbase.FlagDeterBase):
         # state is unflagged
         if flag_cmds:
             flag_cmds.insert(0, "mode='summary' name='before'")
-            
-        #print flag_cmds
         
         return flag_cmds
 
@@ -738,8 +736,8 @@ class FlagDeterVLA(flagdeterbase.FlagDeterBase):
 
         baseband_cmd = ''
 
-        print(bottomSPW)
-        print(topSPW)
+        LOG.info('bottomSPW: {!s}'.format(bottomSPW))
+        LOG.info('topSPW: {!s}'.format(topSPW))
         
         if (bottomSPW != ''):
             SPWtoflag = bottomSPW + ',' + topSPW

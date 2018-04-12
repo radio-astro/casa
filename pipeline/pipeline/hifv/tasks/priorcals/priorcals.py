@@ -90,7 +90,7 @@ def correct_ant_posns (vis_name, print_offsets=False):
     [obs_year,obs_month,obs_day,obs_time_string] = date_time[0].split('/')
     if (int(obs_year) < 2010):
         if (print_offsets):
-            print('Does not work for VLA observations')
+            LOG.warn('Does not work for VLA observations')
         return [1, '', []]
     [obs_hour,obs_minute,obs_second] = obs_time_string.split(':')
     obs_time = 10000*int(obs_year) + 100*int(obs_month) + int(obs_day) + \
@@ -116,7 +116,7 @@ def correct_ant_posns (vis_name, print_offsets=False):
         response = urllib2.urlopen(URL_BASE + '2010')
     except URLError, err:
         if (print_offsets):
-            print('No internet connection to antenna position correction URL {}'.format(err.reason))
+            LOG.warn('No internet connection to antenna position correction URL {}'.format(err.reason))
         return [2, '', []]
     response.close()
     for year in range(2010,current_year+1):
@@ -204,14 +204,14 @@ def correct_ant_posns (vis_name, print_offsets=False):
         if ((ant_num_sta[3] != 0.0) or (ant_num_sta[4] != 0.0) or \
             (ant_num_sta[3] != 0.0)):
             if (print_offsets):
-                print("offsets for antenna %4s : %8.5f  %8.5f  %8.5f" % \
+                LOG.info("offsets for antenna %4s : %8.5f  %8.5f  %8.5f" % \
                       (ant_num_sta[1], ant_num_sta[3], ant_num_sta[4], ant_num_sta[5]))
             ants.append(ant_num_sta[1])
             parms.append(ant_num_sta[3])
             parms.append(ant_num_sta[4])
             parms.append(ant_num_sta[5])
     if ((len(parms) == 0) and print_offsets):
-        print("No offsets found for this MS")
+        LOG.info("No offsets found for this MS")
     ant_string = ','.join(["%s" % ii for ii in ants])
     return [ 0, ant_string, parms ]
 

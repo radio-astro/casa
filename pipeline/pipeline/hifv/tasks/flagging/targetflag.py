@@ -62,7 +62,7 @@ class Targetflag(basetask.StandardTaskTemplate):
 
         if fielddict != {}: LOG.info('cont.dat file present.  Using VLA Spectral Line Heuristics for task targetflag.')
 
-        print(self.inputs.intents)
+        # LOG.info(self.inputs.intents)
 
         if ('CALIBRATE' in self.inputs.intents):
             LOG.info("TARGETFLAG INFO: Running RFLAG ON intent=*CALIBRATE*")
