@@ -5,7 +5,6 @@ import os
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.renderer.logger as logger
 import casa
-import shutil
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -75,13 +74,12 @@ class ampfreqPerAntennaChart(object):
         self.context = context
         self.result = result
         self.ms = context.observing_run.get_ms(result.inputs['vis'])
-        ms = self.ms
         self.caltable = caltable
 
         self.json = {}
         self.json_filename = os.path.join(context.report_dir,
                                           'stage%s' % result.stage_number,
-                                          'ampfreq-%s.json' % ms)
+                                          'ampfreq-%s.json' % self.ms)
 
     def plot(self):
         context = self.context
@@ -118,47 +116,27 @@ class ampfreqPerAntennaChart(object):
                         idents = [a.name if a.name else a.id for a in domain_antennas]
                         antName = ','.join(idents)
 
-                    #casa.plotcal(caltable=self.caltable, xaxis='freq', yaxis='amp', poln='', field='',
-                    #             antenna=antPlot, spw='', timerange='', subplot=111, overplot=False, clearpanel='Auto',
-                    #             iteration='antenna', plotrange=plotrange, showflags=False, plotsymbol='o',
-                    #             plotcolor='blue', markersize=5.0, fontsize=10.0, showgui=False, figfile=figfile)
-
                     casa.plotms(vis=self.caltable, xaxis='freq', yaxis='amp', field='',
                                 antenna=antPlot, spw='', timerange='',
                                 plotrange=plotrange, coloraxis='spw',
                                 title='POL table: {!s}   Antenna: {!s}'.format(self.caltable, antName),
                                 titlefont=8, xaxisfont=7, yaxisfont=7, showgui=False, plotfile=figfile)
 
-                except:
-                    LOG.warn("Unable to plot " + filename)
+                except Exception as ex:
+                    LOG.warn("Unable to plot " + filename + str(ex))
             else:
                 LOG.debug('Using existing ' + filename + ' plot.')
 
             try:
-                plot = logger.Plot(figfile, x_axis='Frequency', y_axis='Amplitude',
-                                   field='',
+                plot = logger.Plot(figfile, x_axis='Frequency', y_axis='Amplitude', field='',
                                    parameters={'spw': '',
                                                'pol': '',
                                                'ant': antName,
                                                'type': 'ampfreq',
                                                'file': os.path.basename(figfile)})
                 plots.append(plot)
-            except:
-                LOG.warn("Unable to add plot to stack")
+            except Exception as ex:
+                LOG.warn("Unable to add plot to stack. " + str(ex))
                 plots.append(None)
-
-        # Create a dummy plot to release the cal table
-        '''
-        scratchfile = 'scratchpol.g'
-        shutil.copytree(self.caltable, scratchfile)
-        casa.plotcal(caltable=scratchfile,
-                     xaxis='time', yaxis='phase', poln='', field='',
-                     antenna=str(0), spw='', timerange='',
-                     subplot=111, overplot=False, clearpanel='Auto',
-                     iteration='antenna', plotrange=[0, 0, -180, 180],
-                     showflags=False, plotsymbol='o-', plotcolor='blue',
-                     markersize=5.0, fontsize=10.0, showgui=False, figfile="scratchpol.png")
-        shutil.rmtree(scratchfile)
-        '''
 
         return [p for p in plots if p is not None]
