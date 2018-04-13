@@ -34,21 +34,23 @@ class PbcorResults(basetask.Results):
         for pbcoritem in self.pbcorimagelist:
             try:
                 imgname = pbcoritem['imagename']
-                imageitem = imagelibrary.ImageItem(
-                  imagename=imgname[:imgname.rfind('.image')]+'.pb.tt0', sourcename=pbcoritem['sourcename'],
-                  spwlist=pbcoritem['spwlist'], specmode=pbcoritem['specmode'],
-                  sourcetype=pbcoritem['sourcetype'],
-                  multiterm=pbcoritem['multiterm'],
-                  imageplot=pbcoritem['imageplot'])
+                imageitem = imagelibrary.ImageItem(imagename=imgname[:imgname.rfind('.image')]+'.pb.tt0',
+                                                   sourcename=pbcoritem['sourcename'],
+                                                   spwlist=pbcoritem['spwlist'],
+                                                   specmode=pbcoritem['specmode'],
+                                                   sourcetype=pbcoritem['sourcetype'],
+                                                   multiterm=pbcoritem['multiterm'],
+                                                   imageplot=pbcoritem['imageplot'])
                 context.pbcorimlist.add_item(imageitem)
                 if 'TARGET' in pbcoritem['sourcetype']:
-                    print('ADDED IMAGE ITEM')
+                    LOG.info('Added Image Item')
                     context.pbcorimlist.add_item(imageitem)
-            except:
+            except Exception as ex:
+                LOG.debug(str(ex))
                 pass
 
     def __repr__(self):
-        #return 'PbcorResults:\n\t{0}'.format(
+        # return 'PbcorResults:\n\t{0}'.format(
         #    '\n\t'.join([ms.name for ms in self.mses]))
         return 'PbcorResults:'
 
@@ -92,10 +94,5 @@ class Pbcor(basetask.StandardTaskTemplate):
     def analyse(self, results):
         return results
 
-    def _do_somethingpbcor(self):
-
-        task = casa_tasks.pbcorcal(vis=self.inputs.vis, caltable='tempcal.pbcor')
-
-        return self._executor.execute(task)
 
 
