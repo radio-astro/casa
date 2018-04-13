@@ -17,9 +17,7 @@ class ApplycalsInputs(applycal.IFApplycalInputs):
     """
     ApplycalInputs defines the inputs for the Applycal pipeline task.
     """
-    def __init__(self, context, output_dir=None,
-                 #
-                 vis=None,
+    def __init__(self, context, output_dir=None, vis=None,
                  # data selection arguments
                  field=None, spw=None, antenna=None, intent=None,
                  # preapply calibrations
@@ -52,7 +50,7 @@ class ApplycalsInputs(applycal.IFApplycalInputs):
 class Applycals(applycal.IFApplycal):
     Inputs = ApplycalsInputs
 
-    ### Note this is a temporary workaround ###
+    # Note this is a temporary workaround
     antenna_to_apply = '*&*'
 
     def prepare(self):
@@ -126,9 +124,9 @@ class Applycals(applycal.IFApplycal):
 
                 # set the on-the-fly calibration state for the data selection.
                 calapp = callibrary.CalApplication(calto, calfroms)
-                ### Note this is a temporary workaround ###
+                # Note this is a temporary workaround ###
                 args['antenna'] = self.antenna_to_apply
-                ### Note this is a temporary workaround ###
+                # Note this is a temporary workaround ###
                 args['gaintable'] = calapp.gaintable
                 args['gainfield'] = calapp.gainfield
                 args['spwmap'] = calapp.spwmap
@@ -173,9 +171,9 @@ class Applycals(applycal.IFApplycal):
 
                 # set the on-the-fly calibration state for the data selection.
                 calapp = callibrary.CalApplication(calto, calfroms)
-                ### Note this is a temporary workaround ###
+                # Note this is a temporary workaround ###
                 args['antenna'] = self.antenna_to_apply
-                ### Note this is a temporary workaround ###
+                # Note this is a temporary workaround ###
                 args['gaintable'] = calapp.gaintable
                 args['gainfield'] = calapp.gainfield
                 args['spwmap'] = calapp.spwmap
@@ -267,8 +265,8 @@ class Applycals(applycal.IFApplycal):
                         spwid = flagdicts[key][fieldname]['spw'].keys()[0]
                         flagsummary[fieldname][key]['name'] = 'AntSpw' + str(spwid).zfill(3) + 'Field_' + str(fieldname)
                         flagsummary[fieldname][key]['type'] = 'summary'
-                    except:
-                        LOG.debug("No flags to report for " + str(key))
+                    except Exception as ex:
+                        LOG.debug("No flags to report for " + str(key) + str(ex))
 
             result.flagsummary = flagsummary
 
@@ -285,8 +283,6 @@ class Applycals(applycal.IFApplycal):
         primarygroups = [list(set(group))[0] for group in groups]
         ngroups = primarygroups.count('TARGET')
 
-        gcount = 0
-        phaselist = []
         targetscans = []
         groups = []
         phase1 = False
@@ -300,7 +296,6 @@ class Applycals(applycal.IFApplycal):
             fieldobj = list(fieldset)[0]
             fieldid = fieldobj.id
 
-            # print scan.id, list(scan.intents), "Field id: ", fieldid, scan.start_time
             if 'PHASE' in list(scan.intents):
                 if not phase1 or (phase1 and bool(targetscans) == False):
                     phase1 = scan
@@ -325,13 +320,10 @@ class Applycals(applycal.IFApplycal):
                 phase2 = False
                 targetscans = []
 
-        #applycalgroups = []
         applycalgroups = collections.defaultdict(list)
 
         for idx, group in enumerate(groups):
-            #print "Applycal Group", idx
             if group.phase2:
-                #print "\tPhase cals....", group.phase1.id, group.phase2.id
                 fieldset = group.phase1.fields
                 fieldobj = list(fieldset)[0]
                 phase1fieldid = fieldobj.id
@@ -341,20 +333,16 @@ class Applycals(applycal.IFApplycal):
                 gainfield = ','.join([str(phase1fieldid), str(phase2fieldid)])
 
             else:
-                #print "\tPhase cal.....", group.phase1.id
                 fieldset = group.phase1.fields
                 fieldobj = list(fieldset)[0]
                 gainfield = str(fieldobj.id)
 
             targetscans = [str(targetscan.id) for targetscan in group.targetscans]
-            #print "\tTargets...........", ','.join(targetscans)
 
-            #applycalgroups.append({'gainfield' : gainfield,
-            #                       'scan'      : targetscans
-            #                       })
             try:
                 gainfieldkey = gainfield.split(',')[1]
-            except:
+            except Exception as ex:
+                LOG.debug(str(ex))
                 gainfieldkey = gainfield.split(',')[0]
             applycalgroups[gainfieldkey].extend(targetscans)
 
