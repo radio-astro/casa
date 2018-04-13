@@ -107,8 +107,8 @@ class finalDelaysPerAntennaChart(object):
                                 plotrange=[], coloraxis='spw',
                                 title='K table: finaldelay.tbl   Antenna: {!s}'.format(antName),
                                 titlefont=8, xaxisfont=7, yaxisfont=7, showgui=False, plotfile=figfile)
-                except:
-                    LOG.warn("Unable to plot " + filename)
+                except Exception as ex:
+                    LOG.warn("Unable to plot " + filename + str(ex))
             else:
                 LOG.debug('Using existing ' + filename + ' plot.')
             
@@ -122,8 +122,8 @@ class finalDelaysPerAntennaChart(object):
                                                'type': 'Final delay',
                                                'file': os.path.basename(real_figfile)})
                 plots.append(plot)
-            except:
-                LOG.warn("Unable to add plot to stack")
+            except Exception as ex:
+                LOG.warn("Unable to add plot to stack." + str(ex))
                 plots.append(None)
 
         return [p for p in plots if p is not None]
@@ -180,8 +180,8 @@ class finalphaseGainPerAntennaChart(object):
                                 title='G table: finalBPinitialgain.tbl   Antenna: {!s}'.format(antName),
                                 titlefont=8, xaxisfont=7, yaxisfont=7, showgui=False, plotfile=figfile)
 
-                except:
-                    LOG.warn("Unable to plot " + filename)
+                except Exception as ex:
+                    LOG.warn("Unable to plot " + filename + str(ex))
             else:
                 LOG.debug('Using existing ' + filename + ' plot.')
             
@@ -193,8 +193,8 @@ class finalphaseGainPerAntennaChart(object):
                                                'type': 'BP initial gain phase',
                                                'file': os.path.basename(figfile)})
                 plots.append(plot)
-            except:
-                LOG.warn("Unable to add plot to stack")
+            except Exception as ex:
+                LOG.warn("Unable to add plot to stack.  " + str(ex))
                 plots.append(None)
 
         return [p for p in plots if p is not None]
@@ -235,14 +235,14 @@ class finalbpSolAmpPerAntennaChart(object):
             phases = np.arctan2(np.imag(dataArr),np.real(dataArr))
             good = np.logical_not(flagArr)
             tmparr = amps[good]
-            if (len(tmparr) > 0):
+            if len(tmparr) > 0:
                 maxamp = np.max(amps[good])
-                if (maxamp > maxmaxamp):
+                if maxamp > maxmaxamp:
                     maxmaxamp = maxamp
             tmparr = np.abs(phases[good])
-            if (len(tmparr) > 0):
+            if len(tmparr) > 0:
                 maxphase = np.max(np.abs(phases[good]))*180./math.pi
-                if (maxphase > maxmaxphase):
+                if maxphase > maxmaxphase:
                     maxmaxphase = maxphase
         ampplotmax = maxmaxamp
 
@@ -276,8 +276,8 @@ class finalbpSolAmpPerAntennaChart(object):
                                 coloraxis='spw', plotrange=[0, 0, 0, ampplotmax], symbolshape='circle',
                                 title='B table: {!s}   Antenna: {!s}'.format('finalBPcal.tbl', antName),
                                 titlefont=8, xaxisfont=7, yaxisfont=7, showgui=False, plotfile=figfile)
-                except:
-                    LOG.warn("Unable to plot " + filename)
+                except Exception as ex:
+                    LOG.warn("Unable to plot " + filename + str(ex))
             else:
                 LOG.debug('Using existing ' + filename + ' plot.')
             
@@ -291,8 +291,8 @@ class finalbpSolAmpPerAntennaChart(object):
                                                'type': 'BP Amp solution',
                                                'file': os.path.basename(real_figfile)})
                 plots.append(plot)
-            except:
-                LOG.warn("Unable to add plot to stack")
+            except Exception as ex:
+                LOG.warn("Unable to add plot to stack.  " + str(ex))
                 plots.append(None)
 
         return [p for p in plots if p is not None]
@@ -375,8 +375,8 @@ class finalbpSolPhasePerAntennaChart(object):
                                 symbolshape='circle',
                                 title='B table: {!s}   Antenna: {!s}'.format('finalBPcal.tbl', antName),
                                 titlefont=8, xaxisfont=7, yaxisfont=7, showgui=False, plotfile=figfile)
-                except:
-                    LOG.warn("Unable to plot " + filename)
+                except Exception as ex:
+                    LOG.warn("Unable to plot " + filename + str(ex))
             else:
                 LOG.debug('Using existing ' + filename + ' plot.')
             
@@ -390,8 +390,8 @@ class finalbpSolPhasePerAntennaChart(object):
                                                'type': 'BP Phase solution',
                                                'file': os.path.basename(real_figfile)})
                 plots.append(plot)
-            except:
-                LOG.warn("Unable to add plot to stack")
+            except Exception as ex:
+                LOG.warn("Unable to add plot to stack.  " + str(ex))
                 plots.append(None)
 
         return [p for p in plots if p is not None]
@@ -417,37 +417,7 @@ class finalbpSolPhaseShortPerAntennaChart(object):
         numAntenna = len(m.antennas)
         plots = []
         
-        nplots=int(numAntenna/3)
-
-        with casatools.TableReader(self.result.bpcaltable) as tb:
-            dataVarCol = tb.getvarcol('CPARAM')
-            flagVarCol = tb.getvarcol('FLAG')
-
-        """
-        rowlist = dataVarCol.keys()
-        maxmaxamp = 0.0
-        maxmaxphase = 0.0
-        for rrow in rowlist:
-            dataArr = dataVarCol[rrow]
-            flagArr = flagVarCol[rrow]
-            amps=np.abs(dataArr)
-            phases=np.arctan2(np.imag(dataArr),np.real(dataArr))
-            good=np.logical_not(flagArr)
-            tmparr=amps[good]
-            if (len(tmparr)>0):
-                maxamp=np.max(amps[good])
-                if (maxamp>maxmaxamp):
-                    maxmaxamp=maxamp
-            tmparr=np.abs(phases[good])
-            if (len(tmparr)>0):
-                maxphase=np.max(np.abs(phases[good]))*180./math.pi
-                if (maxphase>maxmaxphase):
-                    maxmaxphase=maxphase
-        ampplotmax=maxmaxamp
-        phaseplotmax=maxmaxphase
-        """
-
-        nplots=numAntenna
+        nplots = numAntenna
 
         LOG.info("Plotting phase short gaincal")
 
@@ -477,8 +447,8 @@ class finalbpSolPhaseShortPerAntennaChart(object):
                                 coloraxis='spw', plotrange=[0, 0, -180, 180], symbolshape='circle',
                                 title='G table: phaseshortgaincal.tbl   Antenna: {!s}'.format(antName),
                                 titlefont=8, xaxisfont=7, yaxisfont=7, showgui=False, plotfile=figfile)
-                except:
-                    LOG.warn("Unable to plot " + filename)
+                except Exception as ex:
+                    LOG.warn("Unable to plot " + filename + str(ex))
             else:
                 LOG.debug('Using existing ' + filename + ' plot.')
             
@@ -490,8 +460,8 @@ class finalbpSolPhaseShortPerAntennaChart(object):
                                                'type': 'Phase (short) gain solution',
                                                'file': os.path.basename(figfile)})
                 plots.append(plot)
-            except:
-                LOG.warn("Unable to add plot to stack")
+            except Exception as ex:
+                LOG.warn("Unable to add plot to stack.  " + str(ex))
                 plots.append(None)
 
         return [p for p in plots if p is not None]
@@ -518,27 +488,22 @@ class finalAmpTimeCalPerAntennaChart(object):
 
         plots = []
         
-        nplots=int(numAntenna/3)
-
         with casatools.TableReader(self.result.finalampgaincaltable) as tb:
-            cpar=tb.getcol('CPARAM')
-            flgs=tb.getcol('FLAG')
-        amps=np.abs(cpar)
-        good=np.logical_not(flgs)
-        maxamp=np.max(amps[good])
-        plotmax=max(2.0,maxamp)
+            cpar = tb.getcol('CPARAM')
+            flgs = tb.getcol('FLAG')
+        amps = np.abs(cpar)
+        good = np.logical_not(flgs)
+        maxamp = np.max(amps[good])
+        plotmax = max(2.0,maxamp)
 
-        if ((numAntenna%3)>0):
-            nplots = nplots + 1
-
-        nplots=numAntenna
+        nplots = numAntenna
 
         LOG.info("Plotting final amp timecal")
 
         for ii in range(nplots):
 
-            filename='finalamptimecal'+str(ii)+'.png'
-            antPlot=str(ii)
+            filename = 'finalamptimecal'+str(ii)+'.png'
+            antPlot = str(ii)
             
             stage = 'stage%s' % result.stage_number
             stage_dir = os.path.join(context.report_dir, stage)
@@ -558,11 +523,11 @@ class finalAmpTimeCalPerAntennaChart(object):
                     LOG.debug("Plotting final amp timecal "+antName)
                     casa.plotms(vis=self.result.finalampgaincaltable, xaxis='time', yaxis='amp', field='',
                                 antenna=antPlot, spw='', timerange='',
-                                coloraxis='spw', plotrange=[0,0,0,plotmax], symbolshape='circle',
+                                coloraxis='spw', plotrange=[0, 0, 0, plotmax], symbolshape='circle',
                                 title='G table: finalampgaincal.tbl   Antenna: {!s}'.format(antName),
                                 titlefont=8, xaxisfont=7, yaxisfont=7, showgui=False, plotfile=figfile)
-                except:
-                    LOG.warn("Unable to plot " + filename)
+                except Exception as ex:
+                    LOG.warn("Unable to plot " + filename + str(ex))
             else:
                 LOG.debug('Using existing ' + filename + ' plot.')
             
@@ -574,8 +539,8 @@ class finalAmpTimeCalPerAntennaChart(object):
                                                'type': 'Final amp time cal',
                                                'file': os.path.basename(figfile)})
                 plots.append(plot)
-            except:
-                LOG.warn("Unable to add plot to stack")
+            except Exception as ex:
+                LOG.warn("Unable to add plot to stack.  " + str(ex))
                 plots.append(None)
 
         return [p for p in plots if p is not None]
@@ -601,9 +566,7 @@ class finalAmpFreqCalPerAntennaChart(object):
         numAntenna = len(m.antennas)
 
         plots = []
-        
-        nplots=int(numAntenna/3)
-        
+
         with casatools.TableReader(self.result.finalampgaincaltable) as tb:
             cpar = tb.getcol('CPARAM')
             flgs = tb.getcol('FLAG')
@@ -618,8 +581,8 @@ class finalAmpFreqCalPerAntennaChart(object):
 
         for ii in range(nplots):
 
-            filename='finalampfreqcal'+str(ii)+'.png'
-            antPlot=str(ii)
+            filename = 'finalampfreqcal'+str(ii)+'.png'
+            antPlot = str(ii)
             
             stage = 'stage%s' % result.stage_number
             stage_dir = os.path.join(context.report_dir, stage)
@@ -643,8 +606,8 @@ class finalAmpFreqCalPerAntennaChart(object):
                                 title='G table: finalampgaincal.tbl   Antenna: {!s}'.format(antName),
                                 titlefont=8, xaxisfont=7, yaxisfont=7, showgui=False, plotfile=figfile)
                     
-                except:
-                    LOG.warn("Unable to plot " + filename)
+                except Exception as ex:
+                    LOG.warn("Unable to plot " + filename + str(ex))
             else:
                 LOG.debug('Using existing ' + filename + ' plot.')
             
@@ -658,8 +621,8 @@ class finalAmpFreqCalPerAntennaChart(object):
                                                'type': 'Final amp freq cal',
                                                'file': os.path.basename(real_figfile)})
                 plots.append(plot)
-            except:
-                LOG.warn("Unable to add plot to stack")
+            except Exception as ex:
+                LOG.warn("Unable to add plot to stack.  " + str(ex))
                 plots.append(None)
 
         return [p for p in plots if p is not None]
@@ -686,24 +649,14 @@ class finalPhaseGainCalPerAntennaChart(object):
 
         plots = []
 
-        """
-        with casatools.TableReader(self.result.finalphasegaincaltable) as tb:
-            cpar=tb.getcol('CPARAM')
-            flgs=tb.getcol('FLAG')
-        amps=np.abs(cpar)
-        good=np.logical_not(flgs)
-        maxamp=np.max(amps[good])
-        plotmax=max(2.0,maxamp)
-        """
-
         nplots = numAntenna
 
         LOG.info("Plotting final phase freqcal")
 
         for ii in range(nplots):
 
-            filename='finalphasegaincal'+str(ii)+'.png'
-            antPlot=str(ii)
+            filename = 'finalphasegaincal'+str(ii)+'.png'
+            antPlot = str(ii)
             
             stage = 'stage%s' % result.stage_number
             stage_dir = os.path.join(context.report_dir, stage)
@@ -723,12 +676,12 @@ class finalPhaseGainCalPerAntennaChart(object):
                     LOG.debug("Plotting final phase freqcal "+antName)
                     casa.plotms(vis=self.result.finalphasegaincaltable, xaxis='time', yaxis='phase', field='',
                                 antenna=antPlot, spw='', timerange='',
-                                coloraxis='spw', plotrange=[0,0,-180,180], symbolshape='circle',
+                                coloraxis='spw', plotrange=[0, 0, -180, 180], symbolshape='circle',
                                 title='G table: finalphasegaincal.tbl   Antenna: {!s}'.format(antName),
                                 titlefont=8, xaxisfont=7, yaxisfont=7, showgui=False, plotfile=figfile)
 
-                except:
-                    LOG.warn("Problem with plotting " + filename)
+                except Exception as ex:
+                    LOG.warn("Problem with plotting " + filename + str(ex))
             else:
                 LOG.debug('Using existing ' + filename + ' plot.')
             
@@ -740,8 +693,8 @@ class finalPhaseGainCalPerAntennaChart(object):
                                                'type': 'Final phase gain cal',
                                                'file': os.path.basename(figfile)})
                 plots.append(plot)
-            except:
-                LOG.warn("Unable to add plot to stack")
+            except Exception as ex:
+                LOG.warn("Unable to add plot to stack.  " + str(ex))
                 plots.append(None)
 
         return [p for p in plots if p is not None]
