@@ -11,14 +11,12 @@ LOG = logging.get_logger(__name__)
 
 
 class VLASubPlotRenderer(object):
-    # template = 'testdelays_plots.html'
 
     def __init__(self, context, result, plots, json_path, template, filename_prefix):
         self.context = context
         self.result = result
         self.plots = plots
         self.ms = os.path.basename(self.result.inputs['vis'][0])
-        # print 'MY MS IS: ' + self.ms
         self.template = template
         self.filename_prefix = filename_prefix
 
@@ -26,7 +24,6 @@ class VLASubPlotRenderer(object):
         self.ampfreq_subpages = {}
 
         self.ampfreq_subpages[self.ms] = filenamer.sanitize('ampfreq' + '-%s.html' % self.ms)
-
 
         if os.path.exists(json_path):
             with open(json_path, 'r') as json_file:
@@ -73,7 +70,8 @@ class T2_4MDetailsCircfeedpolcalRenderer(basetemplates.T2_4MDetailsDefaultRender
     def __init__(self, uri='circfeedpolcal.mako',
                  description='CircFeed Polarization', always_rerender=False):
         super(T2_4MDetailsCircfeedpolcalRenderer, self).__init__(uri=uri,
-                description=description, always_rerender=always_rerender)
+                                                                 description=description,
+                                                                 always_rerender=always_rerender)
 
     def update_mako_context(self, ctx, context, result):
         weblog_dir = os.path.join(context.report_dir,
