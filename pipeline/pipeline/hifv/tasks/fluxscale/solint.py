@@ -1,5 +1,6 @@
 from __future__ import absolute_import
 
+import os
 import numpy as np
 
 import pipeline.hif.heuristics.findrefant as findrefant
@@ -75,11 +76,18 @@ class Solint(basetask.StandardTaskTemplate):
         calMs = 'calibrators.ms'
         split_result = self._do_split(calMs)
         (longsolint, gain_solint2) = self._do_determine_solint(calMs)
+
+        try:
+            stage_number = self.inputs.context.results[-1].read()[0].stage_number + 1
+        except Exception as e:
+            stage_number = self.inputs.context.results[-1].read().stage_number + 1
+
+        tableprefix = os.path.basename(self.inputs.vis) + '.' + 'hifv_solint.s'
         
         # Testgains section
         context = self.inputs.context
-        tablebase = 'testgaincal'
-        table_suffix = ['.g','3.g','10.g']
+        tablebase = tableprefix + str(stage_number) + '_1.' + 'testgaincal'
+        table_suffix = ['.tbl','3.tbl','10.tbl', 'scan.tbl', 'limit.tbl']
         soltimes = [1.0,3.0,10.0] 
         m = self.inputs.context.observing_run.get_ms(self.inputs.vis)
         # soltimes = [self.inputs.context.evla['msinfo'][m.name].int_time * x for x in soltimes]
@@ -102,10 +110,10 @@ class Solint(basetask.StandardTaskTemplate):
         refAnt = ','.join([str(i) for i in RefAntOutput[0:4]])
 
         bpdgain_touse = tablebase + table_suffix[0]
-        testgains_result = self._do_gtype_testgains(calMs, 'testgaincal.g', solint=solint,
+        testgains_result = self._do_gtype_testgains(calMs, bpdgain_touse, solint=solint,
                                                     context=context, combtime=combtime, refAnt=refAnt)
 
-        flaggedSolnResult1 = getCalFlaggedSoln('testgaincal.g')
+        flaggedSolnResult1 = getCalFlaggedSoln(bpdgain_touse)
         LOG.info("For solint = "+solint+" fraction of flagged solutions = "+str(flaggedSolnResult1['all']['fraction']))
         LOG.info("Median fraction of flagged solutions per antenna = "+str(flaggedSolnResult1['antmedian']['fraction']))
 
@@ -120,9 +128,9 @@ class Solint(basetask.StandardTaskTemplate):
             soltime = soltimes[1]
             solint = solints[1]
 
-            testgains_result = self._do_gtype_testgains(calMs, 'testgaincal3.g', solint=solint,
+            testgains_result = self._do_gtype_testgains(calMs, tablebase + table_suffix[1], solint=solint,
                                                         context=context, combtime=combtime, refAnt=refAnt)
-            flaggedSolnResult3 = getCalFlaggedSoln('testgaincal3.g')
+            flaggedSolnResult3 = getCalFlaggedSoln(tablebase + table_suffix[0])
             
             LOG.info("For solint = "+solint+" fraction of flagged solutions = "+str(flaggedSolnResult3['all']['fraction']))
             LOG.info("Median fraction of flagged solutions per antenna = "+str(flaggedSolnResult3['antmedian']['fraction']))
@@ -140,7 +148,7 @@ class Solint(basetask.StandardTaskTemplate):
                     soltime = soltimes[2]
                     solint = solints[2]
 
-                    testgains_result = self._do_gtype_testgains(calMs, 'testgaincal10.g', solint=solint,
+                    testgains_result = self._do_gtype_testgains(calMs, tablebase + table_suffix[2], solint=solint,
                                                                 context=context, combtime=combtime, refAnt=refAnt)
                     flaggedSolnResult10 = getCalFlaggedSoln(tablebase + table_suffix[2])
                     LOG.info("For solint = "+solint+" fraction of flagged solutions = "+str(flaggedSolnResult3['all']['fraction']))
@@ -158,10 +166,10 @@ class Solint(basetask.StandardTaskTemplate):
                         if (fracFlaggedSolns10 > 0.05):
                             solint='inf'
                             combtime=''
-                            testgains_result = self._do_gtype_testgains(calMs, 'testgaincalscan.g',
+                            testgains_result = self._do_gtype_testgains(calMs, tablebase + table_suffix[3],
                                                                         solint=solint, context=context,
                                                                         combtime=combtime, refAnt=refAnt)
-                            flaggedSolnResultScan = getCalFlaggedSoln('testgaincalscan.g')
+                            flaggedSolnResultScan = getCalFlaggedSoln(tablebase + table_suffix[3])
                             LOG.info("For solint = "+solint+" fraction of flagged solutions = "+str(flaggedSolnResult3['all']['fraction']))
                             LOG.info("Median fraction of flagged solutions per antenna = "+str(flaggedSolnResult3['antmedian']['fraction']))
                             
@@ -172,7 +180,7 @@ class Solint(basetask.StandardTaskTemplate):
                                 
                             if (fracFlaggedSolnsScan < fracFlaggedSolns10):
                                 shortsol2=context.evla['msinfo'][m.name].longsolint
-                                bpdgain_touse = 'testgaincalscan.g'
+                                bpdgain_touse = tablebase + table_suffix[3]
                                 
                                 if (fracFlaggedSolnsScan > 0.05):
                                     LOG.warn("Warning, large fraction of flagged solutions, there might be something wrong with your data")
@@ -194,9 +202,9 @@ class Solint(basetask.StandardTaskTemplate):
                 short_solint = float(limit_short_solint)
                 new_gain_solint1 = str(short_solint) + 's'
 
-                testgains_result = self._do_gtype_testgains(calMs, 'testgaincallimit.g', solint=new_gain_solint1,
+                testgains_result = self._do_gtype_testgains(calMs, tablebase + table_suffix[4], solint=new_gain_solint1,
                                                             context=context, combtime=combtime, refAnt=refAnt)
-                bpdgain_touse = 'testgaincallimit.g'
+                bpdgain_touse = tablebase + table_suffix[4]
 
                 LOG.info("Using short solint = " + new_gain_solint1)
 
@@ -210,9 +218,9 @@ class Solint(basetask.StandardTaskTemplate):
                 new_gain_solint1 = short_solint
                 LOG.warn("   Note that since 'inf' was specified then combine='' for gaincal.")
 
-                testgains_result = self._do_gtype_testgains(calMs, 'testgaincallimit.g', solint=new_gain_solint1,
+                testgains_result = self._do_gtype_testgains(calMs, tablebase + table_suffix[4], solint=new_gain_solint1,
                                                             context=context, combtime=combtime, refAnt=refAnt)
-                bpdgain_touse = 'testgaincallimit.g'
+                bpdgain_touse = tablebase + table_suffix[4]
 
                 LOG.info("Using short solint = " + str(new_gain_solint1))
 
@@ -221,14 +229,15 @@ class Solint(basetask.StandardTaskTemplate):
                                      bpdgain_touse=bpdgain_touse)
 
             short_solint_str = "{:.12f}".format(short_solint)
-            if (float(limit_short_solint) <= short_solint_str):
+
+            if float(limit_short_solint) <= short_solint_str:
                 short_solint = float(limit_short_solint)
                 new_gain_solint1 = str(short_solint) + 's'
                 combtime = 'scan'
 
-                testgains_result = self._do_gtype_testgains(calMs, 'testgaincallimit.g', solint=new_gain_solint1,
+                testgains_result = self._do_gtype_testgains(calMs, tablebase + table_suffix[4], solint=new_gain_solint1,
                                                         context=context, combtime=combtime, refAnt=refAnt)
-                bpdgain_touse = 'testgaincallimit.g'
+                bpdgain_touse = tablebase + table_suffix[4]
 
                 LOG.info("Using short solint = " + str(new_gain_solint1))
 

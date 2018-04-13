@@ -6,7 +6,6 @@ import pipeline.infrastructure.renderer.logger as logger
 
 import casa
 
-
 LOG = infrastructure.get_logger(__name__)
 
 
@@ -15,10 +14,9 @@ class fluxbootSummaryChart(object):
         self.context = context
         self.result = result
         self.ms = context.observing_run.get_ms(result.inputs['vis'])
-        #self.caltable = result.final[0].gaintable
+        # self.caltable = result.final[0].gaintable
 
     def plot(self):
-        ##science_spws = self.ms.get_spectral_windows(science_windows_only=True)
         plots = [self.get_plot_wrapper()]
         return [p for p in plots if p is not None]
 
@@ -26,9 +24,7 @@ class fluxbootSummaryChart(object):
         figfile = self.get_figfile()
         
         context = self.context
-        result = self.result
         m = context.observing_run.measurement_sets[0]
-        #corrstring = context.evla['msinfo'][m.name].corrstring
         corrstring = m.get_vla_corrstring()
         calibrator_scan_select_string = context.evla['msinfo'][m.name].calibrator_scan_select_string
         ms_active = m.name
@@ -37,8 +33,7 @@ class fluxbootSummaryChart(object):
                     scan=calibrator_scan_select_string, correlation=corrstring, averagedata=True,
                     avgtime='1e8', avgscan=True, transform=False,    extendflag=False, iteraxis='',
                     coloraxis='field', plotrange=[], title='', xlabel='', ylabel='',  showmajorgrid=False,
-                    showminorgrid=False,    plotfile=figfile, overwrite=True, clearplots=True, showgui=False)
-
+                    showminorgrid=False, plotfile=figfile, overwrite=True, clearplots=True, showgui=False)
 
     def get_figfile(self):
         return os.path.join(self.context.report_dir, 
@@ -47,21 +42,17 @@ class fluxbootSummaryChart(object):
 
     def get_plot_wrapper(self):
         figfile = self.get_figfile()
-        
-        context = self.context
-        m = context.observing_run.measurement_sets[0]
        
         wrapper = logger.Plot(figfile,
-                          x_axis='freq',
-                          y_axis='amp',
-                          parameters={'vis'      : self.ms.basename,
-                                      'type'     : 'fluxboot',
-                                      'spw'      : '',
-                                      'figurecaption':'Model calibrator'})
+                              x_axis='freq',
+                              y_axis='amp',
+                              parameters={'vis'          : self.ms.basename,
+                                          'type'         : 'fluxboot',
+                                          'spw'          : '',
+                                          'figurecaption':'Model calibrator'})
 
         if not os.path.exists(figfile):
-            LOG.trace('Plotting model calibrator flux densities. Creating new '
-                      'plot.')
+            LOG.trace('Plotting model calibrator flux densities. Creating new plot.')
             try:
                 self.create_plot()
             except Exception as ex:
@@ -70,8 +61,6 @@ class fluxbootSummaryChart(object):
                 return None
             
         return wrapper
-
-
 
 
 class fluxgaincalSummaryChart(object):
@@ -103,20 +92,16 @@ class fluxgaincalSummaryChart(object):
     def get_plot_wrapper(self):
         figfile = self.get_figfile()
 
-        context = self.context
-        m = context.observing_run.measurement_sets[0]
-
         wrapper = logger.Plot(figfile,
                               x_axis='freq',
                               y_axis='amp',
-                              parameters={'vis': self.ms.basename,
-                                          'type': 'fluxgaincal',
-                                          'spw': '',
+                              parameters={'vis'          : self.ms.basename,
+                                          'type'         : 'fluxgaincal',
+                                          'spw'          : '',
                                           'figurecaption': 'Caltable: {!s}'.format(self.caltable)})
 
         if not os.path.exists(figfile):
-            LOG.trace('Plotting amp vs. freq for fluxgaincal. Creating new '
-                      'plot.')
+            LOG.trace('Plotting amp vs. freq for fluxgaincal. Creating new plot.')
             try:
                 self.create_plot()
             except Exception as ex:

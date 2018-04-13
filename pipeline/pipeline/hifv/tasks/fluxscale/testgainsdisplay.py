@@ -25,13 +25,13 @@ class testgainsSummaryChart(object):
     def create_plot(self, prefix):
         figfile = self.get_figfile(prefix)
 
-        antPlot = '0~2'
+        antplot = '0~2'
         
         plotmax=100
 
         # Dummy plot
-        casa.plotms(vis='testgaincal.g', xaxis='time', yaxis='amp', field='',
-                    antenna=antPlot, spw='', timerange='',
+        casa.plotms(vis=self.result.bpdgain_touse, xaxis='time', yaxis='amp', field='',
+                    antenna=antplot, spw='', timerange='',
                     plotrange=[0, 0, 0, plotmax], coloraxis='spw',
                     title='testgains Temp table',
                     titlefont=8, xaxisfont=7, yaxisfont=7, showgui=False, plotfile=figfile)
@@ -66,24 +66,21 @@ class testgainsPerAntennaChart(object):
         self.context = context
         self.result = result
         self.ms = context.observing_run.get_ms(result.inputs['vis'])
-        ms = self.ms
         self.yaxis = yaxis
         
         self.json = {}
         self.json_filename = os.path.join(context.report_dir, 
                                           'stage%s' % result.stage_number, 
-                                          yaxis+'testgains-%s.json' % ms)
+                                          yaxis+'testgains-%s.json' % self.ms)
 
     def plot(self):
-        context = self.context
-        result = self.result
-        m = context.observing_run.measurement_sets[0]
+        m = self.context.observing_run.measurement_sets[0]
         numAntenna = len(m.antennas)
         plots = []
         
         LOG.info("Plotting testgain solutions")
 
-        with casatools.TableReader(result.bpdgain_touse) as tb:
+        with casatools.TableReader(self.result.bpdgain_touse) as tb:
             cpar = tb.getcol('CPARAM')
             flgs = tb.getcol('FLAG')
         amps = np.abs(cpar)
@@ -95,11 +92,11 @@ class testgainsPerAntennaChart(object):
 
         for ii in range(nplots):
 
-            filename='testgaincal_' + self.yaxis + str(ii) + '.png'
+            filename = 'testgaincal_' + self.yaxis + str(ii) + '.png'
             antPlot = str(ii)
             
-            stage = 'stage%s' % result.stage_number
-            stage_dir = os.path.join(context.report_dir, stage)
+            stage = 'stage%s' % self.result.stage_number
+            stage_dir = os.path.join(self.context.report_dir, stage)
             # construct the relative filename, eg. 'stageX/testdelay0.png'
             
             figfile = os.path.join(stage_dir, filename)
@@ -116,20 +113,20 @@ class testgainsPerAntennaChart(object):
                 try:
 
                     # Get antenna name
-                    antName = antPlot
+                    antname = antPlot
                     if antPlot != '':
                         domain_antennas = self.ms.get_antenna(antPlot)
                         idents = [a.name if a.name else a.id for a in domain_antennas]
-                        antName = ','.join(idents)
+                        antname = ','.join(idents)
 
-                    casa.plotms(vis=result.bpdgain_touse, xaxis='time', yaxis=self.yaxis, field='',
+                    casa.plotms(vis=self.result.bpdgain_touse, xaxis='time', yaxis=self.yaxis, field='',
                                 antenna=antPlot, spw='', timerange='',
                                 plotrange=plotrange, coloraxis='spw',
-                                title='G table: {!s}   Antenna: {!s}'.format(result.bpdgain_touse, antName),
+                                title='G table: {!s}   Antenna: {!s}'.format(self.result.bpdgain_touse, antname),
                                 titlefont=8, xaxisfont=7, yaxisfont=7, showgui=False, plotfile=figfile)
 
-                except:
-                    LOG.warn("Unable to plot " + filename)
+                except Exception as ex:
+                    LOG.warn("Unable to plot " + filename + str(ex))
             else:
                 LOG.debug('Using existing ' + filename + ' plot.')
             
@@ -137,12 +134,12 @@ class testgainsPerAntennaChart(object):
                 plot = logger.Plot(figfile, x_axis='Time', y_axis=self.yaxis.title(), field='',
                                    parameters={'spw': '',
                                                'pol': '',
-                                               'ant': antName,
+                                               'ant': antname,
                                                'type': self.yaxis,
                                                'file': os.path.basename(figfile)})
                 plots.append(plot)
-            except:
-                LOG.warn("Unable to add plot to stack")
+            except Exception as ex:
+                LOG.warn("Unable to add plot to stack. " + str(ex))
                 plots.append(None)
 
         return [p for p in plots if p is not None]
