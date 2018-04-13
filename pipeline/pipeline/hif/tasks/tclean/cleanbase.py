@@ -219,6 +219,7 @@ class CleanBase(basetask.StandardTaskTemplate):
         if scanidlist is None:
             scanidlist = []
 
+        context = self.inputs.context
         inputs = self.inputs
 
         # Derive names of clean products for this iteration
@@ -252,13 +253,16 @@ class CleanBase(basetask.StandardTaskTemplate):
         parallel = all([mpihelpers.parse_mpi_input_parameter(inputs.parallel),
                         'TARGET' in inputs.intent])
 
+        # Need to translate the virtual spw IDs to real ones
+        real_spwsel = context.observing_run.get_real_spwsel(inputs.spwsel, inputs.vis)
+
         # Common tclean parameters
         tclean_job_parameters = {
             'vis':           inputs.vis,
             'imagename':     '%s.%s.iter%s' % (os.path.basename(inputs.imagename), inputs.stokes, iter),
             'datacolumn':    inputs.datacolumn,
             'field':         inputs.field,
-            'spw':           inputs.spwsel,
+            'spw':           real_spwsel,
             'intent':        utils.to_CASA_intent(inputs.ms[0], inputs.intent),
             'specmode':      inputs.specmode if inputs.specmode != 'cont' else 'mfs',
             'gridder':       inputs.gridder,
@@ -454,19 +458,22 @@ class CleanBase(basetask.StandardTaskTemplate):
             # Store the model.
             set_miscinfo(name=model_name, spw=inputs.spw, field=inputs.field,
                          type='model', iter=iter, multiterm=result.multiterm,
-                         intent=inputs.intent, specmode=inputs.specmode)
+                         intent=inputs.intent, specmode=inputs.specmode,
+                         observing_run=context.observing_run)
             result.set_model(iter=iter, image=model_name)
 
             # Always set info on the uncorrected image for plotting
             set_miscinfo(name=image_name, spw=inputs.spw, field=inputs.field,
                          type='image', iter=iter, multiterm=result.multiterm,
-                         intent=inputs.intent, specmode=inputs.specmode)
+                         intent=inputs.intent, specmode=inputs.specmode,
+                         observing_run=context.observing_run)
 
             # Store the PB corrected image.
             if os.path.exists('%s' % (pbcor_image_name.replace('.image.pbcor', '.image.tt0.pbcor' if result.multiterm else '.image.pbcor'))):
                 set_miscinfo(name=pbcor_image_name, spw=inputs.spw, field=inputs.field,
                              type='pbcorimage', iter=iter, multiterm=result.multiterm,
-                             intent=inputs.intent, specmode=inputs.specmode)
+                             intent=inputs.intent, specmode=inputs.specmode,
+                             observing_run=context.observing_run)
                 result.set_image(iter=iter, image=pbcor_image_name)
             else:
                 result.set_image(iter=iter, image=image_name)
@@ -474,32 +481,37 @@ class CleanBase(basetask.StandardTaskTemplate):
         # Store the residual.
         set_miscinfo(name=residual_name, spw=inputs.spw, field=inputs.field,
                      type='residual', iter=iter, multiterm=result.multiterm,
-                     intent=inputs.intent, specmode=inputs.specmode)
+                     intent=inputs.intent, specmode=inputs.specmode,
+                         observing_run=context.observing_run)
         result.set_residual(iter=iter, image=residual_name)
 
         # Store the PSF.
         set_miscinfo(name=psf_name, spw=inputs.spw, field=inputs.field,
                      type='psf', iter=iter, multiterm=result.multiterm,
-                     intent=inputs.intent, specmode=inputs.specmode)
+                     intent=inputs.intent, specmode=inputs.specmode,
+                     observing_run=context.observing_run)
         result.set_psf(image=psf_name)
 
         # Store the flux image.
         set_miscinfo(name=flux_name, spw=inputs.spw, field=inputs.field,
                      type='flux', iter=iter, multiterm=result.multiterm,
-                     intent=inputs.intent, specmode=inputs.specmode)
+                     intent=inputs.intent, specmode=inputs.specmode,
+                     observing_run=context.observing_run)
         result.set_flux(image=flux_name)
 
         # Make sure mask has path name
         if os.path.exists(inputs.mask):
             set_miscinfo(name=inputs.mask, spw=inputs.spw, field=inputs.field,
                          type='cleanmask', iter=iter,
-                         intent=inputs.intent, specmode=inputs.specmode)
+                         intent=inputs.intent, specmode=inputs.specmode,
+                         observing_run=context.observing_run)
             result.set_cleanmask(iter=iter, image=inputs.mask)
         elif os.path.exists(mask_name):
             # Use mask made by tclean
             set_miscinfo(name=mask_name, spw=inputs.spw, field=inputs.field,
                          type='cleanmask', iter=iter,
-                         intent=inputs.intent, specmode=inputs.specmode)
+                         intent=inputs.intent, specmode=inputs.specmode,
+                         observing_run=context.observing_run)
             result.set_cleanmask(iter=iter, image=mask_name)
 
         # Keep threshold and sensitivity for QA and weblog
@@ -517,7 +529,7 @@ def rename_image(old_name, new_name, extensions=['']):
             with casatools.ImageReader('%s%s' % (old_name, extension)) as image:
                 image.rename(name=new_name, overwrite=True)
 
-def set_miscinfo(name, spw=None, field=None, type=None, iter=None, multiterm=None, intent=None, specmode=None):
+def set_miscinfo(name, spw=None, field=None, type=None, iter=None, multiterm=None, intent=None, specmode=None, observing_run=None):
     """
     Define miscellaneous image information
     """
@@ -537,7 +549,11 @@ def set_miscinfo(name, spw=None, field=None, type=None, iter=None, multiterm=Non
                 for i in xrange(len(filename_components)):
                     info['filnam%02d' % (i+1)] = filename_components[i]
             if spw:
-                info['spw'] = spw
+                if observing_run is not None:
+                    spw_names = ','.join([observing_run.virtual_science_spw_ids.get(int(spw_id), 'N/A') for spw_id in spw.split(',')])
+                else:
+                    spw_names = 'N/A'
+                info['spw'] = '%s / %s' % (spw, spw_names)
             if field:
                 # TODO: Find common key calculation. Long VLASS lists cause trouble downstream.
                 #       Truncated list may cause duplicates.

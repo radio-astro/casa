@@ -21,7 +21,9 @@ import pipeline.domain.measures as measures
 				<caption>Spectral Windows with Science Intent in ${ms.basename}</caption>
 			    <thead>
 			        <tr>
-			            <th scope="col" rowspan="2">ID</th>
+			            <th scope="col" rowspan="2">Real ID</th>
+			            <th scope="col" rowspan="2">Virtual ID</th>
+			            <th scope="col" rowspan="2">Name</th>
 			            <%
 						spwtypelabel='<th scope="col" rowspan="2">Type</th>'
 						if 'VLA' in pcontext.project_summary.telescope:
@@ -56,6 +58,8 @@ import pipeline.domain.measures as measures
 					% for spw in ms.get_spectral_windows(science_windows_only=True):
 					<tr>
 					  <td>${spw.id}</td>
+					  <td>${pcontext.observing_run.real2virtual_spw_id(int(spw.id), ms)}</td>
+					  <td>${pcontext.observing_run.virtual_science_spw_ids.get(pcontext.observing_run.real2virtual_spw_id(int(spw.id), ms), 'N/A')}</td>
 			            <%
 						spwtypeentry='<td>'+str(spw.type)+'</td>'
 						if 'VLA' in pcontext.project_summary.telescope:

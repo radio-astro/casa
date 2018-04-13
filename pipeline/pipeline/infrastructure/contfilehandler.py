@@ -157,7 +157,7 @@ class ContFileHandler(object):
 
         return cont_ranges_spwsel
 
-    def lsrk_to_topo(self, selection, msnames, fields, spw_id, ctrim=0, ctrim_nchan=-1):
+    def lsrk_to_topo(self, selection, msnames, fields, spw_id, observing_run, ctrim=0, ctrim_nchan=-1):
 
         lsrk_freq_selection, refer = selection.split()
         if (refer != 'LSRK'):
@@ -187,16 +187,17 @@ class ContFileHandler(object):
         topo_freq_selections = []
         for i in xrange(len(msnames)):
             msname = msnames[i]
+            real_spw_id = observing_run.virtual2real_spw_id(spw_id, observing_run.get_ms(msname))
             field = int(fields[i])
             topo_chan_selection = []
             topo_freq_selection = []
             try:
                 if (field != -1):
                     for freq_range in freq_ranges:
-                        imTool.selectvis(vis = msname, field = field, spw = spw_id)
+                        imTool.selectvis(vis = msname, field = field, spw = real_spw_id)
                         result = imTool.advisechansel(freqstart = freq_range[0], freqend = freq_range[1], freqstep = 100., freqframe = 'LSRK')
                         imTool.done()
-                        spw_index = result['ms_0']['spw'].tolist().index(spw_id)
+                        spw_index = result['ms_0']['spw'].tolist().index(real_spw_id)
                         start = result['ms_0']['start'][spw_index]
                         stop = start + result['ms_0']['nchan'][spw_index] - 1
                         # Optionally skip edge channels
@@ -205,12 +206,13 @@ class ContFileHandler(object):
                             stop = stop if (stop < (ctrim_nchan-ctrim)) else ctrim_nchan-ctrim-1
                         if (stop >= start):
                             topo_chan_selection.append((start, stop))
-                            result = imTool.advisechansel(msname = msname, fieldid = field, spwselection = '%d:%d~%d' % (spw_id, start, stop), freqframe = 'TOPO', getfreqrange = True)
+                            result = imTool.advisechansel(msname = msname, fieldid = field, spwselection = '%d:%d~%d' % (real_spw_id, start, stop), freqframe = 'TOPO', getfreqrange = True)
                             fLow = qaTool.convert('%sHz' % (result['freqstart']), 'GHz')['value']
                             fHigh = qaTool.convert('%sHz' % (result['freqend']), 'GHz')['value']
                             topo_freq_selection.append((fLow, fHigh))
             except Exception as e:
-                LOG.info('Cannot calculate TOPO range for MS %s Field %s SPW %s' % (msname, field, spw_id))
+                LOG.info('Cannot calculate TOPO range for MS %s Field %s SPW %s' % (msname, field, real_spw_id))
+                print 'ERROR_DM:', e
 
             topo_chan_selections.append(';'.join('%d~%d' % (item[0], item[1]) for item in topo_chan_selection))
             topo_freq_selections.append('%s TOPO' % (';'.join('%s~%sGHz' % (item[0], item[1]) for item in topo_freq_selection)))

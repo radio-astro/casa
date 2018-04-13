@@ -229,15 +229,12 @@ class MakeImList(basetask.StandardTaskTemplate):
             spw = inputs.spw
    
             if spw == '':
-                ms = inputs.context.observing_run.get_ms(name=inputs.vis[0])
-                spws = ms.get_spectral_windows(science_windows_only=True)
-                spwids = [spw.id for spw in spws]
-                spw = ','.join("'%s'" % (spwid) for spwid in spwids)
-                spw = '[%s]' % spw
+                spwids = inputs.context.observing_run.virtual_science_spw_ids.keys()
+                spwids.sort()
             else:
                 spwids = spw.split(',')
-                spw = ','.join("'%s'" % (spwid) for spwid in spwids)
-                spw = '[%s]' % spw
+            spw = ','.join("'%s'" % (spwid) for spwid in spwids)
+            spw = '[%s]' % spw
 
             spwlist = spw.replace('[','').replace(']','')
             spwlist = spwlist[1:-1].split("','")

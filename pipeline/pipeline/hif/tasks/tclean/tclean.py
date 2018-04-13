@@ -820,6 +820,8 @@ class Tclean(cleanbase.CleanBase):
     # worked well, then this image should just contain noise.
     def _calc_mom0_8_fc(self, result):
  
+        context = self.inputs.context
+
         # Find max iteration that was performed.
         maxiter = max(result.iterations.keys())
 
@@ -850,7 +852,8 @@ class Tclean(cleanbase.CleanBase):
             # Update the metadata in the MOM0_FC image.
             cleanbase.set_miscinfo(name=mom0_name, spw=self.inputs.spw, 
               field=self.inputs.field, iter=maxiter, type='mom0_fc',
-              intent=self.inputs.intent, specmode=self.inputs.specmode)
+              intent=self.inputs.intent, specmode=self.inputs.specmode,
+              observing_run=context.observing_run)
 
             # Update the result.
             result.set_mom0_fc(maxiter, mom0_name)
@@ -863,7 +866,8 @@ class Tclean(cleanbase.CleanBase):
             # Update the metadata in the MOM8_FC image.
             cleanbase.set_miscinfo(name=mom8_name, spw=self.inputs.spw, 
               field=self.inputs.field, iter=maxiter, type='mom8_fc',
-              intent=self.inputs.intent, specmode=self.inputs.specmode)
+              intent=self.inputs.intent, specmode=self.inputs.specmode,
+              observing_run=context.observing_run)
 
             # Update the result.
             result.set_mom8_fc(maxiter, mom8_name)
