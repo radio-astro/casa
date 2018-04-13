@@ -144,10 +144,10 @@ class Circfeedpolcal(polarization.Polarization):
         polleakagefields = m.get_fields(intent='POLLEAKAGE')
         try:
             polleakagefield = polleakagefields[0].name
-        except:
+        except Exception as ex:
             # If no POLLEAKAGE intent is associated with a field, then use the flux calibrator
             polleakagefield = fluxcalfieldname
-            LOG.warning("No POLLEAKGE intents found.")
+            LOG.warning("Exception: No POLLEAKGE intents found. {!s}".format(str(ex)))
         if len(polleakagefields) > 1:
             # Use the first pol leakage field
             polleakagefield = polleakagefields[0].name
@@ -180,10 +180,10 @@ class Circfeedpolcal(polarization.Polarization):
         polanglefields = m.get_fields(intent='POLANGLE')
         try:
             polanglefield = polanglefields[0].name
-        except:
+        except Exception as ex:
             # If no POLANGLE intent is associated with a field, then use the flux calibrator
             polanglefield = fluxcalfieldname
-            LOG.warning("No POLANGLE intents found.")
+            LOG.warning("Exception: No POLANGLE intents found. {!s}".format(str(ex)))
         if len(polanglefields) > 1:
             # Use the first pol angle field
             polanglefield = polanglefields[0].name
@@ -398,8 +398,8 @@ class Circfeedpolcal(polarization.Polarization):
             job = casa_tasks.setjy(**task_args)
 
             self._executor.execute(job)
-        except Exception, e:
-            print(e)
+        except Exception as ex:
+            LOG.warn("Exception: Problem with circfeedpolcal setjy. {!s}".format(str(ex)))
             return None
 
         return fluxcalfieldname, fluxcalfieldid, fluxcal
@@ -416,8 +416,8 @@ class Circfeedpolcal(polarization.Polarization):
                 band = spw.name.split('#')[0].split('_')[1]
                 baseband = spw.name.split('#')[1]
                 banddict[band][baseband].append({str(spw.id): (spw.min_frequency, spw.max_frequency)})
-            except:
-                LOG.warn("Baseband name cannot be parsed.")
+            except Exception as ex:
+                LOG.warn("Exception: Baseband name cannot be parsed. {!s}".format(str(ex)))
 
         for band in banddict.keys():
             basebands = banddict[band].keys()
