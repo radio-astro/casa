@@ -54,8 +54,8 @@ class Hanning(basetask.StandardTaskTemplate):
                 shutil.rmtree(self.inputs.vis)
                 LOG.info("Renaming temphanning.ms to " + self.inputs.vis)
                 os.rename('temphanning.ms', self.inputs.vis)
-            except:
-                LOG.warn('Problem encountered with hanning smoothing.')
+            except Exception as ex:
+                LOG.warn('Problem encountered with hanning smoothing. ' + str(ex))
 
         return HanningResults()
     
