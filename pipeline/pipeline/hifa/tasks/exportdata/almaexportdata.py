@@ -187,8 +187,7 @@ class ALMAExportData(exportdata.ExportData):
                     tar.add(flux_file, arcname=os.path.basename(flux_file))
                     LOG.info('Saving auxiliary data product %s in %s', os.path.basename(flux_file), tarfilename)
                 else:
-                    if fluxfile_name != 'Undefined':
-                        LOG.warn('Auxiliary data product %s does not exist', os.path.basename(flux_file))
+                    LOG.info('Auxiliary data product flux.csv does not exist')
                     flux_file = 'Undefined'
 
                 # Save antenna positions file
@@ -196,8 +195,7 @@ class ALMAExportData(exportdata.ExportData):
                     tar.add(antpos_file, arcname=os.path.basename(antpos_file))
                     LOG.info('Saving auxiliary data product %s in %s', os.path.basename(antpos_file), tarfilename)
                 else:
-                    if antposfile_name != 'Undefined':
-                        LOG.warn('Auxiliary data product %s does not exist', os.path.basename(antpos_file))
+                    LOG.info('Auxiliary data product antennapos.csv does not exist')
                     antpos_file = 'Undefined'
 
                 # Save continuum regions file
@@ -205,7 +203,7 @@ class ALMAExportData(exportdata.ExportData):
                     tar.add(cont_file, arcname=os.path.basename(cont_file))
                     LOG.info('Saving auxiliary data product %s in %s', os.path.basename(cont_file), tarfilename)
                 else:
-                    LOG.info('Auxiliary data product %s does not exist', os.path.basename(cont_file))
+                    LOG.info('Auxiliary data product cont.dat does not exist')
                     cont_file = 'Undefined'
 
                 # Save target flag files
@@ -214,7 +212,7 @@ class ALMAExportData(exportdata.ExportData):
                         tar.add(flags_file, arcname=os.path.basename(flags_file))
                         LOG.info('Saving auxiliary data product %s in %s', os.path.basename(flags_file), tarfilename)
                     else:
-                        LOG.info('Auxiliary data product %s does not exist', os.path.basename(flags_file))
+                        LOG.info('Auxiliary data product flagging target templates file does not exist')
 
                 tar.close()
         finally:
