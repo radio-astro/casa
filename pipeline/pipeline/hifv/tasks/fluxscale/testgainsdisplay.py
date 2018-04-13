@@ -1,6 +1,5 @@
 from __future__ import absolute_import
 import os
-import shutil
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.casatools as casatools
@@ -31,11 +30,11 @@ class testgainsSummaryChart(object):
         plotmax=100
 
         # Dummy plot
-        casa.plotcal(caltable='testgaincal.g',  xaxis='time', yaxis='amp', poln='', field='',
-                     antenna=antPlot, spw='', timerange='', subplot=311,  overplot=False,
-                     clearpanel='Auto',  iteration='antenna',  plotrange=[0, 0, 0, plotmax],
-                     showflags=False, plotsymbol='o', plotcolor='blue', markersize=5.0,
-                     fontsize=10.0, showgui=False, figfile=figfile)
+        casa.plotms(vis='testgaincal.g', xaxis='time', yaxis='amp', field='',
+                    antenna=antPlot, spw='', timerange='',
+                    plotrange=[0, 0, 0, plotmax], coloraxis='spw',
+                    title='testgains Temp table',
+                    titlefont=8, xaxisfont=7, yaxisfont=7, showgui=False, plotfile=figfile)
 
     def get_figfile(self, prefix):
         return os.path.join(self.context.report_dir,
@@ -123,12 +122,6 @@ class testgainsPerAntennaChart(object):
                         idents = [a.name if a.name else a.id for a in domain_antennas]
                         antName = ','.join(idents)
 
-                    #casa.plotcal(caltable=result.bpdgain_touse,  xaxis='time', yaxis=self.yaxis,
-                    #             poln='', field='', antenna=antPlot, spw='', timerange='',
-                    #             subplot=111,  overplot=False, clearpanel='Auto',  iteration='antenna',
-                    #             plotrange=plotrange,  showflags=False, plotsymbol=plotsymbol,
-                    #             plotcolor='blue', markersize=5.0,  fontsize=10.0, showgui=False, figfile=figfile)
-
                     casa.plotms(vis=result.bpdgain_touse, xaxis='time', yaxis=self.yaxis, field='',
                                 antenna=antPlot, spw='', timerange='',
                                 plotrange=plotrange, coloraxis='spw',
@@ -151,19 +144,5 @@ class testgainsPerAntennaChart(object):
             except:
                 LOG.warn("Unable to add plot to stack")
                 plots.append(None)
-
-        # Create a dummy plot to release the cal table
-        '''
-        scratchfile = 'scratch.g'
-        shutil.copytree(result.bpdgain_touse, scratchfile)
-        casa.plotcal(caltable=scratchfile,
-                     xaxis='time', yaxis=self.yaxis, poln='', field='',
-                     antenna=str(0), spw='', timerange='',
-                     subplot=111, overplot=False, clearpanel='Auto',
-                     iteration='antenna', plotrange=[0, 0, -180, 180],
-                     showflags=False, plotsymbol='o-', plotcolor='blue',
-                     markersize=5.0, fontsize=10.0, showgui=False, figfile="scratch.png")
-        shutil.rmtree(scratchfile)
-        '''
 
         return [p for p in plots if p is not None]

@@ -1,5 +1,6 @@
 from __future__ import absolute_import
 
+import os
 import numpy as np
 
 import pipeline.hif.heuristics.findrefant as findrefant
@@ -28,7 +29,8 @@ class semiFinalBPdcalsInputs(vdp.StandardInputs):
 
 
 class semiFinalBPdcalsResults(basetask.Results):
-    def __init__(self, final=None, pool=None, preceding=None, bpdgain_touse=None):
+    def __init__(self, final=None, pool=None, preceding=None, bpdgain_touse=None,
+                 gtypecaltable=None, ktypecaltable=None, bpcaltable=None):
 
         if final is None:
             final = []
@@ -45,6 +47,9 @@ class semiFinalBPdcalsResults(basetask.Results):
         self.preceding = preceding[:]
         self.error = set()
         self.bpdgain_touse = bpdgain_touse
+        self.gtypecaltable = gtypecaltable
+        self.ktypecaltable = ktypecaltable
+        self.bpcaltable = bpcaltable
 
 
 @task_registry.set_equivalent_casa_task('hifv_semiFinalBPdcals')
@@ -54,12 +59,18 @@ class semiFinalBPdcals(basetask.StandardTaskTemplate):
     def prepare(self):
 
         self.parang = True
+        try:
+            stage_number = self.inputs.context.results[-1].read()[0].stage_number + 1
+        except Exception as e:
+            stage_number = self.inputs.context.results[-1].read().stage_number + 1
+
+        tableprefix = os.path.basename(self.inputs.vis) + '.' + 'hifv_semiFinalBPdcals.s'
         
-        gtypecaltable = 'semiFinaldelayinitialgain.g'
-        ktypecaltable = 'delay.k'
-        bpcaltable = 'BPcal.b'
-        tablebase = 'BPinitialgain'
-        table_suffix = ['.g','3.g','10.g']
+        gtypecaltable = tableprefix + str(stage_number) + '_1.' + 'semiFinaldelayinitialgain.tbl'
+        ktypecaltable = tableprefix + str(stage_number) + '_2.' + 'delay.tbl'
+        bpcaltable    = tableprefix + str(stage_number) + '_3.' + 'BPcal.tbl'
+        tablebase     = tableprefix + str(stage_number) + '_4.' + 'BPinitialgain'
+        table_suffix = ['.tbl','3.tbl','10.tbl']
         soltimes = [1.0,3.0,10.0] 
         m = self.inputs.context.observing_run.get_ms(self.inputs.vis)
         #soltimes = [self.inputs.context.evla['msinfo'][m.name].int_time * x for x in soltimes]
@@ -76,10 +87,8 @@ class semiFinalBPdcals(basetask.StandardTaskTemplate):
         
         RefAntOutput=refantobj.calculate()
         
-        
-        gtype_delaycal_result = self._do_gtype_delaycal(caltable=gtypecaltable, context=context, RefAntOutput=RefAntOutput)
-        
-        
+        gtype_delaycal_result = self._do_gtype_delaycal(caltable=gtypecaltable,
+                                                        context=context, RefAntOutput=RefAntOutput)
 
         fracFlaggedSolns = 1.0
         
@@ -147,15 +156,16 @@ class semiFinalBPdcals(basetask.StandardTaskTemplate):
 
         #LOG.info("WEAKBP: "+str(self.inputs.weakbp))
 
-        if (self.inputs.weakbp == True):
+        if self.inputs.weakbp:
             #LOG.info("USING WEAKBP HEURISTICS")
             interp = weakbp(self.inputs.vis, bpcaltable, context=context, RefAntOutput=RefAntOutput[0],
-                                            ktypecaltable=ktypecaltable, bpdgain_touse=bpdgain_touse, solint='inf', append=False)
+                            ktypecaltable=ktypecaltable, bpdgain_touse=bpdgain_touse, solint='inf', append=False)
         else:
             #LOG.info("Using REGULAR heuristics")
             interp = ''
-            bandpass_job = do_bandpass(self.inputs.vis, bpcaltable, context=context, RefAntOutput=RefAntOutput[0], spw='',
-                                            ktypecaltable=ktypecaltable, bpdgain_touse=bpdgain_touse, solint='inf', append=False)
+            bandpass_job = do_bandpass(self.inputs.vis, bpcaltable, context=context, RefAntOutput=RefAntOutput[0],
+                                       spw='', ktypecaltable=ktypecaltable, bpdgain_touse=bpdgain_touse,
+                                       solint='inf', append=False)
             self._executor.execute(bandpass_job)
 
             AllCalTables = sorted(self.inputs.context.callibrary.active.get_caltable())
@@ -196,7 +206,8 @@ class semiFinalBPdcals(basetask.StandardTaskTemplate):
         applycal_result = self._do_applycal(context=context, ktypecaltable=ktypecaltable, bpdgain_touse=bpdgain_touse,
                                             bpcaltable=bpcaltable, interp=interp)
 
-        return semiFinalBPdcalsResults(bpdgain_touse=bpdgain_touse)
+        return semiFinalBPdcalsResults(bpdgain_touse=bpdgain_touse, gtypecaltable=gtypecaltable,
+                                       ktypecaltable=ktypecaltable, bpcaltable=bpcaltable)
 
     def analyse(self, results):
         return results

@@ -17,10 +17,10 @@ class semifinalBPdcalsSummaryChart(object):
         self.result = result
         self.ms = context.observing_run.get_ms(result.inputs['vis'])
         self.suffix = suffix
-        #self.caltable = result.final[0].gaintable
+        # self.caltable = result.final[0].gaintable
 
     def plot(self):
-        # #science_spws = self.ms.get_spectral_windows(science_windows_only=True)
+        # science_spws = self.ms.get_spectral_windows(science_windows_only=True)
         plots = [self.get_plot_wrapper()]
         return [p for p in plots if p is not None]
 
@@ -46,10 +46,6 @@ class semifinalBPdcalsSummaryChart(object):
 
     def get_plot_wrapper(self):
         figfile = self.get_figfile()
-        
-        context = self.context
-        m = context.observing_run.measurement_sets[0]
-
         wrapper = logger.Plot(figfile, x_axis='freq', y_axis='amp',
                               parameters={'vis'      : self.ms.basename,
                                           'type'     : 'semifinalcalibratedcals'+self.suffix,
@@ -113,17 +109,11 @@ class DelaysPerAntennaChart(object):
                         antName = ','.join(idents)
 
                     LOG.debug("Plotting semiFinal delays "+antName)
-                    #casa.plotcal(caltable='delay.k', xaxis='freq', yaxis='delay', poln='',  field='',
-                    #             antenna=antPlot, spw='', timerange='', subplot=111, overplot=False,
-                    #             clearpanel='Auto', iteration='antenna', plotrange=[], showflags=False,
-                    #             plotsymbol='o', plotcolor='blue', markersize=5.0, fontsize=10.0, showgui=False,
-                    #             figfile=figfile)
-                    # plots.append(figfile)
 
-                    casa.plotms(vis='delay.k', xaxis='freq', yaxis='amp', field='',
+                    casa.plotms(vis=self.result.ktypecaltable, xaxis='freq', yaxis='amp', field='',
                                 antenna=antPlot, spw='', timerange='',
                                 plotrange=[], coloraxis='spw',
-                                title='K table: delay.k   Antenna: {!s}'.format(antName),
+                                title='K table: delay.tbl   Antenna: {!s}'.format(antName),
                                 titlefont=8, xaxisfont=7, yaxisfont=7, showgui=False, plotfile=figfile)
 
                 except:
@@ -132,7 +122,6 @@ class DelaysPerAntennaChart(object):
                 LOG.debug('Using existing ' + filename + ' plot.')
             
             try:
-            
                 plot = logger.Plot(figfile, x_axis='Frequency', y_axis='Delay', field='',
                                    parameters={'spw': '',
                                                'pol': '',
@@ -154,8 +143,7 @@ class semifinalphaseGainPerAntennaChart(object):
         self.ms = context.observing_run.get_ms(result.inputs['vis'])
         self.suffix = suffix
         ms = self.ms
-        
-        
+
         self.json = {}
         self.json_filename = os.path.join(context.report_dir, 
                                           'stage%s' % result.stage_number, 
@@ -185,7 +173,6 @@ class semifinalphaseGainPerAntennaChart(object):
 
             if not os.path.exists(figfile):
                 try:
-
                     # Get antenna name
                     antName = antPlot
                     if antPlot != '':
@@ -194,12 +181,6 @@ class semifinalphaseGainPerAntennaChart(object):
                         antName = ','.join(idents)
 
                     LOG.debug("Plotting phase gain solutions "+antName)
-                    #casa.plotcal(caltable=result.bpdgain_touse, xaxis='time', yaxis='phase', poln='', field='',
-                    #             antenna=antPlot, spw='', timerange='', subplot=111, overplot=False,
-                    #             clearpanel='Auto', iteration='antenna', plotrange=[0,0,-180,180],
-                    #             showflags=False, plotsymbol='o-', plotcolor='blue', markersize=5.0,
-                    #             fontsize=10.0, showgui=False, figfile=figfile)
-                    # plots.append(figfile)
 
                     casa.plotms(vis=result.bpdgain_touse, xaxis='time', yaxis='phase', field='',
                                 antenna=antPlot, spw='', timerange='',
@@ -214,7 +195,6 @@ class semifinalphaseGainPerAntennaChart(object):
             
             try:
 
-            
                 plot = logger.Plot(figfile, x_axis='Time', y_axis='Phase', field='',
                                    parameters={'spw': '',
                                                'pol': '',
@@ -253,12 +233,11 @@ class semifinalbpSolAmpPerAntennaChart(object):
         
         LOG.info("Plotting amp bandpass solutions")
 
-        with casatools.TableReader('BPcal.b') as tb:
+        with casatools.TableReader(self.result.bpcaltable) as tb:
             dataVarCol = tb.getvarcol('CPARAM')
             flagVarCol = tb.getvarcol('FLAG')
     
         rowlist = dataVarCol.keys()
-        nrows = len(rowlist)
         maxmaxamp = 0.0
         maxmaxphase = 0.0
         for rrow in rowlist:
@@ -278,16 +257,12 @@ class semifinalbpSolAmpPerAntennaChart(object):
                 if (maxphase>maxmaxphase):
                     maxmaxphase=maxphase
         ampplotmax=maxmaxamp
-        phaseplotmax=maxmaxphase
 
-        # if ((numAntenna%3)>0):
-            # nplots = nplots + 1
         nplots=numAntenna
 
-
         for ii in range(nplots):
-            filename='BPcal_amp'+str(ii)+'_'+self.suffix+'.png'
-            antPlot=str(ii)
+            filename = 'BPcal_amp'+str(ii)+'_'+self.suffix+'.png'
+            antPlot = str(ii)
             
             stage = 'stage%s' % result.stage_number
             stage_dir = os.path.join(context.report_dir, stage)
@@ -297,7 +272,6 @@ class semifinalbpSolAmpPerAntennaChart(object):
 
             if not os.path.exists(figfile):
                 try:
-
                     # Get antenna name
                     antName = antPlot
                     if antPlot != '':
@@ -305,19 +279,11 @@ class semifinalbpSolAmpPerAntennaChart(object):
                         idents = [a.name if a.name else a.id for a in domain_antennas]
                         antName = ','.join(idents)
 
-                    #casa.plotcal(caltable='BPcal.b', xaxis='freq', yaxis='amp', poln='', field='',
-                    #             antenna=antPlot, spw='', timerange='',  subplot=111, overplot=False,
-                    #             clearpanel='Auto',  iteration='antenna', plotrange=[0,0,0,ampplotmax],
-                    #             showflags=False, plotsymbol='o', plotcolor='blue', markersize=5.0,
-                    #             fontsize=10.0,  showgui=False, figfile=figfile)
-                    # plots.append(figfile)
-
-                    casa.plotms(vis='BPcal.b', xaxis='freq', yaxis='amp', field='',
+                    casa.plotms(vis=self.result.bpcaltable, xaxis='freq', yaxis='amp', field='',
                                 antenna=antPlot, spw='', timerange='',
                                 coloraxis='spw', plotrange=[0, 0, 0, ampplotmax], symbolshape='circle',
                                 title='B table: {!s}   Antenna: {!s}'.format('BPcal.b', antName),
                                 titlefont=8, xaxisfont=7, yaxisfont=7, showgui=False, plotfile=figfile)
-
                 except:
                     LOG.warn("Unable to plot " + filename)
             else:
@@ -362,12 +328,11 @@ class semifinalbpSolPhasePerAntennaChart(object):
         
         LOG.info("Plotting phase bandpass solutions")
 
-        with casatools.TableReader('BPcal.b') as tb:
+        with casatools.TableReader(self.result.bpcaltable) as tb:
             dataVarCol = tb.getvarcol('CPARAM')
             flagVarCol = tb.getvarcol('FLAG')
     
         rowlist = dataVarCol.keys()
-        nrows = len(rowlist)
         maxmaxamp = 0.0
         maxmaxphase = 0.0
         for rrow in rowlist:
@@ -386,17 +351,13 @@ class semifinalbpSolPhasePerAntennaChart(object):
                 maxphase=np.max(np.abs(phases[good]))*180./math.pi
                 if (maxphase>maxmaxphase):
                     maxmaxphase=maxphase
-        ampplotmax=maxmaxamp
         phaseplotmax=maxmaxphase
-
-        # if ((numAntenna%3)>0):
-        #    nplots = nplots + 1
 
         nplots=numAntenna
 
         for ii in range(nplots):
-            filename='BPcal_phase'+str(ii)+'_'+self.suffix+'.png'
-            antPlot=str(ii)
+            filename = 'BPcal_phase'+str(ii)+'_'+self.suffix+'.png'
+            antPlot = str(ii)
             
             stage = 'stage%s' % result.stage_number
             stage_dir = os.path.join(context.report_dir, stage)
@@ -406,7 +367,6 @@ class semifinalbpSolPhasePerAntennaChart(object):
 
             if not os.path.exists(figfile):
                 try:
-
                     # Get antenna name
                     antName = antPlot
                     if antPlot != '':
@@ -414,21 +374,12 @@ class semifinalbpSolPhasePerAntennaChart(object):
                         idents = [a.name if a.name else a.id for a in domain_antennas]
                         antName = ','.join(idents)
 
-                    #casa.plotcal(caltable='BPcal.b', xaxis='freq', yaxis='phase', poln='', field='',
-                    #             antenna=antPlot, spw='', timerange='', subplot=111,  overplot=False,
-                    #             clearpanel='Auto', iteration='antenna',
-                    #             plotrange=[0,0,-phaseplotmax,phaseplotmax],
-                    #             showflags=False, plotsymbol='o',  plotcolor='blue',
-                    #             markersize=5.0, fontsize=10.0, showgui=False, figfile=figfile)
-                    # plots.append(figfile)
-
-                    casa.plotms(vis='BPcal.b', xaxis='freq', yaxis='phase', field='',
+                    casa.plotms(vis=self.result.bpcaltable, xaxis='freq', yaxis='phase', field='',
                                 antenna=antPlot, spw='', timerange='',
                                 coloraxis='spw', plotrange=[0, 0, -phaseplotmax, phaseplotmax],
                                 symbolshape='circle',
-                                title='B table: {!s}   Antenna: {!s}'.format('BPcal.b', antName),
+                                title='B table: {!s}   Antenna: {!s}'.format('BPcal.tbl', antName),
                                 titlefont=8, xaxisfont=7, yaxisfont=7, showgui=False, plotfile=figfile)
-
                 except:
                     LOG.warn("Unable to plot " + filename)
             else:

@@ -106,7 +106,8 @@ class T2_4MDetailsSolintRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
         for result in results:
             
             plotter = testgainsdisplay.testgainsSummaryChart(context, result)
-            plots = plotter.plot()
+            # plots = plotter.plot()
+            plots = []
             ms = os.path.basename(result.inputs['vis'])
             summary_plots[ms] = plots
             

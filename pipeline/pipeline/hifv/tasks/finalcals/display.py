@@ -1,7 +1,6 @@
 from __future__ import absolute_import
 
 import os
-import shutil
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.casatools as casatools
@@ -29,14 +28,10 @@ class finalcalsSummaryChart(object):
     def create_plot(self):
         figfile = self.get_figfile()
 
-        #casa.plotcal(caltable=self.basevis+'.finaldelay.k', xaxis='freq', yaxis='delay', poln='',  field='',
-        #             antenna='0~2', spw='', timerange='', subplot=311, overplot=False, clearpanel='Auto',
-        #             iteration='antenna', plotrange=[], showflags=False, plotsymbol='o', plotcolor='blue',
-        #             markersize=5.0, fontsize=10.0, showgui=False, figfile=figfile)
-        casa.plotms(vis=self.basevis + '.finaldelay.k', xaxis='freq', yaxis='amp', field='',
+        casa.plotms(vis=self.result.ktypecaltable, xaxis='freq', yaxis='amp', field='',
                     antenna='0~2', spw='', timerange='',
                     plotrange=[], coloraxis='spw',
-                    title='K table: finaldelay.k   Antenna: {!s}'.format('0~2'),
+                    title='K table: finaldelay.tbl   Antenna: {!s}'.format('0~2'),
                     titlefont=8, xaxisfont=7, yaxisfont=7, showgui=False, plotfile=figfile)
 
     def get_figfile(self):
@@ -107,26 +102,17 @@ class finalDelaysPerAntennaChart(object):
 
                     LOG.debug("Plotting final calibration tables "+antName)
 
-                    #casa.plotcal(caltable=self.basevis+'.finaldelay.k', xaxis='freq', yaxis='delay', poln='',
-                    #             field='', antenna=antPlot, spw='', timerange='', subplot=111, overplot=False,
-                    #             clearpanel='Auto', iteration='antenna', plotrange=[], showflags=False,
-                    #             plotsymbol='o', plotcolor='blue', markersize=5.0, fontsize=10.0, showgui=False,
-                    #             figfile=figfile)
-
-                    casa.plotms(vis=self.basevis+'.finaldelay.k', xaxis='freq', yaxis='amp', field='',
+                    casa.plotms(vis=self.result.ktypecaltable, xaxis='freq', yaxis='amp', field='',
                                 antenna=antPlot, spw='', timerange='',
                                 plotrange=[], coloraxis='spw',
-                                title='K table: finaldelay.k   Antenna: {!s}'.format(antName),
+                                title='K table: finaldelay.tbl   Antenna: {!s}'.format(antName),
                                 titlefont=8, xaxisfont=7, yaxisfont=7, showgui=False, plotfile=figfile)
-
                 except:
                     LOG.warn("Unable to plot " + filename)
             else:
                 LOG.debug('Using existing ' + filename + ' plot.')
             
             try:
-                # root, ext = os.path.splitext(figfile)
-                # real_figfile = '%s.%s.spw%0.2d.%s%s' % (root, antName, 00, 't00',ext)
                 real_figfile = figfile
 
                 plot = logger.Plot(real_figfile, x_axis='Frequency', y_axis='Delay',field='',
@@ -163,12 +149,6 @@ class finalphaseGainPerAntennaChart(object):
         numAntenna = len(m.antennas)
 
         plots = []
-        nplots=int(numAntenna/3)
-
-
-        if ((numAntenna%3)>0):
-            nplots = nplots + 1
-
         nplots=numAntenna
 
         LOG.info("Plotting final phase gain solutions")
@@ -176,9 +156,6 @@ class finalphaseGainPerAntennaChart(object):
         for ii in range(nplots):
 
             filename='finalBPinitialgainphase'+str(ii)+'.png'
-            ####syscommand='rm -rf '+filename
-            ####os.system(syscommand)
-            #antPlot=str(ii*3)+'~'+str(ii*3+2)
             antPlot=str(ii)
             
             stage = 'stage%s' % result.stage_number
@@ -197,20 +174,14 @@ class finalphaseGainPerAntennaChart(object):
                         antName = ','.join(idents)
 
                     LOG.debug("Plotting final phase gain solutions "+antName)
-                    #casa.plotcal(caltable=self.basevis+'.finalBPinitialgain.g', xaxis='time', yaxis='phase',
-                    #             poln='', field='',  antenna=antPlot, spw='', timerange='',
-                    #             subplot=111, overplot=False, clearpanel='Auto', iteration='antenna',
-                    #             plotrange=[0,0,-180,180], showflags=False, plotsymbol='o-',
-                    #             plotcolor='blue',  markersize=5.0, fontsize=10.0, showgui=False, figfile=figfile)
-                    casa.plotms(vis=self.basevis+'.finalBPinitialgain.g', xaxis='time', yaxis='phase', field='',
+                    casa.plotms(vis=result.bpdgain_touse, xaxis='time', yaxis='phase', field='',
                                 antenna=antPlot, spw='', timerange='',
                                 coloraxis='spw', plotrange=[0, 0, -180, 180], symbolshape='circle',
-                                title='G table: finalBPinitialgain.g   Antenna: {!s}'.format(antName),
+                                title='G table: finalBPinitialgain.tbl   Antenna: {!s}'.format(antName),
                                 titlefont=8, xaxisfont=7, yaxisfont=7, showgui=False, plotfile=figfile)
 
                 except:
                     LOG.warn("Unable to plot " + filename)
-                    #print " "
             else:
                 LOG.debug('Using existing ' + filename + ' plot.')
             
@@ -250,14 +221,11 @@ class finalbpSolAmpPerAntennaChart(object):
 
         plots = []
 
-        nplots=int(numAntenna/3)
-
-        with casatools.TableReader(self.basevis+'.finalBPcal.b') as tb:
+        with casatools.TableReader(self.result.bpcaltable) as tb:
             dataVarCol = tb.getvarcol('CPARAM')
             flagVarCol = tb.getvarcol('FLAG')
     
         rowlist = dataVarCol.keys()
-        nrows = len(rowlist)
         maxmaxamp = 0.0
         maxmaxphase = 0.0
         for rrow in rowlist:
@@ -277,21 +245,14 @@ class finalbpSolAmpPerAntennaChart(object):
                 if (maxphase > maxmaxphase):
                     maxmaxphase = maxphase
         ampplotmax = maxmaxamp
-        phaseplotmax = maxmaxphase
 
-        if ((numAntenna%3)>0):
-            nplots = nplots + 1
-
-        nplots=numAntenna
+        nplots = numAntenna
 
         LOG.info("Plotting amp bandpass solutions")
 
         for ii in range(nplots):
 
             filename='finalBPcal_amp'+str(ii)+'.png'
-            ####syscommand='rm -rf '+filename
-            ####os.system(syscommand)
-            #antPlot=str(ii*3)+'~'+str(ii*3+2)
             antPlot=str(ii)
             
             stage = 'stage%s' % result.stage_number
@@ -310,26 +271,17 @@ class finalbpSolAmpPerAntennaChart(object):
                         antName = ','.join(idents)
 
                     LOG.debug("Plotting amp bandpass solutions "+antName)
-                    
-                    #casa.plotcal(caltable=self.basevis+'.finalBPcal.b', xaxis='freq',  yaxis='amp', poln='',
-                    #             field='', antenna=antPlot, spw='', timerange='', subplot=111,
-                    #             overplot=False, clearpanel='Auto', iteration='antenna',
-                    #             plotrange=[0,0,0,ampplotmax],  showflags=False, plotsymbol='o',
-                    #             plotcolor='blue',  markersize=5.0, fontsize=10.0, showgui=False, figfile=figfile)
-                    casa.plotms(vis=self.basevis+'.finalBPcal.b', xaxis='freq', yaxis='amp', field='',
+                    casa.plotms(vis=self.result.bpcaltable, xaxis='freq', yaxis='amp', field='',
                                 antenna=antPlot, spw='', timerange='',
                                 coloraxis='spw', plotrange=[0, 0, 0, ampplotmax], symbolshape='circle',
-                                title='B table: {!s}   Antenna: {!s}'.format('finalBPcal.b', antName),
+                                title='B table: {!s}   Antenna: {!s}'.format('finalBPcal.tbl', antName),
                                 titlefont=8, xaxisfont=7, yaxisfont=7, showgui=False, plotfile=figfile)
-
                 except:
                     LOG.warn("Unable to plot " + filename)
             else:
                 LOG.debug('Using existing ' + filename + ' plot.')
             
             try:
-                root, ext = os.path.splitext(figfile)
-                # real_figfile = '%s.%s.spw%0.2d.%s%s' % (root, antName, 00, 't00',ext)
                 real_figfile = figfile
             
                 plot = logger.Plot(real_figfile, x_axis='Freq', y_axis='Amp',field='',
@@ -366,15 +318,12 @@ class finalbpSolPhasePerAntennaChart(object):
         numAntenna = len(m.antennas)
 
         plots = []
-        
-        nplots=int(numAntenna/3)
 
-        with casatools.TableReader(self.basevis+'.finalBPcal.b') as tb:
+        with casatools.TableReader(self.result.bpcaltable) as tb:
             dataVarCol = tb.getvarcol('CPARAM')
             flagVarCol = tb.getvarcol('FLAG')
     
         rowlist = dataVarCol.keys()
-        nrows = len(rowlist)
         maxmaxamp = 0.0
         maxmaxphase = 0.0
         for rrow in rowlist:
@@ -393,22 +342,15 @@ class finalbpSolPhasePerAntennaChart(object):
                 maxphase=np.max(np.abs(phases[good]))*180./math.pi
                 if (maxphase>maxmaxphase):
                     maxmaxphase=maxphase
-        ampplotmax=maxmaxamp
-        phaseplotmax=maxmaxphase
+        phaseplotmax = maxmaxphase
 
-        if ((numAntenna%3)>0):
-            nplots = nplots + 1
-
-        nplots=numAntenna
+        nplots = numAntenna
 
         LOG.info("Plotting phase bandpass solutions")
 
         for ii in range(nplots):
 
             filename='finalBPcal_phase'+str(ii)+'.png'
-            ####syscommand='rm -rf '+filename
-            ####os.system(syscommand)
-            #antPlot=str(ii*3)+'~'+str(ii*3+2)
             antPlot=str(ii)
             
             stage = 'stage%s' % result.stage_number
@@ -427,28 +369,18 @@ class finalbpSolPhasePerAntennaChart(object):
                         antName = ','.join(idents)
 
                     LOG.debug("Plotting phase bandpass solutions "+antName)
-
-                    #casa.plotcal(caltable=self.basevis+'.finalBPcal.b',  xaxis='freq', yaxis='phase', poln='',
-                    #             field='',  antenna=antPlot, spw='',  timerange='',
-                    #             subplot=111,  overplot=False, clearpanel='Auto', iteration='antenna',
-                    #             plotrange=[0,0,-phaseplotmax,phaseplotmax], showflags=False,
-                    #             plotsymbol='o', plotcolor='blue',  markersize=5.0, fontsize=10.0,
-                    #             showgui=False,  figfile=figfile)
-                    casa.plotms(vis=self.basevis+'.finalBPcal.b', xaxis='freq', yaxis='phase', field='',
+                    casa.plotms(vis=self.result.bpcaltable, xaxis='freq', yaxis='phase', field='',
                                 antenna=antPlot, spw='', timerange='',
                                 coloraxis='spw', plotrange=[0, 0, -phaseplotmax, phaseplotmax],
                                 symbolshape='circle',
-                                title='B table: {!s}   Antenna: {!s}'.format('finalBPcal.b', antName),
+                                title='B table: {!s}   Antenna: {!s}'.format('finalBPcal.tbl', antName),
                                 titlefont=8, xaxisfont=7, yaxisfont=7, showgui=False, plotfile=figfile)
-
                 except:
                     LOG.warn("Unable to plot " + filename)
             else:
                 LOG.debug('Using existing ' + filename + ' plot.')
             
             try:
-                root, ext = os.path.splitext(figfile)
-                # real_figfile = '%s.%s.spw%0.2d.%s%s' % (root, antName, 00, 't00',ext)
                 real_figfile = figfile
             
                 plot = logger.Plot(real_figfile, x_axis='Freq', y_axis='Phase', field='',
@@ -487,12 +419,12 @@ class finalbpSolPhaseShortPerAntennaChart(object):
         
         nplots=int(numAntenna/3)
 
-        with casatools.TableReader(self.basevis+'.finalBPcal.b') as tb:
+        with casatools.TableReader(self.result.bpcaltable) as tb:
             dataVarCol = tb.getvarcol('CPARAM')
             flagVarCol = tb.getvarcol('FLAG')
-    
+
+        """
         rowlist = dataVarCol.keys()
-        nrows = len(rowlist)
         maxmaxamp = 0.0
         maxmaxphase = 0.0
         for rrow in rowlist:
@@ -513,9 +445,7 @@ class finalbpSolPhaseShortPerAntennaChart(object):
                     maxmaxphase=maxphase
         ampplotmax=maxmaxamp
         phaseplotmax=maxmaxphase
-
-        if ((numAntenna%3)>0):
-            nplots = nplots + 1
+        """
 
         nplots=numAntenna
 
@@ -524,9 +454,6 @@ class finalbpSolPhaseShortPerAntennaChart(object):
         for ii in range(nplots):
 
             filename='phaseshortgaincal'+str(ii)+'.png'
-            ####syscommand='rm -rf '+filename
-            ####os.system(syscommand)
-            #antPlot=str(ii*3)+'~'+str(ii*3+2)
             antPlot=str(ii)
             
             stage = 'stage%s' % result.stage_number
@@ -537,7 +464,6 @@ class finalbpSolPhaseShortPerAntennaChart(object):
 
             if not os.path.exists(figfile):
                 try:
-
                     # Get antenna name
                     antName = antPlot
                     if antPlot != '':
@@ -546,25 +472,17 @@ class finalbpSolPhaseShortPerAntennaChart(object):
                         antName = ','.join(idents)
 
                     LOG.debug("Plotting phase short gaincal "+antName)
-                    #casa.plotcal(caltable=self.basevis+'.phaseshortgaincal.g', xaxis='time', yaxis='phase',
-                    #             poln='', field='', antenna=antPlot, spw='', timerange='',
-                    #             subplot=111, overplot=False, clearpanel='Auto', iteration='antenna',
-                    #             plotrange=[0,0,-180,180], showflags=False, plotsymbol='o-',
-                    #             plotcolor='blue', markersize=5.0, fontsize=10.0, showgui=False, figfile=figfile)
-                    casa.plotms(vis=self.basevis+'.phaseshortgaincal.g', xaxis='time', yaxis='phase', field='',
+                    casa.plotms(vis=self.result.phaseshortgaincaltable, xaxis='time', yaxis='phase', field='',
                                 antenna=antPlot, spw='', timerange='',
                                 coloraxis='spw', plotrange=[0, 0, -180, 180], symbolshape='circle',
-                                title='G table: phaseshortgaincal.g   Antenna: {!s}'.format(antName),
+                                title='G table: phaseshortgaincal.tbl   Antenna: {!s}'.format(antName),
                                 titlefont=8, xaxisfont=7, yaxisfont=7, showgui=False, plotfile=figfile)
-                    #plots.append(figfile)
-
                 except:
                     LOG.warn("Unable to plot " + filename)
             else:
                 LOG.debug('Using existing ' + filename + ' plot.')
             
             try:
-
                 plot = logger.Plot(figfile, x_axis='Time', y_axis='Phase', field='',
                                    parameters={'spw': '',
                                                'pol': '',
@@ -602,7 +520,7 @@ class finalAmpTimeCalPerAntennaChart(object):
         
         nplots=int(numAntenna/3)
 
-        with casatools.TableReader(self.basevis+'.finalampgaincal.g') as tb:
+        with casatools.TableReader(self.result.finalampgaincaltable) as tb:
             cpar=tb.getcol('CPARAM')
             flgs=tb.getcol('FLAG')
         amps=np.abs(cpar)
@@ -620,9 +538,6 @@ class finalAmpTimeCalPerAntennaChart(object):
         for ii in range(nplots):
 
             filename='finalamptimecal'+str(ii)+'.png'
-            ####syscommand='rm -rf '+filename
-            ####os.system(syscommand)
-            #antPlot=str(ii*3)+'~'+str(ii*3+2)
             antPlot=str(ii)
             
             stage = 'stage%s' % result.stage_number
@@ -633,7 +548,6 @@ class finalAmpTimeCalPerAntennaChart(object):
 
             if not os.path.exists(figfile):
                 try:
-
                     # Get antenna name
                     antName = antPlot
                     if antPlot != '':
@@ -642,15 +556,10 @@ class finalAmpTimeCalPerAntennaChart(object):
                         antName = ','.join(idents)
 
                     LOG.debug("Plotting final amp timecal "+antName)
-                    #casa.plotcal(caltable=self.basevis+'.finalampgaincal.g', xaxis='time', yaxis='amp', poln='',
-                    #             field='', antenna=antPlot, spw='',     timerange='', subplot=111, overplot=False,
-                    #             clearpanel='Auto', iteration='antenna', plotrange=[0,0,0,plotmax], showflags=False,
-                    #             plotsymbol='o-', plotcolor='blue', markersize=5.0, fontsize=10.0, showgui=False,
-                    #             figfile=figfile)
-                    casa.plotms(vis=self.basevis + '.finalampgaincal.g', xaxis='time', yaxis='amp', field='',
+                    casa.plotms(vis=self.result.finalampgaincaltable, xaxis='time', yaxis='amp', field='',
                                 antenna=antPlot, spw='', timerange='',
                                 coloraxis='spw', plotrange=[0,0,0,plotmax], symbolshape='circle',
-                                title='G table: finalampgaincal.g   Antenna: {!s}'.format(antName),
+                                title='G table: finalampgaincal.tbl   Antenna: {!s}'.format(antName),
                                 titlefont=8, xaxisfont=7, yaxisfont=7, showgui=False, plotfile=figfile)
                 except:
                     LOG.warn("Unable to plot " + filename)
@@ -670,7 +579,6 @@ class finalAmpTimeCalPerAntennaChart(object):
                 plots.append(None)
 
         return [p for p in plots if p is not None]
-
 
 
 class finalAmpFreqCalPerAntennaChart(object):
@@ -696,16 +604,13 @@ class finalAmpFreqCalPerAntennaChart(object):
         
         nplots=int(numAntenna/3)
         
-        with casatools.TableReader(self.basevis+'.finalampgaincal.g') as tb:
+        with casatools.TableReader(self.result.finalampgaincaltable) as tb:
             cpar = tb.getcol('CPARAM')
             flgs = tb.getcol('FLAG')
         amps = np.abs(cpar)
         good = np.logical_not(flgs)
         maxamp = np.max(amps[good])
         plotmax = max(2.0,maxamp)
-
-        if ((numAntenna%3)>0):
-            nplots = nplots + 1
 
         nplots=numAntenna
 
@@ -714,9 +619,6 @@ class finalAmpFreqCalPerAntennaChart(object):
         for ii in range(nplots):
 
             filename='finalampfreqcal'+str(ii)+'.png'
-            ####syscommand='rm -rf '+filename
-            ####os.system(syscommand)
-            #antPlot=str(ii*3)+'~'+str(ii*3+2)
             antPlot=str(ii)
             
             stage = 'stage%s' % result.stage_number
@@ -735,16 +637,10 @@ class finalAmpFreqCalPerAntennaChart(object):
                         antName = ','.join(idents)
 
                     LOG.debug("Plotting final amp freqcal "+antName)
-
-                    #casa.plotcal(caltable=self.basevis+'.finalampgaincal.g', xaxis='freq', yaxis='amp', poln='',
-                    #             field='', antenna=antPlot, spw='',     timerange='', subplot=111, overplot=False,
-                    #             clearpanel='Auto', iteration='antenna', plotrange=[0,0,0,plotmax], showflags=False,
-                    #             plotsymbol='o', plotcolor='blue', markersize=5.0, fontsize=10.0, showgui=False,
-                    #             figfile=figfile)
-                    casa.plotms(vis=self.basevis + '.finalampgaincal.g', xaxis='freq', yaxis='amp', field='',
+                    casa.plotms(vis=self.result.finalampgaincaltable, xaxis='freq', yaxis='amp', field='',
                                 antenna=antPlot, spw='', timerange='',
                                 coloraxis='spw', plotrange=[0, 0, 0, plotmax], symbolshape='circle',
-                                title='G table: finalampgaincal.g   Antenna: {!s}'.format(antName),
+                                title='G table: finalampgaincal.tbl   Antenna: {!s}'.format(antName),
                                 titlefont=8, xaxisfont=7, yaxisfont=7, showgui=False, plotfile=figfile)
                     
                 except:
@@ -753,8 +649,6 @@ class finalAmpFreqCalPerAntennaChart(object):
                 LOG.debug('Using existing ' + filename + ' plot.')
             
             try:
-                root, ext = os.path.splitext(figfile)
-                #real_figfile = '%s.%s.spw%0.2d.%s%s' % (root, antName, 00, 't00',ext)
                 real_figfile = figfile
             
                 plot = logger.Plot(real_figfile, x_axis='freq', y_axis='Amp', field='',
@@ -769,7 +663,6 @@ class finalAmpFreqCalPerAntennaChart(object):
                 plots.append(None)
 
         return [p for p in plots if p is not None]
-
 
 
 class finalPhaseGainCalPerAntennaChart(object):
@@ -792,21 +685,18 @@ class finalPhaseGainCalPerAntennaChart(object):
         numAntenna = len(m.antennas)
 
         plots = []
-        
-        nplots=int(numAntenna/3)
 
-        with casatools.TableReader(self.basevis+'.finalphasegaincal.g') as tb:
+        """
+        with casatools.TableReader(self.result.finalphasegaincaltable) as tb:
             cpar=tb.getcol('CPARAM')
             flgs=tb.getcol('FLAG')
         amps=np.abs(cpar)
         good=np.logical_not(flgs)
         maxamp=np.max(amps[good])
         plotmax=max(2.0,maxamp)
+        """
 
-        if ((numAntenna%3)>0):
-            nplots = nplots + 1
-
-        nplots=numAntenna
+        nplots = numAntenna
 
         LOG.info("Plotting final phase freqcal")
 
@@ -831,19 +721,11 @@ class finalPhaseGainCalPerAntennaChart(object):
                         antName = ','.join(idents)
 
                     LOG.debug("Plotting final phase freqcal "+antName)
-                    #casa.plotcal(caltable=self.basevis+'.finalphasegaincal.g',
-                    #             xaxis='time', yaxis='phase',  poln='', field='',
-                    #             antenna=antPlot, spw='',  timerange='',
-                    #             subplot=111,  overplot=False, clearpanel='Auto',
-                    #             iteration='antenna',  plotrange=[0,0,-180,180],
-                    #             showflags=False, plotsymbol='o-', plotcolor='blue',
-                    #             markersize=5.0, fontsize=10.0, showgui=False, figfile=figfile)
-                    casa.plotms(vis=self.basevis + '.finalphasegaincal.g', xaxis='time', yaxis='phase', field='',
+                    casa.plotms(vis=self.result.finalphasegaincaltable, xaxis='time', yaxis='phase', field='',
                                 antenna=antPlot, spw='', timerange='',
                                 coloraxis='spw', plotrange=[0,0,-180,180], symbolshape='circle',
-                                title='G table: finalphasegaincal.g   Antenna: {!s}'.format(antName),
+                                title='G table: finalphasegaincal.tbl   Antenna: {!s}'.format(antName),
                                 titlefont=8, xaxisfont=7, yaxisfont=7, showgui=False, plotfile=figfile)
-                    # plots.append(figfile)
 
                 except:
                     LOG.warn("Problem with plotting " + filename)
@@ -861,21 +743,6 @@ class finalPhaseGainCalPerAntennaChart(object):
             except:
                 LOG.warn("Unable to add plot to stack")
                 plots.append(None)
-
-        # Create a dummy plot to release the cal table
-
-        '''
-        scratchfile = 'scratch.g'
-        shutil.copytree(self.basevis + '.finalphasegaincal.g', scratchfile)
-        casa.plotcal(caltable=scratchfile,
-                     xaxis='time', yaxis='phase', poln='', field='',
-                     antenna=str(0), spw='', timerange='',
-                     subplot=111, overplot=False, clearpanel='Auto',
-                     iteration='antenna', plotrange=[0, 0, -180, 180],
-                     showflags=False, plotsymbol='o-', plotcolor='blue',
-                     markersize=5.0, fontsize=10.0, showgui=False, figfile="scratch.png")
-        shutil.rmtree(scratchfile)
-        '''
 
         return [p for p in plots if p is not None]
 
