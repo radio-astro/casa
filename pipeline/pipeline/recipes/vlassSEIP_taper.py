@@ -34,9 +34,9 @@ IMPORT_ONLY = ''
 
 
 # Run the procedure
-def vlassQLIP(vislist, editimlist_infile, importonly=False, pipelinemode='automatic', interactive=True):
+def vlassSEIP_taper(vislist, editimlist_infile, importonly=False, pipelinemode='automatic', interactive=True):
     echo_to_screen = interactive
-    casatools.post_to_log("Beginning VLA Sky Survey quick look imaging pipeline run ...")
+    casatools.post_to_log("Beginning VLA Sky Survey single epoch continuum taper imaging pipeline run ...")
 
     try:
         # Initialize the pipeline
@@ -48,7 +48,7 @@ def vlassQLIP(vislist, editimlist_infile, importonly=False, pipelinemode='automa
             raise Exception(IMPORT_ONLY)
 
         # add imaging target
-        hif_editimlist(parameter_file=editimlist_infile, imaging_mode='VLASS-QL')
+        hif_editimlist(parameter_file=editimlist_infile, imaging_mode='VLASS-SE-TAPER')
 
         # split out selected target data from full MS
         hif_transformimagedata(datacolumn="corrected", clear_pointing=True, modify_weights=False)
