@@ -339,7 +339,10 @@ def import_flux(output_dir, observing_run, filename=None):
                     (ms_name, field_id, spw_id, I, Q, U, V, extra) = row
                     spix = decimal.Decimal('0.0')
                 spw_id = int(spw_id)
-                ageNMP = extra[extra.index(ageString) + len(ageString):]
+                try:
+                    ageNMP = extra[extra.index(ageString) + len(ageString):]
+                except:
+                    ageNMP = ''
                 try:
                     ms = observing_run.get_ms(ms_name)
                 except KeyError:
