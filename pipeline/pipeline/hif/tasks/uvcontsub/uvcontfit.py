@@ -285,7 +285,10 @@ class UVcontFit(basetask.StandardTaskTemplate):
             LOG.info('Representative field for MS %s source %s is field %s with id %d' % (inputs.ms.basename, sname, rep_field_name, rep_field_id))
             cranges_spwsel[sname] = collections.OrderedDict()
             for spw_id in [str(spw.id) for spw in inputs.ms.get_spectral_windows(task_arg=inputs.spw)]:
-                cranges_spwsel[sname][spw_id] = contfile_handler.get_merged_selection(sname, spw_id)
+                # convert real to virtual spw id
+                virtual_spw_id = str(inputs.context.observing_run.real2virtual_spw_id (int(spw_id), inputs.ms))
+                #cranges_spwsel[sname][spw_id] = contfile_handler.get_merged_selection(sname, spw_id)
+                cranges_spwsel[sname][spw_id] = contfile_handler.get_merged_selection(sname, virtual_spw_id)
                 if not cranges_spwsel[sname][spw_id]:
                     LOG.info('No continuum region detection attempted for MS %s source %s spw %d' % (inputs.ms.basename, sname, int(spw_id)))
                     continue
@@ -295,8 +298,10 @@ class UVcontFit(basetask.StandardTaskTemplate):
                 else:
                     LOG.info('Input continuum frequency ranges for MS %s and spw %d are %s' % (inputs.ms.basename, int(spw_id), cranges_spwsel[sname][spw_id]))
                 try:
+                    #freq_ranges, chan_ranges, aggregate_lsrk_bw = contfile_handler.lsrk_to_topo(cranges_spwsel[sname][spw_id],
+                        #[inputs.vis], [rep_field_id], int(spw_id), self.inputs.context.observing_run)
                     freq_ranges, chan_ranges, aggregate_lsrk_bw = contfile_handler.lsrk_to_topo(cranges_spwsel[sname][spw_id],
-                        [inputs.vis], [rep_field_id], int(spw_id), self.inputs.context.observing_run)
+                        [inputs.vis], [rep_field_id], int(virtual_spw_id), self.inputs.context.observing_run)
                     LOG.info('Output continuum frequency range for MS %s and spw %d are %s' % (inputs.ms.basename, int(spw_id),
                         freq_ranges[0]))
                     LOG.info('Output continuum channel ranges for MS %s and spw %d are %s' % (inputs.ms.basename, int(spw_id),
