@@ -309,8 +309,9 @@ class Priorcals(basetask.StandardTaskTemplate):
                 N=3
                 subList = [antparamlist[2][n:n+N] for n in range(0, len(antparamlist[2]), N)]
                 antcorrect = dict(zip(antList, subList))
-        except:
+        except Exception as ex:
             LOG.info("No offsets found. No caltable created.")
+            LOG.debug(ex)
 
         m = self.inputs.context.observing_run.get_ms(self.inputs.vis)
 

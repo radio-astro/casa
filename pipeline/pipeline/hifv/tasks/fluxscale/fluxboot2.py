@@ -193,7 +193,9 @@ class Fluxboot2(basetask.StandardTaskTemplate):
 
             LOG.info("The pipeline will use antenna(s) " + refAnt + " as the reference")
 
-            gaincal_result = self._do_gaincal(context, calMs, 'fluxphaseshortgaincal.g', 'p', [''],
+            fluxphase = 'fluxphaseshortgaincal.g'
+
+            gaincal_result = self._do_gaincal(context, calMs, fluxphase, 'p', [''],
                                               solint=new_gain_solint1, minsnr=3.0, refAnt=refAnt)
 
             # ----------------------------------------------------------------------------
@@ -208,7 +210,7 @@ class Fluxboot2(basetask.StandardTaskTemplate):
             for i, field in enumerate(field_objects):
                 append=False
                 if i > 0: append=True
-                gaincal_result = self._do_gaincal(context, calMs, fluxflagtable, 'ap', ['fluxphaseshortgaincal.g'],
+                gaincal_result = self._do_gaincal(context, calMs, fluxflagtable, 'ap', [fluxphase],
                                                   solint=gain_solint2, minsnr=5.0, refAnt=refAnt, field=field.name,
                                                   solnorm=True, append=append)
 
@@ -228,8 +230,7 @@ class Fluxboot2(basetask.StandardTaskTemplate):
 
             # -------------------------------------------------------------------------------
 
-
-            gaincal_result = self._do_gaincal(context, calMs, caltable, 'ap', ['fluxphaseshortgaincal.g'],
+            gaincal_result = self._do_gaincal(context, calMs, caltable, 'ap', [fluxphase],
                                               solint=gain_solint2, minsnr=5.0, refAnt=refAnt)
 
             LOG.info("Gain table " + caltable + " is ready for flagging.")
@@ -256,9 +257,9 @@ class Fluxboot2(basetask.StandardTaskTemplate):
             fluxscale_result = {}
 
         return Fluxboot2Results(sources=self.inputs.sources, flux_densities=self.inputs.flux_densities,
-                               spws=self.inputs.spws, weblog_results=weblog_results,
-                               spindex_results=spindex_results, vis=self.inputs.vis, caltable=caltable,
-                               fluxscale_result=fluxscale_result)
+                                spws=self.inputs.spws, weblog_results=weblog_results,
+                                spindex_results=spindex_results, vis=self.inputs.vis, caltable=caltable,
+                                fluxscale_result=fluxscale_result)
 
     def analyse(self, results):
         return results
@@ -312,7 +313,8 @@ class Fluxboot2(basetask.StandardTaskTemplate):
         ##    LOG.fatal(fluxscale_output + " doesn't exist, error: " + err.filename)
 
         # looking for lines like:
-        # 2012-03-09 21:30:23     INFO    fluxscale::::    Flux density for J1717-3342 in SpW=3 is: 1.94158 +/- 0.0123058 (SNR = 157.777, N= 34)
+        # 2012-03-09 21:30:23     INFO    fluxscale::::
+        #                        Flux density for J1717-3342 in SpW=3 is: 1.94158 +/- 0.0123058 (SNR = 157.777, N= 34)
         # sometimes they look like:
         # 2012-03-09 21:30:23     INFO    fluxscale::::    Flux density for J1717-3342 in SpW=0 is:  INSUFFICIENT DATA
         # so watch for that.
@@ -320,13 +322,13 @@ class Fluxboot2(basetask.StandardTaskTemplate):
         sources = []
         flux_densities = []
         spws = []
-        ##for line in ff:
-        ##    if 'Flux density for' in line:
-        ##        fields = line[:-1].split()
-        ##        if (fields[11] != 'INSUFFICIENT'):
-        ##            sources.append(fields[7])
-        ##            flux_densities.append([float(fields[11]), float(fields[13])])
-        ##            spws.append(int(fields[9].split('=')[1]))
+        # for line in ff:
+        #     if 'Flux density for' in line:
+        #         fields = line[:-1].split()
+        #         if (fields[11] != 'INSUFFICIENT'):
+        #             sources.append(fields[7])
+        #             flux_densities.append([float(fields[11]), float(fields[13])])
+        #             spws.append(int(fields[9].split('=')[1]))
 
         # Find the field_ids in the dictionary returned from the CASA task fluxscale
         dictkeys = fluxscale_result.keys()
@@ -343,7 +345,6 @@ class Fluxboot2(basetask.StandardTaskTemplate):
                 flux_d = list(fluxscale_result[field_id][spw_id]['fluxd'])
                 flux_d_err = list(fluxscale_result[field_id][spw_id]['fluxdErr'])
                 # spwslist  = list(int(spw_id))
-
 
                 # flux_d = list(fluxscale_result[field_id]['fluxd'])
                 # flux_d_err = list(fluxscale_result[field_id]['fluxdErr'])
@@ -591,7 +592,6 @@ class Fluxboot2(basetask.StandardTaskTemplate):
                          'standard': 'manual',
                          'usescratch': True}
 
-
             # job = casa_tasks.setjy(**task_args)
             jobs_calMs.append(casa_tasks.setjy(**task_args))
 
@@ -603,7 +603,7 @@ class Fluxboot2(basetask.StandardTaskTemplate):
             # job = casa_tasks.setjy(**task_args)
             # self._executor.execute(job)
 
-            if (abs(self.spix) > 5.0):
+            if abs(self.spix) > 5.0:
                 LOG.warn("abs(spix) > 5.0 - Fail")
 
             # merge identical jobs into one job with a multi-spw argument
@@ -639,7 +639,7 @@ class Fluxboot2(basetask.StandardTaskTemplate):
 
             return job
         except Exception, e:
-            print(e)
+            LOG.info(e)
             return None
 
     def _do_gaincal(self, context, calMs, caltable, calmode, gaintablelist,

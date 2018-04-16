@@ -92,7 +92,7 @@ class Solint(basetask.StandardTaskTemplate):
         m = self.inputs.context.observing_run.get_ms(self.inputs.vis)
         # soltimes = [self.inputs.context.evla['msinfo'][m.name].int_time * x for x in soltimes]
         soltimes = [m.get_vla_max_integration_time() * x for x in soltimes]
-        print(soltimes)
+        # print(soltimes)
         
         solints = ['int', str(soltimes[1])+'s', str(soltimes[2])+'s']
         soltime = soltimes[0]
@@ -114,8 +114,10 @@ class Solint(basetask.StandardTaskTemplate):
                                                     context=context, combtime=combtime, refAnt=refAnt)
 
         flaggedSolnResult1 = getCalFlaggedSoln(bpdgain_touse)
-        LOG.info("For solint = "+solint+" fraction of flagged solutions = "+str(flaggedSolnResult1['all']['fraction']))
-        LOG.info("Median fraction of flagged solutions per antenna = "+str(flaggedSolnResult1['antmedian']['fraction']))
+        LOG.info("For solint = "+solint+" fraction of flagged solutions = " +
+                 str(flaggedSolnResult1['all']['fraction']))
+        LOG.info("Median fraction of flagged solutions per antenna = " +
+                 str(flaggedSolnResult1['antmedian']['fraction']))
 
         if (flaggedSolnResult1['all']['total'] > 0):
             fracFlaggedSolns1=flaggedSolnResult1['antmedian']['fraction']
@@ -132,8 +134,10 @@ class Solint(basetask.StandardTaskTemplate):
                                                         context=context, combtime=combtime, refAnt=refAnt)
             flaggedSolnResult3 = getCalFlaggedSoln(tablebase + table_suffix[0])
             
-            LOG.info("For solint = "+solint+" fraction of flagged solutions = "+str(flaggedSolnResult3['all']['fraction']))
-            LOG.info("Median fraction of flagged solutions per antenna = "+str(flaggedSolnResult3['antmedian']['fraction']))
+            LOG.info("For solint = "+solint+" fraction of flagged solutions = " +
+                     str(flaggedSolnResult3['all']['fraction']))
+            LOG.info("Median fraction of flagged solutions per antenna = " +
+                     str(flaggedSolnResult3['antmedian']['fraction']))
 
             if (flaggedSolnResult3['all']['total'] > 0):
                 fracFlaggedSolns3=flaggedSolnResult3['antmedian']['fraction']
@@ -151,8 +155,10 @@ class Solint(basetask.StandardTaskTemplate):
                     testgains_result = self._do_gtype_testgains(calMs, tablebase + table_suffix[2], solint=solint,
                                                                 context=context, combtime=combtime, refAnt=refAnt)
                     flaggedSolnResult10 = getCalFlaggedSoln(tablebase + table_suffix[2])
-                    LOG.info("For solint = "+solint+" fraction of flagged solutions = "+str(flaggedSolnResult3['all']['fraction']))
-                    LOG.info("Median fraction of flagged solutions per antenna = "+str(flaggedSolnResult3['antmedian']['fraction']))
+                    LOG.info("For solint = "+solint+" fraction of flagged solutions = " +
+                             str(flaggedSolnResult3['all']['fraction']))
+                    LOG.info("Median fraction of flagged solutions per antenna = " +
+                             str(flaggedSolnResult3['antmedian']['fraction']))
 
                     if (flaggedSolnResult10['all']['total'] > 0):
                         fracFlaggedSolns10 = flaggedSolnResult10['antmedian']['fraction']
@@ -170,8 +176,10 @@ class Solint(basetask.StandardTaskTemplate):
                                                                         solint=solint, context=context,
                                                                         combtime=combtime, refAnt=refAnt)
                             flaggedSolnResultScan = getCalFlaggedSoln(tablebase + table_suffix[3])
-                            LOG.info("For solint = "+solint+" fraction of flagged solutions = "+str(flaggedSolnResult3['all']['fraction']))
-                            LOG.info("Median fraction of flagged solutions per antenna = "+str(flaggedSolnResult3['antmedian']['fraction']))
+                            LOG.info("For solint = "+solint+" fraction of flagged solutions = " +
+                                     str(flaggedSolnResult3['all']['fraction']))
+                            LOG.info("Median fraction of flagged solutions per antenna = " +
+                                     str(flaggedSolnResult3['antmedian']['fraction']))
                             
                             if (flaggedSolnResultScan['all']['total'] > 0):
                                 fracFlaggedSolnsScan=flaggedSolnResultScan['antmedian']['fraction']
@@ -183,7 +191,8 @@ class Solint(basetask.StandardTaskTemplate):
                                 bpdgain_touse = tablebase + table_suffix[3]
                                 
                                 if (fracFlaggedSolnsScan > 0.05):
-                                    LOG.warn("Warning, large fraction of flagged solutions, there might be something wrong with your data")
+                                    LOG.warn("Warning, large fraction of flagged solutions.  " +
+                                             "There might be something wrong with your data")
 
         LOG.info("ShortSol1: " + str(shortsol1))
         LOG.info("ShortSol2: " + str(shortsol2))
@@ -294,12 +303,12 @@ class Solint(basetask.StandardTaskTemplate):
             scan_summary = ms.getscansummary()    
             
             m = self.inputs.context.observing_run.get_ms(self.inputs.vis)
-            #phase_scan_list = self.inputs.context.evla['msinfo'][m.name].phase_scan_list
+            # phase_scan_list = self.inputs.context.evla['msinfo'][m.name].phase_scan_list
 
             phase_scan_list = self.inputs.context.evla['msinfo'][m.name].phase_scan_select_string.split(',')
             phase_scan_list = [int(i) for i in phase_scan_list]
 
-            print(phase_scan_list)
+            # print(phase_scan_list)
             
             for kk in range(len(phase_scan_list)):
                 ii = phase_scan_list[kk]
@@ -313,8 +322,8 @@ class Solint(basetask.StandardTaskTemplate):
                     end_time = max(endtimes)
                     begin_time = min(begintimes)
 
-                    #end_time = scan_summary[str(ii)]['0']['EndTime']
-                    #begin_time = scan_summary[str(ii)]['0']['BeginTime']
+                    # end_time = scan_summary[str(ii)]['0']['EndTime']
+                    # begin_time = scan_summary[str(ii)]['0']['BeginTime']
                     new_spws = scan_summary[str(ii)]['0']['SpwIds']
                     new_field = scan_summary[str(ii)]['0']['FieldId']
                     
@@ -322,14 +331,14 @@ class Solint(basetask.StandardTaskTemplate):
                     
                     if ((kk > 0) and (phase_scan_list[kk-1] == ii-1) and (set(new_spws) == set(old_spws)) and (new_field == old_field)):
                         # if contiguous scans, just increase the time on the previous one
-                        print("End time, old begin time {} {}".format(end_time, old_begin_time))
+                        LOG.info("End time, old begin time {} {}".format(end_time, old_begin_time))
                         durations[-1] = 86400*(end_time - old_begin_time)
                         # print "first durations: ", durations
                     else:
-                        print("End time, begin time {} {}".format(end_time, begin_time))
+                        LOG.info("End time, begin time {} {}".format(end_time, begin_time))
                         durations.append(86400*(end_time - begin_time))
                         old_begin_time = begin_time
-                        print("append durations, old, begin:".format(durations, old_begin_time, begin_time))
+                        LOG.info("append durations, old, begin:".format(durations, old_begin_time, begin_time))
                     LOG.info("Scan "+str(ii)+" has "+str(durations[-1])+"s on source")
                     old_spws = new_spws
                     old_field = new_field
@@ -338,7 +347,7 @@ class Solint(basetask.StandardTaskTemplate):
                     LOG.warn("WARNING: scan "+str(ii)+" is completely flagged and missing from " + calMs)
 
         longsolint = (np.max(durations))*1.01
-        gain_solint2=str(longsolint)+'s'
+        gain_solint2 = str(longsolint)+'s'
                    
         return (longsolint, gain_solint2)
 
