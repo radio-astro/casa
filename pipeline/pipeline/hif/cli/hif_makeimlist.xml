@@ -117,6 +117,11 @@ Create a a list of images to be cleaned.
     <value type="string"></value>
   </param>
 
+  <param type="bool" name="clearlist" subparam="true">
+    <description>Clear any previous target list</description>
+    <value>False</value>
+  </param>
+
   <param type="string" name="pipelinemode">
     <description>The pipeline operating mode</description>
     <value>automatic</value>
@@ -159,6 +164,7 @@ Create a a list of images to be cleaned.
         <default param="hm_cell"><value type="stringArray"></value></default>
         <default param="width"><value type="string"></value></default>
         <default param="nbins"><value type="string"></value></default>
+        <default param="clearlist"><value type="bool">False</value></default>
         <default param="dryrun"><value type="bool">False</value></default>
         <default param="acceptresults"><value type="bool">True</value></default>
       </equals>
@@ -314,6 +320,10 @@ nchan -- Total number of channels in the output image(s)
 start -- First channel for frequency mode images.
     default '' Starts at first input channel of the spw.
     example: '22.3GHz'
+
+clearlist -- Clear previous iamge target list.
+    default False
+    example: True
 
 --- pipeline task execution modes
 dryrun -- Run the commands (True) or generate the commands to be run but

@@ -12,6 +12,7 @@ class MakeImListResult(basetask.Results):
         self.targets = []
         self.clean_list_info = {}
         self._max_num_targets = 0
+        self.clearlist = False
 
     def add_target(self, target):
         self.targets.append(target)
@@ -20,8 +21,16 @@ class MakeImListResult(basetask.Results):
         self.clean_list_info = info
 
     def merge_with_context(self, context):
-        context.clean_list_pending = copy.deepcopy(self.targets)
-        context.clean_list_info = self.clean_list_info
+        if self.clearlist:
+            context.clean_list_pending = copy.deepcopy(self.targets)
+            context.clean_list_info = self.clean_list_info
+        else:
+            context.clean_list_pending.extend(copy.deepcopy(self.targets))
+            for key, value in self.clean_list_info.iteritems():
+                if context.clean_list_info.get(key, None) is not None:
+                    context.clean_list_info[key] = '%s %s' % (context.clean_list_info[key], value)
+                else:
+                    context.clean_list_info[key] = value
         context.contfile = self.contfile
         context.linesfile = self.linesfile
 

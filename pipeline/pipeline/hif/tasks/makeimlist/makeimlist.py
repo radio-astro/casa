@@ -30,6 +30,7 @@ class MakeImListInputs(vdp.StandardInputs):
     start = vdp.VisDependentProperty(default='')
     uvrange = vdp.VisDependentProperty(default='')
     width = vdp.VisDependentProperty(default='')
+    clearlist = vdp.VisDependentProperty(default=False)
 
     # properties requiring some processing or MS-dependent logic -------------------------------------------------------
 
@@ -118,7 +119,8 @@ class MakeImListInputs(vdp.StandardInputs):
 
     def __init__(self, context, output_dir=None, vis=None, imagename=None, intent=None, field=None, spw=None,
                  contfile=None, linesfile=None, uvrange=None, specmode=None, outframe=None, hm_imsize=None,
-                 hm_cell=None, calmaxpix=None, phasecenter=None, nchan=None, start=None, width=None, nbins=None):
+                 hm_cell=None, calmaxpix=None, phasecenter=None, nchan=None, start=None, width=None, nbins=None,
+                 clearlist=None):
         self.context = context
         self.output_dir = output_dir
         self.vis = vis
@@ -140,6 +142,7 @@ class MakeImListInputs(vdp.StandardInputs):
         self.start = start
         self.width = width
         self.nbins = nbins
+        self.clearlist = clearlist
 
 
 # tell the infrastructure to give us mstransformed data when possible by
@@ -161,6 +164,7 @@ class MakeImList(basetask.StandardTaskTemplate):
         qaTool = casatools.quanta
 
         result = MakeImListResult()
+        result.clearlist = inputs.clearlist
 
         # make sure inputs.vis is a list, even it is one that contains a
         # single measurement set
