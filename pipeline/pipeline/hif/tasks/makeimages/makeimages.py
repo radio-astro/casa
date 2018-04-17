@@ -250,6 +250,9 @@ class CleanTaskFactory(object):
         else:
             task_args['maxncleans'] = 1
 
+        if target['vis']:
+            task_args['vis'] = target['vis']
+
         return task_args
 
 

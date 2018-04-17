@@ -33,5 +33,8 @@ class CleanTarget(dict):
          self['reffreq'] = None         # string
          self['heuristics'] = None      # object
          self['nsigma'] = None          # float
+         # vis list only for special setups like CHECK source
+         # imaging per EB for ALMA
+         self['vis'] = None             # list of strings
 
          dict.__init__(self, *args, **kwargs)
