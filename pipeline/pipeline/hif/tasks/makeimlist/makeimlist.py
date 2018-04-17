@@ -444,9 +444,8 @@ class MakeImList(basetask.StandardTaskTemplate):
 
         # describe the function of this task by interpreting the inputs
         # parameters to give an execution context
-        long_description = _DESCRIPTIONS.get((inputs.intent, inputs.specmode),
-                                             'Compile a list of cleaned images to be calculated')
-        result.metadata['long description'] = long_description
+        long_descriptions = [_DESCRIPTIONS.get((intent.strip(), inputs.specmode), inputs.specmode) for intent in inputs.intent.split(',')]
+        result.metadata['long description'] = 'Set-up parameters for %s imaging' % ' & '.join(set(long_descriptions))
 
         # Check for size mitigation errors.
         if inputs.context.size_mitigation_parameters.has_key('status'):
@@ -544,9 +543,11 @@ class MakeImList(basetask.StandardTaskTemplate):
 
 # maps intent and specmode Inputs parameters to textual description of execution context.
 _DESCRIPTIONS = {
-    ('PHASE,BANDPASS,CHECK', 'mfs'): 'Set-up image parameters for calibrator imaging',
-    ('TARGET', 'mfs'): 'Set-up image parameters for target per-spw continuum imaging',
-    ('TARGET', 'cont'): 'Set-up image parameters for target aggregate continuum imaging',
-    ('TARGET', 'cube'): 'Set-up image parameters for target cube imaging',
-    ('TARGET', 'repBW'): 'Set-up image parameters for representative bandwidth target cube imaging',
+    ('PHASE', 'mfs'): 'calibrator',
+    ('BANDPASS', 'mfs'): 'calibrator',
+    ('CHECK', 'mfs'): 'calibrator',
+    ('TARGET', 'mfs'): 'target per-spw continuum',
+    ('TARGET', 'cont'): 'target aggregate continuum',
+    ('TARGET', 'cube'): 'target cube',
+    ('TARGET', 'repBW'): 'representative bandwidth target cube',
 }
