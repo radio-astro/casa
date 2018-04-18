@@ -65,7 +65,7 @@ class CircfeedpolcalResults(polarization.PolarizationResults):
 class CircfeedpolcalInputs(vdp.StandardInputs):
     Dterm_solint = vdp.VisDependentProperty(default='2MHz')
     refantignore = vdp.VisDependentProperty(default='')
-    leakge_poltype = vdp.VisDependentProperty(default='')
+    leakage_poltype = vdp.VisDependentProperty(default='')
     mbdkcross = vdp.VisDependentProperty(default=True)
 
     def __init__(self, context, vis=None, Dterm_solint=None, refantignore=None, leakage_poltype=None,
