@@ -180,10 +180,14 @@ class T2_4MDetailsSingleDishSkyCalRenderer(basetemplates.T2_4MDetailsDefaultRend
         direction = pointing_direction['antenna1']['pointingdirection']
         me.doframe(antenna_position)
         me.doframe(epoch)
-        j2000 = me.measure(direction, rf='J2000')
-        LOG.debug('converted direction=%s'%(j2000))
-        coord = '{ref} {ra} {dec}'.format(ref='J2000',
-                                          ra=qa.formxxx(j2000['m0'], format='hms'),
-                                          dec=qa.formxxx(j2000['m1'], format='dms'))
+        # 2018/04/18 TN
+        # CAS-10874 single dish pipeline should use ICRS instead of J2000
+        #outref = 'J2000'
+        outref = 'ICRS'
+        converted= me.measure(direction, rf=outref)
+        LOG.debug('converted direction=%s'%(converted))
+        coord = '{ref} {ra} {dec}'.format(ref=outref,
+                                          ra=qa.formxxx(converted['m0'], format='hms'),
+                                          dec=qa.formxxx(converted['m1'], format='dms'))
         
         return coord
