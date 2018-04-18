@@ -9,12 +9,13 @@ _pprinter = pprint.PrettyPrinter()
 
 
 class Source(object):
-    def __init__(self, source_id, name, direction, proper_motion):
+    def __init__(self, source_id, name, direction, proper_motion, is_eph_obj):
         self.id = source_id
         self.name = name
         self.fields = []
         self._direction = direction
         self._proper_motion = proper_motion
+        self.is_eph_obj = is_eph_obj
 
     def __repr__(self):
         # use pretty printer so we have consistent ordering of dicts

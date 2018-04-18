@@ -5,6 +5,7 @@ import operator
 import os
 import re
 import string
+import glob
 from bisect import bisect_left
 
 import cachetools
@@ -714,9 +715,9 @@ class SourceTable(object):
                 for row in no_dups]
 
     @staticmethod
-    def _create_source(source_id, name, direction, proper_motion):
-        return domain.Source(source_id, name, direction, proper_motion)
-        
+    def _create_source(source_id, name, direction, proper_motion, is_eph_obj):
+        return domain.Source(source_id, name, direction, proper_motion, is_eph_obj)
+
     @staticmethod
     def _read_table(msmd):
         """
@@ -729,8 +730,10 @@ class SourceTable(object):
                                            key=lambda (k, _): int(k))]
         propermotions = [v for _, v in sorted(msmd.propermotions().items(),
                                               key=lambda (k, _): int(k))]
+        eph_sourcenames = SourceTable._get_eph_sourcenames(msmd.name())
+        is_eph_objs = [sourcename in eph_sourcenames for sourcename in sourcenames]
 
-        all_sources = zip(ids, sourcenames, directions, propermotions)
+        all_sources = zip(ids, sourcenames, directions, propermotions, is_eph_objs)
 
         # Only return sources for which scans are present.
         # Create a mapping of source id to a boolean of whether any
@@ -749,6 +752,17 @@ class SourceTable(object):
 
         return [row for row in all_sources if source_id_to_scans.get(row[0], False)]
 
+    @staticmethod
+    def _get_eph_sourcenames(msname):
+        ephemeris_tables = glob.glob(msname+'/FIELD/EPHEM*.tab')
+
+        eph_sourcenames = []
+        for ephemeris_table in ephemeris_tables:
+            with casatools.TableReader(ephemeris_table) as tb:
+                keywords = tb.getkeywords()
+                eph_sourcenames.append(keywords['NAME'])
+
+        return eph_sourcenames
 
 class StateTable(object):
     @staticmethod
