@@ -202,20 +202,24 @@ class MetaDataReader(object):
                 lon = pointing_direction['m0']
                 lat = pointing_direction['m1']
                 ref = pointing_direction['refer']
+                # 2018/04/18 TN
+                # CAS-10874 single dish pipeline should use ICRS instead of J2000
+                #outref = 'J2000'
+                outref = 'ICRS'
                 if ref in ['AZEL', 'AZELGEO']:
                     if irow == 0:
-                        LOG.info('Require direction conversion from %s to J2000'%(ref))
+                        LOG.info('Require direction conversion from {0} to {1}'.format(ref, outref))
                         
                     Taz[irow] = get_value_in_deg(lon)
                     Tel[irow] = get_value_in_deg(lat)
                     
                     # conversion to J2000
-                    ra, dec = direction_convert(pointing_direction, mepoch, mposition, outframe='J2000')                    
+                    ra, dec = direction_convert(pointing_direction, mepoch, mposition, outframe=outref)                    
                     Tra[irow] = get_value_in_deg(ra)
                     Tdec[irow] = get_value_in_deg(dec)
-                elif ref in ['J2000']:
+                elif ref in [outref]:
                     if irow == 0:
-                        LOG.info('Require direction conversion from %s to AZELGEO'%(ref))
+                        LOG.info('Require direction conversion from {0} to AZELGEO'.format(ref))
                         
                     Tra[irow] = get_value_in_deg(lon)
                     Tdec[irow] = get_value_in_deg(lat)
@@ -226,10 +230,10 @@ class MetaDataReader(object):
                     Tel[irow] = get_value_in_deg(el)
                 else:
                     if irow == 0:
-                        LOG.info('Require direction conversion from %s to J2000 as well as to AZELGEO'%(ref))
+                        LOG.info('Require direction conversion from {0} to {1} as well as to AZELGEO'%(ref, outref))
                         
                     # conversion to J2000
-                    ra, dec = direction_convert(pointing_direction, mepoch, mposition, outframe='J2000')
+                    ra, dec = direction_convert(pointing_direction, mepoch, mposition, outframe=outref)
                     Tra[irow] = get_value_in_deg(ra)
                     Tdec[irow] = get_value_in_deg(dec)
 
