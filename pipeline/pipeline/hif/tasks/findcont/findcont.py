@@ -191,16 +191,25 @@ class FindCont(basetask.StandardTaskTemplate):
 
                     real_spwsel = context.observing_run.get_real_spwsel([str(spwid)]*len(vislist), vislist)
 
-                    # Need to make an LSRK cube to get the real ranges in the source
-                    # frame. The LSRK ranges will need to be translated to the
-                    # individual TOPO ranges for the involved MSs.
+                    # Need to make an LSRK cube to get the real ranges in the source frame.
+                    # The LSRK ranges will need to be translated to the individual TOPO
+                    # ranges for the involved MSs.
+
+                    # Set special phasecenter for ephemeris objects.
+                    # Needs to be done here since the explicit coordinates are
+                    # used in heuristics methods upstream.
+                    if image_heuristics.is_eph_obj(target['field']):
+                        phasecenter = 'TRACKFIELD'
+                    else:
+                        phasecenter = target['phasecenter']
+
                     job = casa_tasks.tclean(vis=vislist, imagename=findcont_basename, datacolumn=datacolumn, spw=real_spwsel,
                                             intent=utils.to_CASA_intent(inputs.ms[0], target['intent']),
                                             field=target['field'], start=start, width=width, nchan=nchan,
                                             outframe='LSRK', scan=scanidlist, specmode='cube', gridder=gridder,
                                             pblimit=0.2, niter=0, threshold='0mJy', deconvolver='hogbom',
                                             interactive=False, imsize=target['imsize'], cell=target['cell'],
-                                            phasecenter=target['phasecenter'], stokes='I', weighting='briggs',
+                                            phasecenter=phasecenter, stokes='I', weighting='briggs',
                                             robust=0.5, npixels=0, restoration=False, restoringbeam=[], pbcor=False,
                                             savemodel='none', chanchunks=chanchunks, parallel=parallel)
                     self._executor.execute(job)

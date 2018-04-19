@@ -271,13 +271,11 @@ class CleanBase(basetask.StandardTaskTemplate):
             'threshold':     inputs.threshold,
             'deconvolver':   inputs.deconvolver,
             'interactive':   0,
-            'outframe':      inputs.outframe,
             'nchan':         inputs.nchan,
             'start':         inputs.start,
             'width':         inputs.width,
             'imsize':        inputs.imsize,
             'cell':          inputs.cell,
-            'phasecenter':   inputs.phasecenter,
             'stokes':        inputs.stokes,
             'weighting':     inputs.weighting,
             'robust':        inputs.robust,
@@ -288,6 +286,18 @@ class CleanBase(basetask.StandardTaskTemplate):
             'chanchunks':    chanchunks,
             'parallel':      parallel
             }
+
+        # Set special phasecenter and outframe for ephemeris objects.
+        # Needs to be done here since the explicit coordinates are
+        # used in heuristics methods upstream.
+        if inputs.heuristics.is_eph_obj(inputs.field):
+            tclean_job_parameters['phasecenter'] = 'TRACKFIELD'
+            # 2018-04-19: 'REST' does not yet work (see CAS-8965, CAS-9997)
+            #tclean_job_parameters['outframe'] = 'REST'
+            tclean_job_parameters['outframe'] = ''
+        else:
+            tclean_job_parameters['phasecenter'] = inputs.phasecenter
+            tclean_job_parameters['outframe'] = inputs.outframe
 
         if scanidlist not in [[], None]:
             tclean_job_parameters['scan'] = scanidlist

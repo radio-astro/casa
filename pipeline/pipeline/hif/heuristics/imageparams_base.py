@@ -644,6 +644,16 @@ class ImageParamsHeuristics(object):
 
         return result
 
+    def is_eph_obj(self, field):
+
+        ms = self.observing_run.get_ms(self.vislist[0])
+        source_name = ms.get_fields(field)[0].source.name
+        is_eph_obj = False
+        for source in ms.sources:
+            if (source.name == source_name) and (source.is_eph_obj):
+                is_eph_obj = True
+        return is_eph_obj
+
     def representative_target(self):
 
         cqa = casatools.quanta
