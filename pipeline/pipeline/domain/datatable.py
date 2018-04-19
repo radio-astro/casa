@@ -170,6 +170,8 @@ class DataTableImpl( object ):
     def get_rwtable_name(cls, datatable_name):
         return os.path.join(datatable_name, 'RW')
     
+    REFKEY = 'DIRECTION_REF'
+    
     def __init__(self, name=None, readonly=None):
         """
         name (optional) -- name of DataTable
@@ -232,6 +234,23 @@ class DataTableImpl( object ):
     @property
     def time_group_id_large(self):
         return self.__get_time_group_id(False)
+    
+    @property
+    def direction_ref(self):
+        if self.REFKEY in self.tb1.keywordnames():
+            return self.tb1.getkeyword(self.REFKEY)
+        else:
+            return None
+        
+    @direction_ref.setter
+    def direction_ref(self, value):
+        # value must be string
+        if not isinstance(value, str):
+            return
+       
+        # set value only if it is not yet registered to table
+        if self.REFKEY not in self.tb1.keywordnames():
+            self.tb1.putkeyword(self.REFKEY, value)
                     
     def __get_time_group_id(self, small=True):
         if small:
