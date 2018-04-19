@@ -143,9 +143,20 @@ def RADEClabel(span):
 
 class PointingAxesManager(object):
     MATPLOTLIB_FIGURE_ID = 9005
+    
+    @property
+    def direction_reference(self):
+        return self._direction_reference
+    
+    @direction_reference.setter
+    def direction_reference(self, value):
+        if isinstance(value, str):
+            self._direction_reference = value
+    
     def __init__(self):
         self._axes = None
         self.is_initialized = False
+        self._direction_reference = None
 
     def init_axes(self, xlocator, ylocator, xformatter, yformatter, xrotation, yrotation, aspect, xlim=None, ylim=None, reset=False):
         if self._axes is None:
@@ -177,8 +188,12 @@ class PointingAxesManager(object):
 
     def __axes(self):
         a = pl.axes([0.15, 0.2, 0.7, 0.7])
-        pl.xlabel('RA')
-        pl.ylabel('Dec')
+        if self.direction_reference is None:
+            pl.xlabel('RA')
+            pl.ylabel('Dec')
+        else:
+            pl.xlabel('RA ({0})'.format(self.direction_reference))
+            pl.ylabel('Dec ({0})'.format(self.direction_reference))
         pl.title('')
         return a
 
@@ -349,6 +364,8 @@ class SingleDishPointingChart(object):
             # use flag for pol 0
             FLAG[i] = pflags[0][OnlineFlagIndex]
                 
+        self.axes_manager.direction_reference = datatable.direction_ref
+        
         pl.clf()
         draw_pointing(self.axes_manager, RA, DEC, FLAG, self.figfile, circle=[0.5*beam_size_in_deg], ObsPattern=obs_pattern, plotpolicy='greyed')
         pl.close()
