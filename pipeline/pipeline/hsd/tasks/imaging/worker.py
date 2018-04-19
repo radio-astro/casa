@@ -85,6 +85,10 @@ def ALMAImageCoordinateUtil(context, ms_names, ant_list, spw_list, fieldid_list)
     if (datatable.getcolkeyword('RA', 'UNIT') != 'deg') or \
         (datatable.getcolkeyword('DEC', 'UNIT') != 'deg'):
         raise RuntimeError, "Found unexpected unit of RA/DEC in DataTable. It should be in 'deg'"
+    outref = datatable.direction_ref
+    if outref is None:
+        LOG.warn('No direction reference is set. Assuming ICRS')
+        outref = 'ICRS'
     del datatable
 
     ra_min = min(ra)
@@ -102,8 +106,9 @@ def ALMAImageCoordinateUtil(context, ms_names, ant_list, spw_list, fieldid_list)
         dec_center = qa.quantity(0.5 * (dec_min + dec_max), 'deg')
     ra_center_in_deg = qa.getvalue(ra_center)
     dec_center_in_deg = qa.getvalue(dec_center)
-    phasecenter = 'J2000 %s %s' % (qa.formxxx(ra_center, 'hms'),
-                                   qa.formxxx(dec_center, 'dms'))
+    phasecenter = '{0} {1} {2}'.format(outref,
+                                       qa.formxxx(ra_center, 'hms'),
+                                       qa.formxxx(dec_center, 'dms'))
     LOG.info('phasecenter=\'%s\'' % (phasecenter,))
 
     dec_correction = 1.0 / math.cos(dec_center_in_deg / 180.0 * 3.1415926535897931)
