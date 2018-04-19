@@ -98,6 +98,15 @@ class MetaDataReader(object):
         ms_id = len(filenames) - 1
         self.datatable.putkeyword('FILENAMES',filenames)
 
+        # 2018/04/18 TN
+        # CAS-10874 single dish pipeline should use ICRS instead of J2000
+        # For consistency throuout the single dish pipeline, direction 
+        # reference frame is stored in the DataTable 
+        outref = self._get_outref()
+        # register direction reference to datatable
+        self.datatable.direction_ref = outref
+        azelref = self._get_azelref()
+        #LOG.info('outref="{0}" azelref="{1}"'.format(outref, azelref))
 
         ms = self.ms
         assert ms is not None
@@ -204,9 +213,7 @@ class MetaDataReader(object):
                 ref = pointing_direction['refer']
                 # 2018/04/18 TN
                 # CAS-10874 single dish pipeline should use ICRS instead of J2000
-                #outref = 'J2000'
-                outref = 'ICRS'
-                if ref in ['AZEL', 'AZELGEO']:
+                if ref in [azelref]:
                     if irow == 0:
                         LOG.info('Require direction conversion from {0} to {1}'.format(ref, outref))
                         
@@ -219,18 +226,18 @@ class MetaDataReader(object):
                     Tdec[irow] = get_value_in_deg(dec)
                 elif ref in [outref]:
                     if irow == 0:
-                        LOG.info('Require direction conversion from {0} to AZELGEO'.format(ref))
+                        LOG.info('Require direction conversion from {0} to {1}'.format(ref, azelref))
                         
                     Tra[irow] = get_value_in_deg(lon)
                     Tdec[irow] = get_value_in_deg(lat)
                     
                     # conversion to AZELGEO
-                    az, el = direction_convert(pointing_direction, mepoch, mposition, outframe='AZELGEO')                  
+                    az, el = direction_convert(pointing_direction, mepoch, mposition, outframe=azelref)                  
                     Taz[irow] = get_value_in_deg(az)
                     Tel[irow] = get_value_in_deg(el)
                 else:
                     if irow == 0:
-                        LOG.info('Require direction conversion from {0} to {1} as well as to AZELGEO'%(ref, outref))
+                        LOG.info('Require direction conversion from {0} to {1} as well as to {2}'%(ref, outref, azelref))
                         
                     # conversion to J2000
                     ra, dec = direction_convert(pointing_direction, mepoch, mposition, outframe=outref)
@@ -238,7 +245,7 @@ class MetaDataReader(object):
                     Tdec[irow] = get_value_in_deg(dec)
 
                     # conversion to AZELGEO
-                    az, el = direction_convert(pointing_direction, mepoch, mposition, outframe='AZELGEO')
+                    az, el = direction_convert(pointing_direction, mepoch, mposition, outframe=azelref)
                     Taz[irow] = get_value_in_deg(az)
                     Tel[irow] = get_value_in_deg(el)
                 last_mjd = mjd_in_sec
@@ -293,6 +300,41 @@ class MetaDataReader(object):
         self.vAnt += num_antenna
         
         self.appended_row = nrow
+        
+    def _get_outref(self):
+        outref = None
+        
+        if self.ms.representative_target[0] is not None:
+            # if ms has representative target, take reference from that
+            LOG.info('Use direction reference for representative target "{0}".'.format(self.ms.representative_target[0]))
+            representative_source_name = self.ms.representative_target[0]
+            dirrefs = numpy.unique([f.mdirection['refer'] for f in self.ms.fields if f.source.name == representative_source_name])
+            if len(dirrefs) == 0:
+                raise RuntimeError('Failed to get direction reference for representative source.')
+        else:
+            # if representative target is not given, take reference from one of the targets
+            dirrefs = numpy.unique([f.mdirection['refer'] for f in self.ms.fields if 'TARGET' in f.intents])
+            if len(dirrefs) == 0:
+                # no target field exists, something wrong
+                raise RuntimeError('No TARGET field exists.')
+        if len(dirrefs) == 1:
+            outref = dirrefs[0]
+        else:
+            # direction reference is not unique, search desired ref 
+            if 'ICRS' in dirrefs:
+                outref = 'ICRS'
+            elif 'J2000' in dirrefs:
+                outref = 'J2000'
+            else:
+                # use first one
+                outref = dirrefs[0]
+        if outref is None:
+            raise RuntimeError('Failed to get direction reference for TARGET.')
+        
+        return outref
+        
+    def _get_azelref(self):
+        return 'AZELGEO'
     
 def direction_convert(direction, mepoch, mposition, outframe):
     direction_type = direction['type']
