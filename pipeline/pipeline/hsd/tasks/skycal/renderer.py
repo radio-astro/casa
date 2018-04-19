@@ -5,6 +5,7 @@ import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.renderer.basetemplates as basetemplates
 import pipeline.infrastructure.utils as utils
+from pipeline.domain.datatable import DataTableImpl as DataTable
 
 from . import display as skycal_display
 
@@ -77,7 +78,7 @@ class T2_4MDetailsSingleDishSkyCalRenderer(basetemplates.T2_4MDetailsDefaultRend
                 LOG.debug('calmode=\'%s\''%(calmode))
                 field_domain = ms.get_fields(gainfield)[0]
                 if calmode == 'ps':
-                    reference_coord = self._get_reference_coord(ms, field_domain)
+                    reference_coord = self._get_reference_coord(context, ms, field_domain)
                     reference_coords[vis][field_domain.name] = reference_coord
             
             summary_amp_vs_freq[vis].extend(summaries_freq)
@@ -152,7 +153,7 @@ class T2_4MDetailsSingleDishSkyCalRenderer(basetemplates.T2_4MDetailsDefaultRend
         return applications
         
 
-    def _get_reference_coord(self, ms, field):
+    def _get_reference_coord(self, context, ms, field):
         LOG.debug('_get_reference_coord({ms}, {field})'.format(ms=ms.basename, field=field.name))
         spws = ms.get_spectral_windows(science_windows_only=True)
         dd = ms.get_data_description(spw=spws[0].id)
@@ -181,9 +182,13 @@ class T2_4MDetailsSingleDishSkyCalRenderer(basetemplates.T2_4MDetailsDefaultRend
         me.doframe(antenna_position)
         me.doframe(epoch)
         # 2018/04/18 TN
-        # CAS-10874 single dish pipeline should use ICRS instead of J2000
-        #outref = 'J2000'
-        outref = 'ICRS'
+        # CAS-10874 single dish pipeline should use a direction reference
+        # taken from input MS
+        datatable_name = context.observing_run.ms_datatable_name
+        datatable = DataTable()
+        datatable.importdata(datatable_name, minimal=False, readonly=True)
+        outref = datatable.direction_ref
+        
         converted= me.measure(direction, rf=outref)
         LOG.debug('converted direction=%s'%(converted))
         coord = '{ref} {ra} {dec}'.format(ref=outref,
