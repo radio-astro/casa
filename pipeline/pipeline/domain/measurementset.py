@@ -234,7 +234,7 @@ class MeasurementSet(object):
             cme.doframe(target_scans[0].start_time)
             target_frequency_topo = cme.measure(target_frequency, 'TOPO')
         else:
-            LOG.error('Unable to convert representaitve frequency to TOPO for data set %s' % \
+            LOG.error('Unable to convert representative frequency to TOPO for data set %s' % \
                 (self.basename))
             target_frequency_topo = None
         cme.done()
