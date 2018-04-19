@@ -1,21 +1,44 @@
 <%!
-rsc_path = "../"
+rsc_path = ""
 import os
 import pipeline.infrastructure.renderer.htmlrenderer as hr
+
+def num_targets (result):
+    ntargets = 0
+    for r in result:
+        ntargets = ntargets + len(r.targets)
+    return ntargets
+
+def no_clean_targets(result):
+    no_clean_targets = True
+    for r in result:
+        if r.clean_list_info == {}:
+            continue
+        no_clean_targets = False
+        break
+    return no_clean_targets
+
+def get_message(result):
+    message = ""
+    for r in result:
+        message = r.clean_list_info.get('msg', '')
+        break
+    return message
 %>
+
 <%inherit file="t2-4m_details-base.mako"/>
 
 <%block name="header" />
 
-<%block name="title">Make image list<br><small>${result.metadata['long description']}</small></%block>
+<%block name="title">Make image list<br><small>${result[0].metadata['long description']}</small></%block>
 
 <h2>List of Clean Targets</h2>
 
-%if not len(result[0].targets):
-    %if result[0].clean_list_info == {}:
+%if num_targets(result) <= 0:
+    %if no_clean_targets(result):
         <p>There are no clean targets.
     %else:
-        <p>${result[0].clean_list_info.get('msg', '')}
+        <p>${get_message(result)}
     %endif
 %else:
     <%
@@ -78,7 +101,8 @@ import pipeline.infrastructure.renderer.htmlrenderer as hr
 	        </tr>
 		</thead>
 		<tbody>
-	    %for target in result[0].targets:
+        %for r in result:
+	    %for target in r.targets:
 	        <tr>
 	            <td>${target['field']}</td>
 	            <td>${target['intent']}</td>
@@ -128,6 +152,7 @@ import pipeline.infrastructure.renderer.htmlrenderer as hr
 	        %endif
 			</tr>
 	    %endfor
+        %endfor
 		</tbody>
 	</table>
 %endif
