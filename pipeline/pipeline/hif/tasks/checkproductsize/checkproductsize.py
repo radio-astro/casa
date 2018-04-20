@@ -53,6 +53,61 @@ class CheckProductSize(basetask.StandardTaskTemplate):
     is_multi_vis_task = True
 
     def prepare(self):
+        # Check parameter settings
+        if (self.inputs.maxcubesize != -1) and \
+           (self.inputs.maxcubelimit != -1) and \
+           (self.inputs.maxcubesize > self.inputs.maxcubelimit):
+            result = CheckProductSizeResult(self.inputs.maxcubesize, \
+                                            self.inputs.maxcubelimit, \
+                                            self.inputs.maxproductsize, \
+                                            -1, \
+                                            -1, \
+                                            -1, \
+                                            -1, \
+                                            -1, \
+                                            {}, \
+                                            'ERROR', \
+                                            {'longmsg': 'Parameter error: maxcubelimit must be >= maxcubesize', 'shortmsg': 'Parameter error'})
+            # Log summary information
+            LOG.info(str(result))
+            return result
+
+        if (self.inputs.maxcubesize != -1) and \
+           (self.inputs.maxproductsize != -1) and \
+           (self.inputs.maxcubesize >= self.inputs.maxproductsize):
+            result = CheckProductSizeResult(self.inputs.maxcubesize, \
+                                            self.inputs.maxcubelimit, \
+                                            self.inputs.maxproductsize, \
+                                            -1, \
+                                            -1, \
+                                            -1, \
+                                            -1, \
+                                            -1, \
+                                            {}, \
+                                            'ERROR', \
+                                            {'longmsg': 'Parameter error: maxproductsize must be > maxcubesize', 'shortmsg': 'Parameter error'})
+            # Log summary information
+            LOG.info(str(result))
+            return result
+
+        if (self.inputs.maxcubelimit != -1) and \
+           (self.inputs.maxproductsize != -1) and \
+           (self.inputs.maxcubelimit >= self.inputs.maxproductsize):
+            result = CheckProductSizeResult(self.inputs.maxcubesize, \
+                                            self.inputs.maxcubelimit, \
+                                            self.inputs.maxproductsize, \
+                                            -1, \
+                                            -1, \
+                                            -1, \
+                                            -1, \
+                                            -1, \
+                                            {}, \
+                                            'ERROR', \
+                                            {'longmsg': 'Parameter error: maxproductsize must be > maxcubelimit', 'shortmsg': 'Parameter error'})
+            # Log summary information
+            LOG.info(str(result))
+            return result
+
         checkproductsize_heuristics = checkproductsize.CheckProductSizeHeuristics(self.inputs)
 
         # Clear any previous size mitigation parameters
