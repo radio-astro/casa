@@ -14,7 +14,8 @@ import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.renderer.logger as logger
 import pipeline.infrastructure.displays.pointing as pointing
 #from ..common.display import RADEClabel, RArotation, DECrotation, DDMMSSs, HHMMSSss
-from ..common.display import DPISummary, DPIDetail, SingleDishDisplayInputs, ShowPlot, LightSpeed
+from pipeline.domain.datatable import DataTableImpl as DataTable
+from ..common.display import DPISummary, DPIDetail, SingleDishDisplayInputs, ShowPlot, LightSpeed, MapAxesManagerBase
 LOG = infrastructure.get_logger(__name__)
 
 RADEClabel = pointing.RADEClabel
@@ -23,10 +24,11 @@ DECrotation = pointing.DECrotation
 DDMMSSs = pointing.DDMMSSs
 HHMMSSss = pointing.HHMMSSss
 
-class ClusterValidationAxesManager(object):
+class ClusterValidationAxesManager(MapAxesManagerBase):
     def __init__(self, ncluster, nh, nv, aspect_ratio,
                  xformatter, yformatter, xlocator, ylocator,
                  xrotation, yrotation, ticksize):
+        super(ClusterValidationAxesManager, self).__init__()
         self.ncluster = ncluster
         self.nh = nh
         self.nv = nv
@@ -80,8 +82,8 @@ class ClusterValidationAxesManager(object):
             # 2008/9/20 DEC Effect
             axes.set_aspect(self.aspect_ratio)
             #axes.set_aspect('equal')
-            pl.xlabel('RA', size=self.ticksize)
-            pl.ylabel('Dec', size=self.ticksize)
+            pl.xlabel(self.get_horizontal_axis_label(), size=self.ticksize)
+            pl.ylabel(self.get_vertical_axis_label(), size=self.ticksize)
             axes.xaxis.set_major_formatter(self.xformatter)
             axes.yaxis.set_major_formatter(self.yformatter)
             axes.xaxis.set_major_locator(self.xlocator)
@@ -315,7 +317,14 @@ class ClusterValidationDisplay(ClusterDisplayWorker):
 
         span = max(xmax - xmin, ymax - ymin)
         (RAlocator, DEClocator, RAformatter, DECformatter) = RADEClabel(span)
-
+    
+        # direction reference
+        datatable_name = self.context.observing_run.ms_datatable_name
+        datatable = DataTable()
+        datatable.importdata(datatable_name, minimal=False, readonly=True)
+        direction_reference = datatable.direction_ref
+        del datatable
+        
         axes_manager = ClusterValidationAxesManager(num_cluster,
                                                     num_panel_h,
                                                     num_panel_v,
@@ -327,6 +336,7 @@ class ClusterValidationDisplay(ClusterDisplayWorker):
                                                     RArotation,
                                                     DECrotation,
                                                     tick_size)
+        axes_manager.direction_reference = direction_reference
         axes_list = axes_manager.axes_list
         axes_legend = axes_manager.axes_legend
         

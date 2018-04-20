@@ -21,7 +21,7 @@ class PlotterPool(object):
         self.pool = {}
         self.figure_id = display.SparseMapAxesManager.MATPLOTLIB_FIGURE_ID()
     
-    def create_plotter(self, num_ra, num_dec, num_plane, refpix, refval, increment):
+    def create_plotter(self, num_ra, num_dec, num_plane, refpix, refval, increment, direction_reference=None):
 #         key = (num_ra, num_dec)
 #         if self.pool.has_key(key):
 #             LOG.info('Reuse existing plotter: (nra, ndec) = {}', key)
@@ -39,6 +39,7 @@ class PlotterPool(object):
         plotter = display.SDSparseMapPlotter(nh=num_ra, nv=num_dec, 
                                                step=1, brightnessunit='Jy/beam',
                                                figure_id=self.figure_id)
+        plotter.direction_reference = direction_reference
         plotter.setup_labels(refpix, refval, increment)
         return plotter
     
@@ -241,8 +242,9 @@ class BaselineSubtractionPlotManager(object):
                                                                                             polids,
                                                                                             grid_table)
             
-        plotter = self.pool.create_plotter(num_ra, num_dec, num_plane, refpix, refval, increment)
-        LOG.info('vis {} ant {} spw {} plotter figure id {} has {} axes', ms.basename, antid, spwid, plotter.axes.figure_id, len(plotter.axes.figure.axes))
+        plotter = self.pool.create_plotter(num_ra, num_dec, num_plane, refpix, refval, increment,
+                                           direction_reference=self.datatable.direction_ref)
+        LOG.debug('vis {} ant {} spw {} plotter figure id {} has {} axes', ms.basename, antid, spwid, plotter.axes.figure_id, len(plotter.axes.figure.axes))
 #         LOG.info('axes list: {}', [x.__hash__()  for x in plotter.axes.figure.axes])
         spw = ms.spectral_windows[spwid]
         nchan = spw.num_channels

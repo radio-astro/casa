@@ -161,6 +161,7 @@ class SpectralImage(object):
             self.dec_max = top[key(self.id_direction[1])]
             self._brightnessunit = ia.brightnessunit()
             beam = ia.restoringbeam()
+            self.direction_reference = self.coordsys.referencecode('dir')[0]
         qa = casatools.quanta
         self._beamsize_in_deg = qa.convert(qa.sqrt(qa.mul(beam['major'], beam['minor'])),'deg')['value']
         
@@ -387,6 +388,7 @@ class SDImageDisplay(object):
         self.ny = self.image.ny
         self.npol = self.image.npol
         self.brightnessunit = self.image.brightnessunit
+        self.direction_reference = self.image.direction_reference
         (refpix, refval, increment) = self.image.spectral_axis(unit='GHz')
         self.frequency = numpy.array([refval+increment*(i-refpix) for i in xrange(self.nchan)])
         self.velocity = self.image.to_velocity(self.frequency, freq_unit='GHz')
@@ -519,9 +521,36 @@ def form4(n):
     else:
         return 5.5
 
+class MapAxesManagerBase(object):
+    @property
+    def direction_reference(self):
+        return self._direction_reference
+    
+    @direction_reference.setter
+    def direction_reference(self, value):
+        if isinstance(value, str):
+            self._direction_reference = value
+    
+    def __init__(self):
+        self._direction_reference = None
+        
+    def __get_axis_label(self, base_label):
+        if self.direction_reference is None:
+            return base_label
+        else:
+            return '{0} ({1})'.format(base_label,
+                                      self.direction_reference)
+        
+    def get_horizontal_axis_label(self):
+        return self.__get_axis_label('RA')
+    
+    def get_vertical_axis_label(self):
+        return self.__get_axis_label('Dec')
+        
 
-class SparseMapAxesManager(object):
+class SparseMapAxesManager(MapAxesManagerBase):
     def __init__(self, nh, nv, brightnessunit, ticksize, clearpanel=True, figure_id=None):
+        super(SparseMapAxesManager, self).__init__()
         self.nh = nh
         self.nv = nv
         self.ticksize = ticksize
@@ -625,8 +654,10 @@ class SparseMapAxesManager(object):
                 a1.texts[0].set_text(pointing.DDMMSSs((label_dec[y][0]+label_dec[y][1])/2.0, 0))
         a1 = pl.subplot(self.gs_bottom[-1, 0])
         a1.set_axis_off()
-        pl.text(0.5, 1, 'Dec', horizontalalignment='center', verticalalignment='bottom', size=(self.ticksize+1))
-        pl.text(1, 0.5, 'RA', horizontalalignment='center', verticalalignment='center', size=(self.ticksize+1))
+        ralabel = self.get_horizontal_axis_label()
+        declabel = self.get_vertical_axis_label()
+        pl.text(0.5, 1, declabel, horizontalalignment='center', verticalalignment='bottom', size=(self.ticksize+1))
+        pl.text(1, 0.5, ralabel, horizontalalignment='right', verticalalignment='center', size=(self.ticksize+1))
 
 
 class SDSparseMapPlotter(object):
@@ -657,6 +688,14 @@ class SDSparseMapPlotter(object):
     @property
     def TickSize(self):
         return self.axes.ticksize
+    
+    @property
+    def direction_reference(self):
+        return self.axes.direction_reference
+    
+    @direction_reference.setter
+    def direction_reference(self, value):
+        self.axes.direction_reference = value
     
     def setup_labels(self, refpix_list, refval_list, increment_list):
         LabelRA = numpy.zeros((self.nh, 2), numpy.float32) + NoData
@@ -900,6 +939,7 @@ class SDSparseMapDisplay(SDImageDisplay):
         chan1 = self.nchan
         
         plotter = SDSparseMapPlotter(NH, NV, STEP, self.brightnessunit)
+        plotter.direction_reference = self.direction_reference
 
         plot_list = []
 

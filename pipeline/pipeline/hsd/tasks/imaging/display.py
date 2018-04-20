@@ -17,7 +17,7 @@ from ..common.display import DPIDetail, DPISummary, SDImageDisplay, SDImageDispl
 import pipeline.infrastructure.casatools as casatools
 from ..common.display import sd_polmap as polmap
 #from ..common.display import DDMMSSs, HHMMSSss
-from ..common.display import SDSparseMapDisplay
+from ..common.display import SDSparseMapDisplay, MapAxesManagerBase
 from ..common.display import NoData, NoDataThreshold
 
 # NoData = -32767.0
@@ -32,8 +32,9 @@ HHMMSSss = pointing.HHMMSSss
 LOG = infrastructure.get_logger(__name__)
 
 
-class ChannelAveragedAxesManager(object):
+class ChannelAveragedAxesManager(MapAxesManagerBase):
     def __init__(self, xformatter, yformatter, xlocator, ylocator, xrotation, yrotation, ticksize, colormap):
+        super(ChannelAveragedAxesManager, self).__init__()
         self.xformatter = xformatter
         self.yformatter = yformatter
         self.xlocator = xlocator
@@ -59,8 +60,8 @@ class ChannelAveragedAxesManager(object):
             ylabels = axes.get_yticklabels()
             pl.setp(ylabels, 'rotation', self.yrotation, fontsize=self.ticksize)
             pl.title('Baseline RMS Map', size=self.ticksize)
-            pl.xlabel('RA', size=self.ticksize)
-            pl.ylabel('DEC', size=self.ticksize)
+            pl.xlabel(self.get_horizontal_axis_label(), size=self.ticksize)
+            pl.ylabel(self.get_vertical_axis_label(), size=self.ticksize)
 
             if self.isgray:
                 pl.gray()
@@ -235,6 +236,7 @@ class SDMomentMapDisplay(SDImageDisplay):
                                                   RAlocator, DEClocator,
                                                   RArotation, DECrotation,
                                                   TickSize, colormap)
+        axes_manager.direction_reference = self.direction_reference
         axes_tpmap = axes_manager.axes_tpmap
         tpmap_colorbar = None
         beam_circle = None
@@ -346,8 +348,8 @@ class ChannelMapAxesManager(ChannelAveragedAxesManager):
             ylabels = axes.get_yticklabels()
             pl.setp(ylabels, 'rotation', self.yrotation, fontsize=self.ticksize)
             
-            pl.xlabel('RA', size=self.ticksize)
-            pl.ylabel('DEC', size=self.ticksize)
+            pl.xlabel(self.get_horizontal_axis_label(), size=self.ticksize)
+            pl.ylabel(self.get_vertical_axis_label(), size=self.ticksize)
             if self.isgray:
                 pl.gray()
             else:
@@ -560,6 +562,7 @@ class SDChannelMapDisplay(SDImageDisplay):
                                              TickSize, colormap,
                                              self.NhPanel, self.NvPanel,
                                              self.brightnessunit)
+        axes_manager.direction_reference = self.direction_reference
         axes_integmap = axes_manager.axes_integmap
         integmap_colorbar = None
         beam_circle = None
@@ -850,6 +853,7 @@ class SDRmsMapDisplay(SDImageDisplay):
                                          RAlocator, DEClocator,
                                          RArotation, DECrotation,
                                          TickSize, colormap)
+        axes_manager.direction_reference = self.direction_reference
         rms_axes = axes_manager.axes_rmsmap
         rms_colorbar = None
         beam_circle = None
@@ -917,7 +921,7 @@ class SDRmsMapDisplay(SDImageDisplay):
         return plot_list
         
 
-class SpectralMapAxesManager(object):
+class SpectralMapAxesManager(MapAxesManagerBase):
     def __init__(self, nh, nv, brightnessunit, formatter, locator, ticksize):
         self.nh = nh
         self.nv = nv
