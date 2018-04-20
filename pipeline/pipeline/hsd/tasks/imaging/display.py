@@ -17,8 +17,9 @@ from ..common.display import DPIDetail, DPISummary, SDImageDisplay, SDImageDispl
 import pipeline.infrastructure.casatools as casatools
 from ..common.display import sd_polmap as polmap
 #from ..common.display import DDMMSSs, HHMMSSss
-from ..common.display import SDSparseMapDisplay, MapAxesManagerBase
+from ..common.display import SDSparseMapPlotter, MapAxesManagerBase
 from ..common.display import NoData, NoDataThreshold
+from ..common import atmutil
 
 # NoData = -32767.0
 # NoDataThreshold = NoData + 10000.0
@@ -416,6 +417,169 @@ class ChannelMapAxesManager(ChannelAveragedAxesManager):
 
             yield a
         
+
+class SDSparseMapDisplay(SDImageDisplay):
+    #MATPLOTLIB_FIGURE_ID = 8910
+    MaxPanel = 8
+    
+#     @property
+#     def num_valid_spectrum(self):
+#         return self.inputs.num_valid_spectrum
+
+    def enable_atm(self):
+        self.showatm = True
+        
+    def disable_atm(self):
+        self.showatm = False
+
+    def plot(self):
+
+        self.init()
+        
+        return self.__plot_sparse_map()
+
+    def __plot_sparse_map(self):
+
+        # Plotting routine
+        #Mark = '-b'
+        #if ShowPlot: pl.ion()
+        #else: pl.ioff()
+        #pl.figure(self.MATPLOTLIB_FIGURE_ID)
+        #if ShowPlot: pl.ioff()
+        
+        num_panel = min(max(self.x_max - self.x_min + 1, self.y_max - self.y_min + 1), self.MaxPanel)
+        STEP = int((max(self.x_max - self.x_min + 1, self.y_max - self.y_min + 1) - 1) / num_panel) + 1
+        NH = (self.x_max - self.x_min) / STEP + 1
+        NV = (self.y_max - self.y_min) / STEP + 1
+
+        LOG.info('num_panel=%s, STEP=%s, NH=%s, NV=%s'%(num_panel,STEP,NH,NV))
+
+        chan0 = 0
+        chan1 = self.nchan
+        
+        plotter = SDSparseMapPlotter(NH, NV, STEP, self.brightnessunit)
+        plotter.direction_reference = self.direction_reference
+
+        plot_list = []
+
+        refpix = [0,0]
+        refval = [0,0]
+        increment = [0,0]
+        refpix[0], refval[0], increment[0] = self.image.direction_axis(0, unit='deg')
+        refpix[1], refval[1], increment[1] = self.image.direction_axis(1, unit='deg')
+        plotter.setup_labels(refpix, refval, increment)
+        
+        if hasattr(self, 'showatm') and self.showatm is True:
+            msid_list = numpy.unique(self.inputs.msid_list)
+            for ms_id in msid_list:
+                ms = self.inputs.context.observing_run.measurement_sets[ms_id]
+                vis = ms.name
+                antenna_id = 0 # nominal
+                spw_id = self.inputs.spw
+                atm_freq, atm_transmission = atmutil.get_transmission(vis=vis, antenna_id=antenna_id,
+                                                            spw_id=spw_id, doplot=False)
+                frame = self.frequency_frame
+                if frame != 'TOPO':
+                    # do conversion
+                    assoc_id = self.inputs.msid_list.index(ms_id)
+                    field_id = self.inputs.fieldid_list[assoc_id]
+                    field = ms.fields[field_id]
+                    direction_ref = field.mdirection
+                    start_time = ms.start_time
+                    end_time = ms.end_time
+                    me = casatools.measures
+                    qa = casatools.quanta
+                    qmid_time = qa.quantity(start_time['m0'])
+                    qmid_time = qa.add(qmid_time, end_time['m0'])
+                    qmid_time = qa.div(qmid_time, 2.0)
+                    time_ref = me.epoch(rf=start_time['refer'], 
+                                        v0=qmid_time)
+                    position_ref = ms.antennas[antenna_id].position
+                    
+                    # initialize
+                    me.done()
+                    me.doframe(time_ref)
+                    me.doframe(direction_ref)
+                    me.doframe(position_ref)
+                    def _tolsrk(x):
+                        # ATM is always in TOPO
+                        m = me.frequency(rf='TOPO', v0=qa.quantity(x, 'GHz'))
+                        converted = me.measure(v=m, rf=frame)
+                        qout = qa.convert(converted['m0'], outunit='GHz')
+                        return qout['value']
+                    tolsrk = numpy.vectorize(_tolsrk)
+                    atm_freq = tolsrk(atm_freq)
+                plotter.set_atm_transmission(atm_transmission, atm_freq)
+      
+        # loop over pol
+        for pol in xrange(self.npol):
+            Plot = numpy.zeros((num_panel, num_panel, (chan1 - chan0)), numpy.float32) + NoData
+            TotalSP = (self.data.take([pol], axis=self.id_stokes) * self.mask.take([pol], axis=self.id_stokes)).squeeze().sum(axis=(0,1))
+            isvalid = numpy.any(self.mask.take([pol], axis=self.id_stokes).squeeze(), axis=2)
+            Nsp = sum(isvalid.flatten())
+            LOG.info('Nsp=%s'%(Nsp))
+            TotalSP /= Nsp
+            
+            slice_axes = (self.image.id_direction[0], self.image.id_direction[1], self.id_stokes)
+
+            for x in xrange(NH):
+                x0 = x * STEP
+                x1 = (x + 1) * STEP
+                for y in xrange(NV):
+                    y0 = y * STEP
+                    y1 = (y + 1) * STEP
+                    valid_index = isvalid[x0:x1,y0:y1].nonzero()
+                    chunk = self._get_array_chunk(self.data, (x0, y0, pol), (x1, y1, pol+1), slice_axes).squeeze(axis=self.id_stokes) * self._get_array_chunk(self.mask, (x0, y0, pol), (x1, y1, pol+1), slice_axes).squeeze(axis=self.id_stokes)
+                    valid_sp = chunk[valid_index[0],valid_index[1],:]
+                    Plot[x][y] = valid_sp.mean(axis=0)
+                    del valid_index, chunk, valid_sp
+            del isvalid
+ 
+            FigFileRoot = self.inputs.imagename+'.pol%s_Sparse'%(pol)
+            plotfile = os.path.join(self.stage_dir, FigFileRoot+'_0.png')
+
+            status = plotter.plot(Plot, TotalSP, self.frequency[chan0:chan1], 
+                                  figfile=plotfile)
+            del Plot, TotalSP
+            
+            if status:
+                parameters = {}
+                parameters['intent'] = 'TARGET'
+                parameters['spw'] = self.inputs.spw
+                parameters['pol'] = self.image.coordsys.stokes()[pol]#polmap[pol]
+                parameters['ant'] = self.inputs.antenna
+                parameters['type'] = 'sd_sparse_map'
+                parameters['file'] = self.inputs.imagename
+
+                plot = logger.Plot(plotfile,
+                                   x_axis='Frequency',
+                                   y_axis='Intensity',
+                                   field=self.inputs.source,
+                                   parameters=parameters)
+                plot_list.append(plot)
+            
+        return plot_list
+    
+    def _get_array_chunk(self, data, blc, trc, axes):
+        """
+        Returns a slice of an array
+        
+        data : an array that could be sliced
+        blc : a list of minimum index in each dimention of axes to slice
+        trc : a list of maximum index in each dimention of axes to slice
+              Note trc is used for the second parameter to construct slice.
+              Hence, the indices of last elements in returned array is trc-1
+        axes : a list of demention of axes in cube blc and trc corresponds
+        """
+        array_shape = data.shape
+        ndim = len(array_shape)
+        full_blc = numpy.zeros(ndim, dtype=int)
+        full_trc = numpy.array(array_shape)
+        for i in xrange(len(axes)):
+            iax = axes[i]
+            full_blc[iax] = max(blc[i], 0)
+            full_trc[iax] = min(trc[i], array_shape[iax])
+        return data[map(slice, full_blc,full_trc)]
 
 class SDChannelMapDisplay(SDImageDisplay):
     #MATPLOTLIB_FIGURE_ID = 8910
