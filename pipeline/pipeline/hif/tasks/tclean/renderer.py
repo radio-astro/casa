@@ -22,7 +22,7 @@ LOG = logging.get_logger(__name__)
 
 
 ImageRow = collections.namedtuple('ImageInfo', (
-    'field spw pol frequency_label frequency beam beam_pa sensitivity '
+    'field spw spwnames pol frequency_label frequency beam beam_pa sensitivity '
     'cleaning_threshold residual_ratio non_pbcor_label non_pbcor pbcor score '
     'fractional_bw_label fractional_bw aggregate_bw_label aggregate_bw '
     'image_file nchan plot qa_url iterdone stopcode stopreason'))
@@ -89,6 +89,11 @@ class T2_4MDetailsTcleanRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
             image_stats[image_path] = display.ImageStats(rms=image_rms, max=image_max)
 
             spw = info.get('spw', None)
+            if spw is not None:
+                nspwnam = info.get('nspwnam', None)
+                spwnames = ','.join([info.get('spwnam%02d' % (i+1)) for i in xrange(nspwnam)])
+            else:
+                spwnames = None
             if 'field' in info:
                 field = '%s (%s)' % (info['field'], r.intent)
 
@@ -301,6 +306,7 @@ class T2_4MDetailsTcleanRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
             row = ImageRow(
                 field=field,
                 spw=spw,
+                spwnames=spwnames,
                 pol=pol,
                 frequency_label=row_frequency_label,
                 frequency=row_frequency,

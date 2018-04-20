@@ -560,10 +560,13 @@ def set_miscinfo(name, spw=None, field=None, type=None, iter=None, multiterm=Non
                     info['filnam%02d' % (i+1)] = filename_components[i]
             if spw:
                 if observing_run is not None:
-                    spw_names = ','.join([observing_run.virtual_science_spw_ids.get(int(spw_id), 'N/A') for spw_id in spw.split(',')])
+                    spw_names = [observing_run.virtual_science_spw_ids.get(int(spw_id), 'N/A') for spw_id in spw.split(',')]
                 else:
-                    spw_names = 'N/A'
-                info['spw'] = '%s / %s' % (spw, spw_names)
+                    spw_names = ['N/A']
+                info['spw'] = spw
+                info['nspwnam'] = len(spw_names)
+                for i in xrange(len(spw_names)):
+                    info['spwnam%02d' % (i+1)] = spw_names[i]
             if field:
                 # TODO: Find common key calculation. Long VLASS lists cause trouble downstream.
                 #       Truncated list may cause duplicates.

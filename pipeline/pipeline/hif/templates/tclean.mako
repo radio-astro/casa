@@ -58,16 +58,16 @@ except:
                     %if row.nchan is not None:
                         %if row.nchan == 1:
                             <td rowspan="12">${row.field}</td>
-                            <td rowspan="12">${row.spw}</td>
+                            <td rowspan="12">${'%s / %s' % (row.spw, row.spwnames)}</td>
                             <td rowspan="12">${row.pol}</td>
                         %else:
                             <td rowspan="11">${row.field}</td>
-                            <td rowspan="11">${row.spw}</td>
+                            <td rowspan="11">${'%s / %s' % (row.spw, row.spwnames)}</td>
                             <td rowspan="11">${row.pol}</td>
                         %endif
                     %else:
                         <td rowspan="11">${row.field}</td>
-                        <td rowspan="11">${row.spw}</td>
+                        <td rowspan="11">${'%s / %s' % (row.spw, row.spwnames)}</td>
                         <td rowspan="11">${row.pol}</td>
                     %endif
                     <th>${row.frequency_label}</th>
