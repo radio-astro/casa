@@ -147,6 +147,7 @@ class Finalcals(basetask.StandardTaskTemplate):
         refantmode = 'flex'
         intents = list(m.intents)
         if [intent for intent in intents if 'POL' in intent]:
+            # set to strict
             refantmode = 'strict'
 
         avgpgain = tableprefix + str(stage_number) + '_5.' + 'averagephasegain.tbl'
