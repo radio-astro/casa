@@ -237,7 +237,7 @@ class MetaDataReader(object):
                     Tel[irow] = get_value_in_deg(el)
                 else:
                     if irow == 0:
-                        LOG.info('Require direction conversion from {0} to {1} as well as to {2}'%(ref, outref, azelref))
+                        LOG.info('Require direction conversion from {0} to {1} as well as to {2}'.format(ref, outref, azelref))
                         
                     # conversion to J2000
                     ra, dec = direction_convert(pointing_direction, mepoch, mposition, outframe=outref)
