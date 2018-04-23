@@ -144,10 +144,16 @@ class Finalcals(basetask.StandardTaskTemplate):
         # Derive an average phase solution for the bandpass calibrator to apply
         # to all data to make QA plots easier to interpret.
 
+        refantmode = 'flex'
+        intents = list(m.intents)
+        if [intent for intent in intents if 'POL' in intent]:
+            refantmode = 'strict'
+
         avgpgain = tableprefix + str(stage_number) + '_5.' + 'averagephasegain.tbl'
 
         avgphase_result = self._do_avgphasegaincal(avgpgain, context, refAnt,
-                                                   ktypecaltable=ktypecaltable, bpcaltable=bpcaltable)
+                                                   ktypecaltable=ktypecaltable, bpcaltable=bpcaltable,
+                                                   refantmode=refantmode)
 
         # In case any antenna is flagged by this process, unflag all solutions
         # in this gain table (if an antenna does exist or has bad solutions from
@@ -171,24 +177,23 @@ class Finalcals(basetask.StandardTaskTemplate):
             LOG.info("Using power-law fit results from original hifv_fluxboot task.")
             powerfit_results = self._do_powerfit(field_spws)
             powerfit_setjy = self._do_powerfitsetjy1(calMs, powerfit_results)
-            LOG.info("Using power-law fits results from fluxcale and hifv_fluxboot2 task.")
+            LOG.info("Using power-law fits results from fluxscale and hifv_fluxboot2 task.")
         if self.inputs.context.evla['msinfo'][m.name].fbversion == 'fb2':
             powerfit_setjy = self._do_powerfitsetjy2(calMs)
 
         new_gain_solint1 = context.evla['msinfo'][m.name].new_gain_solint1
         phaseshortgaincaltable = tableprefix + str(stage_number) + '_6.' + 'phaseshortgaincal.tbl'
         phaseshortgaincal_results = self._do_calibratorgaincal(calMs, phaseshortgaincaltable,
-                                                               new_gain_solint1, 3.0, 'p', [''], refAnt)
+                                                               new_gain_solint1, 3.0, 'p', [''], refAnt,
+                                                               refantmode=refantmode)
 
         gain_solint2 = context.evla['msinfo'][m.name].gain_solint2
         finalampgaincaltable = tableprefix + str(stage_number) + '_7.' +'finalampgaincal.tbl'
         finalampgaincal_results = self._do_calibratorgaincal(calMs, finalampgaincaltable, gain_solint2, 5.0,
-                                                             'ap', [phaseshortgaincaltable], refAnt)
+                                                             'ap', [phaseshortgaincaltable], refAnt,
+                                                             refantmode=refantmode)
 
-        refantmode = 'flex'
-        intents = list(m.intents)
-        if [intent for intent in intents if 'POL' in intent]:
-            refantmode = 'strict'
+
 
         finalphasegaincaltable = tableprefix + str(stage_number) + '_8.' + 'finalphasegaincal.tbl'
         finalphasegaincal_results = self._do_calibratorgaincal(calMs, finalphasegaincaltable, gain_solint2,
@@ -338,7 +343,8 @@ class Finalcals(basetask.StandardTaskTemplate):
 
         return self._executor.execute(job)
 
-    def _do_avgphasegaincal(self, caltable, context, refAnt, ktypecaltable=None, bpcaltable=None):
+    def _do_avgphasegaincal(self, caltable, context, refAnt, ktypecaltable=None, bpcaltable=None,
+                            refantmode='flex'):
 
         m = self.inputs.context.observing_run.get_ms(self.inputs.vis)
         bandpass_field_select_string = context.evla['msinfo'][m.name].bandpass_field_select_string
@@ -372,7 +378,8 @@ class Finalcals(basetask.StandardTaskTemplate):
                                      'gainfield': [''],
                                      'interp': [''],
                                      'spwmap': [],
-                                     'parang': self.parang}
+                                     'parang': self.parang,
+                                     'refantmode': refantmode}
 
         job = casa_tasks.gaincal(**avgphasegaincal_task_args)
 

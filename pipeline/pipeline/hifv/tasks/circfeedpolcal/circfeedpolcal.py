@@ -116,9 +116,16 @@ class Circfeedpolcal(polarization.Polarization):
         # setjy for amplitude/flux calibrator (VLASS 3C286 or 3C48)
         fluxcalfieldname, fluxcalfieldid, fluxcal = self._do_setjy()
 
-        tablesToAdd = ((self.inputs.vis + '.kcross', 'kcross', self.do_spwmap()),
-                       (self.inputs.vis + '.D2', 'polarization',[]),
-                       (self.inputs.vis + '.X1', 'polarization',[]))
+        try:
+            stage_number = self.inputs.context.results[-1].read()[0].stage_number + 1
+        except Exception as e:
+            stage_number = self.inputs.context.results[-1].read().stage_number + 1
+
+        tableprefix = os.path.basename(self.inputs.vis) + '.' + 'hifv_circfeedpolcal.s'
+
+        tablesToAdd = ((tableprefix + str(stage_number) + '_1.' + 'kcross.tbl', 'kcross', self.do_spwmap()),
+                       (tableprefix + str(stage_number) + '_2.' + 'D2.tbl', 'polarization',[]),
+                       (tableprefix + str(stage_number) + '_3.' + 'X1.tbl', 'polarization',[]))
 
         # D-terms   - do we need this?
         # self.do_polcal(self.inputs.vis+'.D1', 'D+QU',field='',
@@ -194,12 +201,14 @@ class Circfeedpolcal(polarization.Polarization):
 
         self.do_polcal(tablesToAdd[1][0], kcrosstable=tablesToAdd[0][0], poltype=poltype, field=polleakagefield,
                        intent='CALIBRATE_POL_LEAKAGE#UNSPECIFIED',
-                       gainfield=[''], kcrossspwmap=spwmap, solint='inf,{!s}'.format(self.inputs.Dterm_solint), minsnr=5.0)
+                       gainfield=[''], kcrossspwmap=spwmap, solint='inf,{!s}'.format(self.inputs.Dterm_solint),
+                       minsnr=5.0)
 
         # 2MHz pieces, minsnr of 3.0
         self.do_polcal(tablesToAdd[2][0], kcrosstable=tablesToAdd[0][0], poltype='Xf', field=polanglefield,
                        intent='CALIBRATE_POL_ANGLE#UNSPECIFIED',
-                       gainfield=[''], kcrossspwmap=spwmap, solint='inf,2MHz', minsnr=3.0)
+                       gainfield=[''], kcrossspwmap=spwmap, solint='inf,2MHz',
+                       minsnr=3.0)
 
         for (addcaltable, caltype, spwmap) in tablesToAdd:
             calto = callibrary.CalTo(self.inputs.vis)
