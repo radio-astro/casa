@@ -253,6 +253,9 @@ class MakeImList(basetask.StandardTaskTemplate):
         else:
             vislists = [inputs.vis]
 
+        # Need to record if there are targets for a vislist
+        have_targets = {}
+
         for vislist in vislists:
             if inputs.per_eb:
                 imagename_prefix=os.path.basename(vislist[0])
@@ -472,6 +475,9 @@ class MakeImList(basetask.StandardTaskTemplate):
                     result.linesfile = None
                     return result
 
+            # Remember if there are targets for this vislist
+            have_targets[','.join(vislist)] = len(field_intent_list) > 0
+
             for field_intent in field_intent_list:
                 for spwspec in spwlist:
                     spwspec_ok = True
@@ -548,6 +554,12 @@ class MakeImList(basetask.StandardTaskTemplate):
                         )
 
                         result.add_target(target)
+
+        if (inputs.intent == 'CHECK') and inputs.per_eb:
+            if not any(have_targets.values()):
+                LOG.info('No check source found.')
+            elif not all(have_targets.values()):
+                LOG.warn('No check source in these datasets: %s' % ([os.path.basename(k) for k,v in have_targets.iteritems() if not v]))
 
         # Pass contfile and linefile names to context (via resultobjects)
         # for hif_findcont and hif_makeimages
