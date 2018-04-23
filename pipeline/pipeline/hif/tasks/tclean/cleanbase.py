@@ -47,6 +47,7 @@ class CleanBaseInputs(vdp.StandardInputs):
     outframe = vdp.VisDependentProperty(default='LSRK')
     parallel = vdp.VisDependentProperty(default='automatic')
     pblimit = vdp.VisDependentProperty(default=0.2)
+    is_per_eb = vdp.VisDependentProperty(default=False)
     phasecenter = vdp.VisDependentProperty(default='')
     restoringbeam = vdp.VisDependentProperty(default='common')
     robust = vdp.VisDependentProperty(default=-999.0)
@@ -100,7 +101,7 @@ class CleanBaseInputs(vdp.StandardInputs):
                  robust=None, noise=None, npixels=None, restoringbeam=None, iter=None, mask=None, hm_masking=None,
                  hm_sidelobethreshold=None, hm_noisethreshold=None, hm_lownoisethreshold=None,
                  hm_negativethreshold=None, hm_minbeamfrac=None, hm_growiterations=None, pblimit=None, niter=None,
-                 threshold=None, sensitivity=None, reffreq=None, conjbeams=None, result=None, parallel=None,
+                 threshold=None, sensitivity=None, reffreq=None, conjbeams=None, is_per_eb=None, result=None, parallel=None,
                  heuristics=None):
         self.context = context
         self.output_dir = output_dir
@@ -154,6 +155,7 @@ class CleanBaseInputs(vdp.StandardInputs):
         self.conjbeams = conjbeams
         self.result = result
         self.parallel = parallel
+        self.is_per_eb = is_per_eb
         self.heuristics = heuristics
 
 
@@ -469,6 +471,7 @@ class CleanBase(basetask.StandardTaskTemplate):
             set_miscinfo(name=model_name, spw=inputs.spw, field=inputs.field,
                          type='model', iter=iter, multiterm=result.multiterm,
                          intent=inputs.intent, specmode=inputs.specmode,
+                         is_per_eb=inputs.is_per_eb,
                          observing_run=context.observing_run)
             result.set_model(iter=iter, image=model_name)
 
@@ -476,6 +479,7 @@ class CleanBase(basetask.StandardTaskTemplate):
             set_miscinfo(name=image_name, spw=inputs.spw, field=inputs.field,
                          type='image', iter=iter, multiterm=result.multiterm,
                          intent=inputs.intent, specmode=inputs.specmode,
+                         is_per_eb=inputs.is_per_eb,
                          observing_run=context.observing_run)
 
             # Store the PB corrected image.
@@ -483,6 +487,7 @@ class CleanBase(basetask.StandardTaskTemplate):
                 set_miscinfo(name=pbcor_image_name, spw=inputs.spw, field=inputs.field,
                              type='pbcorimage', iter=iter, multiterm=result.multiterm,
                              intent=inputs.intent, specmode=inputs.specmode,
+                             is_per_eb=inputs.is_per_eb,
                              observing_run=context.observing_run)
                 result.set_image(iter=iter, image=pbcor_image_name)
             else:
@@ -492,13 +497,15 @@ class CleanBase(basetask.StandardTaskTemplate):
         set_miscinfo(name=residual_name, spw=inputs.spw, field=inputs.field,
                      type='residual', iter=iter, multiterm=result.multiterm,
                      intent=inputs.intent, specmode=inputs.specmode,
-                         observing_run=context.observing_run)
+                     is_per_eb=inputs.is_per_eb,
+                     observing_run=context.observing_run)
         result.set_residual(iter=iter, image=residual_name)
 
         # Store the PSF.
         set_miscinfo(name=psf_name, spw=inputs.spw, field=inputs.field,
                      type='psf', iter=iter, multiterm=result.multiterm,
                      intent=inputs.intent, specmode=inputs.specmode,
+                     is_per_eb=inputs.is_per_eb,
                      observing_run=context.observing_run)
         result.set_psf(image=psf_name)
 
@@ -506,6 +513,7 @@ class CleanBase(basetask.StandardTaskTemplate):
         set_miscinfo(name=flux_name, spw=inputs.spw, field=inputs.field,
                      type='flux', iter=iter, multiterm=result.multiterm,
                      intent=inputs.intent, specmode=inputs.specmode,
+                     is_per_eb=inputs.is_per_eb,
                      observing_run=context.observing_run)
         result.set_flux(image=flux_name)
 
@@ -514,6 +522,7 @@ class CleanBase(basetask.StandardTaskTemplate):
             set_miscinfo(name=inputs.mask, spw=inputs.spw, field=inputs.field,
                          type='cleanmask', iter=iter,
                          intent=inputs.intent, specmode=inputs.specmode,
+                         is_per_eb=inputs.is_per_eb,
                          observing_run=context.observing_run)
             result.set_cleanmask(iter=iter, image=inputs.mask)
         elif os.path.exists(mask_name):
@@ -521,6 +530,7 @@ class CleanBase(basetask.StandardTaskTemplate):
             set_miscinfo(name=mask_name, spw=inputs.spw, field=inputs.field,
                          type='cleanmask', iter=iter,
                          intent=inputs.intent, specmode=inputs.specmode,
+                         is_per_eb=inputs.is_per_eb,
                          observing_run=context.observing_run)
             result.set_cleanmask(iter=iter, image=mask_name)
 
@@ -539,7 +549,7 @@ def rename_image(old_name, new_name, extensions=['']):
             with casatools.ImageReader('%s%s' % (old_name, extension)) as image:
                 image.rename(name=new_name, overwrite=True)
 
-def set_miscinfo(name, spw=None, field=None, type=None, iter=None, multiterm=None, intent=None, specmode=None, observing_run=None):
+def set_miscinfo(name, spw=None, field=None, type=None, iter=None, multiterm=None, intent=None, specmode=None, is_per_eb=None, observing_run=None):
     """
     Define miscellaneous image information
     """
@@ -581,6 +591,8 @@ def set_miscinfo(name, spw=None, field=None, type=None, iter=None, multiterm=Non
                 info['intent'] = intent
             if specmode is not None:
                 info['specmode'] = specmode
+            if is_per_eb is not None:
+                info['per_eb'] = is_per_eb
             image.setmiscinfo(info)
 
 

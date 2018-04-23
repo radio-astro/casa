@@ -36,5 +36,6 @@ class CleanTarget(dict):
          # vis list only for special setups like CHECK source
          # imaging per EB for ALMA
          self['vis'] = None             # list of strings
+         self['is_per_eb'] = None       # boolean
 
          dict.__init__(self, *args, **kwargs)

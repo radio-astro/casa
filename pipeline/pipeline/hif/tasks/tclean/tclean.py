@@ -128,7 +128,7 @@ class TcleanInputs(cleanbase.CleanBaseInputs):
                  cleancontranges=None, parallel=None,
                  # Extra parameters not in the CLI task interface
                  uvtaper=None, scales=None, nsigma=None, cycleniter=None, cyclefactor=None, sensitivity=None,
-                 reffreq=None, conjbeams=None,
+                 reffreq=None, conjbeams=None, is_per_eb=None,
                  # End of extra parameters
                  heuristics=None):
         super(TcleanInputs, self).__init__(context, output_dir=output_dir, vis=vis, imagename=imagename, intent=intent,
@@ -144,7 +144,7 @@ class TcleanInputs(cleanbase.CleanBaseInputs):
                                            hm_lownoisethreshold=hm_lownoisethreshold,
                                            hm_negativethreshold=hm_negativethreshold, hm_minbeamfrac=hm_minbeamfrac,
                                            hm_growiterations=hm_growiterations, niter=niter, threshold=threshold,
-                                           sensitivity=sensitivity, conjbeams=conjbeams, parallel=parallel,
+                                           sensitivity=sensitivity, conjbeams=conjbeams, is_per_eb=is_per_eb, parallel=parallel,
                                            heuristics=heuristics)
 
         self.cleancontranges = cleancontranges
@@ -162,6 +162,8 @@ class TcleanInputs(cleanbase.CleanBaseInputs):
         # For MOM0/8_FC and cube RMS we need the LSRK frequency ranges in
         # various places
         self.cont_freq_ranges = ''
+
+        self.is_per_eb = is_per_eb
 
 
 # tell the infrastructure to give us mstransformed data when possible by
@@ -736,6 +738,7 @@ class Tclean(cleanbase.CleanBase):
         clean_inputs = cleanbase.CleanBase.Inputs(inputs.context,
                                                   output_dir=inputs.output_dir,
                                                   vis=inputs.vis,
+                                                  is_per_eb=inputs.is_per_eb,
                                                   imagename=inputs.imagename,
                                                   intent=inputs.intent,
                                                   field=inputs.field,

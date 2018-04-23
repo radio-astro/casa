@@ -31,6 +31,7 @@ class MakeImListInputs(vdp.StandardInputs):
     uvrange = vdp.VisDependentProperty(default='')
     width = vdp.VisDependentProperty(default='')
     clearlist = vdp.VisDependentProperty(default=False)
+    pbe_eb = vdp.VisDependentProperty(default=False)
 
     # properties requiring some processing or MS-dependent logic -------------------------------------------------------
 
@@ -120,7 +121,7 @@ class MakeImListInputs(vdp.StandardInputs):
     def __init__(self, context, output_dir=None, vis=None, imagename=None, intent=None, field=None, spw=None,
                  contfile=None, linesfile=None, uvrange=None, specmode=None, outframe=None, hm_imsize=None,
                  hm_cell=None, calmaxpix=None, phasecenter=None, nchan=None, start=None, width=None, nbins=None,
-                 clearlist=None):
+                 clearlist=None, per_eb=None):
         self.context = context
         self.output_dir = output_dir
         self.vis = vis
@@ -143,6 +144,7 @@ class MakeImListInputs(vdp.StandardInputs):
         self.width = width
         self.nbins = nbins
         self.clearlist = clearlist
+        self.per_eb = per_eb
 
 
 # tell the infrastructure to give us mstransformed data when possible by
@@ -246,133 +248,111 @@ class MakeImList(basetask.StandardTaskTemplate):
             spw = '[]'
             spwlist = []
 
-        self.heuristics = image_heuristics_factory.getHeuristics(
-            vislist=inputs.vis,
-            spw=spw,
-            observing_run=inputs.context.observing_run,
-            imagename_prefix=inputs.context.project_structure.ousstatus_entity_id,
-            proj_params=inputs.context.project_performance_parameters,
-            contfile=inputs.contfile,
-            linesfile=inputs.linesfile,
-            imaging_mode=inputs.context.project_summary.telescope
-        )
-
-        if inputs.specmode == 'cont':
-            # Make sure the spw list is sorted numerically
-            spwlist = [','.join(map(str, sorted(map(int, spwlist))))]
-
-        # get list of field_ids/intents to be cleaned
-        if (not repr_target_mode) or (repr_target_mode and image_repr_target):
-            field_intent_list = self.heuristics.field_intent_list(
-              intent=inputs.intent, field=inputs.field)
+        if inputs.per_eb:
+            vislists = [[vis] for vis in inputs.vis]
         else:
-            field_intent_list = []
+            vislists = [inputs.vis]
 
-        # Parse hm_cell to get optional pixperbeam setting
-        cell = inputs.hm_cell
-        if type(cell) is types.StringType:
-            pixperbeam = float(cell.split('ppb')[0])
-            cell = []
-        else:
-            pixperbeam = 5.0
+        for vislist in vislists:
+            if inputs.per_eb:
+                imagename_prefix=os.path.basename(vislist[0])
+            else:
+                imagename_prefix=inputs.context.project_structure.ousstatus_entity_id
 
-        # Expand cont spws
-        if inputs.specmode == 'cont':
-            spwids = spwlist[0].split(',')
-        else:
-            spwids = spwlist
+            self.heuristics = image_heuristics_factory.getHeuristics(
+                vislist=vislist,
+                spw=spw,
+                observing_run=inputs.context.observing_run,
+                imagename_prefix=imagename_prefix,
+                proj_params=inputs.context.project_performance_parameters,
+                contfile=inputs.contfile,
+                linesfile=inputs.linesfile,
+                imaging_mode=inputs.context.project_summary.telescope
+            )
 
-        # Record number of expected clean targets
-        result.set_max_num_targets(len(field_intent_list)*len(spwlist))
+            if inputs.specmode == 'cont':
+                # Make sure the spw list is sorted numerically
+                spwlist = [','.join(map(str, sorted(map(int, spwlist))))]
 
-        # Remove bad spws
-        if field_intent_list != set([]):
-            valid_data = {}
-            filtered_spwlist = []
-            for spw in spwids:
-                valid_data[str(spw)] = self.heuristics.has_data(field_intent_list=field_intent_list, spwspec=spw)
-                # For now we consider the spw for all fields / intents.
-                # May need to handle this individually.
-                if (valid_data[str(spw)][list(field_intent_list)[0]]):
-                    filtered_spwlist.append(spw)
-        else:
-            filtered_spwlist = []
+            # get list of field_ids/intents to be cleaned
+            if (not repr_target_mode) or (repr_target_mode and image_repr_target):
+                field_intent_list = self.heuristics.field_intent_list(
+                  intent=inputs.intent, field=inputs.field)
+            else:
+                field_intent_list = []
 
-        # Collapse cont spws
-        if inputs.specmode == 'cont':
-            spwlist = [reduce(lambda x,y: x+','+y, filtered_spwlist)]
-        else:
-            spwlist = filtered_spwlist
+            # Parse hm_cell to get optional pixperbeam setting
+            cell = inputs.hm_cell
+            if type(cell) is types.StringType:
+                pixperbeam = float(cell.split('ppb')[0])
+                cell = []
+            else:
+                pixperbeam = 5.0
 
-        # get beams for each spwspec
-        largest_primary_beams = {}
-        synthesized_beams = {}
-        for spwspec in spwlist:
-            largest_primary_beams[spwspec] = self.heuristics.largest_primary_beam_size(spwspec=spwspec)
-            synthesized_beams[spwspec] = self.heuristics.synthesized_beam(field_intent_list=field_intent_list, spwspec=spwspec, robust=0.5, uvtaper=[])
+            # Expand cont spws
+            if inputs.specmode == 'cont':
+                spwids = spwlist[0].split(',')
+            else:
+                spwids = spwlist
 
-        # cell is a list of form [cellx, celly]. If the list has form [cell]
-        # then that means the cell is the same size in x and y. If cell is
-        # empty then fill it with a heuristic result
-        cells = {}
-        if cell == []:
-            min_cell = ['3600arcsec']
+            # Record number of expected clean targets
+            result.set_max_num_targets(len(field_intent_list)*len(spwlist))
+
+            # Remove bad spws
+            if field_intent_list != set([]):
+                valid_data = {}
+                filtered_spwlist = []
+                for spw in spwids:
+                    valid_data[str(spw)] = self.heuristics.has_data(field_intent_list=field_intent_list, spwspec=spw)
+                    # For now we consider the spw for all fields / intents.
+                    # May need to handle this individually.
+                    if (valid_data[str(spw)][list(field_intent_list)[0]]):
+                        filtered_spwlist.append(spw)
+            else:
+                filtered_spwlist = []
+
+            # Collapse cont spws
+            if inputs.specmode == 'cont':
+                spwlist = [reduce(lambda x,y: x+','+y, filtered_spwlist)]
+            else:
+                spwlist = filtered_spwlist
+
+            # get beams for each spwspec
+            largest_primary_beams = {}
+            synthesized_beams = {}
             for spwspec in spwlist:
-                # the heuristic cell is always the same for x and y as
-                # the value derives from the single value returned by
-                # imager.advise
-                cells[spwspec] = self.heuristics.cell(beam=synthesized_beams[spwspec], pixperbeam=pixperbeam)
-                if ('invalid' not in cells[spwspec]):
-                    min_cell = cells[spwspec] if (qaTool.convert(cells[spwspec][0], 'arcsec')['value'] < qaTool.convert(min_cell[0], 'arcsec')['value']) else min_cell
-            # Rounding to two significant figures
-            min_cell = ['%.2g%s' % (qaTool.getvalue(min_cell[0]), qaTool.getunit(min_cell[0]))]
-            # Use same cell size for all spws (in a band (TODO))
-            for spwspec in spwlist:
-                if ('invalid' not in cells[spwspec]):
-                    cells[spwspec] = min_cell
-        else:
-            for spwspec in spwlist:
-                cells[spwspec] = cell
+                largest_primary_beams[spwspec] = self.heuristics.largest_primary_beam_size(spwspec=spwspec)
+                synthesized_beams[spwspec] = self.heuristics.synthesized_beam(field_intent_list=field_intent_list, spwspec=spwspec, robust=0.5, uvtaper=[])
 
-        # if phase center not set then use heuristic code to calculate the
-        # centers for each field
-        phasecenter = inputs.phasecenter
-        phasecenters = {}
-        if phasecenter == '':
-            for field_intent in field_intent_list:
-                try:
-                    gridder = self.heuristics.gridder(field_intent[1], field_intent[0])
-                    if field_intent[1] == 'TARGET' and gridder == 'mosaic':
-                        field_ids = self.heuristics.field(
-                          'TARGET', field_intent[0], exclude_intent='ATMOSPHERE')
-                    else:
-                        field_ids = self.heuristics.field(
-                          field_intent[1], field_intent[0])
-                    phasecenters[field_intent[0]] = \
-                      self.heuristics.phasecenter(field_ids)
-                except Exception, e:
-                    # problem defining center
-                    LOG.warn(e)
-                    pass
-        else:
-            for field_intent in field_intent_list:
-                phasecenters[field_intent[0]] = phasecenter
-
-        # if imsize not set then use heuristic code to calculate the
-        # centers for each field/spwspec
-        imsize = inputs.hm_imsize
-        if type(imsize) is types.StringType:
-            sfpblimit = float(imsize.split('pb')[0])
-            imsize = []
-        else:
-            sfpblimit = 0.2
-        imsizes = {}
-        if imsize == []:
-            for field_intent in field_intent_list:
-                max_x_size = 1
-                max_y_size = 1
+            # cell is a list of form [cellx, celly]. If the list has form [cell]
+            # then that means the cell is the same size in x and y. If cell is
+            # empty then fill it with a heuristic result
+            cells = {}
+            if cell == []:
+                min_cell = ['3600arcsec']
                 for spwspec in spwlist:
+                    # the heuristic cell is always the same for x and y as
+                    # the value derives from the single value returned by
+                    # imager.advise
+                    cells[spwspec] = self.heuristics.cell(beam=synthesized_beams[spwspec], pixperbeam=pixperbeam)
+                    if ('invalid' not in cells[spwspec]):
+                        min_cell = cells[spwspec] if (qaTool.convert(cells[spwspec][0], 'arcsec')['value'] < qaTool.convert(min_cell[0], 'arcsec')['value']) else min_cell
+                # Rounding to two significant figures
+                min_cell = ['%.2g%s' % (qaTool.getvalue(min_cell[0]), qaTool.getunit(min_cell[0]))]
+                # Use same cell size for all spws (in a band (TODO))
+                for spwspec in spwlist:
+                    if ('invalid' not in cells[spwspec]):
+                        cells[spwspec] = min_cell
+            else:
+                for spwspec in spwlist:
+                    cells[spwspec] = cell
 
+            # if phase center not set then use heuristic code to calculate the
+            # centers for each field
+            phasecenter = inputs.phasecenter
+            phasecenters = {}
+            if phasecenter == '':
+                for field_intent in field_intent_list:
                     try:
                         gridder = self.heuristics.gridder(field_intent[1], field_intent[0])
                         if field_intent[1] == 'TARGET' and gridder == 'mosaic':
@@ -381,158 +361,193 @@ class MakeImList(basetask.StandardTaskTemplate):
                         else:
                             field_ids = self.heuristics.field(
                               field_intent[1], field_intent[0])
-                        himsize = self.heuristics.imsize(fields=field_ids,
-                          cell=cells[spwspec], primary_beam=largest_primary_beams[spwspec], sfpblimit=sfpblimit)
-                        if field_intent[1] in ['PHASE', 'BANDPASS', 'AMPLITUDE', 'FLUX', 'CHECK']:
-                            himsize = [min(npix, inputs.calmaxpix) for npix in himsize]
-                        imsizes[(field_intent[0],spwspec)] = himsize
-                        if (imsizes[(field_intent[0],spwspec)][0] > max_x_size):
-                            max_x_size = imsizes[(field_intent[0],spwspec)][0]
-                        if (imsizes[(field_intent[0],spwspec)][1] > max_y_size):
-                            max_y_size = imsizes[(field_intent[0],spwspec)][1]
+                        phasecenters[field_intent[0]] = \
+                          self.heuristics.phasecenter(field_ids)
                     except Exception, e:
-                        # problem defining imsize
+                        # problem defining center
                         LOG.warn(e)
                         pass
+            else:
+                for field_intent in field_intent_list:
+                    phasecenters[field_intent[0]] = phasecenter
 
-                # Use same size for all spws (in a band (TODO))
-                for spwspec in spwlist:
-                    imsizes[(field_intent[0],spwspec)] = [max_x_size, max_y_size]
+            # if imsize not set then use heuristic code to calculate the
+            # centers for each field/spwspec
+            imsize = inputs.hm_imsize
+            if type(imsize) is types.StringType:
+                sfpblimit = float(imsize.split('pb')[0])
+                imsize = []
+            else:
+                sfpblimit = 0.2
+            imsizes = {}
+            if imsize == []:
+                for field_intent in field_intent_list:
+                    max_x_size = 1
+                    max_y_size = 1
+                    for spwspec in spwlist:
+
+                        try:
+                            gridder = self.heuristics.gridder(field_intent[1], field_intent[0])
+                            if field_intent[1] == 'TARGET' and gridder == 'mosaic':
+                                field_ids = self.heuristics.field(
+                                  'TARGET', field_intent[0], exclude_intent='ATMOSPHERE')
+                            else:
+                                field_ids = self.heuristics.field(
+                                  field_intent[1], field_intent[0])
+                            himsize = self.heuristics.imsize(fields=field_ids,
+                              cell=cells[spwspec], primary_beam=largest_primary_beams[spwspec], sfpblimit=sfpblimit)
+                            if field_intent[1] in ['PHASE', 'BANDPASS', 'AMPLITUDE', 'FLUX', 'CHECK']:
+                                himsize = [min(npix, inputs.calmaxpix) for npix in himsize]
+                            imsizes[(field_intent[0],spwspec)] = himsize
+                            if (imsizes[(field_intent[0],spwspec)][0] > max_x_size):
+                                max_x_size = imsizes[(field_intent[0],spwspec)][0]
+                            if (imsizes[(field_intent[0],spwspec)][1] > max_y_size):
+                                max_y_size = imsizes[(field_intent[0],spwspec)][1]
+                        except Exception, e:
+                            # problem defining imsize
+                            LOG.warn(e)
+                            pass
+
+                    # Use same size for all spws (in a band (TODO))
+                    for spwspec in spwlist:
+                        imsizes[(field_intent[0],spwspec)] = [max_x_size, max_y_size]
  
-        else:
+            else:
+                for field_intent in field_intent_list:
+                    for spwspec in spwlist:
+                        imsizes[(field_intent[0],spwspec)] = imsize
+
+            # if nchan is not set then use heuristic code to calculate it
+            # for each field/spwspec. The channel width needs to be calculated
+            # at the same time.
+            specmode = inputs.specmode
+            nchan = inputs.nchan
+            nchans = {}
+            width = inputs.width
+            widths = {}
+            if ((specmode not in ('mfs', 'cont')) and (width == 'pilotimage')):
+                for field_intent in field_intent_list:
+                    for spwspec in spwlist:
+                        try:
+                            nchans[(field_intent[0],spwspec)], widths[(field_intent[0],spwspec)] = \
+                              self.heuristics.nchan_and_width(field_intent=field_intent[1], \
+                              spwspec=spwspec)
+                        except Exception, e:
+                            # problem defining nchan and width
+                            LOG.warn(e)
+                            pass
+
+            else:
+                for field_intent in field_intent_list:
+                    for spwspec in spwlist:
+                        nchans[(field_intent[0],spwspec)] = nchan
+                        widths[(field_intent[0],spwspec)] = width
+
+            # construct imagename
+            imagename = inputs.imagename
+            imagenames = {}
             for field_intent in field_intent_list:
                 for spwspec in spwlist:
-                    imsizes[(field_intent[0],spwspec)] = imsize
-
-        # if nchan is not set then use heuristic code to calculate it
-        # for each field/spwspec. The channel width needs to be calculated
-        # at the same time.
-        specmode = inputs.specmode
-        nchan = inputs.nchan
-        nchans = {}
-        width = inputs.width
-        widths = {}
-        if ((specmode not in ('mfs', 'cont')) and (width == 'pilotimage')):
-            for field_intent in field_intent_list:
-                for spwspec in spwlist:
-                    try:
-                        nchans[(field_intent[0],spwspec)], widths[(field_intent[0],spwspec)] = \
-                          self.heuristics.nchan_and_width(field_intent=field_intent[1], \
-                          spwspec=spwspec)
-                    except Exception, e:
-                        # problem defining nchan and width
-                        LOG.warn(e)
-                        pass
-
-        else:
-            for field_intent in field_intent_list:
-                for spwspec in spwlist:
-                    nchans[(field_intent[0],spwspec)] = nchan
-                    widths[(field_intent[0],spwspec)] = width
-
-        # construct imagename
-        imagename = inputs.imagename
-        imagenames = {}
-        for field_intent in field_intent_list:
-            for spwspec in spwlist:
-                if inputs.imagename == '':
-                    imagenames[(field_intent,spwspec)] = \
-                      self.heuristics.imagename(
-                      output_dir=inputs.output_dir, intent=field_intent[1],
-                      field=field_intent[0], spwspec=spwspec, specmode=specmode)
-                else:
-                    imagenames[(field_intent,spwspec)] = inputs.imagename
-
-        # now construct the list of imaging command parameter lists that must
-        # be run to obtain the required images
-
-        # describe the function of this task by interpreting the inputs
-        # parameters to give an execution context
-        long_descriptions = [_DESCRIPTIONS.get((intent.strip(), inputs.specmode), inputs.specmode) for intent in inputs.intent.split(',')]
-        result.metadata['long description'] = 'Set-up parameters for %s imaging' % ' & '.join(set(long_descriptions))
-
-        # Check for size mitigation errors.
-        if inputs.context.size_mitigation_parameters.has_key('status'):
-            if inputs.context.size_mitigation_parameters['status'] == 'ERROR':
-                LOG.error('Size mitigation had failed. Will not create any clean targets.')
-                result.contfile = None
-                result.linesfile = None
-                return result
-
-        for field_intent in field_intent_list:
-            for spwspec in spwlist:
-                spwspec_ok = True
-                new_spwspec = []
-                spwsel = {}
-                for spwid in spwspec.split(','):
-                    spwsel_spwid = self.heuristics.cont_ranges_spwsel().get(utils.dequote(field_intent[0]), {}).get(spwid, 'NONE')
-                    if (field_intent[1] == 'TARGET'):
-                        if (spwsel_spwid == 'NONE'):
-                            LOG.warn('No continuum frequency range information detected for %s, spw %s. Will not image spw %s.' % (field_intent[0], spwid, spwspec))
-                            spwspec_ok = False
-                        #elif (spwsel_spwid == ''):
-                        #    LOG.warn('Empty continuum frequency range for %s, spw %s. Run hif_findcont ?' % (field_intent[0], spwid))
-
-                    if spwsel_spwid in ('ALL', '', 'NONE'):
-                        spwsel_spwid_freqs = ''
-                        spwsel_spwid_refer = 'LSRK'
+                    if inputs.imagename == '':
+                        imagenames[(field_intent,spwspec)] = \
+                          self.heuristics.imagename(
+                          output_dir=inputs.output_dir, intent=field_intent[1],
+                          field=field_intent[0], spwspec=spwspec, specmode=specmode)
                     else:
-                        spwsel_spwid_freqs, spwsel_spwid_refer = spwsel_spwid.split()
+                        imagenames[(field_intent,spwspec)] = inputs.imagename
 
-                    if (spwsel_spwid_refer != 'LSRK'):
-                        LOG.warn('Frequency selection is specified in %s but must be in LSRK' % (spwsel_spwid_refer))
-                        # TODO: skip this field and/or spw ?
+            # now construct the list of imaging command parameter lists that must
+            # be run to obtain the required images
 
-                    new_spwspec.append(spwid)
-                    spwsel['spw%s' % (spwid)] = spwsel_spwid
+            # describe the function of this task by interpreting the inputs
+            # parameters to give an execution context
+            long_descriptions = [_DESCRIPTIONS.get((intent.strip(), inputs.specmode), inputs.specmode) for intent in inputs.intent.split(',')]
+            result.metadata['long description'] = 'Set-up parameters for %s imaging' % ' & '.join(set(long_descriptions))
 
-                new_spwspec = ','.join(new_spwspec)
+            # Check for size mitigation errors.
+            if inputs.context.size_mitigation_parameters.has_key('status'):
+                if inputs.context.size_mitigation_parameters['status'] == 'ERROR':
+                    LOG.error('Size mitigation had failed. Will not create any clean targets.')
+                    result.contfile = None
+                    result.linesfile = None
+                    return result
 
-                if inputs.nbins != '' and inputs.specmode != 'cont':
-                    nbin_items = inputs.nbins.split(',')
-                    nbins_dict = {}
-                    for nbin_item in nbin_items:
-                        key, value = nbin_item.split(':')
-                        nbins_dict[key] = int(value)
-                    try:
-                        if '*' in nbins_dict.keys():
-                            nbin = nbins_dict['*']
+            for field_intent in field_intent_list:
+                for spwspec in spwlist:
+                    spwspec_ok = True
+                    new_spwspec = []
+                    spwsel = {}
+                    for spwid in spwspec.split(','):
+                        spwsel_spwid = self.heuristics.cont_ranges_spwsel().get(utils.dequote(field_intent[0]), {}).get(spwid, 'NONE')
+                        if (field_intent[1] == 'TARGET'):
+                            if (spwsel_spwid == 'NONE'):
+                                LOG.warn('No continuum frequency range information detected for %s, spw %s. Will not image spw %s.' % (field_intent[0], spwid, spwspec))
+                                spwspec_ok = False
+                            #elif (spwsel_spwid == ''):
+                            #    LOG.warn('Empty continuum frequency range for %s, spw %s. Run hif_findcont ?' % (field_intent[0], spwid))
+
+                        if spwsel_spwid in ('ALL', '', 'NONE'):
+                            spwsel_spwid_freqs = ''
+                            spwsel_spwid_refer = 'LSRK'
                         else:
-                            nbin = nbins_dict[new_spwspec]
-                    except:
-                        LOG.warn('Could not determine binning factor for spw %s. Using default channel width.' % (new_spwspec))
+                            spwsel_spwid_freqs, spwsel_spwid_refer = spwsel_spwid.split()
+
+                        if (spwsel_spwid_refer != 'LSRK'):
+                            LOG.warn('Frequency selection is specified in %s but must be in LSRK' % (spwsel_spwid_refer))
+                            # TODO: skip this field and/or spw ?
+
+                        new_spwspec.append(spwid)
+                        spwsel['spw%s' % (spwid)] = spwsel_spwid
+
+                    new_spwspec = ','.join(new_spwspec)
+
+                    if inputs.nbins != '' and inputs.specmode != 'cont':
+                        nbin_items = inputs.nbins.split(',')
+                        nbins_dict = {}
+                        for nbin_item in nbin_items:
+                            key, value = nbin_item.split(':')
+                            nbins_dict[key] = int(value)
+                        try:
+                            if '*' in nbins_dict.keys():
+                                nbin = nbins_dict['*']
+                            else:
+                                nbin = nbins_dict[new_spwspec]
+                        except:
+                            LOG.warn('Could not determine binning factor for spw %s. Using default channel width.' % (new_spwspec))
+                            nbin = -1
+                    else:
                         nbin = -1
-                else:
-                    nbin = -1
 
-                if spwspec_ok and imsizes.has_key((field_intent[0],spwspec)) and ('invalid' not in cells[spwspec]):
-                    LOG.debug (
-                      'field:%s intent:%s spw:%s cell:%s imsize:%s phasecenter:%s'
-                      % (field_intent[0], field_intent[1], spwspec,
-                      cells[spwspec], imsizes[(field_intent[0],spwspec)],
-                      phasecenters[field_intent[0]]))
+                    if spwspec_ok and imsizes.has_key((field_intent[0],spwspec)) and ('invalid' not in cells[spwspec]):
+                        LOG.debug (
+                          'field:%s intent:%s spw:%s cell:%s imsize:%s phasecenter:%s'
+                          % (field_intent[0], field_intent[1], spwspec,
+                          cells[spwspec], imsizes[(field_intent[0],spwspec)],
+                          phasecenters[field_intent[0]]))
 
-                    target = CleanTarget(
-                        field=field_intent[0],
-                        intent=field_intent[1],
-                        spw=new_spwspec,
-                        spwsel_lsrk=spwsel,
-                        cell=cells[spwspec],
-                        imsize=imsizes[(field_intent[0], spwspec)],
-                        phasecenter=phasecenters[field_intent[0]],
-                        specmode=inputs.specmode,
-                        gridder=self.heuristics.gridder(field_intent[1], field_intent[0]),
-                        imagename=imagenames[(field_intent, spwspec)],
-                        start=inputs.start,
-                        width=widths[(field_intent[0], spwspec)],
-                        nbin=nbin,
-                        nchan=nchans[(field_intent[0], spwspec)],
-                        uvrange=inputs.uvrange,
-                        stokes='I',
-                        heuristics=self.heuristics
-                    )
+                        target = CleanTarget(
+                            field=field_intent[0],
+                            intent=field_intent[1],
+                            spw=new_spwspec,
+                            spwsel_lsrk=spwsel,
+                            cell=cells[spwspec],
+                            imsize=imsizes[(field_intent[0], spwspec)],
+                            phasecenter=phasecenters[field_intent[0]],
+                            specmode=inputs.specmode,
+                            gridder=self.heuristics.gridder(field_intent[1], field_intent[0]),
+                            imagename=imagenames[(field_intent, spwspec)],
+                            start=inputs.start,
+                            width=widths[(field_intent[0], spwspec)],
+                            nbin=nbin,
+                            nchan=nchans[(field_intent[0], spwspec)],
+                            uvrange=inputs.uvrange,
+                            stokes='I',
+                            heuristics=self.heuristics,
+                            vis=vislist if inputs.per_eb else None,
+                            is_per_eb=inputs.per_eb if inputs.per_eb else None
+                        )
 
-                    result.add_target(target)
+                        result.add_target(target)
 
         # Pass contfile and linefile names to context (via resultobjects)
         # for hif_findcont and hif_makeimages

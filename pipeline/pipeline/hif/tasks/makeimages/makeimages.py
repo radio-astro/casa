@@ -253,6 +253,9 @@ class CleanTaskFactory(object):
         if target['vis']:
             task_args['vis'] = target['vis']
 
+        if target['is_per_eb']:
+            task_args['is_per_eb'] = target['is_per_eb']
+
         return task_args
 
 

@@ -122,6 +122,11 @@ Create a a list of images to be cleaned.
     <value>False</value>
   </param>
 
+  <param type="bool" name="per_eb" subparam="true">
+    <description>Make an image target per EB</description>
+    <value>False</value>
+  </param>
+
   <param type="string" name="pipelinemode">
     <description>The pipeline operating mode</description>
     <value>automatic</value>
@@ -165,6 +170,7 @@ Create a a list of images to be cleaned.
         <default param="width"><value type="string"></value></default>
         <default param="nbins"><value type="string"></value></default>
         <default param="clearlist"><value type="bool">False</value></default>
+        <default param="per_eb"><value type="bool">False</value></default>
         <default param="dryrun"><value type="bool">False</value></default>
         <default param="acceptresults"><value type="bool">True</value></default>
       </equals>
@@ -322,6 +328,10 @@ start -- First channel for frequency mode images.
     example: '22.3GHz'
 
 clearlist -- Clear previous iamge target list.
+    default False
+    example: True
+
+per_eb -- Make an image target per EB.
     default False
     example: True
 
