@@ -155,8 +155,7 @@ class Editimlist(basetask.StandardTaskTemplate):
                         value = ast.literal_eval(value)
 
                         # use this information to change the values in inputs
-                        print("Setting inputdict['{k}'] to {v} {t}".format(k=parameter, v=value,
-                                                                           t=type(value)))
+                        LOG.debug("Setting inputdict['{k}'] to {v} {t}".format(k=parameter, v=value, t=type(value)))
                         inpdict[parameter] = value
                         inp.keys_to_change.append(parameter)
             else:
