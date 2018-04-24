@@ -256,6 +256,8 @@ class MakeImList(basetask.StandardTaskTemplate):
         # Need to record if there are targets for a vislist
         have_targets = {}
 
+        max_num_targets = 0
+
         for vislist in vislists:
             if inputs.per_eb:
                 imagename_prefix=os.path.basename(vislist[0])
@@ -298,8 +300,8 @@ class MakeImList(basetask.StandardTaskTemplate):
             else:
                 spwids = spwlist
 
-            # Record number of expected clean targets
-            result.set_max_num_targets(len(field_intent_list)*len(spwlist))
+            # Add number of expected clean targets
+            max_num_targets += len(field_intent_list)*len(spwlist)
 
             # Remove bad spws
             if field_intent_list != set([]):
@@ -560,6 +562,9 @@ class MakeImList(basetask.StandardTaskTemplate):
                 LOG.info('No check source found.')
             elif not all(have_targets.values()):
                 LOG.warn('No check source in these datasets: %s' % ([os.path.basename(k) for k,v in have_targets.iteritems() if not v]))
+
+        # Record total number of expected clean targets
+        result.set_max_num_targets(max_num_targets)
 
         # Pass contfile and linefile names to context (via resultobjects)
         # for hif_findcont and hif_makeimages
