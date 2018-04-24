@@ -646,13 +646,21 @@ class ImageParamsHeuristics(object):
 
     def is_eph_obj(self, field):
 
-        ms = self.observing_run.get_ms(self.vislist[0])
-        source_name = ms.get_fields(field)[0].source.name
-        is_eph_obj = False
-        for source in ms.sources:
-            if (source.name == source_name) and (source.is_eph_obj):
-                is_eph_obj = True
-        return is_eph_obj
+        ms = None
+        for msname in self.vislist:
+            ms = self.observing_run.get_ms(msname)
+            if field in [f.name for f in ms.fields]:
+                break
+        if ms is None:
+            LOG.error('Image Heuristics Ephemeris Object Check: Field %s not found.' % (field))
+            raise Exception('Image Heuristics Ephemeris Object Check: Field %s not found.' % (field))
+        else:
+            source_name = ms.get_fields(field)[0].source.name
+            is_eph_obj = False
+            for source in ms.sources:
+                if (source.name == source_name) and (source.is_eph_obj):
+                    is_eph_obj = True
+            return is_eph_obj
 
     def representative_target(self):
 
@@ -681,7 +689,7 @@ class ImageParamsHeuristics(object):
             repr_freq = cqa.quantity(float(repr_chan_obj.getCentreFrequency().convert_to(measures.FrequencyUnits.HERTZ).value), 'Hz')
             repr_bw = cqa.quantity(float(repr_chan_obj.getWidth().convert_to(measures.FrequencyUnits.HERTZ).value), 'Hz')
             repr_target = (repr_source, repr_freq, repr_bw)
-            LOG.info('ImagePreCheck: No representative target found. Choosing %s SPW %d.' % (repr_source, repr_spw))
+            LOG.info('Image Heuristics: No representative target found. Choosing %s SPW %d.' % (repr_source, repr_spw))
 
         # Check if there is a non-zero min/max angular resolution
         minAcceptableAngResolution = cqa.convert(self.proj_params.min_angular_resolution, 'arcsec')
@@ -697,6 +705,7 @@ class ImageParamsHeuristics(object):
                 maxAcceptableAngResolution = cqa.convert(science_goals['maxAcceptableAngResolution'], 'arcsec')
 
         virtual_repr_spw = self.observing_run.real2virtual_spw_id(repr_spw, repr_ms)
+
         return repr_target, repr_source, virtual_repr_spw, reprBW_mode, real_repr_target, minAcceptableAngResolution, maxAcceptableAngResolution
 
     def imsize(self, fields, cell, primary_beam, sfpblimit=None, max_pixels=None, centreonly=False):
