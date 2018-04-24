@@ -574,9 +574,9 @@ class MakeImList(basetask.StandardTaskTemplate):
 
 # maps intent and specmode Inputs parameters to textual description of execution context.
 _DESCRIPTIONS = {
-    ('PHASE', 'mfs'): 'calibrator',
-    ('BANDPASS', 'mfs'): 'calibrator',
-    ('CHECK', 'mfs'): 'calibrator',
+    ('PHASE', 'mfs'): 'phase calibrator',
+    ('BANDPASS', 'mfs'): 'bandpass calibrator',
+    ('CHECK', 'mfs'): 'check source',
     ('TARGET', 'mfs'): 'target per-spw continuum',
     ('TARGET', 'cont'): 'target aggregate continuum',
     ('TARGET', 'cube'): 'target cube',
