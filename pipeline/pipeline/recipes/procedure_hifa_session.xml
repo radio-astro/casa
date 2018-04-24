@@ -111,7 +111,27 @@
         <ParameterSet>
             <Parameter>
                 <Keyword xmlns="">intent</Keyword>
-                <Value xmlns="">PHASE,BANDPASS,CHECK</Value>
+                <Value xmlns="">PHASE,BANDPASS</Value>
+            </Parameter>
+        </ParameterSet>
+    </ProcessingCommand>
+
+    <ProcessingCommand>
+        <Command xmlns="">hif_makeimages</Command>
+        <ParameterSet>
+        </ParameterSet>
+    </ProcessingCommand>
+
+    <ProcessingCommand>
+        <Command xmlns="">hif_makeimlist</Command>
+        <ParameterSet>
+            <Parameter>
+                <Keyword xmlns="">intent</Keyword>
+                <Value xmlns="">CHECK</Value>
+            </Parameter>
+            <Parameter>
+                <Keyword xmlns="">per_eb</Keyword>
+                <Value xmlns="">True</Value>
             </Parameter>
         </ParameterSet>
     </ProcessingCommand>

@@ -124,7 +124,13 @@ def hifacal(vislist, importonly=True, pipelinemode='automatic',
         hifa_imageprecheck(pipelinemode=pipelinemode)
     
         # Make a list of expected point source calibrators to be cleaned
-        hif_makeimlist(intent='PHASE,BANDPASS,CHECK', pipelinemode=pipelinemode)
+        hif_makeimlist(intent='PHASE,BANDPASS', pipelinemode=pipelinemode)
+    
+        # Make clean images for the selected calibrators
+        hif_makeimages(pipelinemode=pipelinemode)
+
+        # Make a list of check source calibrators to be cleaned
+        hif_makeimlist(intent='CHECK', per_eb=True, pipelinemode=pipelinemode)
     
         # Make clean images for the selected calibrators
         hif_makeimages(pipelinemode=pipelinemode)

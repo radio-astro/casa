@@ -1790,11 +1790,13 @@ def score_checksources(mses, fieldname, spwid, imagename):
     # Do the fit and compute positions offsets and flux ratios
     fitdict = checksource.checkimage(imagename, refdirection, refflux)
 
+    msnames = ','.join([os.path.basename(ms.name) for ms in mses])
+
     # Compute the scores the default score is the geometric mean of
     # the position and flux scores if both are available.
     if not fitdict:
         score = 0.0
-        longmsg = 'Check source fit failed for %s spwd %d' % (fieldname, spwid)
+        longmsg = 'Check source fit failed for %s field %s spwid %d' % (msnames, fieldname, spwid)
         shortmsg = 'Check source fit failed'
         metric_score = None
         metric_units = 'Check source fit failed'
@@ -1808,8 +1810,8 @@ def score_checksources(mses, fieldname, spwid, imagename):
             score = max(0.0, 1.0 - min(1.0, beams))
             if score <= 0.9:
                 shortmsg = 'Check source fit not optimal'
-            longmsg = ('Check source fit for %s spwd %d:  offet %0.3fmarcsec %0.3fbeams  fit flux %0.3fJy  '
-                       'decoherence None' % (fieldname, spwid, offset, beams, fitflux))
+            longmsg = ('Check source fit for %s field %s spwid %d:  offet %0.3fmarcsec %0.3fbeams  fit flux %0.3fJy  '
+                       'decoherence None' % (msnames, fieldname, spwid, offset, beams, fitflux))
             metric_score = beams
             metric_units = 'beams'
 
@@ -1820,8 +1822,8 @@ def score_checksources(mses, fieldname, spwid, imagename):
             score = math.sqrt(fluxscore * offsetscore)
             if score <= 0.9:
                 shortmsg = 'Check source fit not optimal'
-            longmsg = ('Check source fit for %s spwd %d:  offet %0.3fmarcsec %0.3fbeams  fit flux %0.3fJy  '
-                       'decoherence %0.3f percent' % (fieldname, spwid, offset, beams, fitflux, coherence))
+            longmsg = ('Check source fit for %s field %s spwid %d:  offet %0.3fmarcsec %0.3fbeams  fit flux %0.3fJy  '
+                       'decoherence %0.3f percent' % (msnames, fieldname, spwid, offset, beams, fitflux, coherence))
 
             metric_score = (fluxscore, offsetscore)
             metric_units = 'flux score, offset score'
