@@ -309,6 +309,7 @@ class ImageParamsHeuristics(object):
                     valid_data[(field, intent, spwid)] = False
                     valid_vis_list = []
                     valid_real_spwid_list = []
+                    valid_virtual_spwid_list = []
                     for vis in self.vislist:
                         ms = self.observing_run.get_ms(name=vis)
                         ms.get_scans()
@@ -326,6 +327,7 @@ class ImageParamsHeuristics(object):
                             valid_data[(field, intent, spwid)] = True
                             valid_vis_list.append(vis)
                             valid_real_spwid_list.append(real_spwid)
+                            valid_virtual_spwid_list.append(spwid)
                         except:
                             pass
 
@@ -356,9 +358,9 @@ class ImageParamsHeuristics(object):
 
                         # Need to find an unflagged channel
                         makepsf_channel = None
-                        for msname, real_spwid in zip(valid_vis_list, valid_real_spwid_list):
+                        for msname, real_spwid, virtual_spwid in zip(valid_vis_list, valid_real_spwid_list, valid_virtual_spwid_list):
                             # Get the channel flags
-                            channel_flags = self.get_channel_flags(msname, field, real_spwid)
+                            channel_flags = self.get_channel_flags(msname, field, virtual_spwid)
 
                             # Get first unflagged channel from the center
                             makepsf_channel = self.get_first_unflagged_channel_from_center(channel_flags)
