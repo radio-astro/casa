@@ -94,15 +94,18 @@ def savitzky_golay(y, window_size, order, deriv=0, rate=1):
 
 
 class SyspowerResults(basetask.Results):
-    def __init__(self, gaintable=None):
+    def __init__(self, gaintable=None, spowerdict=None):
 
         if gaintable is None:
             gaintable = ''
+        if spowerdict is None:
+            spowerdict = {}
 
         super(SyspowerResults, self).__init__()
 
         self.pipeline_casa_task = 'Syspower'
         self.gaintable = gaintable
+        self.spowerdict = spowerdict
 
     def merge_with_context(self, context):
         """
@@ -128,7 +131,6 @@ class Syspower(basetask.StandardTaskTemplate):
     Inputs = SyspowerInputs
 
     def prepare(self):
-        LOG.info("This Syspower class is running.")
         m = self.inputs.context.observing_run.get_ms(self.inputs.vis)
 
         # flag normalized p_diff outside this range
@@ -136,8 +138,9 @@ class Syspower(basetask.StandardTaskTemplate):
 
         try:
             rq_table = self.inputs.context.results[4].read()[0].rq_result[0].final[0].gaintable
-        except:
+        except Exception as ex:
             rq_table = self.inputs.context.results[4].read()[0].rq_result.final[0].gaintable
+            LOG.debug(ex)
 
         fields = m.get_fields(intent='AMPLITUDE')
         field = fields[0]
@@ -167,6 +170,8 @@ class Syspower(basetask.StandardTaskTemplate):
         dat_filtered     = np.zeros((len(antenna_ids), len(spws), 2, len(sorted_time)))
         dat_common       = np.ma.zeros((len(antenna_ids), 2, 2, len(sorted_time)))
         dat_online_flags = np.zeros((len(antenna_ids), len(sorted_time)), dtype='bool')
+        dat_sum          = np.zeros((len(antenna_ids), len(spws), 2, len(sorted_time)))
+        dat_sum_flux     = np.zeros((len(antenna_ids), len(spws), 2, len(sorted_time)))
 
         # Obtain online flagging commands from flagdata result
         flagresult = self.inputs.context.results[2]
@@ -205,7 +210,7 @@ class Syspower(basetask.StandardTaskTemplate):
                 flux_hits = np.where((times >= np.min(flux_times)) & (times <= np.max(flux_times)))[0]
 
                 for pol in [0, 1]:
-                    LOG.info(str(i) + ' ' + str(j) + ' ' + str(pol) + ' ' + str(hits2))
+                    LOG.debug(str(i) + ' ' + str(j) + ' ' + str(pol) + ' ' + str(hits2))
                     dat_raw[i, j, pol, hits2] = p_diff[pol, hits]
                     dat_flux[i, j, pol] = np.median(pdrq[pol, hits][flux_hits])
                     dat_rq[i, j, pol, hits2] = rq[pol, hits]
@@ -273,6 +278,17 @@ class Syspower(basetask.StandardTaskTemplate):
 
                     dat_common[i, bband, pol, :] = sp_template
 
+        spowerdict = {}
+        spowerdict['spower_raw']          = dat_raw
+        spowerdict['spower_flux_levels']  = dat_flux
+        spowerdict['spower_rq']           = dat_rq
+        spowerdict['spower_scaled']       = dat_scaled
+        spowerdict['spower_filtered']     = dat_filtered
+        spowerdict['spower_common']       = np.ma.filled(dat_common, 0)
+        spowerdict['spower_online_flags'] = dat_online_flags
+        spowerdict['spower_sum']          = dat_sum
+        spowerdict['spower_sum_flux']     = dat_sum_flux
+
         # flag template using clip values
         final_template = np.ma.array(dat_common)
         final_template.mask = np.ma.getmaskarray(final_template)
@@ -309,25 +325,19 @@ class Syspower(basetask.StandardTaskTemplate):
                                 LOG.info(message.format(bband, pol, 100. * np.sum(rq_flag[2 * pol, 0, hits]) /
                                                                                   rq_flag[2 * pol, 0, hits].size))
                         except:
-                            LOG.warn('error preparing final RQ table')
+                            LOG.warn('Error preparing final RQ table')
                             raise  # SystemExit('shape mismatch writing final RQ table')
 
             try:
                 tb.putcol('FPARAM', rq_par)
                 tb.putcol('FLAG', rq_flag)
-            except:
-                LOG.warn('error writing final RQ table - switched power will not be applied')
+            except Exception as ex:
+                LOG.warn('Error writing final RQ table - switched power will not be applied' + str(ex))
 
-        return SyspowerResults(gaintable=rq_table)
+        return SyspowerResults(gaintable=rq_table, spowerdict=spowerdict)
 
     def analyse(self, results):
         return results
-
-    def _do_somethingsyspower(self):
-
-        task = casa_tasks.syspowercal(vis=self.inputs.vis, caltable='tempcal.syspower')
-
-        return self._executor.execute(task)
 
     # function for smoothing and statistical flagging
     # adapted from https://gist.github.com/bhawkins/3535131
@@ -395,8 +405,13 @@ class Syspower(basetask.StandardTaskTemplate):
         this_interp = 0
         while np.any(x.mask == True):
             flag_percent = 100.0 * np.sum(x.mask) / x.size
-            LOG.info('    will attempt to interpolate {0:.2f}% of data in iteration {1}'.format(flag_percent,
-                                                                                                    this_interp + 1))
+            message = '    will attempt to interpolate {0:.2f}% of data in iteration {1}'.format(flag_percent,
+                                                                                                 this_interp + 1)
+            if this_interp == 0:
+                LOG.info(message)
+            else:
+                LOG.debug(message)
+
             x = self.medfilt(x, k, threshold, fill_gaps=True)
             this_interp += 1
             if this_interp > max_interp: break
