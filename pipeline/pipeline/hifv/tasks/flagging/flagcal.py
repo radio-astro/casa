@@ -34,7 +34,7 @@ class FlagcalResults(basetask.Results):
 
 
 class FlagcalInputs(vdp.StandardInputs):
-    caltable = vdp.VisDependentProperty(default='finalampgaincal.g')
+    caltable = vdp.VisDependentProperty(default='finalampgaincal.tbl')
     clipminmax = vdp.VisDependentProperty(default=[0.9, 1.1])
 
     def __init__(self, context, vis=None, caltable=None, clipminmax=None):
@@ -57,10 +57,9 @@ class Flagcal(basetask.StandardTaskTemplate):
         LOG.info(','.join([str(x) for x in self.inputs.clipminmax]))
 
         # Check finalcal stage prefixes.
-        basevis = os.path.basename(self.inputs.vis)
         caltable = self.inputs.caltable
         if not os.path.exists(caltable):
-            caltable = basevis + '.' + caltable
+            caltable = self.inputs.context.results[-2].read()[0].finalampgaincaltable
 
         flagcal_result = self._do_flagdata(caltable=caltable,
                                            clipminmax=self.inputs.clipminmax)
