@@ -123,9 +123,9 @@ class Circfeedpolcal(polarization.Polarization):
 
         tableprefix = os.path.basename(self.inputs.vis) + '.' + 'hifv_circfeedpolcal.s'
 
-        tablesToAdd = ((tableprefix + str(stage_number) + '_1.' + 'kcross.tbl', 'kcross', self.do_spwmap()),
-                       (tableprefix + str(stage_number) + '_2.' + 'D2.tbl', 'polarization',[]),
-                       (tableprefix + str(stage_number) + '_3.' + 'X1.tbl', 'polarization',[]))
+        tablesToAdd = [[tableprefix + str(stage_number) + '_1.' + 'kcross.tbl', 'kcross', []],
+                       [tableprefix + str(stage_number) + '_2.' + 'D2.tbl', 'polarization', []],
+                       [tableprefix + str(stage_number) + '_3.' + 'X1.tbl', 'polarization', []]]
 
         # D-terms   - do we need this?
         # self.do_polcal(self.inputs.vis+'.D1', 'D+QU',field='',
@@ -135,14 +135,14 @@ class Circfeedpolcal(polarization.Polarization):
 
         # First pass R-L delay
 
-        spwmap = [] # Default for KCROSS table
+        tablesToAdd[0][2] = []  # Default for KCROSS table
         if self.inputs.mbdkcross:
             # baseband_spws = [spw.id for spw in m.get_spectral_windows(science_windows_only=True)]
             baseband_spws = self.vla_basebands()
             for spws in baseband_spws:
                 LOG.info("Executing gaincal on baseband with spws={!s}".format(spws))
                 self.do_gaincal(tablesToAdd[0][0], field=fluxcalfieldname, spw=spws, combine='scan,spw')
-                spwmap = [self.do_spwmap()]
+                tablesToAdd[0][2] = self.do_spwmap()
         else:
             self.do_gaincal(tablesToAdd[0][0], field=fluxcalfieldname)
 
@@ -201,16 +201,17 @@ class Circfeedpolcal(polarization.Polarization):
 
         self.do_polcal(tablesToAdd[1][0], kcrosstable=tablesToAdd[0][0], poltype=poltype, field=polleakagefield,
                        intent='CALIBRATE_POL_LEAKAGE#UNSPECIFIED',
-                       gainfield=[''], kcrossspwmap=spwmap, solint='inf,{!s}'.format(self.inputs.Dterm_solint),
+                       gainfield=[''], kcrossspwmap=tablesToAdd[0][2], solint='inf,{!s}'.format(self.inputs.Dterm_solint),
                        minsnr=5.0)
 
         # 2MHz pieces, minsnr of 3.0
         self.do_polcal(tablesToAdd[2][0], kcrosstable=tablesToAdd[0][0], poltype='Xf', field=polanglefield,
                        intent='CALIBRATE_POL_ANGLE#UNSPECIFIED',
-                       gainfield=[''], kcrossspwmap=spwmap, solint='inf,2MHz',
+                       gainfield=[''], kcrossspwmap=tablesToAdd[0][2], solint='inf,2MHz',
                        minsnr=3.0)
 
         for (addcaltable, caltype, spwmap) in tablesToAdd:
+            import pdb; pdb.set_trace()
             calto = callibrary.CalTo(self.inputs.vis)
             calfrom = callibrary.CalFrom(gaintable=addcaltable, interp='', calwt=False,
                                          caltype=caltype, spwmap=spwmap)
