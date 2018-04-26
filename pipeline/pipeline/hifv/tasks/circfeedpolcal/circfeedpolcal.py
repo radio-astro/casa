@@ -211,7 +211,6 @@ class Circfeedpolcal(polarization.Polarization):
                        minsnr=3.0)
 
         for (addcaltable, caltype, spwmap) in tablesToAdd:
-            import pdb; pdb.set_trace()
             calto = callibrary.CalTo(self.inputs.vis)
             calfrom = callibrary.CalFrom(gaintable=addcaltable, interp='', calwt=False,
                                          caltype=caltype, spwmap=spwmap)
