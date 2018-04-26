@@ -32,7 +32,7 @@ class ImageParamsHeuristicsALMA(ImageParamsHeuristics):
 
         cqa = casatools.quanta
 
-        repr_target, repr_source, repr_spw, reprBW_mode, real_repr_target, minAcceptableAngResolution, maxAcceptableAngResolution = self.representative_target()
+        repr_target, repr_source, repr_spw, repr_freq, reprBW_mode, real_repr_target, minAcceptableAngResolution, maxAcceptableAngResolution = self.representative_target()
 
         # Only apply the robust heuristic if a representative source is defined
         if not real_repr_target:
@@ -54,25 +54,36 @@ class ImageParamsHeuristicsALMA(ImageParamsHeuristics):
 
         return robust
 
-    def uvtaper(self, beam_natural):
+    def uvtaper(self, beam_natural=None, protect_long=3):
 
         '''Adjustment of uvtaper parameter based on desired resolution.'''
 
-        if (beam_natural is None):
+        if (beam_natural is None) and (protect_long is None):
             return []
 
         cqa = casatools.quanta
 
-        repr_target, repr_source, repr_spw, reprBW_mode, real_repr_target, minAcceptableAngResolution, maxAcceptableAngResolution = self.representative_target()
+        repr_target, repr_source, repr_spw, repr_freq, reprBW_mode, real_repr_target, minAcceptableAngResolution, maxAcceptableAngResolution = self.representative_target()
+
+        # Protection against spurious long baselines
+        if protect_long is not None:
+            l80, min_diameter = self.calc_percentile_baseline_length(80.)
+            LOG.info('ALMA uvtaper heuristic: L80 baseline length is %.1f meter' % (l80)) 
+
+            c = cqa.getvalue(cqa.convert(cqa.constants('c'),'m/s'))[0]
+            uvtaper_value = protect_long * l80 / cqa.getvalue(cqa.convert(cqa.constants('c'),'m/s'))[0] * cqa.getvalue(cqa.convert(repr_freq, 'Hz'))[0]
+            uvtaper = ['%dlambda' % (int(round(uvtaper_value)))]
+
+            return uvtaper
 
         if not real_repr_target:
-            LOG.info('ALMA uvtaper heuristics: No representative target found. Using uvtaper=[]')
+            LOG.info('ALMA uvtaper heuristic: No representative target found. Using uvtaper=[]')
             return []
 
         try:
             beam_natural_v = math.sqrt(cqa.getvalue(cqa.convert(beam_natural['major'], 'arcsec')) * cqa.getvalue(cqa.convert(beam_natural['minor'], 'arcsec')))
         except Exception as e:
-            LOG.error('Cannot get natural beam size: %s. Using uvtaper=[]' % (e))
+            LOG.error('ALMA uvtaper heuristic: Cannot get natural beam size: %s. Using uvtaper=[]' % (e))
             return []
 
         minAR_v = cqa.getvalue(cqa.convert(minAcceptableAngResolution, 'arcsec'))
@@ -186,6 +197,19 @@ class ImageParamsHeuristicsALMA(ImageParamsHeuristics):
 
         return new_niter
 
+    def calc_percentile_baseline_length(self, percentile):
+
+        '''Calculate percentile baseline length for the vis list used in this heuristics instance.'''
+
+        min_diameter = 1.e9
+        percentileBaselineLengths = []
+        for msname in self.vislist:
+            ms_do = self.observing_run.get_ms(msname)
+            min_diameter = min(min_diameter, min([antenna.diameter for antenna in ms_do.antennas]))
+            percentileBaselineLengths.append(np.percentile([float(baseline.length.to_units(measures.DistanceUnits.METRE)) for baseline in ms_do.antenna_array.baselines], percentile))
+
+        return np.median(percentileBaselineLengths), min_diameter
+
     def get_autobox_params(self, intent, specmode):
 
         '''Default auto-boxing parameters for ALMA main array and ACA.'''
@@ -197,13 +221,7 @@ class ImageParamsHeuristicsALMA(ImageParamsHeuristics):
         minbeamfrac = None
         growiterations = None
 
-        min_diameter = 1.e9
-        repBaselineLengths = []
-        for msname in self.vislist:
-            ms_do = self.observing_run.get_ms(msname)
-            min_diameter = min(min_diameter, min([antenna.diameter for antenna in ms_do.antennas]))
-            repBaselineLengths.append(np.percentile([float(baseline.length.to_units(measures.DistanceUnits.METRE)) for baseline in ms_do.antenna_array.baselines], 75.))
-        repBaselineLength = np.median(repBaselineLengths)
+        repBaselineLength, min_diameter = self.calc_percentile_baseline_length(75.)
         LOG.info('autobox heuristic: Representative baseline length is %.1f meter' % (repBaselineLength)) 
 
         if ('TARGET' in intent) or ('CHECK' in intent):

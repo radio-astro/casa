@@ -60,7 +60,7 @@ class ImageParamsHeuristicsVlassSeCube(ImageParamsHeuristics):
     def scales(self):
         return [0]
 
-    def uvtaper(self, beam_natural=None):
+    def uvtaper(self, beam_natural=None, protect_long=None):
         return []
 
     def uvrange(self):

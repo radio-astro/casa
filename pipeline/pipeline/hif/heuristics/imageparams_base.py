@@ -674,6 +674,7 @@ class ImageParamsHeuristics(object):
         reprBW_mode = 'cube'
         if repr_target != (None, None, None):
             real_repr_target = True
+            repr_freq = repr_target[1]
             # Get representative source and spw
             repr_source, repr_spw = repr_ms.get_representative_source_spw()
             # Check if representative bandwidth is larger than spw bandwidth. If so, switch to fullcont.
@@ -708,7 +709,7 @@ class ImageParamsHeuristics(object):
 
         virtual_repr_spw = self.observing_run.real2virtual_spw_id(repr_spw, repr_ms)
 
-        return repr_target, repr_source, virtual_repr_spw, reprBW_mode, real_repr_target, minAcceptableAngResolution, maxAcceptableAngResolution
+        return repr_target, repr_source, virtual_repr_spw, repr_freq, reprBW_mode, real_repr_target, minAcceptableAngResolution, maxAcceptableAngResolution
 
     def imsize(self, fields, cell, primary_beam, sfpblimit=None, max_pixels=None, centreonly=False):
         # get spread of beams
@@ -1348,7 +1349,14 @@ class ImageParamsHeuristics(object):
                                        nx=imsize[0], ny=imsize[1])
                     imTool.weight(type=weighting, rmode='norm', robust=robust)
                     if uvtaper not in (None, []):
-                        imTool.filter(type='gaussian', bmaj=uvtaper[0])
+                        if len(uvtaper) == 1:
+                            bmaj = bmin = uvtaper[0]
+                            bpa = '0.0deg'
+                        elif len(uvtaper) == 3:
+                            bmaj, bmin, bpa = uvtaper
+                        else:
+                            raise Exception, 'Unknown uvtaper format: %s' % (str(uvtaper))
+                        imTool.filter(type='gaussian', bmaj=bmaj, bmin=bmin, bpa=bpa)
                     result = imTool.apparentsens()
 
                 if (result[1] == 0.0):
@@ -1429,7 +1437,7 @@ class ImageParamsHeuristics(object):
     def scales(self):
         return None
 
-    def uvtaper(self, beam_natural=None):
+    def uvtaper(self, beam_natural=None, protect_long=None):
         return None
 
     def uvrange(self):

@@ -192,7 +192,7 @@ class MakeImList(basetask.StandardTaskTemplate):
                 imaging_mode=inputs.context.project_summary.telescope
             )
 
-            repr_target, repr_source, repr_spw, reprBW_mode, real_repr_target, minAcceptableAngResolution, maxAcceptableAngResolution = self.heuristics.representative_target()
+            repr_target, repr_source, repr_spw, repr_freq, reprBW_mode, real_repr_target, minAcceptableAngResolution, maxAcceptableAngResolution = self.heuristics.representative_target()
             # The PI cube shall only be created for real representative targets
             if not real_repr_target:
                 LOG.info('No representative target found. No PI cube will be made.')
@@ -322,20 +322,18 @@ class MakeImList(basetask.StandardTaskTemplate):
             else:
                 spwlist = filtered_spwlist
 
-            # get beams for each spwspec
-            largest_primary_beams = {}
-            synthesized_beams = {}
-            for spwspec in spwlist:
-                largest_primary_beams[spwspec] = self.heuristics.largest_primary_beam_size(spwspec=spwspec)
-                synthesized_beams[spwspec] = self.heuristics.synthesized_beam(field_intent_list=field_intent_list, spwspec=spwspec, robust=0.5, uvtaper=[])
+            # Get default heuristics uvtaper value
+            default_uvtaper = self.heuristics.uvtaper()
 
             # cell is a list of form [cellx, celly]. If the list has form [cell]
             # then that means the cell is the same size in x and y. If cell is
             # empty then fill it with a heuristic result
             cells = {}
             if cell == []:
+                synthesized_beams = {}
                 min_cell = ['3600arcsec']
                 for spwspec in spwlist:
+                    synthesized_beams[spwspec] = self.heuristics.synthesized_beam(field_intent_list=field_intent_list, spwspec=spwspec, robust=0.5, uvtaper=default_uvtaper)
                     # the heuristic cell is always the same for x and y as
                     # the value derives from the single value returned by
                     # imager.advise
@@ -386,6 +384,11 @@ class MakeImList(basetask.StandardTaskTemplate):
                 sfpblimit = 0.2
             imsizes = {}
             if imsize == []:
+                # get primary beams for each spwspec
+                largest_primary_beams = {}
+                for spwspec in spwlist:
+                    largest_primary_beams[spwspec] = self.heuristics.largest_primary_beam_size(spwspec=spwspec)
+
                 for field_intent in field_intent_list:
                     max_x_size = 1
                     max_y_size = 1
@@ -549,6 +552,7 @@ class MakeImList(basetask.StandardTaskTemplate):
                             nbin=nbin,
                             nchan=nchans[(field_intent[0], spwspec)],
                             uvrange=inputs.uvrange,
+                            uvtaper=default_uvtaper,
                             stokes='I',
                             heuristics=self.heuristics,
                             vis=vislist if inputs.per_eb else None,

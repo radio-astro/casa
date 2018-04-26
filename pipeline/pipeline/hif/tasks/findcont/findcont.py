@@ -210,7 +210,8 @@ class FindCont(basetask.StandardTaskTemplate):
                                             pblimit=0.2, niter=0, threshold='0mJy', deconvolver='hogbom',
                                             interactive=False, imsize=target['imsize'], cell=target['cell'],
                                             phasecenter=phasecenter, stokes='I', weighting='briggs',
-                                            robust=0.5, npixels=0, restoration=False, restoringbeam=[], pbcor=False,
+                                            robust=0.5, uvtaper=target['uvtaper'], npixels=0, restoration=False,
+                                            restoringbeam=[], pbcor=False,
                                             savemodel='none', chanchunks=chanchunks, parallel=parallel)
                     self._executor.execute(job)
 

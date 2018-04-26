@@ -260,9 +260,13 @@ class CleanTaskFactory(object):
 
 
 def _get_description_map(intent):
-    if intent in ('PHASE', 'BANDPASS', 'CHECK'):
+    if intent in ('PHASE', 'BANDPASS'):
         return {
             'mfs': 'Make calibrator images'
+        }
+    elif intent == 'CHECK':
+        return {
+            'mfs': 'Make check source images'
         }
     elif intent == 'TARGET':
         return {

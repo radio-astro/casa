@@ -71,6 +71,7 @@ class CheckProductSizeHeuristics(object):
         repr_target, \
         repr_source, \
         repr_spw, \
+        repr_freq, \
         reprBW_mode, \
         real_repr_target, \
         minAcceptableAngResolution, \
