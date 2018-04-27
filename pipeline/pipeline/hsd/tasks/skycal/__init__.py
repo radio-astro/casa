@@ -8,11 +8,11 @@ from .skycal import HpcSDSkyCal
 from . import skycal
 from . import renderer
 
-SDSkyCal = SerialSDSkyCal
+SDSkyCal = HpcSDSkyCal
 
 qaadapter.registry.register_to_calibration_topic(skycal.SDSkyCalResults)
 
-weblog.add_renderer(SDSkyCal, renderer.T2_4MDetailsSingleDishSkyCalRenderer(), group_by=weblog.UNGROUPED)
+weblog.add_renderer(SerialSDSkyCal, renderer.T2_4MDetailsSingleDishSkyCalRenderer(), group_by=weblog.UNGROUPED)
 
 # this is necessary when jobs executed in MPIServer throws an exception
 weblog.add_renderer(HpcSDSkyCal, renderer.T2_4MDetailsSingleDishSkyCalRenderer(), group_by=weblog.UNGROUPED)

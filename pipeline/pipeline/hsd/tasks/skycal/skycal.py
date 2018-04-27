@@ -92,8 +92,8 @@ class SDSkyCalResults(common.SingleDishResults):
         return str(self.outcome)
 
 
-@task_registry.set_equivalent_casa_task('hsd_skycal')
-@task_registry.set_casa_commands_comment('Generates sky calibration table according to calibration strategy.')
+#@task_registry.set_equivalent_casa_task('hsd_skycal')
+#@task_registry.set_casa_commands_comment('Generates sky calibration table according to calibration strategy.')
 class SerialSDSkyCal(basetask.StandardTaskTemplate):
     Inputs = SDSkyCalInputs
 
@@ -213,7 +213,8 @@ class HpcSDSkyCalInputs(SDSkyCalInputs):
     
     
     
-@task_registry.set_equivalent_casa_task('hpc_hsd_skycal')
+#@task_registry.set_equivalent_casa_task('hpc_hsd_skycal')
+@task_registry.set_equivalent_casa_task('hsd_skycal')
 @task_registry.set_casa_commands_comment('Generates sky calibration table according to calibration strategy.')
 class HpcSDSkyCal(sessionutils.ParallelTemplate):
     Inputs = HpcSDSkyCalInputs
