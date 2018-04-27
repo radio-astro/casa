@@ -19,16 +19,16 @@ LOG = infrastructure.get_logger(__name__)
 
 
 class SDBLFlagSummary(object):
-    '''
+    """
     A class of single dish flagging task.
     This class defines per spwid flagging operation.
-    '''
+    """
 
     def __init__(self, context, ms_list, antid_list, fieldid_list,
                  spwid_list, pols_list, thresholds, flagRule, userFlag=[]):
-        '''
+        """
         Constructor of worker class
-        '''
+        """
         self.context = context
         self.datatable = DataTable(name=self.context.observing_run.ms_datatable_name, readonly=True)
         self.ms_list = ms_list
@@ -84,29 +84,29 @@ class SDBLFlagSummary(object):
                 TimeTable = time_table[1]
             else:        
                 TimeTable = time_table[0]
-            flatiter = utils.flatten([ chunks[1] for chunks in TimeTable ])
-            dt_idx = [ chunk for chunk in flatiter ]
+            flatiter = utils.flatten([chunks[1] for chunks in TimeTable])
+            dt_idx = [chunk for chunk in flatiter]
             iteration = _get_iteration(self.context.observing_run.ms_reduction_group,
                                        msobj, antid, fieldid, spwid)
             for pol in pollist:
                 ddobj = msobj.get_data_description(spw=spwid)
                 polid = ddobj.get_polarization_id(pol)
                 # generate summary plot
-                FigFileRoot = ("FlagStat_%s_ant%d_field%d_spw%d_pol%d_iter%d" % \
+                FigFileRoot = ("FlagStat_%s_ant%d_field%d_spw%d_pol%d_iter%d" %
                                (asdm, antid, fieldid, spwid, polid, iteration))
                 time_gap = datatable.get_timegap(antid, spwid, None,
                                                  ms=msobj, field_id=fieldid)
                 # time_gap[0]: PosGap, time_gap[1]: TimeGap
                 for i in range(len(thresholds)):
                     thres = thresholds[i]
-                    if thres['msname'] == msobj.basename and thres['antenna'] == antid and \
-                        thres['field'] == fieldid and thres['spw'] == spwid and \
-                        thres['pol'] == pol:
+                    if (thres['msname'] == msobj.basename and thres['antenna'] == antid and
+                            thres['field'] == fieldid and thres['spw'] == spwid and
+                            thres['pol'] == pol):
                         final_thres = thres['result_threshold']
-                        is_baselined = thres['baselined'] if thres.has_key('baselined') else False
+                        is_baselined = thres['baselined'] if 'baselined' in thres else False
                         thresholds.pop(i)
                         break
-                if (not is_baselined) and not iteration==0:
+                if (not is_baselined) and not iteration == 0:
                     raise Exception, "Internal error: is_baselined flag is set to False for baselined data."
                 t0 = time.time()
                 htmlName, nflags = self.plot_flag(datatable, dt_idx, polid,
@@ -125,7 +125,6 @@ class SDBLFlagSummary(object):
         LOG.info('PROFILE execute: elapsed time is %s sec'%(end_time-start_time))
 
         return flagSummary
-
 
     def _get_parmanent_flag_summary(self, pflag, FlagRule):
         # FLAG_PERMANENT[0] --- 'WeatherFlag'
@@ -191,7 +190,7 @@ class SDBLFlagSummary(object):
             # FLAG_SUMMARY
             Flag *= self._get_stat_flag_summary(tFLAG, FlagRule_local)
             if Flag == 0:
-                FlaggedRows.append( row )
+                FlaggedRows.append(row)
             # Tsys flag
             NPpdata[0][N] = tTSYS
             NPpflag[0][N] = tPFLAG[1]
@@ -245,14 +244,16 @@ class SDBLFlagSummary(object):
         ThreExpectedRMSPostFit = FlagRule_local['RmsExpectedPostFitFlag']['Threshold']
         plots = []
         # Tsys flag
-        PlotData = {'row': NPprows[0], 'data': NPpdata[0], 'flag': NPpflag[0], \
-                    'thre': [threshold[4][1], 0.0], \
-                    'gap': [PosGap, TimeGap], \
-                            'title': "Tsys (K)\nBlue dots: data points, Red dots: deviator, Cyan H-line: %.1f sigma threshold, Red H-line(s): out of vertical scale limit(s)" % FlagRule_local['TsysFlag']['Threshold'], \
-                    'xlabel': "row (spectrum)", \
-                    'ylabel': "Tsys (K)", \
-                    'permanentflag': PermanentFlag, \
-                    'isActive': FlagRule_local['TsysFlag']['isActive'], \
+        PlotData = {'row': NPprows[0],
+                    'data': NPpdata[0],
+                    'flag': NPpflag[0],
+                    'thre': [threshold[4][1], 0.0],
+                    'gap': [PosGap, TimeGap],
+                    'title': "Tsys (K)\nBlue dots: data points, Red dots: deviator, Cyan H-line: %.1f sigma threshold, Red H-line(s): out of vertical scale limit(s)" % FlagRule_local['TsysFlag']['Threshold'],
+                    'xlabel': "row (spectrum)",
+                    'ylabel': "Tsys (K)",
+                    'permanentflag': PermanentFlag,
+                    'isActive': FlagRule_local['TsysFlag']['isActive'],
                     'threType': "line"}
         SDP.StatisticsPlot(PlotData, FigFileDir, FigFileRoot+'_0')
         plots.append(FigFileRoot+'_0.png')
@@ -328,13 +329,14 @@ class SDBLFlagSummary(object):
         if FigFileDir != False:
             Filename = FigFileDir+FigFileRoot+'.html'
             relpath = os.path.basename(FigFileDir.rstrip("/")) ### stage#
-            if os.access(Filename, os.F_OK): os.remove(Filename)
+            if os.access(Filename, os.F_OK):
+                os.remove(Filename)
             # Assuming single MS, antenna, field, spw, and polid
             ID0 = ids[0]
-            msid = DataTable.getcell('MS',ID0)
-            antid = DataTable.getcell('ANTENNA',ID0)
-            fieldid = DataTable.getcell('FIELD_ID',ID0)
-            spwid = DataTable.getcell('IF',ID0)
+            msid = DataTable.getcell('MS', ID0)
+            antid = DataTable.getcell('ANTENNA', ID0)
+            fieldid = DataTable.getcell('FIELD_ID', ID0)
+            spwid = DataTable.getcell('IF', ID0)
             msobj = self.context.observing_run.measurement_sets[msid]
             asdm = asdm = common.asdm_name_from_ms(msobj)
             ant_name = msobj.get_antenna(antid)[0].name
@@ -430,12 +432,14 @@ class SDBLFlagSummary(object):
         del threshold, NPpdata, NPpflag, NPprows, PlotData, FlaggedRows, FlaggedRowsCategory
         return os.path.basename(Filename), flag_nums
 
+
 def _format_table_row_html(label, isactive, threshold, nflag, ntotal):
     valid_flag = isactive and (threshold != 'SKIPPED')
     typestr = "%.1f"
     if not valid_flag: typestr="%s"
     html_str = '<tr align="center" class="stp"><th>%s</th><th>%s</th><th>%s</th><th>%s</th><th>'+typestr+'</th></tr>'
     return html_str % (label, isactive, threshold, (nflag if valid_flag else "N/A"), (nflag*100.0/ntotal if valid_flag else "N/A"))
+
 
 def _get_iteration(reduction_group, msobj, antid, fieldid, spwid):
     members = []
@@ -446,4 +450,4 @@ def _get_iteration(reduction_group, msobj, antid, fieldid, spwid):
         return members[0].iteration
     elif len(members) == 0:
         raise RuntimeError('Given (%s, %s, %s) is not in reduction group.' % (antid, fieldid, spwid))
-    raise RuntimeError('Given (%s, %s, %s) is in more than one reduction groups.'%(antid, fieldid, spwid))
+    raise RuntimeError('Given (%s, %s, %s) is in more than one reduction groups.' % (antid, fieldid, spwid))

@@ -41,11 +41,11 @@ class BaselineParamKeys(object):
 BLP = BaselineParamKeys
     
 
-#@sdutils.profiler
+# @sdutils.profiler
 def write_blparam(fileobj, param):
     param_values = collections.defaultdict(str)
     for key in BLP.ORDERED_KEY:
-        if param.has_key(key):
+        if key in param:
             param_values[key] = param[key]
     line = ','.join(map(str, [param_values[k] for k in BLP.ORDERED_KEY]))
     #line = ','.join((str(param[k]) if k in param.keys() else '' for k in BLP.ORDERED_KEY))
@@ -53,14 +53,15 @@ def write_blparam(fileobj, param):
 
 
 def as_maskstring(masklist):
-    return ';'.join(map(lambda x: '%s~%s'%(x[0],x[1]), masklist))
+    return ';'.join(map(lambda x: '%s~%s' % (x[0], x[1]), masklist))
 
 
 def generate_plot_table(ms_id, antenna_id, spw_id, polarization_ids, grid_table):
     def _filter(msid, ant, spw, pols, table):
         for row in table:
             if row[0] == spw and row[1] in pols:
-                new_row_entry = row[2:6] + [numpy.array([r[3] for r in row[6] if r[-1] == msid and r[-2] == ant], dtype=int)]
+                new_row_entry = row[2:6] + [numpy.array([r[3] for r in row[6] if r[-1] == msid and r[-2] == ant],
+                                                        dtype=int)]
                 yield new_row_entry
     new_table = list(_filter(ms_id, antenna_id, spw_id, polarization_ids, grid_table))
     return new_table
@@ -70,6 +71,7 @@ class BaselineSubtractionInputsBase(basetask.StandardInputs):
     DATACOLUMN = {'CORRECTED_DATA': 'corrected',
                   'DATA': 'data',
                   'FLOAT_DATA': 'float_data'}
+
     def to_casa_args(self):
         args = super(BaselineSubtractionInputsBase, self).to_casa_args()#{'vis': self.vis}
         prefix = os.path.basename(self.vis.rstrip('/'))
@@ -95,7 +97,9 @@ class BaselineSubtractionInputsBase(basetask.StandardInputs):
             args['bloutput'] = self.bloutput
             
         # outfile
-        if (not args.has_key('outfile')) or args['outfile'] is None or len(args['outfile']) == 0:
+        if ('outfile' not in args or
+                args['outfile'] is None or
+                len(args['outfile']) == 0):
             args['outfile'] = self.vis.rstrip('/') + '_bl'
             
         args['datacolumn'] = self.DATACOLUMN[self.colname]
@@ -126,13 +130,13 @@ class BaselineSubtractionResults(common.SingleDishResults):
     
     def _outcome_name(self):
         # outcome should be a name of blparam text file
-        return 'blparam: "%s" bloutput: "%s"'%(self.outcome['blparam'], self.outcome['bloutput'])
+        return 'blparam: "%s" bloutput: "%s"' % (self.outcome['blparam'], self.outcome['bloutput'])
 
 
 class BaselineFitParamConfig(basetask.StandardTaskTemplate):
-    ApplicableDuration = 'raster' # 'raster' | 'subscan'
-    MaxPolynomialOrder = 'none' # 'none', 0, 1, 2,...
-    PolynomialOrder = 'automatic' # 'automatic', 0, 1, 2, ...
+    ApplicableDuration = 'raster'  # 'raster' | 'subscan'
+    MaxPolynomialOrder = 'none'  # 'none', 0, 1, 2,...
+    PolynomialOrder = 'automatic'  # 'automatic', 0, 1, 2, ...
 
     def __init__(self, inputs):
         super(BaselineFitParamConfig, self).__init__(inputs)
@@ -174,7 +178,7 @@ class BaselineFitParamConfig(basetask.StandardTaskTemplate):
         antenna_id = self.inputs.antenna_id
         field_id = self.inputs.field_id
         spw_id = self.inputs.spw_id
-        LOG.debug('MS "{}" ant {} field {} spw {}', os.path.basename(vis),antenna_id,field_id,spw_id)
+        LOG.debug('MS "{}" ant {} field {} spw {}', os.path.basename(vis), antenna_id, field_id, spw_id)
         
         nchan = ms.spectral_windows[spw_id].num_channels
         data_desc = ms.get_data_description(spw=spw_id)
@@ -233,7 +237,7 @@ class BaselineFitParamConfig(basetask.StandardTaskTemplate):
                     #tsel.close()
                     #spectra = numpy.asarray([tb.getcell(colname, row).real for row in rows])
                     spectra = numpy.zeros((len(rows), npol, nchan,), dtype=numpy.float32)
-                    for (i,row) in enumerate(rows):
+                    for (i, row) in enumerate(rows):
                         spectra[i] = tb.getcell(colname, row).real
                     #get_mask_from_flagtra: 1 valid 0 invalid
                     #arg for mask_to_masklist: 0 valid 1 invalid
@@ -243,14 +247,13 @@ class BaselineFitParamConfig(basetask.StandardTaskTemplate):
     
                     #LOG.trace("Flag Mask = %s" % str(flaglist))
         
-                    spectra[:,:edge[0],:] = 0.0
-                    spectra[:,nchan-edge[1]:,:] = 0.0 
+                    spectra[:, :edge[0], :] = 0.0
+                    spectra[:, nchan-edge[1]:, :] = 0.0
                         
                     # here we assume that masklist is polarization-independent
                     # (this is because that line detection/validation process accumulates 
                     # polarization components together
-                    masklist = [datatable.getcell('MASKLIST',idx)
-                                for idx in idxs]
+                    masklist = [datatable.getcell('MASKLIST', idx) for idx in idxs]
         #                 masklist = [datatable.getcell('MASKLIST',idxs[i]) + flaglist[i]
         #                             for i in range(len(idxs))]
                     LOG.debug('DONE {}', y)
@@ -258,12 +261,13 @@ class BaselineFitParamConfig(basetask.StandardTaskTemplate):
                     npol = spectra.shape[1]
                     for pol in xrange(npol):
                         # fit order determination
-                        polyorder = self.fitorder_heuristic(spectra[:,pol,:], [ list(masklist[i]) + flaglist[i][pol] for i in range(len(idxs))], edge)
+                        polyorder = self.fitorder_heuristic(
+                            spectra[:, pol, :], [list(masklist[i]) + flaglist[i][pol] for i in range(len(idxs))], edge)
                         #del spectra
                         if fit_order == 'automatic' and self.MaxPolynomialOrder != 'none':
                             polyorder = min(polyorder, self.MaxPolynomialOrder)
                         LOG.debug('time group {} pol {}: fitting order={}',
-                                  y,pol,polyorder)
+                                  y, pol, polyorder)
                         
                         # calculate fragmentation
                         (fragment, nwindow, win_polyorder) = fragmentation_heuristic(polyorder, nchan, edge)
@@ -301,11 +305,13 @@ class BaselineFitParamConfig(basetask.StandardTaskTemplate):
                             #irow = len(row_list_total)+len(row_list)
                             #irow = len(index_list_total) + i
                             irow = row
-                            param = self._calc_baseline_param(irow, pol, polyorder, nchan, 0, edge, _masklist, win_polyorder, fragment, nwindow, mask_array)
-                            # defintion of masklist differs in pipeline and ASAP (masklist = [a, b+1] in pipeline masks a channel range a ~ b-1)
-                            param[BLP.MASK] = [ [start, end-1] for [start, end] in param[BLP.MASK] ]
+                            param = self._calc_baseline_param(irow, pol, polyorder, nchan, 0, edge, _masklist,
+                                                              win_polyorder, fragment, nwindow, mask_array)
+                            # definition of masklist differs in pipeline and ASAP
+                            # (masklist = [a, b+1] in pipeline masks a channel range a ~ b-1)
+                            param[BLP.MASK] = [[start, end-1] for [start, end] in param[BLP.MASK]]
                             param[BLP.MASK] = as_maskstring(param[BLP.MASK])
-                            LOG.trace('Row {}: param={}', row,param)
+                            LOG.trace('Row {}: param={}', row, param)
                             write_blparam(blparamfileobj, param)
                             
                         # MS rows contain npol spectra
@@ -322,7 +328,8 @@ class BaselineFitParamConfig(basetask.StandardTaskTemplate):
         return results
     
     #@sdutils.profiler
-    def _calc_baseline_param(self, row_idx, pol, polyorder, nchan, modification, edge, masklist, win_polyorder, fragment, nwindow, mask):
+    def _calc_baseline_param(self, row_idx, pol, polyorder, nchan, modification, edge, masklist, win_polyorder,
+                             fragment, nwindow, mask):
         # Create mask for line protection
         nchan_without_edge = nchan - sum(edge)
         if type(masklist) == list or type(masklist) == numpy.ndarray:
@@ -336,7 +343,8 @@ class BaselineFitParamConfig(basetask.StandardTaskTemplate):
         LOG.trace('nchan_without_edge, num_mask, diff={}, {}',
                   nchan_without_edge, num_mask)
 
-        outdata = self._get_param(row_idx, pol, polyorder, nchan, mask, edge, nchan_without_edge, num_mask, fragment, nwindow, win_polyorder, masklist_all)
+        outdata = self._get_param(row_idx, pol, polyorder, nchan, mask, edge, nchan_without_edge, num_mask, fragment,
+                                  nwindow, win_polyorder, masklist_all)
 
         LOG.trace('outdata={}', outdata)
 
@@ -383,7 +391,7 @@ class CubicSplineFitParamConfigInputs(BaselineSubtractionInputsBase):
         self._init_properties(vars())
                 
     fit_order = basetask.property_with_default('fit_order', 'automatic')
-    edge = basetask.property_with_default('edge', (0,0))
+    edge = basetask.property_with_default('edge', (0, 0))
     
 
 class CubicSplineFitParamConfig(BaselineFitParamConfig):
@@ -397,7 +405,8 @@ class CubicSplineFitParamConfig(BaselineFitParamConfig):
         self.paramdict[BLP.CLIPNITER] = self.ClipCycle
         self.paramdict[BLP.CLIPTHRESH] = 5.0
     
-    def _get_param(self, idx, pol, polyorder, nchan, mask, edge, nchan_without_edge, nchan_masked, fragment, nwindow, win_polyorder, masklist):
+    def _get_param(self, idx, pol, polyorder, nchan, mask, edge, nchan_without_edge, nchan_masked, fragment, nwindow,
+                   win_polyorder, masklist):
         num_nomask = nchan_without_edge - nchan_masked
         num_pieces = max(int(min(polyorder * num_nomask / float(nchan_without_edge) + 0.5, 0.1 * num_nomask)), 1)
         LOG.trace('Cubic Spline Fit: Number of Sections = {}', num_pieces)
@@ -457,9 +466,9 @@ class BaselineSubtractionWorker(basetask.StandardTaskTemplate):
             
         # execute tsdbaseline
         job = casa_tasks.sdbaseline(infile=vis, datacolumn=datacolumn, blmode='fit', dosubtract=True,
-                                     blformat='table', bloutput=bloutput, 
-                                     blfunc='variable', blparam=blparam,
-                                     outfile=outfile, overwrite=True)
+                                    blformat='table', bloutput=bloutput,
+                                    blfunc='variable', blparam=blparam,
+                                    outfile=outfile, overwrite=True)
         self._executor.execute(job)
             
         outcome = {'blparam': blparam,

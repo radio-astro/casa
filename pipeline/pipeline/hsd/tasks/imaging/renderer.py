@@ -15,12 +15,13 @@ LOG = logging.get_logger(__name__)
 
 ImageRMSTR = collections.namedtuple('ImageRMSTR', 'name estimate range width rms')
 
+
 class T2_4MDetailsSingleDishImagingRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
     def __init__(self, uri='hsd_imaging.mako', 
                  description='Image single dish data',
                  always_rerender=False):
-        super(T2_4MDetailsSingleDishImagingRenderer, self).__init__(uri=uri,
-                description=description, always_rerender=always_rerender)
+        super(T2_4MDetailsSingleDishImagingRenderer, self).__init__(
+            uri=uri, description=description, always_rerender=always_rerender)
 
     def update_mako_context(self, ctx, context, results):
         cqa = casatools.quanta
@@ -34,9 +35,9 @@ class T2_4MDetailsSingleDishImagingRenderer(basetemplates.T2_4MDetailsDefaultRen
                 spwid = image_item.spwlist
                 ref_ms = context.observing_run.measurement_sets[msid_list[0]]
                 ref_spw = spwid[0]
-                spw_type =  'TP' if imagemode.upper()=='AMPCAL' else ref_ms.spectral_windows[ref_spw].type 
+                spw_type = 'TP' if imagemode.upper() == 'AMPCAL' else ref_ms.spectral_windows[ref_spw].type
                 task_cls = display.SDImageDisplayFactory(spw_type)
-                inputs = task_cls.Inputs(context,result=r)
+                inputs = task_cls.Inputs(context, result=r)
                 task = task_cls(inputs)
                 plots.append(task.plot())
                 # RMS of combined image
@@ -51,7 +52,6 @@ class T2_4MDetailsSingleDishImagingRenderer(basetemplates.T2_4MDetailsDefaultRen
    
         rms_table = utils.merge_td_columns(image_rms, num_to_merge=0)
 
-                            
         map_types = {'sparsemap': {'type': 'sd_sparse_map',
                                    'plot_title': 'Sparse Profile Map'},
                      'profilemap': {'type': 'sd_spectral_map',
@@ -61,7 +61,7 @@ class T2_4MDetailsSingleDishImagingRenderer(basetemplates.T2_4MDetailsDefaultRen
                      'rmsmap': {'type': 'rms_map',
                                 'plot_title': 'Baseline RMS Map'},
                      'momentmap': {'type': 'sd_moment_map',
-                                       'plot_title': 'Maximum Intensity Map'},
+                                   'plot_title': 'Maximum Intensity Map'},
                      'integratedmap': {'type': 'sd_integrated_map',
                                        'plot_title': 'Integrated Intensity Map'}}
         for (key, value) in map_types.iteritems():
@@ -69,14 +69,14 @@ class T2_4MDetailsSingleDishImagingRenderer(basetemplates.T2_4MDetailsDefaultRen
             summary = self._summary_plots(plot_list)
             subpage = {}
             for (name, _plots) in plot_list.iteritems():
-                #renderer = value['renderer'](context, results, name, _plots)
+                # renderer = value['renderer'](context, results, name, _plots)
                 renderer = sdsharedrenderer.SingleDishGenericPlotsRenderer(context, results, name, _plots, 
-                                                          value['plot_title'])
+                                                                           value['plot_title'])
                 with renderer.get_file() as fileobj:
                     fileobj.write(renderer.render())
                 subpage[name] = os.path.basename(renderer.path)
-            ctx.update({'%s_subpage'%(key): subpage,
-                        '%s_plots'%(key): summary})
+            ctx.update({'%s_subpage' % key: subpage,
+                        '%s_plots' % key: summary})
             if key == 'sparsemap':
                 profilemap_entries = {}
                 for (field, _plots) in plot_list.iteritems():
@@ -84,29 +84,31 @@ class T2_4MDetailsSingleDishImagingRenderer(basetemplates.T2_4MDetailsDefaultRen
                     for p in _plots:
                         ant = p.parameters['ant']
                         pol = p.parameters['pol']
-                        if not _ap.has_key(ant):
+                        if ant not in _ap:
                             _ap[ant] = [pol]
                         elif pol not in _ap[ant]:
                             _ap[ant].append(pol)
                     profilemap_entries[field] = _ap
                 ctx.update({'profilemap_entries': profilemap_entries, 'rms_table': rms_table})
     
-    def _plots_per_field_with_type(self, plots, type_string):
+    @staticmethod
+    def _plots_per_field_with_type(plots, type_string):
         plot_group = {}
         for p in [p for _p in plots for p in _p]:
             if p.parameters['type'] == type_string:
                 key = p.field
-                if plot_group.has_key(key):
+                if key in plot_group:
                     plot_group[key].append(p)
                 else:
                     plot_group[key] = [p]
         return plot_group
         
-    def _summary_plots(self, plot_group):
+    @staticmethod
+    def _summary_plots(plot_group):
         summary_plots = {}
         for (field_name, plots) in plot_group.iteritems():
             spw_list = []
-            summary_plots[field_name]= []
+            summary_plots[field_name] = []
             for plot in plots:
                 spw = plot.parameters['spw']
                 if spw not in spw_list:

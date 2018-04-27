@@ -1,10 +1,10 @@
 from __future__ import absolute_import
 
 import pipeline.infrastructure.api as api
-import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure as infrastructure
-from pipeline.hsd.heuristics import DataTypeHeuristics
+
 LOG = infrastructure.get_logger(__name__)
+
 
 class TsysSpwMapHeuristics(api.Heuristic):
     """
@@ -27,26 +27,28 @@ class TsysSpwMapHeuristics(api.Heuristic):
             from_range = freq_range(spws[spwfrom])
             to_range = freq_range(spws[spwto])
             score = (min(from_range[1], to_range[1]) - max(from_range[0], to_range[0])) / (to_range[1] - to_range[0])
-            if not scores.has_key(spwto):
+            if spwto not in scores:
                 scores[spwto] = {}
             scores[spwto][spwfrom] = score
             
-        LOG.debug('scores=%s'%(scores))
+        LOG.debug('scores=%s' % scores)
 
         tsysspwmap = list(best_spwmap(scores))
         
         return tsysspwmap
-    
+
+
 def best_spwmap(scores):
-    for (spw,score_list) in scores.iteritems():
+    for (spw, score_list) in scores.iteritems():
         best_score = 0.0
         best_spw = -1
-        for (atmspw,score) in score_list.iteritems():
+        for (atmspw, score) in score_list.iteritems():
             if score > best_score:
                 best_spw = atmspw
                 best_score = score
-        LOG.debug('science spw %s: best_spw %s (score %s)'%(spw,best_spw,best_score))
+        LOG.debug('science spw %s: best_spw %s (score %s)' % (spw, best_spw, best_score))
         
         if best_score < 1.0:
-            LOG.warn('spw %s: Tsys spw %s doesn\'t cover whole frequnecy range (only %s%% overlap)'%(spw,best_spw,100.0*best_score))
+            LOG.warn('spw %s: Tsys spw %s doesn\'t cover whole frequnecy range (only %s%% overlap)' %
+                     (spw, best_spw, 100.0*best_score))
         yield [best_spw, spw]

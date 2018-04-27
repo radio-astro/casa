@@ -11,6 +11,7 @@ from .. import common
 
 LOG = infrastructure.get_logger(__name__)
 
+
 class WeightMSInputs(basetask.StandardInputs):
     """
     Inputs for exporting data to MS 
@@ -69,7 +70,6 @@ class WeightMS(basetask.StandardTaskTemplate):
         self._set_weight(row_map, minmaxclip=minmaxclip, weight_rms=weight_rms,
                          weight_tintsys=weight_tintsys, try_fallback=is_full_resolution)
 
-
         result = WeightMSResults(task=self.__class__,
                                  success=True,
                                  outcome=outfile)
@@ -104,7 +104,8 @@ class WeightMS(basetask.StandardTaskTemplate):
             data_desc_id = numpy.where(spwids == spwid)[0][0]
         
         with casatools.TableReader(infile) as tb:
-            tsel = tb.query('DATA_DESC_ID==%d && FIELD_ID==%d && ANTENNA1==%d && ANTENNA2==%d' % (data_desc_id, fieldid, antid, antid),
+            tsel = tb.query('DATA_DESC_ID==%d && FIELD_ID==%d && ANTENNA1==%d && ANTENNA2==%d' %
+                            (data_desc_id, fieldid, antid, antid),
                             sortlist='TIME')
             if tsel.nrows() > 0:
                 in_rows = tsel.rownumbers() 
@@ -115,7 +116,8 @@ class WeightMS(basetask.StandardTaskTemplate):
             data_desc_id = numpy.where(spwids == spwid)[0][0]
     
         with casatools.TableReader(outfile) as tb:
-            tsel = tb.query('DATA_DESC_ID==%s && FIELD_ID==%d && ANTENNA1==%d && ANTENNA2==%d' % (data_desc_id, fieldid, antid, antid),
+            tsel = tb.query('DATA_DESC_ID==%s && FIELD_ID==%d && ANTENNA1==%d && ANTENNA2==%d' %
+                            (data_desc_id, fieldid, antid, antid),
                             sortlist='TIME')
             out_rows = tsel.rownumbers() 
             tsel.close()
@@ -157,14 +159,14 @@ class WeightMS(basetask.StandardTaskTemplate):
             stats = datatable.getcol('STATISTICS').take(index_list, axis=2)
             for index in xrange(len(in_rows)):
                 row = in_rows[index]
-                cell_stat = stats[:,:,index]
+                cell_stat = stats[:, :, index]
                 weight[row] = numpy.ones(cell_stat.shape[0])
                 for ipol in xrange(weight[row].shape[0]):
-                    stat = cell_stat[ipol,1] #baselined RMS
+                    stat = cell_stat[ipol, 1]  # baselined RMS
                     if stat > 0.0:
                         weight[row][ipol] /= (stat * stat)
-                    elif stat < 0.0 and cell_stat[ipol,2] > 0.0:
-                        stat = cell_stat[ipol,2] #RMS before baseline
+                    elif stat < 0.0 and cell_stat[ipol, 2] > 0.0:
+                        stat = cell_stat[ipol, 2]  # RMS before baseline
                         weight[row][ipol] /= (stat * stat)
                     elif try_fallback:
                         weight_tintsys = True
@@ -177,8 +179,8 @@ class WeightMS(basetask.StandardTaskTemplate):
             for index in xrange(len(in_rows)):
                 row = in_rows[index]
                 exposure = exposures[index]
-                tsys = tsyss[:,index]
-                if not weight.has_key(row):
+                tsys = tsyss[:, index]
+                if row not in weight:
                     weight[row] = numpy.ones(tsys.shape[0])
                 for ipol in xrange(weight[row].shape[0]):
                     if tsys[ipol] > 0.5:

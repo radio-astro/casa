@@ -242,7 +242,7 @@ class MakeImList(basetask.StandardTaskTemplate):
             spw = ','.join("'%s'" % (spwid) for spwid in spwids)
             spw = '[%s]' % spw
 
-            spwlist = spw.replace('[','').replace(']','')
+            spwlist = spw.replace('[', '').replace(']', '')
             spwlist = spwlist[1:-1].split("','")
         else:
             spw = '[]'
@@ -473,7 +473,7 @@ class MakeImList(basetask.StandardTaskTemplate):
             result.metadata['long description'] = 'Set-up parameters for %s imaging' % ' & '.join(set(long_descriptions))
 
             # Check for size mitigation errors.
-            if inputs.context.size_mitigation_parameters.has_key('status'):
+            if 'status' in inputs.context.size_mitigation_parameters:
                 if inputs.context.size_mitigation_parameters['status'] == 'ERROR':
                     LOG.error('Size mitigation had failed. Will not create any clean targets.')
                     result.contfile = None
@@ -529,8 +529,8 @@ class MakeImList(basetask.StandardTaskTemplate):
                     else:
                         nbin = -1
 
-                    if spwspec_ok and imsizes.has_key((field_intent[0],spwspec)) and ('invalid' not in cells[spwspec]):
-                        LOG.debug (
+                    if spwspec_ok and (field_intent[0], spwspec) in imsizes and ('invalid' not in cells[spwspec]):
+                        LOG.debug(
                           'field:%s intent:%s spw:%s cell:%s imsize:%s phasecenter:%s'
                           % (field_intent[0], field_intent[1], spwspec,
                           cells[spwspec], imsizes[(field_intent[0],spwspec)],

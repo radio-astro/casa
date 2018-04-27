@@ -53,10 +53,10 @@ class BandpassEdgeFlagger(object):
             if profile_i_above <= 0:
                 fit_profile[int(centre - data_i)] = profile[0]
             else:
-                fit_profile[centre - data_i] = profile[profile_i_below] +\
-                 (profile[profile_i_above] - profile[profile_i_below]) *\
-                 (float(profile_i - profile_i_below) / 
-                 float(profile_i_above - profile_i_below))
+                fit_profile[centre - data_i] = profile[profile_i_below] + \
+                                               (profile[profile_i_above] - profile[profile_i_below]) * \
+                                               (float(profile_i - profile_i_below) /
+                                                float(profile_i_above - profile_i_below))
 
             # likewise for upper half of profile
 
@@ -66,10 +66,10 @@ class BandpassEdgeFlagger(object):
             if profile_i_below >= (len(fit_profile) - 1):
                 fit_profile[centre + data_i] = profile[-1]
             else:
-                fit_profile[centre + data_i] = profile[profile_i_below] +\
-                 (profile[profile_i_above] - profile[profile_i_below]) *\
-                 (float(profile_i - profile_i_below) / 
-                 float(profile_i_above - profile_i_below))
+                fit_profile[centre + data_i] = profile[profile_i_below] + \
+                                               (profile[profile_i_above] - profile[profile_i_below]) * \
+                                               (float(profile_i - profile_i_below) /
+                                                float(profile_i_above - profile_i_below))
 
         # get profile of correct amplitude
 
@@ -84,8 +84,7 @@ class BandpassEdgeFlagger(object):
                 if not(flag['Current'][data_chan]):
                     ndata += 1
                     try:
-                        chisq += pow ((data[data_chan] - fit_profile[i])/
-                                      stddev[data_chan],2)
+                        chisq += pow((data[data_chan] - fit_profile[i]) / stddev[data_chan], 2)
                     except ZeroDivisionError:
                         LOG.debug('caught zero division error')
                         chisq += 1e6                 
@@ -215,8 +214,7 @@ class BandpassEdgeFlagger(object):
                     right_edge_profile = numpy.zeros([edge_width], float)
                     left_edge_profile = numpy.zeros([edge_width], float)
                     for i in range(edge_width):
-                        right_edge_profile[i] = (1.0 + 
-                         numpy.cos(i*numpy.pi/(edge_width-1)))/2.0
+                        right_edge_profile[i] = (1.0 + numpy.cos(i*numpy.pi/(edge_width-1)))/2.0
 
                     for i in range(edge_width):
                         left_edge_profile[-(i + 1)] = right_edge_profile[i]
@@ -225,8 +223,7 @@ class BandpassEdgeFlagger(object):
                     right_edge_profile = numpy.zeros([edge_width], float)
                     left_edge_profile = numpy.zeros([edge_width], float)
                     for i in range(edge_width):
-                        right_edge_profile[i] = (1.0 + 
-                         numpy.cos(i*numpy.pi/(edge_width-1)))/2.0
+                        right_edge_profile[i] = (1.0 + numpy.cos(i*numpy.pi/(edge_width-1)))/2.0
 
                     for i in range(edge_width):
                         left_edge_profile[-(i + 1)] = right_edge_profile[i]
@@ -237,8 +234,7 @@ class BandpassEdgeFlagger(object):
                 # calculate chi-squared for edge_width channels from right
                 # end of spectrum
 
-                valid_data = data[nchannels/2:][flag['Current']\
-                 [nchannels/2:]==0] 
+                valid_data = data[nchannels/2:][flag['Current'][nchannels/2:] == 0]
                 if len(valid_data):
                     edge_amp = numpy.median(valid_data)
                     if numpy.mean(data[-2:]) > 0.7 * edge_amp:
@@ -252,17 +248,14 @@ class BandpassEdgeFlagger(object):
                         # look for fit to the band edge template
 
                         chisq = numpy.zeros([3*edge_width], float) + 1.0e6
-                        for edge_offset in range(
-                         -2*edge_width, ((edge_width-1)/2)):
+                        for edge_offset in range(-2*edge_width, ((edge_width-1)/2)):
                             edge_centre = nchannels + edge_offset
-                            chisq [edge_offset+2*edge_width] = \
-                             self._chi_squared(data, flag, data_mad,
-                             right_edge_profile, edge_centre, edge_amp)
+                            chisq[edge_offset+2*edge_width] = self._chi_squared(
+                                data, flag, data_mad, right_edge_profile, edge_centre, edge_amp)
 
                         # find minimum in chi-squared
                            
-                        right_edge_centre =  nchannels + numpy.argmin(chisq) - \
-                             (2 * edge_width)
+                        right_edge_centre = nchannels + numpy.argmin(chisq) - (2 * edge_width)
 
                         # flag channels within half the edge_width of the
                         # edge centre.
@@ -273,8 +266,7 @@ class BandpassEdgeFlagger(object):
 
                 # same for left edge profile
                                
-                valid_data = data[:nchannels/2][flag['Current']\
-                 [:nchannels/2]==0]
+                valid_data = data[:nchannels/2][flag['Current'][:nchannels/2] == 0]
                 if len(valid_data):
                     edge_amp = numpy.median(valid_data)
 
@@ -282,13 +274,10 @@ class BandpassEdgeFlagger(object):
                         left_edge_centre = -(edge_width - 1) / 2.0
                     else:
                         chisq = numpy.zeros([3*edge_width], float) + 1.0e6
-                        for edge_offset in range(
-                         -((edge_width-1)/2),2*edge_width):
-                            chisq [edge_offset + ((edge_width-1)/2)] =\
-                             self._chi_squared(data, flag, data_mad,
-                             left_edge_profile, edge_offset, edge_amp)
-                        left_edge_centre = numpy.argmin(chisq) - \
-                        (edge_width - 1) / 2.0
+                        for edge_offset in range(-((edge_width-1)/2), 2*edge_width):
+                            chisq[edge_offset + ((edge_width-1)/2)] = self._chi_squared(
+                                data, flag, data_mad, left_edge_profile, edge_offset, edge_amp)
+                        left_edge_centre = numpy.argmin(chisq) - (edge_width - 1) / 2.0
 
                         left_flag = left_edge_centre + (edge_width-1) / 2.0
                         if (left_flag+1) > 0:
@@ -301,22 +290,20 @@ class BandpassEdgeFlagger(object):
                  channels_flagged < left_flag, channels_flagged > right_flag)]
 
                 if len(channels_flagged) > 0:
-                    self._add_flag_description(new_flags, flag,
-                     channels_flagged, data_description,
-                     stageDescription, rule)
+                    self._add_flag_description(new_flags, flag, channels_flagged, data_description, stageDescription,
+                                               rule)
 
             elif rule['rule'] == 'PdB edge template':
                 if self._telescopeName != 'IRAM_PDB':
                     continue
 
-                valid_data = data[flag['Current']==0]
+                valid_data = data[flag['Current'] == 0]
                 if len(valid_data):
 
                     # find left edge
 
                     left_amp = self._find_small_diff(data, flag['Current'])
-                    left_amp_stddev = self._find_noise_edge(data_mad, 
-                     flag['Current'])
+                    left_amp_stddev = self._find_noise_edge(data_mad, flag['Current'])
                     left_edge = max(0, left_amp, left_amp_stddev)
                     # print 'left', left_amp, left_amp_stddev, left_edge
 
@@ -325,10 +312,8 @@ class BandpassEdgeFlagger(object):
                     reverse_data = data[-1::-1]
                     reverse_flag = flag['Current'][-1::-1]
                     reverse_mad = data_mad[-1::-1]
-                    right_amp = self._find_small_diff(reverse_data,
-                     reverse_flag)
-                    right_amp_stddev = self._find_noise_edge(reverse_mad,
-                     reverse_flag)
+                    right_amp = self._find_small_diff(reverse_data, reverse_flag)
+                    right_amp_stddev = self._find_noise_edge(reverse_mad, reverse_flag)
                     right_edge = max(0, right_amp, right_amp_stddev)
                     # print 'right', right_amp, right_amp_stddev, right_edge
 
@@ -342,14 +327,12 @@ class BandpassEdgeFlagger(object):
 
                     nchannels = len(data)
                     channels = numpy.arange(nchannels)
-                    channels_flagged = channels[numpy.logical_or(
-                     channels < left_edge,
-                     channels > (nchannels-1-right_edge))]
+                    channels_flagged = channels[numpy.logical_or(channels < left_edge,
+                                                                 channels > (nchannels-1-right_edge))]
 
                     if len(channels_flagged) > 0:
-                        self._add_flag_description(new_flags, flag,
-                         channels_flagged, data_description,
-                         stageDescription, rule)
+                        self._add_flag_description(new_flags, flag, channels_flagged, data_description,
+                                                   stageDescription, rule)
 
             elif rule['rule'] == 'bandpass fraction':
                 fraction = rule['fraction']
@@ -357,14 +340,12 @@ class BandpassEdgeFlagger(object):
                 edge_width = fraction * nchannels
 
                 channels = numpy.arange(nchannels)
-                channels_flagged = channels[numpy.logical_or(
-                 channels < (-0.5 + edge_width),
-                 channels > (nchannels - 0.5 - edge_width))]
+                channels_flagged = channels[numpy.logical_or(channels < (-0.5 + edge_width),
+                                                             channels > (nchannels - 0.5 - edge_width))]
 
                 if len(channels_flagged) > 0:
-                    self._add_flag_description(new_flags, flag,
-                     channels_flagged, data_description,
-                     stageDescription, rule)
+                    self._add_flag_description(new_flags, flag, channels_flagged, data_description, stageDescription,
+                                               rule)
 
             else:
                 raise Exception, 'bad rule: %s' % rule['rule']
@@ -402,10 +383,9 @@ class BandpassEdgeFlagger(object):
             # get new flags, and accumulate these in a dictionary with
             # entries for each 'rule'
  
-            new_flags = self._flagData(x, data, data_mad, data_flag,
-             description, stageDescription)
-            for k,_ in new_flags.iteritems():
-                if not flags.has_key(k):
+            new_flags = self._flagData(x, data, data_mad, data_flag, description, stageDescription)
+            for k, _ in new_flags.iteritems():
+                if k not in flags:
                     flags[k] = []
                 flags[k] += new_flags[k]
 

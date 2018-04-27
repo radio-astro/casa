@@ -13,7 +13,7 @@ def get_spwmap(ms):
     spwmap = {}
     if dotsysspwmap == True:
         for l in tsys_strategy:
-            if spwmap.has_key(l[0]):
+            if l[0] in spwmap:
                 spwmap[l[0]].append(l[1])
             else:
                 spwmap[l[0]] = [l[1]]

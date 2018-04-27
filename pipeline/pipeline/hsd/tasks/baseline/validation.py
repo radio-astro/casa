@@ -499,10 +499,10 @@ class ValidateLineRaster(basetask.StandardTaskTemplate):
         # RealSignal should have all row's as its key
         tmp_index = 0
         for row in index_list:
-            if RealSignal.has_key(row):
+            if row in RealSignal:
                 signal = self.__merge_lines(RealSignal[row][2], self.nchan)
             else:
-                signal = [[-1,-1]]
+                signal = [[-1, -1]]
                 #RealSignal[row] = [PosList[0][tmp_index], PosList[1][tmp_index], signal]
             tmp_index += 1
 
@@ -517,8 +517,8 @@ class ValidateLineRaster(basetask.StandardTaskTemplate):
             if len(tMASKLIST) == 0 or tMASKLIST[0][0] < 0:
                 tMASKLIST = []
             else:
-                tMASKLIST=tMASKLIST.tolist()#list(tMASKLIST)
-            tNOCHANGE = datatable.getcell('NOCHANGE',row)
+                tMASKLIST = tMASKLIST.tolist()  # list(tMASKLIST)
+            tNOCHANGE = datatable.getcell('NOCHANGE', row)
             #LOG.debug('DataTable = %s, RealSignal = %s' % (tMASKLIST, signal))
             if tMASKLIST == signal:
                 #LOG.debug('No update on row %s: iter is %s'%(row,iteration))
@@ -537,9 +537,9 @@ class ValidateLineRaster(basetask.StandardTaskTemplate):
                 #LOG.debug('Updating row %s: signal=%s (type=%s, %s)'%(row,list(signal),type(signal),type(signal[0])))
                 #datatable.putcell('MASKLIST',row,numpy.array(signal))
                 #datatable.putcell('MASKLIST',row,signal)
-                datatable.putcell('MASKLIST',row,signal)
+                datatable.putcell('MASKLIST', row, signal)
                 #datatable.putcell('NOCHANGE',row,-1)
-                datatable.putcell('NOCHANGE',row,-1)
+                datatable.putcell('NOCHANGE', row, -1)
         del GridCluster, RealSignal
         ProcEndTime = time.time()
         LOG.info('Clustering: Merging End: Elapsed time = {} sec', (ProcEndTime - ProcStartTime))
@@ -1497,14 +1497,17 @@ class ValidateLineRaster(basetask.StandardTaskTemplate):
                                     ProtectMask = self.calc_ProtectMask(Fit0, Fit1, self.nchan, MinFWHM, MaxFWHM)
                                     # for Channel map velocity range determination 2014/1/12
                                     MaskCen = (ProtectMask[0] + ProtectMask[1]) / 2.0
-                                    if MaskMin > MaskCen: MaskMin = max(0, MaskCen)
-                                    if MaskMax < MaskCen: MaskMax = min(self.nchan - 1, MaskCen)
+                                    if MaskMin > MaskCen:
+                                        MaskMin = max(0, MaskCen)
+                                    if MaskMax < MaskCen:
+                                        MaskMax = min(self.nchan - 1, MaskCen)
 
-                                    if RealSignal.has_key(ID):
+                                    if ID in RealSignal:
                                         RealSignal[ID][2].append(ProtectMask)
                                     else:
-                                        RealSignal[ID] = [PosList[0][PID], PosList[1][PID] ,[ProtectMask]]
-                                else: LOG.trace('------10------ out of range Fit0={} Fit1={}', Fit0,Fit1)
+                                        RealSignal[ID] = [PosList[0][PID], PosList[1][PID], [ProtectMask]]
+                                else:
+                                    LOG.trace('------10------ out of range Fit0={} Fit1={}', Fit0, Fit1)
                         elif BlurPlane[x][y] == 1:
                             LOG.trace('------11------ in BlurPlane x={} y={}', x, y)
                             # in Blur Plane, Fit is not extrapolated, 
@@ -1544,7 +1547,7 @@ class ValidateLineRaster(basetask.StandardTaskTemplate):
 
                                 for PID in Grid2SpectrumID[x][y]:
                                     ID = index_list[PID]
-                                    if RealSignal.has_key(ID):
+                                    if ID in RealSignal:
                                         RealSignal[ID][2].append(ProtectMask)
                                     else:
                                         RealSignal[ID] = [PosList[0][PID], PosList[1][PID] ,[ProtectMask]]
@@ -1593,8 +1596,8 @@ class ValidateLineRaster(basetask.StandardTaskTemplate):
                                   ......
                           [(xn-10,yn-10),(xn-11,yn-11),..,(xn-1c-1,yn-1c-1)]]
         """
-        Nmember = []    # number of positions where value > self.Marginal in each SubCluster
-        Realmember = [] # number of positions where value > self.Valid in each SubCluster
+        Nmember = []  # number of positions where value > self.Marginal in each SubCluster
+        Realmember = []  # number of positions where value > self.Valid in each SubCluster
         MemberList = []
         NsubCluster = 0
         # Separate cluster members into several SubClusters by spacial connection
@@ -1604,8 +1607,10 @@ class ValidateLineRaster(basetask.StandardTaskTemplate):
                     Plane[x][y] = 2
                     SearchList = [(x, y)]
                     M = 1
-                    if Original[x][y] > self.Valid: MM = 1
-                    else: MM = 0
+                    if Original[x][y] > self.Valid:
+                        MM = 1
+                    else:
+                        MM = 0
                     MemberList.append([(x, y)])
                     while(len(SearchList) != 0):
                         cx, cy = SearchList[0]
@@ -1619,7 +1624,8 @@ class ValidateLineRaster(basetask.StandardTaskTemplate):
                                     Plane[nx][ny] = 2
                                     SearchList.append((nx, ny))
                                     M += 1
-                                    if Original[nx][ny] > self.Valid: MM += 1
+                                    if Original[nx][ny] > self.Valid:
+                                        MM += 1
                                     MemberList[NsubCluster].append((nx, ny))
                         del SearchList[0]
                     Nmember.append(M)
@@ -1729,7 +1735,7 @@ class ValidateLineRaster(basetask.StandardTaskTemplate):
         LOG.trace('cluster_flag = {}', cluster_flag)
 
 
-def convolve2d( data, kernel, mode='nearest', cval=0.0 ):
+def convolve2d(data, kernel, mode='nearest', cval=0.0):
     """
     2d convolution function.
 

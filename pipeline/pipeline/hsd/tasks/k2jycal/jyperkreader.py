@@ -1,5 +1,4 @@
 import cStringIO as StringIO
-import os
 import numpy
 import csv
 import contextlib
@@ -8,6 +7,7 @@ import itertools
 import pipeline.infrastructure as infrastructure
 
 LOG = infrastructure.get_logger(__name__)
+
 
 def read(context, filename):
     """
@@ -22,6 +22,7 @@ def read(context, filename):
         LOG.debug('Session-Based Jy/K factors file is specified')
         return read_session_based(context, filename)
 
+
 def inspect_type(filename):
     with open(filename, 'r') as f:
         line = f.readline()
@@ -30,11 +31,13 @@ def inspect_type(filename):
     else:
         return 'MS-Based'
 
+
 def read_ms_based(reffile):
     #factor_list = []
     with open(reffile, 'r') as f:
         return list(_read_stream(f))
-                
+
+
 def read_session_based(context, reffile):
     parser = JyPerKDataParser
     storage = JyPerK()
@@ -54,12 +57,12 @@ def read_session_based(context, reffile):
     with associate(context, storage) as f:
         return list(_read_stream(f))
 
+
 def _read_stream(stream):
     reader = csv.reader(stream)
     # Check if first line is header or not
     line = reader.next()
-    if  len(line) == 0 or \
-            line[0].strip().upper() == 'MS' or line[0].strip()[0] == '#':
+    if len(line) == 0 or line[0].strip().upper() == 'MS' or line[0].strip()[0] == '#':
         # must be a header, commented line, or empty line
         pass
     elif len(line) == 5:
@@ -75,7 +78,8 @@ def _read_stream(stream):
             yield line
         else:
             LOG.error('Jy/K factor file is invalid format')
-            
+
+
 # Utility classes/functions to convert session based factors file 
 # to MS based one are defined below
 class JyPerKDataParser(object):
@@ -106,6 +110,7 @@ class JyPerKDataParser(object):
             # invalid or empty line, ignored
             return None
 
+
 class JyPerK(object):
     """
     Parse session based jyperk csv and store.
@@ -125,15 +130,16 @@ class JyPerK(object):
         if isinstance(content, list):
             # this should be data header
             self.header = content
-            self.data = dict(((k,[]) for k in self.header))
+            self.data = dict(((k, []) for k in self.header))
         elif isinstance(content, tuple):
             self.meta[content[0]] = content[1]
 
     def register_data(self, content):
         assert len(self.header) > 0
         assert len(self.header) == len(content)
-        for (k,v) in itertools.izip(self.header, content):
+        for (k, v) in itertools.izip(self.header, content):
             self.data[k].append(v)
+
 
 @contextlib.contextmanager
 def associate(context, factors):
@@ -148,7 +154,8 @@ def associate(context, factors):
             session_name = ms.session
             if session_name == 'Session_default':
                 # Session_default is not supported, use Session_1 instead
-                LOG.warn('Session for %s is \'Session_default\'. Use \'Session_1\' for application of Jy/K factor. '%(ms.basename))
+                LOG.warn('Session for %s is \'Session_default\'. Use \'Session_1\' for application of Jy/K factor. ' %
+                         ms.basename)
                 session_id = 1
             else:
                 # session_name should be 'Session_X' where X is an integer
@@ -182,7 +189,7 @@ def associate(context, factors):
                 for i in idx[0]:
                     #coverage = inspect_coverage(min_freq, max_freq, range_min[i], range_max[i])
                     antenna = antenna_list[i]
-                    if d.has_key(antenna):
+                    if antenna in d:
                         #d[antenna].append([i, coverage, bandwidth[i]])
                         d[antenna].append(i)
                     else:
@@ -190,10 +197,11 @@ def associate(context, factors):
                         d[antenna] = [i]
     
                 for ant in antennas:
-                    if d.has_key(ant):
+                    if ant in d:
                         f = d[ant]
                     else:
-                        LOG.info('%s: No factors available for spw %s antenna %s use ANONYMOUS'%(session_name,spwid,ant))
+                        LOG.info('%s: No factors available for spw %s antenna %s use ANONYMOUS' %
+                                 (session_name, spwid, ant))
                         f = d['ANONYMOUS']
                     #print ant, f
                     coverage_list = map(lambda x: inspect_coverage(min_freq, max_freq, range_min[x], range_max[x]), f)
@@ -209,16 +217,18 @@ def associate(context, factors):
                             best_index = _i
                             _best_score = coverage
                     #print best_index
-                    line = '%s,%s,%s,%s,%s'%(ms.basename,ant,spwid,data['POL'][best_index],factor_list[best_index])
+                    line = '%s,%s,%s,%s,%s' % (ms.basename, ant, spwid, data['POL'][best_index],
+                                               factor_list[best_index])
                     LOG.debug(line)
                     stream.write(line + '\n')
         
-        stream.seek(0,0)
+        stream.seek(0, 0)
         yield stream
         
     finally:
         stream.close()
-    
+
+
 def inspect_coverage(minval, maxval, minref, maxref):
     if minval > maxval or minref > maxref:
         return 0.0

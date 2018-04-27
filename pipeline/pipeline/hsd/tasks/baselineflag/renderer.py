@@ -1,10 +1,9 @@
-'''
+"""
 Created on Nov 9, 2016
 
 @author: kana
-'''
+"""
 import collections
-import os
 
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.renderer.basetemplates as basetemplates
@@ -14,23 +13,24 @@ LOG = logging.get_logger(__name__)
 
 
 class T2_4MDetailsBLFlagRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
-    '''
+    """
     The renderer class for baselineflag.
-    '''
+    """
     def __init__(self, uri='hsd_blflag.mako',
                  description='Flag data by Tsys, weather, and statistics of spectra',
                  always_rerender=False):
-        '''
+        """
         Constructor
-        '''
-        super(T2_4MDetailsBLFlagRenderer, self).__init__(uri=uri,
-                description=description, always_rerender=always_rerender)
+        """
+        super(T2_4MDetailsBLFlagRenderer, self).__init__(
+            uri=uri, description=description, always_rerender=always_rerender)
 
     def update_mako_context(self, ctx, context, result):
         accum_flag = accumulate_flag_per_source_spw(result)
         table_rows = make_summary_table(accum_flag)
 
         ctx.update({'sumary_table_rows': table_rows})
+
 
 FlagSummaryTR = collections.namedtuple('FlagSummaryTR', 'field spw before additional total')
 
@@ -44,16 +44,16 @@ def accumulate_flag_per_source_spw(results):
     accum_flag = {}
     for r in results:
         before, after = r.outcome['flagdata_summary']
-        if not before['name']=='before' or not after['name']=='after':
+        if not before['name'] == 'before' or not after['name'] == 'after':
             raise RuntimeError, "Got unexpected flag summary"
         for field, fieldflag in after.iteritems():
-            if not isinstance(fieldflag, dict) or not fieldflag.has_key('spw'):
+            if not isinstance(fieldflag, dict) or 'spw' not in fieldflag:
                 continue
-            if not accum_flag.has_key(field):
+            if field not in accum_flag:
                 accum_flag[field] = {}
             spwflag = fieldflag['spw']
             for spw, flagval in spwflag.iteritems():
-                if not accum_flag[field].has_key(spw):
+                if spw not in accum_flag[field]:
                     accum_flag[field][spw] = dict(before=0, additional=0, after=0, total=0)
                 # sum up incremental flags
                 accum_flag[field][spw]['before'] += before[field]['spw'][spw]['flagged']
@@ -61,7 +61,8 @@ def accumulate_flag_per_source_spw(results):
                 accum_flag[field][spw]['total'] += flagval['total']
                 accum_flag[field][spw]['additional'] += (flagval['flagged']-before[field]['spw'][spw]['flagged'])
     return accum_flag
-                                                   
+
+
 def make_summary_table(flagdict):
     # will hold all the flag summary table rows for the results
     rows = []
@@ -71,7 +72,8 @@ def make_summary_table(flagdict):
             frac_total = flagval['after']/flagval['total']
             frac_additional = (flagval['after']-flagval['before'])/flagval['total']
 
-            tr = FlagSummaryTR(field, spw, '%0.1f%%'%(frac_before*100), '%0.1f%%'%(frac_additional*100), '%0.1f%%'%(frac_total*100))
+            tr = FlagSummaryTR(field, spw, '%0.1f%%' % (frac_before*100), '%0.1f%%' % (frac_additional*100),
+                               '%0.1f%%' % (frac_total*100))
             rows.append(tr)
     
     return utils.merge_td_columns(rows, num_to_merge=2)

@@ -226,8 +226,8 @@ def getCalFlaggedSoln(calTable):
         iid = 0
         #
         # Set up dictionaries if needed
-        if outDict['antspw'].has_key(antIdx):
-            if not outDict['antspw'][antIdx].has_key(spwIdx):
+        if antIdx in outDict['antspw']:
+            if spwIdx not in outDict['antspw'][antIdx]:
                 outDict['antspw'][antIdx][spwIdx] = {}
                 for poln in range(np):
                     outDict['antspw'][antIdx][spwIdx][poln] = {}
@@ -244,7 +244,7 @@ def getCalFlaggedSoln(calTable):
                 outDict['antspw'][antIdx][spwIdx][poln] = {}
                 outDict['antspw'][antIdx][spwIdx][poln]['total'] = 0
                 outDict['antspw'][antIdx][spwIdx][poln]['flagged'] = 0.0
-        if not outDict['spw'].has_key(spwIdx):
+        if spwIdx not in outDict['spw']:
             outDict['spw'][spwIdx] = {}
             for poln in range(np):
                 outDict['spw'][spwIdx][poln] = {}
@@ -612,10 +612,10 @@ def buildscans(msfile):
         for it in range(nt):
             isc = rect['scan_number'][it]
             tim = rect['time'][it]
-            if ddlookup.has_key(isc):
+            if isc in ddlookup:
                 if ddlookup[isc].count(idd)<1:
                     ddlookup[isc].append(idd)
-                if ddscantimes[isc].has_key(idd):
+                if idd in ddscantimes[isc]:
                     ddscantimes[isc][idd].append(tim)
                 else:
                     ddscantimes[isc][idd] = [tim]
@@ -1021,8 +1021,8 @@ def getBCalStatistics(calTable,innerbuff=0.1):
         spwDict[ispw] = {'RX':rx, 'Baseband':bb, 'Subband':sb}
         if rxbands.count(rx)<1:
             rxbands.append(rx)
-        if rxBasebandDict.has_key(rx):
-            if rxBasebandDict[rx].has_key(bb):
+        if rx in rxBasebandDict:
+            if bb in rxBasebandDict[rx]:
                 rxBasebandDict[rx][bb].append(ispw)
             else:
                 rxBasebandDict[rx][bb] = [ispw]
@@ -1065,7 +1065,7 @@ def getBCalStatistics(calTable,innerbuff=0.1):
         dataArr = dataVarCol[rrow]
         flagArr = flagVarCol[rrow]
         # Get the shape of this data row
-        (np,nc,ni) = dataArr.shape
+        (np, nc, ni) = dataArr.shape
         # ni should be 1 for this
         iid = 0
 
@@ -1075,11 +1075,11 @@ def getBCalStatistics(calTable,innerbuff=0.1):
         sb = spwDict[spwIdx]['Subband']
         
         # Set up dictionaries if needed
-        parts = ['all','inner']
-        quants = ['amp','phase','real','imag']
-        vals = ['min','max','mean','var']
-        if outDict['antspw'].has_key(antIdx):
-            if not outDict['antspw'][antIdx].has_key(spwIdx):
+        parts = ['all', 'inner']
+        quants = ['amp', 'phase', 'real', 'imag']
+        vals = ['min', 'max', 'mean', 'var']
+        if antIdx in outDict['antspw']:
+            if spwIdx not in outDict['antspw'][antIdx]:
                 outDict['antspw'][antIdx][spwIdx] = {}
                 for poln in range(np):
                     outDict['antspw'][antIdx][spwIdx][poln] = {}
@@ -1091,8 +1091,8 @@ def getBCalStatistics(calTable,innerbuff=0.1):
                             outDict['antspw'][antIdx][spwIdx][poln][part][quan] = {}
                             for val in vals:
                                 outDict['antspw'][antIdx][spwIdx][poln][part][quan][val] = 0.0
-            if outDict['antband'][antIdx].has_key(rx):
-                if not outDict['antband'][antIdx][rx].has_key(bb):
+            if rx in outDict['antband'][antIdx]:
+                if bb not in outDict['antband'][antIdx][rx]:
                     outDict['antband'][antIdx][rx][bb] = {}
                     for part in parts:
                         outDict['antband'][antIdx][rx][bb][part] = {}

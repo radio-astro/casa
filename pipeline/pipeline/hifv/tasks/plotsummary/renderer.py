@@ -11,7 +11,6 @@ import pipeline.infrastructure.filenamer as filenamer
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.renderer.basetemplates as basetemplates
 import pipeline.infrastructure.utils as utils
-
 from pipeline.h.tasks.common.displays import applycal as applycal
 
 LOG = logging.get_logger(__name__)
@@ -22,8 +21,8 @@ FlagTotal = collections.namedtuple('FlagSummary', 'flagged total')
 class T2_4MDetailsplotsummaryRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
     def __init__(self, uri='plotsummary.mako',
                  description='VLA Plot Summary', always_rerender=False):
-        super(T2_4MDetailsplotsummaryRenderer, self).__init__(uri=uri,
-                description=description, always_rerender=always_rerender)
+        super(T2_4MDetailsplotsummaryRenderer, self).__init__(
+            uri=uri, description=description, always_rerender=always_rerender)
 
     def update_mako_context(self, ctx, context, results_list):
         weblog_dir = os.path.join(context.report_dir,
@@ -647,7 +646,7 @@ class T2_4MDetailsplotsummaryRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
                 for i in scan_ids:
                     # workaround for KeyError exception when summary
                     # dictionary doesn't contain the scan
-                    if not summary['scan'].has_key(i):
+                    if i not in summary['scan']:
                         continue
 
                     flagcount += int(summary['scan'][i]['flagged'])

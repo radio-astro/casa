@@ -170,27 +170,28 @@ class FlagBadDeformatters(basetask.StandardTaskTemplate):
                     nbadspws = 0
                     badspws = []
                     flaggedspws = []
-                    if len(spwl)>0:
+                    if len(spwl) > 0:
                         if doprintall:
-                            LOG.info(' Ant %s (%s) %s %s processing spws=%s' % (str(iant),antName,rrx,bband,str(spwl)))
+                            LOG.info(' Ant %s (%s) %s %s processing spws=%s' %
+                                     (str(iant), antName, rrx, bband, str(spwl)))
                         
                         for ispw in spwl:
                             testvalid = False
-                            if calBPstatresult['antspw'][iant].has_key(ispw):
+                            if ispw in calBPstatresult['antspw'][iant]:
                                 for poln in calBPstatresult['antspw'][iant][ispw].keys():
                                     # Get stats of this ant/spw/poln
                                     nbp = calBPstatresult['antspw'][iant][ispw][poln]['inner']['number']
                                     
-                                    if nbp>0:
-                                        if tstat=='rat':
+                                    if nbp > 0:
+                                        if tstat == 'rat':
                                             bpmax = calBPstatresult['antspw'][iant][ispw][poln]['inner'][testq]['max']
                                             bpmin = calBPstatresult['antspw'][iant][ispw][poln]['inner'][testq]['min']
                                             
-                                            if bpmax==0.0:
+                                            if bpmax == 0.0:
                                                 tval = 0.0
                                             else:
                                                 tval = bpmin/bpmax
-                                        elif tstat=='diff':
+                                        elif tstat == 'diff':
                                             bpmax = calBPstatresult['antspw'][iant][ispw][poln]['inner'][testq]['max']
                                             bpmin = calBPstatresult['antspw'][iant][ispw][poln]['inner'][testq]['min']
                                             
@@ -202,48 +203,52 @@ class FlagBadDeformatters(basetask.StandardTaskTemplate):
                                             testval = tval
                                             testvalid = True
                                         elif testunder:
-                                            if tval<testval:
+                                            if tval < testval:
                                                 testval = tval
                                         else:
-                                            if tval>testval:
+                                            if tval > testval:
                                                 testval = tval
                                 # Test on extrema of the polarizations for this ant/spw
                                 if not testvalid:
                                     # these have no unflagged channels in any poln
                                     flaggedspws.append(ispw)
                                 else:
-                                    if (testunder and testval<testlimit) or (not testunder and testval>testlimit):
+                                    if (testunder and testval < testlimit) or (not testunder and testval > testlimit):
                                         nbadspws += 1
                                         badspws.append(ispw)
                                         if doprintall:
-                                            LOG.info('  Found Ant %s (%s) %s %s spw=%s %s %s=%6.4f' % (str(iant),antName,rrx,bband,str(ispw),testq,tstat,testval))
+                                            LOG.info('  Found Ant %s (%s) %s %s spw=%s %s %s=%6.4f' %
+                                                     (str(iant), antName, rrx, bband, str(ispw), testq, tstat, testval))
                             
                             else:
                                 # this spw is missing from this antenna/rx
                                 if doprintall:
-                                    LOG.info('  Ant %s (%s) %s %s spw=%s missing solution' % (str(iant),antName,rrx,bband,str(ispw)))
+                                    LOG.info('  Ant %s (%s) %s %s spw=%s missing solution' %
+                                             (str(iant), antName, rrx, bband, str(ispw)))
                     
                     # Test to see if this baseband should be entirely flagged
-                    if nbadspws>0 and nbadspws>=nspwlimit:
+                    if nbadspws > 0 and nbadspws >= nspwlimit:
                         # Flag all spw in this baseband
                         bbspws = calBPstatresult['rxBasebandDict'][rrx][bband]
                         badspwlist.extend(bbspws)
-                        LOG.info('Ant %s (%s) %s %s bad baseband spws=%s' % (str(iant),antName,rrx,bband,str(bbspws)))
-                    elif nbadspws>0 and doflagundernspwlimit:
+                        LOG.info('Ant %s (%s) %s %s bad baseband spws=%s' %
+                                 (str(iant), antName, rrx, bband, str(bbspws)))
+                    elif nbadspws > 0 and doflagundernspwlimit:
                         # Flag spws individually
                         badspwlist.extend(badspws)
-                        LOG.info('Ant %s (%s) %s %s bad spws=%s' % (str(iant),antName,rrx,bband,str(badspws)))
-                    if len(flaggedspws)>0:
+                        LOG.info('Ant %s (%s) %s %s bad spws=%s' % (str(iant), antName, rrx, bband, str(badspws)))
+                    if len(flaggedspws) > 0:
                         flaggedspwlist.extend(flaggedspws)
-                        LOG.info('Ant %s (%s) %s %s no unflagged solutions spws=%s ' % (str(iant),antName,rrx,bband,str(flaggedspws)))
+                        LOG.info('Ant %s (%s) %s %s no unflagged solutions spws=%s ' %
+                                 (str(iant), antName, rrx, bband, str(flaggedspws)))
                                     
-            if len(badspwlist)>0:
+            if len(badspwlist) > 0:
                 spwstr = '' 
                 for ispw in badspwlist:
-                    if spwstr=='':
+                    if spwstr == '':
                         spwstr = str(ispw)
                     else:
-                        spwstr+=','+str(ispw)
+                        spwstr += ','+str(ispw)
                 #
                 # reastr = 'bad_deformatters'
                 reastr = flagreason
@@ -254,13 +259,13 @@ class FlagBadDeformatters(basetask.StandardTaskTemplate):
                 flaglist.append(flagstr)
                 weblogflagdict[antName].append(spwstr)
                 
-            if doflagemptyspws and len(flaggedspwlist)>0:
+            if doflagemptyspws and len(flaggedspwlist) > 0:
                 spwstr = '' 
                 for ispw in flaggedspwlist:
-                    if spwstr=='':
+                    if spwstr == '':
                         spwstr = str(ispw)
                     else:
-                        spwstr+=','+str(ispw)
+                        spwstr += ','+str(ispw)
                 #
                 # Add entry for this antenna
                 reastr = 'no_unflagged_solutions'
@@ -277,21 +282,20 @@ class FlagBadDeformatters(basetask.StandardTaskTemplate):
             for spwstr in spws[0].split(','):
                 spw = m.get_spectral_window(spwstr)
                 basebands.append(spw.name.split('#')[0] + '  ' + spw.name.split('#')[1])
-            basebands = list(set(basebands))  #Unique basebands
-            tempDict[antNamekey] = {'spws':spws,'basebands':basebands}
+            basebands = list(set(basebands))  # Unique basebands
+            tempDict[antNamekey] = {'spws': spws, 'basebands': basebands}
 
         weblogflagdict = tempDict
 
-
-        nflagcmds = len(flaglist)+len(extflaglist)
-        if nflagcmds<1:
+        nflagcmds = len(flaglist) + len(extflaglist)
+        if nflagcmds < 1:
             LOG.info("No bad basebands/spws found")
         else:
             LOG.info("Possible bad basebands/spws found:")
             
             for flagstr in flaglist:
                 LOG.info("    "+flagstr)
-            if len(extflaglist)>0:
+            if len(extflaglist) > 0:
                 LOG.info("    ")
                 for flagstr in extflaglist:
                     LOG.info("    "+flagstr)
@@ -310,10 +314,10 @@ class FlagBadDeformatters(basetask.StandardTaskTemplate):
                 
                 flaggingresult = self._executor.execute(job)
                 
-                return (flaglist, weblogflagdict)
+                return flaglist, weblogflagdict
                 
         # If the flag commands are not executed.
-        return ([], collections.defaultdict(list))
+        return [], collections.defaultdict(list)
 
     def analyse(self, results):
         return results

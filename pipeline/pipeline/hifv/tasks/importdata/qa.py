@@ -13,6 +13,7 @@ from . import importdata
 
 LOG = logging.get_logger(__name__)
 
+
 class VLAImportDataQAHandler(pqa.QAPlugin):
     result_cls = importdata.VLAImportDataResults
     child_cls = None
@@ -37,18 +38,20 @@ class VLAImportDataQAHandler(pqa.QAPlugin):
         scores = [score1, score3, score4, score5, score6]
         result.qa.pool.extend(scores)
 
-    def _check_contiguous(self, mses):
-        '''
+    @staticmethod
+    def _check_contiguous(mses):
+        """
         Check whether observations are contiguous.
-        '''
+        """
         tolerance = datetime.timedelta(hours=1)
         return qacalc.score_contiguous_session(mses, tolerance=tolerance)
 
-    def _check_model_data_column(self, mses):
-        '''
+    @staticmethod
+    def _check_model_data_column(mses):
+        """
         Check whether any of the measurement sets contain a MODEL_DATA column,
         complaining if present, and returning an appropriate QA score.
-        '''
+        """
         bad_mses = []
 
         for ms in mses:
@@ -59,13 +62,13 @@ class VLAImportDataQAHandler(pqa.QAPlugin):
         return qacalc.score_ms_model_data_column_present(mses, bad_mses)
 
     def _check_history_column(self, mses, inputs):
-        '''
+        """
         Check whether any of the measurement sets has entries in the history
         column, potentially signifying a non-pristine data set.
-        '''
+        """
         bad_mses = []
 
-        createmms = False if not inputs.has_key('createmms') else inputs['createmms']
+        createmms = False if 'createmms' not in inputs else inputs['createmms']
 
         for ms in mses:
             history_table = os.path.join(ms.name, 'HISTORY')
@@ -75,7 +78,8 @@ class VLAImportDataQAHandler(pqa.QAPlugin):
                     if createmms:
                         # special treatment is needed when createmms mode is turned on
                         for i in range(len(origin_col)):
-                            if origin_col[i] == 'importasdm' or origin_col[i] == 'partition' or origin_col[i] == 'im::calcuvw()':
+                            if (origin_col[i] == 'importasdm' or origin_col[i] == 'partition' or
+                                    origin_col[i] == 'im::calcuvw()'):
                                 continue
                             bad_mses.append(ms)
                             break
@@ -89,16 +93,16 @@ class VLAImportDataQAHandler(pqa.QAPlugin):
         return qacalc.score_ms_history_entries_present(mses, bad_mses)
 
     def _check_flagged_calibrator_data(self, mses):
-        '''
+        """
         Check how much calibrator data has been flagged in the given measurement
         sets, complaining if the fraction of flagged data exceeds a threshold.
-        '''
+        """
         LOG.todo('What fraction of flagged calibrator data should result in a '
                  'warning?')
         threshold = 0.10
 
         # which intents should be checked for flagged data
-        calibrator_intents = set(['AMPLITUDE', 'BANDPASS', 'PHASE'])
+        calibrator_intents = {'AMPLITUDE', 'BANDPASS', 'PHASE'}
 
         # flag for whether to print 'all scans ok' message at end
         all_ok = True
@@ -143,19 +147,21 @@ class VLAImportDataQAHandler(pqa.QAPlugin):
                                utils.commafy([ms.basename for ms in mses]),
                                threshold * 100.0))
 
-    def _check_intents(self, mses):
-        '''
+    @staticmethod
+    def _check_intents(mses):
+        """
         Check each measurement set in the list for a set of required intents.
 
         TODO Should we terminate execution on missing intents?
-        '''
+        """
         return qacalc.score_missing_intents(mses)
 
-    def _check_coordinates(self, mses):
-        '''
+    @staticmethod
+    def _check_coordinates(mses):
+        """
         Check each measurement set in the list for zero valued coordinates.
 
-        '''
+        """
         return qacalc.score_ephemeris_coordinates(mses)
 
 

@@ -184,7 +184,7 @@ class VDPTaskFactory(object):
             inputs.vis = vis
             task_args = inputs.as_dict()
             # support for single-dish tasks
-            if task_args.has_key('infiles'):
+            if 'infiles' in task_args:
                 task_args['infiles'] = task_args['vis']
         finally:
             inputs.vis = original_vis
@@ -202,7 +202,7 @@ def remove_unexpected_args(fn, fn_args):
     unexpected = [k for k in fn_args if k not in arg_names]
 
     # return the fn args purged of any unexpected items
-    x = {k:v for k, v in fn_args.iteritems() if k not in unexpected}
+    x = {k: v for k, v in fn_args.iteritems() if k not in unexpected}
 
     # LOG.info('Arg names: {!s}'.format(arg_names))
     # LOG.info('Unexpected: {!s}'.format(unexpected))

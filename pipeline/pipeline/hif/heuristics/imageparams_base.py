@@ -968,7 +968,7 @@ class ImageParamsHeuristics(object):
             # Save spw width
             total_topo_freq_ranges.append((min_frequency, max_frequency))
 
-            if (inputs.spwsel_lsrk.has_key('spw%s' % (spwid))):
+            if 'spw%s' % (spwid) in inputs.spwsel_lsrk:
                 if (inputs.spwsel_lsrk['spw%s' % (spwid)] not in ['ALL', '', 'NONE']):
                     freq_selection, refer = inputs.spwsel_lsrk['spw%s' % (spwid)].split()
                     if (refer == 'LSRK'):

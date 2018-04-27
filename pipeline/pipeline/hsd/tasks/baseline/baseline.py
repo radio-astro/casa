@@ -26,6 +26,7 @@ from ..common import utils
 _LOG = infrastructure.get_logger(__name__)
 LOG = utils.OnDemandStringParseLogger(_LOG)
 
+
 class SDBaselineInputs(basetask.StandardInputs):
     """
     Inputs for baseline subtraction
@@ -46,7 +47,7 @@ class SDBaselineInputs(basetask.StandardInputs):
         args = super(SDBaselineInputs, self).to_casa_args()
         self.vis = vis
         
-        if not args.has_key('antenna'):
+        if 'antenna' not in args:
             args['antenna'] = ''
         return args
 
@@ -85,15 +86,15 @@ class SDBaselineResults(common.SingleDishResults):
                                         channelmap_range=channelmap_range)
                 
         # register working data that stores spectra after baseline subtraction
-        if self.outcome.has_key('work_data'):
-            for (vis,work_data) in self.outcome['work_data'].iteritems():
+        if 'work_data' in self.outcome:
+            for (vis, work_data) in self.outcome['work_data'].iteritems():
                 ms = context.observing_run.get_ms(vis)
                 ms.work_data = work_data
                  
         # merge deviation_mask with context
         for ms in context.observing_run.measurement_sets:
             ms.deviation_mask = None
-        if self.outcome.has_key('deviation_mask'):
+        if 'deviation_mask' in self.outcome:
             for (basename, masks) in self.outcome['deviation_mask'].iteritems():
                 ms = context.observing_run.get_ms(basename)
                 ms.deviation_mask = {}
@@ -101,7 +102,7 @@ class SDBaselineResults(common.SingleDishResults):
                     for antenna in ms.antennas:
                         for spw in ms.get_spectral_windows(science_windows_only=True):
                             key = (field.id, antenna.id, spw.id)
-                            if masks.has_key(key):
+                            if key in masks:
                                 ms.deviation_mask[key] = masks[key]
 
     def _outcome_name(self):
@@ -230,11 +231,11 @@ class SDBaseline(basetask.StandardTaskTemplate):
             for m in group_desc:
                 # LOG.debug('\tAntenna %s Spw %s Pol %s'%(m.antenna, m.spw, m.pols))
                 LOG.info('\tMS "{ms}" Antenna "{antenna}" (ID {antenna_id}) Spw {spw} Field "{field}" (ID {field_id})',
-                          ms=m.ms.basename,
-                          antenna=m.antenna_name,
-                          antenna_id=m.antenna_id, spw=m.spw_id,
-                          field=m.field_name,
-                          field_id=m.field_id)
+                         ms=m.ms.basename,
+                         antenna=m.antenna_name,
+                         antenna_id=m.antenna_id, spw=m.spw_id,
+                         field=m.field_name,
+                         field_id=m.field_id)
             # assume all members have same spw and pollist
             first_member = group_desc[0]
             iteration = first_member.iteration
@@ -249,8 +250,9 @@ class SDBaseline(basetask.StandardTaskTemplate):
  
             LOG.debug('spw=\'{}\'', args['spw'])
             LOG.debug('vis_list={}', vis_list)
-            member_list = numpy.fromiter(utils.get_valid_ms_members2(group_desc, ms_list, args['antenna'], args['field'], args['spw']),
-                                         dtype=numpy.int32)
+            member_list = numpy.fromiter(
+                utils.get_valid_ms_members2(group_desc, ms_list, args['antenna'], args['field'], args['spw']),
+                dtype=numpy.int32)
             # skip this group if valid member list is empty
             LOG.debug('member_list={}', member_list)
             if len(member_list) == 0:
@@ -268,18 +270,18 @@ class SDBaseline(basetask.StandardTaskTemplate):
             # NOTE: deviation mask is evaluated per ms per field per spw
             if deviationmask:
                 LOG.info('Apply deviation mask to baseline fitting')
-                for (ms, fieldid, antennaid, spwid) in \
-                    utils.iterate_group_member(group_desc, member_list):
+                for (ms, fieldid, antennaid, spwid) in utils.iterate_group_member(group_desc, member_list):
                     if (not hasattr(ms, 'deviation_mask')) or ms.deviation_mask is None:
                         ms.deviation_mask = {}
-                    if not ms.deviation_mask.has_key((fieldid,antennaid,spwid)):
+                    if (fieldid, antennaid, spwid) not in ms.deviation_mask:
                         LOG.debug('Evaluating deviation mask for {} field {} antenna {} spw {}',
                                   ms.basename, fieldid, antennaid, spwid)
                         mask_list = self.evaluate_deviation_mask(ms.name, fieldid, antennaid, spwid, 
                                                                  consider_flag=True)
                         LOG.debug('deviation mask = {}', mask_list)
                         ms.deviation_mask[(fieldid, antennaid, spwid)] = mask_list
-                    deviation_mask[ms.basename][(fieldid, antennaid, spwid)] = ms.deviation_mask[(fieldid, antennaid, spwid)]
+                    deviation_mask[ms.basename][(fieldid, antennaid, spwid)] = ms.deviation_mask[(fieldid, antennaid,
+                                                                                                  spwid)]
                     LOG.debug('evaluated deviation mask is {v}',
                               v=ms.deviation_mask[(fieldid, antennaid, spwid)])
             else:
@@ -363,7 +365,6 @@ class SDBaseline(basetask.StandardTaskTemplate):
                     deviationmask = deviation_mask[vis][(field_id, antenna_id, spw_id)]
                 else:
                     deviationmask = None
-                    
                  
                 if status:
                     plot_list.extend(plot_manager.plot_spectra_with_fit(field_id, antenna_id, spw_id, 
@@ -388,7 +389,8 @@ class SDBaseline(basetask.StandardTaskTemplate):
     def analyse(self, result):
         return result
     
-    def evaluate_deviation_mask(self, vis, field_id, antenna_id, spw_id, consider_flag=False):
+    @staticmethod
+    def evaluate_deviation_mask(vis, field_id, antenna_id, spw_id, consider_flag=False):
         """
         Create deviation mask using MaskDeviation heuristic
         """
@@ -396,5 +398,3 @@ class SDBaseline(basetask.StandardTaskTemplate):
         mask_list = h.calculate(vis=vis, field_id=field_id, antenna_id=antenna_id, spw_id=spw_id, 
                                 consider_flag=consider_flag)
         return mask_list
-
-

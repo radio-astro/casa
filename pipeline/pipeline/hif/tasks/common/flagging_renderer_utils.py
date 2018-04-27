@@ -1,8 +1,8 @@
-'''
+"""
 Created on 25 Nov 2014
 
 @author: sjw
-'''
+"""
 import collections
 import pipeline.infrastructure.utils as utils
 
@@ -19,7 +19,8 @@ def flags_for_result(result, context, non_science_agents=[]):
     
     adjusted = adjust_non_science_totals(merged, non_science_agents)
 
-    return {ms.basename : adjusted}
+    return {ms.basename: adjusted}
+
 
 def flags_by_intent(ms, summaries):
     # create a dictionary of scans per observing intent, eg. 'PHASE':[1,2,7]
@@ -42,7 +43,7 @@ def flags_by_intent(ms, summaries):
             totalcount = 0
 
             for i in scan_ids:
-                if not summary['scan'].has_key(i):
+                if i not in summary['scan']:
                     continue
                 
                 flagcount += int(summary['scan'][i]['flagged'])
@@ -57,6 +58,7 @@ def flags_by_intent(ms, summaries):
         previous_summary = summary
             
     return total 
+
 
 def flags_by_science_spws(ms, summaries):
     science_spws = ms.get_spectral_windows(science_windows_only=True)
@@ -83,6 +85,7 @@ def flags_by_science_spws(ms, summaries):
         previous_summary = summary
             
     return total
+
 
 def adjust_non_science_totals(flagtotals, non_science_agents=[]):
     """

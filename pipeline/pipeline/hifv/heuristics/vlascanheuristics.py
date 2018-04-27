@@ -320,10 +320,10 @@ def buildscans(msfile, scd):
             for it in range(nt):
                 isc = rect['scan_number'][it]
                 tim = rect['time'][it]
-                if ddlookup.has_key(isc):
+                if isc in ddlookup:
                     if ddlookup[isc].count(idd)<1:
                         ddlookup[isc].append(idd)
-                    if ddscantimes[isc].has_key(idd):
+                    if idd in ddscantimes[isc]:
                         ddscantimes[isc][idd].append(tim)
                     else:
                         ddscantimes[isc][idd] = [tim]

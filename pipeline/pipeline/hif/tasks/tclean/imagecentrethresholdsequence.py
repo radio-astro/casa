@@ -26,9 +26,10 @@ class ImageCentreThresholdSequence(BaseCleanSequence):
         self.result = BoxResult()
         self.sidelobe_ratio = -1
 
-    def iteration(self, new_cleanmask, pblimit_image=0.2, pblimit_cleanmask=0.3, spw=None, frequency_selection=None, keep_iterating=None):
+    def iteration(self, new_cleanmask, pblimit_image=0.2, pblimit_cleanmask=0.3, spw=None, frequency_selection=None,
+                  keep_iterating=None):
 
-        if (self.multiterm):
+        if self.multiterm:
             extension = '.tt0'
         else:
             extension = ''
@@ -41,8 +42,8 @@ class ImageCentreThresholdSequence(BaseCleanSequence):
             #   flux > 0.3 (or adjusted for image size) when flux available
             #   centre quarter otherwise
             if self.flux not in (None, ''):
-                cm = casatools.image.newimagefromimage(infile=self.flux+extension,
-                  outfile=new_cleanmask, overwrite=True)
+                cm = casatools.image.newimagefromimage(
+                    infile=self.flux+extension, outfile=new_cleanmask, overwrite=True)
                 # verbose = False to suppress warning message
                 cm.calcmask('T')
                 cm.calc('1', verbose=False)
@@ -50,8 +51,8 @@ class ImageCentreThresholdSequence(BaseCleanSequence):
                 cm.calcmask('"%s" > %s' % (self.flux+extension, str(pblimit_image)))
                 cm.done()
             else:
-                cm = casatools.image.newimagefromimage(infile=self.residuals[0]+extension,
-                  outfile=new_cleanmask, overwrite=True)
+                cm = casatools.image.newimagefromimage(
+                    infile=self.residuals[0]+extension, outfile=new_cleanmask, overwrite=True)
                 cm.set(pixels='0')
                 shape = cm.shape()
                 rg = casatools.regionmanager
@@ -64,17 +65,17 @@ class ImageCentreThresholdSequence(BaseCleanSequence):
             if frequency_selection is not None:
                 channel_ranges = []
                 for spwid in spw.split(','):
-                    spwkey = 'spw%s' % (spwid)
-                    if frequency_selection.has_key(spwkey):
-                        if (frequency_selection[spwkey] not in (None, 'NONE', '')):
-                            channel_ranges.extend(utils.freq_selection_to_channels(new_cleanmask, frequency_selection[spwkey].split()[0]))
+                    spwkey = 'spw%s' % spwid
+                    if spwkey in frequency_selection and frequency_selection[spwkey] not in (None, 'NONE', ''):
+                        channel_ranges.extend(utils.freq_selection_to_channels(new_cleanmask, frequency_selection[spwkey].split()[0]))
                 if channel_ranges != []:
                     with casatools.ImageReader(new_cleanmask) as iaTool:
                         shape = iaTool.shape()
                         rgTool = casatools.regionmanager
                         for channel_range in channel_ranges:
                             LOG.info('Unmasking channels %d to %d' % (channel_range[0], channel_range[1]))
-                            region = rgTool.box([0,0,0,channel_range[0]], [shape[0]-1, shape[1]-1, 0, channel_range[1]])
+                            region = rgTool.box([0, 0, 0, channel_range[0]],
+                                                [shape[0]-1, shape[1]-1, 0, channel_range[1]])
                             iaTool.set(region=region, pixels=0.0, pixelmask=False)
                         rgTool.done()
 

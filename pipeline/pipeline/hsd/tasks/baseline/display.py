@@ -3,13 +3,11 @@ from __future__ import absolute_import
 import os
 import time
 import abc
-import numpy
 import math
 import string
 import pylab as pl
 
 import pipeline.infrastructure as infrastructure
-import pipeline.infrastructure.utils as utils
 import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.renderer.logger as logger
 import pipeline.infrastructure.displays.pointing as pointing
@@ -23,6 +21,7 @@ RArotation = pointing.RArotation
 DECrotation = pointing.DECrotation
 DDMMSSs = pointing.DDMMSSs
 HHMMSSss = pointing.HHMMSSss
+
 
 class ClusterValidationAxesManager(MapAxesManagerBase):
     def __init__(self, ncluster, nh, nv, aspect_ratio,
@@ -52,7 +51,6 @@ class ClusterValidationAxesManager(MapAxesManagerBase):
 
         return self._legend
 
-        
     @property
     def axes_list(self):
         if self._axes is None:
@@ -95,7 +93,6 @@ class ClusterValidationAxesManager(MapAxesManagerBase):
             pl.xticks(size=self.ticksize)
             pl.yticks(size=self.ticksize)
 
-            
             yield axes
         
 
@@ -111,14 +108,14 @@ class ClusterDisplay(object):
 
     def __baselined(self):
         for group in self.inputs.result.outcome['baselined']:
-            if group.has_key('clusters') and group.has_key('lines'):
+            if 'clusters' in group and 'lines' in group:
                 yield group
             
     def plot(self):
         plot_list = []
 
         stage_dir = os.path.join(self.context.report_dir,
-                                 'stage%d'%(self.inputs.result.stage_number))
+                                 'stage%d' % (self.inputs.result.stage_number))
         start_time = time.time()
         reduction_group = self.context.observing_run.ms_reduction_group
         for group in self.__baselined():
@@ -128,11 +125,11 @@ class ClusterDisplay(object):
             is_all_invalid_lines = all([l[2] == False for l in lines])
             rep_member_id = group['members'][0]
             rep_member = reduction_group[group_id][rep_member_id]
-            if (not cluster.has_key('cluster_score')) or (is_all_invalid_lines):
+            if 'cluster_score' not in cluster or is_all_invalid_lines:
                 # it should be empty cluster (no detection) or false clusters (detected but 
                 # judged as an invalid clusters) so skip this cycle
                 continue
-            if group.has_key('index'):
+            if 'index' in group:
                 # having key 'index' indicates the result comes from old (Scantable-based) 
                 # procedure
                 antenna = group['index'][0]
@@ -145,7 +142,7 @@ class ClusterDisplay(object):
             spw = rep_member.spw_id
             field = rep_member.field_id
             ms = self.context.observing_run.get_ms(vis)
-            source_name = ms.fields[field].source.name.replace(' ', '_').replace('/','_')
+            source_name = ms.fields[field].source.name.replace(' ', '_').replace('/', '_')
             iteration = group['iteration']
             t0 = time.time()
             plot_score = ClusterScoreDisplay(group_id, iteration, cluster, spw, source_name, stage_dir)
@@ -159,14 +156,15 @@ class ClusterDisplay(object):
             plot_list.extend(plot_validation.plot())
             t3 = time.time()
 
-            LOG.debug('PROFILE: ClusterScoreDisplay elapsed time is %s sec'%(t1-t0))
-            LOG.debug('PROFILE: ClusterPropertyDisplay elapsed time is %s sec'%(t2-t1))
-            LOG.debug('PROFILE: ClusterValidationDisplay elapsed time is %s sec'%(t3-t2))
+            LOG.debug('PROFILE: ClusterScoreDisplay elapsed time is %s sec' % (t1-t0))
+            LOG.debug('PROFILE: ClusterPropertyDisplay elapsed time is %s sec' % (t2-t1))
+            LOG.debug('PROFILE: ClusterValidationDisplay elapsed time is %s sec' % (t3-t2))
 
         end_time = time.time()
         LOG.debug('PROFILE: plot elapsed time is %s sec'%(end_time-start_time))
         
         return plot_list
+
 
 class ClusterDisplayWorker(object):
     __metaclass__ = abc.ABCMeta
@@ -212,7 +210,8 @@ class ClusterDisplayWorker(object):
     @abc.abstractmethod
     def _plot(self):
         raise NotImplementedError
-        
+
+
 class ClusterScoreDisplay(ClusterDisplayWorker):
     def _plot(self):
         ncluster, score = self.cluster['cluster_score']
@@ -227,12 +226,13 @@ class ClusterScoreDisplay(ClusterDisplayWorker):
             pl.draw()
 
         plotfile = os.path.join(self.stage_dir,
-                                'cluster_score_group%s_spw%s_iter%s.png'%(self.group_id,self.spw,self.iteration))
+                                'cluster_score_group%s_spw%s_iter%s.png' % (self.group_id, self.spw, self.iteration))
         pl.savefig(plotfile, format='png', dpi=DPIDetail)
         plot = self._create_plot(plotfile, 'cluster_score',
                                  'Number of Clusters', 'Score')
         yield plot
-        
+
+
 class ClusterPropertyDisplay(ClusterDisplayWorker):
     def _plot(self):
         lines = self.cluster['detected_lines']
@@ -240,8 +240,8 @@ class ClusterPropertyDisplay(ClusterDisplayWorker):
         scaling = self.cluster['cluster_scale']
 
         sorted_properties = sorted(properties)
-        width = lines[:,0]
-        center = lines[:,1]
+        width = lines[:, 0]
+        center = lines[:, 1]
         pl.plot(center, width, 'bs', markersize=1)
         [xmin, xmax, ymin, ymax] = pl.axis()
         axes = pl.gcf().gca()
@@ -268,7 +268,8 @@ class ClusterPropertyDisplay(ClusterDisplayWorker):
         plot = self._create_plot(plotfile, 'line_property',
                                  'Line Center', 'Line Width')
         yield plot
-        
+
+
 class ClusterValidationDisplay(ClusterDisplayWorker):
     Description = {
         'detection': 'Clustering Analysis at Detection stage\n\nYellow Square: Single spectrum is detected in the grid\nCyan Square: More than one spectra are detected in the grid\n',
@@ -300,7 +301,6 @@ class ClusterValidationDisplay(ClusterDisplayWorker):
         # 2008/9/20 DEC Effect
         aspect_ratio = 1.0 / math.cos(dec0 / 180.0 * 3.141592653)
 
-
         # common message for legends
         scale_msg = self.__scale_msg(scale_ra, scale_dec, aspect_ratio)
 
@@ -317,14 +317,14 @@ class ClusterValidationDisplay(ClusterDisplayWorker):
 
         span = max(xmax - xmin, ymax - ymin)
         (RAlocator, DEClocator, RAformatter, DECformatter) = RADEClabel(span)
-    
+
         # direction reference
         datatable_name = self.context.observing_run.ms_datatable_name
         datatable = DataTable()
         datatable.importdata(datatable_name, minimal=False, readonly=True)
         direction_reference = datatable.direction_ref
         del datatable
-        
+
         axes_manager = ClusterValidationAxesManager(num_cluster,
                                                     num_panel_h,
                                                     num_panel_v,
@@ -340,7 +340,7 @@ class ClusterValidationDisplay(ClusterDisplayWorker):
         axes_list = axes_manager.axes_list
         axes_legend = axes_manager.axes_legend
         
-        for (mode,data,threshold,description) in self.__stages():
+        for (mode, data, threshold, description) in self.__stages():
             plot_objects = []
             
             for icluster in xrange(num_cluster):
@@ -408,23 +408,23 @@ class ClusterValidationDisplay(ClusterDisplayWorker):
         digits = {'detection': 1, 'validation': 10,
                   'smoothing': 100, 'final': 1000}
         for key in ['detection', 'validation', 'smoothing', 'final']:
-            if self.cluster.has_key('cluster_flag'):
+            if 'cluster_flag' in self.cluster:
                 # Pick up target digit
                 _data = self.cluster['cluster_flag']
                 _digit = digits[key]
                 data = (_data / _digit) % 10
-                LOG.debug('data=%s'%(data))
+                LOG.debug('data=%s' % (data))
                 threshold = self.cluster[key+'_threshold']
                 desc = self.Description[key]
                 if key == 'validation':
                     template = string.Template(desc)
-                    valid = '%.1f'%(threshold[0])
-                    marginal = '%.1f'%(threshold[1])
-                    questionable = '%.1f'%(threshold[2])
+                    valid = '%.1f' % (threshold[0])
+                    marginal = '%.1f' % (threshold[1])
+                    questionable = '%.1f' % (threshold[2])
                     desc = template.safe_substitute(valid=valid,
                                                     marginal=marginal,
                                                     questionable=questionable)
-                yield (key,data,threshold,desc)
+                yield (key, data, threshold, desc)
 
     def __line_property(self, icluster):
         reduction_group = self.context.observing_run.ms_reduction_group[self.group_id]
@@ -436,7 +436,7 @@ class ClusterValidationDisplay(ClusterDisplayWorker):
         refval = spectral_window.channels.chan_freqs[0]
         increment = spectral_window.channels.chan_widths[0]
         with casatools.TableReader(os.path.join(self.vis, 'SOURCE')) as tb:
-            tsel = tb.query('SOURCE_ID == %s && SPECTRAL_WINDOW_ID == %s'%(source_id, self.spw))
+            tsel = tb.query('SOURCE_ID == %s && SPECTRAL_WINDOW_ID == %s' % (source_id, self.spw))
             try:
                 if tsel.nrows() == 0:
                     rest_frequency = refval
@@ -455,10 +455,10 @@ class ClusterValidationDisplay(ClusterDisplayWorker):
         center_frequency = refval + (line_center - refpix) * increment
         width_in_frequency = abs(line_width * increment)
 
-        center_frequency *= 1.0e-9 # Hz -> GHz
+        center_frequency *= 1.0e-9  # Hz -> GHz
         width_in_velocity = width_in_frequency / rest_frequency * LightSpeed
 
-        return (center_frequency, width_in_velocity)
+        return center_frequency, width_in_velocity
 
     def __scale_msg(self, scale_ra, scale_dec, aspect_ratio):
         if scale_ra >= 1.0:
@@ -473,4 +473,4 @@ class ClusterValidationDisplay(ClusterDisplayWorker):
         ra_text = scale_ra / aspect_ratio * scale_factor
         dec_text = scale_dec * scale_factor
 
-        return 'Scale of the Square (Grid): %.1f x %.1f (%s)'%(ra_text, dec_text, unit)
+        return 'Scale of the Square (Grid): %.1f x %.1f (%s)' % (ra_text, dec_text, unit)

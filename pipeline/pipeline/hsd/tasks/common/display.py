@@ -28,7 +28,7 @@ DPISummary = 90
 #DPIDetail = 130
 DPIDetail = 260
 LightSpeedQuantity = casatools.quanta.constants('c')
-LightSpeed = casatools.quanta.convert(LightSpeedQuantity, 'km/s')['value'] # speed of light in km/s
+LightSpeed = casatools.quanta.convert(LightSpeedQuantity, 'km/s')['value']  # speed of light in km/s
 
 sd_polmap = {0: 'XX', 1: 'YY', 2: 'XY', 3: 'YX'}
 
@@ -37,7 +37,7 @@ NoDataThreshold = NoData + 10000.0
 
 
 def mjd_to_datedict(val, unit='d'):
-    mjd = casatools.quanta.quantity(val,unit)
+    mjd = casatools.quanta.quantity(val, unit)
     return casatools.quanta.splitdate(mjd)
 
 
@@ -148,13 +148,13 @@ class SpectralImage(object):
             LOG.debug('id_stokes=%s'%(self.id_stokes))
             self.data = ia.getchunk()
             self.mask = ia.getchunk(getmask=True)
-            bottom = ia.toworld(numpy.zeros(len(self.image_shape),dtype=int), 'q')['quantity']
+            bottom = ia.toworld(numpy.zeros(len(self.image_shape), dtype=int), 'q')['quantity']
             top = ia.toworld(self.image_shape-1, 'q')['quantity']
             key = lambda x: '*%s'%(x+1)
             ra_min = bottom[key(self.id_direction[0])]
             ra_max = top[key(self.id_direction[0])]
             if ra_min > ra_max:
-                ra_min,ra_max = ra_max,ra_min
+                ra_min, ra_max = ra_max, ra_min
             self.ra_min = ra_min
             self.ra_max = ra_max
             self.dec_min = bottom[key(self.id_direction[1])]
@@ -163,7 +163,7 @@ class SpectralImage(object):
             beam = ia.restoringbeam()
             self.direction_reference = self.coordsys.referencecode('dir')[0]
         qa = casatools.quanta
-        self._beamsize_in_deg = qa.convert(qa.sqrt(qa.mul(beam['major'], beam['minor'])),'deg')['value']
+        self._beamsize_in_deg = qa.convert(qa.sqrt(qa.mul(beam['major'], beam['minor'])), 'deg')['value']
         
     @property
     def nx(self):
@@ -215,8 +215,8 @@ class SpectralImage(object):
         increment = self.coordsys.increment()['numeric'][idx]
         _unit = self.units[idx]
         if _unit != unit:
-            refval = qa.convert(qa.quantity(refval,_unit),unit)['value']
-            increment = qa.convert(qa.quantity(increment,_unit),unit)['value']
+            refval = qa.convert(qa.quantity(refval, _unit), unit)['value']
+            increment = qa.convert(qa.quantity(increment, _unit), unit)['value']
         #return numpy.array([refval+increment*(i-refpix) for i in xrange(self.nchan)])
         return (refpix, refval, increment)
         
@@ -239,7 +239,7 @@ class SDImageDisplayInputs(SingleDishDisplayInputs):
 
     @property
     def vis(self):
-        if self.result.outcome.has_key('vis'):
+        if 'vis' in self.result.outcome:
             return self.result.outcome['vis']
         else:
             return None
@@ -307,10 +307,13 @@ class SDInspectionDisplay(object):
             # result object seems to be empty, return empty list
             return []
 
-        if ShowPlot: pl.ion()
-        else: pl.ioff()
+        if ShowPlot:
+            pl.ion()
+        else:
+            pl.ioff()
         pl.figure(self.MATPLOTLIB_FIGURE_ID)
-        if ShowPlot: pl.ioff()
+        if ShowPlot:
+            pl.ioff()
         pl.clf()
 
         self.axes_manager = self.AxesManager()
@@ -402,8 +405,8 @@ class SDImageDisplay(object):
         self.dec_min = qa.convert(self.image.dec_min, 'deg')['value']
         self.dec_max = qa.convert(self.image.dec_max, 'deg')['value']
 
-        LOG.debug('(ra_min,ra_max)=(%s,%s)'%(self.ra_min,self.ra_max))
-        LOG.debug('(dec_min,dec_max)=(%s,%s)'%(self.dec_min,self.dec_max))
+        LOG.debug('(ra_min,ra_max)=(%s,%s)' % (self.ra_min, self.ra_max))
+        LOG.debug('(dec_min,dec_max)=(%s,%s)' % (self.dec_min, self.dec_max))
 
         self.beam_size = self.image.beam_size
         self.beam_radius = self.beam_size / 2.0
@@ -443,7 +446,7 @@ class SDImageDisplay(object):
         return self.inputs.result.outcome['edge']
 
     def __reshape2d(self, array2d, dtype=None):
-        array3d = numpy.zeros((self.npol,self.ny,self.nx),dtype=dtype)
+        array3d = numpy.zeros((self.npol, self.ny, self.nx), dtype=dtype)
         if len(array2d) == self.npol:
             each_len = numpy.array(map(len, array2d))
             if numpy.all(each_len == 0):
@@ -451,7 +454,7 @@ class SDImageDisplay(object):
                 array3d = numpy.zeros((self.npol, self.ny, self.nx), dtype=dtype)
             elif numpy.all(each_len == self.ny * self.nx):
                 # all polarizations has valid data in each pixel
-                array3d = numpy.array(array2d).reshape((self.npol,self.ny,self.nx))
+                array3d = numpy.array(array2d).reshape((self.npol, self.ny, self.nx))
             elif numpy.any(each_len == self.ny * self.nx):
                 # probably one of the polarization components has no valid data
                 invalid_pols = numpy.where(each_len == 0)[0]
@@ -461,7 +464,7 @@ class SDImageDisplay(object):
                         _array2d.append(numpy.zeros((self.ny * self.nx), dtype=dtype))
                     else:
                         _array2d.append(array2d[i])
-                array3d = numpy.array(_array2d).reshape((self.npol,self.ny,self.nx))
+                array3d = numpy.array(_array2d).reshape((self.npol, self.ny, self.nx))
         return numpy.flipud(array3d.transpose())
 
 
@@ -488,8 +491,8 @@ def drop_edge(array):
     nchan = array.shape[0]
     a = None
     if nchan > 2:
-        echan = max(1,int(nchan * 0.05))
-        a = array[echan:-echan,::]
+        echan = max(1, int(nchan * 0.05))
+        a = array[echan:-echan, ::]
     return a
 
 
@@ -520,6 +523,7 @@ def form4(n):
         return 5
     else:
         return 5.5
+
 
 class MapAxesManagerBase(object):
     @property
@@ -642,14 +646,16 @@ class SparseMapAxesManager(MapAxesManagerBase):
             a1 = pl.subplot(self.gs_bottom[-1, self.nh - x])
             a1.set_axis_off()
             if len(a1.texts) == 0:
-                pl.text(0.5, 0.5, pointing.HHMMSSss((label_ra[x][0]+label_ra[x][1])/2.0, 0), horizontalalignment='center', verticalalignment='center', size=self.ticksize)
+                pl.text(0.5, 0.5, pointing.HHMMSSss((label_ra[x][0]+label_ra[x][1])/2.0, 0),
+                        horizontalalignment='center', verticalalignment='center', size=self.ticksize)
             else:
                 a1.texts[0].set_text(pointing.HHMMSSss((label_ra[x][0]+label_ra[x][1])/2.0, 0))
         for y in xrange(self.nv):
             a1 = pl.subplot(self.gs_bottom[self.nv - y - 1, 0])
             a1.set_axis_off()
             if len(a1.texts) == 0:
-                pl.text(0.5, 0.5, pointing.DDMMSSs((label_dec[y][0]+label_dec[y][1])/2.0, 0), horizontalalignment='center', verticalalignment='center', size=self.ticksize)
+                pl.text(0.5, 0.5, pointing.DDMMSSs((label_dec[y][0]+label_dec[y][1])/2.0, 0),
+                        horizontalalignment='center', verticalalignment='center', size=self.ticksize)
             else:
                 a1.texts[0].set_text(pointing.DDMMSSs((label_dec[y][0]+label_dec[y][1])/2.0, 0))
         a1 = pl.subplot(self.gs_bottom[-1, 0])
@@ -761,17 +767,17 @@ class SDSparseMapPlotter(object):
             spmax += dsp * 0.4
         else:
             spmax += dsp * 0.1
-        LOG.debug('spmin=%s, spmax=%s'%(spmin,spmax))
+        LOG.debug('spmin=%s, spmax=%s' % (spmin, spmax))
         
         global_xmin = min(frequency[0], frequency[-1])
         global_xmax = max(frequency[0], frequency[-1])
-        LOG.debug('global_xmin=%s, global_xmax=%s'%(global_xmin,global_xmax))
+        LOG.debug('global_xmin=%s, global_xmax=%s' % (global_xmin, global_xmax))
 
         # Auto scaling
         # to eliminate max/min value due to bad pixel or bad fitting,
         #  1/10-th value from max and min are used instead
         valid_index = numpy.where(map_data.min(axis=2) > NoDataThreshold)
-        valid_data = map_data[valid_index[0],valid_index[1],:]
+        valid_data = map_data[valid_index[0], valid_index[1], :]
         LOG.debug('valid_data.shape={shape}'.format(shape=valid_data.shape))
         del valid_index
         if isinstance(map_data, numpy.ma.masked_array):
@@ -859,7 +865,8 @@ class SDSparseMapPlotter(object):
                     else:
                         ymin = global_ymin
                         ymax = global_ymax
-                    LOG.debug('Per panel scaling turned on: ymin=%s, ymax=%s (global ymin=%s, ymax=%s)'%(ymin,ymax,global_ymin,global_ymax))
+                    LOG.debug('Per panel scaling turned on: ymin=%s, ymax=%s (global ymin=%s, ymax=%s)' %
+                              (ymin, ymax, global_ymin, global_ymax))
                 pl.gcf().sca(self.axes.axes_spmap[y+(self.nh-x-1)*self.nv])
                 if map_data[x][y].min() > NoDataThreshold:
                     plot_helper.plot(frequency, map_data[x][y], color='b', linestyle='-', linewidth=0.2)
@@ -867,13 +874,14 @@ class SDSparseMapPlotter(object):
                         for chmin, chmax in self.lines_map[x][y]:
                             fmin = ch_to_freq(chmin, frequency)
                             fmax = ch_to_freq(chmax, frequency)
-                            LOG.debug('plotting line range for %s, %s: [%s, %s]'%(x,y,chmin,chmax))
+                            LOG.debug('plotting line range for %s, %s: [%s, %s]' % (x, y, chmin, chmax))
                             plot_helper.axvspan(fmin, fmax, color='cyan')
                     elif self.lines_averaged is not None:
                         for chmin, chmax in self.lines_averaged:
                             fmin = ch_to_freq(chmin, frequency)
                             fmax = ch_to_freq(chmax, frequency)
-                            LOG.debug('plotting line range for %s, %s (reuse lines_averaged): [%s, %s]'%(x,y,chmin,chmax))
+                            LOG.debug('plotting line range for %s, %s (reuse lines_averaged): [%s, %s]' %
+                                      (x, y, chmin, chmax))
                             plot_helper.axvspan(fmin, fmax, color='cyan')
                     if is_valid_fit_result:
                         plot_helper.plot(frequency, fit_result[x][y], color='r', linewidth=0.4)
@@ -884,7 +892,8 @@ class SDSparseMapPlotter(object):
                                      size=(self.TickSize + 1))
                 pl.axis((xmin, xmax, ymin, ymax))
 
-        if ShowPlot: pl.draw()
+        if ShowPlot:
+            pl.draw()
 
         if figfile is not None:
             pl.savefig(figfile, format='png', dpi=DPIDetail)
@@ -897,7 +906,6 @@ class SDSparseMapPlotter(object):
     def done(self):
         pl.close()
         del self.axes
-
 
 
 def ch_to_freq(ch, frequency):

@@ -1,7 +1,5 @@
 from __future__ import absolute_import
 
-import os
-import re
 import numpy
 
 import pipeline.infrastructure as infrastructure
@@ -14,9 +12,11 @@ from ..common import mjd_to_datestring, TableSelector
 
 LOG = infrastructure.get_logger(__name__)
 
+
 def get_value_in_deg(quantity):
     qa = casatools.quanta
     return qa.getvalue(qa.convert(quantity, 'deg'))
+
 
 def get_state_id(ms, spw, intent):
     states = (s for s in ms.states if intent in s.intents)
@@ -65,11 +65,13 @@ class MetaDataReader(object):
     def detect_target_data_desc(self):
         science_windows = self.detect_target_spw()
         ms = self.ms
+
         def _g():
             for spwid in science_windows:
                 dd = ms.get_data_description(spw=spwid)
                 assert dd is not None
                 yield dd.id
+
         dds = numpy.fromiter(_g(), dtype=numpy.int32)
         return dds
                 
@@ -85,18 +87,19 @@ class MetaDataReader(object):
         
         #Rad2Deg = 180. / 3.141592653
         
-        LOG.info('name=%s'%(name))
+        LOG.info('name=%s' % name)
+        # TODO: rename has_key method to stop shadowing deprecated has_key method of iterables (Python 3)
         if self.datatable.has_key('FILENAMES'):
             filenames = self.datatable.getkeyword('FILENAMES')
             if name in filenames:
                 # the data is already registered, return
                 self.appended_row = 0
                 return
-            filenames = numpy.concatenate((filenames,[name]))
+            filenames = numpy.concatenate((filenames, [name]))
         else:
             filenames = [name]
         ms_id = len(filenames) - 1
-        self.datatable.putkeyword('FILENAMES',filenames)
+        self.datatable.putkeyword('FILENAMES', filenames)
 
         # 2018/04/18 TN
         # CAS-10874 single dish pipeline should use ICRS instead of J2000
@@ -159,20 +162,20 @@ class MetaDataReader(object):
             NchanArray = numpy.fromiter((nchan_map[n] for n in Tif), dtype=numpy.int)   
 
         ID = len(self.datatable)
-        LOG.info('ID=%s'%(ID))
+        LOG.info('ID=%s' % ID)
         #ROWs = []
         #IDs = []
 
-        self.datatable.addrows( nrow )
+        self.datatable.addrows(nrow)
         # column based storing
-        self.datatable.putcol('ROW',rows,startrow=ID)
-        self.datatable.putcol('SCAN',Tscan,startrow=ID)
-        self.datatable.putcol('IF',Tif,startrow=ID)
-        self.datatable.putcol('NPOL',Tpol,startrow=ID)
-        self.datatable.putcol('BEAM',Tbeam,startrow=ID)
-        self.datatable.putcol('TIME',Tmjd/86400.0,startrow=ID)
-        self.datatable.putcol('ELAPSED',Tmjd-Tmjd[0],startrow=ID)
-        self.datatable.putcol('EXPOSURE',Texpt,startrow=ID)
+        self.datatable.putcol('ROW', rows, startrow=ID)
+        self.datatable.putcol('SCAN', Tscan, startrow=ID)
+        self.datatable.putcol('IF', Tif, startrow=ID)
+        self.datatable.putcol('NPOL', Tpol, startrow=ID)
+        self.datatable.putcol('BEAM', Tbeam, startrow=ID)
+        self.datatable.putcol('TIME', Tmjd/86400.0, startrow=ID)
+        self.datatable.putcol('ELAPSED', Tmjd-Tmjd[0], startrow=ID)
+        self.datatable.putcol('EXPOSURE', Texpt, startrow=ID)
         self.datatable.putcol('FIELD_ID', field_ids, startrow=ID)
         Tra = numpy.zeros(nrow, dtype=numpy.float64)
         Tdec = numpy.zeros(nrow, dtype=numpy.float64)
@@ -335,7 +338,8 @@ class MetaDataReader(object):
         
     def _get_azelref(self):
         return 'AZELGEO'
-    
+
+
 def direction_convert(direction, mepoch, mposition, outframe):
     direction_type = direction['type']
     assert direction_type == 'direction'

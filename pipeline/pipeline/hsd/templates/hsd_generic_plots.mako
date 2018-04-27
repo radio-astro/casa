@@ -14,7 +14,7 @@ SELECTORS = ['ant', 'spw', 'pol']
 	</%def>
 
 	<%def name="caption_text(plot)">
-	% if plot.parameters.has_key('vis'):
+	% if 'vis' in plot.parameters:
 	    ${'_'.join(plot.parameters['vis'].split('.')[0].split('_')[-2:])}<br>
 	% endif
 		${plot.parameters['ant']}<br>

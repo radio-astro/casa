@@ -1,15 +1,8 @@
 import collections
-import operator
-import os
-import shutil
 
-import numpy
-
-import pipeline.domain.measures as measures
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.renderer.basetemplates as basetemplates
 import pipeline.infrastructure.utils as utils
-import pipeline.infrastructure.renderer.logger as logger
 
 LOG = logging.get_logger(__name__)
 
@@ -21,9 +14,8 @@ class T2_4MDetailsCheckProductSizeRenderer(basetemplates.T2_4MDetailsDefaultRend
                  uri='checkproductsize.mako',
                  description='Check product size',
                  always_rerender=False):
-        super(T2_4MDetailsCheckProductSizeRenderer, self).__init__(uri=uri,
-                                                           description=description,
-                                                           always_rerender=always_rerender)
+        super(T2_4MDetailsCheckProductSizeRenderer, self).__init__(
+            uri=uri, description=description, always_rerender=always_rerender)
 
     def update_mako_context(self, mako_context, pipeline_context, results):
         # as a multi-vis task, there's only one result for CheckProductSize
@@ -33,29 +25,30 @@ class T2_4MDetailsCheckProductSizeRenderer(basetemplates.T2_4MDetailsDefaultRend
 
         mako_context.update({'table_rows': table_rows})
 
-    def _get_table_rows(self, context, result):
+    @staticmethod
+    def _get_table_rows(context, result):
         
-        if result.size_mitigation_parameters.has_key('nbins'):
+        if 'nbins' in result.size_mitigation_parameters:
             nbins = result.size_mitigation_parameters['nbins']
         else:
             nbins = 'default'
 
-        if result.size_mitigation_parameters.has_key('hm_imsize'):
+        if 'hm_imsize' in result.size_mitigation_parameters:
             hm_imsize = str(result.size_mitigation_parameters['hm_imsize'])
         else:
             hm_imsize = 'default'
 
-        if result.size_mitigation_parameters.has_key('hm_cell'):
+        if 'hm_cell' in result.size_mitigation_parameters:
             hm_cell = str(result.size_mitigation_parameters['hm_cell'])
         else:
             hm_cell = 'default'
 
-        if result.size_mitigation_parameters.has_key('field'):
+        if 'field' in result.size_mitigation_parameters:
             field = str(result.size_mitigation_parameters['field'])
         else:
             field = 'default'
 
-        if result.size_mitigation_parameters.has_key('spw'):
+        if 'spw' in result.size_mitigation_parameters:
             spw = str(result.size_mitigation_parameters['spw'])
         else:
             spw = 'default'

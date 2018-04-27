@@ -1,16 +1,13 @@
 import os
-import re
 
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.renderer.logger as logger
+from pipeline.h.tasks.common.displays import common as common
+from pipeline.h.tasks.common.displays import bandpass as bandpass
 from pipeline.infrastructure import casa_tasks
 
-#import pipeline.infrastructure.displays.common as common
-from pipeline.h.tasks.common.displays import common as common
-#import pipeline.infrastructure.displays.bandpass as bandpass
-from pipeline.h.tasks.common.displays import bandpass as bandpass
-
 LOG = logging.get_logger(__name__)
+
 
 class SingleDishSkyCalDisplayBase(object):
     def init_with_field(self, context, result, field):
@@ -27,21 +24,22 @@ class SingleDishSkyCalDisplayBase(object):
             self.field_id = fields[0].id
         LOG.debug('field: ID %s Name \'%s\''%(self.field_id, self.field_name))
         old_prefix = self._figroot.replace('.png', '')
-        self._figroot = self._figroot.replace('.png', '-%s.png'%(self.field_name))
+        self._figroot = self._figroot.replace('.png', '-%s.png' % (self.field_name))
         new_prefix = self._figroot.replace('.png', '')
         
         self._update_figfile(old_prefix, new_prefix)
             
-        if not self._kwargs.has_key('field'):
+        if 'field' not in self._kwargs:
             self._kwargs['field'] = self.field_id
             
     def add_field_identifier(self, plots):
         for plot in plots:
-            if not plot.parameters.has_key('field'):
+            if 'field' not in plot.parameters:
                 plot.parameters['field'] = self.field_name
                 
     def _update_figfile(self):
         raise NotImplementedError()
+
 
 class SingleDishSkyCalAmpVsFreqSummaryChart(common.PlotbandpassDetailBase, SingleDishSkyCalDisplayBase):
     def __init__(self, context, result, field):
@@ -81,9 +79,9 @@ class SingleDishSkyCalAmpVsFreqSummaryChart(common.PlotbandpassDetailBase, Singl
                 wrapper = logger.Plot(figfile,
                                       x_axis=self._xaxis,
                                       y_axis=self._yaxis,
-                                      parameters={'vis' : self._vis_basename,
-                                                  'spw' : spw_id,
-                                                  'field' : self.field_name},
+                                      parameters={'vis': self._vis_basename,
+                                                  'spw': spw_id,
+                                                  'field': self.field_name},
                                       command=str(task))
                 wrappers.append(wrapper)
             else:
@@ -103,12 +101,12 @@ class SingleDishSkyCalAmpVsFreqSummaryChart(common.PlotbandpassDetailBase, Singl
                 spw_index = -3
             pieces.pop(spw_index - 1)
             self._figfile[spw_id] = '.'.join(pieces)
-    
+
+
 class SingleDishSkyCalAmpVsFreqDetailChart(bandpass.BandpassDetailChart, SingleDishSkyCalDisplayBase):
     def __init__(self, context, result, field):
-        super(SingleDishSkyCalAmpVsFreqDetailChart, self).__init__(context, result,
-                                                          xaxis='freq', yaxis='amp', showatm=True,
-                                                          overlay='time')
+        super(SingleDishSkyCalAmpVsFreqDetailChart, self).__init__(
+            context, result, xaxis='freq', yaxis='amp', showatm=True, overlay='time')
         
         self.init_with_field(context, result, field)
     
@@ -124,6 +122,7 @@ class SingleDishSkyCalAmpVsFreqDetailChart(bandpass.BandpassDetailChart, SingleD
             for antenna_id, figfile in self._figfile[spw_id].iteritems():
                 new_figfile = figfile.replace(old_prefix, new_prefix)
                 self._figfile[spw_id][antenna_id] = new_figfile 
+
 
 class SingleDishPlotmsLeaf(object):
     """
@@ -151,7 +150,7 @@ class SingleDishPlotmsLeaf(object):
             fields = ms.get_fields(name=self.field)
             assert len(fields) == 1
             self.field_id = fields[0].id
-        LOG.debug('field: ID %s Name \'%s\''%(self.field_id, self.field_name))
+        LOG.debug('field: ID %s Name \'%s\'' % (self.field_id, self.field_name))
 
         self.antenna_selection = '*&&&'
 
@@ -159,13 +158,10 @@ class SingleDishPlotmsLeaf(object):
                                      'stage%s' % result.stage_number)
         
     def plot(self):
-        prefix = '{caltable}-{y}_vs_{x}-{field}-spw{spw}'.format(caltable=os.path.basename(self.caltable), 
-                                                              y=self.yaxis, x=self.xaxis,
-                                                              field=self.field_name,
-                                                              spw=self.spw)
-        title = '{caltable} \nField "{field}" Spw {spw}'.format(caltable=os.path.basename(self.caltable), 
-                                                                field=self.field_name,
-                                                                spw=self.spw)
+        prefix = '{caltable}-{y}_vs_{x}-{field}-spw{spw}'.format(
+            caltable=os.path.basename(self.caltable), y=self.yaxis, x=self.xaxis, field=self.field_name, spw=self.spw)
+        title = '{caltable} \nField "{field}" Spw {spw}'.format(
+            caltable=os.path.basename(self.caltable), field=self.field_name, spw=self.spw)
             
         figfile = os.path.join(self._figroot, '{prefix}.png'.format(prefix=prefix))
         
@@ -210,21 +206,24 @@ class SingleDishPlotmsLeaf(object):
 class SingleDishPlotmsAntComposite(common.AntComposite):
     leaf_class = SingleDishPlotmsLeaf
 
+
 class SingleDishPlotmsSpwComposite(common.SpwComposite):
     leaf_class = SingleDishPlotmsLeaf
     
+
 class SingleDishPlotmsAntSpwComposite(common.AntSpwComposite):
     leaf_class = SingleDishPlotmsSpwComposite
     
+
 class SingleDishSkyCalAmpVsTimeSummaryChart(SingleDishPlotmsSpwComposite):
     def __init__(self, context, result, calapp):
         super(SingleDishSkyCalAmpVsTimeSummaryChart, self).__init__(context, result, calapp,
                                                                     xaxis='time', yaxis='amp', 
                                                                     coloraxis='ant1')
-        
+
+
 class SingleDishSkyCalAmpVsTimeDetailChart(SingleDishPlotmsAntSpwComposite):
     def __init__(self, context, result, calapp):
         super(SingleDishSkyCalAmpVsTimeDetailChart, self).__init__(context, result, calapp, 
                                                                    xaxis='time', yaxis='amp',
                                                                    coloraxis='corr')
-        

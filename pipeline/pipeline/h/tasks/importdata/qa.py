@@ -15,7 +15,6 @@ from ..exportdata import aqua
 LOG = logging.get_logger(__name__)
 
 
-
 class ImportDataQAHandler(pqa.QAPlugin):
     result_cls = importdata.ImportDataResults
     child_cls = None
@@ -44,14 +43,16 @@ class ImportDataQAHandler(pqa.QAPlugin):
         scores = [score1, score3, score4, score5, score6]
         result.qa.pool.extend(scores)
     
-    def _check_contiguous(self, mses):
+    @staticmethod
+    def _check_contiguous(mses):
         """
         Check whether observations are contiguous. 
         """
         tolerance = datetime.timedelta(hours=1)
         return qacalc.score_contiguous_session(mses, tolerance=tolerance)
     
-    def _check_model_data_column(self, mses):
+    @staticmethod
+    def _check_model_data_column(mses):
         """
         Check whether any of the measurement sets contain a MODEL_DATA column,
         complaining if present, and returning an appropriate QA score.
@@ -65,14 +66,15 @@ class ImportDataQAHandler(pqa.QAPlugin):
     
         return qacalc.score_ms_model_data_column_present(mses, bad_mses)
     
-    def _check_history_column(self, mses, inputs):
+    @staticmethod
+    def _check_history_column(mses, inputs):
         """
         Check whether any of the measurement sets has entries in the history
         column, potentially signifying a non-pristine data set.
         """
         bad_mses = []
         
-        createmms = False if not inputs.has_key('createmms') else inputs['createmms']
+        createmms = False if 'createmms' not in inputs else inputs['createmms']
     
         for ms in mses:
             history_table = os.path.join(ms.name, 'HISTORY')
@@ -82,7 +84,8 @@ class ImportDataQAHandler(pqa.QAPlugin):
                     if createmms:
                         # special treatment is needed when createmms mode is turned on
                         for i in range(len(origin_col)):
-                            if origin_col[i] == 'importasdm' or origin_col[i] == 'partition' or origin_col[i] == 'im::calcuvw()':
+                            if (origin_col[i] == 'importasdm' or origin_col[i] == 'partition' or
+                                    origin_col[i] == 'im::calcuvw()'):
                                 continue
                             bad_mses.append(ms)
                             break
@@ -95,7 +98,8 @@ class ImportDataQAHandler(pqa.QAPlugin):
     
         return qacalc.score_ms_history_entries_present(mses, bad_mses)
     
-    def _check_flagged_calibrator_data(self, mses):
+    @staticmethod
+    def _check_flagged_calibrator_data(mses):
         """
         Check how much calibrator data has been flagged in the given measurement
         sets, complaining if the fraction of flagged data exceeds a threshold. 

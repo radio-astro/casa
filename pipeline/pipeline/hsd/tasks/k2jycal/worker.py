@@ -23,9 +23,9 @@ class SDK2JyCalWorkerInputs(basetask.StandardInputs):
 
     # Convert to CASA gencal task arguments.
     def to_casa_args(self):
-        return {'vis'      : self.vis,
-                'caltable' : self.caltable,
-                'caltype'  : self.caltype}
+        return {'vis': self.vis,
+                'caltable': self.caltable,
+                'caltype': self.caltype}
 
 
 class SDK2JyCalWorkerResults(basetask.Results):
@@ -60,7 +60,7 @@ class SDK2JyCalWorker(basetask.StandardTaskTemplate):
             LOG.error("Could not find MS '%s'" % vis)
             return SDK2JyCalWorkerResults(os.path.basename(vis))
         vis = os.path.basename(vis)
-        if not factors.has_key(vis):
+        if vis not in factors:
             return SDK2JyCalWorkerResults(vis)
 
         # make a note of the current inputs state before we start fiddling
@@ -79,10 +79,10 @@ class SDK2JyCalWorker(basetask.StandardTaskTemplate):
                 pols = str(',').join(map(polmap.get, pol_list))
                 for pol in pol_list:
                     factors_used[spw][ant][pol] = ant_factor[pol]
-                    LOG.debug("%s, SPW %d, %s, %s: factor=%f" % \
+                    LOG.debug("%s, SPW %d, %s, %s: factor=%f" %
                               (vis, spw, ant, pol, factors_used[spw][ant][pol]))
                 # handle anonymous antenna
-                ant_sel = '' if ant.upper()=='ANONYMOUS' else ant
+                ant_sel = '' if ant.upper() == 'ANONYMOUS' else ant
                 gain_factor = [1./sqrt(ant_factor[pol]) for pol in pol_list]
                 gencal_args = dict(spw=str(spw), antenna=ant_sel, pol=pols,
                                    parameter=gain_factor)
@@ -105,14 +105,14 @@ class SDK2JyCalWorker(basetask.StandardTaskTemplate):
         name = result.vis
         if len(result.ms_factors) == 0:
             result.factors_ok = False
-            LOG.warn("No Jy/K factor is given for MS '%s'" % (name))
+            LOG.warn("No Jy/K factor is given for MS '%s'" % name)
             return result
 
         ms = self.inputs.context.observing_run.get_ms(name)
         pol_to_map_i = ('XX', 'YY', 'RR', 'LL', 'I')
         for spw in ms.get_spectral_windows(science_windows_only=True):
             spwid = spw.id
-            if not result.ms_factors.has_key(spwid):
+            if spwid not in result.ms_factors:
                 result.factors_ok = False
                 LOG.warn("No Jy/K factor is given for Spw=%d of %s" % (spwid, name))
                 continue
@@ -120,16 +120,17 @@ class SDK2JyCalWorker(basetask.StandardTaskTemplate):
             pol_list = map(ddid.get_polarization_label,
                            range(ddid.num_polarizations))
             # mapping for anonymous antenna if necessary
-            is_anonymous_ant = result.ms_factors[spwid].has_key('ANONYMOUS')
+            is_anonymous_ant = 'ANONYMOUS' in result.ms_factors[spwid]
             all_ant_factor = result.ms_factors[spwid].pop('ANONYMOUS') if is_anonymous_ant else {}
             for ant in ms.get_antenna():
                 ant_name = ant.name
-                if is_anonymous_ant: result.ms_factors[spwid][ant_name] = all_ant_factor
-                elif not result.ms_factors[spwid].has_key(ant_name):
+                if is_anonymous_ant:
+                    result.ms_factors[spwid][ant_name] = all_ant_factor
+                elif ant_name not in result.ms_factors[spwid]:
                     result.factors_ok = False
                     LOG.warn("No Jy/K factor is given for Spw=%d, Ant=%s of %s" % (spwid, ant_name, name))
                     continue
-                is_anonymous_pol = result.ms_factors[spwid][ant_name].has_key('I')
+                is_anonymous_pol = 'I' in result.ms_factors[spwid][ant_name]
                 all_pol_factor = result.ms_factors[spwid][ant_name].pop('I') if is_anonymous_pol else {}
                 for pol in pol_list:
                     # mapping for stokes I if necessary
@@ -139,7 +140,8 @@ class SDK2JyCalWorker(basetask.StandardTaskTemplate):
                     ok = self.__check_factor(result.ms_factors, spwid, ant_name, pol)
                     result.factors_ok &= ok
                     if not ok:
-                        LOG.warn("No Jy/K factor is given for Spw=%d, Ant=%s, Pol=%s of %s" % (spwid, ant_name, pol, name))
+                        LOG.warn("No Jy/K factor is given for Spw=%d, Ant=%s, Pol=%s of %s" %
+                                 (spwid, ant_name, pol, name))
         # LOG information
         sep = "*"*40
         LOG.info("")
@@ -152,11 +154,12 @@ class SDK2JyCalWorker(basetask.StandardTaskTemplate):
                     LOG.info("SPW %d, %s, %s: %f" % (spw, ant, pol, facp))
         return result
 
-    def __check_factor(self, factors, spw, ant, pol):
-        if (not factors.has_key(spw) or \
-                factors[spw] is None): return False
-        if (not factors[spw].has_key(ant) or \
-                factors[spw][ant] is None): return False
-        if (not factors[spw][ant].has_key(pol) or \
-                factors[spw][ant][pol] is None): return False
+    @staticmethod
+    def __check_factor(factors, spw, ant, pol):
+        if spw not in factors or factors[spw] is None:
+            return False
+        if ant not in factors[spw] or factors[spw][ant] is None:
+            return False
+        if pol not in factors[spw][ant] or factors[spw][ant][pol] is None:
+            return False
         return True

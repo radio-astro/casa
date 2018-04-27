@@ -97,8 +97,8 @@ class MaskLine(basetask.StandardTaskTemplate):
                                     dtype=numpy.int64)
 
         LOG.debug('index_list={}', index_list)
-        #LOG.trace('all(spwid == {}) ? {}', spwid_list[0], numpy.all(dt.getcol('IF').take(index_list) == spwid_list[0]))
-        #LOG.trace('all(fieldid == {}) ? {}', field_list[0], numpy.all(dt.getcol('FIELD_ID').take(index_list) == field_list[0]))
+        # LOG.trace('all(spwid == {}) ? {}', spwid_list[0], numpy.all(dt.getcol('IF').take(index_list) == spwid_list[0]))
+        # LOG.trace('all(fieldid == {}) ? {}', field_list[0], numpy.all(dt.getcol('FIELD_ID').take(index_list) == field_list[0]))
         if len(index_list) == 0:
             # No valid data 
             outcome = {'detected_lines': [],
@@ -200,7 +200,7 @@ class MaskLine(basetask.StandardTaskTemplate):
                                            grid_table=grid_table, detect_signal=detect_signal)
         validation_result = self._executor.execute(job, merge=False)
         lines = validation_result.outcome['lines']
-        if validation_result.outcome.has_key('channelmap_range'):
+        if 'channelmap_range' in validation_result.outcome:
             channelmap_range = validation_result.outcome['channelmap_range']
         else:
             channelmap_range = validation_result.outcome['lines']
@@ -217,10 +217,10 @@ class MaskLine(basetask.StandardTaskTemplate):
             datatable.exportdata(minimal=True)
         t1 = time.time()
  
-        #LOG.debug('lines=%s'%(lines))
+        # LOG.debug('lines=%s'%(lines))
         LOG.debug('PROFILE validation: elapsed time is {} sec', t1-t0)
          
-        #LOG.debug('cluster_info=%s'%(cluster_info))
+        # LOG.debug('cluster_info=%s'%(cluster_info))
  
         end_time = time.time()
         LOG.debug('PROFILE execute: elapsed time is {} sec', end_time-start_time)
@@ -230,8 +230,8 @@ class MaskLine(basetask.StandardTaskTemplate):
                    'cluster_info': cluster_info,
                    'grid_table': grid_table}
         result = MaskLineResults(task=self.__class__,
-                                  success=True,
-                                  outcome=outcome)
+                                 success=True,
+                                 outcome=outcome)
         result.task = self.__class__
 
         return result

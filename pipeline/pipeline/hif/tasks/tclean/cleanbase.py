@@ -198,7 +198,7 @@ class CleanBase(basetask.StandardTaskTemplate):
                                   spw=inputs.spw,
                                   orig_specmode=inputs.orig_specmode,
                                   specmode=inputs.specmode,
-                                  multiterm=inputs.nterms if inputs.deconvolver=='mtmfs' else None,
+                                  multiterm=inputs.nterms if inputs.deconvolver == 'mtmfs' else None,
                                   plotdir=plotdir, imaging_mode=inputs.heuristics.imaging_mode)
         else:
             result = inputs.result
@@ -214,7 +214,7 @@ class CleanBase(basetask.StandardTaskTemplate):
     def analyse(self, result):
         return result
 
-    def _do_clean_cycle (self, scanidlist=None, result=None, iter=1):
+    def _do_clean_cycle(self, scanidlist=None, result=None, iter=1):
         """
         Compute a clean image.
         """
@@ -229,12 +229,13 @@ class CleanBase(basetask.StandardTaskTemplate):
         model_name = '%s.%s.iter%s.model' % (inputs.imagename, inputs.stokes, iter)
         if old_model_name is not None:
             if os.path.exists(old_model_name):
-                if (result.multiterm):
-                    rename_image(old_name=old_model_name, new_name=model_name, extensions=['.tt%d' % (nterm) for nterm in xrange(result.multiterm)])
+                if result.multiterm:
+                    rename_image(old_name=old_model_name, new_name=model_name,
+                                 extensions=['.tt%d' % nterm for nterm in xrange(result.multiterm)])
                 else:
                     rename_image(old_name=old_model_name, new_name=model_name)
 
-        if (inputs.niter == 0):
+        if inputs.niter == 0:
             image_name = ''
         else:
             image_name = '%s.%s.iter%s.image' % (
@@ -347,11 +348,11 @@ class CleanBase(basetask.StandardTaskTemplate):
                 tclean_job_parameters['mask'] = inputs.mask
 
         # Show nterms parameter only if it is used.
-        if (result.multiterm):
+        if result.multiterm:
             tclean_job_parameters['nterms'] = result.multiterm
 
         # Select whether to restore image
-        if (inputs.niter == 0):
+        if inputs.niter == 0:
             tclean_job_parameters['restoration'] = False
             tclean_job_parameters['pbcor'] = False
         else:
@@ -359,7 +360,7 @@ class CleanBase(basetask.StandardTaskTemplate):
             tclean_job_parameters['pbcor'] = inputs.heuristics.pb_correction()
 
         # Re-use products from previous iteration.
-        if (iter > 0):
+        if iter > 0:
             tclean_job_parameters['restart'] = True
             tclean_job_parameters['calcpsf'] = False
             tclean_job_parameters['calcres'] = False
@@ -441,8 +442,8 @@ class CleanBase(basetask.StandardTaskTemplate):
 
         pbcor_image_name = '%s.%s.iter%s.image.pbcor' % (inputs.imagename, inputs.stokes, iter)
 
-        if (inputs.niter > 0):
-            if tclean_result.has_key('stopcode'):
+        if inputs.niter > 0:
+            if 'stopcode' in tclean_result:
                 # Serial tclean result
                 tclean_stopcode = tclean_result['stopcode']
                 tclean_iterdone = tclean_result['iterdone']
@@ -453,20 +454,23 @@ class CleanBase(basetask.StandardTaskTemplate):
                 tclean_iterdone = sum([tclean_result[key][int(key.replace('node',''))]['iterdone'] for key in tclean_result.keys()])
                 tclean_niter = max([tclean_result[key][int(key.replace('node',''))]['niter'] for key in tclean_result.keys()])
 
-            LOG.info('tclean used %d iterations' % (tclean_iterdone))
-            if ((tclean_stopcode == 1) and (tclean_iterdone >= tclean_niter)):
-                result.error = CleanBaseError('tclean reached niter limit. Field: %s SPW: %s' % (inputs.field, inputs.spw), 'Reached niter limit')
-                LOG.warning('tclean reached niter limit of %d for %s / spw%s !' % (tclean_niter, utils.dequote(inputs.field), inputs.spw))
+            LOG.info('tclean used %d iterations' % tclean_iterdone)
+            if (tclean_stopcode == 1) and (tclean_iterdone >= tclean_niter):
+                result.error = CleanBaseError('tclean reached niter limit. Field: %s SPW: %s' %
+                                              (inputs.field, inputs.spw), 'Reached niter limit')
+                LOG.warning('tclean reached niter limit of %d for %s / spw%s !' %
+                            (tclean_niter, utils.dequote(inputs.field), inputs.spw))
 
             result.set_tclean_stopcode(tclean_stopcode)
             result.set_tclean_stopreason(tclean_stopcode)
             result.set_tclean_iterdone(tclean_iterdone)
 
-            if (tclean_stopcode == 5):
-                result.error = CleanBaseError('tclean stopped to prevent divergence. Field: %s SPW: %s' % (inputs.field, inputs.spw), 'tclean stopped to prevent divergence.')
+            if tclean_stopcode == 5:
+                result.error = CleanBaseError('tclean stopped to prevent divergence. Field: %s SPW: %s' %
+                                              (inputs.field, inputs.spw), 'tclean stopped to prevent divergence.')
                 LOG.warning('tclean stopped to prevent divergence. Field: %s SPW: %s' % (inputs.field, inputs.spw))
 
-        if (iter > 0):
+        if iter > 0:
             # Store the model.
             set_miscinfo(name=model_name, spw=inputs.spw, field=inputs.field,
                          type='model', iter=iter, multiterm=result.multiterm,
@@ -540,6 +544,7 @@ class CleanBase(basetask.StandardTaskTemplate):
 
         return result
 
+
 def rename_image(old_name, new_name, extensions=['']):
     """
     Rename an image
@@ -549,16 +554,18 @@ def rename_image(old_name, new_name, extensions=['']):
             with casatools.ImageReader('%s%s' % (old_name, extension)) as image:
                 image.rename(name=new_name, overwrite=True)
 
-def set_miscinfo(name, spw=None, field=None, type=None, iter=None, multiterm=None, intent=None, specmode=None, is_per_eb=None, observing_run=None):
+
+def set_miscinfo(name, spw=None, field=None, type=None, iter=None, multiterm=None, intent=None, specmode=None,
+                 is_per_eb=None, observing_run=None):
     """
     Define miscellaneous image information
     """
     if name != '':
-        if (multiterm):
-            if (name.find('.image.pbcor') != -1):
+        if multiterm:
+            if name.find('.image.pbcor') != -1:
                 imagename = name.replace('.image.pbcor', '.image.tt0.pbcor')
             else:
-                imagename = '%s.tt0' % (name)
+                imagename = '%s.tt0' % name
         else:
             imagename = name
         with casatools.ImageReader(imagename) as image:
@@ -570,7 +577,8 @@ def set_miscinfo(name, spw=None, field=None, type=None, iter=None, multiterm=Non
                     info['filnam%02d' % (i+1)] = filename_components[i]
             if spw:
                 if observing_run is not None:
-                    spw_names = [observing_run.virtual_science_spw_ids.get(int(spw_id), 'N/A') for spw_id in spw.split(',')]
+                    spw_names = [observing_run.virtual_science_spw_ids.get(int(spw_id), 'N/A')
+                                 for spw_id in spw.split(',')]
                 else:
                     spw_names = ['N/A']
                 info['spw'] = spw
@@ -597,9 +605,9 @@ def set_miscinfo(name, spw=None, field=None, type=None, iter=None, multiterm=Non
 
 
 class CleanBaseError(object):
-
-    '''Clean Base Error Class to transfer detailed messages for weblog
-       reporting.'''
+    """Clean Base Error Class to transfer detailed messages for weblog
+    reporting.
+    """
 
     def __init__(self, longmsg='', shortmsg=''):
         self.longmsg = longmsg

@@ -12,6 +12,7 @@ from . import worker
 
 LOG = infrastructure.get_logger(__name__)
 
+
 class SDK2JyCalInputs(vdp.StandardInputs):
 
     reffile = vdp.VisDependentProperty(default='jyperk.csv')
@@ -52,6 +53,7 @@ class SDK2JyCalInputs(vdp.StandardInputs):
         # set the properties to the values given as input arguments
         self.caltable = caltable
         self.reffile = reffile
+
 
 class SDK2JyCalResults(basetask.Results):
     def __init__(self, vis=None, final=[], pool=[], reffile=None, factors={},
@@ -108,7 +110,7 @@ class SDK2JyCal(basetask.StandardTaskTemplate):
         # read scaling factor list
         reffile = os.path.abspath(os.path.expandvars(os.path.expanduser(inputs.reffile)))
         factors_list = jyperkreader.read(inputs.context, reffile)
-        LOG.debug('factors_list=%s'%(factors_list))
+        LOG.debug('factors_list=%s' % factors_list)
         
         # generate scaling factor dictionary
         factors = rearrange_factors_list(factors_list)
@@ -155,13 +157,12 @@ def rearrange_factors_list(factors_list):
     for (vis, ant, spw, pol, _factor) in factors_list:
         spwid = int(spw)
         factor = float(_factor)
-        if factors.has_key(vis):
-            if factors[vis].has_key(spwid):
-                if factors[vis][spwid].has_key(ant):
-                    if factors[vis][spwid][ant].has_key(pol):
-                        LOG.info('There are duplicate rows in reffile, use %s instead of %s for (%s,%s,%s,%s)'%\
-
-                                 (factors[vis][spwid][ant][pol],factor,vis,spwid,ant,pol))
+        if vis in factors:
+            if spwid in factors[vis]:
+                if ant in factors[vis][spwid]:
+                    if pol in factors[vis][spwid][ant]:
+                        LOG.info('There are duplicate rows in reffile, use %s instead of %s for (%s,%s,%s,%s)' %
+                                 (factors[vis][spwid][ant][pol], factor, vis, spwid, ant, pol))
                         factors[vis][spwid][ant][pol] = factor
                     else:
                         factors[vis][spwid][ant][pol] = factor

@@ -10,27 +10,25 @@ from pipeline.infrastructure import casa_tasks
 
 LOG = infrastructure.get_logger(__name__)
 
+
 """
 The ALMA receiver band, nominal tsys, and sensitivity info.
     This information should go elsewhere in the next release
     The ALMA receiver bands are defined per pipeline convention
 """
-
-ALMA_BANDS = ['ALMA Band 3', 'ALMA Band 4', 'ALMA Band 5', 'ALMA Band 6', \
-    'ALMA Band 7', 'ALMA Band 8', 'ALMA Band 9', 'ALMA Band 10']
+ALMA_BANDS = ['ALMA Band 3', 'ALMA Band 4', 'ALMA Band 5', 'ALMA Band 6',
+              'ALMA Band 7', 'ALMA Band 8', 'ALMA Band 9', 'ALMA Band 10']
 ALMA_TSYS = [75.0, 86.0, 120.0, 90.0, 150.0, 387.0, 1200.0, 1515.0]
-ALMA_SENSITIVITIES = [0.20, 0.24, 0.37, 0.27, 0.50, 1.29, 5.32, 8.85] \
-    # mJy (for 16*12 m antennas, 1 minute, 8 GHz, 2pol)
+# Sensitivities in mJy (for 16*12 m antennas, 1 minute, 8 GHz, 2pol)
+ALMA_SENSITIVITIES = [0.20, 0.24, 0.37, 0.27, 0.50, 1.29, 5.32, 8.85]
 
-"""
-Estimate the single to noise of the phase measurments and return it
-in the fomr of a dictionary
-"""
 
-def estimate_gaincalsnr (ms, fieldlist, intent, spwidlist, compute_nantennas,
-    max_fracflagged, edge_fraction):
+def estimate_gaincalsnr(ms, fieldlist, intent, spwidlist, compute_nantennas,
+                        max_fracflagged, edge_fraction):
 
-    """
+    """Estimate the signal to noise of the phase measurements and return it
+    in the form of a dictionary.
+
     Input Parameters
                    ms: The pipeline context ms object
         fieldnamelist: The list of field names to be selected 
@@ -67,8 +65,7 @@ def estimate_gaincalsnr (ms, fieldlist, intent, spwidlist, compute_nantennas,
     # Construct the Tsys spw list and the associated phase scan list.
     # from the Tsys dictionary
     tsys_spwlist, scan_list = make_tsyslists(spwidlist, tsys_dict)
-    tsystemp_dict = get_mediantemp (ms, tsys_spwlist, scan_list,
-        antenna='', temptype='tsys')
+    tsystemp_dict = get_mediantemp(ms, tsys_spwlist, scan_list, antenna='', temptype='tsys')
     if not tsystemp_dict:
         LOG.info('No Tsys estimates')
         return {}
@@ -76,32 +73,26 @@ def estimate_gaincalsnr (ms, fieldlist, intent, spwidlist, compute_nantennas,
     # Get the observing characteristics dictionary as a function of spw
     #    This includes the spw configuration, time on source and
     #    integration information
-    obs_dict = get_obsinfo (ms, fieldlist, intent, spwidlist,
-        compute_nantennas=compute_nantennas, max_fracflagged=max_fracflagged)
+    obs_dict = get_obsinfo(ms, fieldlist, intent, spwidlist, compute_nantennas=compute_nantennas,
+                           max_fracflagged=max_fracflagged)
     if not obs_dict:
         LOG.info('No observation scans')
         return {}
 
     # Combine all the dictionariies
-    spw_dict = join_dicts (spwidlist, tsys_dict, flux_dict,
-         tsystemp_dict, obs_dict)
+    spw_dict = join_dicts(spwidlist, tsys_dict, flux_dict, tsystemp_dict, obs_dict)
 
     # Compute the gain SNR values for each spw
     gaincalsnr_dict = compute_gaincalsnr(ms, spwidlist, spw_dict, edge_fraction=edge_fraction)
 
     return gaincalsnr_dict
 
-"""
 
-Estimate the optimal solint for the selected bandpass data and return
-the solution in the form of a dictionary
-"""
+def estimate_bpsolint(ms, fieldlist, intent, spwidlist, compute_nantennas, max_fracflagged, phaseupsnr,
+                      minphaseupints, bpsnr, minbpnchan, evenbpsolints=False):
+    """Estimate the optimal solint for the selected bandpass data and return
+    the solution in the form of a dictionary.
 
-def estimate_bpsolint (ms, fieldlist, intent, spwidlist, compute_nantennas,
-    max_fracflagged, phaseupsnr, minphaseupints, bpsnr, minbpnchan,
-    evenbpsolints=False):
-
-    """
     Input Parameters
                    ms: The pipeline context ms object
         fieldnamelist: The list of field names to be selected 
@@ -154,8 +145,7 @@ def estimate_bpsolint (ms, fieldlist, intent, spwidlist, compute_nantennas,
     # Construct the Tsys spw list and the associated bandpass scan list.
     # from the Tsys dictionary
     tsys_spwlist, scan_list = make_tsyslists(spwidlist, tsys_dict)
-    tsystemp_dict = get_mediantemp (ms, tsys_spwlist, scan_list,
-        antenna='', temptype='tsys')
+    tsystemp_dict = get_mediantemp(ms, tsys_spwlist, scan_list, antenna='', temptype='tsys')
     if not tsystemp_dict:
         LOG.info('No Tsys estimates')
         return {}
@@ -163,33 +153,28 @@ def estimate_bpsolint (ms, fieldlist, intent, spwidlist, compute_nantennas,
     # Get the observing characteristics dictionary as a function of spw
     #    This includes the spw configuration, time on source and
     #    integration information
-    obs_dict = get_obsinfo (ms, fieldlist, intent, spwidlist,
-        compute_nantennas=compute_nantennas, max_fracflagged=max_fracflagged)
+    obs_dict = get_obsinfo(ms, fieldlist, intent, spwidlist, compute_nantennas=compute_nantennas,
+                           max_fracflagged=max_fracflagged)
     if not obs_dict:
         LOG.info('No observation scans')
         return {}
 
     # Combine all the dictionariies
-    spw_dict = join_dicts (spwidlist, tsys_dict, flux_dict,
-         tsystemp_dict, obs_dict)
+    spw_dict = join_dicts(spwidlist, tsys_dict, flux_dict, tsystemp_dict, obs_dict)
 
     # Compute the bandpass solint parameters and return a solution
     # dictionary
-    solint_dict = compute_bpsolint(ms, spwidlist, spw_dict,
-        phaseupsnr, minphaseupints, bpsnr, minbpnchan,
-        evenbpsolints=evenbpsolints)
+    solint_dict = compute_bpsolint(ms, spwidlist, spw_dict, phaseupsnr, minphaseupints, bpsnr, minbpnchan,
+                                   evenbpsolints=evenbpsolints)
 
     return solint_dict
 
-"""
-Retrieve the fluxes of selected sources from the pipeline context
-as a function of spw id and return the results in a dictinary indexed
-by spw id.
-"""
 
 def get_fluxinfo(ms, fieldnamelist, intent, spwidlist):
+    """Retrieve the fluxes of selected sources from the pipeline context
+    as a function of spw id and return the results in a dictinary indexed
+    by spw id.
 
-    """
     The input parameters
                ms: The pipeline context ms object
     fieldnamelist: The list of field names to be selected 
@@ -225,7 +210,7 @@ def get_fluxinfo(ms, fieldnamelist, intent, spwidlist):
             # Get fields associated with the name and intent.
             #    There should be only one. If there is more
             #    than one pick the first field.
-            fields = ms.get_fields (name=fieldname, intent=intent)
+            fields = ms.get_fields(name=fieldname, intent=intent)
             if len(fields) <= 0:
                 continue
             field = fields[0]
@@ -249,13 +234,10 @@ def get_fluxinfo(ms, fieldnamelist, intent, spwidlist):
 
     return fluxdict
 
-"""
-Get the tsys information as functions of spw and return a dictionary
-"""
 
 def get_tsysinfo(ms, fieldnamelist, intent, spwidlist):
+    """Get the tsys information as functions of spw and return a dictionary.
 
-    """
     Input parameters
                ms: The pipeline context ms object
     fieldnamelist: The list of field names to be selected 
@@ -346,16 +328,16 @@ def get_tsysinfo(ms, fieldnamelist, intent, spwidlist):
             fieldname = scanfieldlist[0]
 
             # Get tsys spws and spw ids
-            scanspwlist = [scanspw for scanspw in list(atmscan.spws) \
-                if scanspw.num_channels not in (1,4)]
-            scanspwidlist = [scanspw.id for scanspw in list(atmscan.spws) \
-                if scanspw.num_channels not in (1,4)]
+            scanspwlist = [scanspw for scanspw in list(atmscan.spws)
+                           if scanspw.num_channels not in (1, 4)]
+            scanspwidlist = [scanspw.id for scanspw in list(atmscan.spws)
+                             if scanspw.num_channels not in (1, 4)]
 
             # Match the Tsys spw to the science spw
             #   Match first by id then by frequency   
             bestspwid = None
             if spw.id in scanspwidlist: 
-                #bestspwid = scanspw.id
+                # bestspwid = scanspw.id
                 bestspwid = spw.id
             else:
                 mindiff = sys.float_info.max
@@ -364,8 +346,7 @@ def get_tsysinfo(ms, fieldnamelist, intent, spwidlist):
                         continue
                     if spw.baseband != scanspw.baseband:
                         continue
-                    diff = abs(spw.centre_frequency.value - \
-                        scanspw.centre_frequency.value)
+                    diff = abs(spw.centre_frequency.value - scanspw.centre_frequency.value)
                     if diff < mindiff:
                         bestspwid = scanspw.id
                         mindiff = diff
@@ -399,14 +380,11 @@ def get_tsysinfo(ms, fieldnamelist, intent, spwidlist):
 
     return tsysdict
 
-"""
-Utility routine for constructing the tsys spw list and the observing
-scan list from the tysdict produced by get_tsysinfo.
-"""
 
-def make_tsyslists (spwlist, tsysdict):
+def make_tsyslists(spwlist, tsysdict):
+    """Utility routine for constructing the tsys spw list and the observing
+    scan list from the tysdict produced by get_tsysinfo.
 
-    """
     Input Parameters
          spwlist: The science spw list, e.g. [13, 15]
         tsysdict: The Tsys dictionary created by get_tsysinfo
@@ -416,11 +394,12 @@ def make_tsyslists (spwlist, tsysdict):
             scanlist: The list of snr scans for each Tsys window
     """
 
-    tsys_spwlist = []; scan_list = []
+    tsys_spwlist = []
+    scan_list = []
     for spw in spwlist:
-        if not tsysdict.has_key(spw):
+        if spw not in tsysdict:
             continue
-        if not tsysdict[spw].has_key('tsys_spw'):
+        if 'tsys_spw' not in tsysdict[spw]:
             continue
         tsys_spwlist.append(tsysdict[spw]['tsys_spw'])
         scan_list.append(tsysdict[spw]['snr_scan'])
@@ -428,15 +407,10 @@ def make_tsyslists (spwlist, tsysdict):
     return tsys_spwlist, scan_list
 
 
-"""
-Get median Tsys, Trx, or Tsky temperatures as a function of spw and return
-a dictionary
-"""
+def get_mediantemp(ms, tsys_spwlist, scan_list, antenna='', temptype='tsys'):
+    """Get median Tsys, Trx, or Tsky temperatures as a function of spw and return
+    a dictionary
 
-def get_mediantemp (ms, tsys_spwlist, scan_list, antenna='',
-    temptype='tsys'):
-
-    """
     Input parameters
               ms: The pipeline measurement set object
     tsys_spwlist: The list of Tsys spw ids, e.g. [9,11,13,15]
@@ -455,18 +429,19 @@ def get_mediantemp (ms, tsys_spwlist, scan_list, antenna='',
     LOG.info('Estimating Tsys temperatures')
 
     # Temperature type must be one of 'tsys' or 'trx' or 'tsky'
-    if (temptype != 'tsys' and temptype != 'trx' and temptype != 'tsky'):
+    if temptype != 'tsys' and temptype != 'trx' and temptype != 'tsky':
         return medtempsdict
 
     # Get list of unique scan ids.
     uniqueScans = list(set(scan_list))
 
     # Determine the start and end times for each unique scan
-    beginScanTimes = []; endScanTimes = []
+    beginScanTimes = []
+    endScanTimes = []
     for scan in uniqueScans:
         reqscan = ms.get_scans(scan_id=scan)
         if not reqscan:
-            LOG.warn ('Cannot find observation scan %d in MS %s' % (scan, ms.basename))
+            LOG.warn('Cannot find observation scan %d in MS %s' % (scan, ms.basename))
             return medtempsdict
         startTime = reqscan[0].start_time 
         endTime = reqscan[0].end_time 
@@ -479,7 +454,7 @@ def get_mediantemp (ms, tsys_spwlist, scan_list, antenna='',
 
         # Get the antenna ids
         tsys_antennas = table.getcol('ANTENNA_ID')
-        if (len(tsys_antennas) < 1):
+        if len(tsys_antennas) < 1:
             LOG.warn('The SYSCAL table is blank in MS %s' % ms.basename)
             return medtempsdict
 
@@ -510,11 +485,9 @@ def get_mediantemp (ms, tsys_spwlist, scan_list, antenna='',
 
             # Time conversions
             #    Not necessary if scan begin and end times are not converted
-            tstart = mt.epoch(time_ref, qt.quantity(tsys_start_times[i],
-                time_unit))
-            tend = mt.epoch(time_ref, qt.quantity(tsys_end_times[i],
-                time_unit))
-            LOG.debug ('row %d start %s end %s' % (i, tstart, tend)) 
+            tstart = mt.epoch(time_ref, qt.quantity(tsys_start_times[i], time_unit))
+            tend = mt.epoch(time_ref, qt.quantity(tsys_end_times[i], time_unit))
+            LOG.debug('row %d start %s end %s' % (i, tstart, tend))
 
             # Scan starts after end of validity interval or ends before
             # the beginning of the validity interval
@@ -526,19 +499,16 @@ def get_mediantemp (ms, tsys_spwlist, scan_list, antenna='',
                     nmatch = nmatch + 1
 
         if nmatch <= 0:
-            LOG.warn ( \
-            'No SYSCAL table row matches for scans %s tsys spws %s in MS %s' % \
-            (uniqueScans, tsys_spwlist, ms.basename))
+            LOG.warn('No SYSCAL table row matches for scans %s tsys spws %s in MS %s' %
+                     (uniqueScans, tsys_spwlist, ms.basename))
             return medtempsdict
         else:
-            LOG.info ( \
-                '    SYSCAL table row matches for scans %s Tsys spws %s %d / %d' % \
-                (uniqueScans, tsys_spwlist, nmatch, len(tsys_start_times)))
+            LOG.info('    SYSCAL table row matches for scans %s Tsys spws %s %d / %d' %
+                     (uniqueScans, tsys_spwlist, nmatch, len(tsys_start_times)))
 
         # Get the spw ids
         tsys_spws = table.getcol('SPECTRAL_WINDOW_ID')
         tsys_uniqueSpws = np.unique(tsys_spws)
-
 
     # Get a list of unique antenna ids.
     if antenna == '':
@@ -547,59 +517,52 @@ def get_mediantemp (ms, tsys_spwlist, scan_list, antenna='',
         uniqueAntennaIds = [ms.get_antenna(search_term=antenna)[0].id]
 
     # Loop over the spw and scan list which have the same length
-    for spw, scan in zip (tsys_spwlist, scan_list):
+    for spw, scan in zip(tsys_spwlist, scan_list):
 
         # If no Tsys data skip to the next window
-        if (spw not in tsys_uniqueSpws):
-            LOG.warn ('Tsys spw %d is not in the SYSCAL table for MS %s' % \
-                (spw, ms.basename))
+        if spw not in tsys_uniqueSpws:
+            LOG.warn('Tsys spw %d is not in the SYSCAL table for MS %s' %
+                     (spw, ms.basename))
             continue
-            #return medtempsdict
+            # return medtempsdict
 
         # Loop over the rows
         medians = []
         with casatools.TableReader(os.path.join(ms.name, 'SYSCAL')) as table:
             for i in range(len(tsys_antennas)):
-                if (tsys_spws[i] != spw):
+                if tsys_spws[i] != spw:
                     continue
-                if (tsys_antennas[i] not in uniqueAntennaIds):
+                if tsys_antennas[i] not in uniqueAntennaIds:
                     continue
-                if (scan != scanids[i]):
+                if scan != scanids[i]:
                     continue
-                if (temptype == 'tsys'):
-                    tsys = table.getcell('TSYS_SPECTRUM',i)
-                elif (temptype == 'trx'):
-                    tsys = table.getcell('TRX_SPECTRUM',i)
-                elif (temptype == 'tsky'):
-                    tsys = table.getcell('TSKY_SPECTRUM',i)
+                if temptype == 'tsys':
+                    tsys = table.getcell('TSYS_SPECTRUM', i)
+                elif temptype == 'trx':
+                    tsys = table.getcell('TRX_SPECTRUM', i)
+                elif temptype == 'tsky':
+                    tsys = table.getcell('TSKY_SPECTRUM', i)
                 medians.append(np.median(tsys))
 
-        if (len(medians) > 0):
+        if len(medians) > 0:
             medtempsdict[spw] = np.median(medians)
-            LOG.info ( \
-                "    Median Tsys %s value for Tsys spw %2d = %.1f K" % \
-                (temptype, spw, medtempsdict[spw]))
+            LOG.info("    Median Tsys %s value for Tsys spw %2d = %.1f K" % (temptype, spw, medtempsdict[spw]))
         else:
-            LOG.warn ('    No Tsys data for spw %d scan %d in MS %s' % \
-                (spw, scan, ms.basename))
+            LOG.warn('    No Tsys data for spw %d scan %d in MS %s' % (spw, scan, ms.basename))
 
     # Return median temperature per spw and scan.
     return medtempsdict 
 
-"""
-Internal method for determining the number of unflagged 12m and 7m
-antennas.
 
-Loop over the scans in scanlist. Compute the list of unflagged
-and flagged 12m and 7m antennas for each scan. In most cases
-there will be only one scan. Return the number of unflagged
-12m and 7m antennas
-"""
+def _get_unflagged_antennas(vis, scanidlist, ants12m, ants7m, max_fracflagged=0.90):
+    """Internal method for determining the number of unflagged 12m and 7m
+    antennas.
 
-def _get_unflagged_antennas(vis, scanidlist, ants12m, ants7m,
-    max_fracflagged = 0.90):
+    Loop over the scans in scanlist. Compute the list of unflagged
+    and flagged 12m and 7m antennas for each scan. In most cases
+    there will be only one scan. Return the number of unflagged
+    12m and 7m antennas
 
-    """
     Input Parameters
                 vis: The name of the MS
          scanidlist: The input scan id list, e.g. [3,4,5]
@@ -612,21 +575,18 @@ def _get_unflagged_antennas(vis, scanidlist, ants12m, ants7m,
         nunflagged_7mantennas: number of unflagged 7m antennas
     """
 
-    # Loop over the bandpass scans
-    nunflagged_12mantennas = 0; nflagged_12mantennas = 0
-    nunflagged_7mantennas = 0; nflagged_7mantennas = 0
-
     # Execute the CASA flagdata task for the specified bandpass scans
     #     Format the id list for CASA
     #     Execute task
     scanidstr = ','.join([str(scanid) for scanid in scanidlist])
-    flagdata_task = casa_tasks.flagdata(vis=vis, scan=scanidstr,
-        mode='summary')
+    flagdata_task = casa_tasks.flagdata(vis=vis, scan=scanidstr, mode='summary')
     flagdata_result = flagdata_task.execute(dry_run=False)
 
     # Initialize the statistics per scan
-    unflagged_12mantennas = []; flagged_12mantennas = []
-    unflagged_7mantennas = []; flagged_7mantennas = []
+    unflagged_12mantennas = []
+    flagged_12mantennas = []
+    unflagged_7mantennas = []
+    flagged_7mantennas = []
 
     # Add up the antennas
     antennas = flagdata_result['antenna'].keys()
@@ -634,12 +594,12 @@ def _get_unflagged_antennas(vis, scanidlist, ants12m, ants7m,
         points = flagdata_result['antenna'][antenna]
         fraction = points['flagged']/points['total']
         if antenna in ants12m:
-            if (fraction < max_fracflagged):
+            if fraction < max_fracflagged:
                 unflagged_12mantennas.append(antenna)
             else:
                 flagged_12mantennas.append(antenna)
         elif antenna in ants7m:
-            if (fraction < max_fracflagged):
+            if fraction < max_fracflagged:
                 unflagged_7mantennas.append(antenna)
             else:
                 flagged_7mantennas.append(antenna)
@@ -648,27 +608,23 @@ def _get_unflagged_antennas(vis, scanidlist, ants12m, ants7m,
     nunflagged_12mantennas = len(unflagged_12mantennas)
     nunflagged_7mantennas = len(unflagged_7mantennas)
 
-    #nflagged_12mantennas = len(flagged_12mantennas)
-    #nflagged_7mantennas = len(flagged_7mantennas)
+    # nflagged_12mantennas = len(flagged_12mantennas)
+    # nflagged_7mantennas = len(flagged_7mantennas)
 
     # Return the number of unflagged antennas
     return nunflagged_12mantennas, nunflagged_7mantennas
 
 
-"""
-Get the observing information as a function of spw id  and return a dictionary
-"""
+def get_obsinfo(ms, fieldnamelist, intent, spwidlist, compute_nantennas='all', max_fracflagged=0.90):
+    """Get the observing information as a function of spw id  and return a dictionary.
 
-def get_obsinfo (ms, fieldnamelist, intent, spwidlist, compute_nantennas='all',
-    max_fracflagged=0.90):
-
-    """
     Input parameters
                    ms: The pipeline context ms object
         fieldnamelist: The list of field names to be selected 
                intent: The intent of the fields to be selected 
             spwidlist: The list of spw ids to be selected
-    compute_nantennas: The algorithm for computing the number of unflagged antennas ('all', 'flagged') (was 'hm_nantennas')
+    compute_nantennas: The algorithm for computing the number of unflagged antennas ('all', 'flagged')
+                       (was 'hm_nantennas')
       max_fracflagged: The maximum fraction of an antenna can be flagged
 
     The output observing dictionary obsdict
@@ -690,7 +646,7 @@ def get_obsinfo (ms, fieldnamelist, intent, spwidlist, compute_nantennas='all',
     """
 
     obsdict = collections.OrderedDict()
-    LOG.info ('Observation summary')
+    LOG.info('Observation summary')
     fieldset = set(fieldnamelist)
     spwset = set(spwidlist)
 
@@ -711,7 +667,8 @@ def get_obsinfo (ms, fieldnamelist, intent, spwidlist, compute_nantennas='all',
     qt = casatools.quanta
 
     # Loop over the spws
-    prev_spwid = None; prev_scanids = []
+    prev_spwid = None
+    prev_scanids = []
     for spwid in spwidlist:
 
         # Get spectral window
@@ -724,8 +681,8 @@ def get_obsinfo (ms, fieldnamelist, intent, spwidlist, compute_nantennas='all',
         # one spw to the next
         spwscans = []
         for obscan in obscans:
-            scanspwset = set ([scanspw.id for scanspw in list(obscan.spws) \
-                if scanspw.num_channels not in (1,4)])
+            scanspwset = set([scanspw.id for scanspw in list(obscan.spws)
+                              if scanspw.num_channels not in (1, 4)])
             if len(set([spwid]).intersection(scanspwset)) == 0:
                 continue
             spwscans.append(obscan)
@@ -749,30 +706,30 @@ def get_obsinfo (ms, fieldnamelist, intent, spwidlist, compute_nantennas='all',
         scanids = [scan.id for scan in fscans]
         obsdict[spwid]['snr_scans'] = scanids
 
-
         # Figure out the number of 7m and 12 m antennas
         #   Note comparison of floating point numbers is tricky ...
         #   
         if compute_nantennas == 'all':
             # Use numbers from the scan with the minimum number of 
             # antennas
-            n7mant = np.iinfo('i').max; n12mant = np.iinfo('i').max
+            n7mant = np.iinfo('i').max
+            n12mant = np.iinfo('i').max
             for scan in fscans:
-                n7mant = min (n7mant, len ([a for a in scan.antennas \
-                    if a.diameter == 7.0]))
-                n12mant = min (n12mant, len ([a for a in scan.antennas \
-                    if a.diameter == 12.0]))
+                n7mant = min(n7mant, len([a for a in scan.antennas
+                                          if a.diameter == 7.0]))
+                n12mant = min(n12mant, len([a for a in scan.antennas
+                                            if a.diameter == 12.0]))
         elif len(set(scanids).difference(set(prev_scanids))) > 0:
             # Get the lists of unique 7m and 12m antennas
-            ant7m = []; ant12m = []
+            ant7m = []
+            ant12m = []
             for scan in fscans:
-                ant7m.extend ([a.name for a in scan.antennas if a.diameter == 7.0])
+                ant7m.extend([a.name for a in scan.antennas if a.diameter == 7.0])
                 ant12m.extend([a.name for a in scan.antennas if a.diameter == 12.0])
             ant12m = list(set(ant12m))
             ant7m = list(set(ant7m))
             # Get the number of unflagged antennas
-            n12mant, n7mant = _get_unflagged_antennas(ms.name, scanids,
-                ant12m, ant7m, max_fracflagged=max_fracflagged)
+            n12mant, n7mant = _get_unflagged_antennas(ms.name, scanids, ant12m, ant7m, max_fracflagged=max_fracflagged)
         else:
             # Use values from previous spw
             nant7m = obsdict[prev_spwid]['num_7mantenna']
@@ -786,10 +743,10 @@ def get_obsinfo (ms, fieldnamelist, intent, spwidlist, compute_nantennas='all',
         exposureTime = 0.0
         meanInterval = 0.0
         for scan in fscans:
-            #scanTime = float (scan.time_on_source.total_seconds()) / 60.0
+            # scanTime = float (scan.time_on_source.total_seconds()) / 60.0
             scanTime = scan.exposure_time(spw.id).total_seconds() / 60.0
             exposureTime = exposureTime + scanTime
-            #intTime = scan.mean_interval(spw.id).total_seconds() / 60.0
+            # intTime = scan.mean_interval(spw.id).total_seconds() / 60.0
             intTime = scan.mean_interval(spw.id)
             intTime = (intTime.seconds + intTime.microseconds * 1.0e-6) / 60.0
             meanInterval = meanInterval + intTime
@@ -811,8 +768,9 @@ def get_obsinfo (ms, fieldnamelist, intent, spwidlist, compute_nantennas='all',
         obsdict[spwid]['chanwidths'] = np.median(chanwidths) 
 
         LOG.info('For field %s spw %2d scans %s' % (fieldname, spwid, scanids))
-        LOG.info('    %2d 12m antennas  %2d 7m antennas  exposure %0.3f minutes  interval %0.3f minutes' % \
-            (obsdict[spwid]['num_12mantenna'], obsdict[spwid]['num_7mantenna'], exposureTime, meanInterval / len(fscans)))
+        LOG.info('    %2d 12m antennas  %2d 7m antennas  exposure %0.3f minutes  interval %0.3f minutes' %
+                 (obsdict[spwid]['num_12mantenna'], obsdict[spwid]['num_7mantenna'], exposureTime,
+                  meanInterval / len(fscans)))
 
         prev_spwid = spwid
         prev_scanids = scanids
@@ -820,15 +778,11 @@ def get_obsinfo (ms, fieldnamelist, intent, spwidlist, compute_nantennas='all',
     return obsdict
 
 
-"""
-Combine all the input dictionaries and output the spw dictionary
-This dictionary contains all the information needed to compute the SNR
-estimates.
-"""
+def join_dicts(spwlist, tsys_dict, flux_dict, tsystemp_dict, obs_dict):
+    """Combine all the input dictionaries and output the spw dictionary.
+    This dictionary contains all the information needed to compute the SNR
+    estimates.
 
-def join_dicts (spwlist, tsys_dict, flux_dict, tsystemp_dict, obs_dict):
-
-    """
     The input parameters
 
     The output dictionary spw_dict
@@ -865,54 +819,53 @@ def join_dicts (spwlist, tsys_dict, flux_dict, tsystemp_dict, obs_dict):
     spw_dict = deepcopy(tsys_dict)
 
     # Transfer flux information to the spw dictionary.
-    _transfer_fluxes (spwlist, spw_dict, flux_dict)
+    _transfer_fluxes(spwlist, spw_dict, flux_dict)
 
     # Transfer the tsys temperature information to the spw dictionary
-    _transfer_temps (spwlist, spw_dict, tsystemp_dict)
+    _transfer_temps(spwlist, spw_dict, tsystemp_dict)
 
     # Transfer the observing information to the spw dictionary
-    _transfer_obsinfo (spwlist, spw_dict, obs_dict)
+    _transfer_obsinfo(spwlist, spw_dict, obs_dict)
 
     return spw_dict
 
-"""
-Transfer flux information from the flux dictionary to the spw dictionary.
-"""
 
-def _transfer_fluxes (spwlist, spw_dict, flux_dict):
+def _transfer_fluxes(spwlist, spw_dict, flux_dict):
+    """
+    Transfer flux information from the flux dictionary to the spw dictionary.
+    """
     for spw in spwlist:
-        if not flux_dict.has_key(spw):
+        if spw not in flux_dict:
             continue
-        if not spw_dict.has_key(spw):
+        if spw not in spw_dict:
             continue
-        #if spw_dict[spw]['tsys_field_name'] != flux_dict[spw]['field_name']:
-            #continue
+        # if spw_dict[spw]['tsys_field_name'] != flux_dict[spw]['field_name']:
+        #     continue
         spw_dict[spw]['field_name'] = flux_dict[spw]['field_name']
         spw_dict[spw]['flux'] = flux_dict[spw]['flux']
 
 
-"""
-Transfer the tsys temp information to the spw dictionary
-"""
-
-def _transfer_temps (spwlist, spw_dict, tsystemp_dict):
+def _transfer_temps(spwlist, spw_dict, tsystemp_dict):
+    """
+    Transfer the tsys temp information to the spw dictionary.
+    """
     for spw in spwlist:
-        if not spw_dict.has_key(spw):
+        if spw not in spw_dict:
             continue
-        if not tsystemp_dict.has_key(spw_dict[spw]['tsys_spw']):
+        if spw_dict[spw]['tsys_spw'] not in tsystemp_dict:
             continue
         spw_dict[spw]['median_tsys'] = \
             tsystemp_dict[spw_dict[spw]['tsys_spw']]
 
-"""
-Transfer the observing information to the spw dictionary
-"""
 
-def _transfer_obsinfo (spwlist, spw_dict, obs_dict):
+def _transfer_obsinfo(spwlist, spw_dict, obs_dict):
+    """
+    Transfer the observing information to the spw dictionary.
+    """
     for spw in spwlist:
-        if not spw_dict.has_key(spw):
+        if spw not in spw_dict:
             continue
-        if not obs_dict.has_key(spw):
+        if spw not in obs_dict:
             continue
         spw_dict[spw]['snr_scans'] = obs_dict[spw]['snr_scans']
         spw_dict[spw]['exptime'] = obs_dict[spw]['exptime']
@@ -925,16 +878,14 @@ def _transfer_obsinfo (spwlist, spw_dict, obs_dict):
         spw_dict[spw]['nchan'] = obs_dict[spw]['nchan']
         spw_dict[spw]['chanwidths'] = obs_dict[spw]['chanwidths']
 
-"""
-Compute the gain to signal to noise given the spw list and the spw 
-dictionary
-    This code assumes that the science spws are observed in both the
-    calibrator and the science target
-"""
 
 def compute_gaincalsnr(ms, spwlist, spw_dict, edge_fraction):
+    """Compute the gain to signal to noise given the spw list and the spw
+    dictionary.
 
-    """
+    This code assumes that the science spws are observed in both the
+    calibrator and the science target.
+
     The input parameters
         spwlist                     The list of spw ids
         spw_dict                    The spw dictionary
@@ -959,7 +910,6 @@ def compute_gaincalsnr(ms, spwlist, spw_dict, edge_fraction):
         key: 'inttime_minutes'            value: The exposure time in minutes
         key: 'sensitivity_per_scan_mJy    value: The sensitivity per scan in mJy
         key: 'snr_per_scan                value: The snr per scan
-
     """
 
     # Initialize the output solution interval dictionary
@@ -967,7 +917,7 @@ def compute_gaincalsnr(ms, spwlist, spw_dict, edge_fraction):
 
     maxEffectiveBW = 2.0e9 * (1.0 - 2.0 * edge_fraction)
 
-    LOG.info ('Signal to noise summary')
+    LOG.info('Signal to noise summary')
     for spwid in spwlist:
 
         # Determine the receiver band
@@ -976,12 +926,10 @@ def compute_gaincalsnr(ms, spwlist, spw_dict, edge_fraction):
         # Compute the various generic SNR factors
         if spw_dict[spwid]['median_tsys'] <= 0.0:
             relativeTsys = 1.0
-            LOG.warn('Spw %d <= 0K in MS %s assuming nominal Tsys' % \
-            (spwid, ms.basename))
+            LOG.warn('Spw %d <= 0K in MS %s assuming nominal Tsys' % (spwid, ms.basename))
         else:
             relativeTsys = spw_dict[spwid]['median_tsys'] / ALMA_TSYS[bandidx]
-        nbaselines = spw_dict[spwid]['num_7mantenna'] + \
-            spw_dict[spwid]['num_12mantenna'] - 1
+        nbaselines = spw_dict[spwid]['num_7mantenna'] + spw_dict[spwid]['num_12mantenna'] - 1
         arraySizeFactor = np.sqrt(16 * 15 / 2.0) / np.sqrt(nbaselines)
         if spw_dict[spwid]['num_7mantenna'] == 0:
             areaFactor = 1.0
@@ -989,10 +937,8 @@ def compute_gaincalsnr(ms, spwlist, spw_dict, edge_fraction):
             areaFactor = (12.0 / 7.0) ** 2
         else:
             # Not sure this is correct
-            ntotant = spw_dict[spwid]['num_7mantenna'] + \
-                spw_dict[spwid]['num_12mantenna']
-            areaFactor = (spw_dict[spwid]['num_12mantenna'] + \
-                (12.0 / 7.0)**2 * spw_dict[spwid]['num_7mantenna']) / \
+            ntotant = spw_dict[spwid]['num_7mantenna'] + spw_dict[spwid]['num_12mantenna']
+            areaFactor = (spw_dict[spwid]['num_12mantenna'] + (12.0 / 7.0)**2 * spw_dict[spwid]['num_7mantenna']) / \
                 ntotant
         polarizationFactor = np.sqrt(2.0)
 
@@ -1027,40 +973,32 @@ def compute_gaincalsnr(ms, spwlist, spw_dict, edge_fraction):
             snr_dict[spwid]['flux_Jy'] = spw_dict[spwid]['flux']
         else:
             snr_dict[spwid]['flux_Jy'] = None
-        snr_dict[spwid]['inttime_minutes'] = \
-            spw_dict[spwid]['integrationtime']
-        snr_dict[spwid]['scantime_minutes'] = \
-            spw_dict[spwid]['exptime'] / len(spw_dict[spwid]['snr_scans'])
-        snr_dict[spwid]['sensitivity_per_scan_mJy'] = \
-           sensitivity
+        snr_dict[spwid]['inttime_minutes'] = spw_dict[spwid]['integrationtime']
+        snr_dict[spwid]['scantime_minutes'] = spw_dict[spwid]['exptime'] / len(spw_dict[spwid]['snr_scans'])
+        snr_dict[spwid]['sensitivity_per_scan_mJy'] = sensitivity
         if not snrPerScan:
             snr_dict[spwid]['snr_per_scan'] = None
-            LOG.info("Spw %3d  scan (minutes) %6.3f  integration (minutes) %6.3f  sensitivity (mJy) %7.3f  SNR unknown" % \
-                (spwid, \
-                snr_dict[spwid]['scantime_minutes'], \
-                snr_dict[spwid]['inttime_minutes'], \
-                snr_dict[spwid]['sensitivity_per_scan_mJy']))
+            LOG.info("Spw %3d  scan (minutes) %6.3f  integration (minutes) %6.3f  sensitivity (mJy) %7.3f  SNR unknown" %
+                     (spwid,
+                      snr_dict[spwid]['scantime_minutes'],
+                      snr_dict[spwid]['inttime_minutes'],
+                      snr_dict[spwid]['sensitivity_per_scan_mJy']))
         else:
             snr_dict[spwid]['snr_per_scan'] = snrPerScan
-            LOG.info("Spw %3d  scan (minutes) %6.3f  integration (minutes) %6.3f  sensitivity (mJy) %7.3f  SNR %10.3f" % \
-                (spwid, \
-                snr_dict[spwid]['scantime_minutes'], \
-                snr_dict[spwid]['inttime_minutes'], \
-                snr_dict[spwid]['sensitivity_per_scan_mJy'], \
-                snr_dict[spwid]['snr_per_scan']))
+            LOG.info("Spw %3d  scan (minutes) %6.3f  integration (minutes) %6.3f  sensitivity (mJy) %7.3f  SNR %10.3f" %
+                     (spwid,
+                      snr_dict[spwid]['scantime_minutes'],
+                      snr_dict[spwid]['inttime_minutes'],
+                      snr_dict[spwid]['sensitivity_per_scan_mJy'],
+                      snr_dict[spwid]['snr_per_scan']))
 
     return snr_dict
 
 
-"""
-Compute the optimal bandpass frequency solution intervals given the spw list
-and the spw dictionary
-"""
+def compute_bpsolint(ms, spwlist, spw_dict, reqPhaseupSnr, minBpNintervals, reqBpSnr, minBpNchan, evenbpsolints=False):
+    """Compute the optimal bandpass frequency solution intervals given the spw list
+    and the spw dictionary.
 
-def compute_bpsolint(ms, spwlist, spw_dict, reqPhaseupSnr,
-    minBpNintervals, reqBpSnr, minBpNchan, evenbpsolints=False):
-
-    """
     The input parameters
         spwlist             The list of spw ids
         spw_dict            The spw dictionary
@@ -1092,7 +1030,6 @@ def compute_bpsolint(ms, spwlist, spw_dict, reqPhaseupSnr,
         key: 'nchan_bpsolint'     value: The total number of solint channels
     """
 
-
     if evenbpsolints:
         LOG.info("Forcing bandpass frequency solint to divide evenly into bandpass")
 
@@ -1109,12 +1046,10 @@ def compute_bpsolint(ms, spwlist, spw_dict, reqPhaseupSnr,
         #    the bandpass frequency solint
         if spw_dict[spwid]['median_tsys'] <= 0.0:
             relativeTsys = 1.0
-            LOG.warn('Spw %d <= 0K in MS %s assuming nominal Tsys' % \
-            (spwid, ms.basename))
+            LOG.warn('Spw %d <= 0K in MS %s assuming nominal Tsys' % (spwid, ms.basename))
         else:
             relativeTsys = spw_dict[spwid]['median_tsys'] / ALMA_TSYS[bandidx]
-        nbaselines = spw_dict[spwid]['num_7mantenna'] + \
-            spw_dict[spwid]['num_12mantenna'] - 1
+        nbaselines = spw_dict[spwid]['num_7mantenna'] + spw_dict[spwid]['num_12mantenna'] - 1
         arraySizeFactor = np.sqrt(16 * 15 / 2.0) / np.sqrt(nbaselines)
         if spw_dict[spwid]['num_7mantenna'] == 0:
             areaFactor = 1.0
@@ -1122,10 +1057,8 @@ def compute_bpsolint(ms, spwlist, spw_dict, reqPhaseupSnr,
             areaFactor = (12.0 / 7.0) ** 2
         else:
             # Not sure this is correct
-            ntotant = spw_dict[spwid]['num_7mantenna'] + \
-                spw_dict[spwid]['num_12mantenna']
-            areaFactor = (spw_dict[spwid]['num_12mantenna'] + \
-                (12.0 / 7.0)**2 * spw_dict[spwid]['num_7mantenna']) / \
+            ntotant = spw_dict[spwid]['num_7mantenna'] + spw_dict[spwid]['num_12mantenna']
+            areaFactor = (spw_dict[spwid]['num_12mantenna'] + (12.0 / 7.0)**2 * spw_dict[spwid]['num_7mantenna']) / \
                 ntotant
         polarizationFactor = np.sqrt(2.0)
 
@@ -1145,7 +1078,7 @@ def compute_bpsolint(ms, spwlist, spw_dict, reqPhaseupSnr,
             areaFactor * bpbandwidthFactor * polarizationFactor
         bpsensitivity = ALMA_SENSITIVITIES[bandidx] * bpfactor
         snrPerChannel = spw_dict[spwid]['flux'] * 1000.0 / bpsensitivity
-        requiredChannels = ( reqBpSnr / snrPerChannel ) ** 2
+        requiredChannels = (reqBpSnr / snrPerChannel) ** 2
         evenChannels = nextHighestDivisibleInt(spw_dict[spwid]['nchan'], int(np.ceil(requiredChannels)))
 
         # Fill in the dictionary
@@ -1164,10 +1097,8 @@ def compute_bpsolint(ms, spwlist, spw_dict, reqPhaseupSnr,
 
         # Sensitivity info
         solint_dict[spwid]['flux_Jy'] = spw_dict[spwid]['flux']
-        solint_dict[spwid]['integration_minutes'] = \
-            spw_dict[spwid]['integrationtime']
-        solint_dict[spwid]['sensitivity_per_integration_mJy'] = \
-           pusensitivity
+        solint_dict[spwid]['integration_minutes'] = spw_dict[spwid]['integrationtime']
+        solint_dict[spwid]['sensitivity_per_integration_mJy'] = pusensitivity
         solint_dict[spwid]['snr_per_integration'] = snrPerIntegration
         solint_dict[spwid]['exptime_minutes'] = spw_dict[spwid]['exptime']
         solint_dict[spwid]['snr_per_channel'] = snrPerChannel
@@ -1178,32 +1109,27 @@ def compute_bpsolint(ms, spwlist, spw_dict, reqPhaseupSnr,
             solint_dict[spwid]['phaseup_solint'] = 'int'
             solint_dict[spwid]['nint_phaseup_solint'] = 1
         else:
-            solint_dict[spwid]['phaseup_solint'] = '%fs' % \
-                (solint_dict[spwid]['integration_minutes'] * \
-                requiredIntegrations * 60.0)
-            solint_dict[spwid]['nint_phaseup_solint'] = \
-                int(np.ceil(requiredIntegrations))
-        solInts = int (np.ceil(solint_dict[spwid]['exptime_minutes'] / \
-            solint_dict[spwid]['integration_minutes'])) / \
-            int(np.ceil(requiredIntegrations))
+            solint_dict[spwid]['phaseup_solint'] = '%fs' % (solint_dict[spwid]['integration_minutes'] *
+                                                            requiredIntegrations * 60.0)
+            solint_dict[spwid]['nint_phaseup_solint'] = int(np.ceil(requiredIntegrations))
+        solInts = int(np.ceil(solint_dict[spwid]['exptime_minutes'] / solint_dict[spwid]['integration_minutes'])) / int(np.ceil(requiredIntegrations))
         if solInts < minBpNintervals:
             tooFewIntervals = True
             asterisks = '***'
         else:
             tooFewIntervals = False
             asterisks = ''
-        LOG.info("%sspw %2d (%6.3fmin) requires phaseup solint='%0.3gsec' (%d time intervals in solution) to reach S/N=%.0f" % \
-            (asterisks,
-            spwid,
-            solint_dict[spwid]['exptime_minutes'],
-            60.0 * requiredIntegrations * solint_dict[spwid]['integration_minutes'],
-            solInts,
-            reqPhaseupSnr))
+        LOG.info("%sspw %2d (%6.3fmin) requires phaseup solint='%0.3gsec' (%d time intervals in solution) to reach S/N=%.0f" %
+                 (asterisks,
+                  spwid,
+                  solint_dict[spwid]['exptime_minutes'],
+                  60.0 * requiredIntegrations * solint_dict[spwid]['integration_minutes'],
+                  solInts,
+                  reqPhaseupSnr))
         solint_dict[spwid]['nphaseup_solutions'] = solInts
         if tooFewIntervals:
-            LOG.warn( \
-            '%s Spw %d would have less than %d time intervals in its solution in MS %s' % \
-            (asterisks, spwid, minBpNintervals, ms.basename))
+            LOG.warn('%s Spw %d would have less than %d time intervals in its solution in MS %s' %
+                     (asterisks, spwid, minBpNintervals, ms.basename))
 
         # Bandpass solution
         #    Determine frequenty interval in MHz
@@ -1215,45 +1141,42 @@ def compute_bpsolint(ms, spwlist, spw_dict, reqPhaseupSnr,
                 solint_dict[spwid]['bpsolint'] = '%fMHz' % \
                     (requiredChannels * solint_dict[spwid]['chanwidth_Hz'] * 1.0e-6)
         else:
-            #solint_dict[spwid]['bpsolint'] = '1ch'
+            # solint_dict[spwid]['bpsolint'] = '1ch'
             solint_dict[spwid]['bpsolint'] = '%fMHz' % \
                     (solint_dict[spwid]['chanwidth_Hz'] * 1.0e-6)
 
         # Determine the number of channels in the bandpass
         # solution and the number of solutions
         if evenbpsolints:
-            solint_dict[spwid]['nchan_bpsolint'] = \
-                int(np.ceil(evenChannels))
-            solChannels = solint_dict[spwid]['nchan_total'] / \
-                int(np.ceil(evenChannels))
+            solint_dict[spwid]['nchan_bpsolint'] = int(np.ceil(evenChannels))
+            solChannels = solint_dict[spwid]['nchan_total'] / int(np.ceil(evenChannels))
         else:
-            solint_dict[spwid]['nchan_bpsolint'] = \
-                int(np.ceil(requiredChannels))
-            solChannels = solint_dict[spwid]['nchan_total'] / \
-                int(np.ceil(requiredChannels))
+            solint_dict[spwid]['nchan_bpsolint'] = int(np.ceil(requiredChannels))
+            solChannels = solint_dict[spwid]['nchan_total'] / int(np.ceil(requiredChannels))
 
-        if solChannels  < minBpNchan:
+        if solChannels < minBpNchan:
             tooFewChannels = True
             asterisks = '***'
         else:
             tooFewChannels = False
             asterisks = ''
         #LOG.info("%sspw %2d (%4.0fMHz) requires solint='%0.3gMHz' (%d channels intervals in solution) to reach S/N=%.0f" % \
-        LOG.info("%sspw %2d (%4.0fMHz) requires solint='%s' (%d channels intervals in solution) to reach S/N=%.0f" % \
-            (asterisks,
-            spwid,
-            solint_dict[spwid]['bandwidth']*1.0e-6,
-            solint_dict[spwid]['bpsolint'],
-            solChannels,
-            reqBpSnr))
+        LOG.info("%sspw %2d (%4.0fMHz) requires solint='%s' (%d channels intervals in solution) to reach S/N=%.0f" %
+                 (asterisks,
+                  spwid,
+                  solint_dict[spwid]['bandwidth']*1.0e-6,
+                  solint_dict[spwid]['bpsolint'],
+                  solChannels,
+                  reqBpSnr))
         solint_dict[spwid]['nbandpass_solutions'] = solChannels
         if tooFewChannels:
-            LOG.warn('%s Spw %d would have less than %d channels in its solution in MS %s' % \
-                (asterisks, spwid, minBpNchan, ms.basename))
+            LOG.warn('%s Spw %d would have less than %d channels in its solution in MS %s' %
+                     (asterisks, spwid, minBpNchan, ms.basename))
 
     return solint_dict
 
-def nextHighestDivisibleInt (n, d):
+
+def nextHighestDivisibleInt(n, d):
     """
     Checks whether an integer is evenly divisible by a second
     integer, and if not, finds the next higher integer that is.
@@ -1263,7 +1186,7 @@ def nextHighestDivisibleInt (n, d):
     """
 
     dd = d
-    while (n % dd != 0 and dd < n):
+    while n % dd != 0 and dd < n:
         dd += 1
     
     return dd

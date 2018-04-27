@@ -14,10 +14,10 @@ class GroupByPosition2(api.Heuristic):
     @staticmethod
     def translate_pos_dict(pos_dict, rows, ids):
         translated = {}
-        for (pos,val) in pos_dict.iteritems():
+        for (pos, val) in pos_dict.iteritems():
             key = rows[pos]
             if val[0] == -1:
-                translated[key] = [[-1,rows[val[1]]],[ids[val[1]]]]
+                translated[key] = [[-1, rows[val[1]]], [ids[val[1]]]]
             else:
                 translated[key] = [[rows[v] for v in val],
                                    [ids[v] for v in val]]
@@ -27,8 +27,6 @@ class GroupByPosition2(api.Heuristic):
     def translate_pos_gap(pos_gap, rows, ids):
         return [ids[p] for p in pos_gap]
 
-
-    
     def calculate(self, ra, dec, r_combine, r_allowance):
         """
         Grouping by RA/DEC position
@@ -44,12 +42,12 @@ class GroupByPosition2(api.Heuristic):
         qa = casatools.quanta
         if isinstance(r_combine, dict):
             # r_combine should be quantity
-            CombineRadius = qa.convert(r_combine,'deg')['value']
+            CombineRadius = qa.convert(r_combine, 'deg')['value']
         else:
             CombineRadius = r_combine
         if isinstance(r_allowance, dict):
             # r_allowance should be quantity
-            AllowanceRadius = qa.convert(r_allowance,'deg')['value']
+            AllowanceRadius = qa.convert(r_allowance, 'deg')['value']
         else:
             AllowanceRadius = r_allowance
 
@@ -68,12 +66,14 @@ class GroupByPosition2(api.Heuristic):
         # Calculate the lattice position (sRA, sDEC) for each pointings
         # Create list of pointings (dictionary) for each lattice position
         for x in xrange(Nrows):
-           sRA = int((ra[x] - MinRA) / CombineDiameter)
-           sDEC = int((dec[x] - MinDEC) / CombineDiameter)
-           if not SelectDict.has_key(sRA): SelectDict[sRA] = {}
-           if not SelectDict[sRA].has_key(sDEC): SelectDict[sRA][sDEC] = [x]
-           else:
-               SelectDict[sRA][sDEC].append(x)
+            sRA = int((ra[x] - MinRA) / CombineDiameter)
+            sDEC = int((dec[x] - MinDEC) / CombineDiameter)
+            if sRA not in SelectDict:
+                SelectDict[sRA] = {}
+            if sDEC not in SelectDict[sRA]:
+                SelectDict[sRA][sDEC] = [x]
+            else:
+                SelectDict[sRA][sDEC].append(x)
 
         # Create PosDict
         # make a list of spectra inside each lattice grid
@@ -105,7 +105,6 @@ class GroupByPosition2(api.Heuristic):
                 PosGap.append(x)
                 LOG.info('Position Gap %s deg at row=%d' % (DeltaP[x-1], x))
 
-
         # Print information
         if len(PosGap) == 0:
             PosGapMsg = 'Found no position gap'
@@ -115,7 +114,7 @@ class GroupByPosition2(api.Heuristic):
 
         #print '\nPosGap', PosGap
         #print '\nPosDict', PosDict
-        return (PosDict, PosGap)
+        return PosDict, PosGap
 
 
 class GroupByTime2(api.Heuristic):
@@ -125,8 +124,8 @@ class GroupByTime2(api.Heuristic):
 
     @staticmethod
     def translate_time_table(time_table, rows, ids):
-        translated = [[],[]]
-        for i in (0,1):
+        translated = [[], []]
+        for i in (0, 1):
             for group in time_table[i]:
                 translated[i].append([[rows[v] for v in group],
                                       [ids[v] for v in group]])
@@ -136,7 +135,6 @@ class GroupByTime2(api.Heuristic):
     def translate_time_gap(time_gap, rows, ids):
         return [[ids[t] for t in time_gap[0]],
                 [ids[t] for t in time_gap[1]]]
-
 
     def calculate(self, timebase, time_diff):
         """
@@ -188,7 +186,7 @@ class GroupByTime2(api.Heuristic):
         del SubTable1, SubTable2
 
         # print information
-        if len(TimeGap[0])==0: 
+        if len(TimeGap[0]) == 0:
             TimeGapMsg = 'Found no time gap'
             LOG.info(TimeGapMsg)
         else:
@@ -199,7 +197,7 @@ class GroupByTime2(api.Heuristic):
 
         #print '\nTimeGap', TimeGap
         #print '\nTimeTable', TimeTable
-        return (TimeTable, TimeGap)
+        return  TimeTable, TimeGap
         # TimeGap is index
         # TimeTable[][0] is row, TimeTable[][1] is index
         
@@ -230,7 +228,7 @@ class ThresholdForGroupByTime(api.Heuristic):
         LOG.info('MaxDeltaT = %s sec' % DeltaT1.max())
         LOG.info('MinDeltaT = %s sec' % DeltaT1.min())
 
-        return (Threshold1,Threshold2)
+        return Threshold1, Threshold2
     
         
 class MergeGapTables2(api.Heuristic):
@@ -275,11 +273,12 @@ class MergeGapTables2(api.Heuristic):
                 LOG.info('Small Time Gap at row=%d' % n)
             else:
                 SubTable1.append(n)
-        if len(SubTable1) > 0: TimeTable[0].append(SubTable1)
+        if len(SubTable1) > 0:
+            TimeTable[0].append(SubTable1)
 
         # 2009/2/6 Divide TimeTable in accordance with the Beam
         TimeTable2 = TimeTable[:]
-        TimeTable = [[],[]]
+        TimeTable = [[], []]
         for i in range(len(TimeTable2)):
             for index in range(len(TimeTable2[i])):
                 #rows = TimeTable2[i][index][0]
@@ -288,7 +287,7 @@ class MergeGapTables2(api.Heuristic):
                 for index2 in range(len(idxs)):
                     #row = rows[index2]
                     idx = idxs[index2]
-                    if BeamDict.has_key(tBEAM[idx]):
+                    if tBEAM[idx] in BeamDict:
                         #BeamDict[tBEAM[row]][0].append(row)
                         BeamDict[tBEAM[idx]].append(idx)
                     else:
