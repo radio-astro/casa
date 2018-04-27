@@ -133,6 +133,9 @@ def get_task_name(result_obj, include_stage=True):
 
         if isinstance(result_obj, basetask.FailedTaskResults):
             s += ' (failed)'
+        elif isinstance(result_obj, basetask.ResultsList) and \
+            any([isinstance(result, basetask.FailedTaskResults) for result in result_obj]):
+            s += ' (failed)'
 
         return s
     else:
