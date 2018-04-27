@@ -58,7 +58,7 @@ def get_task_description(result_obj, context, include_stage=True):
                 try:
                     renderer = weblog.get_renderer(task_cls, context, result)
                 except KeyError:
-                    LOG.error('No renderer registered for task %s'.format(task_cls.__name__))
+                    LOG.error('No renderer registered for task {0}'.format(task_cls.__name__))
                     raise
                 else:
                     description = getattr(renderer, 'description', None)
@@ -90,7 +90,7 @@ def get_task_description(result_obj, context, include_stage=True):
                 # result_obj is a list
                 renderer = weblog.get_renderer(task_cls, context, result_obj[0])
             except KeyError:
-                LOG.error('No renderer registered for task %s'.format(task_cls.__name__))
+                LOG.error('No renderer registered for task {0}'.format(task_cls.__name__))
                 raise
             else:
                 description = getattr(renderer, 'description', None)
@@ -1504,7 +1504,7 @@ class T2_4MDetailsRenderer(object):
             try:
                 renderer = weblog.get_renderer(task, context, task_result)
             except KeyError:
-                LOG.warning('No renderer was registered for task %s'.format(task.__name__))
+                LOG.warning('No renderer was registered for task {0}'.format(task.__name__))
                 renderer = cls._default_renderer
             LOG.trace('Using %s to render %s result',
                       renderer.__class__.__name__, task.__name__)
