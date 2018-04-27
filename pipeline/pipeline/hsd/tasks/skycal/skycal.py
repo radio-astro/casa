@@ -7,6 +7,7 @@ import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.callibrary as callibrary
 import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.sdfilenamer as filenamer
+import pipeline.infrastructure.sessionutils as sessionutils
 import pipeline.infrastructure.vdp as vdp
 from pipeline.infrastructure import casa_tasks
 from pipeline.infrastructure import task_registry
@@ -93,7 +94,7 @@ class SDSkyCalResults(common.SingleDishResults):
 
 @task_registry.set_equivalent_casa_task('hsd_skycal')
 @task_registry.set_casa_commands_comment('Generates sky calibration table according to calibration strategy.')
-class SDSkyCal(basetask.StandardTaskTemplate):
+class SerialSDSkyCal(basetask.StandardTaskTemplate):
     Inputs = SDSkyCalInputs
 
     def prepare(self):
@@ -163,7 +164,7 @@ class SDSkyCal(basetask.StandardTaskTemplate):
     
             # make a note of the current inputs state before we start fiddling
             # with it. This origin will be attached to the final CalApplication.
-            origin = callibrary.CalAppOrigin(task=SDSkyCal,
+            origin = callibrary.CalAppOrigin(task=SerialSDSkyCal,
                                              inputs=args)
             
             calto = callibrary.CalTo(vis=myargs['infile'],
@@ -188,3 +189,47 @@ class SDSkyCal(basetask.StandardTaskTemplate):
     
     def analyse(self, result):
         return result
+    
+    
+class HpcSDSkyCalInputs(SDSkyCalInputs):
+    # use common implementation for parallel inputs argument
+    parallel = sessionutils.parallel_inputs_impl()
+    
+    def __init__(self, context, calmode=None, fraction=None, noff=None, width=None, elongated=None, output_dir=None,
+                 infiles=None, outfile=None, field=None, spw=None, scan=None, parallel=None):
+        super(HpcSDSkyCalInputs, self).__init__(context,
+                                                calmode=calmode,
+                                                fraction=fraction,
+                                                noff=noff,
+                                                width=width,
+                                                elongated=elongated,
+                                                output_dir=output_dir,
+                                                infiles=infiles,
+                                                outfile=outfile,
+                                                field=field,
+                                                spw=spw,
+                                                scan=scan)
+        self.parallel = parallel
+    
+    
+    
+@task_registry.set_equivalent_casa_task('hpc_hsd_skycal')
+@task_registry.set_casa_commands_comment('Generates sky calibration table according to calibration strategy.')
+class HpcSDSkyCal(sessionutils.ParallelTemplate):
+    Inputs = HpcSDSkyCalInputs
+    Task = SerialSDSkyCal
+
+    def __init__(self, inputs):
+        super(HpcSDSkyCal, self).__init__(inputs)
+
+    @basetask.result_finaliser
+    def get_result_for_exception(self, vis, exception):
+        LOG.error('Error operating sky calibration for {!s}'.format(os.path.basename(vis)))
+        import traceback
+        tb = traceback.format_exc()
+        if tb.startswith('None'):
+            tb = str(exception)
+        return basetask.FailedTaskResults(self, exception, tb)
+   
+    
+    
