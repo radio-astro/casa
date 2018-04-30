@@ -1,4 +1,3 @@
-
 # ------------------------------------------------------------------------------
 # Subsystem module ICD
 # ------------------------------------------------------------------------------
@@ -82,14 +81,10 @@
 
 # ------------------------------------------------------------------------------
 
-# Imports
-# -------
-
 import os
-import math
 
-import numpy
 import matplotlib.pyplot as pl
+import numpy
 
 try:
     from casac import casac
@@ -97,6 +92,7 @@ except:
     import casa
 
 import utility.logs as logs
+
 
 # ------------------------------------------------------------------------------
 # Subsystem user function and ICD
@@ -136,91 +132,73 @@ import utility.logs as logs
 #               Added call to flag_plot() function.
 
 # ------------------------------------------------------------------------------
+def flag(in_ms, out_dir, logobj='PYTHON'):
+    # Initialize the logger
+    root = 'flag.flag'
+    level = logs.INFO
 
-def flag( in_ms, out_dir, logobj='PYTHON' ):
+    log_local, logger = logs.init(out_dir, root, level, logobj)
 
-	# Initialize the logger
+    # Print the first log message
+    msg = 'Flagging statistics started for ' + in_ms + ' ...'
+    origin = root
+    logger.info(msg, origin=origin)
 
-	root = 'flag.flag'
-	level = logs.INFO
+    # Check to see if the output file already exists
+    out_table_root = os.path.basename(os.path.splitext(in_ms)[0])
+    out_table = out_dir + '/' + out_table_root + '.flag.stats'
 
-	log_local, logger = logs.init( out_dir, root, level, logobj )
+    if os.path.exists(out_table):
+        msg = 'Output table ' + out_table + ' already exists ...\n'
+        origin = root
+        logger.error(msg, origin=origin)
+        raise IOError(msg)
 
+    # Calculate the flagging statistics
+    flag_stats = flag_calc(in_ms)
 
-	# Print the first log message
+    msg = 'Flagging statistics of ' + in_ms + ' calculated ...'
+    origin = root
+    logger.info(msg, origin=origin)
 
-	msg = 'Flagging statistics started for ' + in_ms + ' ...'
-	origin = root
-	logger.info( msg, origin=origin )
+    # Write the flagging statistics to the table
+    status = flag_write(flag_stats, out_table)
 
+    msg = 'Flagging statistics written in ' + out_table + ' ...'
+    origin = root
+    logger.info(msg, origin=origin)
 
-	# Check to see if the output file already exists
+    # Create the flagging statistics plots
+    flag_plots = flag_plot(in_ms, out_dir, flag_stats)
 
-	out_table_root = os.path.basename( os.path.splitext( in_ms )[0] )
-	out_table = out_dir + '/' + out_table_root + '.flag.stats'
+    msg = 'Flagging statistics plots created in ' + out_dir + ' ...'
+    origin = root
+    logger.info(msg, origin=origin)
 
-	if os.path.exists( out_table ):
-		msg = 'Output table ' + out_table + ' already exists ...\n'
-		origin = root
-		logger.error( msg, origin=origin )
-		raise IOError( msg )
+    # Create the flagging scores
+    flag_scores = flag_score(flag_stats)
 
+    msg = 'Flagging statistics scores calculated ...'
+    origin = root
+    logger.info(msg, origin=origin)
 
-	# Calculate the flagging statistics
+    # Print the last log message
+    msg = 'Flagging statistics     inished for ' + in_ms + ' ...\n'
+    origin = root
+    logger.info(msg, origin=origin)
 
-	flag_stats = flag_calc( in_ms )
+    # Delete the logger, if it was created locally
+    if log_local:
+        del logger
 
-	msg = 'Flagging statistics of ' + in_ms + ' calculated ...'
-	origin = root
-	logger.info( msg, origin=origin )
+    # Return the dictionary containing the flagging statistics, scores, and
+    # plots dictionaries
+    flag_qa = {'QANUMBERS': flag_stats,
+               'QASCORES': flag_scores,
+               'QAPLOTS': flag_plots}
 
+    return flag_qa
 
-	# Write the flagging statistics to the table
-
-	status = flag_write( flag_stats, out_table )
-
-	msg = 'Flagging statistics written in ' + out_table + ' ...'
-	origin = root
-	logger.info( msg, origin=origin )
-
-
-	# Create the flagging statistics plots
-
-	flag_plots = flag_plot( in_ms, out_dir, flag_stats )
-
-	msg = 'Flagging statistics plots created in ' + out_dir + ' ...'
-	origin = root
-	logger.info( msg, origin=origin )
-
-
-        # Create the flagging scores
-
-        flag_scores = flag_score( flag_stats )
-
-        msg = 'Flagging statistics scores calculated ...'
-	origin = root
-	logger.info( msg, origin=origin )
-
-
-	# Print the last log message
-
-	msg = 'Flagging statistics finished for ' + in_ms + ' ...\n'
-	origin = root
-	logger.info( msg, origin=origin )
-
-
-	# Delete the logger, if it was created locally
-
-	if log_local: del logger
-
-
-        # Return the dictionary containing the flagging statistics, scores, and
-        # plots dictionaries
-        flag_qa = {'QANUMBERS': flag_stats, \
-                    'QASCORES': flag_scores, \
-                    'QAPLOTS': flag_plots}
-
-	return flag_qa
 
 # ------------------------------------------------------------------------------
 # Component user functions and ICDs
@@ -259,58 +237,48 @@ def flag( in_ms, out_dir, logobj='PYTHON' ):
 #               channel.
 
 # ------------------------------------------------------------------------------
+def flag_calc(in_ms):
+    # Create the local instance of the test flag tool and open it
+    try:
+        tfLoc = casac.agentflagger()
+    except:
+        # This won't work anymore
+        tfLoc = casa.__agentflaggerhome__.create()
 
-def flag_calc( in_ms ):
+    tfLoc.open(in_ms)
 
-	# Create the local instance of the test flag tool and open it
+    # Get the flagging statistics
+    tfLoc.selectdata()
+    tfLoc.parsesummaryparameters(spwchan=True, spwcorr=True, basecnt=True)
+    tfLoc.init()
 
-	try:
-            tfLoc = casac.agentflagger()
-        except:
-	    # This won't work anymore
-            tfLoc = casa.__agentflaggerhome__.create()
+    flag_stats = tfLoc.run()['report0']
 
-	tfLoc.open( in_ms )
+    # Fix the dictionary
+    total = flag_stats['total']
+    flagged = flag_stats['flagged']
 
+    del flag_stats['total']
+    del flag_stats['flagged']
 
-	# Get the flagging statistics
+    flag_stats['global'] = dict()
+    flag_stats['global']['total'] = total
+    flag_stats['global']['flagged'] = flagged
 
-	tfLoc.selectdata()
-	tfLoc.parsesummaryparameters( spwchan=True, spwcorr=True, basecnt=True )
-	tfLoc.init()
+    del flag_stats['antenna:scan']
+    del flag_stats['correlation']
+    del flag_stats['array']
+    del flag_stats['name']
+    del flag_stats['observation']
+    del flag_stats['type']
 
-	flag_stats = tfLoc.run()['report0']
+    # Close and delete the local test flag tool
+    tfLoc.done()
+    del tfLoc
 
-	# Fix the dictionary
+    # Return the dictionary containing the flagging statistics
+    return flag_stats
 
-	total = flag_stats['total']
-	flagged = flag_stats['flagged']
-
-	del flag_stats['total']
-	del flag_stats['flagged']
-
-	flag_stats['global'] = dict()
-	flag_stats['global']['total'] = total
-	flag_stats['global']['flagged'] = flagged
-
-	del flag_stats['antenna:scan']
-	del flag_stats['correlation']
-	del flag_stats['array']
-	del flag_stats['name']
-	del flag_stats['observation']
-	del flag_stats['type']
-
-
-	# Close and delete the local test flag tool
-
-	tfLoc.done()
-
-	del tfLoc
-
-
-	# Return the dictionary containing the flagging statistics
-
-	return flag_stats
 
 # ------------------------------------------------------------------------------
 
@@ -343,73 +311,59 @@ def flag_calc( in_ms ):
 #               First working version.
 
 # ------------------------------------------------------------------------------
+def flag_write(flag_stats, out_table):
+    # Create the local instance of the table tool and create the output
+    # table according to the description
+    try:
+        tbLoc = casac.table()
+    except:
+        tbLoc = casa.__tablehome__.create()
 
-def flag_write( flag_stats, out_table ):
+    tbLoc.create(out_table, flag_desc())
 
-	# Create the local instance of the table tool and create the output
-	# table according to the description
+    # Put the global flagging statistics into the output table
+    row = 0
 
-        try:
-	    tbLoc = casac.table()
-        except:
-            tbLoc = casa.__tablehome__.create()
+    total = flag_stats['global']['total']
+    flagged = flag_stats['global']['flagged']
+    fraction = float(flagged) / float(total)
 
-	tbLoc.create( out_table, flag_desc() )
+    tbLoc.addrows()
+    tbLoc.putcol('type', 'global', row, 1, 1)
+    tbLoc.putcol('id', '', row, 1, 1)
+    tbLoc.putcol('total', total, row, 1, 1)
+    tbLoc.putcol('flagged', flagged, row, 1, 1)
+    tbLoc.putcol('fraction', fraction, row, 1, 1)
 
+    # Put the rest of the flagging statistics into the output table
+    row = 0
 
-	# Put the global flagging statistics into the output table
+    keys1 = sorted(flag_stats)
+    keys1.remove('global')
 
-	row = 0
+    for k1 in keys1:
+        keys2 = sorted(flag_stats[k1])
 
-	total = flag_stats['global']['total']
-	flagged = flag_stats['global']['flagged']
-	fraction = float( flagged ) / float( total )
+        for k2 in keys2:
+            total = flag_stats[k1][k2]['total']
+            flagged = flag_stats[k1][k2]['flagged']
+            fraction = float(flagged) / float(total)
 
-	tbLoc.addrows()
-	tbLoc.putcol( 'type', 'global', row, 1, 1 )
-	tbLoc.putcol( 'id', '', row, 1, 1 )
-	tbLoc.putcol( 'total', total, row, 1, 1 )
-	tbLoc.putcol( 'flagged', flagged, row, 1, 1 )
-	tbLoc.putcol( 'fraction', fraction, row, 1, 1 )
+            row += 1
 
+            tbLoc.addrows()
+            tbLoc.putcol('type', k1, row, 1, 1)
+            tbLoc.putcol('id', k2, row, 1, 1)
+            tbLoc.putcol('total', total, row, 1, 1)
+            tbLoc.putcol('flagged', flagged, row, 1, 1)
+            tbLoc.putcol('fraction', fraction, row, 1, 1)
 
-	# Put the rest of the flagging statistics into the output table
+    # Close and delete the local table tool
+    tbLoc.done()
+    del tbLoc
 
-	row = 0
+    return True
 
-	keys1 = sorted( flag_stats )
-	keys1.remove( 'global' )
-
-	for k1 in keys1:
-
-		keys2 = sorted( flag_stats[k1] )
-
-		for k2 in keys2:
-
-			total = flag_stats[k1][k2]['total']
-			flagged = flag_stats[k1][k2]['flagged']
-			fraction = float( flagged ) / float( total )
-
-			row += 1
-
-			tbLoc.addrows()
-			tbLoc.putcol( 'type', k1, row, 1, 1 )
-			tbLoc.putcol( 'id', k2, row, 1, 1 )
-			tbLoc.putcol( 'total', total, row, 1, 1 )
-			tbLoc.putcol( 'flagged', flagged, row, 1, 1 )
-			tbLoc.putcol( 'fraction', fraction, row, 1, 1 )
-
-
-	# Close and delete the local table tool
-
-	tbLoc.done()
-
-	del tbLoc
-
-
-	# Return True
-
-	return True
 
 # ------------------------------------------------------------------------------
 
@@ -439,31 +393,28 @@ def flag_write( flag_stats, out_table ):
 #               Initial version.
 
 # ------------------------------------------------------------------------------
+def flag_plot(in_ms, out_dir, flag_stats):
+    flag_plots = dict()
 
-def flag_plot( in_ms, out_dir, flag_stats ):
+    # Create the different types of flag statistics plots
 
-        flag_plots = dict()
+    flag_plots['ANTENNA_PLOT'] = flag_plot_antenna(in_ms, out_dir, flag_stats['antenna'])
 
-	# Create the different types of flag statistics plots
+    flag_plots['BASELINE_PLOT'] = flag_plot_baseline(in_ms, out_dir, flag_stats['baseline'])
 
-	flag_plots['ANTENNA_PLOT'] = flag_plot_antenna( in_ms, out_dir, flag_stats['antenna'] )
+    flag_plots['SPW_CHANNEL_PLOT'] = flag_plot_spw_channel(in_ms, out_dir, flag_stats['spw:channel'])
 
-	flag_plots['BASELINE_PLOT'] = flag_plot_baseline( in_ms, out_dir, flag_stats['baseline'] )
+    flag_plots['SPW_CORRELATION_PLOT'] = flag_plot_spw_correlation(in_ms, out_dir, flag_stats['spw:correlation'])
 
-	flag_plots['SPW_CHANNEL_PLOT'] = flag_plot_spw_channel( in_ms, out_dir, flag_stats['spw:channel'] )
+    flag_plots['FIELD_PLOT'] = flag_plot_field(in_ms, out_dir, flag_stats['field'])
 
-	flag_plots['SPW_CORRELATION_PLOT'] = flag_plot_spw_correlation( in_ms, out_dir,
-	    flag_stats['spw:correlation'] )
+    flag_plots['SCAN_PLOT'] = flag_plot_scan(in_ms, out_dir, flag_stats['scan'])
 
-	flag_plots['FIELD_PLOT'] = flag_plot_field( in_ms, out_dir, flag_stats['field'] )
+    flag_plots['SPW_PLOT'] = flag_plot_spw(in_ms, out_dir, flag_stats['spw'])
 
-	flag_plots['SCAN_PLOT'] = flag_plot_scan( in_ms, out_dir, flag_stats['scan'] )
+    # Return dictionary with plot names
+    return flag_plots
 
-	flag_plots['SPW_PLOT'] = flag_plot_spw( in_ms, out_dir, flag_stats['spw'] )
-
-
-        # Return dictionary with plot names
-	return flag_plots
 
 # ------------------------------------------------------------------------------
 # Unit functions and ICDs
@@ -492,62 +443,58 @@ def flag_plot( in_ms, out_dir, flag_stats ):
 #               Initial version.
 
 # ------------------------------------------------------------------------------
-
 def flag_desc():
+    # Create the description of the flag statistics table
+    desc = dict()
 
-	# Create the description of the flag statistics table
+    desc['type'] = {
+        'comment': 'Type of flag statistics',
+        'dataManagerGroup': 'StandardStMan',
+        'dataManagerType': 'StandardStMan',
+        'maxlen': 0,
+        'option': 0,
+        'valueType': 'string'
+    }
 
-	desc = dict()
+    desc['id'] = {
+        'comment': 'ID for flag statistics',
+        'dataManagerGroup': 'StandardStMan',
+        'dataManagerType': 'StandardStMan',
+        'maxlen': 0,
+        'option': 0,
+        'valueType': 'string'
+    }
 
-	desc['type'] = {
-		'comment': 'Type of flag statistics',
-		'dataManagerGroup': 'StandardStMan',
-		'dataManagerType': 'StandardStMan',
-		'maxlen': 0,
-		'option': 0,
-		'valueType': 'string'
-	}
+    desc['total'] = {
+        'comment': 'Total number of data',
+        'dataManagerGroup': 'StandardStMan',
+        'dataManagerType': 'StandardStMan',
+        'maxlen': 0,
+        'option': 0,
+        'valueType': 'integer'
+    }
 
-	desc['id'] = {
-		'comment': 'ID for flag statistics',
-		'dataManagerGroup': 'StandardStMan',
-		'dataManagerType': 'StandardStMan',
-		'maxlen': 0,
-		'option': 0,
-		'valueType': 'string'
-	}
+    desc['flagged'] = {
+        'comment': 'Number of flagged data',
+        'dataManagerGroup': 'StandardStMan',
+        'dataManagerType': 'StandardStMan',
+        'maxlen': 0,
+        'option': 0,
+        'valueType': 'integer'
+    }
 
-	desc['total'] = {
-		'comment': 'Total number of data',
-		'dataManagerGroup': 'StandardStMan',
-		'dataManagerType': 'StandardStMan',
-		'maxlen': 0,
-		'option': 0,
-		'valueType': 'integer'
-	}
+    desc['fraction'] = {
+        'comment': 'Fraction of flagged data',
+        'dataManagerGroup': 'StandardStMan',
+        'dataManagerType': 'StandardStMan',
+        'maxlen': 0,
+        'option': 0,
+        'valueType': 'float'
+    }
 
-	desc['flagged'] = {
-		'comment': 'Number of flagged data',
-		'dataManagerGroup': 'StandardStMan',
-		'dataManagerType': 'StandardStMan',
-		'maxlen': 0,
-		'option': 0,
-		'valueType': 'integer'
-	}
+    # Return the description of the flag statistics table
+    return desc
 
-	desc['fraction'] = {
-		'comment': 'Fraction of flagged data',
-		'dataManagerGroup': 'StandardStMan',
-		'dataManagerType': 'StandardStMan',
-		'maxlen': 0,
-		'option': 0,
-		'valueType': 'float'
-	}
-
-
-	# Return the description of the flag statistics table
-
-	return desc
 
 # ------------------------------------------------------------------------------
 
@@ -579,53 +526,40 @@ def flag_desc():
 #               Return plot name
 
 # ------------------------------------------------------------------------------
+def flag_plot_antenna(in_ms, out_dir, stats_dict):
+    # Get the antenna names from the antenna table of the MS
+    names = flag_antenna_map(in_ms)
+    nName = len(names)
+    rName = range(nName)
 
-def flag_plot_antenna( in_ms, out_dir, stats_dict ):
+    # Calculate the fraction of flagged data corresponding to each antenna name
+    fracs = list()
 
-	# Get the antenna names from the antenna table of the MS
+    for n in names:
+        if n not in stats_dict:
+            continue
+        flagged = stats_dict[n]['flagged']
+        total = stats_dict[n]['total']
+        fracs.append(flagged / total)
 
-	names = flag_antenna_map( in_ms )
+    # Plot the data and set the axes
+    pl.plot(rName, fracs, 'bo')
+    pl.axis([-2, nName + 1, 0.0, 1.0])
 
-	nName = len( names )
-	rName = range( nName )
+    # Add the x and y labels
+    pl.xlabel('Antenna ID')
+    pl.ylabel('Fraction of Flagged Data')
 
+    # Save the plot to disk
+    out_plot_root = os.path.basename(os.path.splitext(in_ms)[0])
+    out_plot = out_dir + '/' + out_plot_root + '.flag.stats.antenna.png'
 
-	# Calculate the fraction of flagged data corresponding to each antenna
-	# name
+    pl.savefig(out_plot)
+    pl.clf()
 
-	fracs = list()
+    # Return plot name
+    return out_plot
 
-	for n in names:
-		if not stats_dict.has_key( n ): continue
-		flagged = stats_dict[n]['flagged']
-		total = stats_dict[n]['total']
-		fracs.append( flagged / total )
-
-
-	# Plot the data and set the axes
-
-	pl.plot( rName, fracs, 'bo' )
-
-	pl.axis( [-2, nName+1, 0.0, 1.0] )
-
-
-	# Add the x and y labels
-
-	pl.xlabel( 'Antenna ID' )
-	pl.ylabel( 'Fraction of Flagged Data' )
-
-
-	# Save the plot to disk
-
-	out_plot_root = os.path.basename( os.path.splitext( in_ms )[0] )
-	out_plot = out_dir + '/' + out_plot_root + '.flag.stats.antenna.png'
-
-	pl.savefig( out_plot )
-	pl.clf()
-
-
-	# Return plot name
-	return out_plot
 
 # ------------------------------------------------------------------------------
 
@@ -660,66 +594,54 @@ def flag_plot_antenna( in_ms, out_dir, stats_dict ):
 #               Return plot name
 
 # ------------------------------------------------------------------------------
+def flag_plot_baseline(in_ms, out_dir, stats_dict):
+    # Get the antenna names versus antenna numbers (a python list used as a
+    # map) from the MS antenna table, the lists of unique antenna numbers
+    # from the MS main table (just in case antennas as split out), and the
+    # antenna positions
+    antennaMap = flag_antenna_map(in_ms)
+    antennaNum = flag_antenna_number(in_ms)
+    antennaPos = flag_antenna_position(in_ms)
 
-def flag_plot_baseline( in_ms, out_dir, stats_dict ):
+    # Create the baseline length and flagging fraction python lists
+    bLen = list()
+    frac = list()
 
-	# Get the antenna names versus antenna numbers (a python list used as a
-	# map) from the MS antenna table, the lists of unique antenna numbers
-	# from the MS main table (just in case antennas as split out), and the
-	# antenna positions
+    for a1 in antennaNum['antenna1']:
+        for a2 in antennaNum['antenna2']:
+            if a1 >= a2:
+                continue
 
-	antennaMap = flag_antenna_map( in_ms )
-	antennaNum = flag_antenna_number( in_ms )
+            bVec = antennaPos[:, a1] - antennaPos[:, a2]
+            bLen.append(numpy.sqrt(numpy.sum(bVec ** 2)))
 
-	antennaPos = flag_antenna_position( in_ms )
+            bName = str(antennaMap[a1]) + '&&' + str(antennaMap[a2])
+            flagged = stats_dict[bName]['flagged']
+            total = stats_dict[bName]['total']
+            frac.append(flagged / total)
 
+    # Plot the data and set the axes
+    pl.plot(bLen, frac, 'bo')
 
-	# Create the baseline length and flagging fraction python lists
+    bMin = min(bLen)
+    bMax = max(bLen)
+    bDelta = 0.05 * (bMax - bMin)
+    pl.axis([bMin - bDelta, bMax + bDelta, 0.0, 1.0])
 
-	bLen = list()
-	frac = list()
+    # Add the x and y labels
+    pl.xlabel('Baseline Length (meters)')
+    pl.ylabel('Fraction of Flagged Data')
 
-	for a1 in antennaNum['antenna1']:
-		for a2 in antennaNum['antenna2']:
+    # Save the plot to disk
+    out_plot_root = os.path.basename(os.path.splitext(in_ms)[0])
+    out_plot = out_dir + '/' + out_plot_root + '.flag.stats.baseline.png'
 
-			if a1 >= a2: continue
+    pl.savefig(out_plot)
+    pl.clf()
 
-			bVec = antennaPos[:,a1] - antennaPos[:,a2]
-			bLen.append( numpy.sqrt( numpy.sum( bVec**2 ) ) )
+    # Return plot name
+    return out_plot
 
-			bName = str(antennaMap[a1]) + '&&' + str(antennaMap[a2])
-			flagged = stats_dict[bName]['flagged']
-			total = stats_dict[bName]['total']
-			frac.append( flagged / total )
-
-
-	# Plot the data and set the axes
-
-	pl.plot( bLen, frac, 'bo' )
-
-	bMin = min( bLen )
-	bMax = max( bLen )
-	bDelta = 0.05 * ( bMax - bMin )
-	pl.axis( [bMin-bDelta, bMax+bDelta, 0.0, 1.0] )
-
-
-	# Add the x and y labels
-
-	pl.xlabel( 'Baseline Length (meters)' )
-	pl.ylabel( 'Fraction of Flagged Data' )
-
-
-	# Save the plot to disk
-
-	out_plot_root = os.path.basename( os.path.splitext( in_ms )[0] )
-	out_plot = out_dir + '/' + out_plot_root + '.flag.stats.baseline.png'
-
-	pl.savefig( out_plot )
-	pl.clf()
-
-
-	# Return plot name
-	return out_plot	
 
 # ------------------------------------------------------------------------------
 
@@ -748,33 +670,25 @@ def flag_plot_baseline( in_ms, out_dir, stats_dict ):
 #               code has been eliminated.
 
 # ------------------------------------------------------------------------------
+def flag_antenna_map(in_ms):
+    # Create the local instance of the table tool and open it
+    try:
+        tbLoc = casac.table()
+    except:
+        tbLoc = casa.__tablehome__.create()
 
-def flag_antenna_map( in_ms ):
+    tbLoc.open(in_ms + '/ANTENNA')
 
-	# Create the local instance of the table tool and open it
+    # Get the antenna names versus the antenna numbers
+    names = tbLoc.getcol('NAME').tolist()
 
-        try:
-	    tbLoc = casac.table()
-        except:
-            tbLoc = casa.__tablehome__.create()
+    # Close and delete the local table tool
+    tbLoc.close()
+    del tbLoc
 
-	tbLoc.open( in_ms + '/ANTENNA' )
+    # Return the antenna names
+    return names
 
-
-	# Get the antenna names versus the antenna numbers
-
-	names = tbLoc.getcol( 'NAME' ).tolist()
-
-
-	# Close and delete the local table tool
-
-	tbLoc.close()
-	del tbLoc
-
-
-	# Return the antenna names
-
-	return( names )
 
 # ------------------------------------------------------------------------------
 
@@ -802,36 +716,27 @@ def flag_antenna_map( in_ms ):
 #               Initial version.
 
 # ------------------------------------------------------------------------------
+def flag_antenna_number(in_ms):
+    # Create the local instance of the table tool and open it
+    try:
+        tbLoc = casac.table()
+    except:
+        tbLoc = casa.__tablehome__.create()
 
-def flag_antenna_number( in_ms ):
+    tbLoc.open(in_ms)
 
-	# Create the local instance of the table tool and open it
+    # Get the unique antenna 1s and antenna2 from the main table
+    d = dict()
+    d['antenna1'] = numpy.unique(tbLoc.getcol('ANTENNA1')).tolist()
+    d['antenna2'] = numpy.unique(tbLoc.getcol('ANTENNA2')).tolist()
 
-        try:
-	    tbLoc = casac.table()
-        except:
-            tbLoc = casa.__tablehome__.create()
+    # Close and delete the local table tool
+    tbLoc.close()
+    del tbLoc
 
-	tbLoc.open( in_ms )
+    # Return the dictionary containing the antenna numbers
+    return d
 
-
-	# Get the unique antenna 1s and antenna2 from the main table
-
-	d = dict()
-
-	d['antenna1'] = numpy.unique( tbLoc.getcol( 'ANTENNA1' ) ).tolist()
-	d['antenna2'] = numpy.unique( tbLoc.getcol( 'ANTENNA2' ) ).tolist()
-
-
-	# Close and delete the local table tool
-
-	tbLoc.close()
-	del tbLoc
-
-
-	# Return the dictionary containing the antenna numbers
-
-	return d
 
 # ------------------------------------------------------------------------------
 
@@ -861,33 +766,26 @@ def flag_antenna_number( in_ms ):
 #               Initial version.
 
 # ------------------------------------------------------------------------------
+def flag_antenna_position(in_ms):
+    # Create the local instance of the table tool and open it
 
-def flag_antenna_position( in_ms ):
+    try:
+        tbLoc = casac.table()
+    except:
+        tbLoc = casa.__tablehome__.create()
 
-	# Create the local instance of the table tool and open it
+    tbLoc.open(in_ms + '/ANTENNA')
 
-        try:
-	    tbLoc = casac.table()
-        except:
-            tbLoc = casa.__tablehome__.create()
+    # Get the antenna position vectors
+    position = tbLoc.getcol('POSITION')
 
-	tbLoc.open( in_ms + '/ANTENNA' )
+    # Close and delete the local table tool
+    tbLoc.close()
+    del tbLoc
 
+    # Return the antenna position vectors
+    return position
 
-	# Get the antenna position vectors
-
-	position = tbLoc.getcol( 'POSITION' )
-
-
-	# Close and delete the local table tool
-
-	tbLoc.close()
-	del tbLoc
-
-
-	# Return the antenna position vectors
-
-	return position
 
 # ------------------------------------------------------------------------------
 
@@ -920,60 +818,52 @@ def flag_antenna_position( in_ms ):
 #               Return plot names.
 
 # ------------------------------------------------------------------------------
+def flag_plot_spw_channel(in_ms, out_dir, stats_dict):
+    # Group the channels according to spectral window and calculate the
+    # corresponding fractions of flagged data
+    plot_names = dict()
+    names = stats_dict.keys()
+    channels = dict()
+    fracs = dict()
 
-def flag_plot_spw_channel( in_ms, out_dir, stats_dict ):
+    for n in names:
+        s, c = n.split(':')
 
-	# Group the channels according to spectral window and calculate the
-	# corresponding fractions of flagged data
+        if s not in channels:
+            channels[s] = list()
+            fracs[s] = list()
 
-        plot_names = dict()
+        channels[s].append(int(c))
 
-	names = stats_dict.keys()
+        flagged = stats_dict[n]['flagged']
+        total = stats_dict[n]['total']
+        fracs[s].append(flagged / total)
 
-	channels = dict()
-	fracs = dict()
+    # For each spectral window: plot the data, set the axes, add the x and
+    # y lables, and save the plots to disk
+    spws = channels.keys()
 
-	for n in names:
+    for s in spws:
+        pl.plot(channels[s], fracs[s], 'bo')
 
-		s,c = n.split( ':' )
+        pl.axis([-2, len(channels[s]) + 1, 0.0, 1.0])
 
-		if not channels.has_key(s):
-			channels[s] = list()
-			fracs[s] = list()
+        pl.xlabel('Channel Number (Spectral Window ' + s + ')')
+        pl.ylabel('Fraction of Flagged Data')
 
-		channels[s].append( int(c) )
+        out_plot_root = os.path.basename(os.path.splitext(in_ms)[0])
 
-		flagged = stats_dict[n]['flagged']
-		total = stats_dict[n]['total']
-		fracs[s].append( flagged / total )
+        out_plot = out_dir + '/' + out_plot_root
+        out_plot += '.flag.stats.channel.spw.' + s + '.png'
 
+        pl.savefig(out_plot)
+        pl.clf()
 
-	# For each spectral window: plot the data, set the axes, add the x and
-	# y lables, and save the plots to disk
+        plot_names[s] = out_plot
 
-	spws = channels.keys()
+    # Return plot names
+    return plot_names
 
-	for s in spws:
-
-		pl.plot( channels[s], fracs[s], 'bo' )
-
-		pl.axis( [-2, len(channels[s])+1, 0.0, 1.0] )
-
-		pl.xlabel( 'Channel Number (Spectral Window ' + s + ')' )
-		pl.ylabel( 'Fraction of Flagged Data' )
-
-		out_plot_root = os.path.basename( os.path.splitext( in_ms )[0] )
-
-		out_plot = out_dir + '/' + out_plot_root
-		out_plot += '.flag.stats.channel.spw.' + s + '.png'
-
-		pl.savefig( out_plot )
-		pl.clf()
-
-                plot_names[s] = out_plot
-
-	# Return plot names
-	return plot_names
 
 # ------------------------------------------------------------------------------
 
@@ -1005,62 +895,53 @@ def flag_plot_spw_channel( in_ms, out_dir, stats_dict ):
 #               Return plot names.
 
 # ------------------------------------------------------------------------------
+def flag_plot_spw_correlation(in_ms, out_dir, stats_dict):
+    # Group the correlations according to spectral window and calculate the
+    # corresponding fractions of flagged data
+    plot_names = dict()
+    names = stats_dict.keys()
+    correlations = dict()
+    fracs = dict()
 
-def flag_plot_spw_correlation( in_ms, out_dir, stats_dict ):
+    for n in names:
+        s, c = n.split(':')
 
-	# Group the correlations according to spectral window and calculate the
-	# corresponding fractions of flagged data
+        if s not in correlations:
+            correlations[s] = list()
+            fracs[s] = list()
 
-        plot_names = dict()
+        correlations[s].append(c)
 
-	names = stats_dict.keys()
+        flagged = stats_dict[n]['flagged']
+        total = stats_dict[n]['total']
+        fracs[s].append(flagged / total)
 
-	correlations = dict()
-	fracs = dict()
+    # For each spectral window: plot the data, set the axes, add the x and
+    # y lables, and save the plots to disk
+    spws = correlations.keys()
+    for s in spws:
+        corrNums = range(len(correlations[s]))
+        pl.plot(corrNums, fracs[s], 'bo')
+        pl.xticks(corrNums, correlations[s], rotation=45)
 
-	for n in names:
+        pl.axis([-2, len(corrNums) + 1, 0.0, 1.0])
 
-		s,c = n.split( ':' )
+        pl.xlabel('Correlation Number (Spectral Window ' + s + ')')
+        pl.ylabel('Fraction of Flagged Data')
 
-		if not correlations.has_key(s):
-			correlations[s] = list()
-			fracs[s] = list()
+        out_plot_root = os.path.basename(os.path.splitext(in_ms)[0])
 
-		correlations[s].append( c )
+        out_plot = out_dir + '/' + out_plot_root
+        out_plot += '.flag.stats.correlation.spw.' + s + '.png'
 
-		flagged = stats_dict[n]['flagged']
-		total = stats_dict[n]['total']
-		fracs[s].append( flagged / total )
+        pl.savefig(out_plot)
+        pl.clf()
 
+        plot_names[s] = out_plot
 
-	# For each spectral window: plot the data, set the axes, add the x and
-	# y lables, and save the plots to disk
+    # Return plot names
+    return plot_names
 
-	spws = correlations.keys()
-
-	for s in spws:
-
-		corrNums = range( len(correlations[s]) )
-		pl.plot( corrNums, fracs[s], 'bo' )
-		pl.xticks( corrNums, correlations[s], rotation=45 )
-
-		pl.axis( [-2, len(corrNums)+1, 0.0, 1.0] )
-
-		pl.xlabel( 'Correlation Number (Spectral Window ' + s + ')' )
-		pl.ylabel( 'Fraction of Flagged Data' )
-
-		out_plot_root = os.path.basename( os.path.splitext( in_ms )[0] )
-
-		out_plot = out_dir + '/' + out_plot_root
-		out_plot += '.flag.stats.correlation.spw.' + s + '.png'
-
-		pl.savefig( out_plot )
-		pl.clf()
-
-                plot_names[s] = out_plot
-
-	# Return plot names
-	return plot_names
 
 # ------------------------------------------------------------------------------
 
@@ -1092,52 +973,38 @@ def flag_plot_spw_correlation( in_ms, out_dir, stats_dict ):
 #               Return plot name
 
 # ------------------------------------------------------------------------------
+def flag_plot_field(in_ms, out_dir, stats_dict):
+    # Get the field names
+    names = stats_dict.keys()
+    nName = len(names)
+    rName = range(nName)
 
-def flag_plot_field( in_ms, out_dir, stats_dict ):
+    # Calculate the fraction of flagged data corresponding to each field name
+    fracs = list()
 
-	# Get the field names
+    for n in names:
+        flagged = stats_dict[n]['flagged']
+        total = stats_dict[n]['total']
+        fracs.append(flagged / total)
 
-	names = stats_dict.keys()
+    # Plot the data and set the axes
+    pl.plot(rName, fracs, 'bo')
+    pl.axis([-2, nName + 1, 0.0, 1.0])
 
-	nName = len( names )
-	rName = range( nName )
+    # Add the x and y labels
+    pl.xlabel('Field Number')
+    pl.ylabel('Fraction of Flagged Data')
 
+    # Save the plot to disk
+    out_plot_root = os.path.basename(os.path.splitext(in_ms)[0])
+    out_plot = out_dir + '/' + out_plot_root + '.flag.stats.field.png'
 
-	# Calculate the fraction of flagged data corresponding to each field
-	# name
+    pl.savefig(out_plot)
+    pl.clf()
 
-	fracs = list()
+    # Return plot name
+    return out_plot
 
-	for n in names:
-		flagged = stats_dict[n]['flagged']
-		total = stats_dict[n]['total']
-		fracs.append( flagged / total )
-
-
-	# Plot the data and set the axes
-
-	pl.plot( rName, fracs, 'bo' )
-
-        pl.axis( [-2, nName+1, 0.0, 1.0] )
-
-
-	# Add the x and y labels
-
-	pl.xlabel( 'Field Number' )
-	pl.ylabel( 'Fraction of Flagged Data' )
-
-
-	# Save the plot to disk
-
-	out_plot_root = os.path.basename( os.path.splitext( in_ms )[0] )
-	out_plot = out_dir + '/' + out_plot_root + '.flag.stats.field.png'
-
-	pl.savefig( out_plot )
-	pl.clf()
-
-
-	# Return plot name
-	return out_plot
 
 # ------------------------------------------------------------------------------
 
@@ -1169,52 +1036,38 @@ def flag_plot_field( in_ms, out_dir, stats_dict ):
 #               Return plot name
 
 # ------------------------------------------------------------------------------
+def flag_plot_scan(in_ms, out_dir, stats_dict):
+    # Get and sort the scan number
+    numbers = stats_dict.keys()
+    nNumber = len(numbers)
+    rNumber = range(nNumber)
 
-def flag_plot_scan( in_ms, out_dir, stats_dict ):
+    # Calculate the fraction of flagged data corresponding to each scan
+    # number
+    fracs = list()
+    for n in numbers:
+        flagged = stats_dict[n]['flagged']
+        total = stats_dict[n]['total']
+        fracs.append(flagged / total)
 
-	# Get and sort the scan number
+    # Plot the data and set the axes
+    pl.plot(rNumber, fracs, 'bo')
+    pl.axis([-2, nNumber + 1, 0.0, 1.0])
 
-	numbers = stats_dict.keys()
+    # Add the x and y labels
+    pl.xlabel('Scan Number')
+    pl.ylabel('Fraction of Flagged Data')
 
-	nNumber = len( numbers )
-	rNumber = range( nNumber )
+    # Save the plot to disk
+    out_plot_root = os.path.basename(os.path.splitext(in_ms)[0])
+    out_plot = out_dir + '/' + out_plot_root + '.flag.stats.scan.png'
 
+    pl.savefig(out_plot)
+    pl.clf()
 
-	# Calculate the fraction of flagged data corresponding to each scan
-	# number
+    # Return plot name
+    return out_plot
 
-	fracs = list()
-
-	for n in numbers:
-		flagged = stats_dict[n]['flagged']
-		total = stats_dict[n]['total']
-		fracs.append( flagged / total )
-
-
-	# Plot the data and set the axes
-
-	pl.plot( rNumber, fracs, 'bo' )
-
-	pl.axis( [-2, nNumber+1, 0.0, 1.0] )
-
-
-	# Add the x and y labels
-
-	pl.xlabel( 'Scan Number' )
-	pl.ylabel( 'Fraction of Flagged Data' )
-
-
-	# Save the plot to disk
-
-	out_plot_root = os.path.basename( os.path.splitext( in_ms )[0] )
-	out_plot = out_dir + '/' + out_plot_root + '.flag.stats.scan.png'
-
-	pl.savefig( out_plot )
-	pl.clf()
-
-
-	# Return plot name
-	return out_plot
 
 # ------------------------------------------------------------------------------
 
@@ -1246,52 +1099,39 @@ def flag_plot_scan( in_ms, out_dir, stats_dict ):
 #               Return plot name
 
 # ------------------------------------------------------------------------------
+def flag_plot_spw(in_ms, out_dir, stats_dict):
+    # Get and sort the spectral window number
+    numbers = stats_dict.keys()
+    nNumber = len(numbers)
+    rNumber = range(nNumber)
 
-def flag_plot_spw( in_ms, out_dir, stats_dict ):
+    # Calculate the fraction of flagged data corresponding to each spectral
+    # window number
+    fracs = list()
 
-	# Get and sort the spectral window number
+    for n in numbers:
+        flagged = stats_dict[n]['flagged']
+        total = stats_dict[n]['total']
+        fracs.append(flagged / total)
 
-	numbers = stats_dict.keys()
+    # Plot the data and set the axes
+    pl.plot(rNumber, fracs, 'bo')
+    pl.axis([-2, nNumber + 1, 0.0, 1.0])
 
-	nNumber = len( numbers )
-	rNumber = range( nNumber )
+    # Add the x and y labels
+    pl.xlabel('Spectral Window Number')
+    pl.ylabel('Fraction of Flagged Data')
 
+    # Save the plot to disk
+    out_plot_root = os.path.basename(os.path.splitext(in_ms)[0])
+    out_plot = out_dir + '/' + out_plot_root + '.flag.stats.spw.png'
 
-	# Calculate the fraction of flagged data corresponding to each spectral
-	# window number
+    pl.savefig(out_plot)
+    pl.clf()
 
-	fracs = list()
+    # Return plot name
+    return out_plot
 
-	for n in numbers:
-		flagged = stats_dict[n]['flagged']
-		total = stats_dict[n]['total']
-		fracs.append( flagged / total )
-
-
-	# Plot the data and set the axes
-
-	pl.plot( rNumber, fracs, 'bo' )
-
-	pl.axis( [-2, nNumber+1, 0.0, 1.0] )
-
-
-	# Add the x and y labels
-
-	pl.xlabel( 'Spectral Window Number' )
-	pl.ylabel( 'Fraction of Flagged Data' )
-
-
-	# Save the plot to disk
-
-	out_plot_root = os.path.basename( os.path.splitext( in_ms )[0] )
-	out_plot = out_dir + '/' + out_plot_root + '.flag.stats.spw.png'
-
-	pl.savefig( out_plot )
-	pl.clf()
-
-
-	# Return plot name
-	return out_plot
 
 # ------------------------------------------------------------------------------
 
@@ -1315,9 +1155,7 @@ def flag_plot_spw( in_ms, out_dir, stats_dict ):
 #               Initial version
 
 # ------------------------------------------------------------------------------
-
-def flag_score( flag_stats ):
-
+def flag_score(flag_stats):
     flag_scores = dict()
 
     # Calculate grand total score
@@ -1328,27 +1166,29 @@ def flag_score( flag_stats ):
     antennaPairs = [item.split('&&') for item in flag_stats['baseline'].iterkeys()]
     for antenna1, antenna2 in antennaPairs:
         # Count only real flags, no auto-correlations
-        if (antenna1 != antenna2):
-            globalFraction += flag_stats['baseline']['%s&&%s' % (antenna1, antenna2)]['flagged'] / flag_stats['baseline']['%s&&%s' % (antenna1, antenna2)]['total']
+        if antenna1 != antenna2:
+            globalFraction += flag_stats['baseline']['%s&&%s' % (antenna1, antenna2)]['flagged'] / \
+                              flag_stats['baseline']['%s&&%s' % (antenna1, antenna2)]['total']
             numPoints += 1
     globalFraction /= numPoints
     globalScore -= globalFraction
     flag_scores['TOTAL'] = globalScore
 
-
     # Calculate individual scores
-
     flag_scores['AVERAGE'] = dict()
-    flag_scores['AVERAGE']['antenna'] = 1.0 - numpy.average(numpy.array([fs_antenna['flagged'] / fs_antenna['total'] for fs_antenna in flag_stats['antenna'].itervalues()]))
-    flag_scores['AVERAGE']['baseline'] = 1.0 - numpy.average(numpy.array([fs_baseline['flagged'] / fs_baseline['total'] for fs_baseline in flag_stats['baseline'].itervalues()]))
+    flag_scores['AVERAGE']['antenna'] = 1.0 - numpy.average(numpy.array(
+        [fs_antenna['flagged'] / fs_antenna['total'] for fs_antenna in flag_stats['antenna'].itervalues()]))
+    flag_scores['AVERAGE']['baseline'] = 1.0 - numpy.average(numpy.array(
+        [fs_baseline['flagged'] / fs_baseline['total'] for fs_baseline in flag_stats['baseline'].itervalues()]))
 
     flag_scores['ANTENNA'] = dict()
     for antennaKey in flag_stats['antenna'].iterkeys():
-        flag_scores['ANTENNA'][antennaKey] = 1.0 - flag_stats['antenna'][antennaKey]['flagged'] / flag_stats['antenna'][antennaKey]['total']
-
+        flag_scores['ANTENNA'][antennaKey] = 1.0 - flag_stats['antenna'][antennaKey]['flagged'] / \
+                                             flag_stats['antenna'][antennaKey]['total']
 
     flag_scores['BASELINE'] = dict()
     for baselineKey in flag_stats['baseline'].iterkeys():
-        flag_scores['BASELINE'][baselineKey] = 1.0 - flag_stats['baseline'][baselineKey]['flagged'] / flag_stats['baseline'][baselineKey]['total']
+        flag_scores['BASELINE'][baselineKey] = 1.0 - flag_stats['baseline'][baselineKey]['flagged'] / \
+                                               flag_stats['baseline'][baselineKey]['total']
 
     return flag_scores
