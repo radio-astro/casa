@@ -34,7 +34,7 @@ class ImageParamsHeuristicsVlassSeCont(ImageParamsHeuristics):
         return 'mtmfs'
 
     def robust(self, beam=None):
-        return 1.0, 0.0, 0.0
+        return 1.0
 
     def gridder(self, intent, field):
         return 'mosaic'
