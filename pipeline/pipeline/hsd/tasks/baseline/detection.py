@@ -40,7 +40,7 @@ class DetectLineInputs(common.SingleDishInputs):
         
     @property
     def edge(self):
-        return (0,0) if self._edge is None else self._edge
+        return (0, 0) if self._edge is None else self._edge
     
     @edge.setter
     def edge(self, value):
@@ -63,7 +63,7 @@ class DetectLineResults(common.SingleDishResults):
         LOG.debug('DetectLineResults.merge_with_context')
         super(DetectLineResults, self).merge_with_context(context)
         # exporting datatable should be done within the parent task
-#         if type(self.outcome) is types.DictType and self.outcome.has_key('datatable'):
+#         if type(self.outcome) is types.DictType and 'datatable' in self.outcome:
 #             datatable = self.outcome.pop('datatable')
 #             start_time = time.time()
 #             LOG.debug('Start exporting datatable (minimal): {}', start_time)
@@ -114,7 +114,7 @@ class DetectLine(basetask.StandardTaskTemplate):
         detect_signal = {}
 
         #(nchan,nrow) = spectra.shape
-        (nrow,nchan) = spectra.shape
+        (nrow, nchan) = spectra.shape
 
         # Pre-Defined Spectrum Window
         if len(window) != 0:
@@ -170,8 +170,9 @@ class DetectLine(basetask.StandardTaskTemplate):
         TmpRange = [4**i for i in xrange(int(math.ceil(math.log(len(spectra[0])/MinChanBinSp)/math.log(4))))]
         BinningRange = []
         for i in TmpRange:
-           BinningRange.append([i, 0])
-           if i>1: BinningRange.append([i, i/2])
+            BinningRange.append([i, 0])
+            if i > 1:
+                BinningRange.append([i, i/2])
         for row in xrange(nrow):
             # Countup progress timer
             Timer.count()
@@ -184,16 +185,16 @@ class DetectLine(basetask.StandardTaskTemplate):
                 Protected = [[-1, -1, 1]]
             else:
                 LOG.debug('Start Row {}', row)
-                for [BINN, offset]  in BinningRange:
+                for [BINN, offset] in BinningRange:
                     MinNchan = (MinFWHM-2) / BINN + 2
                     SP = self.SpBinning(spectra[row], BINN, offset)
                     MSK = self.MaskBinning(masks[row], BINN, offset)
     
-                    protected = self._detect(spectrum = SP,
-                                             mask = MSK,
+                    protected = self._detect(spectrum=SP,
+                                             mask=MSK,
                                              threshold=Thre+math.sqrt(BINN)-1.0,
                                              tweak=True,
-                                             edge=(EdgeL,EdgeR))
+                                             edge=(EdgeL, EdgeR))
 
                     MaxLineWidth = MaxFWHM
                     #MaxLineWidth = int((nchan - Nedge)/3.0)
@@ -206,14 +207,14 @@ class DetectLine(basetask.StandardTaskTemplate):
                             if(EdgeMin < Chan0) and (Chan1 < EdgeMax) and (MinLineWidth <= ChanW) and (ChanW <= MaxLineWidth):
                                 Protected.append([Chan0, Chan1, BINN])
                         else:
-                            Protected.append([-1,-1, BINN])
+                            Protected.append([-1, -1, BINN])
 
                 # plot to check detected lines
                 #self.plot_detectrange(spectra[row], Protected, 'SpPlot0%04d.png' % row)
 
-            detect_signal[row] = [grid_table[row][4], # RA
-                                  grid_table[row][5], # DEC
-                                  Protected]          # Protected Region
+            detect_signal[row] = [grid_table[row][4],  # RA
+                                  grid_table[row][5],  # DEC
+                                  Protected]           # Protected Region
             ProcEndTime = time.time()
             LOG.info('Channel ranges of detected lines for Row {}: {}', row, detect_signal[row][2])
             
@@ -234,10 +235,10 @@ class DetectLine(basetask.StandardTaskTemplate):
         print(protected, fname)
         PL.clf()
         PL.plot(sp)
-        ymin,ymax = PL.ylim()
+        ymin, ymax = PL.ylim()
         for i in range(len(protected)):
             y = ymin + (ymax - ymin)/30.0 * (i + 1)
-            PL.plot(protected[i],(y,y),'r')
+            PL.plot(protected[i], (y, y), 'r')
         PL.savefig(fname, format='png')
 
     def MaskBinning(self, data, Bin, offset=0):
@@ -284,24 +285,24 @@ class DetectLine(basetask.StandardTaskTemplate):
             ### 2011/05/16 allowance was moved to clustering analysis
             #allowance = int(Width/5)
             LOG.debug('Ranges={}, Width={}', line_ranges[y*2:y*2+2], Width)
-            if Width >= MinFWHM and Width <= MaxFWHM and \
-               line_ranges[y*2] > EdgeL and \
-               line_ranges[y*2+1] < (nchan - 1 - EdgeR):
+            if (Width >= MinFWHM and Width <= MaxFWHM and line_ranges[y*2] > EdgeL and
+                    line_ranges[y*2+1] < (nchan - 1 - EdgeR)):
                 protected.append([line_ranges[y*2], line_ranges[y*2+1]])
         if len(protected) == 0:
             protected = [[-1, -1]]
-        elif(len(protected) > 1):
+        elif len(protected) > 1:
             # 2007/09/01 add merged lines to the list if two lines are close enough
             flag = True
             for y in range(len(protected) - 1):
                 curr0, curr1 = protected[y][0], protected[y][1]
                 next0, next1 = protected[y+1][0], protected[y+1][1]
-                if (next0 - curr1) < (0.25*min((curr1-curr0),(next1-next0))):
-                    if flag == True:
+                if (next0 - curr1) < (0.25*min((curr1-curr0), (next1-next0))):
+                    if flag:
                         if curr1 < next1 and curr0 < next0 and (next1 - curr0) <= MaxFWHM:
                             protected.append([curr0, next1])
                             Line0 = curr0
-                        else: continue
+                        else:
+                            continue
                     else:
                         if (next1 - Line0) <= MaxFWHM:
                             protected.pop()
@@ -310,7 +311,8 @@ class DetectLine(basetask.StandardTaskTemplate):
                             flag = True
                             continue
                     flag = False
-                else: flag = True
+                else:
+                    flag = True
         return protected
 
     def _get_predefined_window(self, window):
@@ -339,7 +341,7 @@ def get_linerange(window, spwid, ms):
     elif len(window) == 3:
         # [center_freq, velmin, velmax] form
         spw = ms.spectral_windows[spwid]
-        center_freq = window[0] * 1.0e9 # GHz -> Hz
+        center_freq = window[0] * 1.0e9  # GHz -> Hz
         target_fields = ms.get_fields(intent='TARGET')
         source_id = target_fields[0].source_id
         restfreq = get_restfrequency(ms.name, spwid, source_id)
