@@ -344,7 +344,7 @@ def get_linerange(window, spwid, ms):
         source_id = target_fields[0].source_id
         restfreq = get_restfrequency(ms.name, spwid, source_id)
         if restfreq is None:
-            restfreq = float(spw.ref_frequency.to_units(measures.FrequencyUnits.HERTS).value)
+            restfreq = float(spw.ref_frequency.to_units(measures.FrequencyUnits.HERTZ).value)
         #restfreq = spw.refval if len(spw.rest_frequencies) == 0 else spw.rest_frequencies[0]
         dfreq = map(lambda x: restfreq * abs(x) / 299792.458, window[1:])
         freq_range = [center_freq + dfreq[0], center_freq - dfreq[1]]
