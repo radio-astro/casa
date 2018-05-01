@@ -124,8 +124,8 @@ class DetectLine(basetask.StandardTaskTemplate):
             predefined_window = self._get_predefined_window(window)
             for row in xrange(nrow):
                 detect_signal[row] = [tRA[row], tDEC[row], predefined_window]
-                for row in range(datatable.nrow):
-                    datatable.putcell('MASKLIST', row, predefined_window)
+            for dt_row in range(datatable.nrow):
+                datatable.putcell('MASKLIST', dt_row, predefined_window)
                     
             result = DetectLineResults(task=self.__class__,
                                        success=True,
