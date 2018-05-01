@@ -100,9 +100,12 @@ class SyncTask(object):
                 return self.__executor.execute(self.__task)
             else:
                 return self.__task.execute(dry_run=False)
-        except Exception:
+        except Exception, e:
             # TODO add exception to error
-            raise PipelineError('Failure executing job')
+            import traceback
+            err_msg = "Failure executing job by an exception {} " \
+                      "with the following traceback\n {}".format(e.__class__.__name__, traceback.format_exc())
+            raise PipelineError(err_msg)
 
 
 class Tier1Executable(object):
