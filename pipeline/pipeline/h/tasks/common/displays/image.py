@@ -119,10 +119,10 @@ class ImageDisplay(object):
         # of all antennas. Truncate filename while keeping it unique
         # by replacing with hash.
         if len(png) > 251:  # 255 - '.png'
-            png_hash = str(hash(png))
+            new_png = '{!s}.png'.format(hash(png))
             LOG.info('Renaming plot to avoid exceeding filesystem limit on filename length.\n'
-                     'Old: %s\nNew: %s', png, png_hash)
-            png = '%s.png' % png_hash
+                     'Old: {!s}\nNew: {!s}'.format(png, new_png))
+            png = new_png
 
         return png
 

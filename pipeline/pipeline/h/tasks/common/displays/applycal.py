@@ -154,10 +154,10 @@ class PlotmsLeaf(object):
         # Truncate over-long field components while keeping them unique by
         # replacing them with the hash of the component          
         if len(png) > 251:  # 255 - '.png'
-            png_hash = str(hash(png))
+            new_png = '{!s}.png'.format(hash(png))
             LOG.info('Renaming plot to avoid exceeding filesystem limit on filename length.\n'
-                     'Old: %s\nNew: %s', png, png_hash)
-            png = '%s.png' % png_hash
+                     'Old: {!s}\nNew: {!s}'.format(png, new_png))
+            png = new_png
 
         return os.path.join(self._output_dir, png)
 

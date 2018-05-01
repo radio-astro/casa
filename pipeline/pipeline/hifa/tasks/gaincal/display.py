@@ -417,10 +417,10 @@ class RMSOffsetVsRefAntDistanceChart(PhaseVsBaselineChart):
         # them unique and reproducible/identifiable  by replacing them with
         # the hash of the component.
         if len(png) > 251:  # 255 - '.png'
-            png_hash = str(hash(png))
+            new_png = '{!s}.png'.format(hash(png))
             LOG.info('Renaming plot to avoid exceeding filesystem limit on filename length.\n'
-                     'Old: %s\nNew: %s', png, png_hash)
-            png = '%s.png' % png_hash
+                     'Old: {!s}\nNew: {!s}'.format(png, new_png))
+            png = new_png
 
         return os.path.join(self.context.report_dir, 'stage%s' % self.result.stage_number, png)
 
