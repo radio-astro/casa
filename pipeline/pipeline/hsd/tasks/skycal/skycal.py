@@ -226,10 +226,11 @@ class HpcSDSkyCal(sessionutils.ParallelTemplate):
     @basetask.result_finaliser
     def get_result_for_exception(self, vis, exception):
         LOG.error('Error operating sky calibration for {!s}'.format(os.path.basename(vis)))
+        LOG.error('{0}({1})'.format(exception.__class__.__name__, exception.message))
         import traceback
         tb = traceback.format_exc()
         if tb.startswith('None'):
-            tb = str(exception)
+            tb = '{0}({1})'.format(exception.__class__.__name__, exception.message)
         return basetask.FailedTaskResults(self, exception, tb)
    
     
