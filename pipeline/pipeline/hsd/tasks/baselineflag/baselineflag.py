@@ -404,6 +404,12 @@ class HpcSDBLFlag(sessionutils.ParallelTemplate):
     def __init__(self, inputs):
         super(HpcSDBLFlag, self).__init__(inputs)
 
+    @basetask.result_finaliser
     def get_result_for_exception(self, vis, exception):
         LOG.error('Error operating target flag for {!s}'.format(os.path.basename(vis)))
-        return SDBLFlagResults()
+        LOG.error('{0}({1})'.format(exception.__class__.__name__, exception.message))
+        import traceback
+        tb = traceback.format_exc()
+        if tb.startswith('None'):
+            tb = '{0}({1})'.format(exception.__class__.__name__, exception.message)
+        return basetask.FailedTaskResults(self, exception, tb)
