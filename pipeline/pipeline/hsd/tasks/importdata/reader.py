@@ -82,14 +82,13 @@ class MetaDataReader(object):
         # name of the MS
         name = self.name
         spwids = self.detect_target_spw()
-        nchan_map = dict([(spwid,self.ms.get_spectral_window(spwid).num_channels) for spwid in spwids])
+        nchan_map = dict([(spwid, self.ms.get_spectral_window(spwid).num_channels) for spwid in spwids])
         ddids = self.detect_target_data_desc()
         
         #Rad2Deg = 180. / 3.141592653
         
         LOG.info('name=%s' % name)
-        # TODO: rename has_key method to stop shadowing deprecated has_key method of iterables (Python 3)
-        if self.datatable.has_key('FILENAMES'):
+        if self.datatable.haskeyword('FILENAMES'):
             filenames = self.datatable.getkeyword('FILENAMES')
             if name in filenames:
                 # the data is already registered, return
@@ -210,7 +209,7 @@ class MetaDataReader(object):
                 antenna_domain = antennas[0]
                 mposition = antenna_domain.position
                 pointing_directions = msmd.pointingdirection(row, interpolate=True)
-                pointing_direction = pointing_directions['antenna1']['pointingdirection'] # antenna2 should be the same
+                pointing_direction = pointing_directions['antenna1']['pointingdirection']  # antenna2 should be the same
                 lon = pointing_direction['m0']
                 lat = pointing_direction['m1']
                 ref = pointing_direction['refer']
@@ -240,7 +239,8 @@ class MetaDataReader(object):
                     Tel[irow] = get_value_in_deg(el)
                 else:
                     if irow == 0:
-                        LOG.info('Require direction conversion from {0} to {1} as well as to {2}'.format(ref, outref, azelref))
+                        LOG.info('Require direction conversion from {0} to {1} as well as to {2}'.format(ref, outref,
+                                                                                                         azelref))
                         
                     # conversion to J2000
                     ra, dec = direction_convert(pointing_direction, mepoch, mposition, outframe=outref)
@@ -255,19 +255,19 @@ class MetaDataReader(object):
                 last_antenna = antenna_id
                 last_result = (Taz[irow], Tel[irow], Tra[irow], Tdec[irow],)
         LOG.info('Done reading direction (convert if necessary).')
-        self.datatable.putcol('RA',Tra,startrow=ID)
-        self.datatable.putcol('DEC',Tdec,startrow=ID)
-        self.datatable.putcol('AZ',Taz,startrow=ID)
-        self.datatable.putcol('EL',Tel,startrow=ID)
-        self.datatable.putcol('NCHAN',NchanArray,startrow=ID)
-        self.datatable.putcol('TARGET',Tsrc,startrow=ID)
+        self.datatable.putcol('RA', Tra, startrow=ID)
+        self.datatable.putcol('DEC', Tdec, startrow=ID)
+        self.datatable.putcol('AZ', Taz, startrow=ID)
+        self.datatable.putcol('EL', Tel, startrow=ID)
+        self.datatable.putcol('NCHAN', NchanArray, startrow=ID)
+        self.datatable.putcol('TARGET', Tsrc, startrow=ID)
         intArr = numpy.zeros(nrow, dtype=int)
-        self.datatable.putcol('NMASK',intArr,startrow=ID)
+        self.datatable.putcol('NMASK', intArr, startrow=ID)
         intArr[:] = -1
         self.datatable.putcol('NOCHANGE', intArr, startrow=ID)
-        self.datatable.putcol('POSGRP',intArr,startrow=ID)
-        self.datatable.putcol('ANTENNA',Tant,startrow=ID)
-        self.datatable.putcol('SRCTYPE',Tsrctype,startrow=ID)
+        self.datatable.putcol('POSGRP', intArr, startrow=ID)
+        self.datatable.putcol('ANTENNA', Tant, startrow=ID)
+        self.datatable.putcol('SRCTYPE', Tsrctype, startrow=ID)
         intArr[:] = ms_id
         self.datatable.putcol('MS', intArr, startrow=ID)
         
@@ -278,17 +278,17 @@ class MetaDataReader(object):
         tsys_template = numpy.ones(4, dtype=numpy.float32)
         
         flag_summary_template = numpy.ones(4, dtype=numpy.int32)
-        stats_template = numpy.zeros((4,7), dtype=numpy.int32) - 1
-        flags_template = numpy.ones((4,7), dtype=numpy.int32)
-        pflags_template = numpy.ones((4,4), dtype=numpy.int32)
+        stats_template = numpy.zeros((4, 7), dtype=numpy.int32) - 1
+        flags_template = numpy.ones((4, 7), dtype=numpy.int32)
+        pflags_template = numpy.ones((4, 4), dtype=numpy.int32)
         for x in xrange(nrow):
             # FLAGROW is mapped into OnlineFlag (PermanentFlag[3])
             # NOTE: data is valid if Tflagrow is 0
             #       data is valid if pflags[3] is 1
-            pflags_template[:,OnlineFlagIndex] = 1 if Tflagrow[x] == 0 else 0
-            sDate = mjd_to_datestring(Tmjd[x]/86400.0,unit='day')
-            self.datatable.putcell('DATE',ID,sDate)
-            self.datatable.putcell('MASKLIST',ID,masklist)
+            pflags_template[:, OnlineFlagIndex] = 1 if Tflagrow[x] == 0 else 0
+            sDate = mjd_to_datestring(Tmjd[x]/86400.0, unit='day')
+            self.datatable.putcell('DATE', ID, sDate)
+            self.datatable.putcell('MASKLIST', ID, masklist)
 
             # polarization dependent arrays
             npol = self.datatable.getcell('NPOL', ID)
@@ -309,9 +309,11 @@ class MetaDataReader(object):
         
         if self.ms.representative_target[0] is not None:
             # if ms has representative target, take reference from that
-            LOG.info('Use direction reference for representative target "{0}".'.format(self.ms.representative_target[0]))
+            LOG.info(
+                'Use direction reference for representative target "{0}".'.format(self.ms.representative_target[0]))
             representative_source_name = self.ms.representative_target[0]
-            dirrefs = numpy.unique([f.mdirection['refer'] for f in self.ms.fields if f.source.name == representative_source_name])
+            dirrefs = numpy.unique([f.mdirection['refer'] for f in self.ms.fields
+                                    if f.source.name == representative_source_name])
             if len(dirrefs) == 0:
                 raise RuntimeError('Failed to get direction reference for representative source.')
         else:
@@ -336,7 +338,8 @@ class MetaDataReader(object):
         
         return outref
         
-    def _get_azelref(self):
+    @staticmethod
+    def _get_azelref():
         return 'AZELGEO'
 
 

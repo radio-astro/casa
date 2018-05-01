@@ -49,7 +49,7 @@ class SDInspection(object):
         appended_row = worker.appended_row
         nrow = datatable.nrow
         startrow = nrow - appended_row
-        LOG.debug('%s rows are appended (total %s, startrow %s)'%(appended_row, nrow, startrow))
+        LOG.debug('%s rows are appended (total %s, startrow %s)' % (appended_row, nrow, startrow))
 
         # MS-wide inspection: data grouping
         LOG.debug('_group_data: ms = %s' % self.ms.basename)
@@ -82,8 +82,7 @@ class SDInspection(object):
             else:
                 mskey = self.ms.basename.replace('.', '_')
                 value = {mskey: value}
-            # TODO: refactor to stop shadowing deprecated has_key method from dictionaries (Python 3).
-            if datatable.has_key(key):
+            if datatable.haskeyword(key):
                 LOG.debug('Updating %s' % key)
                 LOG.debug('before: %s' % (datatable.getkeyword(key)))
                 current_value = datatable.getkeyword(key)
@@ -104,7 +103,8 @@ class SDInspection(object):
                 ant = member.antenna_id
                 spw = member.spw_id
                 field_id = member.field_id
-                LOG.info('Adding time table for Reduction Group %s (ms %s antenna %s spw %s field_id %s)'%(group_id,ms.basename,ant,spw,field_id))
+                LOG.info('Adding time table for Reduction Group %s (ms %s antenna %s spw %s field_id %s)' %
+                         (group_id, ms.basename, ant, spw, field_id))
                 datatable.set_timetable(ant, spw, None, time_group_list[ant][spw][field_id],
                                         numpy.array(time_group[0]), numpy.array(time_group[1]),
                                         ms=ms.basename, field_id=field_id)
@@ -151,7 +151,7 @@ class SDInspection(object):
                 ### Check existance of antenna, spw, field combination in MS
                 ddid = ms.get_data_description(id=spw.id)
                 with casatools.TableReader(ms.name) as tb:
-                    subtb = tb.query('DATA_DESC_ID==%d && FIELD_ID==%d' %(ddid.id, field.id),
+                    subtb = tb.query('DATA_DESC_ID==%d && FIELD_ID==%d' % (ddid.id, field.id),
                                      columns='ANTENNA1')
                     valid_antid = set(subtb.getcol('ANTENNA1'))
                     subtb.close()
@@ -197,9 +197,9 @@ class SDInspection(object):
             spw_domain = self.ms.spectral_windows[thisspw]
             #LOG.debug('spw.name=\'%s\''%(spw_domain.name))
             #LOG.debug('spw.intents=%s'%(spw_domain.intents))
-            if re.search('^WVR#', spw_domain.name) is not None \
-                or re.search('#CH_AVG$', spw_domain.name) is not None \
-                or 'TARGET' not in spw_domain.intents:
+            if (re.search('^WVR#', spw_domain.name) is not None or
+                    re.search('#CH_AVG$', spw_domain.name) is not None or
+                    'TARGET' not in spw_domain.intents):
                 continue
 
             if thisant not in by_antenna:
@@ -248,7 +248,7 @@ class SDInspection(object):
         beam = numpy.asarray(datatable.getcol('BEAM'))
         posgrp = numpy.zeros(datatable.nrow, dtype=numpy.int32) - 1
         timegrp = [numpy.zeros(datatable.nrow, dtype=numpy.int32) - 1,
-                        numpy.zeros(datatable.nrow, dtype=numpy.int32) - 1]
+                   numpy.zeros(datatable.nrow, dtype=numpy.int32) - 1]
         posgrp_rep = {}
         posgrp_list = {}
         timegrp_list = {}
@@ -271,7 +271,7 @@ class SDInspection(object):
 
         ms = self.ms
         for (ant, vant) in by_antenna.iteritems():
-            LOG.debug('Start ant %s'%(ant))
+            LOG.debug('Start ant %s' % ant)
             pattern_dict = {}
             #ms = ms_ant_map[ant]
             observatory = ms.antenna_array.name
@@ -281,7 +281,7 @@ class SDInspection(object):
             posgrp_list[ant] = {}
             timegrp_list[ant] = {}
             for (spw, vspw) in by_spw.iteritems():
-                LOG.debug('Start spw %s'%(spw))
+                LOG.debug('Start spw %s' % spw)
                 try:
                     spw_domain = ms.get_spectral_window(spw_id=spw)
                 except KeyError:
@@ -292,7 +292,7 @@ class SDInspection(object):
                 for i in (0, 1):
                     timegap[i][ant][spw] = {}
                 # beam radius
-                radius = qa.mul(_beam_size[spw],0.5)
+                radius = qa.mul(_beam_size[spw], 0.5)
                 r_combine = radius
                 r_allowance = qa.mul(radius, 0.1)
 
@@ -308,7 +308,7 @@ class SDInspection(object):
                     if len(id_list) == 0:
                         continue
                     id_list.sort()
-                    LOG.debug('id_list=%s'%(id_list))
+                    LOG.debug('id_list=%s' % id_list)
 #                     row_sel = numpy.take(row, id_list)
                     ra_sel = numpy.take(ra, id_list)
                     dec_sel = numpy.take(dec, id_list)
@@ -340,7 +340,7 @@ class SDInspection(object):
                     #posgrp_list[ant][spw][pol] = []
                     LOG.debug('pos_dict = %s' % pos_dict)
                     LOG.debug('last_ra = %s last_dec = %s' % (last_ra, last_dec))
-                    for (k,v) in pos_dict.iteritems():
+                    for (k, v) in pos_dict.iteritems():
                         if v[0] == -1:
                             continue
                         LOG.debug('POSGRP_REP: add %s as a representative of group %s' % (id_list[v[0]], posgrp_id))
@@ -487,7 +487,7 @@ class SDInspection(object):
 
     def __find_match_by_name(self, spw_name, field_name, group_names):
         match = False
-        for (group_key,names) in group_names.iteritems():
+        for (group_key, names) in group_names.iteritems():
             group_spw_name = names[0]
             group_field_name = names[1]
             if group_spw_name == '':
@@ -537,7 +537,7 @@ def match_field_name(name1, name2):
     elif pos2 == 0 and len(name1) < len(name2):
         # name2 looks like name1 + suffix, try pattern matching for suffix
         suffix = name2[len(name1):]
-    else: # field names do not match
+    else:  # field names do not match
         return False
     # Check if the field name matches to pattern
     off_pattern = '^_OFF_[0-9]+$'

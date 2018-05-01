@@ -39,16 +39,15 @@ import pipeline.infrastructure.casatools as casatools
 LOG = infrastructure.get_logger(__name__)
 
 
-def __coldesc(vtype, option, maxlen,
-              ndim, comment, unit=None):
+def __coldesc(vtype, option, maxlen, ndim, comment, unit=None):
     d = {'dataManagerGroup': 'StandardStMan',
-         'dataManagerType': 'StandardStMan'}
-    d['valueType'] = vtype
-    d['option'] = option
+         'dataManagerType': 'StandardStMan',
+         'valueType': vtype,
+         'option': option,
+         'maxlen': maxlen,
+         'comment': comment}
     if ndim > 0:
         d['ndim'] = ndim
-    d['maxlen'] = maxlen
-    d['comment'] = comment
     if unit is not None:
         d['keywords'] = {'UNIT': unit}
     return d
@@ -230,8 +229,7 @@ class DataTableImpl(object):
     @property
     def position_group_id(self):
         key = 'POSGRP_REP'
-        # TODO: refactor to stop shadowing deprecated has_key method from dictionaries (Python 3).
-        if self.has_key(key):
+        if self.haskeyword(key):
             return numpy.max(numpy.fromiter((int(x) for x in self.getkeyword(key).keys()), dtype=numpy.int32)) + 1
         else:
             return 0
@@ -294,8 +292,7 @@ class DataTableImpl(object):
             ref = [msid, antenna, ifno, polno]
             return [i for i in xrange(self.nrow) if [mses[i], ants[i], ifs[i], pols[i]] == ref]
 
-    # TODO: refactor to stop shadowing deprecated has_key method from dictionaries (Python 3).
-    def has_key(self, name):
+    def haskeyword(self, name):
         return name in self.tb2.keywordnames()
 
     def addrows(self, nrow):
@@ -874,7 +871,7 @@ class RODataTableColumn(object):
         self.__raise()
 
     def __raise(self):
-        raise NotImplementedError('column %s is read-only' % (self.name))
+        raise NotImplementedError('column %s is read-only' % self.name)
 
 
 class RWDataTableColumn(RODataTableColumn):
