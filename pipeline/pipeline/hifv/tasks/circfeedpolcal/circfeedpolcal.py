@@ -144,7 +144,10 @@ class Circfeedpolcal(polarization.Polarization):
                 self.do_gaincal(tablesToAdd[0][0], field=fluxcalfieldname, spw=spws, combine='scan,spw')
                 tablesToAdd[0][2] = self.do_spwmap()
         else:
-            self.do_gaincal(tablesToAdd[0][0], field=fluxcalfieldname)
+            spwsobj = m.get_spectral_windows(science_windows_only=True)
+            spwslist = [str(spw.id) for spw in spwsobj]
+            spws = ','.join(spwslist)
+            self.do_gaincal(tablesToAdd[0][0], field=fluxcalfieldname, spw=spws)
 
         # Determine number of scans with POLLEAKGE intent and use the first POLLEAKAGE FIELD
         polleakagefield = ''
@@ -233,6 +236,20 @@ class Circfeedpolcal(polarization.Polarization):
             append = True
             LOG.info("{!s} exists.  Appending to caltable.".format(caltable))
 
+        GainTables = []
+        interp = []
+
+        calto = callibrary.CalTo(self.inputs.vis)
+        calstate = self.inputs.context.callibrary.get_calstate(calto)
+        merged = calstate.merged()
+        for calto, calfroms in merged.items():
+            calapp = callibrary.CalApplication(calto, calfroms)
+            GainTables.append(calapp.gaintable)
+            interp.append(calapp.interp)
+
+        GainTables = GainTables[0]
+        interp = interp[0]
+
         # Similar inputs to hifa/linpolcal.py
         task_inputs = gaincal.GTypeGaincal.Inputs(self.inputs.context,
                                                   output_dir='',
@@ -250,10 +267,38 @@ class Circfeedpolcal(polarization.Polarization):
                                                   parang=True,
                                                   append=append)
 
-        gaincal_task = gaincal.GTypeGaincal(task_inputs)
-        result = self._executor.execute(gaincal_task, merge=True)
+        # gaincal_task = gaincal.GTypeGaincal(task_inputs)
+        # result = self._executor.execute(gaincal_task, merge=True)
 
-        return result
+        casa_task_args = {'vis'         : self.inputs.vis,
+                          'caltable'    : caltable,
+                          'field'       : field,
+                          'intent'      : 'CALIBRATE_FLUX#UNSPECIFIED,CALIBRATE_AMPLI#UNSPECIFIED,CALIBRATE_PHASE#UNSPECIFIED,CALIBRATE_BANDPASS#UNSPECIFIED',
+                          'scan'        : '',
+                          'spw'         : spw,
+                          'solint'      : 'inf',
+                          'gaintype'    : 'KCROSS',
+                          'combine'     : combine,
+                          'refant'      : self.RefAntOutput[0].lower(),
+                          'gaintable'   : GainTables,
+                          'interp'      : interp,
+                          'minblperant' : minBL_for_cal,
+                          'parang'      : True,
+                          'append'      : append}
+
+        job = casa_tasks.gaincal(**casa_task_args)
+
+        self._executor.execute(job)
+
+        if not append:
+            LOG.info("Adding " + str(caltable) + " to callibrary.")
+            calfrom = callibrary.CalFrom(gaintable=caltable, interp='', calwt=False, caltype='kcross')
+            calto = callibrary.CalTo(self.inputs.vis)
+            calapp = callibrary.CalApplication(calto, calfrom)
+            self.inputs.context.callibrary.add(calapp.calto, calapp.calfrom)
+
+        # return result
+        return True
 
     def do_polcal(self, caltable, kcrosstable='', poltype='', field='', intent='',
                   gainfield=[''], kcrossspwmap=[], solint='inf', minsnr=5.0):
