@@ -10,8 +10,8 @@ LOG = infrastructure.get_logger(__name__)
 
 class ImageParamsHeuristicsVlassSeTaper(ImageParamsHeuristics):
 
-    def __init__(self, vislist, spw, observing_run, imagename_prefix='', proj_params=None, contfile=None, linesfile=None):
-        ImageParamsHeuristics.__init__(self, vislist, spw, observing_run, imagename_prefix, proj_params, contfile, linesfile)
+    def __init__(self, vislist, spw, observing_run, imagename_prefix='', proj_params=None, contfile=None, linesfile=None, imaging_params={}):
+        ImageParamsHeuristics.__init__(self, vislist, spw, observing_run, imagename_prefix, proj_params, contfile, linesfile, imaging_params)
         self.imaging_mode = 'VLASS-SE-TAPER'
 
     # niter
@@ -33,7 +33,7 @@ class ImageParamsHeuristicsVlassSeTaper(ImageParamsHeuristics):
     def deconvolver(self, specmode, spwspec):
         return 'mtmfs'
 
-    def robust(self, beam=None):
+    def robust(self):
         return 1.0
 
     def gridder(self, intent, field):

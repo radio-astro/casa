@@ -6,11 +6,11 @@ LOG = infrastructure.get_logger(__name__)
 
 class ImageParamsHeuristicsVLA(ImageParamsHeuristicsALMA):
 
-    def __init__(self, vislist, spw, observing_run, imagename_prefix='', proj_params=None, contfile=None, linesfile=None):
-        ImageParamsHeuristicsALMA.__init__(self, vislist, spw, observing_run, imagename_prefix, proj_params, contfile, linesfile)
+    def __init__(self, vislist, spw, observing_run, imagename_prefix='', proj_params=None, contfile=None, linesfile=None, imaging_params={}):
+        ImageParamsHeuristicsALMA.__init__(self, vislist, spw, observing_run, imagename_prefix, proj_params, contfile, linesfile, imaging_params)
         self.imaging_mode = 'VLA'
 
-    def robust(self, beam=None):
+    def robust(self):
 
         return 0.5
 

@@ -50,6 +50,7 @@ class TcleanInputs(cleanbase.CleanBaseInputs):
             proj_params=self.context.project_performance_parameters,
             contfile=self.context.contfile,
             linesfile=self.context.linesfile,
+            imaging_params=self.context.imaging_parameters,
             # TODO: imaging_mode should not be fixed
             imaging_mode='ALMA'
         )
@@ -86,34 +87,14 @@ class TcleanInputs(cleanbase.CleanBaseInputs):
 
     @vdp.VisDependentProperty(null_input=[None, -999, -999.0])
     def robust(self):
-        # For Cycle 5 we disable the robust heuristic
+        # Fallback value if undefined in the imaging target and in the
+        # imaging parameters. TODO: Use heuristic
         return 0.5
-
-        # if ',' in self.spw:
-        #     # TODO: Use real synthesized beam size
-        #     return self.image_heuristics.robust({
-        #         'major': '1.0arcsec',
-        #         'minor': '1.0arcsec',
-        #         'positionangle': '0.0deg'
-        #     })
-        #
-        # else:
-        #     robust = 0.0
-        #     spws = self.spw.split(',')
-        #     for _ in spws:
-        #         # TODO: Use real synthesized beam size
-        #         hm_robust = self.image_heuristics.robust({
-        #             'major': '1.0arcsec',
-        #             'minor': '1.0arcsec',
-        #             'positionangle': '0.0deg'
-        #         })
-        #         robust += hm_robust
-        #     robust /= len(spws)
-        #     return robust
 
     @vdp.VisDependentProperty
     def uvtaper(self):
-        # TODO: Use heuristic
+        # Fallback value if undefined in the imaging target and in the
+        # imaging parameters. TODO: Use heuristic
         return []
 
     # class methods ----------------------------------------------------------------------------------------------------

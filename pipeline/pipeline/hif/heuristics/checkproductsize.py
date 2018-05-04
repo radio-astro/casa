@@ -18,9 +18,11 @@ class CheckProductSizeHeuristics(object):
     def calculate_sizes(self, imlist):
         cubesizes = []
         productsize = 0.0
+        ref_ms = self.context.observing_run.measurement_sets[0]
         for target in imlist:
             nx, ny = target['imsize']
-            nchan = self.context.observing_run.measurement_sets[0].get_spectral_window(target['spw']).num_channels
+            real_spw = self.context.observing_run.virtual2real_spw_id(int(target['spw']), ref_ms)
+            nchan = ref_ms.get_spectral_window(real_spw).num_channels
             if target['nbin'] != -1:
                 nbin = target['nbin']
             else:
@@ -55,13 +57,13 @@ class CheckProductSizeHeuristics(object):
         fields = list(set([i['field'] for i in imlist]))
         nfields = len(fields)
         spws = list(set([i['spw'] for i in imlist]))
-        # Use first MS in list, assuming that spw definition is the same for all MSs
         ref_ms = self.context.observing_run.measurement_sets[0]
-        nchans = dict([(spw, ref_ms.get_spectral_window(spw).num_channels) for spw in spws])
+        real_spws = [self.context.observing_run.virtual2real_spw_id(int(spw), ref_ms) for spw in spws]
+        nchans = dict([(spw, ref_ms.get_spectral_window(real_spw).num_channels) for spw, real_spw in zip(spws, real_spws)])
         ch_width_ratios = dict([(spw, \
-            float(ref_ms.get_spectral_window(spw).channels[0].effective_bw.convert_to(measures.FrequencyUnits.HERTZ).value) / \
-            float(ref_ms.get_spectral_window(spw).channels[0].getWidth().convert_to(measures.FrequencyUnits.HERTZ).value)) \
-            for spw in spws])
+            float(ref_ms.get_spectral_window(real_spw).channels[0].effective_bw.convert_to(measures.FrequencyUnits.HERTZ).value) / \
+            float(ref_ms.get_spectral_window(real_spw).channels[0].getWidth().convert_to(measures.FrequencyUnits.HERTZ).value)) \
+            for spw, real_spw in zip(spws, real_spws)])
 
         if len(fields) == 0:
             LOG.error('Cannot determine any default imaging targets')

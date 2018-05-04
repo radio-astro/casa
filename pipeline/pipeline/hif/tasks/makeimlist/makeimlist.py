@@ -189,6 +189,7 @@ class MakeImList(basetask.StandardTaskTemplate):
                 proj_params=inputs.context.project_performance_parameters,
                 contfile=inputs.contfile,
                 linesfile=inputs.linesfile,
+                imaging_params=inputs.context.imaging_parameters,
                 imaging_mode=inputs.context.project_summary.telescope
             )
 
@@ -272,6 +273,7 @@ class MakeImList(basetask.StandardTaskTemplate):
                 proj_params=inputs.context.project_performance_parameters,
                 contfile=inputs.contfile,
                 linesfile=inputs.linesfile,
+                imaging_params=inputs.context.imaging_parameters,
                 imaging_mode=inputs.context.project_summary.telescope
             )
 
@@ -322,7 +324,8 @@ class MakeImList(basetask.StandardTaskTemplate):
             else:
                 spwlist = filtered_spwlist
 
-            # Get default heuristics uvtaper value
+            # Get default heuristics robust and uvtaper values
+            default_robust = self.heuristics.robust()
             default_uvtaper = self.heuristics.uvtaper()
 
             # cell is a list of form [cellx, celly]. If the list has form [cell]
@@ -333,7 +336,7 @@ class MakeImList(basetask.StandardTaskTemplate):
                 synthesized_beams = {}
                 min_cell = ['3600arcsec']
                 for spwspec in spwlist:
-                    synthesized_beams[spwspec] = self.heuristics.synthesized_beam(field_intent_list=field_intent_list, spwspec=spwspec, robust=0.5, uvtaper=default_uvtaper)
+                    synthesized_beams[spwspec] = self.heuristics.synthesized_beam(field_intent_list=field_intent_list, spwspec=spwspec, robust=default_robust, uvtaper=default_uvtaper)
                     # the heuristic cell is always the same for x and y as
                     # the value derives from the single value returned by
                     # imager.advise
@@ -551,6 +554,7 @@ class MakeImList(basetask.StandardTaskTemplate):
                             width=widths[(field_intent[0], spwspec)],
                             nbin=nbin,
                             nchan=nchans[(field_intent[0], spwspec)],
+                            robust=default_robust,
                             uvrange=inputs.uvrange,
                             uvtaper=default_uvtaper,
                             stokes='I',

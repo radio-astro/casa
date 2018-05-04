@@ -14,14 +14,12 @@ class ImagePreCheckQAHandler(pqa.QAPlugin):
     child_cls = None
 
     def handle(self, context, result):
-        if result.real_repr_target:
-            score = 1.0
-            longmsg = 'Representative target found. Applied robust and uvtaper heuristics.'
-            shortmsg = 'robust and uvtaper computed.'
+        if result.score is not None:
+            score, longmsg, shortmsg = result.score
         else:
-            score = 0.5
-            longmsg = 'No representative target found. Picking first in list.'
-            shortmsg = 'No representative target'
+            score = 0.0
+            longmsg = 'No score information'
+            shortmsg = 'No score information'
         result.qa.pool[:] = [pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg)]
 
 

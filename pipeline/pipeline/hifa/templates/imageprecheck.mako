@@ -22,6 +22,7 @@ minAR = '%#.3g arcsec' % (minAR_v)
 maxAR = '%#.3g arcsec' % (maxAR_v)
 robust = '%.1f' % (result[0].hm_robust)
 uvtaper = '%s' % (result[0].hm_uvtaper)
+single_continuum = result[0].single_continuum
 %>
 <p>
 %if real_repr_target:
@@ -51,6 +52,20 @@ Min / Max Acceptable Resolution:
     Not available
 %else:
     ${minAR} / ${maxAR}
+%endif
+<br>
+Goal PI sensitivity:
+%if real_repr_target:
+    Not available
+%else:
+    Not available
+%endif
+<br>
+Single Continuum:
+%if real_repr_target:
+    ${single_continuum}
+%else:
+    Not available
 %endif
 
 <h4>Estimated Synthesized Beam and Sensitivities for the Representative

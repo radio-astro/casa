@@ -21,42 +21,29 @@ LOG = infrastructure.get_logger(__name__)
 
 class ImageParamsHeuristicsALMA(ImageParamsHeuristics):
 
-    def __init__(self, vislist, spw, observing_run, imagename_prefix='', proj_params=None, contfile=None, linesfile=None):
-        ImageParamsHeuristics.__init__(self, vislist, spw, observing_run, imagename_prefix, proj_params, contfile, linesfile)
+    def __init__(self, vislist, spw, observing_run, imagename_prefix='', proj_params=None, contfile=None, linesfile=None, imaging_params={}):
+        ImageParamsHeuristics.__init__(self, vislist, spw, observing_run, imagename_prefix, proj_params, contfile, linesfile, imaging_params)
         self.imaging_mode = 'ALMA'
 
-    def robust(self, beam):
+    def robust(self):
 
-        '''Adjustment of robust parameter based on desired resolutions.
-           beam is the synthesized beam.'''
+        '''robust parameter heuristic.'''
 
-        cqa = casatools.quanta
-
-        repr_target, repr_source, repr_spw, repr_freq, reprBW_mode, real_repr_target, minAcceptableAngResolution, maxAcceptableAngResolution = self.representative_target()
-
-        # Only apply the robust heuristic if a representative source is defined
-        if not real_repr_target:
-            LOG.info('ALMA robust heuristics: No representative target found. Using robust=0.5')
-            return 0.5
-
-        try:
-            native_resolution = math.sqrt(cqa.getvalue(cqa.convert(beam['major'], 'arcsec')) * cqa.getvalue(cqa.convert(beam['minor'], 'arcsec')))
-        except Exception as e:
-            LOG.error('Cannot calculate native resolution: %s. Using robust=0.5' % (e))
-            return 0.5
-
-        if native_resolution > cqa.getvalue(cqa.convert(maxAcceptableAngResolution, 'arcsec')):
-            robust = -0.5
-        elif native_resolution < cqa.getvalue(cqa.convert(minAcceptableAngResolution, 'arcsec')):
-            robust = 2.0
+        if 'robust' in self.imaging_params:
+            robust = self.imaging_params['robust']
+            LOG.info('ALMA robust heuristics: Using imageprecheck value of robust=%.1f' % (robust))
+            return robust
         else:
-            robust = 0.5
-
-        return robust
+            return 0.5
 
     def uvtaper(self, beam_natural=None, protect_long=3):
 
-        '''Adjustment of uvtaper parameter based on desired resolution.'''
+        '''Adjustment of uvtaper parameter based on desired resolution or representative baseline length.'''
+
+        if 'uvtaper' in self.imaging_params:
+            uvtaper = self.imaging_params['uvtaper']
+            LOG.info('ALMA uvtaper heuristics: Using imageprecheck value of uvtaper=%s' % (str(uvtaper)))
+            return uvtaper
 
         if (beam_natural is None) and (protect_long is None):
             return []
@@ -75,7 +62,10 @@ class ImageParamsHeuristicsALMA(ImageParamsHeuristics):
             uvtaper = ['%dlambda' % (int(round(uvtaper_value)))]
 
             return uvtaper
+        else:
+            return []
 
+        # Original Cycle 5 heuristic follows below for possible later use.
         if not real_repr_target:
             LOG.info('ALMA uvtaper heuristic: No representative target found. Using uvtaper=[]')
             return []

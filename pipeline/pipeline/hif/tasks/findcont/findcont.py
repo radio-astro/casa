@@ -203,6 +203,16 @@ class FindCont(basetask.StandardTaskTemplate):
                     else:
                         phasecenter = target['phasecenter']
 
+                    if target['robust'] not in (-999, -999., None):
+                        robust = target['robust']
+                    else:
+                        robust = None
+
+                    if target['uvtaper'] not in ([], None):
+                        uvtaper = target['uvtaper']
+                    else:
+                        uvtaper = None
+
                     job = casa_tasks.tclean(vis=vislist, imagename=findcont_basename, datacolumn=datacolumn, spw=real_spwsel,
                                             intent=utils.to_CASA_intent(inputs.ms[0], target['intent']),
                                             field=target['field'], start=start, width=width, nchan=nchan,
@@ -210,13 +220,15 @@ class FindCont(basetask.StandardTaskTemplate):
                                             pblimit=0.2, niter=0, threshold='0mJy', deconvolver='hogbom',
                                             interactive=False, imsize=target['imsize'], cell=target['cell'],
                                             phasecenter=phasecenter, stokes='I', weighting='briggs',
-                                            robust=0.5, uvtaper=target['uvtaper'], npixels=0, restoration=False,
+                                            robust=robust, uvtaper=uvtaper, npixels=0, restoration=False,
                                             restoringbeam=[], pbcor=False,
                                             savemodel='none', chanchunks=chanchunks, parallel=parallel)
                     self._executor.execute(job)
 
                     # Try detecting continuum frequency ranges
-                    spw_transitions = context.observing_run.measurement_sets[0].get_spectral_window(spwid).transitions
+                    ref_ms = context.observing_run.measurement_sets[0]
+                    real_spwid = inputs.context.observing_run.virtual2real_spw_id(int(spwid), ref_ms)
+                    spw_transitions = ref_ms.get_spectral_window(spwid).transitions
                     single_continuum = 'Single_Continuum' in spw_transitions
                     cont_range, png = findcont_heuristics.find_continuum(dirty_cube = '%s.residual' % findcont_basename,
                                                                          pb_cube = '%s.pb' % findcont_basename,

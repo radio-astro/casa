@@ -7,6 +7,7 @@ import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.imageparamsfilehandler as imageparamsfilehandler
 import pipeline.infrastructure.vdp as vdp
 from pipeline.h.tasks.common.sensitivity import Sensitivity
+from pipeline.hifa.heuristics import imageprecheck
 from pipeline.hif.heuristics import imageparams_factory
 from pipeline.infrastructure import task_registry
 
@@ -16,7 +17,7 @@ LOG = infrastructure.get_logger(__name__)
 class ImagePreCheckResults(basetask.Results):
     def __init__(self, real_repr_target=False, repr_target='', repr_source='', repr_spw=None,
                  minAcceptableAngResolution='0.0arcsec', maxAcceptableAngResolution='0.0arcsec', hm_robust=0.5,
-                 hm_uvtaper='', sensitivities=None, sensitivity_bandwidth=None):
+                 hm_uvtaper=[], sensitivities=None, sensitivity_bandwidth=None, score=None, single_continuum=False):
         super(ImagePreCheckResults, self).__init__()
 
         if sensitivities is None:
@@ -33,6 +34,8 @@ class ImagePreCheckResults(basetask.Results):
         self.sensitivities = sensitivities
         self.sensitivities_for_aqua = []
         self.sensitivity_bandwidth = sensitivity_bandwidth
+        self.score = score
+        self.single_continuum = single_continuum
 
     def merge_with_context(self, context):
         """
@@ -41,12 +44,10 @@ class ImagePreCheckResults(basetask.Results):
 
         # Store imaging parameters in context
         #
-        # Note: for Cycle 6 new robust and uvtaper heuristics are used on a per
-        # imaging target basis. The values derived here (even the defaults of
-        # robust=0.5 and uvtaper=[] shall not be set in the context since they
-        # would overwrite the other heuristics.
+        # Note: For Cycle 6 the robust heuristic is used in subsequent stages.
+        #       The uvtaper heuristic is not yet to be used.
         #
-        #context.imaging_parameters['robust'] = self.hm_robust
+        context.imaging_parameters['robust'] = self.hm_robust
         #context.imaging_parameters['uvtaper'] = self.hm_uvtaper
 
         # It was decided not use a file based transport for the time being (03/2018)
@@ -55,9 +56,7 @@ class ImagePreCheckResults(basetask.Results):
         #imageparams_filehandler.write(self.hm_robust, self.hm_uvtaper)
 
         # Add sensitivities to be reported to AQUA
-        # Note: for Cycle 6 we stay with robust=0.5. This may change for Cycle 7.
-        #self.sensitivities_for_aqua.extend([s for s in self.sensitivities if s['robust']==self.hm_robust and s['uvtaper']==self.hm_uvtaper])
-        self.sensitivities_for_aqua.extend([s for s in self.sensitivities if s['robust']==0.5 and s['uvtaper']==[]])
+        self.sensitivities_for_aqua.extend([s for s in self.sensitivities if s['robust']==self.hm_robust and s['uvtaper']==self.hm_uvtaper])
 
     def __repr__(self):
         return 'ImagePreCheckResults:\n\t{0}'.format(
@@ -81,6 +80,8 @@ class ImagePreCheck(basetask.StandardTaskTemplate):
         inputs = self.inputs
         cqa = casatools.quanta
 
+        imageprecheck_heuristics = imageprecheck.ImagePreCheckHeuristics(inputs)
+
         image_heuristics_factory = imageparams_factory.ImageParamsHeuristicsFactory()
         image_heuristics = image_heuristics_factory.getHeuristics(
             vislist=inputs.vis,
@@ -90,6 +91,7 @@ class ImagePreCheck(basetask.StandardTaskTemplate):
             proj_params=inputs.context.project_performance_parameters,
             contfile=inputs.context.contfile,
             linesfile=inputs.context.linesfile,
+            imaging_params=inputs.context.imaging_parameters,
             imaging_mode='ALMA'
         )
 
@@ -98,6 +100,9 @@ class ImagePreCheck(basetask.StandardTaskTemplate):
         repr_field = list(image_heuristics.field_intent_list('TARGET', repr_source))[0][0]
 
         repr_ms = self.inputs.ms[0]
+        real_repr_spw = inputs.context.observing_run.virtual2real_spw_id(int(repr_spw), repr_ms)
+        real_repr_spw_obj = repr_ms.get_spectral_window(real_repr_spw)
+        single_continuum = 'Single_Continuum' in real_repr_spw_obj.transitions
 
         # Get the array
         diameter = min([a.diameter for a in repr_ms.antennas])
@@ -108,7 +113,7 @@ class ImagePreCheck(basetask.StandardTaskTemplate):
 
         # Approximate reprBW with nbin
         if reprBW_mode == 'cube':
-            physicalBW_of_1chan = float(inputs.context.observing_run.measurement_sets[0].get_spectral_window(repr_spw).channels[0].getWidth().convert_to(measures.FrequencyUnits.HERTZ).value)
+            physicalBW_of_1chan = float(real_repr_spw_obj.channels[0].getWidth().convert_to(measures.FrequencyUnits.HERTZ).value)
             nbin = int(cqa.getvalue(cqa.convert(repr_target[2], 'Hz'))/physicalBW_of_1chan + 0.5)
             cont_sens_bw_modes = ['aggBW']
         else:
@@ -125,8 +130,10 @@ class ImagePreCheck(basetask.StandardTaskTemplate):
         else:
             field_ids = image_heuristics.field('TARGET', repr_field)
             phasecenter = None
-        cont_spw = ','.join([str(s.id) for s in inputs.context.observing_run.measurement_sets[0].get_spectral_windows()])
-        num_cont_spw = len(cont_spw.split(','))
+        cont_spwids = [s for s in inputs.context.observing_run.virtual_science_spw_ids.keys()]
+        cont_spwids.sort()
+        cont_spw = ','.join(map(str, cont_spwids))
+        num_cont_spw = len(cont_spwids)
 
         beams = {}
         cells = {}
@@ -208,10 +215,15 @@ class ImagePreCheck(basetask.StandardTaskTemplate):
             if sensitivity_bandwidth is None:
                 sensitivity_bandwidth = cqa.quantity(sens_bw, 'Hz')
 
-        if real_repr_target:
-            # Determine heuristic robust value
-            hm_robust = image_heuristics.robust(beams[(0.5, str(default_uvtaper))])
+        # Apply robust heuristic based on beam sizes for robust=(-0.5, 0.5, 2.0)
+        hm_robust, hm_robust_score = imageprecheck_heuristics.compare_beams( \
+            beams[(-0.5, str(default_uvtaper))], \
+            beams[(0.5, str(default_uvtaper))], \
+            beams[(2.0, str(default_uvtaper))], \
+            minAcceptableAngResolution, \
+            maxAcceptableAngResolution)
 
+        if real_repr_target:
             # Determine heuristic UV taper value
             if hm_robust == 2.0:
                 hm_uvtaper = image_heuristics.uvtaper(beam_natural=beams[(2.0, str(default_uvtaper))], protect_long=None)
@@ -288,9 +300,6 @@ class ImagePreCheck(basetask.StandardTaskTemplate):
             minAcceptableAngResolution = cqa.quantity(0.0, 'arcsec')
             maxAcceptableAngResolution = cqa.quantity(0.0, 'arcsec')
 
-        # For ALMA Cycle 6 the heuristics results should just be logged, but not carried along.
-        LOG.info('Heuristics would have chosen robust=%.1f, uvtaper=%s. Overriding to 0.5 / %s for Cycle 6.' % (hm_robust, str(hm_uvtaper), str(default_uvtaper)))
-        hm_robust = 0.5
         hm_uvtaper = default_uvtaper
 
         return ImagePreCheckResults(
@@ -303,7 +312,8 @@ class ImagePreCheck(basetask.StandardTaskTemplate):
             hm_robust=hm_robust,
             hm_uvtaper=hm_uvtaper,
             sensitivities=sensitivities,
-            sensitivity_bandwidth=sensitivity_bandwidth
+            sensitivity_bandwidth=sensitivity_bandwidth,
+            score=hm_robust_score
         )
 
     def analyse(self, results):

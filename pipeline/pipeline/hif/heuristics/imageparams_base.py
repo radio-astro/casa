@@ -31,7 +31,7 @@ class ImageParamsHeuristics(object):
        call. There are subclasses for different imaging modes such as ALMA
        or VLASS.'''
 
-    def __init__(self, vislist, spw, observing_run, imagename_prefix='', proj_params=None, contfile=None, linesfile=None):
+    def __init__(self, vislist, spw, observing_run, imagename_prefix='', proj_params=None, contfile=None, linesfile=None, imaging_params={}):
         """
         :param vislist: the list of MS names
         :type vislist: list of strings
@@ -52,6 +52,8 @@ class ImageParamsHeuristics(object):
         self.spw = spw
         self.contfile = contfile
         self.linesfile = linesfile
+
+        self.imaging_params = imaging_params
 
         # split spw into list of spw parameters for 'clean' 
         spwlist = spw.replace('[','').replace(']','').strip()
@@ -356,48 +358,32 @@ class ImageParamsHeuristics(object):
                         # Now get better estimate from makePSF
                         tmp_psf_filename = str(uuid.uuid4())
 
-                        # Need to find an unflagged channel
-                        makepsf_channel = None
-                        for msname, real_spwid, virtual_spwid in zip(valid_vis_list, valid_real_spwid_list, valid_virtual_spwid_list):
-                            # Get the channel flags
-                            channel_flags = self.get_channel_flags(msname, field, virtual_spwid)
+                        paramList = ImagerParameters(msname=valid_vis_list,
+                                                     spw=map(str, valid_real_spwid_list),
+                                                     field=field,
+                                                     imagename=tmp_psf_filename,
+                                                     imsize=cleanhelper.cleanhelper.getOptimumSize(int(2.0*largest_primary_beam_size/cellv)),
+                                                     cell='%.2g%s' % (cellv, cellu),
+                                                     gridder='standard',
+                                                     weighting='briggs',
+                                                     robust=robust,
+                                                     uvtaper=uvtaper,
+                                                     specmode='mfs')
+                        makepsf_imager = PySynthesisImager(params=paramList)
+                        makepsf_imager.initializeImagers()
+                        makepsf_imager.initializeNormalizers()
+                        makepsf_imager.setWeighting()
+                        makepsf_imager.makePSF()
+                        makepsf_imager.deleteTools()
 
-                            # Get first unflagged channel from the center
-                            makepsf_channel = self.get_first_unflagged_channel_from_center(channel_flags)
+                        with casatools.ImageReader('%s.psf' % (tmp_psf_filename)) as image:
+                            # Avoid bad PSFs
+                            if all(qaTool.getvalue(qaTool.convert(image.restoringbeam()['minor'], 'arcsec')) > 1e-5):
+                                makepsf_beams.append(image.restoringbeam())
 
-                            if makepsf_channel is not None:
-                                break
-
-                        if makepsf_channel is not None:
-                            LOG.info('Using channel %d for makePSF' % (makepsf_channel))
-                            paramList = ImagerParameters(msname=valid_vis_list,
-                                                         spw=map(str, valid_real_spwid_list),
-                                                         field=field,
-                                                         imagename=tmp_psf_filename,
-                                                         imsize=cleanhelper.cleanhelper.getOptimumSize(int(2.0*largest_primary_beam_size/cellv)),
-                                                         cell='%.2g%s' % (cellv, cellu),
-                                                         gridder='standard',
-                                                         weighting='briggs',
-                                                         robust=robust,
-                                                         uvtaper=uvtaper,
-                                                         specmode='cube',
-                                                         start=makepsf_channel,
-                                                         nchan=1)
-                            makepsf_imager = PySynthesisImager(params=paramList)
-                            makepsf_imager.initializeImagers()
-                            makepsf_imager.initializeNormalizers()
-                            makepsf_imager.setWeighting()
-                            makepsf_imager.makePSF()
-                            makepsf_imager.deleteTools()
-
-                            with casatools.ImageReader('%s.psf' % (tmp_psf_filename)) as image:
-                                # Avoid bad PSFs
-                                if all(qaTool.getvalue(qaTool.convert(image.restoringbeam()['minor'], 'arcsec')) > 1e-5):
-                                    makepsf_beams.append(image.restoringbeam())
-
-                            tmp_psf_images = glob.glob('%s.*' % (tmp_psf_filename))
-                            for tmp_psf_image in tmp_psf_images:
-                                shutil.rmtree(tmp_psf_image)
+                        tmp_psf_images = glob.glob('%s.*' % (tmp_psf_filename))
+                        for tmp_psf_image in tmp_psf_images:
+                            shutil.rmtree(tmp_psf_image)
 
         finally:
             casatools.imager.done()
@@ -896,9 +882,9 @@ class ImageParamsHeuristics(object):
         else:
             return 'hogbom'
 
-    def robust(self, beam):
+    def robust(self):
 
-        '''Default robust and min/max acceptable resolution values.'''
+        '''Default robust value.'''
 
         return 0.5
 
