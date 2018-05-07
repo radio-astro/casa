@@ -59,7 +59,7 @@ class ImageParamsHeuristicsALMA(ImageParamsHeuristics):
 
             c = cqa.getvalue(cqa.convert(cqa.constants('c'),'m/s'))[0]
             uvtaper_value = protect_long * l80 / cqa.getvalue(cqa.convert(cqa.constants('c'),'m/s'))[0] * cqa.getvalue(cqa.convert(repr_freq, 'Hz'))[0]
-            uvtaper = ['%dlambda' % (int(round(uvtaper_value)))]
+            uvtaper = ['%.2fklambda' % round(uvtaper_value/1000.,2)]
 
             return uvtaper
         else:
