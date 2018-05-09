@@ -213,7 +213,9 @@ class MakeImList(basetask.StandardTaskTemplate):
 
                 # The PI cube shall only be created if the PI bandwidth is greater
                 # than 4 times the nbin averaged bandwidth used in the default cube
-                physicalBW_of_1chan_Hz = float(inputs.context.observing_run.get_ms(inputs.vis[0]).get_spectral_window(repr_spw).channels[0].getWidth().convert_to(measures.FrequencyUnits.HERTZ).value)
+                ref_ms = inputs.context.observing_run.get_ms(inputs.vis[0])
+                real_repr_spw = inputs.context.observing_run.virtual2real_spw_id(repr_spw, ref_ms)
+                physicalBW_of_1chan_Hz = float(ref_ms.get_spectral_window(real_repr_spw).channels[0].getWidth().convert_to(measures.FrequencyUnits.HERTZ).value)
                 repr_spw_nbin_bw_Hz = repr_spw_nbin * physicalBW_of_1chan_Hz
                 reprBW_Hz = qaTool.getvalue(qaTool.convert(repr_target[2], 'Hz'))
 
