@@ -156,10 +156,12 @@ class ImageParamsHeuristicsALMA(ImageParamsHeuristics):
                 maxEDR_used = True
 
         if new_threshold != old_threshold:
-            LOG.info('DR heuristic: Modified threshold from %s Jy to %s Jy based on dirty dynamic range calculated from dirty peak / final theoretical sensitivity: %.1f' % (old_threshold, new_threshold, dirty_dynamic_range))
+            print 1
+            LOG.info('DR heuristic: Modified threshold from %.3g Jy to %.3g Jy based on dirty dynamic range calculated from dirty peak / final theoretical sensitivity: %.1f' % (old_threshold, new_threshold, dirty_dynamic_range))
+            print 2
             DR_correction_factor = new_threshold / old_threshold
 
-        return '%sJy' % (new_threshold), DR_correction_factor, maxEDR_used
+        return '%.3gJy' % (new_threshold), DR_correction_factor, maxEDR_used
 
     def niter_correction(self, niter, cell, imsize, residual_max, threshold):
 

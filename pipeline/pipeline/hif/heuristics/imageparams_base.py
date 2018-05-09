@@ -1242,9 +1242,9 @@ class ImageParamsHeuristics(object):
                         max_sensitivities.append(max_sensitivity)
                         min_field_ids.append(min_field_id)
                         max_field_ids.append(max_field_id)
-                        LOG.info('Using median of all mosaic field sensitivities for MS %s, Field %s, SPW %s: %s Jy' % (os.path.basename(msname), field, str(real_spwid), median_sensitivity))
-                        LOG.info('Minimum mosaic field sensitivity for MS %s, Field %s (ID: %s), SPW %s: %s Jy' % (os.path.basename(msname), field, min_field_id, str(real_spwid), min_sensitivity))
-                        LOG.info('Maximum mosaic field sensitivity for MS %s, Field %s (ID: %s), SPW %s: %s Jy' % (os.path.basename(msname), field, max_field_id, str(real_spwid), max_sensitivity))
+                        LOG.info('Using median of all mosaic field sensitivities for MS %s, Field %s, SPW %s: %.3g` Jy' % (os.path.basename(msname), field, str(real_spwid), median_sensitivity))
+                        LOG.info('Minimum mosaic field sensitivity for MS %s, Field %s (ID: %s), SPW %s: %.3g Jy' % (os.path.basename(msname), field, min_field_id, str(real_spwid), min_sensitivity))
+                        LOG.info('Maximum mosaic field sensitivity for MS %s, Field %s (ID: %s), SPW %s: %.3g Jy' % (os.path.basename(msname), field, max_field_id, str(real_spwid), max_sensitivity))
                     else:
                         # Still need to loop over field ID with proper intent for single field case
                         field_sensitivities = []
@@ -1362,7 +1362,7 @@ class ImageParamsHeuristics(object):
                         approximateEffectiveBW = (nchan + 1.12 * (spwchan - nchan) / spwchan / N_smooth) * float(physicalBW_of_1chan)
                         SCF = (optimisticBW / approximateEffectiveBW)**0.5
                         corrected_apparentsens_value = apparentsens_value * SCF
-                        LOG.info('Effective BW heuristic: Correcting apparentsens result by %s from %s Jy/beam to %s Jy/beam' % (SCF, apparentsens_value, corrected_apparentsens_value))
+                        LOG.info('Effective BW heuristic: Correcting apparentsens result by %.3g from %.3g Jy/beam to %s Jy/beam' % (SCF, apparentsens_value, corrected_apparentsens_value))
                     else:
                         corrected_apparentsens_value = apparentsens_value
                 else:
