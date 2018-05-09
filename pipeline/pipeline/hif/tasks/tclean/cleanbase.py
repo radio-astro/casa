@@ -80,7 +80,7 @@ class CleanBaseInputs(vdp.StandardInputs):
         return value
 
     @vdp.VisDependentProperty
-    def specmode(self):
+    def specmode(self, value):
         if 'TARGET' in self.intent:
             return 'cube'
         return 'mfs'

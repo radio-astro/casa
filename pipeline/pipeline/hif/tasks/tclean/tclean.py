@@ -206,9 +206,9 @@ class Tclean(cleanbase.CleanBase):
         # Generate the image name if one is not supplied.
         if inputs.imagename in ('', None):
             inputs.imagename = self.image_heuristics.imagename(intent=inputs.intent,
-                                                      field=inputs.field,
-                                                      spwspec=inputs.spw,
-                                                      specmode=inputs.specmode)
+                                                               field=inputs.field,
+                                                               spwspec=inputs.spw,
+                                                               specmode=inputs.specmode)
 
         # Determine the default gridder
         if inputs.gridder in ('', None):
@@ -224,7 +224,7 @@ class Tclean(cleanbase.CleanBase):
 
         # Determine the phase center
         if inputs.phasecenter in ('', None):
-            if inputs.intent == 'TARGET' and gridder == 'mosaic':
+            if inputs.intent == 'TARGET' and inputs.gridder == 'mosaic':
                 field_id = self.image_heuristics.field('TARGET', inputs.field, exclude_intent='ATMOSPHERE')
             else:
                 field_id = self.image_heuristics.field(inputs.intent, inputs.field)
@@ -234,36 +234,35 @@ class Tclean(cleanbase.CleanBase):
         # centers for each field  / spw
         imsize = inputs.imsize
         cell = inputs.cell
-        if imsize == [] or cell == []:
+        if imsize in (None, [], '') or cell in (None, [], ''):
 
             # The heuristics cell size  is always the same for x and y as
             # the value derives from a single value returned by imager.advise
-            synthesized_beam = self.image_heuristics.synthesized_beam( \
-                               field_intent_list=[(inputs.field, inputs.intent)], \
-                               spwspec=inputs.spw, \
-                               robust=inputs.robust, \
-                               uvtaper=inputs.uvtaper)
+            synthesized_beam = self.image_heuristics.synthesized_beam(field_intent_list=[(inputs.field,
+                                                                                          inputs.intent)],
+                                                                      spwspec=inputs.spw,
+                                                                      robust=inputs.robust,
+                                                                      uvtaper=inputs.uvtaper)
             cell = self.image_heuristics.cell(beam=synthesized_beam)
 
-            if inputs.cell == []:
+            if inputs.cell in (None, [], ''):
                 inputs.cell = cell
                 LOG.info('Heuristic cell: %s' % cell)
 
-            if inputs.intent == 'TARGET' and gridder == 'mosaic':
+            if inputs.intent == 'TARGET' and inputs.gridder == 'mosaic':
                 field_ids = self.image_heuristics.field('TARGET', inputs.field, exclude_intent='ATMOSPHERE')
             else:
                 field_ids = self.image_heuristics.field(inputs.intent, inputs.field)
             largest_primary_beam = self.image_heuristics.largest_primary_beam_size(spwspec=inputs.spw)
-            imsize = self.image_heuristics.imsize( \
-                     fields=field_ids, \
-                     cell=inputs.cell, \
-                     primary_beam=largest_primary_beam)
+            imsize = self.image_heuristics.imsize(fields=field_ids,
+                                                  cell=inputs.cell,
+                                                  primary_beam=largest_primary_beam)
 
-            if inputs.imsize == []:
+            if inputs.imsize in (None, [], ''):
                 inputs.imsize = imsize
                 LOG.info('Heuristic imsize: %s', imsize)
 
-        if (inputs.specmode == 'cube'):
+        if inputs.specmode == 'cube':
             # To avoid noisy edge channels, use only the LSRK frequency
             # intersection and skip one channel on either end.
             if0, if1, channel_width = self.image_heuristics.lsrk_freq_intersection(inputs.vis, inputs.field, inputs.spw)
@@ -284,7 +283,7 @@ class Tclean(cleanbase.CleanBase):
                     LOG.error('Supplied start frequency %s < f_low for Field %s SPW %s' % (inputs.start, inputs.field, inputs.spw))
                     result.error = '%s/%s/spw%s clean error: f_start < f_low_native' % (inputs.field, inputs.intent, inputs.spw)
                     return result
-                LOG.info('Using supplied start frequency %s' % (inputs.start))
+                LOG.info('Using supplied start frequency %s' % inputs.start)
 
             if (inputs.width != '') and (inputs.nbin not in (None, -1)):
                 LOG.error('Field %s SPW %s: width and nbin are mutually exclusive' % (inputs.field, inputs.spw))
@@ -298,12 +297,12 @@ class Tclean(cleanbase.CleanBase):
                     result.error = '%s/%s/spw%s clean error: user channel width too small' % (inputs.field, inputs.intent, inputs.spw)
                     return result
 
-                LOG.info('Using supplied width %s' % (inputs.width))
+                LOG.info('Using supplied width %s' % inputs.width)
                 channel_width = channel_width_manual
                 if channel_width > channel_width_auto:
                     inputs.nbin = int(round(channel_width / channel_width_auto) + 0.5)
             elif inputs.nbin not in (None, -1):
-                LOG.info('Applying binning factor %d' % (inputs.nbin))
+                LOG.info('Applying binning factor %d' % inputs.nbin)
                 channel_width *= inputs.nbin
 
             if inputs.nchan not in (None, -1):
@@ -312,7 +311,7 @@ class Tclean(cleanbase.CleanBase):
                     LOG.error('Calculated stop frequency %s GHz > f_high_native for Field %s SPW %s' % (if1, inputs.field, inputs.spw))
                     result.error = '%s/%s/spw%s clean error: f_stop > f_high' % (inputs.field, inputs.intent, inputs.spw)
                     return result
-                LOG.info('Using supplied nchan %d' % (inputs.nchan))
+                LOG.info('Using supplied nchan %d' % inputs.nchan)
 
             # tclean interprets the start frequency as the center of the
             # first channel. We have, however, an edge to edge range.
@@ -321,11 +320,11 @@ class Tclean(cleanbase.CleanBase):
                 inputs.start = '%sGHz' % ((if0 + 1.5 * channel_width) / 1e9)
 
             # Always adjust width to apply possible binning
-            inputs.width = '%sMHz' % ((channel_width) / 1e6)
+            inputs.width = '%sMHz' % (channel_width / 1e6)
 
             # Skip edge channels if no nchan is supplied
             if inputs.nchan in (None, -1):
-               inputs.nchan = int(round((if1 - if0) / channel_width - 2))
+                inputs.nchan = int(round((if1 - if0) / channel_width - 2))
 
         # Make sure there are LSRK selections if cont.dat/lines.dat exist.
         # For ALMA this is already done at the hif_makeimlist step. For VLASS
@@ -333,34 +332,27 @@ class Tclean(cleanbase.CleanBase):
         if inputs.spwsel_lsrk == {}:
             for spwid in inputs.spw.split(','):
                 spwsel_spwid = self.image_heuristics.cont_ranges_spwsel().get(utils.dequote(inputs.field), {}).get(spwid, 'NONE')
-                if (inputs.intent == 'TARGET'):
+                if inputs.intent == 'TARGET':
                     if (spwsel_spwid == 'NONE') and self.image_heuristics.warn_missing_cont_ranges():
                         LOG.warn('No continuum frequency range information detected for %s, spw %s.' % (inputs.field, spwid))
 
                 if spwsel_spwid in ('ALL', '', 'NONE'):
-                    spwsel_spwid_freqs = ''
                     spwsel_spwid_refer = 'LSRK'
                 else:
                     spwsel_spwid_freqs, spwsel_spwid_refer = spwsel_spwid.split()
 
-                if (spwsel_spwid_refer != 'LSRK'):
-                    LOG.warn('Frequency selection is specified in %s but must be in LSRK' % (spwsel_spwid_refer))
+                if spwsel_spwid_refer != 'LSRK':
+                    LOG.warn('Frequency selection is specified in %s but must be in LSRK' % spwsel_spwid_refer)
 
-                inputs.spwsel_lsrk['spw%s' % (spwid)] = spwsel_spwid
+                inputs.spwsel_lsrk['spw%s' % spwid] = spwsel_spwid
 
         # Get TOPO frequency ranges for all MSs
-        spw_topo_freq_param, \
-        spw_topo_chan_param, \
-        spw_topo_freq_param_dict, \
-        spw_topo_chan_param_dict, \
-        total_topo_bw, \
-        aggregate_topo_bw, \
-        aggregate_lsrk_bw = \
-            self.image_heuristics.calc_topo_ranges(inputs)
+        (spw_topo_freq_param, spw_topo_chan_param, spw_topo_freq_param_dict, spw_topo_chan_param_dict,
+         total_topo_bw, aggregate_topo_bw, aggregate_lsrk_bw) = self.image_heuristics.calc_topo_ranges(inputs)
 
         # Save continuum frequency ranges for later.
-        if (inputs.specmode == 'cube') and (inputs.spwsel_lsrk.get('spw%s' % (inputs.spw), None) not in (None, 'NONE', '')):
-            self.cont_freq_ranges = inputs.spwsel_lsrk['spw%s' % (inputs.spw)].split()[0]
+        if (inputs.specmode == 'cube') and (inputs.spwsel_lsrk.get('spw%s' % inputs.spw, None) not in (None, 'NONE', '')):
+            self.cont_freq_ranges = inputs.spwsel_lsrk['spw%s' % inputs.spw].split()[0]
         else:
             self.cont_freq_ranges = ''
 
@@ -374,32 +366,22 @@ class Tclean(cleanbase.CleanBase):
             min_field_id = 0
             max_field_id = 0
             eff_ch_bw = 1.0
-            sens_bw = 1.0
         else:
             # Get a noise estimate from the CASA sensitivity calculator
-            sensitivity, \
-            min_sensitivity, \
-            max_sensitivity, \
-            min_field_id, \
-            max_field_id, \
-            eff_ch_bw, \
-            sens_bw = \
-                self.image_heuristics.calc_sensitivities(inputs.vis, \
-                                                         inputs.field, \
-                                                         inputs.intent, \
-                                                         inputs.spw, \
-                                                         inputs.nbin, \
-                                                         spw_topo_chan_param_dict, \
-                                                         inputs.specmode, \
-                                                         inputs.gridder, \
-                                                         inputs.cell, \
-                                                         inputs.imsize, \
-                                                         inputs.weighting, \
-                                                         inputs.robust, \
-                                                         inputs.uvtaper)
+            (sensitivity,
+             min_sensitivity,
+             max_sensitivity,
+             min_field_id,
+             max_field_id,
+             eff_ch_bw,
+             sens_bw) = \
+                self.image_heuristics.calc_sensitivities(inputs.vis, inputs.field, inputs.intent, inputs.spw,
+                                                         inputs.nbin, spw_topo_chan_param_dict, inputs.specmode,
+                                                         inputs.gridder, inputs.cell, inputs.imsize, inputs.weighting,
+                                                         inputs.robust, inputs.uvtaper)
 
         if sensitivity is None:
-            LOG.error('Could not calculate the sensitivity for Field %s SPW %s' % (inputs.start, inputs.field, inputs.spw))
+            LOG.error('Could not calculate the sensitivity for Field %s SPW %s' % (inputs.field, inputs.spw))
             result.error = '%s/%s/spw%s clean error: no sensitivity' % (inputs.field, inputs.intent, inputs.spw)
             return result
 
@@ -409,7 +391,7 @@ class Tclean(cleanbase.CleanBase):
         if inputs.specmode != 'cube':
             inputs.spwsel_topo = spw_topo_freq_param
         else:
-            inputs.spwsel_topo = ['%s' % (inputs.spw)] * len(inputs.vis)
+            inputs.spwsel_topo = ['%s' % inputs.spw] * len(inputs.vis)
 
         # Choose cleaning method.
         if inputs.hm_masking in ('centralregion', 'auto', 'manual', 'none'):
@@ -417,7 +399,7 @@ class Tclean(cleanbase.CleanBase):
             if inputs.hm_cleaning == 'manual':
                 threshold = inputs.threshold
             elif inputs.hm_cleaning == 'sensitivity':
-                raise Exception, 'sensitivity threshold not yet implemented'
+                raise Exception('sensitivity threshold not yet implemented')
             elif inputs.hm_cleaning == 'rms':
                 if inputs.threshold not in (None, '', 0.0):
                     threshold = inputs.threshold
@@ -428,19 +410,19 @@ class Tclean(cleanbase.CleanBase):
             # Central mask based on PB
             if inputs.hm_masking == 'centralregion':
                 sequence_manager = ImageCentreThresholdSequence(
-                    gridder = inputs.gridder, threshold=threshold,
-                    sensitivity = sensitivity, niter=inputs.niter)
+                    gridder=inputs.gridder, threshold=threshold,
+                    sensitivity=sensitivity, niter=inputs.niter)
             # Auto-boxing
             elif inputs.hm_masking == 'auto':
                 sequence_manager = AutoMaskThresholdSequence(
-                    gridder = inputs.gridder, threshold=threshold,
-                    sensitivity = sensitivity, niter=inputs.niter)
+                    gridder=inputs.gridder, threshold=threshold,
+                    sensitivity=sensitivity, niter=inputs.niter)
             # Manually supplied mask
             elif inputs.hm_masking == 'manual':
                 sequence_manager = ManualMaskThresholdSequence(
                     mask=inputs.mask,
-                    gridder = inputs.gridder, threshold=threshold,
-                    sensitivity = sensitivity, niter=inputs.niter)
+                    gridder=inputs.gridder, threshold=threshold,
+                    sensitivity=sensitivity, niter=inputs.niter)
             # No mask
             elif inputs.hm_masking == 'none':
                 sequence_manager = NoMaskThresholdSequence(
@@ -457,8 +439,7 @@ class Tclean(cleanbase.CleanBase):
                 maxncleans=inputs.maxncleans,
                 sensitivity=sensitivity)
 
-        result = self._do_iterative_imaging(
-            sequence_manager=sequence_manager, result=result)
+        result = self._do_iterative_imaging(sequence_manager=sequence_manager)
 
         # Record aggregate LSRK bandwidth and mosaic field sensitivities for weblog
         # TODO: Record total bandwidth as opposed to range
@@ -479,44 +460,42 @@ class Tclean(cleanbase.CleanBase):
 
         return result
 
-    def _do_iterative_imaging(self, sequence_manager, result):
+    def _do_iterative_imaging(self, sequence_manager):
 
-        context = self.inputs.context
         inputs = self.inputs
 
         # Compute the dirty image
         LOG.info('Compute the dirty image')
-        iter = 0
-        result = self._do_clean(iter=iter, cleanmask='', niter=0, threshold='0.0mJy',
+        iteration = 0
+        result = self._do_clean(iternum=iteration, cleanmask='', niter=0, threshold='0.0mJy',
                                 sensitivity=sequence_manager.sensitivity, result=None)
 
         # Determine masking limits depending on PB
         extension = '.tt0' if result.multiterm else ''
-        self.pblimit_image, self.pblimit_cleanmask = \
-            self.image_heuristics.pblimits(result.flux+extension)
+        self.pblimit_image, self.pblimit_cleanmask = self.image_heuristics.pblimits(result.flux+extension)
         # The modified pblimit is not supposed to be used in the tclean commands
         # anymore (CAS-10489)
         #inputs.pblimit = self.pblimit_image
 
         # Give the result to the sequence_manager for analysis
-        model_sum, \
-        residual_cleanmask_rms, \
-        residual_non_cleanmask_rms, \
-        residual_min, \
-        residual_max, \
-        nonpbcor_image_non_cleanmask_rms_min, \
-        nonpbcor_image_non_cleanmask_rms_max, \
-        nonpbcor_image_non_cleanmask_rms, \
-        pbcor_image_min, \
-        pbcor_image_max,\
-        residual_robust_rms = \
-            sequence_manager.iteration_result(iter=0, \
-                multiterm=result.multiterm, psf=result.psf, model=result.model, \
-                restored=result.image, residual=result.residual, \
-                flux=result.flux, cleanmask=None, threshold=None, \
-                pblimit_image=self.pblimit_image, \
-                pblimit_cleanmask=self.pblimit_cleanmask, \
-                cont_freq_ranges=self.cont_freq_ranges)
+        (model_sum,
+         residual_cleanmask_rms,
+         residual_non_cleanmask_rms,
+         residual_min,
+         residual_max,
+         nonpbcor_image_non_cleanmask_rms_min,
+         nonpbcor_image_non_cleanmask_rms_max,
+         nonpbcor_image_non_cleanmask_rms,
+         pbcor_image_min,
+         pbcor_image_max,
+         residual_robust_rms) = \
+            sequence_manager.iteration_result(iter=0,
+                                              multiterm=result.multiterm, psf=result.psf, model=result.model,
+                                              restored=result.image, residual=result.residual,
+                                              flux=result.flux, cleanmask=None, threshold=None,
+                                              pblimit_image=self.pblimit_image,
+                                              pblimit_cleanmask=self.pblimit_cleanmask,
+                                              cont_freq_ranges=self.cont_freq_ranges)
 
         LOG.info('Dirty image stats')
         LOG.info('    Residual rms: %s', residual_non_cleanmask_rms)
@@ -527,29 +506,26 @@ class Tclean(cleanbase.CleanBase):
         # Adjust threshold based on the dirty image statistics
         dirty_dynamic_range = residual_max / sequence_manager.sensitivity
         new_threshold, DR_correction_factor, maxEDR_used = \
-            self.image_heuristics.dr_correction(sequence_manager.threshold, \
-                                                dirty_dynamic_range, \
-                                                residual_max, \
-                                                inputs.intent, \
-                                                inputs.tlimit)
+            self.image_heuristics.dr_correction(sequence_manager.threshold, dirty_dynamic_range, residual_max,
+                                                inputs.intent, inputs.tlimit)
         sequence_manager.threshold = new_threshold
         sequence_manager.dr_corrected_sensitivity = sequence_manager.sensitivity * DR_correction_factor
 
         # Adjust niter based on the dirty image statistics
-        new_niter = self.image_heuristics.niter_correction(sequence_manager.niter, inputs.cell, inputs.imsize, residual_max, new_threshold)
+        new_niter = self.image_heuristics.niter_correction(sequence_manager.niter, inputs.cell, inputs.imsize,
+                                                           residual_max, new_threshold)
         sequence_manager.niter = new_niter
 
-        iterating = True
         keep_iterating = False
-        iter = 1
-        while iterating:
+        iteration = 1
+        while True:
             # Create the name of the next clean mask from the root of the 
             # previous residual image.
             rootname, ext = os.path.splitext(result.residual)
             rootname, ext = os.path.splitext(rootname)
 
             # Delete any old files with this naming root
-            filenames = glob.glob('%s.iter%s*' % (rootname, iter))
+            filenames = glob.glob('%s.iter%s*' % (rootname, iteration))
             for filename in filenames:
                 try:
                     shutil.rmtree(filename)
@@ -557,11 +533,11 @@ class Tclean(cleanbase.CleanBase):
                     LOG.warning('Exception while deleting %s: %s' % (filename, e))
 
             if inputs.hm_masking == 'auto':
-                new_cleanmask = '%s.iter%s.mask' % (rootname, iter)
+                new_cleanmask = '%s.iter%s.mask' % (rootname, iteration)
             elif inputs.hm_masking == 'manual':
                 new_cleanmask = inputs.mask
             else:
-                new_cleanmask = '%s.iter%s.cleanmask' % (rootname, iter)
+                new_cleanmask = '%s.iter%s.cleanmask' % (rootname, iteration)
 
             rms_threshold = self.image_heuristics.rms_threshold(residual_robust_rms, inputs.nsigma)
             if rms_threshold:
@@ -571,77 +547,88 @@ class Tclean(cleanbase.CleanBase):
                     LOG.info("    Input 'threshold' = {tt}".format(tt=inputs.threshold))
                     LOG.info("    Input 'threshold_nsigma' = {ns}".format(ns=inputs.nsigma))
                     LOG.info("    Scaled MAD * 'threshold_nsigma' = {ts}".format(ts=rms_threshold))
-                    LOG.info('    max(threshold, scaled MAD * nsigma)= {nt}'.format(nt=max(inputs.threshold, rms_threshold)))
+                    LOG.info('    max(threshold, scaled MAD * nsigma)= {nt}'.format(nt=max(inputs.threshold,
+                                                                                           rms_threshold)))
                     sequence_manager.threshold = max(inputs.threshold, rms_threshold)
                 else:
                     sequence_manager.threshold = rms_threshold
 
             # perform an iteration.
             if (inputs.specmode == 'cube') and (not inputs.cleancontranges):
-                seq_result = sequence_manager.iteration(new_cleanmask, self.pblimit_image, self.pblimit_cleanmask, inputs.spw, inputs.spwsel_lsrk, keep_iterating=keep_iterating)
+                seq_result = sequence_manager.iteration(new_cleanmask, self.pblimit_image, self.pblimit_cleanmask,
+                                                        inputs.spw, inputs.spwsel_lsrk, keep_iterating=keep_iterating)
             else:
-                seq_result = sequence_manager.iteration(new_cleanmask, self.pblimit_image, self.pblimit_cleanmask, keep_iterating=keep_iterating)
+                seq_result = sequence_manager.iteration(new_cleanmask, self.pblimit_image, self.pblimit_cleanmask,
+                                                        keep_iterating=keep_iterating)
 
             # Check the iteration status.
             if not seq_result.iterating:
                 break
 
             # Use previous iterations's products as starting point
-            old_pname = '%s.iter%s' % (rootname, iter-1)
-            new_pname = '%s.iter%s' % (rootname, iter)
+            old_pname = '%s.iter%s' % (rootname, iteration-1)
+            new_pname = '%s.iter%s' % (rootname, iteration)
             self.copy_products(os.path.basename(old_pname), os.path.basename(new_pname))
             if keep_iterating:
                 # Delete existing (iter2) mask from autoboxing since we
                 # now switch to a user supplied mask.
-                shutil.rmtree('%s.iter%s.mask' % (rootname, iter))
+                shutil.rmtree('%s.iter%s.mask' % (rootname, iteration))
 
             # Determine the cleaning threshold
             threshold = seq_result.threshold
 
-            LOG.info('Iteration %s: Clean control parameters' % iter)
+            LOG.info('Iteration %s: Clean control parameters' % iteration)
             LOG.info('    Mask %s', new_cleanmask)
             LOG.info('    Threshold %s', seq_result.threshold)
             LOG.info('    Niter %s', seq_result.niter)
 
-            result = self._do_clean(iter=iter, cleanmask=new_cleanmask, niter=seq_result.niter, threshold=threshold,
-                                    sensitivity=sequence_manager.sensitivity, result=result)
+            result = self._do_clean(iternum=iteration, cleanmask=new_cleanmask, niter=seq_result.niter,
+                                    threshold=threshold, sensitivity=sequence_manager.sensitivity, result=result)
 
             # Give the result to the clean 'sequencer'
-            model_sum, \
-            residual_cleanmask_rms, \
-            residual_non_cleanmask_rms, \
-            residual_min, \
-            residual_max, \
-            nonpbcor_image_non_cleanmask_rms_min, \
-            nonpbcor_image_non_cleanmask_rms_max, \
-            nonpbcor_image_non_cleanmask_rms, \
-            pbcor_image_min, \
-            pbcor_image_max, \
-            residual_robust_rms = \
-                sequence_manager.iteration_result(iter=iter, \
-                    multiterm=result.multiterm, psf=result.psf, model=result.model, \
-                    restored=result.image, residual=result.residual, \
-                    flux=result.flux, cleanmask=new_cleanmask, threshold=seq_result.threshold, \
-                    pblimit_image=self.pblimit_image, \
-                    pblimit_cleanmask=self.pblimit_cleanmask, \
-                    cont_freq_ranges=self.cont_freq_ranges)
+            (model_sum,
+             residual_cleanmask_rms,
+             residual_non_cleanmask_rms,
+             residual_min,
+             residual_max,
+             nonpbcor_image_non_cleanmask_rms_min,
+             nonpbcor_image_non_cleanmask_rms_max,
+             nonpbcor_image_non_cleanmask_rms,
+             pbcor_image_min,
+             pbcor_image_max,
+             residual_robust_rms) = \
+                sequence_manager.iteration_result(iter=iteration,
+                                                  multiterm=result.multiterm, psf=result.psf, model=result.model,
+                                                  restored=result.image, residual=result.residual,
+                                                  flux=result.flux, cleanmask=new_cleanmask,
+                                                  threshold=seq_result.threshold,
+                                                  pblimit_image=self.pblimit_image,
+                                                  pblimit_cleanmask=self.pblimit_cleanmask,
+                                                  cont_freq_ranges=self.cont_freq_ranges)
 
             # Check for zero automask
             if (inputs.hm_masking == 'auto') and (result.tclean_stopcode == 7):
                 if inputs.intent in ('BANDPASS', 'PHASE'):
                     if residual_max / residual_robust_rms > 10.0:
-                        LOG.warn('No automatic clean mask was found despite clean residual peak / scaled MAD > 10, switched to pb-based mask and tlimit=4. Field %s Intent %s SPW %s' % (inputs.field, inputs.intent, inputs.spw))
+                        LOG.warn('No automatic clean mask was found despite clean residual peak / scaled MAD > 10, '
+                                 'switched to pb-based mask and tlimit=4. '
+                                 'Field %s Intent %s SPW %s' % (inputs.field, inputs.intent, inputs.spw))
                     else:
-                        LOG.warn('No automatic clean mask was found, switched to pb-based mask and tlimit=4. Field %s Intent %s SPW %s' % (inputs.field, inputs.intent, inputs.spw))
+                        LOG.warn('No automatic clean mask was found, switched to pb-based mask and tlimit=4. Field %s '
+                                 'Intent %s SPW %s' % (inputs.field, inputs.intent, inputs.spw))
                     # If no automask is found, always try the simple circular mask for calibrators
                     inputs.hm_masking = 'centralregion'
                     keep_iterating = True
                 elif inputs.intent in ('CHECK', 'TARGET'):
                     if residual_max / residual_robust_rms > 10.0:
                         if (inputs.specmode == 'cube') or (dirty_dynamic_range <= 30.0):
-                            LOG.warn('No automatic clean mask was found despite clean residual peak / scaled MAD > 10, check the results. Field %s Intent %s SPW %s' % (inputs.field, inputs.intent, inputs.spw))
+                            LOG.warn('No automatic clean mask was found despite clean residual peak / scaled MAD > 10, '
+                                     'check the results. '
+                                     'Field %s Intent %s SPW %s' % (inputs.field, inputs.intent, inputs.spw))
                         else:
-                            LOG.warn('No automatic clean mask was found despite clean residual peak / scaled MAD > 10, switched to pb-based mask and tlimit=4. Field %s Intent %s SPW %s' % (inputs.field, inputs.intent, inputs.spw))
+                            LOG.warn('No automatic clean mask was found despite clean residual peak / scaled MAD > 10, '
+                                     'switched to pb-based mask and tlimit=4. '
+                                     'Field %s Intent %s SPW %s' % (inputs.field, inputs.intent, inputs.spw))
                             # If no automask is found, try the simple circular mask for high DR continuum
                             inputs.hm_masking = 'centralregion'
                             keep_iterating = True
@@ -659,7 +646,7 @@ class Tclean(cleanbase.CleanBase):
             result.set_maxEDR_used(maxEDR_used)
             result.set_dr_corrected_sensitivity(sequence_manager.dr_corrected_sensitivity)
 
-            LOG.info('Clean image iter %s stats' % iter)
+            LOG.info('Clean image iter %s stats' % iteration)
             LOG.info('    Clean image annulus area rms: %s', nonpbcor_image_non_cleanmask_rms)
             LOG.info('    Clean image min: %s', pbcor_image_min)
             LOG.info('    Clean image max: %s', pbcor_image_max)
@@ -670,17 +657,17 @@ class Tclean(cleanbase.CleanBase):
 
             # Keep tclean summary plot
             try:
-                shutil.move('summaryplot_1.png', '%s.iter%s.summaryplot.png' % (rootname, iter))
-            except:
+                shutil.move('summaryplot_1.png', '%s.iter%s.summaryplot.png' % (rootname, iteration))
+            except (IOError, OSError):
                 LOG.info('Could not save tclean summary plot.')
 
             # Up the iteration counter
-            iter += 1
+            iteration += 1
 
-        if iter == 2 and 'VLASS-SE' in self.image_heuristics.imaging_mode:
+        if iteration == 2 and 'VLASS-SE' in self.image_heuristics.imaging_mode:
             # Use previous iterations's products as starting point
-            old_pname = '%s.iter%s' % (rootname, iter-1)
-            new_pname = '%s.iter%s' % (rootname, iter)
+            old_pname = '%s.iter%s' % (rootname, iteration-1)
+            new_pname = '%s.iter%s' % (rootname, iteration)
             self.copy_products(os.path.basename(old_pname), os.path.basename(new_pname))
 
             rms_threshold = self.image_heuristics.rms_threshold(residual_robust_rms, inputs.nsigma)
@@ -691,13 +678,14 @@ class Tclean(cleanbase.CleanBase):
                     LOG.info("    Input 'threshold' = {tt}".format(tt=inputs.threshold))
                     LOG.info("    Input 'threshold_nsigma' = {ns}".format(ns=inputs.nsigma))
                     LOG.info("    Scaled MAD * 'threshold_nsigma' = {ts}".format(ts=rms_threshold))
-                    LOG.info('    max(threshold, scaled MAD * nsigma)= {nt}'.format(nt=max(inputs.threshold, rms_threshold)))
+                    LOG.info('    max(threshold, scaled MAD * nsigma)= {nt}'.format(nt=max(inputs.threshold,
+                                                                                           rms_threshold)))
                     sequence_manager.threshold = max(inputs.threshold, rms_threshold)
                 else:
                     sequence_manager.threshold = rms_threshold
 
             LOG.info('Final VLASS single epoch tclean call with no mask')
-            result = self._do_clean(iter=iter, cleanmask='', niter=seq_result.niter, threshold=threshold,
+            result = self._do_clean(iternum=iteration, cleanmask='', niter=seq_result.niter, threshold=threshold,
                                     sensitivity=sequence_manager.sensitivity, result=result)
 
         # If specmode is "cube", create from the non-pbcorrected cube
@@ -708,7 +696,7 @@ class Tclean(cleanbase.CleanBase):
 
         return result
 
-    def _do_clean(self, iter, cleanmask, niter, threshold, sensitivity, result):
+    def _do_clean(self, iternum, cleanmask, niter, threshold, sensitivity, result):
         """
         Do basic cleaning.
         """
@@ -750,7 +738,7 @@ class Tclean(cleanbase.CleanBase):
                                                   noise=inputs.noise,
                                                   npixels=inputs.npixels,
                                                   restoringbeam=inputs.restoringbeam,
-                                                  iter=iter,
+                                                  iter=iternum,
                                                   mask=cleanmask,
                                                   hm_masking=inputs.hm_masking,
                                                   hm_sidelobethreshold=inputs.hm_sidelobethreshold,
@@ -811,13 +799,13 @@ class Tclean(cleanbase.CleanBase):
 
         # Get filename of image from result, and modify to select the  
         # non-PB-corrected image.
-        imagename = result.iterations[maxiter]['image'].replace('.pbcor','')
+        imagename = result.iterations[maxiter]['image'].replace('.pbcor', '')
 
         # Set output filename for MOM0_FC image.
-        mom0_name = '%s.mom0_fc' % (imagename)
+        mom0_name = '%s.mom0_fc' % imagename
 
         # Set output filename for MOM8_FC image.
-        mom8_name = '%s.mom8_fc' % (imagename)
+        mom8_name = '%s.mom8_fc' % imagename
 
         # Convert frequency ranges to channel ranges.
         cont_chan_ranges = utils.freq_selection_to_channels(imagename, self.cont_freq_ranges)
@@ -834,10 +822,10 @@ class Tclean(cleanbase.CleanBase):
             assert os.path.exists(mom0_name)
 
             # Update the metadata in the MOM0_FC image.
-            cleanbase.set_miscinfo(name=mom0_name, spw=self.inputs.spw, 
-              field=self.inputs.field, iter=maxiter, type='mom0_fc',
-              intent=self.inputs.intent, specmode=self.inputs.specmode,
-              observing_run=context.observing_run)
+            cleanbase.set_miscinfo(name=mom0_name, spw=self.inputs.spw,
+                                   field=self.inputs.field, iter=maxiter, type='mom0_fc',
+                                   intent=self.inputs.intent, specmode=self.inputs.specmode,
+                                   observing_run=context.observing_run)
 
             # Update the result.
             result.set_mom0_fc(maxiter, mom0_name)
@@ -848,14 +836,14 @@ class Tclean(cleanbase.CleanBase):
             assert os.path.exists(mom8_name)
 
             # Update the metadata in the MOM8_FC image.
-            cleanbase.set_miscinfo(name=mom8_name, spw=self.inputs.spw, 
-              field=self.inputs.field, iter=maxiter, type='mom8_fc',
-              intent=self.inputs.intent, specmode=self.inputs.specmode,
-              observing_run=context.observing_run)
+            cleanbase.set_miscinfo(name=mom8_name, spw=self.inputs.spw,
+                                   field=self.inputs.field, iter=maxiter, type='mom8_fc',
+                                   intent=self.inputs.intent, specmode=self.inputs.specmode,
+                                   observing_run=context.observing_run)
 
             # Update the result.
             result.set_mom8_fc(maxiter, mom8_name)
         else:
             LOG.warning('Cannot create MOM0_FC / MOM8_FC images for intent "%s", '
-              'field %s, spw %s, no continuum ranges found.' %
-              (self.inputs.intent, self.inputs.field, self.inputs.spw))
+                        'field %s, spw %s, no continuum ranges found.' %
+                        (self.inputs.intent, self.inputs.field, self.inputs.spw))
