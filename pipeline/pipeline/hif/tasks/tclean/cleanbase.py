@@ -31,10 +31,12 @@ class CleanBaseInputs(vdp.StandardInputs):
     intent = vdp.VisDependentProperty(default='')
     iter = vdp.VisDependentProperty(default=0)
     mask = vdp.VisDependentProperty(default='')
+    hm_dogrowprune = vdp.VisDependentProperty(default=True)
     hm_growiterations = vdp.VisDependentProperty(default=-999)
     hm_lownoisethreshold = vdp.VisDependentProperty(default=-999.0)
     hm_masking = vdp.VisDependentProperty(default='auto')
     hm_minbeamfrac = vdp.VisDependentProperty(default=-999.0)
+    hm_minpercentchange = vdp.VisDependentProperty(default=-999.0)
     hm_negativethreshold = vdp.VisDependentProperty(default=-999.0)
     hm_noisethreshold = vdp.VisDependentProperty(default=-999.0)
     hm_sidelobethreshold = vdp.VisDependentProperty(default=-999.0)
@@ -100,7 +102,8 @@ class CleanBaseInputs(vdp.StandardInputs):
                  cell=None, phasecenter=None, nchan=None, start=None, width=None, stokes=None, weighting=None,
                  robust=None, noise=None, npixels=None, restoringbeam=None, iter=None, mask=None, hm_masking=None,
                  hm_sidelobethreshold=None, hm_noisethreshold=None, hm_lownoisethreshold=None,
-                 hm_negativethreshold=None, hm_minbeamfrac=None, hm_growiterations=None, pblimit=None, niter=None,
+                 hm_negativethreshold=None, hm_minbeamfrac=None, hm_growiterations=None, hm_dogrowprune=None,
+                 hm_minpercentchange=None, pblimit=None, niter=None,
                  threshold=None, sensitivity=None, reffreq=None, conjbeams=None, is_per_eb=None, result=None, parallel=None,
                  heuristics=None):
         self.context = context
@@ -146,6 +149,8 @@ class CleanBaseInputs(vdp.StandardInputs):
         self.hm_negativethreshold = hm_negativethreshold
         self.hm_minbeamfrac = hm_minbeamfrac
         self.hm_growiterations = hm_growiterations
+        self.hm_dogrowprune = hm_dogrowprune
+        self.hm_minpercentchange = hm_minpercentchange
 
         self.pblimit = pblimit
         self.niter = niter
@@ -310,7 +315,7 @@ class CleanBase(basetask.StandardTaskTemplate):
             tclean_job_parameters['usemask'] = 'auto-multithresh'
 
             # get heuristics parameters 
-            sidelobethreshold, noisethreshold, lownoisethreshold, negativethreshold, minbeamfrac, growiterations = inputs.heuristics.get_autobox_params(inputs.intent, inputs.specmode)
+            sidelobethreshold, noisethreshold, lownoisethreshold, negativethreshold, minbeamfrac, growiterations, dogrowprune, minpercentchange = inputs.heuristics.get_autobox_params(inputs.intent, inputs.specmode)
 
             # Override individually with manual settings
             if inputs.hm_sidelobethreshold != -999.0:
@@ -342,6 +347,16 @@ class CleanBase(basetask.StandardTaskTemplate):
                 tclean_job_parameters['growiterations'] = inputs.hm_growiterations
             elif growiterations is not None:
                 tclean_job_parameters['growiterations'] = growiterations
+
+            if inputs.hm_dogrowprune != -999:
+                tclean_job_parameters['dogrowprune'] = inputs.hm_dogrowprune
+            elif dogrowprune is not None:
+                tclean_job_parameters['dogrowprune'] = dogrowprune
+
+            if inputs.hm_minpercentchange != -999:
+                tclean_job_parameters['minpercentchange'] = inputs.hm_minpercentchange
+            elif minpercentchange is not None:
+                tclean_job_parameters['minpercentchange'] = minpercentchange
         else:
             if (inputs.hm_masking != 'none') and (inputs.mask != ''):
                 tclean_job_parameters['usemask'] = 'user'

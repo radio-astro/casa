@@ -210,6 +210,8 @@ class ImageParamsHeuristicsALMA(ImageParamsHeuristics):
         lownoisethreshold = None
         minbeamfrac = None
         growiterations = None
+        dogrowprune = None
+        minpercentchange = None
 
         repBaselineLength, min_diameter = self.calc_percentile_baseline_length(75.)
         LOG.info('autobox heuristic: Representative baseline length is %.1f meter' % (repBaselineLength)) 
@@ -221,6 +223,8 @@ class ImageParamsHeuristicsALMA(ImageParamsHeuristics):
                     noisethreshold = 4.25
                     lownoisethreshold = 1.5
                     minbeamfrac = 0.3
+                    dogrowprune = True
+                    minpercentchange = -1.0
                     if specmode == 'cube':
                         negativethreshold = 15.0
                         growiterations = 50
@@ -232,6 +236,8 @@ class ImageParamsHeuristicsALMA(ImageParamsHeuristics):
                     noisethreshold = 5.0
                     lownoisethreshold = 1.5
                     minbeamfrac = 0.3
+                    dogrowprune = True
+                    minpercentchange = -1.0
                     if specmode == 'cube':
                         negativethreshold = 7.0
                         growiterations = 50
@@ -245,6 +251,8 @@ class ImageParamsHeuristicsALMA(ImageParamsHeuristics):
                 minbeamfrac = 0.1
                 growiterations = 75
                 negativethreshold = 0.0
+                dogrowprune = True
+                minpercentchange = -1.0
         else:
             if min_diameter == 12.0:
                 sidelobethreshold = 2.0
@@ -253,6 +261,8 @@ class ImageParamsHeuristicsALMA(ImageParamsHeuristics):
                 minbeamfrac = 0.1
                 growiterations = 75
                 negativethreshold = 0.0
+                dogrowprune = True
+                minpercentchange = -1.0
             elif min_diameter == 7.0:
                 sidelobethreshold = 1.5
                 noisethreshold = 6.0
@@ -260,8 +270,10 @@ class ImageParamsHeuristicsALMA(ImageParamsHeuristics):
                 minbeamfrac = 0.1
                 growiterations = 75
                 negativethreshold = 0.0
+                dogrowprune = True
+                minpercentchange = -1.0
 
-        return sidelobethreshold, noisethreshold, lownoisethreshold, negativethreshold, minbeamfrac, growiterations
+        return sidelobethreshold, noisethreshold, lownoisethreshold, negativethreshold, minbeamfrac, growiterations, dogrowprune, minpercentchange
 
     def warn_missing_cont_ranges(self):
 

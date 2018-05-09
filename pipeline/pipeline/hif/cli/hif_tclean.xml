@@ -226,6 +226,16 @@ Compute a clean map.
        <value>-999</value>
   </param>
 
+  <param type="bool" name="hm_dogrowprune" subparam="true">
+    <description>Do pruning on the grow mask</description>
+    <value>True</value>
+  </param>
+
+  <param type="double" name="hm_minpercentchange" subparam="true">
+     <description>Mask size change threshold</description>
+       <value>-999.0</value>
+  </param>
+
   <param type="string" name="hm_cleaning">
      <description>Pipeline clean control heuristics</description>
        <value>rms</value>
@@ -360,6 +370,8 @@ Compute a clean map.
         <default param="hm_negativethreshold"><value type="double">-999.0</value></default>
         <default param="hm_minbeamfrac"><value type="double">-999.0</value></default>
         <default param="hm_growiterations"><value type="in">-999</value></default>
+        <default param="hm_dogrowprune"><value type="bool">True</value></default>
+        <default param="hm_minpercentchange"><value type="double">-999.0</value></default>
       </equals>
       <equals value="centralregion">
       </equals>
@@ -603,6 +615,10 @@ hm_negativethreshold -- Auto-boxing negativethreshold.
 hm_minbeamfrac -- Auto-boxing minbeamfrac.
 
 hm_growiterations -- number of binary dilation iterations for growing the mask.
+
+hm_dogrowprune -- Do pruning on the grow mask
+
+hm_minpercentchange -- Mask size change threshold
 
 mask -- Image mask for hm_masking manual mode. User responsible for
     matching image sizes, coordinates, etc.

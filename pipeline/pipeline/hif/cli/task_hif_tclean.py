@@ -10,7 +10,8 @@ def hif_tclean(vis=None, imagename=None, intent=None, field=None, spw=None, spws
                cell=None, phasecenter=None, stokes=None, nchan=None, start=None, width=None, nbin=None, weighting=None,
                robust=None, noise=None, npixels=None, restoringbeam=None, hm_masking=None, hm_sidelobethreshold=None,
                hm_noisethreshold=None, hm_lownoisethreshold=None, hm_negativethreshold=None, hm_minbeamfrac=None,
-               hm_growiterations=None, hm_cleaning=None, mask=None, niter=None, threshold=None, tlimit=None,
+               hm_growiterations=None, hm_dogrowprune=None, hm_minpercentchange=None,
+               hm_cleaning=None, mask=None, niter=None, threshold=None, tlimit=None,
                masklimit=None, maxncleans=None, cleancontranges=None, parallel=None, pipelinemode=None, dryrun=None,
                acceptresults=None):
 

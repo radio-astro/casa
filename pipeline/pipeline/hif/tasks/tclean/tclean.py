@@ -105,7 +105,8 @@ class TcleanInputs(cleanbase.CleanBaseInputs):
                  start=None, width=None, nbin=None, weighting=None, robust=None, noise=None, npixels=None,
                  restoringbeam=None, hm_masking=None, hm_sidelobethreshold=None, hm_noisethreshold=None,
                  hm_lownoisethreshold=None, hm_negativethreshold=None, hm_minbeamfrac=None, hm_growiterations=None,
-                 hm_cleaning=None, mask=None, niter=None, threshold=None, tlimit=None, masklimit=None, maxncleans=None,
+                 hm_dogrowprune=None, hm_minpercentchange=None, hm_cleaning=None,
+                 iter=None, mask=None, niter=None, threshold=None, tlimit=None, masklimit=None, maxncleans=None,
                  cleancontranges=None, parallel=None,
                  # Extra parameters not in the CLI task interface
                  uvtaper=None, scales=None, nsigma=None, cycleniter=None, cyclefactor=None, sensitivity=None,
@@ -124,7 +125,8 @@ class TcleanInputs(cleanbase.CleanBaseInputs):
                                            hm_noisethreshold=hm_noisethreshold,
                                            hm_lownoisethreshold=hm_lownoisethreshold,
                                            hm_negativethreshold=hm_negativethreshold, hm_minbeamfrac=hm_minbeamfrac,
-                                           hm_growiterations=hm_growiterations, niter=niter, threshold=threshold,
+                                           hm_growiterations=hm_growiterations, hm_dogrowprune=hm_dogrowprune,
+                                           hm_minpercentchange=hm_minpercentchange, niter=niter, threshold=threshold,
                                            sensitivity=sensitivity, conjbeams=conjbeams, is_per_eb=is_per_eb, parallel=parallel,
                                            heuristics=heuristics)
 
@@ -385,7 +387,7 @@ class Tclean(cleanbase.CleanBase):
             result.error = '%s/%s/spw%s clean error: no sensitivity' % (inputs.field, inputs.intent, inputs.spw)
             return result
 
-        LOG.info('Sensitivity estimate: %s Jy', sensitivity)
+        LOG.info('Sensitivity estimate: %.3g Jy', sensitivity)
 
         # Choose TOPO frequency selections
         if inputs.specmode != 'cube':
@@ -404,7 +406,7 @@ class Tclean(cleanbase.CleanBase):
                 if inputs.threshold not in (None, '', 0.0):
                     threshold = inputs.threshold
                 else:
-                    threshold = '%sJy' % (inputs.tlimit * sensitivity)
+                    threshold = '%.3gJy' % (inputs.tlimit * sensitivity)
 
             # Choose sequence manager
             # Central mask based on PB
@@ -747,6 +749,8 @@ class Tclean(cleanbase.CleanBase):
                                                   hm_negativethreshold=inputs.hm_negativethreshold,
                                                   hm_minbeamfrac=inputs.hm_minbeamfrac,
                                                   hm_growiterations=inputs.hm_growiterations,
+                                                  hm_dogrowprune=inputs.hm_dogrowprune,
+                                                  hm_minpercentchange=inputs.hm_minpercentchange,
                                                   niter=niter,
                                                   threshold=threshold,
                                                   sensitivity=sensitivity,
