@@ -541,6 +541,8 @@ class MakeImList(basetask.StandardTaskTemplate):
                           cells[spwspec], imsizes[(field_intent[0],spwspec)],
                           phasecenters[field_intent[0]]))
 
+                        any_non_imaging_ms = any([not inputs.context.observing_run.get_ms(vis).is_imaging_ms for vis in vislist])
+
                         target = CleanTarget(
                             field=field_intent[0],
                             intent=field_intent[1],
@@ -561,7 +563,7 @@ class MakeImList(basetask.StandardTaskTemplate):
                             uvtaper=default_uvtaper,
                             stokes='I',
                             heuristics=self.heuristics,
-                            vis=vislist if inputs.per_eb else None,
+                            vis=vislist if inputs.per_eb or any_non_imaging_ms else None,
                             is_per_eb=inputs.per_eb if inputs.per_eb else None
                         )
 
