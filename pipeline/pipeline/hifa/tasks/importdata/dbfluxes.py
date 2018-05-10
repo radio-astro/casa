@@ -238,7 +238,7 @@ def flux_nosourcexml(ms):
     return result
 
 
-def fluxservice (serviceurl, ms, frequency, sourcename):
+def fluxservice(serviceurl, ms, frequency, sourcename):
     """
     Usage of this online service requires:
         - serviceurl - url for the db service
@@ -266,10 +266,10 @@ def fluxservice (serviceurl, ms, frequency, sourcename):
     urlparams = buildparams(sourcename, date, frequency)
     try:
         dom = minidom.parse(urllib2.urlopen(serviceurl + '?%s' % urlparams, timeout=10.0))
-    except:
-        LOG.warn('DB flux service timeout/connection problem...')
+    except Exception as ex:
+        LOG.warn('ALMA Source Catalog Database is unreachable...')
+        LOG.debug(str(ex))
     LOG.debug('url: ' + serviceurl + '?%s' % urlparams)
-
 
     domtable = dom.getElementsByTagName('TR')
     rowdict = {}
