@@ -385,7 +385,7 @@ class RestoreData(basetask.StandardTaskTemplate):
         # figured out.
         container = vdp.InputsContainer(importdata.ImportData, inputs.context, vis=vislist, session=sessionlist,
                                         save_flagonline=False, lazy=inputs.lazy, bdfflags=inputs.bdfflags,
-                                        asis=inputs.asis, ocorr_mode=inputs.ocorr_mode)
+                                        asis=inputs.asis, ocorr_mode=inputs.ocorr_mode, createmms='false')
         importdata_task = importdata.ImportData(container)
         return self._executor.execute(importdata_task, merge=True)
 
