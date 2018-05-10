@@ -15,6 +15,7 @@ class ObservingRun(object):
         self.measurement_sets = []
         self.virtual_science_spw_ids = {}
         self.virtual_science_spw_names = {}
+        self.virtual_science_spw_shortnames = {}
 
     def add_measurement_set(self, ms):
         if ms.basename in [m.basename for m in self.measurement_sets]:
@@ -28,6 +29,16 @@ class ObservingRun(object):
                 dict((int(s.id), s.name) for s in ms.get_spectral_windows(science_windows_only=True))
             self.virtual_science_spw_names = \
                 dict((s.name, int(s.id)) for s in ms.get_spectral_windows(science_windows_only=True))
+            self.virtual_science_spw_shortnames = {}
+            for name in self.virtual_science_spw_names.keys():
+                if 'ALMA' in name:
+                    i = name.rfind('#')
+                    if i != -1:
+                        self.virtual_science_spw_shortnames[name] = name[:i]
+                    else:
+                        self.virtual_science_spw_shortnames[name] = name
+                else:
+                    self.virtual_science_spw_shortnames[name] = name
 
         self.measurement_sets.append(ms)
 

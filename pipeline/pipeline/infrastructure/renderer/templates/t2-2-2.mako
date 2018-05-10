@@ -59,7 +59,7 @@ import pipeline.domain.measures as measures
 					<tr>
 					  <td>${spw.id}</td>
 					  <td>${pcontext.observing_run.real2virtual_spw_id(int(spw.id), ms)}</td>
-					  <td>${pcontext.observing_run.virtual_science_spw_ids.get(pcontext.observing_run.real2virtual_spw_id(int(spw.id), ms), 'N/A')}</td>
+					  <td>${pcontext.observing_run.virtual_science_spw_shortnames.get(pcontext.observing_run.virtual_science_spw_ids.get(pcontext.observing_run.real2virtual_spw_id(int(spw.id), ms), 'N/A'), 'N/A')}</td>
 			            <%
 						spwtypeentry='<td>'+str(spw.type)+'</td>'
 						if 'VLA' in pcontext.project_summary.telescope:

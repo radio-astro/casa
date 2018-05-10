@@ -592,7 +592,7 @@ def set_miscinfo(name, spw=None, field=None, type=None, iter=None, multiterm=Non
                     info['filnam%02d' % (i+1)] = filename_components[i]
             if spw:
                 if observing_run is not None:
-                    spw_names = [observing_run.virtual_science_spw_ids.get(int(spw_id), 'N/A')
+                    spw_names = [observing_run.virtual_science_spw_shortnames.get(observing_run.virtual_science_spw_ids.get(int(spw_id), 'N/A'), 'N/A')
                                  for spw_id in spw.split(',')]
                 else:
                     spw_names = ['N/A']
