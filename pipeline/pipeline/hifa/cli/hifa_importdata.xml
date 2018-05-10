@@ -75,11 +75,11 @@
 
             <param type="string" name="createmms">
                 <description>Create a MMS</description>
-                <value>automatic</value>
+                <value>false</value>
                 <allowed kind="enum">
-                    <value>automatic</value>
-                    <value>true</value>
                     <value>false</value>
+                    <value>true</value>
+                    <value>automatic</value>
                 </allowed>
             </param>
 
@@ -220,10 +220,10 @@ ocorr_mode -- Read in cross- and auto-correlation data(ca), cross-
    correlation data only (co), or autocorrelation data only (ao).
    default: ca
 
-createmms -- Create a multi-MeasurementSet ('true') ready for parallel
+createmms -- Create a multi-MeasurementSet ('true') ready for full parallel 
     processing, or a standard MeasurementSet ('false'). The default setting
     ('automatic') creates an MMS if running in a cluster environment.
-    default: automatic
+    default: 'false'
 
 --- pipeline task execution modes
 
