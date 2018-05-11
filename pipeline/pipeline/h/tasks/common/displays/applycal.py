@@ -608,6 +608,9 @@ class AmpVsFrequencySummaryChart(SpwSummaryChart):
             'coloraxis': 'antenna1',
             'overwrite': True,
             'showatm': True,
+            # CAS-10875: applycal plots should have global y-scale per source/dataset
+            'yselfscale': True,
+            'ysharedaxis': True
         }
         plot_args.update(kwargs)
 
