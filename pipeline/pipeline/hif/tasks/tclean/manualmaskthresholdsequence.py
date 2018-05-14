@@ -1,7 +1,5 @@
 from __future__ import absolute_import
 
-import os
-
 import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure as infrastructure
 from .basecleansequence import BaseCleanSequence
@@ -30,7 +28,7 @@ class ManualMaskThresholdSequence(BaseCleanSequence):
     def iteration(self, new_cleanmask, pblimit_image=-1, pblimit_cleanmask=-1, spw=None, frequency_selection=None, keep_iterating=None):
 
         if self.iter is None:
-            raise Exception, 'no data for iteration'
+            raise Exception('no data for iteration')
 
         elif self.iter == 0:
             tbTool = casatools.table
@@ -42,21 +40,14 @@ class ManualMaskThresholdSequence(BaseCleanSequence):
             self.result.cleanmask = new_cleanmask
             self.result.threshold = self.threshold
             self.result.sensitivity = self.sensitivity
-            self.result.niter =  self.niter
+            self.result.niter = self.niter
             self.result.iterating = True
 
-        elif self.iter == 1:
+        else:
             self.result.cleanmask = ''
             self.result.threshold = self.threshold
             self.result.sensitivity = self.sensitivity
             self.result.niter = self.niter
-            self.result.iterating = False
-
-        else:
-            self.result.cleanmask = ''
-            self.result.threshold = '0.0mJy'
-            self.result.sensitivity = 0.0
-            self.result.niter =  0
             self.result.iterating = False
 
         return self.result

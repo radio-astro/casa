@@ -686,8 +686,13 @@ class Tclean(cleanbase.CleanBase):
                 else:
                     sequence_manager.threshold = rms_threshold
 
+            # Adjust niter based on the dirty image statistics
+            new_niter = self.image_heuristics.niter_correction(inputs.niter, inputs.cell, inputs.imsize,
+                                                               residual_max, new_threshold)
+            sequence_manager.niter = new_niter
+
             LOG.info('Final VLASS single epoch tclean call with no mask')
-            result = self._do_clean(iternum=iteration, cleanmask='', niter=seq_result.niter, threshold=threshold,
+            result = self._do_clean(iternum=iteration, cleanmask='', niter=new_niter, threshold=threshold,
                                     sensitivity=sequence_manager.sensitivity, result=result)
 
         # If specmode is "cube", create from the non-pbcorrected cube
