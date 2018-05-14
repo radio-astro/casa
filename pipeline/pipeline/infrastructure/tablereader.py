@@ -298,6 +298,7 @@ class MeasurementSetReader(object):
                 else:
                     LOG.info('Populating ms.representative_target ...')
                     ms.representative_target = (sbinfo[0], sbinfo[1], sbinfo[2])
+                LOG.info('Populating ms.science_goals ...')
                 if not (sbinfo[3] and sbinfo[4]):
                     observing_mode = SBSummaryTable.get_observing_mode(ms)
                     # Only warn if the number of 12m antennas is greater than the number of 7m antennas
@@ -307,8 +308,16 @@ class MeasurementSetReader(object):
                         LOG.warn('Undefined angular resolution limits for %s' % (ms.basename))
                     ms.science_goals = {'minAcceptableAngResolution': '0.0arcsec', 'maxAcceptableAngResolution': '0.0arcsec'}
                 else:
-                    LOG.info('Populating ms.science_goals ...')
+                    #LOG.info('Populating ms.science_goals ...')
                     ms.science_goals = {'minAcceptableAngResolution': sbinfo[3], 'maxAcceptableAngResolution': sbinfo[4]}
+                if not sbinfo[5]:
+                    ms.science_goals['sensitivity'] = '0.0mJy'
+                else:
+                    ms.science_goals['sensitivity'] = sbinfo[5]
+                if not sbinfo[6]:
+                    ms.science_goals['dynamicRange'] = '1.0'
+                else:
+                    ms.science_goals['dynamicRange'] = sbinfo[6]
             LOG.info('Populating ms.array_name ...')
             # No MSMD functions to help populating the ASDM_EXECBLOCK table
             ms.array_name = ExecblockTable.get_execblock_info(ms)
@@ -571,8 +580,8 @@ class SBSummaryTable(object):
         return observing_modes
 
     @staticmethod
-    def _create_sbsummary_info(repSource, repFrequency, repBandwidth, minAngResolution, maxAngResolution):
-       return (repSource, repFrequency, repBandwidth, minAngResolution, maxAngResolution) 
+    def _create_sbsummary_info(repSource, repFrequency, repBandwidth, minAngResolution, maxAngResolution, sensitivity, dynamicRange):
+       return (repSource, repFrequency, repBandwidth, minAngResolution, maxAngResolution, sensitivity, dynamicRange) 
 
     @staticmethod
     def _read_table(ms):
@@ -599,6 +608,8 @@ class SBSummaryTable(object):
             repBandWidths = []
             minAngResolutions = []
             maxAngResolutions = []
+            sensitivities = []
+            dynamicRanges = []
             for i in range(table.nrows()):
 
                 # Create source
@@ -634,7 +645,19 @@ class SBSummaryTable(object):
                     maxAngResolution = None
                 maxAngResolutions.append(maxAngResolution)
 
-        rows = zip(repSources, repFrequencies, repBandWidths, minAngResolutions, maxAngResolutions)
+                # Create sensitivity goal
+                sensitivity = qa.quantity(_get_science_goal_value (scienceGoals[0:numScienceGoals[i],i],
+                    'sensitivityGoal'))
+                if sensitivity['value'] <= 0.0 or sensitivity['unit'] == '':
+                    sensitivity = None
+                sensitivities.append(sensitivity)
+
+                # Create dynamic range goal
+                dynamicRange = qa.quantity(_get_science_goal_value (scienceGoals[0:numScienceGoals[i],i],
+                    'dynamicRange'))
+                dynamicRanges.append(dynamicRange)
+
+        rows = zip(repSources, repFrequencies, repBandWidths, minAngResolutions, maxAngResolutions, sensitivities, dynamicRanges)
         return rows
 
 class ExecblockTable(object):

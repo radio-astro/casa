@@ -73,8 +73,8 @@ class PerformanceParameters(object):
         max_angular_resolution = '0.0arcsec',
         #desired_largest_scale = '0.0arcsec',
         #desired_spectral_resolution = '0.0MHz',
-        #desired_sensitivity = '0.0Jy',
-        #desired_dynamic_range = 1.0,
+        desired_sensitivity = '0.0mJy',
+        desired_dynamic_range = 1.0,
 
         # Note: Remove frequency and bandwidth settings?
         representative_source = '',
@@ -93,8 +93,8 @@ class PerformanceParameters(object):
         self.max_angular_resolution = max_angular_resolution
         #self.desired_largest_scale = desired_largest_scale
         #self.desired_spectral_resolution = desired_spectral_resolution
-        #self.desired_sensitivity = desired_sensitivity
-        #self.desired_dynamic_range = desired_dynamic_range
+        self.desired_sensitivity = desired_sensitivity
+        self.desired_dynamic_range = desired_dynamic_range
 
         # Representative source parameters
         # Note: Remove frequency and bandwidth settings?
