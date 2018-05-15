@@ -33,6 +33,7 @@ class TcleanInputs(cleanbase.CleanBaseInputs):
     nsigma = vdp.VisDependentProperty(default=None)
     reffreq = vdp.VisDependentProperty(default=None)
     tlimit = vdp.VisDependentProperty(default=2.0)
+    weighting = vdp.VisDependentProperty(default='briggs')
 
     # override CleanBaseInputs default value of 'auto'
     hm_masking = vdp.VisDependentProperty(default='centralregion')
@@ -102,15 +103,15 @@ class TcleanInputs(cleanbase.CleanBaseInputs):
     def __init__(self, context, output_dir=None, vis=None, imagename=None, intent=None, field=None, spw=None,
                  spwsel_lsrk=None, spwsel_topo=None, uvrange=None, specmode=None, gridder=None, deconvolver=None,
                  nterms=None, outframe=None, imsize=None, cell=None, phasecenter=None, stokes=None, nchan=None,
-                 start=None, width=None, nbin=None, weighting=None, robust=None, noise=None, npixels=None,
+                 start=None, width=None, nbin=None,
                  restoringbeam=None, hm_masking=None, hm_sidelobethreshold=None, hm_noisethreshold=None,
                  hm_lownoisethreshold=None, hm_negativethreshold=None, hm_minbeamfrac=None, hm_growiterations=None,
                  hm_dogrowprune=None, hm_minpercentchange=None, hm_cleaning=None,
                  iter=None, mask=None, niter=None, threshold=None, tlimit=None, masklimit=None, maxncleans=None,
                  cleancontranges=None, parallel=None,
                  # Extra parameters not in the CLI task interface
-                 uvtaper=None, scales=None, nsigma=None, cycleniter=None, cyclefactor=None, sensitivity=None,
-                 reffreq=None, conjbeams=None, is_per_eb=None,
+                 weighting=None, robust=None, uvtaper=None, scales=None, nsigma=None, cycleniter=None, cyclefactor=None,
+                 sensitivity=None, reffreq=None, conjbeams=None, is_per_eb=None,
                  # End of extra parameters
                  heuristics=None):
         super(TcleanInputs, self).__init__(context, output_dir=output_dir, vis=vis, imagename=imagename, intent=intent,
@@ -119,7 +120,7 @@ class TcleanInputs(cleanbase.CleanBaseInputs):
                                            cycleniter=cycleniter, cyclefactor=cyclefactor, scales=scales,
                                            outframe=outframe, imsize=imsize, cell=cell, phasecenter=phasecenter,
                                            nchan=nchan, start=start, width=width, stokes=stokes, weighting=weighting,
-                                           robust=robust, noise=noise, npixels=npixels, restoringbeam=restoringbeam,
+                                           robust=robust, restoringbeam=restoringbeam,
                                            iter=iter, mask=mask, hm_masking=hm_masking,
                                            hm_sidelobethreshold=hm_sidelobethreshold,
                                            hm_noisethreshold=hm_noisethreshold,
@@ -727,7 +728,6 @@ class Tclean(cleanbase.CleanBase):
                                                   specmode=inputs.specmode,
                                                   gridder=inputs.gridder,
                                                   deconvolver=inputs.deconvolver,
-                                                  uvtaper=inputs.uvtaper,
                                                   nterms=inputs.nterms,
                                                   cycleniter=inputs.cycleniter,
                                                   cyclefactor=inputs.cyclefactor,
@@ -742,8 +742,7 @@ class Tclean(cleanbase.CleanBase):
                                                   width=inputs.width,
                                                   weighting=inputs.weighting,
                                                   robust=inputs.robust,
-                                                  noise=inputs.noise,
-                                                  npixels=inputs.npixels,
+                                                  uvtaper=inputs.uvtaper,
                                                   restoringbeam=inputs.restoringbeam,
                                                   iter=iternum,
                                                   mask=cleanmask,

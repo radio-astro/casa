@@ -149,34 +149,6 @@ Compute a clean map.
     <value>-1</value>
   </param>
 
-  <param type="string" name="weighting">
-     <description>Type of weighting</description>
-     <value>briggs</value>
-       <allowed kind="enum">
-         <value>briggs</value>
-         <value>natural</value>
-         <value>uniform</value>
-         <value>superuniform</value>
-         <value>briggsabs</value>
-       </allowed>
-  </param>
-
-  <param type="double" name="robust" subparam="true">
-     <description>Briggs weighting robustness parameter</description>
-     <value>-999.0</value>
-  </param>
-
-  <param type="any" name="noise" subparam="true">
-    <description>Briggs weighting noise parameter</description>
-    <any type="variant"/>
-    <value type="string">1.0Jy</value>
-  </param>
-
-  <param type="int" name="npixels" subparam="true">
-    <description>Weighting algorithm parameter</description>
-    <value type="int">0</value>
-  </param>
-
   <param type="stringArray" name="restoringbeam" subparam="true">
      <description>Gaussian restoring beam, \'\' for default</description>
      <value></value>
@@ -422,23 +394,6 @@ Compute a clean map.
       </equals>
     </when>
 
-    <when param="weighting">
-      <equals value="briggs">
-         <default param="robust"><value>-999.0</value></default>
-         <default param="npixels"><value>0</value></default>
-      </equals>
-      <equals value="natural"/>
-      <equals value="uniform"/>
-      <equals value="briggsabs">
-        <default param="robust"><value>-999.0</value></default>
-        <default param="noise"><value type="string">1.0Jy</value></default>
-        <default param="npixels"><value>0</value></default>
-      </equals>
-      <equals value="superuniform">
-        <default param="npixels"><value>0</value></default>
-      </equals>
-    </when>
-
   </constraints>
 
 </input>
@@ -576,24 +531,6 @@ width -- Width of spectral dimension in frequency, \'\' for default.
 nbin -- Channel binning factor
     default: -1
     example: 2
-
-weighting -- Weighting to apply to visibilities. Options are: 'natural',
-    'uniform','briggs', 'superuniform','briggsabs','radial'
-     default='briggs'
-     example: weighting='uniform'
-
-robust -- Parameter for  'briggs' and 'briggsabs' weighting. Ranges from -2.0 to
-    2.0. -2 for uniform +2 for natural.
-    default=-999.0
-    example: 0.7
-
-noise -- Parameter for 'briggsabs' weighting
-    default: '1.0Jy'
-    example: '0.5Jy'
-
-npixels -- Parameter for 'briggs' and 'briggsabs; weighting
-    default: 0
-    example: 0
 
 restoringbeam -- Gaussian restoring beam for clean, \'\' for default
     default: \'\'

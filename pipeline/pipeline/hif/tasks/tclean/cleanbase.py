@@ -42,8 +42,6 @@ class CleanBaseInputs(vdp.StandardInputs):
     hm_sidelobethreshold = vdp.VisDependentProperty(default=-999.0)
     nchan = vdp.VisDependentProperty(default=-1)
     niter = vdp.VisDependentProperty(default=5000)
-    noise = vdp.VisDependentProperty(default='1.0Jy')
-    npixels = vdp.VisDependentProperty(default=0)
     nterms = vdp.VisDependentProperty(default=None)
     orig_specmode = vdp.VisDependentProperty(default='')
     outframe = vdp.VisDependentProperty(default='LSRK')
@@ -100,7 +98,7 @@ class CleanBaseInputs(vdp.StandardInputs):
                  spw=None, spwsel=None, uvrange=None, orig_specmode=None, specmode=None, gridder=None, deconvolver=None,
                  uvtaper=None, nterms=None, cycleniter=None, cyclefactor=None, scales=None, outframe=None, imsize=None,
                  cell=None, phasecenter=None, nchan=None, start=None, width=None, stokes=None, weighting=None,
-                 robust=None, noise=None, npixels=None, restoringbeam=None, iter=None, mask=None, hm_masking=None,
+                 robust=None, restoringbeam=None, iter=None, mask=None, hm_masking=None,
                  hm_sidelobethreshold=None, hm_noisethreshold=None, hm_lownoisethreshold=None,
                  hm_negativethreshold=None, hm_minbeamfrac=None, hm_growiterations=None, hm_dogrowprune=None,
                  hm_minpercentchange=None, pblimit=None, niter=None,
@@ -136,8 +134,6 @@ class CleanBaseInputs(vdp.StandardInputs):
         self.stokes = stokes
         self.weighting = weighting
         self.robust = robust
-        self.noise = noise
-        self.npixels = npixels
         self.restoringbeam = restoringbeam
         self.iter = iter
         self.mask = mask
@@ -287,7 +283,6 @@ class CleanBase(basetask.StandardTaskTemplate):
             'stokes':        inputs.stokes,
             'weighting':     inputs.weighting,
             'robust':        inputs.robust,
-            'npixels':       inputs.npixels,
             'restoringbeam': inputs.restoringbeam,
             'uvrange':       inputs.uvrange,
             'savemodel':     'none',

@@ -121,7 +121,7 @@ class MakeImListInputs(vdp.StandardInputs):
     def __init__(self, context, output_dir=None, vis=None, imagename=None, intent=None, field=None, spw=None,
                  contfile=None, linesfile=None, uvrange=None, specmode=None, outframe=None, hm_imsize=None,
                  hm_cell=None, calmaxpix=None, phasecenter=None, nchan=None, start=None, width=None, nbins=None,
-                 clearlist=None, per_eb=None):
+                 robust=None, uvtaper=None, clearlist=None, per_eb=None):
         self.context = context
         self.output_dir = output_dir
         self.vis = vis
@@ -143,6 +143,8 @@ class MakeImListInputs(vdp.StandardInputs):
         self.start = start
         self.width = width
         self.nbins = nbins
+        self.robust = robust
+        self.uvtaper = uvtaper
         self.clearlist = clearlist
         self.per_eb = per_eb
 
@@ -326,9 +328,20 @@ class MakeImList(basetask.StandardTaskTemplate):
             else:
                 spwlist = filtered_spwlist
 
-            # Get default heuristics robust and uvtaper values
-            default_robust = self.heuristics.robust()
-            default_uvtaper = self.heuristics.uvtaper()
+            # Get robust and uvtaper values
+            if inputs.robust not in (None, -999.0):
+                robust = inputs.robust
+            elif 'robust' in inputs.context.imaging_parameters:
+                robust = inputs.context.imaging_parameters['robust']
+            else:
+                robust = self.heuristics.robust()
+
+            if inputs.uvtaper not in (None, []):
+                uvtaper = inputs.uvtaper
+            elif 'uvtaper' in inputs.context.imaging_parameters:
+                uvtaper = inputs.context.imaging_parameters['uvtaper']
+            else:
+                uvtaper = self.heuristics.uvtaper()
 
             # cell is a list of form [cellx, celly]. If the list has form [cell]
             # then that means the cell is the same size in x and y. If cell is
@@ -338,7 +351,7 @@ class MakeImList(basetask.StandardTaskTemplate):
                 synthesized_beams = {}
                 min_cell = ['3600arcsec']
                 for spwspec in spwlist:
-                    synthesized_beams[spwspec] = self.heuristics.synthesized_beam(field_intent_list=field_intent_list, spwspec=spwspec, robust=default_robust, uvtaper=default_uvtaper)
+                    synthesized_beams[spwspec] = self.heuristics.synthesized_beam(field_intent_list=field_intent_list, spwspec=spwspec, robust=robust, uvtaper=uvtaper)
                     # the heuristic cell is always the same for x and y as
                     # the value derives from the single value returned by
                     # imager.advise
@@ -558,9 +571,9 @@ class MakeImList(basetask.StandardTaskTemplate):
                             width=widths[(field_intent[0], spwspec)],
                             nbin=nbin,
                             nchan=nchans[(field_intent[0], spwspec)],
-                            robust=default_robust,
+                            robust=robust,
                             uvrange=inputs.uvrange,
-                            uvtaper=default_uvtaper,
+                            uvtaper=uvtaper,
                             stokes='I',
                             heuristics=self.heuristics,
                             vis=vislist if inputs.per_eb or any_non_imaging_ms else None,

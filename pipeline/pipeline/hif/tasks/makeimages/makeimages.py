@@ -31,10 +31,7 @@ class MakeImagesInputs(vdp.StandardInputs):
     hm_sidelobethreshold = vdp.VisDependentProperty(default=-999.0)
     masklimit = vdp.VisDependentProperty(default=2.0)
     maxncleans = vdp.VisDependentProperty(default=10)
-    noise = vdp.VisDependentProperty(default='1.0Jy')
-    npixels = vdp.VisDependentProperty(default=0)
     parallel = vdp.VisDependentProperty(default='automatic')
-    robust = vdp.VisDependentProperty(default=-999.0)
     tlimit = vdp.VisDependentProperty(default=2.0)
     weighting = vdp.VisDependentProperty(default='briggs')
 
@@ -42,20 +39,19 @@ class MakeImagesInputs(vdp.StandardInputs):
     def target_list(self):
         return self.context.clean_list_pending
 
-    def __init__(self, context, output_dir=None, vis=None, target_list=None, weighting=None, robust=None, noise=None,
-                 npixels=None, hm_masking=None, hm_sidelobethreshold=None, hm_noisethreshold=None,
+    def __init__(self, context, output_dir=None, vis=None, target_list=None,
+                 hm_masking=None, hm_sidelobethreshold=None, hm_noisethreshold=None,
                  hm_lownoisethreshold=None, hm_negativethreshold=None, hm_minbeamfrac=None, hm_growiterations=None,
                  hm_dogrowprune=None, hm_minpercentchange=None,
-                 hm_cleaning=None, tlimit=None, masklimit=None, maxncleans=None, cleancontranges=None, parallel=None):
+                 hm_cleaning=None, tlimit=None, masklimit=None, maxncleans=None, cleancontranges=None, parallel=None,
+                 # Extra parameters
+                 weighting=None):
         self.context = context
         self.output_dir = output_dir
         self.vis = vis
 
         self.target_list = target_list
         self.weighting = weighting
-        self.robust = robust
-        self.noise = noise
-        self.npixels = npixels
         self.hm_masking = hm_masking
         self.hm_sidelobethreshold = hm_sidelobethreshold
         self.hm_noisethreshold = hm_noisethreshold
@@ -201,10 +197,8 @@ class CleanTaskFactory(object):
         task_args.update({
             'output_dir': inputs.output_dir,
             'vis': inputs.vis,
-            # set the weighting values.
+            # set the weighting type
             'weighting': inputs.weighting,
-            'noise': inputs.noise,
-            'npixels': inputs.npixels,
             # other vals
             'tlimit': inputs.tlimit,
             'masklimit': inputs.masklimit,
@@ -215,7 +209,12 @@ class CleanTaskFactory(object):
         if target['robust']:
             task_args['robust'] = target['robust']
         else:
-            task_args['robust'] = inputs.robust
+            task_args['robust'] = image_heuristics.robust()
+
+        if target['uvtaper']:
+            task_args['uvtaper'] = target['uvtaper']
+        else:
+            task_args['uvtaper'] = image_heuristics.uvtaper()
 
         # set the imager mode here (temporarily ...)
         image_heuristics = target['heuristics']

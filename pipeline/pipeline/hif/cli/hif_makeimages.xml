@@ -22,34 +22,6 @@ Compute clean results from a list of specified targets.
     <value>{}</value>
   </param>
 
-  <param type="string" name="weighting">
-    <description>Weighting of uv (natural, uniform, briggs, ...)</description>
-    <value>briggs</value>
-    <allowed kind="enum">
-      <value>briggs</value>
-      <value>natural</value>
-      <value>uniform</value>
-      <value>superuniform</value>
-      <value>briggsabs</value>
-    </allowed>
-  </param>
-
-  <param type="double" name="robust" subparam="true">
-    <description>Briggs robustness parameter</description>
-    <value>-999.0</value>
-  </param>
-
-  <param type="any" name="noise"  subparam="true">
-    <description>noise parameter for briggs abs mode weighting</description>
-    <any type="variant"/>
-    <value type="string">1.0Jy</value>
-  </param>
-
-  <param type="int" name="npixels" subparam="true">
-    <description>number of pixels for superuniform or briggs weighting</description>
-    <value>0</value>
-  </param>
-
   <param type="string" name="hm_masking">
      <description>Pipeline heuristics masking option</description>
        <value>auto</value>
@@ -221,23 +193,6 @@ Compute clean results from a list of specified targets.
       </equals>
     </when>
 
-    <when param="weighting">
-      <equals value="briggs">
-         <default param="robust"><value>-999.0</value></default>
-         <default param="npixels"><value>0</value></default>
-      </equals>
-      <equals value="natural"/>
-      <equals value="uniform"/>
-      <equals value="briggsabs">
-        <default param="robust"><value>-999.0</value></default>
-        <default param="noise"><value type="string">1.0Jy</value></default>
-        <default param="npixels"><value>0</value></default>
-      </equals>
-      <equals value="superuniform">
-        <default param="npixels"><value>0</value></default>
-      </equals>
-    </when>
-
   </constraints>
 
 </input>
@@ -278,19 +233,6 @@ vis -- The list of input MeasurementSets. Defaults to the list of
     example: vis='ngc5921.ms'
              vis=['ngc5921a.ms', ngc5921b.ms', 'ngc5921c.ms']
     default: use all MeasurementSets in the context 
-
-weighting -- Weighting to apply to visibilities:
-             default='briggs'; example: weighting='uniform';
-             Options: 'natural','uniform','briggs', 
-                'superuniform','briggsabs','radial'
-
-weighting_robust -- For weighting='briggs' and 'briggsabs'
-                       default=-999.0; example: robust=0.7;
-                       Options: -2.0 to 2.0; -2 (uniform)/+2 (natural)
-                 
-weighting_noise -- For weighting='briggsabs'
-                       noise parameter to use for Briggs "abs" weighting
-                       example noise='1.0mJy'
 
 hm_masking -- Clean masking mode. Options are 'centralregion',
     'psf', 'psfiter', 'auto', 'manual' and 'none'

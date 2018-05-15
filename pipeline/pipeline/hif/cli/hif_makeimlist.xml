@@ -117,6 +117,16 @@ Create a a list of images to be cleaned.
     <value type="string"></value>
   </param>
 
+  <param type="double" name="robust" subparam="true">
+    <description>Briggs robustness parameter</description>
+    <value>-999.0</value>
+  </param>
+
+  <param type="stringArray" name="uvtaper" subparam="true">
+    <description>uv-taper on outer baselines</description>
+    <value></value>
+  </param>
+
   <param type="bool" name="clearlist" subparam="true">
     <description>Clear any previous target list</description>
     <value>False</value>
@@ -169,6 +179,8 @@ Create a a list of images to be cleaned.
         <default param="hm_cell"><value type="stringArray"></value></default>
         <default param="width"><value type="string"></value></default>
         <default param="nbins"><value type="string"></value></default>
+        <default param="robust"><value type="double">-999.0</value></default>
+        <default param="uvtaper"><value type="stringArray"></value></default>
         <default param="clearlist"><value type="bool">False</value></default>
         <default param="per_eb"><value type="bool">False</value></default>
         <default param="dryrun"><value type="bool">False</value></default>
@@ -276,6 +288,14 @@ nbins -- Channel binning factors per spw
              Optional wildcard: '*:nb'
     example: '9:2,11:4,13:2,15:8'
              '*:2'
+
+robust -- Briggs robustness parameter
+    default=-999.0; example: robust=0.7;
+    Options: -2.0 to 2.0; -2 (uniform)/+2 (natural)
+
+uvtaper -- uv-taper on outer baselines
+    default=[]
+    example: ['10arcsec']
 
 ---- pipeline context defined parameter arguments which can be set only in
      'interactive mode'

@@ -9,7 +9,8 @@ def hif_makeimlist(vis=None, imagename=None, intent=None, field=None,
                    spw=None, contfile=None, linesfile=None, uvrange=None,
                    specmode=None, outframe=None, hm_imsize=None, hm_cell=None,
                    calmaxpix=None, phasecenter=None,
-                   nchan=None, start=None, width=None, nbins=None, clearlist=None,
+                   nchan=None, start=None, width=None, nbins=None,
+                   robust=None, uvtaper=None, clearlist=None,
                    per_eb=None, pipelinemode=None, dryrun=None, acceptresults=None):
 
     ##########################################################################
