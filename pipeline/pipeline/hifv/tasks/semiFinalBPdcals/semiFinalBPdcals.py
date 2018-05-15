@@ -457,7 +457,7 @@ class semiFinalBPdcals(basetask.StandardTaskTemplate):
                               'calwt'      :[False]*ntables,
                               'parang'     :self.parang,
                               'applymode'  :'calflagstrict',
-                              'flagbackup' :False}
+                              'flagbackup' :True}
 
         job = casa_tasks.applycal(**applycal_task_args)
 
