@@ -193,6 +193,8 @@ class CleanTaskFactory(object):
                         'TARGET' in target['intent'],
                         mpihelpers.is_mpi_ready()])
 
+        image_heuristics = target['heuristics']
+
         task_args = dict(target)
         task_args.update({
             'output_dir': inputs.output_dir,
@@ -217,7 +219,6 @@ class CleanTaskFactory(object):
             task_args['uvtaper'] = image_heuristics.uvtaper()
 
         # set the imager mode here (temporarily ...)
-        image_heuristics = target['heuristics']
         if target['gridder'] is not None:
             task_args['gridder'] = target['gridder']
         else:
