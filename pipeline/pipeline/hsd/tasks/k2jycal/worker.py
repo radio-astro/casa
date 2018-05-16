@@ -17,7 +17,7 @@ class SDK2JyCalWorkerInputs(vdp.StandardInputs):
     caltype = vdp.VisDependentProperty(default='amp', readonly=True)
     
     def __init__(self, context, output_dir, vis, caltable, factors):
-        super(self.__class__, self).__init__()
+        super(SDK2JyCalWorkerInputs, self).__init__()
         
         self.context = context
         self.vis = vis
