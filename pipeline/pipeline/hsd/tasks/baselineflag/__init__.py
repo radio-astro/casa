@@ -12,5 +12,5 @@ SDBLFlag = HpcSDBLFlag # SerialSDBLFlag or HpcSDBLFlag
 
 qaadapter.registry.register_to_flagging_topic(baselineflag.SDBLFlagResults)
 
-weblog.add_renderer(SerialSDBLFlag, renderer.T2_4MDetailsBLFlagRenderer(always_rerender=True), group_by=weblog.UNGROUPED)
-weblog.add_renderer(HpcSDBLFlag, renderer.T2_4MDetailsBLFlagRenderer(always_rerender=True), group_by=weblog.UNGROUPED)
+weblog.add_renderer(SerialSDBLFlag, renderer.T2_4MDetailsBLFlagRenderer(always_rerender=False), group_by=weblog.UNGROUPED)
+weblog.add_renderer(HpcSDBLFlag, renderer.T2_4MDetailsBLFlagRenderer(always_rerender=False), group_by=weblog.UNGROUPED)
