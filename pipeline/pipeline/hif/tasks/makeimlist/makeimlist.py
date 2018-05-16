@@ -331,6 +331,18 @@ class MakeImList(basetask.StandardTaskTemplate):
             else:
                 spwlist = filtered_spwlist
 
+            # Select only the highest frequency spw to get the smallest beams
+            ref_ms = inputs.context.observing_run.get_ms(vislist[0])
+            max_freq = 0.0
+            max_freq_spwid = -1
+            for spwid in filtered_spwlist:
+                real_spwid = inputs.context.observing_run.virtual2real_spw_id(spwid, ref_ms)
+                spwid_centre_freq = ref_ms.get_spectral_window(real_spwid).centre_frequency.to_units(measures.FrequencyUnits.HERTZ)
+                if spwid_centre_freq > max_freq:
+                    max_freq = spwid_centre_freq
+                    max_freq_spwid = spwid
+            max_freq_spwlist = [str(max_freq_spwid)]
+
             # Get robust and uvtaper values
             if inputs.robust not in (None, -999.0):
                 robust = inputs.robust
@@ -353,8 +365,8 @@ class MakeImList(basetask.StandardTaskTemplate):
             if cell == []:
                 synthesized_beams = {}
                 min_cell = ['3600arcsec']
-                for spwspec in spwlist:
-                    synthesized_beams[spwspec] = self.heuristics.synthesized_beam(field_intent_list=field_intent_list, spwspec=spwspec, robust=robust, uvtaper=uvtaper)
+                for spwspec in max_freq_spwlist:
+                    synthesized_beams[spwspec] = self.heuristics.synthesized_beam(field_intent_list=field_intent_list, spwspec=spwspec, robust=robust, uvtaper=uvtaper, pixperbeam=pixperbeam)
                     # the heuristic cell is always the same for x and y as
                     # the value derives from the single value returned by
                     # imager.advise
@@ -365,8 +377,7 @@ class MakeImList(basetask.StandardTaskTemplate):
                 min_cell = ['%.2g%s' % (qaTool.getvalue(min_cell[0]), qaTool.getunit(min_cell[0]))]
                 # Use same cell size for all spws (in a band (TODO))
                 for spwspec in spwlist:
-                    if ('invalid' not in cells[spwspec]):
-                        cells[spwspec] = min_cell
+                    cells[spwspec] = min_cell
             else:
                 for spwspec in spwlist:
                     cells[spwspec] = cell
@@ -407,13 +418,13 @@ class MakeImList(basetask.StandardTaskTemplate):
             if imsize == []:
                 # get primary beams for each spwspec
                 largest_primary_beams = {}
-                for spwspec in spwlist:
+                for spwspec in max_freq_spwlist:
                     largest_primary_beams[spwspec] = self.heuristics.largest_primary_beam_size(spwspec=spwspec)
 
                 for field_intent in field_intent_list:
                     max_x_size = 1
                     max_y_size = 1
-                    for spwspec in spwlist:
+                    for spwspec in max_freq_spwlist:
 
                         try:
                             gridder = self.heuristics.gridder(field_intent[1], field_intent[0])

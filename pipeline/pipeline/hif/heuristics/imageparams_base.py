@@ -280,7 +280,7 @@ class ImageParamsHeuristics(object):
 
         return largest_primary_beam_size
 
-    def synthesized_beam(self, field_intent_list, spwspec, robust=0.5, uvtaper=[]):
+    def synthesized_beam(self, field_intent_list, spwspec, robust=0.5, uvtaper=[], pixperbeam=5.0):
 
         '''Calculate synthesized beam for a given field / spw selection.'''
 
@@ -295,6 +295,18 @@ class ImageParamsHeuristics(object):
         spwids = p.findall(' %s' % spwspec)
         spwids = map(int, spwids)
         spwids = list(set(spwids))
+
+        # Select only the highest frequency spw to get the smallest beam
+        ref_ms = self.observing_run.get_ms(self.vislist[0])
+        max_freq = 0.0
+        max_freq_spwid = -1
+        for spwid in spwids:
+            real_spwid = self.observing_run.virtual2real_spw_id(spwid, ref_ms)
+            spwid_centre_freq = ref_ms.get_spectral_window(real_spwid).centre_frequency.to_units(measures.FrequencyUnits.HERTZ)
+            if spwid_centre_freq > max_freq:
+                max_freq = spwid_centre_freq
+                max_freq_spwid = spwid
+        spwids = [max_freq_spwid]
 
         # find largest primary beam size among spws in spwspec
         largest_primary_beam_size = self.largest_primary_beam_size(spwspec)
@@ -353,7 +365,7 @@ class ImageParamsHeuristics(object):
                     else:
                         cellv = qaTool.convert(rtn[2], 'arcsec')['value']
                         cellu = 'arcsec'
-                        cellv /= 2.5
+                        cellv /= (0.5 * pixperbeam)
 
                         # Now get better estimate from makePSF
                         tmp_psf_filename = str(uuid.uuid4())
