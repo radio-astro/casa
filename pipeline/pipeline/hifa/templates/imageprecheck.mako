@@ -20,6 +20,8 @@ minAR_v = cqa.getvalue(cqa.convert(result[0].minAcceptableAngResolution, 'arcsec
 maxAR_v = cqa.getvalue(cqa.convert(result[0].maxAcceptableAngResolution, 'arcsec'))
 minAR = '%#.3g arcsec' % (minAR_v)
 maxAR = '%#.3g arcsec' % (maxAR_v)
+sensitivityGoal_v = cqa.getvalue(cqa.convert(result[0].sensitivityGoal, 'mJy'))
+sensitivityGoal = '%#.3g mJy' % (sensitivityGoal_v)
 robust = '%.1f' % (result[0].hm_robust)
 uvtaper = '%s' % (result[0].hm_uvtaper)
 single_continuum = result[0].single_continuum
@@ -56,7 +58,11 @@ Min / Max Acceptable Resolution:
 <br>
 Goal PI sensitivity:
 %if real_repr_target:
-    Not available
+    %if sensitivityGoal_v==0.0:
+        Not available
+    %else:
+        ${sensitivityGoal}
+    %endif
 %else:
     Not available
 %endif

@@ -16,8 +16,9 @@ LOG = infrastructure.get_logger(__name__)
 
 class ImagePreCheckResults(basetask.Results):
     def __init__(self, real_repr_target=False, repr_target='', repr_source='', repr_spw=None,
-                 minAcceptableAngResolution='0.0arcsec', maxAcceptableAngResolution='0.0arcsec', hm_robust=0.5,
-                 hm_uvtaper=[], sensitivities=None, sensitivity_bandwidth=None, score=None, single_continuum=False):
+                 minAcceptableAngResolution='0.0arcsec', maxAcceptableAngResolution='0.0arcsec',
+                 sensitivityGoal='0mJy', hm_robust=0.5, hm_uvtaper=[],
+                 sensitivities=None, sensitivity_bandwidth=None, score=None, single_continuum=False):
         super(ImagePreCheckResults, self).__init__()
 
         if sensitivities is None:
@@ -29,6 +30,7 @@ class ImagePreCheckResults(basetask.Results):
         self.repr_spw = repr_spw
         self.minAcceptableAngResolution = minAcceptableAngResolution
         self.maxAcceptableAngResolution = maxAcceptableAngResolution
+        self.sensitivityGoal = sensitivityGoal
         self.hm_robust = hm_robust
         self.hm_uvtaper = hm_uvtaper
         self.sensitivities = sensitivities
@@ -95,7 +97,7 @@ class ImagePreCheck(basetask.StandardTaskTemplate):
             imaging_mode='ALMA'
         )
 
-        repr_target, repr_source, repr_spw, repr_freq, reprBW_mode, real_repr_target, minAcceptableAngResolution, maxAcceptableAngResolution = image_heuristics.representative_target()
+        repr_target, repr_source, repr_spw, repr_freq, reprBW_mode, real_repr_target, minAcceptableAngResolution, maxAcceptableAngResolution, sensitivityGoal = image_heuristics.representative_target()
 
         repr_field = list(image_heuristics.field_intent_list('TARGET', repr_source))[0][0]
 
@@ -309,6 +311,7 @@ class ImagePreCheck(basetask.StandardTaskTemplate):
             repr_spw,
             minAcceptableAngResolution=minAcceptableAngResolution,
             maxAcceptableAngResolution=maxAcceptableAngResolution,
+            sensitivityGoal=sensitivityGoal,
             hm_robust=hm_robust,
             hm_uvtaper=hm_uvtaper,
             sensitivities=sensitivities,

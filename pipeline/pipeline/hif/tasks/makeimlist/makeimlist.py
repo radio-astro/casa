@@ -198,7 +198,7 @@ class MakeImList(basetask.StandardTaskTemplate):
                 imaging_mode=inputs.context.project_summary.telescope
             )
 
-            repr_target, repr_source, repr_spw, repr_freq, reprBW_mode, real_repr_target, minAcceptableAngResolution, maxAcceptableAngResolution = self.heuristics.representative_target()
+            repr_target, repr_source, repr_spw, repr_freq, reprBW_mode, real_repr_target, minAcceptableAngResolution, maxAcceptableAngResolution, sensitivityGoal = self.heuristics.representative_target()
             # The PI cube shall only be created for real representative targets
             if not real_repr_target:
                 LOG.info('No representative target found. No PI cube will be made.')

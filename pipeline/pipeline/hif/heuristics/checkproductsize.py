@@ -77,7 +77,8 @@ class CheckProductSizeHeuristics(object):
         reprBW_mode, \
         real_repr_target, \
         minAcceptableAngResolution, \
-        maxAcceptableAngResolution = \
+        maxAcceptableAngResolution, \
+        sensitivityGoal = \
             imlist[0]['heuristics'].representative_target()
 
         # Get original maximum cube and product sizes

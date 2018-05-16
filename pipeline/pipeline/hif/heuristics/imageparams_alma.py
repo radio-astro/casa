@@ -50,7 +50,7 @@ class ImageParamsHeuristicsALMA(ImageParamsHeuristics):
 
         cqa = casatools.quanta
 
-        repr_target, repr_source, repr_spw, repr_freq, reprBW_mode, real_repr_target, minAcceptableAngResolution, maxAcceptableAngResolution = self.representative_target()
+        repr_target, repr_source, repr_spw, repr_freq, reprBW_mode, real_repr_target, minAcceptableAngResolution, maxAcceptableAngResolution, sensitivityGoal = self.representative_target()
 
         # Protection against spurious long baselines
         if protect_long is not None:
