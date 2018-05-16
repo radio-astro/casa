@@ -55,16 +55,18 @@ class MakeImListInputs(vdp.StandardInputs):
 
     @hm_cell.convert
     def hm_cell(self, val):
+        if not isinstance(val, str) and not isinstance(val, list):
+            raise ValueError('Malformatted value for hm_cell: {!r}'.format(val))
+
         if isinstance(val, str):
-            if 'ppb' in val:
-                return val
+            val = [val]
 
-            try:
-                return ast.literal_eval(val)
-            except:
-                pass
+        for item in val:
+            if isinstance(item, str):
+                if 'ppb' in item:
+                    return item
 
-        raise ValueError('Malformatted value for hm_cell: {!r}'.format(val))
+        return val
 
     @vdp.VisDependentProperty
     def hm_imsize(self):
@@ -74,20 +76,21 @@ class MakeImListInputs(vdp.StandardInputs):
 
     @hm_imsize.convert
     def hm_imsize(self, val):
+        if not isinstance(val, int) and not isinstance(val, str) and not isinstance(val, list):
+            raise ValueError('Malformatted value for hm_imsize: {!r}'.format(val))
+
         if isinstance(val, int):
             return [val, val]
 
         if isinstance(val, str):
-            if 'pb' in val:
-                return val
+            val = [val]
 
-            try:
-                # convert string to list
-                return ast.literal_eval(val).split(',')
-            except:
-                pass
+        for item in val:
+            if isinstance(item, str):
+                if 'pb' in item:
+                    return item
 
-        raise ValueError('Malformatted value for hm_imsize: {!r}'.format(val))
+        return val
 
     linesfile = vdp.VisDependentProperty(default='lines.dat')
 
