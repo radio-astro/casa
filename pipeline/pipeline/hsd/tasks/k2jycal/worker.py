@@ -6,20 +6,25 @@ from numpy import sqrt
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
+import pipeline.infrastructure.vdp as vdp
 import pipeline.infrastructure.callibrary as callibrary
 from pipeline.infrastructure import casa_tasks
 
 LOG = infrastructure.get_logger(__name__)
 
 
-class SDK2JyCalWorkerInputs(basetask.StandardInputs):
+class SDK2JyCalWorkerInputs(vdp.StandardInputs):
+    caltype = vdp.VisDependentProperty(default='amp', readonly=True)
+    
     def __init__(self, context, output_dir, vis, caltable, factors):
-        # set the properties to the values given as input arguments
-        self._init_properties(vars())
+        super(self.__class__, self).__init__()
+        
+        self.context = context
+        self.vis = vis
+        self.output_dir = output_dir
+        self.caltable = caltable
+        self.factors = factors
 
-    @property
-    def caltype(self):
-        return 'amp'
 
     # Convert to CASA gencal task arguments.
     def to_casa_args(self):
