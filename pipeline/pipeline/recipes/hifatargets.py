@@ -20,6 +20,7 @@ __rethrow_casa_exceptions = True
 #     Clunky but import casa does not work for pipeline tasks
 from h_init_cli import h_init_cli as h_init
 from hifa_importdata_cli import hifa_importdata_cli as hifa_importdata
+from hifa_imageprecheck_cli import hifa_imageprecheck_cli as hifa_imageprecheck
 from hif_checkproductsize_cli import hif_checkproductsize_cli as hif_checkproductsize
 from hif_mstransform_cli import hif_mstransform_cli as hif_mstransform
 from hifa_flagtargets_cli import hifa_flagtargets_cli as hifa_flagtargets
@@ -51,15 +52,18 @@ def hifatargets (vislist, importonly=False, pipelinemode='automatic', interactiv
         if importonly:
             raise Exception(IMPORT_ONLY)
 
-        # Check product size limits and mitigate imaging parameters
-        hif_checkproductsize(maxcubesize=30.0, maxcubelimit=40.0, maxproductsize=400.0)
-
         # Split out the target data
         hif_mstransform (pipelinemode=pipelinemode)
 
         # Flag the target data
         hifa_flagtargets (pipelinemode=pipelinemode)
  
+        # Check imaging parameters against PI specified values
+        hifa_imageprecheck(pipelinemode=pipelinemode)
+
+        # Check product size limits and mitigate imaging parameters
+        hif_checkproductsize(maxcubesize=30.0, maxcubelimit=40.0, maxproductsize=400.0)
+
         # Make a list of expected targets to be cleaned in mfs mode (used for continuum subtraction)
         hif_makeimlist (specmode='mfs', pipelinemode=pipelinemode)
  

@@ -120,9 +120,6 @@ def hifacal(vislist, importonly=True, pipelinemode='automatic',
         # Apply the calibrations
         hif_applycal(pipelinemode=pipelinemode)
     
-        # Check imaging parameters against PI specified values
-        hifa_imageprecheck(pipelinemode=pipelinemode)
-    
         # Make a list of expected point source calibrators to be cleaned
         hif_makeimlist(intent='PHASE,BANDPASS', pipelinemode=pipelinemode)
     
@@ -135,6 +132,9 @@ def hifacal(vislist, importonly=True, pipelinemode='automatic',
         # Make clean images for the selected calibrators
         hif_makeimages(pipelinemode=pipelinemode)
 
+        # Check imaging parameters against PI specified values
+        hifa_imageprecheck(pipelinemode=pipelinemode)
+    
         # Check product size limits and mitigate imaging parameters
         hif_checkproductsize(maxcubesize=30.0, maxcubelimit=40.0, maxproductsize=400.0)
     

@@ -9,6 +9,24 @@
     </ProcessingCommand>
 
     <ProcessingCommand>
+        <Command xmlns="">hif_mstransform</Command>
+        <ParameterSet>
+        </ParameterSet>
+    </ProcessingCommand>
+
+    <ProcessingCommand>
+        <Command xmlns="">hifa_flagtargets</Command>
+        <ParameterSet>
+        </ParameterSet>
+    </ProcessingCommand>
+
+    <ProcessingCommand>
+        <Command xmlns="">hifa_imageprecheck</Command>
+        <ParameterSet>
+        </ParameterSet>
+    </ProcessingCommand>
+
+    <ProcessingCommand>
         <Command xmlns="">hif_checkproductsize</Command>
         <ParameterSet>
             <Parameter>
@@ -23,18 +41,6 @@
                 <Keyword xmlns="">maxproductsize</Keyword>
                 <Value xmlns="">400.0</Value>
             </Parameter>
-        </ParameterSet>
-    </ProcessingCommand>
-
-    <ProcessingCommand>
-        <Command xmlns="">hif_mstransform</Command>
-        <ParameterSet>
-        </ParameterSet>
-    </ProcessingCommand>
-
-    <ProcessingCommand>
-        <Command xmlns="">hifa_flagtargets</Command>
-        <ParameterSet>
         </ParameterSet>
     </ProcessingCommand>
 
