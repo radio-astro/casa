@@ -7,18 +7,16 @@ import types
 
 import numpy
 
-# import pipeline.infrastructure.mpihelpers as mpihelpers
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
+import pipeline.infrastructure.vdp as vdp
 from pipeline.domain import DataTable
-# import pipeline.infrastructure.casatools as casatools
 from pipeline.hsd.heuristics import MaskDeviationHeuristic
 from pipeline.infrastructure import task_registry
 from . import maskline
 from . import plotter
 from . import worker
 from .. import common
-# from . import fitting
 from ..common import compress
 from ..common import utils
 
@@ -26,41 +24,57 @@ from ..common import utils
 _LOG = infrastructure.get_logger(__name__)
 LOG = utils.OnDemandStringParseLogger(_LOG)
 
-
-class SDBaselineInputs(basetask.StandardInputs):
+class SDBaselineInputs(vdp.StandardInputs):
     """
     Inputs for baseline subtraction
     """
+    spw = vdp.VisDependentProperty(default='')
+    pol = vdp.VisDependentProperty(default='')
+    field = vdp.VisDependentProperty(default='')
+    linewindow = vdp.VisDependentProperty(default=[])
+    edge = vdp.VisDependentProperty(default=(0, 0))
+    broadline = vdp.VisDependentProperty(default=True)
+    fitorder = vdp.VisDependentProperty(default='automatic')
+    fitfunc = vdp.VisDependentProperty(default='cspline')
+    clusteringalgorithm = vdp.VisDependentProperty(default='kmean')
+    deviationmask = vdp.VisDependentProperty(default=True)
+    
+    # Synchronization between infiles and vis is still necessary
+    @vdp.VisDependentProperty
+    def vis(self):
+        return self.infiles
+    
     def __init__(self, context, infiles=None, antenna=None, spw=None, pol=None, field=None,
                  linewindow=None, edge=None, broadline=None, fitorder=None,
                  fitfunc=None, clusteringalgorithm=None, deviationmask=None):
-        vis = infiles
-        self._init_properties(vars())
-        # LOG.debug('attributes summary:')
-        # for (k,v) in self.__dict__.iteritems():
-        #    LOG.debug('\t{key}={value}'.format(key=k, value=v))
+        super(SDBaselineInputs, self).__init__()
+        
+        self.context = context
+        self.infiles = infiles
+        self.antenna = antenna
+        self.spw = spw
+        self.pol = pol
+        self.field = field
+        self.linewindow = linewindow
+        self.edge = edge
+        self.broadline = broadline
+        self.fitorder = fitorder
+        self.fitfunc = fitfunc
+        self.clusteringalgorithm = clusteringalgorithm
+        self.deviationmask = deviationmask
+        
             
     def to_casa_args(self):
-        vis = self.vis
-        if type(self.vis) is types.ListType:
-            self.vis = vis[0]
+        infiles = self.infiles
+        if type(self.infiles) is types.ListType:
+            self.infiles = infiles[0]
         args = super(SDBaselineInputs, self).to_casa_args()
-        self.vis = vis
+        self.infiles = infiles
         
         if 'antenna' not in args:
             args['antenna'] = ''
         return args
 
-    spw = basetask.property_with_default('spw', '')
-    pol = basetask.property_with_default('pol', '')
-    field = basetask.property_with_default('field', '')
-    linewindow = basetask.property_with_default('linewindow', [])
-    edge = basetask.property_with_default('edge', (0, 0))
-    broadline = basetask.property_with_default('broadline', True)
-    fitorder = basetask.property_with_default('fitorder', 'automatic')
-    fitfunc = basetask.property_with_default('fitfunc', 'cspline')
-    clusteringalgorithm = basetask.property_with_default('clusteringalgorithm', 'kmean')
-    deviationmask = basetask.property_with_default('deviationmask', True)
             
 
 class SDBaselineResults(common.SingleDishResults):
