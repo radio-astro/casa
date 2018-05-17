@@ -12,6 +12,7 @@ import scipy.cluster.vq as VQ
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
+import pipeline.infrastructure.vdp as vdp
 from pipeline.domain.datatable import DataTableImpl as DataTable
 from . import rules
 from .. import common
@@ -30,70 +31,14 @@ def ValidationFactory(pattern):
         raise ValueError, 'Invalid observing pattern'
 
 
-class ValidateLineInputs(common.SingleDishInputs):
-    def __init__(self, context, group_id, member_list, iteration, grid_ra, grid_dec,
-                 window=None, edge=None, nsigma=None, xorder=None, yorder=None, 
-                 broad_component=None, clusteringalgorithm=None):
-        self._init_properties(vars())
-        
-    @property
-    def window(self):
-        return [] if self._window is None else self._window
-    
-    @window.setter
-    def window(self, value):
-        self._window = value
-        
-    @property
-    def edge(self):
-        return (0,0) if self._edge is None else self._edge
-    
-    @edge.setter
-    def edge(self, value):
-        self._edge = value
-
-    @property
-    def nsigma(self):
-        return 3.0 if self._nsigma is None else self._nsigma
-    
-    @nsigma.setter
-    def nsigma(self, value):
-        self._nsigma = value
-        
-    @property
-    def xorder(self):
-        return -1 if self._xorder is None else self._xorder
-    
-    @xorder.setter
-    def xorder(self, value):
-        self._xorder = value
-
-    @property
-    def yorder(self):
-        return -1 if self._yorder is None else self._yorder
-    
-    @yorder.setter
-    def yorder(self, value):
-        self._yorder = value
-        
-    @property
-    def broad_component(self):
-        return False if self._broad_component is None else self._broad_component
-    
-    @broad_component.setter
-    def broad_component(self, value):
-        self._broad_component = value
-        
-    @property
-    def clusteringalgorithm(self):
-        if hasattr(self, '_clusteringalgorithm') and self._clusteringalgorithm is not None:
-            return self._clusteringalgorithm
-        else:
-            return rules.ClusterRule['ClusterAlgorithm']
-        
-    @clusteringalgorithm.setter
-    def clusteringalgorithm(self, value):
-        self._clusteringalgorithm = value
+class ValidateLineInputs(vdp.StandardInputs):
+    window = vdp.VisDependentProperty(default=[])
+    edge = vdp.VisDependentProperty(default=(0,0))
+    nsigma = vdp.VisDependentProperty(default=3.0)
+    xorder = vdp.VisDependentProperty(default=-1.0)
+    yorder = vdp.VisDependentProperty(default=-1.0)
+    broad_component = vdp.VisDependentProperty(default=False)
+    clusteringalgorithm = vdp.VisDependentProperty(default=rules.ClusterRule['ClusterAlgorithm'])
 
     @property
     def group_desc(self):
@@ -103,6 +48,25 @@ class ValidateLineInputs(common.SingleDishInputs):
     def reference_member(self):
         return self.group_desc[self.member_list[0]]
 
+    def __init__(self, context, group_id, member_list, iteration, grid_ra, grid_dec,
+                 window=None, edge=None, nsigma=None, xorder=None, yorder=None, 
+                 broad_component=None, clusteringalgorithm=None):
+        super(ValidateLineInputs, self).__init__()
+        
+        self.context = context
+        self.group_id = group_id
+        self.member_list = member_list
+        self.iteration = iteration
+        self.grid_ra = grid_ra
+        self.grid_dec = grid_dec
+        self.window = window
+        self.edge = edge
+        self.nsigma = nsigma
+        self.xorder = xorder
+        self.yorder = yorder
+        self.broad_component = broad_component
+        self.clusteringalgorithm = clusteringalgorithm
+        
 
 class ValidateLineResults(common.SingleDishResults):
     def __init__(self, task=None, success=None, outcome=None):
