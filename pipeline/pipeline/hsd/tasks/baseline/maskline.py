@@ -6,6 +6,7 @@ import numpy
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
+import pipeline.infrastructure.vdp as vdp
 import pipeline.infrastructure.casatools as casatools
 from pipeline.domain.datatable import DataTableImpl as DataTable
 from . import simplegrid
@@ -19,36 +20,12 @@ LOG = utils.OnDemandStringParseLogger(_LOG)
 
 NoData = common.NoData
 
-
-class MaskLineInputs(common.SingleDishInputs):
-    def __init__(self, context, iteration, group_id, member_list, #vis_list, field_list, antenna_list, spwid_list,
-                 window=None, edge=None, broadline=None, clusteringalgorithm=None):
-        self._init_properties(vars())
-        
-    @property
-    def window(self):
-        return [] if self._window is None else self._window
+class MaskLineInputs(vdp.StandardInputs):
+    window = vdp.VisDependentProperty(default=[])
+    edge = vdp.VisDependentProperty(default=(0,0))
+    broadline = vdp.VisDependentProperty(default=True)
+    clusteringalgorithm = vdp.VisDependentProperty(default='kmean')
     
-    @window.setter
-    def window(self, value):
-        self._window = value
-        
-    @property
-    def edge(self):
-        return (0, 0) if self._edge is None else self._edge
-    
-    @edge.setter
-    def edge(self, value):
-        self._edge = value
-        
-    @property
-    def broadline(self):
-        return False if self._broadline is None else self._broadline
-    
-    @broadline.setter
-    def broadline(self, value):
-        self._broadline = value
-        
     @property
     def group_desc(self):
         return self.context.observing_run.ms_reduction_group[self.group_id]
@@ -56,6 +33,19 @@ class MaskLineInputs(common.SingleDishInputs):
     @property
     def reference_member(self):
         return self.group_desc[self.member_list[0]]
+
+    def __init__(self, context, iteration, group_id, member_list, #vis_list, field_list, antenna_list, spwid_list,
+                 window=None, edge=None, broadline=None, clusteringalgorithm=None):
+        super(MaskLineInputs, self).__init__()
+        
+        self.context = context
+        self.iteration = iteration
+        self.group_id = group_id
+        self.member_list = member_list
+        self.window = window
+        self.edge = edge
+        self.broadline = broadline
+        self.clusteringalgorithm = clusteringalgorithm
         
 
 class MaskLineResults(common.SingleDishResults):
