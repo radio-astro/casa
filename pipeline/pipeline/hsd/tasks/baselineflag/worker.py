@@ -11,6 +11,7 @@ from taskinit import gentools
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
+import pipeline.infrastructure.vdp as vdp
 from pipeline.infrastructure import casa_tasks
 import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.utils as utils
@@ -26,21 +27,19 @@ from .SDFlagRule import INVALID_STAT
 LOG = infrastructure.get_logger(__name__)
 
 
-class SDBLFlagWorkerInputs(basetask.StandardInputs):
+class SDBLFlagWorkerInputs(vdp.StandardInputs):
     """
     Inputs for imaging worker
     NOTE: infile should be a complete list of MSes 
     """
+    userFlag = vdp.VisDependentProperty(default=[])
+    edge = vdp.VisDependentProperty(default=(0,0))
 
     def __init__(self, context, clip_niteration, ms_list, antenna_list, fieldid_list, spwid_list, pols_list, nchan,
                  flagRule, userFlag=None, edge=None, rowmap=None):
-        super(SDBLFlagWorkerInputs, self).__init__(context, vis=None, output_dir=None)
+        super(SDBLFlagWorkerInputs, self).__init__()
 
-        if userFlag is None:
-            userFlag = []
-        if edge is None:
-            edge = (0, 0)
-
+        self.context = context
         self.clip_niteration = clip_niteration
         self.ms_list = ms_list
         self.antenna_list = antenna_list
