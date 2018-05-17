@@ -9,6 +9,7 @@ import pylab as PL
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.basetask as basetask
+import pipeline.infrastructure.vdp as vdp
 import pipeline.h.heuristics as heuristics
 import pipeline.domain.measures as measures
 from pipeline.domain.datatable import DataTableImpl as DataTable
@@ -22,37 +23,22 @@ _LOG = infrastructure.get_logger(__name__)
 LOG = utils.OnDemandStringParseLogger(_LOG)
 
 
-class DetectLineInputs(common.SingleDishInputs):
-    def __init__(self, context, window=None, edge=None, broadline=None):
-        self._init_properties(vars())
-        
+class DetectLineInputs(vdp.StandardInputs):
+    window = vdp.VisDependentProperty(default=[])
+    edge = vdp.VisDependentProperty(default=(0,0))
+    broadline = vdp.VisDependentProperty(default=True)
+    
     @property
     def spw(self):
         return self.grid_table[0][0] if len(self.grid_table) > 0 else -1
     
-    @property
-    def window(self):
-        return [] if self._window is None else self._window
-    
-    @window.setter
-    def window(self, value):
-        self._window = value
+    def __init__(self, context, window=None, edge=None, broadline=None):
+        super(DetectLineInputs, self).__init__()
         
-    @property
-    def edge(self):
-        return (0, 0) if self._edge is None else self._edge
-    
-    @edge.setter
-    def edge(self, value):
-        self._edge = value
-        
-    @property
-    def broadline(self):
-        return False if self._broadline is None else self._broadline
-    
-    @broadline.setter
-    def broadline(self, value):
-        self._broadline = value
+        self.context = context
+        self.window = window
+        self.edge = edge
+        self.broadline = broadline
 
 
 class DetectLineResults(common.SingleDishResults):
