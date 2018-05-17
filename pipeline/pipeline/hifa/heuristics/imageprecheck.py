@@ -20,7 +20,7 @@ class ImagePreCheckHeuristics(object):
            (cqa.getvalue(maxAR) == 0.0):
             # PI requested resolution range is not available, robust=0.5 (pre-Cycle 5 data and all 7m-array datasets)
             hm_robust = 0.5
-            hm_robust_scoreA = (0.5, 'No representative target info found', 'No representative target')
+            hm_robust_scoreA = (1.0, 'No representative target info found', 'No representative target')
         elif cqa.le(minAR, beams[0.5]['major']) and \
              cqa.le(beams[0.5]['major'], maxAR) and \
              cqa.le(minAR, beams[0.5]['minor']) and \
