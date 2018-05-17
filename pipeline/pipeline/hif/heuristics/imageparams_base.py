@@ -297,16 +297,16 @@ class ImageParamsHeuristics(object):
         spwids = list(set(spwids))
 
         # Select only the highest frequency spw to get the smallest beam
-        ref_ms = self.observing_run.get_ms(self.vislist[0])
-        max_freq = 0.0
-        max_freq_spwid = -1
-        for spwid in spwids:
-            real_spwid = self.observing_run.virtual2real_spw_id(spwid, ref_ms)
-            spwid_centre_freq = ref_ms.get_spectral_window(real_spwid).centre_frequency.to_units(measures.FrequencyUnits.HERTZ)
-            if spwid_centre_freq > max_freq:
-                max_freq = spwid_centre_freq
-                max_freq_spwid = spwid
-        spwids = [max_freq_spwid]
+        #ref_ms = self.observing_run.get_ms(self.vislist[0])
+        #max_freq = 0.0
+        #max_freq_spwid = -1
+        #for spwid in spwids:
+        #    real_spwid = self.observing_run.virtual2real_spw_id(spwid, ref_ms)
+        #    spwid_centre_freq = ref_ms.get_spectral_window(real_spwid).centre_frequency.to_units(measures.FrequencyUnits.HERTZ)
+        #    if spwid_centre_freq > max_freq:
+        #        max_freq = spwid_centre_freq
+        #        max_freq_spwid = spwid
+        #spwids = [max_freq_spwid]
 
         # find largest primary beam size among spws in spwspec
         largest_primary_beam_size = self.largest_primary_beam_size(spwspec)
@@ -318,13 +318,13 @@ class ImageParamsHeuristics(object):
         makepsf_beams = []
         try:
             for field, intent in field_intent_list:
-                for spwid in spwids:
-                    # select data to be imaged
-                    valid_data[(field, intent, spwid)] = False
-                    valid_vis_list = []
-                    valid_real_spwid_list = []
-                    valid_virtual_spwid_list = []
-                    for vis in self.vislist:
+                valid_data[(field, intent)] = False
+                valid_vis_list = []
+                valid_real_spwid_list = []
+                valid_virtual_spwid_list = []
+                # select data to be imaged
+                for vis in self.vislist:
+                    for spwid in spwids:
                         ms = self.observing_run.get_ms(name=vis)
                         ms.get_scans()
                         scanids = [str(scan.id) for scan in ms.scans
@@ -338,64 +338,64 @@ class ImageParamsHeuristics(object):
                               usescratch=False)
                             # flag to say that imager has some valid data to work
                             # on
-                            valid_data[(field, intent, spwid)] = True
+                            valid_data[(field, intent)] = True
                             valid_vis_list.append(vis)
                             valid_real_spwid_list.append(real_spwid)
                             valid_virtual_spwid_list.append(spwid)
                         except:
                             pass
 
-                    if not valid_data[(field, intent, spwid)]:
-                        # no point carrying on for this field/intent
-                        LOG.debug('No data for SpW %s field %s' % (spwid, field))
-                        continue
+                if not valid_data[(field, intent)]:
+                    # no point carrying on for this field/intent
+                    LOG.debug('No data for field %s' % (field))
+                    continue
 
-                    # use imager.advise to get the maximum cell size
-                    aipsfieldofview = '%4.1farcsec' % (2.0 * largest_primary_beam_size)
-                    rtn = casatools.imager.advise(takeadvice=False,
-                      amplitudeloss=0.5, fieldofview=aipsfieldofview)
-                    casatools.imager.done()
-                    if not rtn[0]:
-                        # advise can fail if all selected data are flagged
-                        # - not documented but assuming bool in first field of returned
-                        # record indicates success or failure
-                        LOG.warning('imager.advise failed for field/intent %s/%s spw %s - no valid data?' 
-                          % (field, intent, spwid))
-                        valid_data[(field, intent, spwid)] = False
-                    else:
-                        cellv = qaTool.convert(rtn[2], 'arcsec')['value']
-                        cellu = 'arcsec'
-                        cellv /= (0.5 * pixperbeam)
+                # use imager.advise to get the maximum cell size
+                aipsfieldofview = '%4.1farcsec' % (2.0 * largest_primary_beam_size)
+                rtn = casatools.imager.advise(takeadvice=False,
+                  amplitudeloss=0.5, fieldofview=aipsfieldofview)
+                casatools.imager.done()
+                if not rtn[0]:
+                    # advise can fail if all selected data are flagged
+                    # - not documented but assuming bool in first field of returned
+                    # record indicates success or failure
+                    LOG.warning('imager.advise failed for field/intent %s/%s spw %s - no valid data?' 
+                      % (field, intent, spwid))
+                    valid_data[(field, intent)] = False
+                else:
+                    cellv = qaTool.convert(rtn[2], 'arcsec')['value']
+                    cellu = 'arcsec'
+                    cellv /= (0.5 * pixperbeam)
 
-                        # Now get better estimate from makePSF
-                        tmp_psf_filename = str(uuid.uuid4())
+                    # Now get better estimate from makePSF
+                    tmp_psf_filename = str(uuid.uuid4())
 
-                        paramList = ImagerParameters(msname=valid_vis_list,
-                                                     spw=map(str, valid_real_spwid_list),
-                                                     field=field,
-                                                     imagename=tmp_psf_filename,
-                                                     imsize=cleanhelper.cleanhelper.getOptimumSize(int(2.0*largest_primary_beam_size/cellv)),
-                                                     cell='%.2g%s' % (cellv, cellu),
-                                                     gridder='standard',
-                                                     weighting='briggs',
-                                                     robust=robust,
-                                                     uvtaper=uvtaper,
-                                                     specmode='mfs')
-                        makepsf_imager = PySynthesisImager(params=paramList)
-                        makepsf_imager.initializeImagers()
-                        makepsf_imager.initializeNormalizers()
-                        makepsf_imager.setWeighting()
-                        makepsf_imager.makePSF()
-                        makepsf_imager.deleteTools()
+                    paramList = ImagerParameters(msname=valid_vis_list,
+                                                 spw=map(str, valid_real_spwid_list),
+                                                 field=field,
+                                                 imagename=tmp_psf_filename,
+                                                 imsize=cleanhelper.cleanhelper.getOptimumSize(int(2.0*largest_primary_beam_size/cellv)),
+                                                 cell='%.2g%s' % (cellv, cellu),
+                                                 gridder='standard',
+                                                 weighting='briggs',
+                                                 robust=robust,
+                                                 uvtaper=uvtaper,
+                                                 specmode='mfs')
+                    makepsf_imager = PySynthesisImager(params=paramList)
+                    makepsf_imager.initializeImagers()
+                    makepsf_imager.initializeNormalizers()
+                    makepsf_imager.setWeighting()
+                    makepsf_imager.makePSF()
+                    makepsf_imager.deleteTools()
 
-                        with casatools.ImageReader('%s.psf' % (tmp_psf_filename)) as image:
-                            # Avoid bad PSFs
-                            if all(qaTool.getvalue(qaTool.convert(image.restoringbeam()['minor'], 'arcsec')) > 1e-5):
-                                makepsf_beams.append(image.restoringbeam())
+                    with casatools.ImageReader('%s.psf' % (tmp_psf_filename)) as image:
+                        # Avoid bad PSFs
+                        if all(qaTool.getvalue(qaTool.convert(image.restoringbeam()['minor'], 'arcsec')) > 1e-5):
+                            makepsf_beams.append(image.restoringbeam())
 
-                        tmp_psf_images = glob.glob('%s.*' % (tmp_psf_filename))
-                        for tmp_psf_image in tmp_psf_images:
-                            shutil.rmtree(tmp_psf_image)
+                    tmp_psf_images = glob.glob('%s.*' % (tmp_psf_filename))
+                    for tmp_psf_image in tmp_psf_images:
+                        shutil.rmtree(tmp_psf_image)
 
         finally:
             casatools.imager.done()
