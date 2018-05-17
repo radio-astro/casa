@@ -328,20 +328,22 @@ class MakeImList(basetask.StandardTaskTemplate):
             # Collapse cont spws
             if inputs.specmode == 'cont':
                 spwlist = [reduce(lambda x,y: x+','+y, filtered_spwlist)]
+
+                max_freq_spwlist = spwlist
             else:
                 spwlist = filtered_spwlist
 
-            # Select only the highest frequency spw to get the smallest beams
-            ref_ms = inputs.context.observing_run.get_ms(vislist[0])
-            max_freq = 0.0
-            max_freq_spwid = -1
-            for spwid in filtered_spwlist:
-                real_spwid = inputs.context.observing_run.virtual2real_spw_id(spwid, ref_ms)
-                spwid_centre_freq = ref_ms.get_spectral_window(real_spwid).centre_frequency.to_units(measures.FrequencyUnits.HERTZ)
-                if spwid_centre_freq > max_freq:
-                    max_freq = spwid_centre_freq
-                    max_freq_spwid = spwid
-            max_freq_spwlist = [str(max_freq_spwid)]
+                # Select only the highest frequency spw to get the smallest beams
+                ref_ms = inputs.context.observing_run.get_ms(vislist[0])
+                max_freq = 0.0
+                max_freq_spwid = -1
+                for spwid in filtered_spwlist:
+                    real_spwid = inputs.context.observing_run.virtual2real_spw_id(spwid, ref_ms)
+                    spwid_centre_freq = ref_ms.get_spectral_window(real_spwid).centre_frequency.to_units(measures.FrequencyUnits.HERTZ)
+                    if spwid_centre_freq > max_freq:
+                        max_freq = spwid_centre_freq
+                        max_freq_spwid = spwid
+                max_freq_spwlist = [str(max_freq_spwid)]
 
             # Get robust and uvtaper values
             if inputs.robust not in (None, -999.0):
