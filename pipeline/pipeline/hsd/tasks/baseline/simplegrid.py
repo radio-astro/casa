@@ -8,6 +8,7 @@ from math import cos
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
+import pipeline.infrastructure.vdp as vdp
 import pipeline.infrastructure.casatools as casatools
 from pipeline.domain.datatable import DataTableImpl as DataTable
 from .. import common
@@ -19,20 +20,9 @@ LOG = utils.OnDemandStringParseLogger(_LOG)
 NoData = common.NoData
 DO_TEST = False
 
-
-class SDSimpleGriddingInputs(common.SingleDishInputs):
-    def __init__(self, context, group_id, member_list, 
-                 nplane=None):
-        self._init_properties(vars())
-        
-    @property
-    def nplane(self):
-        return 3 if self._nplane is None else self._nplane
+class SDSimpleGriddingInputs(vdp.StandardInputs):
+    nplane = vdp.VisDependentProperty(default=3)
     
-    @nplane.setter
-    def nplane(self, value):
-        self._nplane = value
-        
     @property
     def group_desc(self):
         return self.context.observing_run.ms_reduction_group[self.group_id]
@@ -40,7 +30,15 @@ class SDSimpleGriddingInputs(common.SingleDishInputs):
     @property
     def reference_member(self):
         return self.group_desc[self.member_list[0]]
+
+    def __init__(self, context, group_id, member_list, 
+                 nplane=None):
+        super(SDSimpleGriddingInputs, self).__init__()
         
+        self.context = context
+        self.group_id = group_id
+        self.member_list = member_list
+        self.nplane = nplane
 
 class SDSimpleGriddingResults(common.SingleDishResults):
     def __init__(self, task=None, success=None, outcome=None):
