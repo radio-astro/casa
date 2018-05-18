@@ -18,3 +18,4 @@ from .fitorder import FitOrderHeuristics
 from .fragmentation import FragmentationHeuristics
 from .tsysspwmap import TsysSpwMapHeuristics
 from .MaskDeviation import MaskDeviationHeuristic
+from .baselineparamconfig import CubicSplineFitParamConfig
