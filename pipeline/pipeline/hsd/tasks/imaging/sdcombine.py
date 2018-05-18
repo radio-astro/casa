@@ -4,6 +4,7 @@ import os, shutil
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
+import pipeline.infrastructure.vdp as vdp
 import pipeline.infrastructure.casatools as casatools
 from pipeline.infrastructure import casa_tasks
 from .worker import SDImagingWorkerResults
@@ -11,13 +12,26 @@ from .worker import SDImagingWorkerResults
 LOG = infrastructure.get_logger(__name__)
 
 
-class SDImageCombineInputs(basetask.StandardInputs):
+class SDImageCombineInputs(vdp.StandardInputs):
     """
     Inputs for image plane combination
     """
+    inimages = vdp.VisDependentProperty(default='')
+    outfile = vdp.VisDependentProperty(default='')
+    
+    @inimages.convert
+    def inimages(self, value):
+        if type(value) == str:
+            _check_image(value)
+        else:
+            for v in value:
+                _check_image(v)
+        return value
+    
     def __init__(self, context, inimages, outfile):
-        super(SDImageCombineInputs, self).__init__(context)
+        super(SDImageCombineInputs, self).__init__()
 
+        self.context = context
         self.inimages = inimages
         self.outfile = outfile
 
@@ -91,3 +105,8 @@ class SDImageCombine(basetask.StandardTaskTemplate):
         self._executor.execute(combine_job)
 
         return True
+    
+def _check_image(imagename):
+    assert os.path.exists(imagename), 'Input image "{0}" does not exist.'.format(imagename)
+    assert os.path.exists(imagename.rstrip('/') + '.weight'), 'Weight image for "{0}" does not exist.'.format(imagename)
+    
