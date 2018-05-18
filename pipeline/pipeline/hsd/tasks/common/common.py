@@ -14,13 +14,6 @@ LOG = infrastructure.get_logger(__name__)
 def absolute_path(name):
     return os.path.abspath(os.path.expanduser(os.path.expandvars(name)))
 
-class SingleDishInputs(basetask.StandardInputs):
-    # This is dummy
-    @property
-    def vis(self):
-        return None
-        
-
 class SingleDishResults(basetask.Results):
     def __init__(self, task=None, success=None, outcome=None):
         super(SingleDishResults, self).__init__()
