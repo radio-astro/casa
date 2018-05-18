@@ -18,6 +18,7 @@ from pipeline.infrastructure import task_registry
 
 LOG = infrastructure.get_logger(__name__)
 
+
 class SetjyInputs(vdp.StandardInputs):
 
     @vdp.VisDependentProperty
@@ -37,7 +38,7 @@ class SetjyInputs(vdp.StandardInputs):
         else:
             return ','.join([str(i) for i in field_ids])
 
-    intent = vdp.VisDependentProperty (default='AMPLITUDE')
+    intent = vdp.VisDependentProperty(default='AMPLITUDE')
 
     @vdp.VisDependentProperty
     def refspectra(self):
@@ -47,7 +48,7 @@ class SetjyInputs(vdp.StandardInputs):
         # default tuple which is composed of the reference frequency, the
         # Stokes fluxdensity and the spectral index
         if self.fluxdensity is not -1:
-            return (self.reffreq, self.fluxdensity, self.spix)
+            return self.reffreq, self.fluxdensity, self.spix
 
         # There is no ms object.
         if not self.ms:
@@ -117,16 +118,12 @@ class SetjyInputs(vdp.StandardInputs):
                 reffreq = str(self.ms.get_spectral_window(spw_id).centre_frequency)
                 if self.normfluxes:
                     flux = [(reffreq, [I/I, Q/I, U/I, V/I], spix) 
-                        for (ref_field_id, ref_spw_id, I, Q, U, V, spix) in ref_flux
-                        if (ref_field_id in field_ids
-                            or ref_field_id in field_names)
-                        and ref_spw_id == spw_id]
+                            for (ref_field_id, ref_spw_id, I, Q, U, V, spix) in ref_flux
+                            if (ref_field_id in field_ids or ref_field_id in field_names) and ref_spw_id == spw_id]
                 else:
-                    flux = [(reffreq, [I, Q, U, V], spix) 
-                        for (ref_field_id, ref_spw_id, I, Q, U, V, spix) in ref_flux
-                        if (ref_field_id in field_ids
-                            or ref_field_id in field_names)
-                        and ref_spw_id == spw_id]
+                    flux = [(reffreq, [I, Q, U, V], spix)
+                            for (ref_field_id, ref_spw_id, I, Q, U, V, spix) in ref_flux
+                            if (ref_field_id in field_ids or ref_field_id in field_names) and ref_spw_id == spw_id]
                 
                 # No flux measurements found for the requested field/spws, so do
                 # either a CASA model look-up (-1) or reset the flux to 1.                
@@ -155,11 +152,11 @@ class SetjyInputs(vdp.StandardInputs):
         value = os.path.join(self.context.output_dir, 'flux.csv')
         return value
     
-    normfluxes = vdp.VisDependentProperty (default = False)
-    reffreq = vdp.VisDependentProperty (default = '1GHz')
-    fluxdensity = vdp.VisDependentProperty (default = -1)
-    spix = vdp.VisDependentProperty (default = 0.0)
-    scalebychan = vdp.VisDependentProperty (default = True)
+    normfluxes = vdp.VisDependentProperty(default=False)
+    reffreq = vdp.VisDependentProperty(default='1GHz')
+    fluxdensity = vdp.VisDependentProperty(default=-1)
+    spix = vdp.VisDependentProperty(default=0.0)
+    scalebychan = vdp.VisDependentProperty(default=True)
 
     @vdp.VisDependentProperty
     def standard(self):
@@ -182,12 +179,12 @@ class SetjyInputs(vdp.StandardInputs):
         return standards[0] if len(standards) is 1 else standards
 
     def __init__(self, context, output_dir=None, vis=None,
-        field=None, intent=None, spw=None,
-        model=None, scalebychan=None, fluxdensity=None,
-        spix=None, reffreq=None, standard=None,
-        #    tuple containing reffreq, fluxdensity, spix
-        refspectra=None,
-        reffile=None, normfluxes=None):
+                 field=None, intent=None, spw=None,
+                 model=None, scalebychan=None, fluxdensity=None,
+                 spix=None, reffreq=None, standard=None,
+                 #    tuple containing reffreq, fluxdensity, spix
+                 refspectra=None,
+                 reffile=None, normfluxes=None):
 
         super(SetjyInputs, self).__init__()
 
@@ -278,8 +275,8 @@ class Setjy(basetask.StandardTaskTemplate):
                         
             for field in fields:
 
-		# Determine the valid spws for that field
-		valid_spwids = [spw.id for spw in field.valid_spws]
+                # Determine the valid spws for that field
+                valid_spwids = [spw.id for spw in field.valid_spws]
 
                 field_identifier = field.name if field_is_unique else str(field.id)
                 # We're specifying field PLUS intent, so we're unlikely to
@@ -291,9 +288,9 @@ class Setjy(basetask.StandardTaskTemplate):
 
                 for spw in spws:  
 
-		    # Skip invalid spws 
-		    if spw.id not in valid_spwids:
-		        continue
+                    # Skip invalid spws
+                    if spw.id not in valid_spwids:
+                        continue
                     inputs.spw = spw.id
     
                     orig_intent = inputs.intent
@@ -317,7 +314,7 @@ class Setjy(basetask.StandardTaskTemplate):
                     # committed back to the domain objects
                     if inputs.refspectra[1] is not -1:
                         try:
-                            (I,Q,U,V) = inputs.refspectra[1]
+                            (I, Q, U, V) = inputs.refspectra[1]
                             spix = decimal.Decimal(str(inputs.refspectra[2]))
                             flux = domain.FluxMeasurement(spw_id=spw.id, I=I, Q=Q, U=U, V=V, spix=spix)
                         except:
@@ -331,7 +328,6 @@ class Setjy(basetask.StandardTaskTemplate):
             for job, _ in jobs_and_components:
                 setjy_dicts.append(self._executor.execute(job))
 
-
         # Process the setjy results.
         #    There can be ambiguity in the field names and ids
         spw_seen = set()
@@ -342,21 +338,19 @@ class Setjy(basetask.StandardTaskTemplate):
                 spwkeys = setjy_dict[field_id].keys()
                 field = self.inputs.ms.get_fields(field_id)[0]
 
-                if field_id not in result.measurements.keys():
-                    if field.name not in result.measurements.keys():
-                        for spw_id in spwkeys:
-                            I = setjy_dict[field_id][spw_id]['fluxd'][0]
-                            Q = setjy_dict[field_id][spw_id]['fluxd'][1]
-                            U = setjy_dict[field_id][spw_id]['fluxd'][2]
-                            V = setjy_dict[field_id][spw_id]['fluxd'][3]
-                            flux = domain.FluxMeasurement(spw_id=spw_id, I=I, Q=Q, U=U, V=V)
-                    
-                            if spw_id not in spw_seen:
-                                result.measurements[str(field_id)].append(flux)
-                                spw_seen.add(spw_id)
+                if field_id not in result.measurements.keys() and field.name not in result.measurements.keys():
+                    for spw_id in spwkeys:
+                        I = setjy_dict[field_id][spw_id]['fluxd'][0]
+                        Q = setjy_dict[field_id][spw_id]['fluxd'][1]
+                        U = setjy_dict[field_id][spw_id]['fluxd'][2]
+                        V = setjy_dict[field_id][spw_id]['fluxd'][3]
+                        flux = domain.FluxMeasurement(spw_id=spw_id, I=I, Q=Q, U=U, V=V)
+
+                        if spw_id not in spw_seen:
+                            result.measurements[str(field_id)].append(flux)
+                            spw_seen.add(spw_id)
             
         return result
 
     def analyse(self, result):
         return result
-
