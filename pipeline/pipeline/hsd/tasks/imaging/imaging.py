@@ -314,28 +314,15 @@ class SDImaging(basetask.StandardTaskTemplate):
                  
                 # Step 1.
                 # Initialize weight column based on baseline RMS.
-                LOG.info('Set weights based on baseline RMS')
-                for i in xrange(len(msobjs)):
-                    msobj = msobjs[i]
-                    antid = antids[i]
-                    spwid = spwids[i]
-                    fieldid = fieldids[i]
-                    original_ms = msobj.name
-                    work_ms = msobj.work_data
-                    # weighting module sets weight to all pols
-                    LOG.info('Setting weight for %s Antenna %s Spw %s Field %s' % \
-                             (os.path.basename(work_ms), msobj.antennas[antid].name,
-                              spwid, msobj.fields[fieldid].name))
-########## TODO: NEED TO HANDLE SPWTYPE PROPERLY
-                    spwtype = msobj.spectral_windows[spwid].type
-                    weighting_inputs = weighting.WeightMSInputs(context, infile=original_ms, 
-                                                                outfile=work_ms, antenna=antid,
-                                                                spwid=spwid, fieldid=fieldid,
-                                                                spwtype=spwtype)
-                    weighting_task = weighting.WeightMS(weighting_inputs)
-                    weighting_result = self._executor.execute(weighting_task)
-                    del weighting_result  # Not used
-   
+                original_ms = [msobj.name for msobj in msobjs]
+                work_ms = [msobj.work_data for msobj in msobjs]
+                weighting_inputs = vdp.InputsContainer(weighting.WeightMS, context, 
+                                                       infiles=original_ms, outfiles=work_ms,
+                                                       antenna=antids, spwid=spwids, fieldid=fieldids)
+                weighting_task = weighting.WeightMS(weighting_inputs)
+                weighting_result = self._executor.execute(weighting_task)
+                del weighting_result # Not used
+                   
                 # Step 2.
                 # Imaging
                 # Image per antenna, source

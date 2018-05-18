@@ -5,6 +5,7 @@ import numpy
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
+import pipeline.infrastructure.vdp as vdp
 import pipeline.infrastructure.casatools as casatools
 from pipeline.domain import DataTable
 from .. import common
@@ -12,20 +13,39 @@ from .. import common
 LOG = infrastructure.get_logger(__name__)
 
 
-class WeightMSInputs(basetask.StandardInputs):
+class WeightMSInputs(vdp.StandardInputs):
     """
     Inputs for exporting data to MS 
     NOTE: infile should be a complete list of MSes 
     """
-    def __init__(self, context, infile, outfile, antenna, spwid, fieldid, spwtype):
-        super(WeightMSInputs, self).__init__(context, vis=infile)
+    infiles = vdp.VisDependentProperty(default='', null_input=['', None, [], ['']])
+    outfiles = vdp.VisDependentProperty(default='')
+    antenna = vdp.VisDependentProperty(default='')
+    spwid = vdp.VisDependentProperty(default=-1)
+    fieldid = vdp.VisDependentProperty(default=-1)
+    spwtype = vdp.VisDependentProperty(default=None)
+    
+    @vdp.VisDependentProperty(readonly=True)
+    def spwtype(self):
+        msobj = self.context.observing_run.get_ms(self.vis)
+        spwobj = msobj.spectral_windows[self.spwid]
+        return spwobj.type
+    
+    # Synchronization between infiles and vis is still necessary
+    @vdp.VisDependentProperty
+    def vis(self):
+        return self.infiles
 
+    def __init__(self, context, infiles=None, outfiles=None, 
+                 antenna=None, spwid=None, fieldid=None):
+        super(WeightMSInputs, self).__init__()
+
+        self.context = context
+        self.infiles = infiles
+        self.outfiles = outfiles
         self.antenna = antenna
         self.fieldid = fieldid
-        self.infile = infile
-        self.outfile = outfile
         self.spwid = spwid
-        self.spwtype = spwtype
 
         
 class WeightMSResults(common.SingleDishResults):
@@ -48,13 +68,14 @@ class WeightMS(basetask.StandardTaskTemplate):
             'WeightRMS': True,
             'WeightTsysExpTime': False}
    
-    is_multi_vis_task = True
-
     def prepare(self):
         # for each data
-        outfile = self.inputs.outfile
+        outfile = self.inputs.outfiles
         is_full_resolution = (self.inputs.spwtype.upper() in ["TDM", "FDM"])
-
+        LOG.info('Setting weight for %s Antenna %s Spw %s Field %s' % \
+                 (os.path.basename(outfile), self.inputs.ms.antennas[self.inputs.antenna].name,
+                  self.inputs.spwid, self.inputs.ms.fields[self.inputs.fieldid].name))
+        
         # make row mapping table between scantable and ms
         row_map = self._make_row_map()
         
@@ -93,8 +114,8 @@ class WeightMS(basetask.StandardTaskTemplate):
             value: output MS row IDs
         It has row IDs of all intents of selected field, spw, and antenna.
         """
-        infile = self.inputs.infile
-        outfile = self.inputs.outfile
+        infile = self.inputs.infiles
+        outfile = self.inputs.outfiles
         spwid = self.inputs.spwid
         antid = self.inputs.antenna
         fieldid = self.inputs.fieldid
@@ -131,8 +152,8 @@ class WeightMS(basetask.StandardTaskTemplate):
          
     def _set_weight(self, row_map, minmaxclip, weight_rms, weight_tintsys, try_fallback=False):
         inputs = self.inputs
-        infile = inputs.infile
-        outfile = inputs.outfile
+        infile = inputs.infiles
+        outfile = inputs.outfiles
         spwid = inputs.spwid
         antid = inputs.antenna
         fieldid = self.inputs.fieldid
