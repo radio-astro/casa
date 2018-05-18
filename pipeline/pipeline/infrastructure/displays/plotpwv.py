@@ -168,6 +168,7 @@ def plotPWV(ms, figfile='', plotrange=[0,0,0,0], clip=True):
         pb.savefig(figfile)
     else:
         LOG.warn("Failed to create PWV plot")
+    pb.clf()
     pb.close()
 
 
@@ -278,6 +279,7 @@ def utdatestring(mjdsec):
     tokens = dateTimeString.split()
     return(tokens[0])
 
+
 def mjdSecondsToMJDandUT(mjdsec, prec=6):
     """
     Converts a value of MJD seconds into MJD, and into a UT date/time string.
@@ -323,6 +325,7 @@ def mjdSecondsListToDateTime(mjdsecList):
     me.done()
     return(dt)
 
+
 def call_qa_time(arg, form='', prec=0, showform=False):
     """
     This is a wrapper for qa.time(), which in casa 4.0.0 returns a list
@@ -339,6 +342,7 @@ def call_qa_time(arg, form='', prec=0, showform=False):
     else:
         return(result)
 
+
 def RescaleXAxisTimeTicks(xlim, adesc):
     if (xlim[1] - xlim[0] < 10/1440.):
         adesc.xaxis.set_major_locator(matplotlib.dates.MinuteLocator(byminute=range(0,60,1)))
@@ -349,4 +353,3 @@ def RescaleXAxisTimeTicks(xlim, adesc):
     elif (xlim[1] - xlim[0] < 1/24.):
         adesc.xaxis.set_major_locator(matplotlib.dates.MinuteLocator(byminute=range(0,60,10)))
         adesc.xaxis.set_minor_locator(matplotlib.dates.MinuteLocator(byminute=range(0,60,2)))
-

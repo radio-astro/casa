@@ -451,6 +451,7 @@ class IntentVsTimeChart(object):
             obs_end.strftime('%Y-%m-%dT%H:%M:%S'), fontsize=12)
     
         fig.savefig(self.inputs.output)
+        pylab.clf()
         pylab.close()
 
         return self._get_plot_object()
@@ -562,12 +563,14 @@ class PlotAntsChart(object):
 
         # map: with pad names
         plf1 = pylab.figure(1)
+        pylab.clf()
         if self.polarlog:
             self.draw_polarlog_ant_map_in_subplot(plf1)
         else:
             self.draw_pad_map_in_subplot(plf1, self.ms.antennas)
         pylab.title('Antenna Positions for %s' % self.ms.basename)
         pylab.savefig(self.figfile, format='png', density=108)
+        pylab.clf()
         pylab.close()
 
         return self._get_plot_object()
