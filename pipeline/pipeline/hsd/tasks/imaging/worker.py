@@ -8,6 +8,7 @@ import itertools
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
+import pipeline.infrastructure.vdp as vdp
 import pipeline.infrastructure.casatools as casatools
 from pipeline.infrastructure import casa_tasks
 from pipeline.domain import DataTable
@@ -144,31 +145,50 @@ def ALMAImageCoordinateUtil(context, ms_names, ant_list, spw_list, fieldid_list)
     return phasecenter, cellx, celly, nx, ny
 
 
-class SDImagingWorkerInputs(basetask.StandardInputs):
+class SDImagingWorkerInputs(vdp.StandardInputs):
     """
     Inputs for imaging worker
     NOTE: infile should be a complete list of MSes 
     """
+    infiles = vdp.VisDependentProperty(default='', null_input=['', None, [], ['']])
+    outfile = vdp.VisDependentProperty(default='')
+    mode = vdp.VisDependentProperty(default='LINE')
+    antids = vdp.VisDependentProperty(default=-1)
+    spwids = vdp.VisDependentProperty(default=-1)
+    fieldids = vdp.VisDependentProperty(default=-1)
+    stokes = vdp.VisDependentProperty(default='I')
+    edge = vdp.VisDependentProperty(default=(0,0))
+    phasecenter = vdp.VisDependentProperty(default='')
+    cellx = vdp.VisDependentProperty(default='')
+    celly = vdp.VisDependentProperty(default='')
+    nx = vdp.VisDependentProperty(default=-1)
+    ny = vdp.VisDependentProperty(default=-1)
 
+    # Synchronization between infiles and vis is still necessary
+    @vdp.VisDependentProperty
+    def vis(self):
+        return self.infiles
+    
     def __init__(self, context, infiles, outfile, mode, antids, spwids, fieldids, stokes, edge=None, phasecenter=None,
                  cellx=None, celly=None, nx=None, ny=None):
         # NOTE: spwids and pols are list of numeric id list while scans
         #       is string (mssel) list
-        super(SDImagingWorkerInputs, self).__init__(context)
+        super(SDImagingWorkerInputs, self).__init__()
 
+        self.context = context
+        self.infiles = infiles
+        self.outfile = outfile
+        self.mode = mode
         self.antids = antids
+        self.spwids = spwids
+        self.fieldids = fieldids
+        self.stokes = stokes
+        self.edge = edge
+        self.phasecenter = phasecenter
         self.cellx = cellx
         self.celly = celly
-        self.edge = edge
-        self.fieldids = fieldids
-        self.infiles = infiles
-        self.mode = mode
         self.nx = nx
         self.ny = ny
-        self.outfile = outfile
-        self.phasecenter = phasecenter
-        self.spwids = spwids
-        self.stokes = stokes
 
 
 class SDImagingWorkerResults(common.SingleDishResults):
