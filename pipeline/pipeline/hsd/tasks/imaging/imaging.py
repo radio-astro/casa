@@ -401,7 +401,7 @@ class SDImaging(basetask.StandardTaskTemplate):
                         _fieldids = member[2]
                         _spwids = member[3]
                         _pols = [pol for i in xrange(len(_mses))]
-                        gridding_inputs = grid_task_class.Inputs(context, msnames=_mses, 
+                        gridding_inputs = grid_task_class.Inputs(context, infiles=_mses, 
                                                                  antennaids=_antids, 
                                                                  fieldids=_fieldids,
                                                                  spwids=_spwids,
@@ -541,7 +541,7 @@ class SDImaging(basetask.StandardTaskTemplate):
                     _fieldids = member[2]
                     _spwids = member[3]
                     _pols = [pol for i in xrange(len(_mses))]
-                    gridding_inputs = grid_task_class.Inputs(context, msnames=_mses, 
+                    gridding_inputs = grid_task_class.Inputs(context, infiles=_mses, 
                                                              antennaids=_antids, 
                                                              fieldids=_fieldids,
                                                              spwids=_spwids,

@@ -8,6 +8,7 @@ import itertools
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
+import pipeline.infrastructure.vdp as vdp
 import pipeline.infrastructure.casatools as casatools
 from pipeline.domain import DataTable
 from .. import common 
@@ -30,17 +31,31 @@ def gridding_factory(observing_pattern):
         raise ValueError('observing_pattern \'%s\' is invalid.'%(observing_pattern))
 
 
-class GriddingInputs(basetask.StandardInputs):
-    def __init__(self, context, msnames, antennaids, fieldids, spwids, poltypes, nx=None, ny=None):
-        super(GriddingInputs, self).__init__(context)
+class GriddingInputs(vdp.StandardInputs):
+    infiles = vdp.VisDependentProperty(default='', null_input=['', None, [], ['']])
+    antennaids = vdp.VisDependentProperty(default=-1)
+    fieldids = vdp.VisDependentProperty(default=-1)
+    spwids = vdp.VisDependentProperty(default=-1)
+    poltypes = vdp.VisDependentProperty(default='')
+    nx = vdp.VisDependentProperty(default=-1)
+    ny = vdp.VisDependentProperty(default=-1)
+    
+    # Synchronization between infiles and vis is still necessary
+    @vdp.VisDependentProperty
+    def vis(self):
+        return self.infiles
+    
+    def __init__(self, context, infiles, antennaids, fieldids, spwids, poltypes, nx=None, ny=None):
+        super(GriddingInputs, self).__init__()
 
+        self.context = context
+        self.infiles = infiles
         self.antennaids = antennaids
         self.fieldids = fieldids
-        self.msnames = msnames
+        self.spwids = spwids
+        self.poltypes = poltypes
         self.nx = nx
         self.ny = ny
-        self.poltypes = poltypes
-        self.spwids = spwids
 
 
 class GriddingResults(common.SingleDishResults):
@@ -77,10 +92,10 @@ class GriddingBase(basetask.StandardTaskTemplate):
         else:
             self.antenna = inputs.antennaids
         # Make sure using parent MS name
-        if type(inputs.msnames) == str:
-            self.files = [common.get_parent_ms_name(context, inputs.msnames)]
+        if type(inputs.infiles) == str:
+            self.files = [common.get_parent_ms_name(context, inputs.infiles)]
         else:
-            self.files = [ common.get_parent_ms_name(context, name) for name in inputs.msnames]
+            self.files = [ common.get_parent_ms_name(context, name) for name in inputs.infiles]
         if type(inputs.spwids) == int:
             self.spw = [inputs.spwids]
         else:
