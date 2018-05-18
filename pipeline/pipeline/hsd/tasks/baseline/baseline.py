@@ -28,6 +28,7 @@ class SDBaselineInputs(vdp.StandardInputs):
     """
     Inputs for baseline subtraction
     """
+    infiles = vdp.VisDependentProperty(default='', null_input=['', None, [], ['']])
     spw = vdp.VisDependentProperty(default='')
     pol = vdp.VisDependentProperty(default='')
     field = vdp.VisDependentProperty(default='')
