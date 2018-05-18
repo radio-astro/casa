@@ -8,6 +8,7 @@ import numpy
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
+import pipeline.infrastructure.vdp as vdp
 import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.imagelibrary as imagelibrary
 import pipeline.infrastructure.sdfilenamer as filenamer
@@ -31,73 +32,70 @@ LOG = infrastructure.get_logger(__name__)
 SensitivityInfo = collections.namedtuple('SensitivityInfo', 'sensitivity representative frequency_range')
 
 
-class SDImagingInputs(basetask.StandardInputs):
+class SDImagingInputs(vdp.StandardInputs):
     """
     Inputs for imaging
     """
-    def __init__(self, context, mode=None, infiles=None, field=None, spw=None):
-        super(SDImagingInputs, self).__init__(context, vis=infiles)
+    infiles = vdp.VisDependentProperty(default='', null_input=['', None, [], ['']])
+    spw = vdp.VisDependentProperty(default='')
+    pol = vdp.VisDependentProperty(default='')
+    field = vdp.VisDependentProperty(default='')
+    mode = vdp.VisDependentProperty(default='line')
+    
+    @field.postprocess
+    def field(self, unprocessed):
+        #LOG.info('field.postprocess: unprocessed = "{0}"'.format(unprocessed))
+        if unprocessed is not None and unprocessed != '':
+            return unprocessed
+        
+        # filters field with intents in self.intent
+        p = fieldnames.IntentFieldnames()
+        fields = set()
+        vislist = [self.vis] if type(self.vis) == str else self.vis
+        for vis in vislist:
+            # This assumes the same fields in all MSes
+            msobj = self.context.observing_run.get_ms(vis)
+            # this will give something like '0542+3243,0343+242'
+            intent_fields = p(msobj, self.intent)
+            fields.update(utils.safe_split(intent_fields))
+            
+        #LOG.info('field.postprocess: fields = "{0}"'.format(fields))
 
-        if mode is None:
-            mode = 'line'
-
-        self.field = field
-        self.mode = mode
-        self.spw = spw
-
-        # SJW any subsequent redefinition of vis will not be reflected in
-        # infiles. This should probably be fixed.
-        self.infiles = self.vis
-
-    @property
-    def msid_list(self):
-        """
-        Returns MS index in context observing run specified as infiles.
-        """
-        ms_names = [ms.name for ms in self.context.observing_run.measurement_sets]
-        return map(ms_names.index, map(os.path.abspath, self.vis))
-
+        return ','.join(fields)
+        
+    @spw.postprocess
+    def spw(self, unprocessed):
+        if unprocessed is not None and unprocessed != '':
+            return unprocessed
+        
+        # filters science spws by default (assumes the same spw setting for all MSes)
+        vis = self.vis if type(self.vis) == str else self.vis[0]
+        msobj = self.context.observing_run.get_ms(vis)
+        science_spws = msobj.get_spectral_windows(unprocessed, with_channels=True)
+        return ','.join([str(spw.id) for spw in science_spws])
+        
     @property
     def antenna(self):
         return ''
 
     @property
-    def field(self):
-        if not callable(self._field):
-            return self._field
-        # filters field with intents in self.intent
-        fields = set()
-        for idx in self.msid_list:
-            # This assumes the same fields in all MSes
-            msobj = self.context.observing_run.measurement_sets[idx]
-            # this will give something like '0542+3243,0343+242'
-            intent_fields = self._field(msobj, self.intent)
-            fields.update(utils.safe_split(intent_fields))
-
-        return ','.join(fields)
-
-    @field.setter
-    def field(self, value):
-        if value is None:
-            value = fieldnames.IntentFieldnames()
-        self._field = value
-
-    @property
     def intent(self):
         return 'TARGET'
 
-    @property
-    def spw(self):
-        if self._spw is not None:
-            return self._spw
-        # filters science spws by default (assumes the same spw setting for all MSes)
-        msobj = self.context.observing_run.measurement_sets[self.msid_list[0]]
-        science_spws = msobj.get_spectral_windows(self._spw, with_channels=True)
-        return ','.join([str(spw.id) for spw in science_spws])
+    # Synchronization between infiles and vis is still necessary
+    @vdp.VisDependentProperty
+    def vis(self):
+        return self.infiles
+    
+    def __init__(self, context, mode=None, infiles=None, field=None, spw=None):
+        super(SDImagingInputs, self).__init__()
 
-    @spw.setter
-    def spw(self, value):
-        self._spw = value
+        self.context = context
+        self.mode = mode
+        self.infiles = infiles
+        self.field = field
+        self.mode = mode
+        self.spw = spw
 
 
 class SDImagingResultItem(common.SingleDishResults):
@@ -158,7 +156,7 @@ class SDImaging(basetask.StandardTaskTemplate):
         reduction_group = context.observing_run.ms_reduction_group
         infiles = inputs.infiles
         # list of ms to process
-        ms_list = [context.observing_run.measurement_sets[idx] for idx in inputs.msid_list]
+        ms_list = inputs.ms
         ms_names = [msobj.name for msobj in ms_list]
         in_spw = inputs.spw
         # in_field is comma-separated list of target field names that are 
