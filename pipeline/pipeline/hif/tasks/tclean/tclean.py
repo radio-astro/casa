@@ -384,7 +384,7 @@ class Tclean(cleanbase.CleanBase):
                                                          inputs.robust, inputs.uvtaper)
 
         if sensitivity is None:
-            LOG.error('Could not calculate the sensitivity for Field %s SPW %s' % (inputs.field, inputs.spw))
+            LOG.error('Could not calculate the sensitivity for Field %s Intent %s SPW %s' % (inputs.field, inputs.intent, inputs.spw))
             result.error = '%s/%s/spw%s clean error: no sensitivity' % (inputs.field, inputs.intent, inputs.spw)
             return result
 

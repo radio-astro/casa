@@ -1245,7 +1245,7 @@ class ImageParamsHeuristics(object):
                                         field_sensitivities.append(field_sensitivity)
                                         detailed_field_sensitivities[os.path.basename(msname)][intSpw][field_id] = field_sensitivity
                                 except Exception as e:
-                                    LOG.warning('Could not calculate sensitivity for MS %s Field %s (ID %d) SPW %d ChanSel %s' % (os.path.basename(msname), utils.dequote(field), field_id, real_spwid, chansel))
+                                    LOG.warning('Could not calculate sensitivity for MS %s Field %s (ID %d) Intent %s SPW %d ChanSel %s' % (os.path.basename(msname), utils.dequote(field), field_id, intent, real_spwid, chansel))
 
                         median_sensitivity = np.median(field_sensitivities)
                         min_field_id, min_sensitivity = min(detailed_field_sensitivities[os.path.basename(msname)][intSpw].iteritems(), key=operator.itemgetter(1))
