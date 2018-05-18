@@ -106,7 +106,7 @@ class MakeImListInputs(vdp.StandardInputs):
 
     @vdp.VisDependentProperty
     def spw(self):
-        if self.specmode == 'cube' and 'spw' in self.context.size_mitigation_parameters:
+        if 'TARGET' in self.intent and 'spw' in self.context.size_mitigation_parameters:
             return self.context.size_mitigation_parameters['spw']
         return ''
 

@@ -31,6 +31,7 @@ class CheckProductSizeHeuristics(object):
             cubesize = 4. * nx * ny * nchan / nbin / 1e9
             cubesizes.append(cubesize)
             productsize += 2.0 * (mfssize + cubesize)
+            LOG.info('Cube size for Field %s SPW %s nbin %d imsize %d x %d is %.3g GB' % (target['field'], target['spw'], nbin, nx, ny, cubesize))
 
         return cubesizes, max(cubesizes), productsize
 
