@@ -184,7 +184,7 @@ class T2_4MDetailsplotsummaryRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
                                       results_list,
                                       applycal.AmpVsFrequencyPerBasebandSummaryChart,
                                       intents, correlation=correlation, coloraxis='corr', avgtime='1e8',
-                                      avgbaseline=True, avgantenna=False, plotrange=[0, 0, -180, 180])
+                                      avgbaseline=True, avgantenna=False, plotrange=[])
 
             use_pol_plots = False
             for vis, vis_plots in plots.items():
