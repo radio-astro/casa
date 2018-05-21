@@ -18,6 +18,7 @@ LOG = infrastructure.get_logger(__name__)
 TRACE = False
 DEBUG = False
 
+
 class BaselineParamKeys(object):
     ROW = 'row'
     POL = 'pol'
@@ -110,13 +111,10 @@ class BaselineFitParamConfig(api.Heuristic):
         Returns:
             Name of the BLParam file
         """
-        #self.inputs = inputs 
-        
-        LOG.debug('Starting BaselineFitParamConfig.prepare')
+        LOG.debug('Starting BaselineFitParamConfig')
         fragmentation_heuristic = fragmentation.FragmentationHeuristics()
 
         # fitting order
-        #fit_order = self.inputs.fit_order
         if fit_order == 'automatic':
             # fit order heuristics
             LOG.info('Baseline-Fitting order was automatically determined')
@@ -125,29 +123,13 @@ class BaselineFitParamConfig(api.Heuristic):
             LOG.info('Baseline-Fitting order was fixed to {}'.format(fit_order))
             self.fitorder_heuristic = lambda *args, **kwargs: fit_order #self.inputs.fit_order
 
-        #context = self.inputs.context
-        #vis = self.inputs.vis
-#         if datatable is None:
-#             LOG.info('#PNP# instantiate local datatable')
-#             datatable = DataTable(self.context.observing_run.ms_datatable_name)
-#         else:
-#             LOG.info('datatable is propagated from parent task')
-        #ms = context.observing_run.get_ms(vis)
-        
-        #args = self.inputs.to_casa_args()
-
-        #vis = self.inputs.vis
         vis = ms.name
-        #antenna_id = self.inputs.antenna_id
-        #field_id = self.inputs.field_id
-        #spw_id = self.inputs.spw_id
         if DEBUG or TRACE:
             LOG.debug('MS "{}" ant {} field {} spw {}'.format(os.path.basename(vis), antenna_id, field_id, spw_id))
         
         nchan = ms.spectral_windows[spw_id].num_channels
         data_desc = ms.get_data_description(spw=spw_id)
         npol = data_desc.num_polarizations
-        #edge = common.parseEdge(self.inputs.edge)
         # edge must be formatted to [L, R]
         assert type(edge) == list and len(edge) == 2, 'edge must be a list [L, R]. "{0}" was given.'.format(edge)
         
@@ -167,7 +149,6 @@ class BaselineFitParamConfig(api.Heuristic):
         mask_array[nchan-edge[1]:] = 0
         
         # deviation mask
-        #deviation_mask = self.inputs.deviationmask
         if DEBUG or TRACE:
             LOG.debug('Deviation mask for field {} antenna {} spw {}: {}'.format(
                 field_id, antenna_id, spw_id, deviation_mask))
@@ -193,7 +174,6 @@ class BaselineFitParamConfig(api.Heuristic):
             LOG.debug('data column name is "{}"'.format(datacolumn))
         
         # open blparam file (append mode)
-        #with open(args['blparam'], 'a') as blparamfileobj:
         with open(blparam, 'a') as blparamfileobj:
         
             with casatools.TableReader(vis) as tb:
@@ -294,15 +274,8 @@ class BaselineFitParamConfig(api.Heuristic):
                         if pol == 0:
                             index_list_total.extend(idxs)
 
-#         outcome = {'blparam': args['blparam'],
-#                    'bloutput': args['bloutput']}
-#         results = BaselineSubtractionResults(success=True, outcome=outcome)
-        
         return blparam
 
-#     def analyse(self, results):
-#         return results
-#     
     #@sdutils.profiler
     def _calc_baseline_param(self, row_idx, pol, polyorder, nchan, modification, edge, masklist, win_polyorder,
                              fragment, nwindow, mask):
@@ -365,20 +338,10 @@ class BaselineFitParamConfig(api.Heuristic):
     @abc.abstractmethod
     def _get_param(self, idx, pol, polyorder, nchan, mask, edge, nchan_without_edge, nchan_masked, fragment, nwindow,
                    win_polyorder, masklist):
-        raise NotImplementedError
-    
+        raise NotImplementedError    
 
-# class CubicSplineFitParamConfigInputs(BaselineSubtractionInputsBase):
-#     def __init__(self, context, vis=None, field_id=None, antenna_id=None, spw_id=None, 
-#                  fit_order=None, edge=None, deviationmask=None, blparam=None, bloutput=None):
-#         self._init_properties(vars())
-#                 
-#     fit_order = basetask.property_with_default('fit_order', 'automatic')
-#     edge = basetask.property_with_default('edge', (0, 0))
-    
 
 class CubicSplineFitParamConfig(BaselineFitParamConfig):
-    #Inputs = CubicSplineFitParamConfigInputs
     
     def __init__(self):
         super(CubicSplineFitParamConfig, self).__init__()
