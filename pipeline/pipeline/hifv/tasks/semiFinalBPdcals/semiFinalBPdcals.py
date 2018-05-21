@@ -67,8 +67,8 @@ class semiFinalBPdcals(basetask.StandardTaskTemplate):
         
         gtypecaltable = tableprefix + str(stage_number) + '_1.' + 'semiFinaldelayinitialgain.tbl'
         ktypecaltable = tableprefix + str(stage_number) + '_2.' + 'delay.tbl'
-        bpcaltable    = tableprefix + str(stage_number) + '_3.' + 'BPcal.tbl'
-        tablebase     = tableprefix + str(stage_number) + '_4.' + 'BPinitialgain'
+        bpcaltable    = tableprefix + str(stage_number) + '_4.' + 'BPcal.tbl'
+        tablebase     = tableprefix + str(stage_number) + '_3.' + 'BPinitialgain'
 
         table_suffix = ['.tbl','3.tbl','10.tbl']
         soltimes = [1.0,3.0,10.0] 

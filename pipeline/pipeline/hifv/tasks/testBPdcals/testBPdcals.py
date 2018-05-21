@@ -77,8 +77,8 @@ class testBPdcals(basetask.StandardTaskTemplate):
 
         gtypecaltable = tableprefix + str(stage_number) + '_1.' + 'testdelayinitialgain.tbl'
         ktypecaltable = tableprefix + str(stage_number) + '_2.' + 'testdelay.tbl'
-        bpcaltable    = tableprefix + str(stage_number) + '_3.' + 'testBPcal.tbl'
-        tablebase     = tableprefix + str(stage_number) + '_4.' + 'testBPdinitialgain'
+        bpcaltable    = tableprefix + str(stage_number) + '_4.' + 'testBPcal.tbl'
+        tablebase     = tableprefix + str(stage_number) + '_3.' + 'testBPdinitialgain'
         table_suffix = ['.tbl', '3.tbl', '10.tbl']
         soltimes = [1.0,3.0,10.0] 
         m = self.inputs.context.observing_run.get_ms(self.inputs.vis)

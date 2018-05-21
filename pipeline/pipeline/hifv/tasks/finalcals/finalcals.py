@@ -89,8 +89,8 @@ class Finalcals(basetask.StandardTaskTemplate):
 
         gtypecaltable = tableprefix + str(stage_number) + '_1.' + 'finaldelayinitialgain.tbl'
         ktypecaltable = tableprefix + str(stage_number) + '_2.' + 'finaldelay.tbl'
-        bpcaltable    = tableprefix + str(stage_number) + '_3.' + 'finalBPcal.tbl'
-        tablebase     = tableprefix + str(stage_number) + '_4.' + 'finalBPinitialgain'
+        bpcaltable    = tableprefix + str(stage_number) + '_4.' + 'finalBPcal.tbl'
+        tablebase     = tableprefix + str(stage_number) + '_3.' + 'finalBPinitialgain'
         table_suffix = ['.tbl', '3.tbl', '10.tbl']
         soltimes = [1.0, 3.0, 10.0]
         m = self.inputs.context.observing_run.get_ms(self.inputs.vis)
