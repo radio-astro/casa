@@ -2,7 +2,6 @@ from __future__ import absolute_import
 
 import numpy as np
 
-import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.utils as utils
 import pipeline.infrastructure as infrastructure
@@ -29,6 +28,7 @@ def removeRows(caltable, spwids):
         temparray[spwid] = True
         tb.putcol('FLAG_ROW',temparray)
     tb.close()
+
 
 def computeChanFlag(vis, caltable, context):
 
@@ -109,7 +109,6 @@ def do_bandpass(vis, caltable, context=None, RefAntOutput=None, spw=None, ktypec
     m = context.observing_run.get_ms(vis)
     bandpass_field_select_string = context.evla['msinfo'][m.name].bandpass_field_select_string
     bandpass_scan_select_string = context.evla['msinfo'][m.name].bandpass_scan_select_string
-    #minBL_for_cal = max(3,int(len(m.antennas)/2.0))
     minBL_for_cal = m.vla_minbaselineforcal()
 
     BPGainTables = sorted(context.callibrary.active.get_caltable())
@@ -126,7 +125,7 @@ def do_bandpass(vis, caltable, context=None, RefAntOutput=None, spw=None, ktypec
                           'scan'        :bandpass_scan_select_string,
                           'solint'      :solint,
                           'combine'     :'scan',
-                          'refant'      :RefAntOutput.lower(),
+                          'refant'      :','.join(RefAntOutput),
                           'minblperant' :minBL_for_cal,
                           'minsnr'      :5.0,
                           'solnorm'     :False,
@@ -155,15 +154,15 @@ def weakbp(vis, caltable, context=None, RefAntOutput=None, ktypecaltable=None, b
                         ktypecaltable=ktypecaltable, bpdgain_touse=bpdgain_touse, solint='inf', append=False)
     bpjob.execute()
     (largechunk, spwids) = computeChanFlag(vis, caltable, context)
-    #print largechunk, spwids
-    if (largechunk==False and spwids==[]):
-        #All solutions found - proceed as normal with the pipeline
+    # print largechunk, spwids
+    if largechunk==False and spwids==[]:
+        # All solutions found - proceed as normal with the pipeline
         interp = ''
         return interp
 
     LOG.warning("Solutions for all channels not obtained.  Using weak bandpass calibration heuristic.")
     cpa = 2  # Channel pre-averaging
-    while(largechunk == True):
+    while largechunk == True:
 
         LOG.info("Removing rows in table " + caltable + " for spws="+','.join([str(i) for i in spwids]))
         removeRows(caltable, spwids)
@@ -177,9 +176,9 @@ def weakbp(vis, caltable, context=None, RefAntOutput=None, ktypecaltable=None, b
         for spw in spwids:
             preavgnchan = channels[spw]/float(cpa)
             LOG.debug("CPA: "+str(cpa)+"   NCHAN: "+str(preavgnchan)+"    NCHAN/32: "+str(preavgnchan/32.0))
-            if (cpa > preavgnchan/32.0):
+            if cpa > preavgnchan/32.0:
                 LOG.warn("Limiting pre-averaging to maximum 1/32 fractional bandwidth for spw="+str(spw)+". Interpolation in applycal will need to extend over greater than 1/32 fractional bandwidth, which may fail to capture significant bandpass structure.")
-                largechunk = False  #This will break the while loop and move onto applycal
+                largechunk = False  # This will break the while loop and move onto applycal
         cpa = cpa * 2
 
     LOG.warning("Channel gaps in bandpass solutions will be linearly interpolated over in applycal.")

@@ -206,12 +206,12 @@ class testBPdcals(basetask.StandardTaskTemplate):
 
         if self.inputs.weakbp:
             # LOG.info("USING WEAKBP HEURISTICS")
-            interp = weakbp(self.inputs.vis, bpcaltable, context=context, RefAntOutput=RefAntOutput[0],
+            interp = weakbp(self.inputs.vis, bpcaltable, context=context, RefAntOutput=RefAntOutput,
                             ktypecaltable=ktypecaltable, bpdgain_touse=bpdgain_touse, solint='inf', append=False)
         else:
             # LOG.info("Using REGULAR heuristics")
             interp = ''
-            bandpass_job = do_bandpass(self.inputs.vis, bpcaltable, context=context, RefAntOutput=RefAntOutput[0],
+            bandpass_job = do_bandpass(self.inputs.vis, bpcaltable, context=context, RefAntOutput=RefAntOutput,
                                        spw='', ktypecaltable=ktypecaltable, bpdgain_touse=bpdgain_touse,
                                        solint='inf', append=False)
             self._executor.execute(bandpass_job)
@@ -260,7 +260,7 @@ class testBPdcals(basetask.StandardTaskTemplate):
                                 'solint'      : 'int',
                                 'combine'     : 'scan',
                                 'preavg'      : -1.0,
-                                'refant'      : RefAntOutput[0].lower(),
+                                'refant'      : ','.join(RefAntOutput),
                                 'minblperant' : minBL_for_cal,
                                 'minsnr'      : 3.0,
                                 'solnorm'     : False,
@@ -300,7 +300,7 @@ class testBPdcals(basetask.StandardTaskTemplate):
                               'solint'      :'inf',
                               'combine'     :'scan',
                               'preavg'      :-1.0,
-                              'refant'      :RefAntOutput[0].lower(),
+                              'refant'      :','.join(RefAntOutput),
                               'minblperant' :minBL_for_cal,
                               'minsnr'      :3.0,
                               'solnorm'     :False,
@@ -333,7 +333,7 @@ class testBPdcals(basetask.StandardTaskTemplate):
             RefAntOutput = np.delete(RefAntOutput,0)
             self.inputs.context.observing_run.measurement_sets[0].reference_antenna = ','.join(RefAntOutput)
             LOG.info("Not enough good solutions, trying a different reference antenna.")
-            LOG.info("The pipeline will use antenna "+RefAntOutput[0].lower()+" as the reference.")
+            LOG.info("The pipeline will start with antenna "+RefAntOutput[0].lower()+" as the reference.")
 
         return (fracFlaggedSolns, RefAntOutput)
 
@@ -364,7 +364,7 @@ class testBPdcals(basetask.StandardTaskTemplate):
                               'solint'      :solint,
                               'combine'     :'scan',
                               'preavg'      :-1.0,
-                              'refant'      :RefAntOutput[0].lower(),
+                              'refant'      :','.join(RefAntOutput),
                               'minblperant' :minBL_for_cal,
                               'minsnr'      :5.0,
                               'solnorm'     :False,

@@ -107,7 +107,7 @@ class Finalcals(basetask.StandardTaskTemplate):
 
         RefAntOutput = refantobj.calculate()
 
-        refAnt = ','.join([str(i) for i in RefAntOutput[0:4]])
+        refAnt = ','.join(RefAntOutput)
 
         LOG.info("The pipeline will use antenna(s) " + refAnt + " as the reference")
 
@@ -128,12 +128,12 @@ class Finalcals(basetask.StandardTaskTemplate):
 
         if self.inputs.weakbp:
             # LOG.info("USING WEAKBP HEURISTICS")
-            interp = weakbp(self.inputs.vis, bpcaltable, context=context, RefAntOutput=RefAntOutput[0],
+            interp = weakbp(self.inputs.vis, bpcaltable, context=context, RefAntOutput=RefAntOutput,
                             ktypecaltable=ktypecaltable, bpdgain_touse=bpdgain_touse, solint='inf', append=False)
         else:
             # LOG.info("Using REGULAR heuristics")
             interp = ''
-            bandpass_job = do_bandpass(self.inputs.vis, bpcaltable, context=context, RefAntOutput=RefAntOutput[0],
+            bandpass_job = do_bandpass(self.inputs.vis, bpcaltable, context=context, RefAntOutput=RefAntOutput,
                                        spw='',
                                        ktypecaltable=ktypecaltable, bpdgain_touse=bpdgain_touse, solint='inf',
                                        append=False)

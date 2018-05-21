@@ -107,7 +107,7 @@ class Solint(basetask.StandardTaskTemplate):
         
         RefAntOutput=refantobj.calculate()
 
-        refAnt = ','.join([str(i) for i in RefAntOutput[0:4]])
+        refAnt = ','.join(RefAntOutput)
 
         bpdgain_touse = tablebase + table_suffix[0]
         testgains_result = self._do_gtype_testgains(calMs, bpdgain_touse, solint=solint,

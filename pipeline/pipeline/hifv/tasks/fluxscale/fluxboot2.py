@@ -189,7 +189,7 @@ class Fluxboot2(basetask.StandardTaskTemplate):
 
             RefAntOutput = refantobj.calculate()
 
-            refAnt = ','.join([str(i) for i in RefAntOutput[0:4]])
+            refAnt = ','.join(RefAntOutput)
 
             LOG.info("The pipeline will use antenna(s) " + refAnt + " as the reference")
 
