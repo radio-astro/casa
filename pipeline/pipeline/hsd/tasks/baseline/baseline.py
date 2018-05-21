@@ -133,73 +133,6 @@ class SDBaselineResults(common.SingleDishResults):
 )
 class SDBaseline(basetask.StandardTaskTemplate):
     Inputs = SDBaselineInputs
-    
-    class RGAccumulator(object):
-        def __init__(self):
-            self.field = []
-            self.antenna = []
-            self.spw = []
-            self.grid_table = []
-            self.channelmap_range = []
-            
-        def append(self, field_id, antenna_id, spw_id, grid_table, channelmap_range):
-            self.field.append(field_id)
-            self.antenna.append(antenna_id)
-            self.spw.append(spw_id)
-            if isinstance(grid_table, compress.CompressedObj):
-                self.grid_table.append(grid_table)
-            else:
-                self.grid_table.append(compress.CompressedObj(grid_table))
-            self.channelmap_range.append(channelmap_range)
-            
-#         def extend(self, field_id_list, antenna_id_list, spw_id_list):
-#             self.field.extend(field_id_list)
-#             self.antenna.extend(antenna_id_list)
-#             self.spw.extend(spw_id_list)
-#             
-        def get_field_id_list(self):
-            return self.field
-        
-        def get_antenna_id_list(self):
-            return self.antenna
-        
-        def get_spw_id_list(self):
-            return self.spw
-        
-        def get_grid_table_list(self):
-            return self.grid_table
-        
-        def get_channelmap_range_list(self):
-            return self.channelmap_range
-        
-        def iterate_id(self):
-            assert len(self.field) == len(self.antenna)
-            assert len(self.field) == len(self.spw)
-            for v in itertools.izip(self.field, self.antenna, self.spw):
-                yield v
-                
-        def iterate_all(self):
-            assert len(self.field) == len(self.antenna)
-            assert len(self.field) == len(self.spw)
-            assert len(self.field) == len(self.grid_table)
-            assert len(self.field) == len(self.channelmap_range)
-            for f, a, s, g, c in itertools.izip(self.field, self.antenna, self.spw, 
-                                                self.grid_table, self.channelmap_range):
-                _g = g.decompress()
-                yield f, a, s, _g, c
-                del _g
-            
-        
-        def get_process_list(self):
-            field_id_list = self.get_field_id_list()
-            antenna_id_list = self.get_antenna_id_list()
-            spw_id_list = self.get_spw_id_list()
-            
-            assert len(field_id_list) == len(antenna_id_list)
-            assert len(field_id_list) == len(spw_id_list)
-            
-            return field_id_list, antenna_id_list, spw_id_list
-    
     is_multi_vis_task = True
     
 #    @memory_profiler.profile
@@ -234,7 +167,7 @@ class SDBaseline(basetask.StandardTaskTemplate):
         deviation_mask = collections.defaultdict(dict)
         
         # collection of field, antenna, and spw ids in reduction group per MS
-        registry = collections.defaultdict(SDBaseline.RGAccumulator)
+        registry = collections.defaultdict(worker.RGAccumulator)
         
         # outcome for baseline subtraction
         baselined = []
@@ -340,9 +273,36 @@ class SDBaseline(basetask.StandardTaskTemplate):
         work_data = {}
         plot_list = []
         plot_manager = plotter.BaselineSubtractionPlotManager(self.inputs.context, datatable)
-        for ms in context.observing_run.measurement_sets:
-            if ms not in registry:
-                continue
+        
+        # Generate and apply baseline fitting solutions
+        vislist = [ms.name for ms in registry.keys()]
+        plan = [registry[ms] for ms in registry.keys()]
+        blparam = [blparam_file(ms) for ms in registry.keys()]
+        deviationmask_list = [deviation_mask[ms.basename] for ms in registry.keys()]
+#         fitter_inputs = worker.BaselineSubtractionTask.Inputs(context, fitfunc=fitfunc, vis=vislist, plan=plan, 
+#                                                               fit_order=fitorder, edge=edge, blparam=blparam,
+#                                                               deviationmask=deviationmask_list)
+#         fitter_inputs = vdp.InputsContainer(worker.BaselineSubtractionTask, context, 
+#                                             mode=fitfunc, vis=vislist, plan=plan, 
+#                                             fit_order=fitorder, edge=edge, blparam=blparam,
+#                                             deviationmask=deviationmask_list)
+#         fitter_task = worker.BaselineSubtractionTask(fitter_inputs)
+        # 21/05/2018 TN temporal workaround
+        # I don't know how to use vdp.ModeInputs so directly specify worker task class here
+        fitter_inputs = vdp.InputsContainer(worker.CubicSplineBaselineSubtractionWorker, context, 
+                                            vis=vislist, plan=plan, 
+                                            fit_order=fitorder, edge=edge, blparam=blparam,
+                                            deviationmask=deviationmask_list)
+        fitter_task = worker.CubicSplineBaselineSubtractionWorker(fitter_inputs)
+        fitter_results = self._executor.execute(fitter_task, merge=False)
+        
+        #for ms in context.observing_run.measurement_sets:
+        #    if ms not in registry:
+        #        continue
+        #for (visindex, ms) in enumerate(registry.keys()):
+        for result in fitter_results:
+            vis = result.outcome['infile']
+            ms = context.observing_run.get_ms(vis)
             accum = registry[ms]
             vis = ms.basename
             field_id_list = accum.get_field_id_list()
@@ -354,21 +314,22 @@ class SDBaseline(basetask.StandardTaskTemplate):
                       antenna=antenna_id_list,
                       spw=spw_id_list)
              
-            # fit order determination and subtraction
-            fitter_inputs = worker.BaselineSubtractionTask.Inputs(context,
-                                                                  fitfunc=fitfunc,
-                                                                  vis=ms.name,
-                                                                  fit_order=fitorder,
-                                                                  edge=edge,
-                                                                  blparam=blparam_file(ms))
-            fitter_task = worker.BaselineSubtractionTask(fitter_inputs)
-            job = common.ParameterContainerJob(fitter_task, datatable=datatable, 
-                                               process_list=accum, 
-                                               deviationmask_list=deviation_mask[vis])
-            fitter_results = self._executor.execute(job, merge=False)
-            LOG.debug('fitter_results: {}', fitter_results)
+#             # fit order determination and subtraction
+#             fitter_inputs = worker.BaselineSubtractionTask.Inputs(context,
+#                                                                   fitfunc=fitfunc,
+#                                                                   vis=ms.name,
+#                                                                   fit_order=fitorder,
+#                                                                   edge=edge,
+#                                                                   blparam=blparam_file(ms))
+#             fitter_task = worker.BaselineSubtractionTask(fitter_inputs)
+#             job = common.ParameterContainerJob(fitter_task, datatable=datatable, 
+#                                                process_list=accum, 
+#                                                deviationmask_list=deviation_mask[vis])
+#             fitter_results = self._executor.execute(job, merge=False)
+            LOG.debug('fitter_results: {}', result)
  
-            outfile = fitter_results.outcome['outfile']
+            outfile = result.outcome['outfile']
+            LOG.info('infile: {0}, outfile: {1}'.format(os.path.basename(vis), os.path.basename(outfile)))
             work_data[ms.name] = outfile
              
             # plot             
