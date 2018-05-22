@@ -14,24 +14,14 @@ LOG = infrastructure.get_logger(__name__)
 
 
 class MakermsimagesResults(basetask.Results):
-    def __init__(self, final=None, pool=None, preceding=None, rmsimagelist=None, rmsimagenames=None):
+    def __init__(self, rmsimagelist=None, rmsimagenames=None):
         super(MakermsimagesResults, self).__init__()
 
-        if final is None:
-            final = []
-        if pool is None:
-            pool = []
-        if preceding is None:
-            preceding = []
         if rmsimagelist is None:
             rmsimagelist = []
         if rmsimagenames is None:
             rmsimagenames = []
 
-        self.pool = pool[:]
-        self.final = final[:]
-        self.preceding = preceding[:]
-        self.error = set()
         self.rmsimagelist = rmsimagelist[:]
         self.rmsimagenames = rmsimagenames[:]
 
@@ -40,13 +30,8 @@ class MakermsimagesResults(basetask.Results):
         See :method:`~pipeline.infrastructure.api.Results.merge_with_context`
         """
 
-        # if not self.rmsimagenames:
-        #     LOG.warn('No makermsimages results')
-        #     return
-
         # rmsimagelist is a list of dictionaries
         # Use the same format and information from sciimlist, save for the image name and image plot
-
         for rmsitem in self.rmsimagelist:
             try:
                 imageitem = imagelibrary.ImageItem(
@@ -56,7 +41,6 @@ class MakermsimagesResults(basetask.Results):
                     multiterm=rmsitem['multiterm'],
                     imageplot=rmsitem['imageplot'])
                 if 'TARGET' in rmsitem['sourcetype']:
-                    print('ADDED IMAGE ITEM')
                     context.rmsimlist.add_item(imageitem)
             except:
                 pass
@@ -83,14 +67,12 @@ class Makermsimages(basetask.StandardTaskTemplate):
 
         imagenames = []
         for imageitem in imlist:
-            imagenames.extend(glob.glob(imageitem['imagename'] + '*'))
+            if imageitem['multiterm']:
+                imagenames.extend(glob.glob(imageitem['imagename'] + '.pbcor.tt0'))
+            else:
+                imagenames.extend(glob.glob(imageitem['imagename'] + '.pbcor'))
 
-        # tt0 images only
-        imagenames = [im for im in imagenames if 'pbcor.tt0' in im]
-
-        imagenames = [im for im in imagenames if '.rms' not in im]
         rmsimagenames = []
-
         for imagename in imagenames:
             if not os.path.exists(imagename + '.rms') and 'residual' not in imagename:
                 rmsimagename = imagename + '.rms'
@@ -98,7 +80,7 @@ class Makermsimages(basetask.StandardTaskTemplate):
                 _ = self._do_imdev(imagename)
                 rmsimagenames.append(rmsimagename)
 
-        LOG.info("RMS IMAGE NAMES:" + ','.join(rmsimagenames))
+        LOG.info("RMS image names:" + ','.join(rmsimagenames))
 
         return MakermsimagesResults(rmsimagelist=imlist, rmsimagenames=rmsimagenames)
 
