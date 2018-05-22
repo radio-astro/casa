@@ -259,7 +259,7 @@ class ImageParamsHeuristics(object):
                     continue
                 allscanids.extend(scanids)
             if allscanids != []:
-                allscanids = ','.join(map(str, list(set(allscanids))))
+                allscanids = ','.join(map(str, sorted(list(set(allscanids)))))
                 scanidlist.append(allscanids)
                 visindexlist.append(i)
 
@@ -1266,7 +1266,7 @@ class ImageParamsHeuristics(object):
                         max_sensitivities.append(max_sensitivity)
                         min_field_ids.append(min_field_id)
                         max_field_ids.append(max_field_id)
-                        LOG.info('Using median of all mosaic field sensitivities for MS %s, Field %s, SPW %s: %.3g` Jy' % (os.path.basename(msname), field, str(real_spwid), median_sensitivity))
+                        LOG.info('Using median of all mosaic field sensitivities for MS %s, Field %s, SPW %s: %.3g Jy' % (os.path.basename(msname), field, str(real_spwid), median_sensitivity))
                         LOG.info('Minimum mosaic field sensitivity for MS %s, Field %s (ID: %s), SPW %s: %.3g Jy' % (os.path.basename(msname), field, min_field_id, str(real_spwid), min_sensitivity))
                         LOG.info('Maximum mosaic field sensitivity for MS %s, Field %s (ID: %s), SPW %s: %.3g Jy' % (os.path.basename(msname), field, max_field_id, str(real_spwid), max_sensitivity))
                     else:
