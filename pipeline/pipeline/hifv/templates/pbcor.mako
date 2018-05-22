@@ -5,7 +5,7 @@ import pipeline.infrastructure.renderer.htmlrenderer as hr
 %>
 <%inherit file="t2-4m_details-base.mako"/>
 
-<%block name="title">Primary beam corrected tt0 images</%block>
+<%block name="title">Primary beam corrected images (tt0 when multi-term)</%block>
 
 <p>Primary beam corrected images</p>
 
@@ -57,7 +57,7 @@ import pipeline.infrastructure.renderer.htmlrenderer as hr
                                   url_fn="${lambda ms:  'noop'}">
 
         <%def name="title()">
-            Primary Beam Corrected TT0 images
+            Primary Beam Corrected images (tt0 when multi-term)
         </%def>
 
         <%def name="preamble()">
@@ -71,7 +71,7 @@ import pipeline.infrastructure.renderer.htmlrenderer as hr
 
 
         <%def name="fancybox_caption(plot)">
-          primary beam corrected tt0 plot
+          primary beam corrected plot (tt0 when multi-term)
         </%def>
 
 

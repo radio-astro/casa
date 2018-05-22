@@ -206,7 +206,7 @@ class CleanBase(basetask.StandardTaskTemplate):
 
         try:
             result = self._do_clean_cycle(scanidlist, result, iter=inputs.iter)
-        except Exception, e:
+        except Exception as e:
             LOG.error('%s/%s/spw%s clean error: %s' % (inputs.field, inputs.intent, inputs.spw, str(e)))
             result.error = '%s/%s/spw%s clean error: %s' % (inputs.field, inputs.intent, inputs.spw, str(e))
 
