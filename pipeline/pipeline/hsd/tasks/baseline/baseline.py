@@ -281,12 +281,26 @@ class SDBaseline(basetask.StandardTaskTemplate):
         deviationmask_list = [deviation_mask[ms.basename] for ms in registry.keys()]
         # 21/05/2018 TN temporal workaround
         # I don't know how to use vdp.ModeInputs so directly specify worker task class here
-        fitter_inputs = vdp.InputsContainer(worker.CubicSplineBaselineSubtractionWorker, context, 
+        worker_cls = worker.HpcCubicSplineBaselineSubtractionWorker
+        fitter_inputs = vdp.InputsContainer(worker_cls, context, 
                                             vis=vislist, plan=plan, 
                                             fit_order=fitorder, edge=edge, blparam=blparam,
                                             deviationmask=deviationmask_list)
-        fitter_task = worker.CubicSplineBaselineSubtractionWorker(fitter_inputs)
+        fitter_task = worker_cls(fitter_inputs)
         fitter_results = self._executor.execute(fitter_task, merge=False)
+        
+        # Check if fitting was successful
+        fitting_failed = False
+        if isinstance(fitter_results, basetask.FailedTaskResults):
+            fitting_failed = True
+            failed_results = basetask.ResultsList([fitter_results])
+        elif isinstance(fitter_results, basetask.ResultsList) and numpy.any([isinstance(r, basetask.FailedTaskResults) for r in fitter_results]):
+            fitting_failed = True
+            failed_results = basetask.ResultsList([r for r in fitter_results if isinstance(r, basetask.FailedTaskResults)])
+        if fitting_failed:
+            for r in failed_results:
+                r.origtask = SDBaseline
+            return failed_results
         
         #for result in fitter_results:
         results_dict = dict((os.path.basename(r.outcome['infile']), r) for r in fitter_results)

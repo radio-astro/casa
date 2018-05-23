@@ -8,6 +8,7 @@ import itertools
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.vdp as vdp
+import pipeline.infrastructure.sessionutils as sessionutils
 import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.sdfilenamer as filenamer
 from pipeline.hsd.heuristics import CubicSplineFitParamConfig
@@ -166,7 +167,8 @@ class BaselineSubtractionResults(common.SingleDishResults):
 
 
 class BaselineSubtractionWorkerInputs(BaselineSubtractionInputsBase):
-    plan = vdp.VisDependentProperty(default=[])
+    vis = vdp.VisDependentProperty(default='', null_input=['', None, [], ['']])
+    plan = vdp.VisDependentProperty(default=None)
     fit_order = vdp.VisDependentProperty(default='automatic')
     edge = vdp.VisDependentProperty(default=(0,0))
     deviationmask = vdp.VisDependentProperty(default={})
@@ -227,6 +229,8 @@ class BaselineSubtractionWorkerInputs(BaselineSubtractionInputsBase):
 class BaselineSubtractionWorker(basetask.StandardTaskTemplate):
     Inputs = BaselineSubtractionWorkerInputs
     Heuristics = None
+    
+    is_multi_vis_task = False
     
     def prepare(self):
         context = self.inputs.context
@@ -293,6 +297,42 @@ class BaselineSubtractionWorker(basetask.StandardTaskTemplate):
 class CubicSplineBaselineSubtractionWorker(BaselineSubtractionWorker):
     Heuristics = CubicSplineFitParamConfig
 
+
+### Tier-0 Parallelization
+class HpcBaselineSubtractionWorkerInputs(BaselineSubtractionWorkerInputs):
+    # use common implementation for parallel inputs argument
+    parallel = sessionutils.parallel_inputs_impl()
+    
+    def __init__(self, context, vis=None, plan=None,
+                 fit_order=None, edge=None, deviationmask=None, blparam=None, bloutput=None,
+                 parallel=None):
+        super(HpcBaselineSubtractionWorkerInputs, self).__init__(context, vis=vis, plan=plan, 
+                                                                 fit_order=fit_order, edge=edge,
+                                                                 deviationmask=deviationmask, 
+                                                                 blparam=blparam, bloutput=bloutput)
+        self.parallel = parallel
+
+
+class HpcBaselineSubtractionWorker(sessionutils.ParallelTemplate):
+    Inputs = HpcBaselineSubtractionWorkerInputs
+    Task = None
+    
+    is_multi_vis_task = False
+    
+    @basetask.result_finaliser
+    def get_result_for_exception(self, vis, exception):
+        LOG.error('Error operating target flag for {!s}'.format(os.path.basename(vis)))
+        LOG.error('{0}({1})'.format(exception.__class__.__name__, exception.message))
+        import traceback
+        tb = traceback.format_exc()
+        if tb.startswith('None'):
+            tb = '{0}({1})'.format(exception.__class__.__name__, exception.message)
+        return basetask.FailedTaskResults(self, exception, tb)
+
+
+class HpcCubicSplineBaselineSubtractionWorker(HpcBaselineSubtractionWorker):
+    Task = CubicSplineBaselineSubtractionWorker
+    
 
 # # facade for FitParam
 # class BaselineSubtractionInputs(vdp.ModeInputs):
