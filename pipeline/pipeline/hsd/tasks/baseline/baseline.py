@@ -272,7 +272,7 @@ class SDBaseline(basetask.StandardTaskTemplate):
             + '_blparam_stage{stage}.txt'.format(stage=stage_number)
         work_data = {}
         plot_list = []
-        plot_manager = plotter.BaselineSubtractionPlotManager(self.inputs.context, datatable)
+#         plot_manager = plotter.BaselineSubtractionPlotManager(self.inputs.context, datatable)
         
         # Generate and apply baseline fitting solutions
         vislist = [ms.name for ms in registry.keys()]
@@ -287,7 +287,8 @@ class SDBaseline(basetask.StandardTaskTemplate):
                                             fit_order=fitorder, edge=edge, blparam=blparam,
                                             deviationmask=deviationmask_list)
         fitter_task = worker_cls(fitter_inputs)
-        fitter_results = self._executor.execute(fitter_task, merge=False)
+        #fitter_results = self._executor.execute(fitter_task, merge=False)
+        fitter_results = fitter_task.execute(dry_run=self._executor._dry_run)
         
         # Check if fitting was successful
         fitting_failed = False
@@ -305,34 +306,39 @@ class SDBaseline(basetask.StandardTaskTemplate):
         #for result in fitter_results:
         results_dict = dict((os.path.basename(r.outcome['infile']), r) for r in fitter_results)
         for ms in context.observing_run.measurement_sets:
+            if ms.basename not in results_dict:
+                continue
+            
             result = results_dict[ms.basename]
             vis = result.outcome['infile']
-            ms = context.observing_run.get_ms(vis)
-            accum = registry[ms]
-            vis = ms.basename
+            #ms = context.observing_run.get_ms(vis)
+            #accum = registry[ms]
  
             outfile = result.outcome['outfile']
-            LOG.info('infile: {0}, outfile: {1}'.format(os.path.basename(vis), os.path.basename(outfile)))
+            LOG.debug('infile: {0}, outfile: {1}'.format(os.path.basename(vis), os.path.basename(outfile)))
             work_data[ms.name] = outfile
+            
+            if 'plot_list' in result.outcome:
+                plot_list.extend(result.outcome['plot_list'])
              
-            # plot             
-            # initialize plot manager
-            status = plot_manager.initialize(ms, outfile)
-            for (field_id, antenna_id, spw_id, grid_table, channelmap_range) in accum.iterate_all():
-                 
-                if (field_id, antenna_id, spw_id) in deviation_mask[vis]:
-                    deviationmask = deviation_mask[vis][(field_id, antenna_id, spw_id)]
-                else:
-                    deviationmask = None
-                 
-                if status:
-                    plot_list.extend(plot_manager.plot_spectra_with_fit(field_id, antenna_id, spw_id, 
-                                                                        grid_table, 
-                                                                        deviationmask, channelmap_range))
-                    
-                del grid_table
+#             # plot             
+#             # initialize plot manager
+#             status = plot_manager.initialize(ms, outfile)
+#             for (field_id, antenna_id, spw_id, grid_table, channelmap_range) in accum.iterate_all():
+#                  
+#                 if (field_id, antenna_id, spw_id) in deviation_mask[vis]:
+#                     deviationmask = deviation_mask[vis][(field_id, antenna_id, spw_id)]
+#                 else:
+#                     deviationmask = None
+#                  
+#                 if status:
+#                     plot_list.extend(plot_manager.plot_spectra_with_fit(field_id, antenna_id, spw_id, 
+#                                                                         grid_table, 
+#                                                                         deviationmask, channelmap_range))
+#                     
+#                 del grid_table
                 
-        plot_manager.finalize()
+#         plot_manager.finalize()
         
         outcome = {'baselined': baselined,
                    'work_data': work_data,

@@ -15,6 +15,7 @@ from pipeline.hsd.heuristics import CubicSplineFitParamConfig
 from pipeline.domain import DataTable
 from .. import common
 from ..common import compress
+from . import plotter
 from pipeline.hsd.tasks.common import utils as sdutils
 from pipeline.infrastructure import casa_tasks
 
@@ -172,7 +173,29 @@ class BaselineSubtractionWorkerInputs(BaselineSubtractionInputsBase):
     fit_order = vdp.VisDependentProperty(default='automatic')
     edge = vdp.VisDependentProperty(default=(0,0))
     deviationmask = vdp.VisDependentProperty(default={})
-   
+    
+    # workaround for possible bug in ParallelTaskTemplate CAS-11443
+    @plan.postprocess
+    def plan(self, unprocessed):
+        if type(self.vis) == list:
+            vis = self.vis[0]
+        else:
+            vis = self.vis
+        if type(unprocessed) == list and hasattr(self, 'plandict'):
+            return self.plandict[vis]
+        return unprocessed
+    
+    # workaround for possible bug in ParallelTaskTemplate CAS-11443
+    @deviationmask.postprocess
+    def deviationmask(self, unprocessed):
+        if type(self.vis) == list:
+            vis = self.vis[0]
+        else:
+            vis = self.vis
+        if type(unprocessed) == list and hasattr(self, 'dmdict'):
+            return self.dmdict[vis]
+        return unprocessed
+    
     @vdp.VisDependentProperty
     def prefix(self):
         return os.path.basename(self.vis.rstrip('/'))
@@ -181,6 +204,17 @@ class BaselineSubtractionWorkerInputs(BaselineSubtractionInputsBase):
     def blparam(self):
         return self.prefix + '_blparam.txt'
     
+    # workaround for possible bug in ParallelTaskTemplate CAS-11443
+    @blparam.postprocess
+    def blparam(self, unprocessed):
+        if type(self.vis) == list:
+            vis = self.vis[0]
+        else:
+            vis = self.vis
+        if type(unprocessed) == list and hasattr(self, 'blparamdict'):
+            return self.blparamdict[vis]
+        return unprocessed
+       
     @vdp.VisDependentProperty
     def bloutput(self):
         namer = filenamer.BaselineSubtractedTable()
@@ -225,12 +259,37 @@ class BaselineSubtractionWorkerInputs(BaselineSubtractionInputsBase):
         self.blparam = blparam
         self.bloutput = bloutput
         
+        # workaround for possible bug in ParallelTaskTemplate CAS-11443
+        if type(self.vis) == list:
+            if type(self.plan) == list:
+                assert len(self.vis) == len(self.plan)
+                self.plandict = dict((k,v) for (k,v) in zip(self.vis, self.plan))
+            else:
+                self.plandict = dict((k,self.plan) for k in self.vis)
+            if type(self.deviationmask) == list:
+                assert len(self.vis) == len(self.deviationmask)
+                self.dmdict = dict((k,v) for (k,v) in zip(self.vis, self.deviationmask))
+            else:
+                self.dmdict = dict((k,self.deviationmask) for k in self.vis)
+            if type(self.blparam) == list:
+                assert len(self.vis) == len(self.blparam)
+                self.blparamdict = dict((k,v) for (k,v) in zip(self.vis, self.blparam))
+            else:
+                self.blparamdict = dict((k,self.blparam) for k in self.vis)
+            
+        
 
 class BaselineSubtractionWorker(basetask.StandardTaskTemplate):
     Inputs = BaselineSubtractionWorkerInputs
     Heuristics = None
     
     is_multi_vis_task = False
+    
+    def __init__(self, inputs):
+        super(BaselineSubtractionWorker, self).__init__(inputs)
+        
+        # initialize plotter
+        self.datatable = DataTable(self.inputs.context.observing_run.ms_datatable_name)
     
     def prepare(self):
         context = self.inputs.context
@@ -246,6 +305,7 @@ class BaselineSubtractionWorker(basetask.StandardTaskTemplate):
         
         process_list = self.inputs.plan
         deviationmask_list = self.inputs.deviationmask
+        LOG.info('deviationmask_list={}'.format(deviationmask_list))      
         
         field_id_list = self.inputs.field
         antenna_id_list = self.inputs.antenna
@@ -263,7 +323,7 @@ class BaselineSubtractionWorker(basetask.StandardTaskTemplate):
             LOG.debug('Cleaning up blparam file for {vis}', vis=vis)
             os.remove(blparam)        
         
-        datatable = DataTable(context.observing_run.ms_datatable_name)
+        #datatable = DataTable(context.observing_run.ms_datatable_name)
 
         for (field_id, antenna_id, spw_id) in process_list.iterate_id():
             if (field_id, antenna_id, spw_id) in deviationmask_list:
@@ -272,7 +332,7 @@ class BaselineSubtractionWorker(basetask.StandardTaskTemplate):
                 deviationmask = None
             blparam_heuristic = self.Heuristics()
             formatted_edge = list(common.parseEdge(edge))
-            out_blparam = blparam_heuristic(datatable, ms, antenna_id, field_id, spw_id, 
+            out_blparam = blparam_heuristic(self.datatable, ms, antenna_id, field_id, spw_id, 
                                             fit_order, formatted_edge, deviationmask, blparam)
             assert out_blparam == blparam
             
@@ -291,12 +351,38 @@ class BaselineSubtractionWorker(basetask.StandardTaskTemplate):
         return results
         
     def analyse(self, results):
+        # plot             
+        # initialize plot manager
+        plot_manager = plotter.BaselineSubtractionPlotManager(self.inputs.context, self.datatable) 
+        outfile = results.outcome['outfile']
+        ms = self.inputs.ms
+        accum = self.inputs.plan
+        deviationmask_list = self.inputs.deviationmask 
+        LOG.info('deviationmask_list={}'.format(deviationmask_list))      
+        status = plot_manager.initialize(ms, outfile)
+        plot_list = []
+        for (field_id, antenna_id, spw_id, grid_table, channelmap_range) in accum.iterate_all():
+             
+            if (field_id, antenna_id, spw_id) in deviationmask_list:
+                deviationmask = deviationmask_list[(field_id, antenna_id, spw_id)]
+            else:
+                deviationmask = None
+             
+            if status:
+                plot_list.extend(plot_manager.plot_spectra_with_fit(field_id, antenna_id, spw_id, 
+                                                                    grid_table, 
+                                                                    deviationmask, channelmap_range))
+        plot_manager.finalize()
+
+        results.outcome['plot_list'] = plot_list
         return results
                 
 
 class CubicSplineBaselineSubtractionWorker(BaselineSubtractionWorker):
+    Inputs = BaselineSubtractionWorkerInputs
     Heuristics = CubicSplineFitParamConfig
 
+    is_multi_vis_task = False
 
 ### Tier-0 Parallelization
 class HpcBaselineSubtractionWorkerInputs(BaselineSubtractionWorkerInputs):
@@ -316,8 +402,9 @@ class HpcBaselineSubtractionWorkerInputs(BaselineSubtractionWorkerInputs):
 class HpcBaselineSubtractionWorker(sessionutils.ParallelTemplate):
     Inputs = HpcBaselineSubtractionWorkerInputs
     Task = None
-    
-    is_multi_vis_task = False
+        
+    def __init__(self, inputs):
+        super(HpcBaselineSubtractionWorker, self).__init__(inputs)
     
     @basetask.result_finaliser
     def get_result_for_exception(self, vis, exception):
@@ -331,7 +418,11 @@ class HpcBaselineSubtractionWorker(sessionutils.ParallelTemplate):
 
 
 class HpcCubicSplineBaselineSubtractionWorker(HpcBaselineSubtractionWorker):
+    Inputs = HpcBaselineSubtractionWorkerInputs
     Task = CubicSplineBaselineSubtractionWorker
+    
+    def __init__(self, inputs):
+        super(HpcCubicSplineBaselineSubtractionWorker, self).__init__(inputs)
     
 
 # # facade for FitParam
