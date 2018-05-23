@@ -53,7 +53,7 @@ import statwt2_cli
 import tclean_pg
 import wvrgcal_cli
 import visstat_cli
-import sdbaseline_cli
+import sdbaseline_pg
 import sdcal_pg
 import sdimaging_cli
 
@@ -528,8 +528,7 @@ class CASATaskJobGenerator(object):
         return self._get_job(sdcal_pg.sdcal_pg, *v, **k)
 
     def sdbaseline(self, *v, **k):
-        return self._get_job(sdbaseline_cli.sdbaseline_cli, *v, **k)
-        # return self._get_job(sdbaseline_pg.sdbaseline_pg, *v, **k)
+        return self._get_job(sdbaseline_pg.sdbaseline_pg, *v, **k)
 
     def _get_job(self, task, *v, **k):
         job = JobRequest(task, *v, **k)
