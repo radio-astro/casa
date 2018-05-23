@@ -43,7 +43,7 @@ class ImageParamsHeuristicsVlassSeTaper(ImageParamsHeuristics):
         return ['1.8arcsec']
 
     def imsize(self, fields=None, cell=None, primary_beam=None, sfpblimit=None, max_pixels=None, centreonly=None):
-        return [3840, 3840]
+        return [4050, 4050]
 
     def threshold_nsigma(self):
         return 4.0

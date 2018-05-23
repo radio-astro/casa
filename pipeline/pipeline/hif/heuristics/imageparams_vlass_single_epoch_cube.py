@@ -43,7 +43,7 @@ class ImageParamsHeuristicsVlassSeCube(ImageParamsHeuristics):
         return ['0.6arcsec']
 
     def imsize(self, fields=None, cell=None, primary_beam=None, sfpblimit=None, max_pixels=None, centreonly=None):
-        return [11520, 11520]
+        return [12150, 12150]
 
     def threshold_nsigma(self):
         return 4.0
