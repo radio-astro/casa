@@ -282,7 +282,7 @@ class BaselineSubtractionWorker(basetask.StandardTaskTemplate):
     Inputs = BaselineSubtractionWorkerInputs
     Heuristics = None
     
-    def prepare(self, datatable=None, process_list=None, deviationmask_list=None):
+    def prepare(self):
         context = self.inputs.context
         vis = self.inputs.vis
         ms = self.inputs.ms
@@ -297,9 +297,15 @@ class BaselineSubtractionWorker(basetask.StandardTaskTemplate):
         process_list = self.inputs.plan
         deviationmask_list = self.inputs.deviationmask
         
-        assert process_list is not None
-        assert deviationmask_list is not None
-        
+        field_id_list = self.inputs.field
+        antenna_id_list = self.inputs.antenna
+        spw_id_list = self.inputs.spw
+        LOG.debug('subgroup member for {vis}:\n\tfield: {field}\n\tantenna: {antenna}\n\tspw: {spw}',
+                  vis=ms.basename,
+                  field=field_id_list,
+                  antenna=antenna_id_list,
+                  spw=spw_id_list)
+
         # initialization of blparam file
         # blparam file needs to be removed before starting iteration through 
         # reduction group
@@ -307,11 +313,7 @@ class BaselineSubtractionWorker(basetask.StandardTaskTemplate):
             LOG.debug('Cleaning up blparam file for {vis}', vis=vis)
             os.remove(blparam)        
         
-        if datatable is None:
-            LOG.info('#PNP# instantiate local datatable')
-            datatable = DataTable(context.observing_run.ms_datatable_name)
-        else:
-            LOG.info('datatable is propagated from parent task')
+        datatable = DataTable(context.observing_run.ms_datatable_name)
 
         for (field_id, antenna_id, spw_id) in process_list.iterate_id():
             if (field_id, antenna_id, spw_id) in deviationmask_list:
@@ -324,7 +326,7 @@ class BaselineSubtractionWorker(basetask.StandardTaskTemplate):
                                             fit_order, formatted_edge, deviationmask, blparam)
             assert out_blparam == blparam
             
-        # execute tsdbaseline
+        # execute sdbaseline
         job = casa_tasks.sdbaseline(infile=vis, datacolumn=datacolumn, blmode='fit', dosubtract=True,
                                     blformat='table', bloutput=bloutput,
                                     blfunc='variable', blparam=blparam,

@@ -279,14 +279,6 @@ class SDBaseline(basetask.StandardTaskTemplate):
         plan = [registry[ms] for ms in registry.keys()]
         blparam = [blparam_file(ms) for ms in registry.keys()]
         deviationmask_list = [deviation_mask[ms.basename] for ms in registry.keys()]
-#         fitter_inputs = worker.BaselineSubtractionTask.Inputs(context, fitfunc=fitfunc, vis=vislist, plan=plan, 
-#                                                               fit_order=fitorder, edge=edge, blparam=blparam,
-#                                                               deviationmask=deviationmask_list)
-#         fitter_inputs = vdp.InputsContainer(worker.BaselineSubtractionTask, context, 
-#                                             mode=fitfunc, vis=vislist, plan=plan, 
-#                                             fit_order=fitorder, edge=edge, blparam=blparam,
-#                                             deviationmask=deviationmask_list)
-#         fitter_task = worker.BaselineSubtractionTask(fitter_inputs)
         # 21/05/2018 TN temporal workaround
         # I don't know how to use vdp.ModeInputs so directly specify worker task class here
         fitter_inputs = vdp.InputsContainer(worker.CubicSplineBaselineSubtractionWorker, context, 
@@ -296,37 +288,14 @@ class SDBaseline(basetask.StandardTaskTemplate):
         fitter_task = worker.CubicSplineBaselineSubtractionWorker(fitter_inputs)
         fitter_results = self._executor.execute(fitter_task, merge=False)
         
-        #for ms in context.observing_run.measurement_sets:
-        #    if ms not in registry:
-        #        continue
-        #for (visindex, ms) in enumerate(registry.keys()):
-        for result in fitter_results:
+        #for result in fitter_results:
+        results_dict = dict((os.path.basename(r.outcome['infile']), r) for r in fitter_results)
+        for ms in context.observing_run.measurement_sets:
+            result = results_dict[ms.basename]
             vis = result.outcome['infile']
             ms = context.observing_run.get_ms(vis)
             accum = registry[ms]
             vis = ms.basename
-            field_id_list = accum.get_field_id_list()
-            antenna_id_list = accum.get_antenna_id_list()
-            spw_id_list = accum.get_spw_id_list()
-            LOG.debug('subgroup member for {vis}:\n\tfield: {field}\n\tantenna: {antenna}\n\tspw: {spw}',
-                      vis=ms.basename,
-                      field=field_id_list,
-                      antenna=antenna_id_list,
-                      spw=spw_id_list)
-             
-#             # fit order determination and subtraction
-#             fitter_inputs = worker.BaselineSubtractionTask.Inputs(context,
-#                                                                   fitfunc=fitfunc,
-#                                                                   vis=ms.name,
-#                                                                   fit_order=fitorder,
-#                                                                   edge=edge,
-#                                                                   blparam=blparam_file(ms))
-#             fitter_task = worker.BaselineSubtractionTask(fitter_inputs)
-#             job = common.ParameterContainerJob(fitter_task, datatable=datatable, 
-#                                                process_list=accum, 
-#                                                deviationmask_list=deviation_mask[vis])
-#             fitter_results = self._executor.execute(job, merge=False)
-            LOG.debug('fitter_results: {}', result)
  
             outfile = result.outcome['outfile']
             LOG.info('infile: {0}, outfile: {1}'.format(os.path.basename(vis), os.path.basename(outfile)))
