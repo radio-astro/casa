@@ -99,60 +99,6 @@ class RGAccumulator(object):
         return field_id_list, antenna_id_list, spw_id_list
 
 
-class OldBaselineSubtractionInputsBase(basetask.StandardInputs):
-    DATACOLUMN = {'CORRECTED_DATA': 'corrected',
-                  'DATA': 'data',
-                  'FLOAT_DATA': 'float_data'}
-
-    def to_casa_args(self):
-        args = super(BaselineSubtractionInputsBase, self).to_casa_args()#{'vis': self.vis}
-        prefix = os.path.basename(self.vis.rstrip('/'))
-        
-        # blparam 
-        if self.blparam is None or len(self.blparam) == 0:
-            args['blparam'] = prefix + '_blparam.txt'
-        else:
-            args['blparam'] = self.blparam
-            
-        # baseline caltable filename
-        if self.bloutput is None or len(self.bloutput) == 0:
-            namer = filenamer.BaselineSubtractedTable()
-            #namer.spectral_window(self.spwid)
-            #st = self.data_object()
-            #asdm = common.asdm_name(st)
-            asdm = prefix
-            namer.asdm(asdm)
-            #namer.antenna_name(st.antenna.name)
-            bloutput = namer.get_filename() 
-            args['bloutput'] = bloutput
-        else:
-            args['bloutput'] = self.bloutput
-            
-        # outfile
-        if ('outfile' not in args or
-                args['outfile'] is None or
-                len(args['outfile']) == 0):
-            args['outfile'] = self.vis.rstrip('/') + '_bl'
-            
-        args['datacolumn'] = self.DATACOLUMN[self.colname]
-            
-        return args
-    
-    @property
-    def colname(self):
-        colname = ''
-        if type(self.vis) is types.StringType:
-            with casatools.TableReader(self.vis) as tb:
-                candidate_names = ['CORRECTED_DATA', 
-                                   'DATA',
-                                   'FLOAT_DATA']
-                for name in candidate_names:
-                    if name in tb.colnames():
-                        colname = name
-                        break
-        return colname
-    
-    
 class BaselineSubtractionInputsBase(vdp.StandardInputs):
     DATACOLUMN = {'CORRECTED_DATA': 'corrected',
                   'DATA': 'data',
@@ -348,14 +294,14 @@ class CubicSplineBaselineSubtractionWorker(BaselineSubtractionWorker):
     Heuristics = CubicSplineFitParamConfig
 
 
-# facade for FitParam
-class BaselineSubtractionInputs(vdp.ModeInputs):
-    _modes = {'spline': CubicSplineBaselineSubtractionWorker,
-              'cspline': CubicSplineBaselineSubtractionWorker}
-
-    def __init__(self, context, fitfunc, **parameters):
-        super(BaselineSubtractionInputs, self).__init__(context=context, mode=fitfunc, **parameters)
-    
-
-class BaselineSubtractionTask(basetask.ModeTask):
-    Inputs = BaselineSubtractionInputs
+# # facade for FitParam
+# class BaselineSubtractionInputs(vdp.ModeInputs):
+#     _modes = {'spline': CubicSplineBaselineSubtractionWorker,
+#               'cspline': CubicSplineBaselineSubtractionWorker}
+# 
+#     def __init__(self, context, fitfunc, **parameters):
+#         super(BaselineSubtractionInputs, self).__init__(context=context, mode=fitfunc, **parameters)
+#     
+# 
+# class BaselineSubtractionTask(basetask.ModeTask):
+#     Inputs = BaselineSubtractionInputs
