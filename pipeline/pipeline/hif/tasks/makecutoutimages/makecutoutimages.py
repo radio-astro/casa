@@ -56,7 +56,6 @@ class MakecutoutimagesResults(basetask.Results):
                     multiterm=subitem['multiterm'],
                     imageplot=subitem['imageplot'])
                 if 'TARGET' in subitem['sourcetype']:
-                    print('ADDED IMAGE ITEM')
                     context.subimlist.add_item(imageitem)
             except:
                 pass
@@ -92,17 +91,20 @@ class Makecutoutimages(basetask.StandardTaskTemplate):
         imagenames = []
         # Per VLASS Tech Specs page 22
         for imageitem in imlist:
-            imagenames.extend(glob.glob(imageitem['imagename'].replace('.image', '.image.pbcor') + '*'))
-            imagenames.extend(glob.glob(imageitem['imagename'].replace('.image', '.psf') + '*'))
-            imagenames.extend(glob.glob(imageitem['imagename'].replace('.image', '.image.residual.pbcor') + '*'))
-            imagenames.extend(glob.glob(imageitem['imagename'].replace('.image', '.pb') + '*'))
+            if imageitem['multiterm']:
+                imagenames.extend(glob.glob(imageitem['imagename'].replace('.image', '.image.pbcor') + '*.tt0'))
+                imagenames.extend(glob.glob(imageitem['imagename'].replace('.image', '.image.pbcor') + '*.tt0.rms'))
+                imagenames.extend(glob.glob(imageitem['imagename'].replace('.image', '.psf') + '*.tt0'))
+                imagenames.extend(glob.glob(imageitem['imagename'].replace('.image', '.image.residual.pbcor') + '*.tt0'))
+                imagenames.extend(glob.glob(imageitem['imagename'].replace('.image', '.pb') + '*.tt0'))
+            else:
+                imagenames.extend(glob.glob(imageitem['imagename'].replace('.image', '.image.pbcor')))
+                imagenames.extend(glob.glob(imageitem['imagename'].replace('.image', '.image.pbcor.rms')))
+                imagenames.extend(glob.glob(imageitem['imagename'].replace('.image', '.psf')))
+                imagenames.extend(glob.glob(imageitem['imagename'].replace('.image', '.image.residual.pbcor')))
+                imagenames.extend(glob.glob(imageitem['imagename'].replace('.image', '.pb')))
 
-        # tt0 images only
-        imagenames = [im for im in imagenames if 'tt0' in im]
-
-        imagenames = [im for im in imagenames if '.subim' not in im]
         subimagenames = []
-
         subimage_size = None
         for imagename in imagenames:
             if not os.path.exists(imagename + '.subim'):
@@ -160,8 +162,8 @@ class Makecutoutimages(basetask.StandardTaskTemplate):
         xcellsize = 3600.0 * (180.0 / math.pi) * math.fabs(imhead_dict['incr'][0])
         ycellsize = 3600.0 * (180.0 / math.pi) * math.fabs(imhead_dict['incr'][1])
 
-        fld_subim_size_x = int(3600.0 * (image_size_x + buffer_deg) / xcellsize)   # Cutout size with buffer in pixels
-        fld_subim_size_y = int(3600.0 * (image_size_y + buffer_deg) / ycellsize)   # Cutout size with buffer in pixels
+        fld_subim_size_x = round(3600.0 * (image_size_x + buffer_deg) / xcellsize)   # Cutout size with buffer in pixels
+        fld_subim_size_y = round(3600.0 * (image_size_y + buffer_deg) / ycellsize)   # Cutout size with buffer in pixels
 
         # equivalent blc,trc for extracting requested field, in pixels:
         blcx = imsize[0] / 2 - (fld_subim_size_x / 2)
@@ -188,10 +190,10 @@ class Makecutoutimages(basetask.StandardTaskTemplate):
             if type(offsettrc) is str:
                 offsettrc = ast.literal_eval(offsettrc)
 
-            fld_subim_size_x_blc = int(3600.0 * (offsetblc[0] / 3600.0 + buffer_deg / 2.0) / xcellsize)
-            fld_subim_size_y_blc = int(3600.0 * (offsetblc[1] / 3600.0 + buffer_deg / 2.0) / ycellsize)
-            fld_subim_size_x_trc = int(3600.0 * (offsettrc[0] / 3600.0 + buffer_deg / 2.0) / xcellsize)
-            fld_subim_size_y_trc = int(3600.0 * (offsettrc[1] / 3600.0 + buffer_deg / 2.0) / ycellsize)
+            fld_subim_size_x_blc = round(3600.0 * (offsetblc[0] / 3600.0 + buffer_deg / 2.0) / xcellsize)
+            fld_subim_size_y_blc = round(3600.0 * (offsetblc[1] / 3600.0 + buffer_deg / 2.0) / ycellsize)
+            fld_subim_size_x_trc = round(3600.0 * (offsettrc[0] / 3600.0 + buffer_deg / 2.0) / xcellsize)
+            fld_subim_size_y_trc = round(3600.0 * (offsettrc[1] / 3600.0 + buffer_deg / 2.0) / ycellsize)
 
             blcx = imsize[0] / 2 - fld_subim_size_x_blc
             blcy = imsize[1] / 2 - fld_subim_size_y_blc
@@ -222,9 +224,11 @@ class Makecutoutimages(basetask.StandardTaskTemplate):
                             'box': fld_subim}
 
         task = casa_tasks.imsubimage(**imsubimageparams)
-        subimage_size = {'pixels_x': trcx - blcx,
-                         'pixels_y': trcy - blcy,
-                         'arcsec_x': (trcx - blcx) * xcellsize,
-                         'arcsec_y': (trcy - blcy) * ycellsize}
+        px = (trcx - blcx) + 1
+        py = (trcy - blcy) + 1
+        subimage_size = {'pixels_x': px,
+                         'pixels_y': py,
+                         'arcsec_x': px * xcellsize,
+                         'arcsec_y': py * ycellsize}
 
         return self._executor.execute(task), subimage_size

@@ -171,7 +171,7 @@ $(document).ready(function() {
     </tr>
     <tr>
         <td style="font-weight:bold; background-color:#ccffcc">Image size (x, y)</td>
-        <td>${'{:d}px, {:d}px'.format(x_px, y_px)}</td>
+        <td>${'{:.0f}px, {:.0f}px'.format(x_px, y_px)}</td>
     </tr>
     <tr>
         <td style="font-weight:bold; background-color:#ccffcc">Image size (RA, DEC)</td>

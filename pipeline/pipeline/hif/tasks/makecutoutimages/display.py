@@ -30,12 +30,12 @@ class CutoutimagesSummary(object):
         plot_wrappers = []
 
         for subimagename in self.result.subimagenames:
-            if '.psf.tt' in subimagename:
+            if '.psf.' in subimagename:
                 plot_wrappers.append(sky.SkyDisplay().plot(self.context, subimagename,
                                                            reportdir=stage_dir, intent='',
                                                            collapseFunction='mean',
                                                            vmin=-0.1, vmax=0.3))
-            elif 'image.pbcor.tt0.subim' in subimagename:
+            elif '.image.pbcor.' in subimagename and '.rms.' not in subimagename:
                 plot_wrappers.append(sky.SkyDisplay().plot(self.context, subimagename,
                                                            reportdir=stage_dir, intent='',
                                                            collapseFunction='mean',
@@ -44,7 +44,7 @@ class CutoutimagesSummary(object):
                 with casatools.ImageReader(subimagename) as image:
                     self.result.pbcor_stats = image.statistics(robust=True)
 
-            elif 'rms.subim' in subimagename:
+            elif '.rms.' in subimagename:
                 plot_wrappers.append(sky.SkyDisplay().plot(self.context, subimagename,
                                                            reportdir=stage_dir, intent='',
                                                            collapseFunction='mean'))
@@ -61,14 +61,14 @@ class CutoutimagesSummary(object):
                     # get fraction of pixels <= 200 micro Jy VLASS technical requirement.  ignore 0 (masked) values.
                     self.result.RMSfraction200 = (np.count_nonzero((arr != 0) & (arr <= 200e-6)) /
                                                   float(arr.size)) * 100
-            elif 'residual.pbcor.tt' in subimagename and not subimagename.endswith('.rms'):
+            elif '.residual.pbcor.' in subimagename and not subimagename.endswith('.rms'):
                 plot_wrappers.append(sky.SkyDisplay().plot(self.context, subimagename,
                                                            reportdir=stage_dir, intent='',
                                                            collapseFunction='mean'))
                 with casatools.ImageReader(subimagename) as image:
                     self.result.residual_stats = image.statistics(robust=True)
 
-            elif 'pb.tt' in subimagename:
+            elif '.pb.' in subimagename:
                 plot_wrappers.append(sky.SkyDisplay().plot(self.context, subimagename,
                                                            reportdir=stage_dir, intent='',
                                                            collapseFunction='mean'))
