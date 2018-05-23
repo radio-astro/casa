@@ -299,7 +299,7 @@ class SDBaseline(basetask.StandardTaskTemplate):
             failed_results = basetask.ResultsList([r for r in fitter_results if isinstance(r, basetask.FailedTaskResults)])
         if fitting_failed:
             for r in failed_results:
-                r.origtask = SDBaseline
+                r.origtask = self
             return failed_results
         
         #for result in fitter_results:
