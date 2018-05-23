@@ -33,9 +33,8 @@ class ExportvlassdataResults(basetask.Results):
         self.error = set()
 
     def __repr__(self):
-        #return 'ExportvlassdataResults:\n\t{0}'.format(
-        #    '\n\t'.join([ms.name for ms in self.mses]))
         return 'ExportvlassdataResults:'
+
 
 class ExportvlassdataInputs(exportdata.ExportDataInputs):
     gainmap = vdp.VisDependentProperty(default=False)
@@ -43,9 +42,9 @@ class ExportvlassdataInputs(exportdata.ExportDataInputs):
     def __init__(self, context, output_dir=None, session=None, vis=None, exportmses=None, pprfile=None, calintents=None,
                  calimages=None, targetimages=None, products_dir=None, gainmap=None):
         super(ExportvlassdataInputs, self).__init__(context, output_dir=output_dir, session=session, vis=vis,
-                                                  exportmses=exportmses, pprfile=pprfile, calintents=calintents,
-                                                  calimages=calimages, targetimages=targetimages,
-                                                  products_dir=products_dir)
+                                                    exportmses=exportmses, pprfile=pprfile, calintents=calintents,
+                                                    calimages=calimages, targetimages=targetimages,
+                                                    products_dir=products_dir)
         self.gainmap = gainmap
 
 
@@ -82,8 +81,8 @@ class Exportvlassdata(basetask.StandardTaskTemplate):
             prefix = oussid
         else:
             prefix = oussid + '.' + recipe_name
-        stdfproducts = self._do_standard_ous_products(inputs.context, inputs.exportmses,
-            prefix, inputs.pprfile, session_list, vislist, inputs.output_dir, inputs.products_dir)
+        stdfproducts = self._do_standard_ous_products(inputs.context, prefix, inputs.pprfile, inputs.output_dir,
+                                                      inputs.products_dir)
         if stdfproducts.ppr_file:
             result.pprequest = os.path.basename(stdfproducts.ppr_file)
         result.weblog = os.path.basename(stdfproducts.weblog_file)
@@ -94,13 +93,19 @@ class Exportvlassdata(basetask.StandardTaskTemplate):
 
         dname = inputs.products_dir + '/'
         for imageitem in imlist:
-            pbcor_image_name = imageitem['imagename'].replace('subim', 'pbcor.tt0.subim')
+
+            if imageitem['multiterm']:
+                pbcor_image_name = imageitem['imagename'].replace('subim', 'pbcor.tt0.subim')
+                rms_image_name = imageitem['imagename'].replace('subim', 'pbcor.tt0.rms.subim')
+            else:
+                pbcor_image_name = imageitem['imagename'].replace('subim', 'pbcor.subim')
+                rms_image_name = imageitem['imagename'].replace('subim', 'pbcor.rms.subim')
+
             fits_pbcor_image = dname + pbcor_image_name + '.fits'
             task = casa_tasks.exportfits(imagename=pbcor_image_name, fitsimage=fits_pbcor_image)
             self._executor.execute(task)
             LOG.info('Wrote {ff}'.format(ff=fits_pbcor_image))
 
-            rms_image_name = imageitem['imagename'].replace('subim', 'pbcor.tt0.rms.subim')
             fits_rms_image = dname + rms_image_name + '.fits'
             task = casa_tasks.exportfits(imagename=rms_image_name, fitsimage=fits_rms_image)
             self._executor.execute(task)
@@ -108,8 +113,7 @@ class Exportvlassdata(basetask.StandardTaskTemplate):
 
         # Export the pipeline manifest file
         #    TBD Remove support for auxiliary data products to the individual pipelines
-        pipemanifest = self._make_pipe_manifest(inputs.context, oussid, stdfproducts,
-                                                {}, {}, inputs.exportmses, [],
+        pipemanifest = self._make_pipe_manifest(inputs.context, oussid, stdfproducts, {}, {}, [],
                                                 [os.path.basename(fits_pbcor_image), os.path.basename(fits_rms_image)])
         casa_pipe_manifest = self._export_pipe_manifest('pipeline_manifest.xml', inputs.products_dir, pipemanifest)
         result.manifest = os.path.basename(casa_pipe_manifest)
@@ -171,13 +175,11 @@ class Exportvlassdata(basetask.StandardTaskTemplate):
 
         # Get the session list and the visibility files associated with
         # each session.
-        session_list, session_names, session_vislists = self._get_sessions( \
-            context, session, vislist)
+        session_list, session_names, session_vislists = self._get_sessions(context, session, vislist)
 
         return session_list, session_names, session_vislists, vislist
 
-    def _do_standard_ous_products(self, context, exportmses, oussid, pprfile, session_list, vislist, output_dir,
-                                  products_dir):
+    def _do_standard_ous_products(self, context, oussid, pprfile, output_dir, products_dir):
         """
         Generate the per ous standard products
         """
@@ -186,7 +188,7 @@ class Exportvlassdata(basetask.StandardTaskTemplate):
         #     There should normally be at most one pipeline processing request.
         #     In interactive mode there is no PPR.
         ppr_files = self._export_pprfile(context, output_dir, products_dir, oussid, pprfile)
-        if (ppr_files != []):
+        if ppr_files != []:
             ppr_file = os.path.basename(ppr_files[0])
         else:
             ppr_file = None
@@ -207,8 +209,7 @@ class Exportvlassdata(basetask.StandardTaskTemplate):
                                casa_commands_file,
                                casa_pipescript)
 
-    def _make_pipe_manifest(self, context, oussid, stdfproducts, sessiondict,
-                            visdict, exportmses, calimages, targetimages):
+    def _make_pipe_manifest(self, context, oussid, stdfproducts, sessiondict, visdict, calimages, targetimages):
         """
         Generate the manifest file
         """
@@ -326,8 +327,7 @@ class Exportvlassdata(basetask.StandardTaskTemplate):
         # Initialize the output session names and visibility file lists
         session_names = []
         session_vis_list = []
-        for key, value in sorted(session_dict.iteritems(), \
-                                 key=lambda (k, v): (v, k)):
+        for key, value in sorted(session_dict.iteritems(), key=lambda (k, v): (v, k)):
             session_names.append(key)
             session_vis_list.append([])
 
@@ -368,7 +368,7 @@ class Exportvlassdata(basetask.StandardTaskTemplate):
         else:
             tarfilename = oussid + '.weblog.tgz'
 
-        LOG.info('Saving final weblog in %s' % (tarfilename))
+        LOG.info('Saving final weblog in %s' % tarfilename)
 
         # Create the tar file
         if not self._executor._dry_run:
@@ -434,7 +434,7 @@ class Exportvlassdata(basetask.StandardTaskTemplate):
         """
 
         out_manifest_file = os.path.join(products_dir, manifest_name)
-        LOG.info('Creating manifest file %s' % (out_manifest_file))
+        LOG.info('Creating manifest file %s' % out_manifest_file)
         if not self._executor._dry_run:
             pipemanifest.write(out_manifest_file)
 
