@@ -14,7 +14,10 @@ class swpowSummaryChart(object):
         self.context = context
         self.result = result
         self.ms = context.observing_run.get_ms(result.inputs['vis'])
-        self.caltable = result.sw_result.final[0].gaintable
+        if result.sw_result.final:
+            self.caltable = result.sw_result.final[0].gaintable
+        else:
+            self.caltable = ''
 
     def plot(self):
         # science_spws = self.ms.get_spectral_windows(science_windows_only=True)
@@ -29,11 +32,11 @@ class swpowSummaryChart(object):
         plotmax = 100
 
         # Dummy plot
-        #casa.plotcal(caltable=self.caltable, xaxis='time', yaxis='amp', poln='', field='', antenna=antPlot,
-        #             spw='',
-        #             timerange='', subplot=311, overplot=False, clearpanel='Auto', iteration='antenna',
-        #             plotrange=[0, 0, 0, plotmax], showflags=False, plotsymbol='o', plotcolor='blue', markersize=5.0,
-        #             fontsize=10.0, showgui=False, figfile=figfile)
+        # casa.plotcal(caltable=self.caltable, xaxis='time', yaxis='amp', poln='', field='', antenna=antPlot,
+        #              spw='',
+        #              timerange='', subplot=311, overplot=False, clearpanel='Auto', iteration='antenna',
+        #              plotrange=[0, 0, 0, plotmax], showflags=False, plotsymbol='o', plotcolor='blue', markersize=5.0,
+        #              fontsize=10.0, showgui=False, figfile=figfile)
         casa.plotms(vis=self.caltable, xaxis='time', yaxis='amp', field='',
                     antenna=antPlot, spw='', timerange='',
                     plotrange=[0,0,0,plotmax], coloraxis='spw',
@@ -75,7 +78,10 @@ class swpowPerAntennaChart(object):
         self.ms = context.observing_run.get_ms(result.inputs['vis'])
         ms = self.ms
         self.yaxis = yaxis
-        self.caltable = result.sw_result.final[0].gaintable
+        if result.sw_result.final:
+            self.caltable = result.sw_result.final[0].gaintable
+        else:
+            self.caltable = ''
 
         self.json = {}
         self.json_filename = os.path.join(context.report_dir,
@@ -137,7 +143,7 @@ class swpowPerAntennaChart(object):
                                 title='Switched Power  swpow.tbl   Antenna: {!s}'.format(antName),
                                 titlefont=8, xaxisfont=7, yaxisfont=7, showgui=False, plotfile=figfile)
 
-                except:
+                except Exception as ex:
                     LOG.warn("Unable to plot " + filename)
             else:
                 LOG.debug('Using existing ' + filename + ' plot.')

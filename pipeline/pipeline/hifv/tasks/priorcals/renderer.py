@@ -109,15 +109,17 @@ class T2_4MDetailspriorcalsRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
             plots = plotter.plot()
             opacity_plots[ms] = plots
 
-            plotter = swpowdisplay.swpowSummaryChart(context, result)
+            # plotter = swpowdisplay.swpowSummaryChart(context, result)
             # plots = plotter.plot()
             ms = os.path.basename(result.inputs['vis'])
             summary_plots[ms] = None
 
-            
             # generate switched power plots and JSON file
             plotter = swpowdisplay.swpowPerAntennaChart(context, result, 'spgain')
-            plots = plotter.plot()
+            if result.sw_result.final:
+                plots = plotter.plot()
+            else:
+                plots = None
             json_path = plotter.json_filename
             
             # write the html for each MS to disk
@@ -128,7 +130,10 @@ class T2_4MDetailspriorcalsRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
 
             # generate switched power plots and JSON file
             plotter = swpowdisplay.swpowPerAntennaChart(context, result, 'tsys')
-            plots = plotter.plot()
+            if result.sw_result.final:
+                plots = plotter.plot()
+            else:
+                plots = None
             json_path = plotter.json_filename
 
             # write the html for each MS to disk

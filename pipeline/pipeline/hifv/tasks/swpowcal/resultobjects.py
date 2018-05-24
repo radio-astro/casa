@@ -8,7 +8,15 @@ LOG = infrastructure.get_logger(__name__)
 
 
 class SwpowcalResults(basetask.Results):
-    def __init__(self, final=[], pool=[], preceding=[], spw=None):
+    def __init__(self, final=None, pool=None, preceding=None, spw=None):
+
+        if final is None:
+            final = []
+        if pool is None:
+            pool = []
+        if preceding is None:
+            preceding = []
+
         super(SwpowcalResults, self).__init__()
         
         self.vis = None

@@ -52,12 +52,12 @@ class Rqcal(basetask.StandardTaskTemplate):
         # Apply switched power calibration (when commissioned); for now, just
         # requantizer gains (needs casa4.1!), and only for data with
         # sensible switched power tables (Feb 24, 2011)
+        callist = []
         if startdate >= 55616.6:
             gencal_args = inputs.to_casa_args()
             gencal_job = casa_tasks.gencal(**gencal_args)
             self._executor.execute(gencal_job)
 
-            callist = []
             calto = callibrary.CalTo(vis=inputs.vis)
             calfrom = callibrary.CalFrom(gencal_args['caltable'], caltype='rq', interp='', calwt=False)
             calapp = callibrary.CalApplication(calto, calfrom)

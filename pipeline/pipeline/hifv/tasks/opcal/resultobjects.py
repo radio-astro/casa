@@ -7,7 +7,22 @@ LOG = infrastructure.get_logger(__name__)
 
 
 class OpcalResults(basetask.Results):
-    def __init__(self, final=[], pool=[], preceding=[], opacities=[], spw=[], center_frequencies=[], seasonal_weight=None):
+    def __init__(self, final=None, pool=None, preceding=None, opacities=None, spw=None,
+                 center_frequencies=None, seasonal_weight=None):
+
+        if final is None:
+            final = []
+        if pool is None:
+            pool = []
+        if preceding is None:
+            preceding = []
+        if opacities is None:
+            opacities = []
+        if spw is None:
+            spw = []
+        if center_frequencies is None:
+            center_frequencies = []
+
         super(OpcalResults, self).__init__()
         
         self.vis = None

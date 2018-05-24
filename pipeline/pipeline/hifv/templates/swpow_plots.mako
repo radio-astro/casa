@@ -4,6 +4,8 @@ import os
 import pipeline.infrastructure.renderer.htmlrenderer as hr
 %>
 
+% if plots:
+
 <div class="page-header">
 	<h1>Switched Power ${plots[0].parameters['type'].title()} Plots<button class="btn btn-default pull-right" onClick="javascript:window.history.back();">Back</button></h1>
 </div>
@@ -38,3 +40,5 @@ import pipeline.infrastructure.renderer.htmlrenderer as hr
 	</div>
 </div>
 % endfor
+
+%endif
