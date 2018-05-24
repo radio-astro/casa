@@ -287,8 +287,7 @@ class SDBaseline(basetask.StandardTaskTemplate):
                                             fit_order=fitorder, edge=edge, blparam=blparam,
                                             deviationmask=deviationmask_list)
         fitter_task = worker_cls(fitter_inputs)
-        #fitter_results = self._executor.execute(fitter_task, merge=False)
-        fitter_results = fitter_task.execute(dry_run=self._executor._dry_run)
+        fitter_results = self._executor.execute(fitter_task, merge=False)
         
         # Check if fitting was successful
         fitting_failed = False
@@ -311,8 +310,6 @@ class SDBaseline(basetask.StandardTaskTemplate):
             
             result = results_dict[ms.basename]
             vis = result.outcome['infile']
-            #ms = context.observing_run.get_ms(vis)
-            #accum = registry[ms]
  
             outfile = result.outcome['outfile']
             LOG.debug('infile: {0}, outfile: {1}'.format(os.path.basename(vis), os.path.basename(outfile)))
@@ -320,25 +317,6 @@ class SDBaseline(basetask.StandardTaskTemplate):
             
             if 'plot_list' in result.outcome:
                 plot_list.extend(result.outcome['plot_list'])
-             
-#             # plot             
-#             # initialize plot manager
-#             status = plot_manager.initialize(ms, outfile)
-#             for (field_id, antenna_id, spw_id, grid_table, channelmap_range) in accum.iterate_all():
-#                  
-#                 if (field_id, antenna_id, spw_id) in deviation_mask[vis]:
-#                     deviationmask = deviation_mask[vis][(field_id, antenna_id, spw_id)]
-#                 else:
-#                     deviationmask = None
-#                  
-#                 if status:
-#                     plot_list.extend(plot_manager.plot_spectra_with_fit(field_id, antenna_id, spw_id, 
-#                                                                         grid_table, 
-#                                                                         deviationmask, channelmap_range))
-#                     
-#                 del grid_table
-                
-#         plot_manager.finalize()
         
         outcome = {'baselined': baselined,
                    'work_data': work_data,

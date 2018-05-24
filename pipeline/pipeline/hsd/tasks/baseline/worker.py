@@ -1,9 +1,10 @@
 from __future__ import absolute_import
 
 import os
-import numpy
+#import numpy
 import types
 import itertools
+import abc
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
@@ -23,15 +24,15 @@ _LOG = infrastructure.get_logger(__name__)
 LOG = sdutils.OnDemandStringParseLogger(_LOG)
 
 
-def generate_plot_table(ms_id, antenna_id, spw_id, polarization_ids, grid_table):
-    def _filter(msid, ant, spw, pols, table):
-        for row in table:
-            if row[0] == spw and row[1] in pols:
-                new_row_entry = row[2:6] + [numpy.array([r[3] for r in row[6] if r[-1] == msid and r[-2] == ant],
-                                                        dtype=int)]
-                yield new_row_entry
-    new_table = list(_filter(ms_id, antenna_id, spw_id, polarization_ids, grid_table))
-    return new_table
+# def generate_plot_table(ms_id, antenna_id, spw_id, polarization_ids, grid_table):
+#     def _filter(msid, ant, spw, pols, table):
+#         for row in table:
+#             if row[0] == spw and row[1] in pols:
+#                 new_row_entry = row[2:6] + [numpy.array([r[3] for r in row[6] if r[-1] == msid and r[-2] == ant],
+#                                                         dtype=int)]
+#                 yield new_row_entry
+#     new_table = list(_filter(ms_id, antenna_id, spw_id, polarization_ids, grid_table))
+#     return new_table
 
 
 class RGAccumulator(object):
@@ -279,9 +280,17 @@ class BaselineSubtractionWorkerInputs(BaselineSubtractionInputsBase):
             
         
 
+# Base class for workers
 class BaselineSubtractionWorker(basetask.StandardTaskTemplate):
     Inputs = BaselineSubtractionWorkerInputs
-    Heuristics = None
+    
+    @abc.abstractproperty
+    def Heuristics(self):
+        """
+        A reference to the :class:`Heuristics` class.
+        """
+        raise NotImplementedError
+        
     
     is_multi_vis_task = False
     
@@ -292,7 +301,6 @@ class BaselineSubtractionWorker(basetask.StandardTaskTemplate):
         self.datatable = DataTable(self.inputs.context.observing_run.ms_datatable_name)
     
     def prepare(self):
-        context = self.inputs.context
         vis = self.inputs.vis
         ms = self.inputs.ms
         fit_order = self.inputs.fit_order
@@ -378,11 +386,11 @@ class BaselineSubtractionWorker(basetask.StandardTaskTemplate):
         return results
                 
 
+# Worker class for cubic spline fit
 class CubicSplineBaselineSubtractionWorker(BaselineSubtractionWorker):
     Inputs = BaselineSubtractionWorkerInputs
     Heuristics = CubicSplineFitParamConfig
 
-    is_multi_vis_task = False
 
 ### Tier-0 Parallelization
 class HpcBaselineSubtractionWorkerInputs(BaselineSubtractionWorkerInputs):
@@ -399,9 +407,9 @@ class HpcBaselineSubtractionWorkerInputs(BaselineSubtractionWorkerInputs):
         self.parallel = parallel
 
 
+# This is abstract class since Task is not specified yet
 class HpcBaselineSubtractionWorker(sessionutils.ParallelTemplate):
     Inputs = HpcBaselineSubtractionWorkerInputs
-    Task = None
         
     def __init__(self, inputs):
         super(HpcBaselineSubtractionWorker, self).__init__(inputs)
@@ -418,7 +426,6 @@ class HpcBaselineSubtractionWorker(sessionutils.ParallelTemplate):
 
 
 class HpcCubicSplineBaselineSubtractionWorker(HpcBaselineSubtractionWorker):
-    Inputs = HpcBaselineSubtractionWorkerInputs
     Task = CubicSplineBaselineSubtractionWorker
     
     def __init__(self, inputs):
