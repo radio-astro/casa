@@ -48,11 +48,6 @@
         </allowed>
     </param>
 
-    <param type="boolArray" name="calwt" subparam="true">
-	<description>Calibrate the weights as well as the data</description>
-	<value>True</value>
-    </param>
-
     <param type="bool" name="flagbackup" subparam="true">
 	<description>Backup the flags before the apply</description>
 	<value type="bool">True</value>
@@ -102,7 +97,6 @@
 	        <default param="intent"><value type="string"></value></default>
 	        <default param="spw"><value type="string"></value></default>
 		<default param="antenna"><value type="string"></value></default>
-	        <default param="calwt"><value type="boolArray">True</value></default>
 	        <default param="flagbackup"><value type="bool">True</value></default>
 	        <default param="dryrun"><value type="bool">False</value></default>
 	        <default param="acceptresults"><value type="bool">True</value></default>
@@ -113,7 +107,6 @@
 	        <default param="intent"><value type="string"></value></default>
 	        <default param="spw"><value type="string"></value></default>
 		<default param="antenna"><value type="string"></value></default>
-	        <default param="calwt"><value type="boolArray">True</value></default>
 	        <default param="flagbackup"><value type="bool">True</value></default>
 	    </equals>
         </when>

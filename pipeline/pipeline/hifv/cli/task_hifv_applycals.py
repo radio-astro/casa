@@ -6,7 +6,7 @@ import pipeline.h.cli.utils as utils
 
 
 def hifv_applycals(vis=None, field=None, intent=None, spw=None, antenna=None,
-    applymode=None, calwt=None, flagbackup=None, flagsum=None,
+    applymode=None, flagbackup=None, flagsum=None,
     flagdetailedsum=None, gainmap=None, pipelinemode=None, dryrun=None, acceptresults=None):
 
     ##########################################################################
