@@ -17,9 +17,9 @@
                 <value/>
             </param>
 
-            <param type="string" name="search_radius_arcsec">
+            <param type="double" name="search_radius_arcsec">
                 <description>Size of the field finding beam search radius in arcsec.</description>
-                <value/>
+                <value type="double">1000.0</value>
             </param>
             <param type="stringArray" name="cell">
                 <description>Image X and Y cell size(s) with units or pixels per beam, \'\' for default. Single value same for both. \'&lt;number&gt;ppb\' for pixels per beam.</description>
