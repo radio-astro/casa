@@ -1,6 +1,7 @@
 import pipeline.infrastructure.api as api
 import pipeline.infrastructure.utils as utils
 
+
 class Standard(api.Heuristic):
     ephemeris_fields = set(['Mars', 'Jupiter', 'Uranus', 'Neptune', 'Pluto',
                             'Io', 'Europa', 'Ganymede', 'Callisto', 'Titan',
@@ -13,6 +14,6 @@ class Standard(api.Heuristic):
             return 'Butler-JPL-Horizons 2012'
             #return 'Butler-JPL-Horizons 2010'
         elif field.isdisjoint(self.ephemeris_fields):
-            return 'Perley-Butler 2013'
+            return 'Perley-Butler 2017'
         else:
             raise Exception, 'not all fields in same standard'

@@ -14,6 +14,7 @@ import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.utils as utils
 import pipeline.infrastructure.vdp as vdp
 from pipeline.hifv.heuristics import find_EVLA_band
+from pipeline.hifv.heuristics import standard as standard
 from pipeline.hifv.heuristics import weakbp, do_bandpass
 from pipeline.hifv.tasks.setmodel.vlasetjy import standard_sources
 from pipeline.infrastructure import casa_tasks
@@ -535,7 +536,7 @@ class Finalcals(basetask.StandardTaskTemplate):
                          'listmodels': False,
                          'scalebychan': True,
                          'fluxdensity': -1,
-                         'standard': 'Perley-Butler 2013',
+                         'standard': standard.Standard()(field),
                          'usescratch': True}
 
             job = casa_tasks.setjy(**task_args)
