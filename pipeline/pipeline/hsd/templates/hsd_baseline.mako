@@ -89,9 +89,10 @@ line detection stage.</p>
 	                           Spectral Window ${plot.parameters['spw']}
 	                        </a>
 	                    </h4>
-	
-	                    <p>Profile map for spectral
-	                        window ${plot.parameters['spw']} before baseline subtraction.
+	                    <p>Antenna: ${plot.parameters['ant']}<br>
+	                        Field: ${plot.parameters['field']}<br>
+	                        Spectral Window: ${plot.parameters['spw']}<br>
+	                        Polarisation: ${plot.parameters['pol']}
 	                    </p>
 	                </div>
 	            </div>
@@ -131,9 +132,10 @@ line detection stage.</p>
 	                           Spectral Window ${plot.parameters['spw']}
 	                        </a>
 	                    </h4>
-	
-	                    <p>Profile map for spectral
-	                        window ${plot.parameters['spw']} after baseline subtraction.
+	                    <p>Antenna: ${plot.parameters['ant']}<br>
+	                        Field: ${plot.parameters['field']}<br>
+	                        Spectral Window: ${plot.parameters['spw']}<br>
+	                        Polarisation: ${plot.parameters['pol']}
 	                    </p>
 	                </div>
 	            </div>
