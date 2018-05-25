@@ -91,7 +91,7 @@ class testBPdcals(basetask.StandardTaskTemplate):
         context = self.inputs.context
         refantfield = context.evla['msinfo'][m.name].calibrator_field_select_string
         refantobj = findrefant.RefAntHeuristics(vis=self.inputs.vis,field=refantfield,
-                                                geometry=True,flagging=True, intent='',
+                                                geometry=True, flagging=True, intent='',
                                                 spw='', refantignore=self.inputs.refantignore)
         
         RefAntOutput = refantobj.calculate()
@@ -228,7 +228,10 @@ class testBPdcals(basetask.StandardTaskTemplate):
         LOG.info("Test bandpass calibration complete")
         LOG.info("Fraction of flagged solutions = {!s}".format(str(flaggedSolnResult['all']['fraction'])))
         LOG.info("Median fraction of flagged solutions per antenna = "+str(flaggedSolnResult['antmedian']['fraction']))
-        
+
+        LOG.info("Executing flagdata in clip mode.")
+        flag_result = self._do_clipflag(bpcaltable)
+
         LOG.info("Applying test calibrations to BP and delay calibrators")
 
         applycal_result = self._do_applycal(context=context, ktypecaltable=ktypecaltable, bpdgain_touse=bpdgain_touse,
@@ -380,6 +383,22 @@ class testBPdcals(basetask.StandardTaskTemplate):
                               'parang'      :self.parang}
 
         job = casa_tasks.gaincal(**bpdgains_task_args)
+
+        return self._executor.execute(job)
+
+    def _do_clipflag(self, bpcaltable):
+
+        task_args = {'vis'         : bpcaltable,
+                     'mode'        : 'clip',
+                     'datacolumn'  : 'CPARAM',
+                     'clipminmax'  : [0.0, 2.0],
+                     'correlation' : 'ABS_ALL',
+                     'clipoutside' : True,
+                     'flagbackup'  : False,
+                     'savepars'    : False,
+                     'action'      : 'apply'}
+
+        job = casa_tasks.flagdata(**task_args)
 
         return self._executor.execute(job)
 
