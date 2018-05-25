@@ -29,9 +29,8 @@ class T2_4MDetailsplotsummaryRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
                                   'stage%s' % results_list.stage_number)
 
         flag_totals = {}
-        #for r in result:
-        #    flag_totals = utils.dict_merge(flag_totals,
-        #                                   self.flags_for_result(r, context))
+        # for r in result:
+        #    flag_totals = utils.dict_merge(flag_totals, self.flags_for_result(r, context))
 
         calapps = {}
         for r in results_list:
@@ -77,13 +76,13 @@ class T2_4MDetailsplotsummaryRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
         # amp_vs_time_summary_plots = self.create_plots(context,
         #                                               result,
         #                                               applycal.AmpVsTimeSummaryChart,
-        #                                               ['PHASE', 'BANDPASS', 'AMPLITUDE', 'TARGET'], correlation=corrstring)
+        #                                         ['PHASE', 'BANDPASS', 'AMPLITUDE', 'TARGET'], correlation=corrstring)
 
         # Phase vs time removed for CAS-8737
         # phase_vs_time_summary_plots = self.create_plots(context,
         #                                               result,
         #                                               applycal.PhaseVsTimeSummaryChart,
-        #                                               ['PHASE', 'BANDPASS', 'AMPLITUDE', 'TARGET'], correlation=corrstring)
+        #                                         ['PHASE', 'BANDPASS', 'AMPLITUDE', 'TARGET'], correlation=corrstring)
 
         #         amp_vs_freq_phase_summary_plots = self.create_plots(context,
         #                                                             result,
@@ -200,18 +199,16 @@ class T2_4MDetailsplotsummaryRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
                     use_pol_plots = True
 
         # Removed for CAS-8737
-        ##amp_vs_uv_summary_plots = self.create_plots(context,
-        ##                                            result,
-        ##                                            applycal.AmpVsUVSummaryChart,
-        ##                                            ['AMPLITUDE'], correlation=corrstring)
+        # amp_vs_uv_summary_plots = self.create_plots(context,
+        #                                             result,
+        #                                             applycal.AmpVsUVSummaryChart,
+        #                                             ['AMPLITUDE'], correlation=corrstring)
 
-        phase_vs_uv_summary_plots = self.create_plots(context,
-                                                      results_list,
-                                                      applycal.PhaseVsUVSummaryChart,
-                                                      ['AMPLITUDE'], correlation=corrstring)
-
-
-
+        # Removed for CAS-11454
+        # phase_vs_uv_summary_plots = self.create_plots(context,
+        #                                               results_list,
+        #                                               applycal.PhaseVsUVSummaryChart,
+        #                                               ['AMPLITUDE'], correlation=corrstring)
 
         # CAS-5970: add science target plots to the applycal page
         (science_amp_vs_freq_summary_plots,
@@ -263,7 +260,7 @@ class T2_4MDetailsplotsummaryRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
                     'phase_vs_freq_plots': phase_vs_freq_summary_plots,
                     # 'amp_vs_time_plots'   : amp_vs_time_summary_plots,
                     # 'amp_vs_uv_plots'     : amp_vs_uv_summary_plots,
-                    'phase_vs_uv_plots': phase_vs_uv_summary_plots,
+                    # 'phase_vs_uv_plots'   : phase_vs_uv_summary_plots,
                     # 'phase_vs_time_plots' : phase_vs_time_summary_plots,
                     'science_amp_vs_freq_plots': science_amp_vs_freq_summary_plots,
                     'phase_vs_freq_polarization_plots': phase_vs_freq_polarization_plots,
@@ -309,7 +306,7 @@ class T2_4MDetailsplotsummaryRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
 
             # Limit to 30 sources via CAS-8737
             # MAX_PLOTS = 30
-            ## Nplots = (len(brightest_fields.items())/30)+1
+            # Nplots = (len(brightest_fields.items())/30)+1
 
             m = context.observing_run.measurement_sets[0]
             alltargetfields = m.get_fields(intent='TARGET')
@@ -329,7 +326,7 @@ class T2_4MDetailsplotsummaryRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
                 plots_mod = []
                 for p in plots:
                     # p.parameters['intent_idx'] = intent_sort_order[','.join(p.parameters['intent'])]
-                    #fieldobj = m.get_fields(p.parameters['field'])[0]
+                    # fieldobj = m.get_fields(p.parameters['field'])[0]
                     p.parameters['fieldid'] = field.id
                     plots_mod.append(p)
 
