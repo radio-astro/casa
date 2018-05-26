@@ -5,6 +5,10 @@
     <ProcessingCommand>
         <Command xmlns="">hifa_restoredata</Command>
         <ParameterSet>
+          <Parameter>
+            <Keyword xmlns="">copytoraw</Keyword>
+            <Value xmlns="">False</Value>
+          </Parameter>
         </ParameterSet>
     </ProcessingCommand>
 
@@ -125,6 +129,10 @@
     <ProcessingCommand>
         <Command xmlns="">hifa_exportdata</Command>
         <ParameterSet>
+          <Parameter>
+            <Keyword xmlns="">imaging_products_only</Keyword>
+            <Value xmlns="">True</Value>
+          </Parameter>
         </ParameterSet>
     </ProcessingCommand>
 
