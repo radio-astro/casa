@@ -2,6 +2,7 @@ from __future__ import absolute_import
 
 import pipeline.domain.measures as measures
 import pipeline.infrastructure as infrastructure
+import pipeline.infrastructure.api as api
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.imageparamsfilehandler as imageparamsfilehandler
@@ -69,6 +70,11 @@ class ImagePreCheckInputs(vdp.StandardInputs):
     def __init__(self, context, vis=None):
         self.context = context
         self.vis = vis
+
+
+# tell the infrastructure to give us mstransformed data when possible by
+# registering our preference for imaging measurement sets
+api.ImagingMeasurementSetsPreferred.register(ImagePreCheckInputs)
 
 
 @task_registry.set_equivalent_casa_task('hifa_imageprecheck')
@@ -152,8 +158,8 @@ class ImagePreCheck(basetask.StandardTaskTemplate):
             # reprBW sensitivity
             if reprBW_mode == 'cube':
                 try:
-                    sensitivity, min_sensitivity, max_sensitivity, min_field_id, max_field_id, eff_ch_bw, sens_bw = \
-                        image_heuristics.calc_sensitivities(inputs.vis, repr_field, 'TARGET', str(repr_spw), nbin, {}, 'cube', gridder, cells[(robust, str(default_uvtaper), 'repBW')], imsizes[(robust, str(default_uvtaper), 'repBW')], 'briggs', robust, default_uvtaper, phasecenter)
+                    sensitivity, eff_ch_bw, sens_bw, known_sensitivities = \
+                        image_heuristics.calc_sensitivities(inputs.vis, repr_field, 'TARGET', str(repr_spw), nbin, {}, 'cube', gridder, cells[(robust, str(default_uvtaper), 'repBW')], imsizes[(robust, str(default_uvtaper), 'repBW')], 'briggs', robust, default_uvtaper, True)
                     sensitivities.append(Sensitivity(
                         array=array,
                         field=repr_field,
@@ -188,8 +194,8 @@ class ImagePreCheck(basetask.StandardTaskTemplate):
 
             # full cont sensitivity (no frequency ranges excluded)
             try:
-                sensitivity, min_sensitivity, max_sensitivity, min_field_id, max_field_id, eff_ch_bw, sens_bw = \
-                    image_heuristics.calc_sensitivities(inputs.vis, repr_field, 'TARGET', cont_spw, -1, {}, 'cont', gridder, cells[(robust, str(default_uvtaper), 'aggBW')], imsizes[(robust, str(default_uvtaper), 'aggBW')], 'briggs', robust, default_uvtaper, phasecenter)
+                sensitivity, eff_ch_bw, sens_bw, known_sensitivities = \
+                    image_heuristics.calc_sensitivities(inputs.vis, repr_field, 'TARGET', cont_spw, -1, {}, 'cont', gridder, cells[(robust, str(default_uvtaper), 'aggBW')], imsizes[(robust, str(default_uvtaper), 'aggBW')], 'briggs', robust, default_uvtaper, True)
                 for cont_sens_bw_mode in cont_sens_bw_modes:
                     sensitivities.append(Sensitivity(
                         array=array,
@@ -242,8 +248,8 @@ class ImagePreCheck(basetask.StandardTaskTemplate):
                     imsizes[(hm_robust, str(hm_uvtaper), 'repBW')] = image_heuristics.imsize(field_ids, cells[(hm_robust, str(hm_uvtaper), 'repBW')], primary_beam_size, centreonly=False)
                     if reprBW_mode == 'cube':
                         try:
-                            sensitivity, min_sensitivity, max_sensitivity, min_field_id, max_field_id, eff_ch_bw, sens_bw = \
-                                image_heuristics.calc_sensitivities(inputs.vis, repr_field, 'TARGET', str(repr_spw), nbin, {}, 'cube', gridder, cells[(hm_robust, str(hm_uvtaper), 'repBW')], imsizes[(hm_robust, str(hm_uvtaper), 'repBW')], 'briggs', hm_robust, hm_uvtaper, phasecenter)
+                            sensitivity, eff_ch_bw, sens_bw, known_sensitivities = \
+                                image_heuristics.calc_sensitivities(inputs.vis, repr_field, 'TARGET', str(repr_spw), nbin, {}, 'cube', gridder, cells[(hm_robust, str(hm_uvtaper), 'repBW')], imsizes[(hm_robust, str(hm_uvtaper), 'repBW')], 'briggs', hm_robust, hm_uvtaper, True)
                             sensitivities.append(Sensitivity(
                                 array=array,
                                 field=repr_field,
@@ -273,8 +279,8 @@ class ImagePreCheck(basetask.StandardTaskTemplate):
                     cells[(hm_robust, str(hm_uvtaper), 'aggBW')] = image_heuristics.cell(beams[(hm_robust, str(hm_uvtaper), 'aggBW')])
                     imsizes[(hm_robust, str(hm_uvtaper), 'aggBW')] = image_heuristics.imsize(field_ids, cells[(hm_robust, str(hm_uvtaper), 'aggBW')], primary_beam_size, centreonly=False)
                     try:
-                        sensitivity, min_sensitivity, max_sensitivity, min_field_id, max_field_id, eff_ch_bw, sens_bw = \
-                            image_heuristics.calc_sensitivities(inputs.vis, repr_field, 'TARGET', cont_spw, -1, {}, 'cont', gridder, cells[(hm_robust, str(hm_uvtaper), 'aggBW')], imsizes[(hm_robust, str(hm_uvtaper), 'aggBW')], 'briggs', hm_robust, hm_uvtaper, phasecenter)
+                        sensitivity, eff_ch_bw, sens_bw, known_sensitivities = \
+                            image_heuristics.calc_sensitivities(inputs.vis, repr_field, 'TARGET', cont_spw, -1, {}, 'cont', gridder, cells[(hm_robust, str(hm_uvtaper), 'aggBW')], imsizes[(hm_robust, str(hm_uvtaper), 'aggBW')], 'briggs', hm_robust, hm_uvtaper, True)
                         for cont_sens_bw_mode in cont_sens_bw_modes:
                             sensitivities.append(Sensitivity(
                                 array=array,

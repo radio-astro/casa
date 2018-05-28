@@ -184,10 +184,6 @@ class T2_4MDetailsTcleanRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                 row_sensitivity = '-'
             else:
                 row_sensitivity = '%.2g %s' % (r.sensitivity, brightness_unit)
-                if r.min_sensitivity:
-                    row_sensitivity += '<br>min: %.2g %s (field: %s)' % (r.min_sensitivity, brightness_unit, r.min_field_id)
-                if r.max_sensitivity:
-                    row_sensitivity += '<br>max: %.2g %s (field: %s)' % (r.max_sensitivity, brightness_unit, r.max_field_id)
 
             #
             # clean iterations, for VLASS

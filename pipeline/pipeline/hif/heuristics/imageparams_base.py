@@ -9,6 +9,7 @@ import operator
 import shutil
 import uuid
 import glob
+import copy
 
 import cleanhelper
 from imagerhelpers.input_parameters import ImagerParameters
@@ -510,10 +511,13 @@ class ImageParamsHeuristics(object):
         else:
             return 'standard'
 
-    def phasecenter(self, fields, centreonly=True):
+    def phasecenter(self, fields, centreonly=True, vislist=None):
 
         cme = casatools.measures
         cqa = casatools.quanta
+
+        if vislist is None:
+            vislist = self.vislist
 
         mdirections = []
         for ivis, vis in enumerate(self.vislist):
@@ -603,10 +607,14 @@ class ImageParamsHeuristics(object):
         else:
             return '%s %s %s' % (ref, m0, m1), xspread, yspread
 
-    def field(self, intent, field, exclude_intent=None):
+    def field(self, intent, field, exclude_intent=None, vislist=None):
+
+        if vislist is None:
+            vislist = self.vislist
+
         result = []
 
-        for vis in self.vislist:
+        for vis in vislist:
             ms = self.observing_run.get_ms(name=vis)
             fields = ms.fields
 
@@ -1184,142 +1192,14 @@ class ImageParamsHeuristics(object):
 
         return False
 
-    def calc_sensitivities(self, vis, field, intent, spw, nbin, spw_topo_chan_param_dict, specmode, gridder, cell, imsize, weighting, robust, uvtaper, phasecenter=None):
-        """Compute sensitivity estimate using CASA."""
+    def nested_set(self, dic, keys, value):
+        for key in keys[:-1]:
+            dic = dic.setdefault(key, {})
+        dic[keys[-1]] = value
 
-        # Calculate sensitivities
-        sensitivities = []
-
-        detailed_field_sensitivities = {}
-        min_sensitivities = []
-        max_sensitivities = []
-        min_field_ids = []
-        max_field_ids = []
-        eff_ch_bw = 0.0
-        sens_bws = {}
-
-        # Calculate only center field sensitivity if a phasecenter is given
-        if phasecenter is not None:
-            ref_field_ids = self.center_field_ids(vis, field, intent, phasecenter, exclude_intent='ATMOSPHERE')
-        else:
-            ref_field_ids = None
-
-        for ms_index, msname in enumerate(vis):
-            ms = self.observing_run.get_ms(name=msname)
-            detailed_field_sensitivities[os.path.basename(msname)] = {}
-            for intSpw in [int(s) for s in spw.split(',')]:
-                try:
-                    real_spwid = self.observing_run.virtual2real_spw_id(intSpw, self.observing_run.get_ms(msname))
-                    spw_do = ms.get_spectral_window(real_spwid)
-                    detailed_field_sensitivities[os.path.basename(msname)][intSpw] = {}
-                    sens_bws[intSpw] = 0.0
-                    if (specmode == 'cube'):
-                        # Use the center channel selection
-                        if nbin != -1:
-                            chansel = '%d~%d' % (int((spw_do.num_channels - nbin) / 2.0), int((spw_do.num_channels + nbin) / 2.0) - 1)
-                        else:
-                            chansel = '%d~%d' % (int(spw_do.num_channels / 2.0), int(spw_do.num_channels / 2.0))
-                    else:
-                        if spw_topo_chan_param_dict.get(os.path.basename(msname), None):
-                            if (spw_topo_chan_param_dict[os.path.basename(msname)][str(intSpw)] != ''):
-                                # Use continuum frequency selection
-                                chansel = spw_topo_chan_param_dict[os.path.basename(msname)][str(intSpw)]
-                            else:
-                                # Use full spw
-                                chansel = '0~%d' % (spw_do.num_channels - 1)
-                        else:
-                            # Use full spw
-                            chansel = '0~%d' % (spw_do.num_channels - 1)
-
-                    if (gridder == 'mosaic'):
-                        field_sensitivities = []
-                        if ref_field_ids is not None:
-                            field_ids = [ref_field_ids[ms_index]]
-                        else:
-                            field_ids = [f.id for f in ms.fields if (utils.dequote(f.name) == utils.dequote(field) and intent in f.intents)]
-                        for field_id in field_ids:
-                            if field_id != -1:
-                                try:
-                                    field_sensitivity, eff_ch_bw, sens_bws[intSpw] = self.get_sensitivity(ms, field_id, intSpw, chansel, specmode, cell, imsize, weighting, robust, uvtaper)
-                                    if (field_sensitivity > 0.0):
-                                        field_sensitivities.append(field_sensitivity)
-                                        detailed_field_sensitivities[os.path.basename(msname)][intSpw][field_id] = field_sensitivity
-                                except Exception as e:
-                                    LOG.warning('Could not calculate sensitivity for MS %s Field %s (ID %d) Intent %s SPW %d ChanSel %s' % (os.path.basename(msname), utils.dequote(field), field_id, intent, real_spwid, chansel))
-
-                        median_sensitivity = np.median(field_sensitivities)
-                        min_field_id, min_sensitivity = min(detailed_field_sensitivities[os.path.basename(msname)][intSpw].iteritems(), key=operator.itemgetter(1))
-                        max_field_id, max_sensitivity = max(detailed_field_sensitivities[os.path.basename(msname)][intSpw].iteritems(), key=operator.itemgetter(1))
-
-                        # Correct for mosaic overlap factor
-                        source_name = [f.source.name for f in ms.fields if (utils.dequote(f.name) == utils.dequote(field) and intent in f.intents)][0]
-                        diameter = np.median([a.diameter for a in ms.antennas])
-                        overlap_factor = mosaicoverlap.mosaicOverlapFactorMS(ms, source_name, intSpw, diameter)
-                        LOG.info('Dividing by mosaic overlap improvement factor of %s.' % (overlap_factor))
-                        median_sensitivity /= overlap_factor
-                        min_sensitivity /= overlap_factor
-                        max_sensitivity /= overlap_factor
-
-                        # Final values
-                        sensitivities.append(median_sensitivity)
-                        min_sensitivities.append(min_sensitivity)
-                        max_sensitivities.append(max_sensitivity)
-                        min_field_ids.append(min_field_id)
-                        max_field_ids.append(max_field_id)
-                        LOG.info('Using median of all mosaic field sensitivities for MS %s, Field %s, SPW %s: %.3g Jy' % (os.path.basename(msname), field, str(real_spwid), median_sensitivity))
-                        LOG.info('Minimum mosaic field sensitivity for MS %s, Field %s (ID: %s), SPW %s: %.3g Jy' % (os.path.basename(msname), field, min_field_id, str(real_spwid), min_sensitivity))
-                        LOG.info('Maximum mosaic field sensitivity for MS %s, Field %s (ID: %s), SPW %s: %.3g Jy' % (os.path.basename(msname), field, max_field_id, str(real_spwid), max_sensitivity))
-                    else:
-                        # Still need to loop over field ID with proper intent for single field case
-                        field_sensitivities = []
-                        for field_id in [f.id for f in ms.fields if (utils.dequote(f.name) == utils.dequote(field) and intent in f.intents)]:
-                            field_sensitivity, eff_ch_bw, sens_bws[intSpw] = self.get_sensitivity(ms, field_id, intSpw, chansel, specmode, cell, imsize, weighting, robust, uvtaper)
-                            if (field_sensitivity > 0.0):
-                                field_sensitivities.append(field_sensitivity)
-                        # Check if we have anything
-                        if (len(field_sensitivities) > 0):
-                            # If there is more than one result (shouldn't be), combine them to one number
-                            field_sensitivity = 1.0 / np.sqrt(np.sum(1.0 / np.array(field_sensitivities)**2))
-                            sensitivities.append(field_sensitivity)
-                            detailed_field_sensitivities[os.path.basename(msname)][intSpw][field] = field_sensitivity
-                except Exception as e:
-                    # Simply pass as this could be a case of a source not
-                    # being present in the MS.
-                    pass
-
-        if (len(sensitivities) > 0):
-            sensitivity = 1.0 / np.sqrt(np.sum(1.0 / np.array(sensitivities)**2))
-            if (gridder == 'mosaic'):
-                min_sensitivity = 1.0 / np.sqrt(np.sum(1.0 / np.array(min_sensitivities)**2))
-                max_sensitivity = 1.0 / np.sqrt(np.sum(1.0 / np.array(max_sensitivities)**2))
-                min_field_id = int(np.median(min_field_ids))
-                max_field_id = int(np.median(max_field_ids))
-            else:
-                min_sensitivity = None
-                max_sensitivity = None
-                min_field_id = None
-                max_field_id = None
-        else:
-            defaultSensitivity = None
-            if (specmode == 'cube'):
-                LOG.warning('Exception in calculating sensitivity. Cube center channel seems to be flagged.')
-            else:
-                LOG.warning('Exception in calculating sensitivity.')
-            sensitivity = defaultSensitivity
-            min_sensitivity = None
-            max_sensitivity = None
-            min_field_id = None
-            max_field_id = None
-
-        return sensitivity, min_sensitivity, max_sensitivity, min_field_id, max_field_id, eff_ch_bw, sum(sens_bws.values())
-
-    def get_sensitivity(self, ms_do, field, spw, chansel, specmode, cell, imsize, weighting, robust, uvtaper):
+    def get_bw_corr_factor(self, ms_do, spw, nchan):
         """
-        Get sensitivity for a field / spw / chansel combination from CASA's
-        apparentsens method and a correction for effective channel widths
-        in case of online smoothing.
-
-        This heuristic is currently optimized for ALMA data only.
+        Calculate effective bandwidth correction factor.
         """
 
         real_spwid = self.observing_run.virtual2real_spw_id(spw, ms_do)
@@ -1346,6 +1226,156 @@ class ImageParamsHeuristics(object):
             LOG.warning('Could not evaluate channel bandwidths ratio. Physical: %s Effective: %s Ratio: %s' % (physicalBW_of_1chan, effectiveBW_of_1chan, BW_ratio))
             N_smooth = 0
 
+        if N_smooth > 0 and nchan > 1:
+            optimisticBW = nchan * float(effectiveBW_of_1chan)
+            approximateEffectiveBW = (nchan + 1.12 * (spwchan - nchan) / spwchan / N_smooth) * float(physicalBW_of_1chan)
+            SCF = (optimisticBW / approximateEffectiveBW)**0.5
+        else:
+            SCF = 1.0
+
+        return SCF, physicalBW_of_1chan, effectiveBW_of_1chan
+
+    def calc_sensitivities(self, vis, field, intent, spw, nbin, spw_topo_chan_param_dict, specmode, gridder, cell, imsize, weighting, robust, uvtaper, center_only=False, known_sensitivities={}, force_calc=False):
+        """Compute sensitivity estimate using CASA."""
+
+        cqa = casatools.quanta
+
+        # Need to work on a local copy of known_sensitivities to avoid setting the
+        # method default value inadvertently
+        local_known_sensitivities = copy.deepcopy(known_sensitivities)
+
+        sensitivities = []
+        eff_ch_bw = 0.0
+        sens_bws = {}
+
+        field_ids = self.field(intent, field, vislist=vis) # list of strings with comma separated IDs per MS
+        phasecenter = self.phasecenter(field_ids, vislist=vis) # string
+        if gridder == 'mosaic':
+            center_field_ids = self.center_field_ids(vis, field, intent, phasecenter, exclude_intent='ATMOSPHERE') # list of integer IDs per MS
+        else:
+            center_field_ids = self.center_field_ids(vis, field, intent, phasecenter) # list of integer IDs per MS
+
+        for ms_index, msname in enumerate(vis):
+            ms = self.observing_run.get_ms(name=msname)
+            for intSpw in [int(s) for s in spw.split(',')]:
+                try:
+                    real_spwid = self.observing_run.virtual2real_spw_id(intSpw, self.observing_run.get_ms(msname))
+                    spw_do = ms.get_spectral_window(real_spwid)
+                    sens_bws[intSpw] = 0.0
+                    if (specmode == 'cube'):
+                        # Use the center channel selection
+                        if nbin != -1:
+                            chansel = '%d~%d' % (int((spw_do.num_channels - nbin) / 2.0), int((spw_do.num_channels + nbin) / 2.0) - 1)
+                            nchan_sel = nbin
+                        else:
+                            chansel = '%d~%d' % (int(spw_do.num_channels / 2.0), int(spw_do.num_channels / 2.0))
+                            nchan_sel = 1
+                        bw_corr_factor, physicalBW_of_1chan, effectiveBW_of_1chan = self.get_bw_corr_factor(ms, intSpw, nchan_sel)
+                    else:
+                        if spw_topo_chan_param_dict.get(os.path.basename(msname), False):
+                            if spw_topo_chan_param_dict[os.path.basename(msname)].get(str(intSpw), '') != '':
+                                # Use continuum frequency selection
+                                chansel = spw_topo_chan_param_dict[os.path.basename(msname)][str(intSpw)]
+                                nchan_sel = np.sum([c[1]-c[0]+1 for c in [map(int, sel.split('~')) for sel in chansel.split(';')]])
+                                bw_corr_factor = 1.0
+                            else:
+                                # Use full spw
+                                chansel = '0~%d' % (spw_do.num_channels - 1)
+                                nchan_sel = spw_do.num_channels
+                                bw_corr_factor = 1.0
+                        else:
+                            # Use full spw
+                            chansel = '0~%d' % (spw_do.num_channels - 1)
+                            nchan_sel = spw_do.num_channels
+                            bw_corr_factor = 1.0
+
+                    chansel_full = '0~%d' % (spw_do.num_channels - 1)
+
+                    # If necessary, calculate center field full spw sensitivity
+                    try:
+                        calc_sens = False
+                        if force_calc:
+                            # Reset flag to avoid clearing the dictionary several times
+                            force_calc = False
+                            local_known_sensitivities = {}
+                            LOG.info('Got request to recalculate sensitivities.')
+                            raise Exception('Got request to recalculate sensitivities.')
+                        if local_known_sensitivities['robust'] != robust:
+                            LOG.warn('robust value changed (old: %.1f, new: %.1f). Re-calculating sensitivities.' % (local_known_sensitivities['robust'], robust))
+                            local_known_sensitivities = {}
+                            raise Exception('robust value changed (old: %.1f, new: %.1f). Re-calculating sensitivities.' % (local_known_sensitivities['robust'], robust))
+                        if local_known_sensitivities['uvtaper'] != uvtaper:
+                            LOG.warn('uvtaper value changed (old: %s, new: %s). Re-calculating sensitivities.' % (str(local_known_sensitivities['uvtaper']), str(uvtaper)))
+                            local_known_sensitivities = {}
+                            raise Exception('uvtaper value changed (old: %s, new: %s). Re-calculating sensitivities.' % (str(local_known_sensitivities['uvtaper']), str(uvtaper)))
+                        center_field_full_spw_sensitivity = cqa.getvalue(cqa.convert(local_known_sensitivities[os.path.basename(msname)][field][intSpw]['sensitivityAllChans'], 'Jy/beam'))
+                        nchan_unflagged = local_known_sensitivities[os.path.basename(msname)][field][intSpw]['nchanUnflagged']
+                        eff_ch_bw = cqa.getvalue(cqa.convert(local_known_sensitivities[os.path.basename(msname)][field][intSpw]['effChanBW'], 'Hz'))
+                        sens_bws[intSpw] = cqa.getvalue(cqa.convert(local_known_sensitivities[os.path.basename(msname)][field][intSpw]['sensBW'], 'Hz'))
+                    except:
+                        calc_sens = True
+                        center_field_full_spw_sensitivity, eff_ch_bw, sens_bws[intSpw] = self.get_sensitivity(ms, center_field_ids[ms_index], intSpw, chansel_full, specmode, cell, imsize, weighting, robust, uvtaper)
+                        channel_flags = self.get_channel_flags(msname, field, intSpw)
+                        nchan_unflagged = np.where(channel_flags == False)[0].shape[0]
+                        local_known_sensitivities['robust'] = robust
+                        local_known_sensitivities['uvtaper'] = uvtaper
+                        self.nested_set(local_known_sensitivities, (os.path.basename(msname), field, intSpw, 'sensitivityAllChans'), '%.3g Jy/beam' % (center_field_full_spw_sensitivity))
+                        self.nested_set(local_known_sensitivities, (os.path.basename(msname), field, intSpw, 'nchanUnflagged'), nchan_unflagged)
+                        self.nested_set(local_known_sensitivities, (os.path.basename(msname), field, intSpw, 'effChanBW'), '%s Hz' % (eff_ch_bw))
+                        self.nested_set(local_known_sensitivities, (os.path.basename(msname), field, intSpw, 'sensBW'), '%s Hz' % (sens_bws[intSpw]))
+
+                    # Correct from full spw to channel selection
+                    bw_uncorrected_center_field_sensitivity = center_field_full_spw_sensitivity * (float(nchan_unflagged)/float(nchan_sel))**0.5
+                    center_field_sensitivity = bw_uncorrected_center_field_sensitivity * bw_corr_factor
+                    if bw_corr_factor != 1.0:
+                        LOG.info('Effective BW heuristic: Correcting apparentsens result by %.3g from %.3g Jy/beam to %s Jy/beam' % (bw_corr_factor, bw_uncorrected_center_field_sensitivity, center_field_sensitivity))
+                    sens_bws[intSpw] = sens_bws[intSpw] * float(nchan_sel) / float(spw_do.num_channels)
+
+                    if gridder == 'mosaic':
+                        # Correct for mosaic overlap factor
+                        source_name = [f.source.name for f in ms.fields if (utils.dequote(f.name) == utils.dequote(field) and intent in f.intents)][0]
+                        diameter = np.median([a.diameter for a in ms.antennas])
+                        overlap_factor = mosaicoverlap.mosaicOverlapFactorMS(ms, source_name, intSpw, diameter)
+                        LOG.info('Dividing by mosaic overlap improvement factor of %s.' % (overlap_factor))
+                        center_field_full_spw_sensitivity /= overlap_factor
+                        center_field_sensitivity /= overlap_factor
+
+                        if calc_sens and not center_only:
+                            # Calculate diagnostic sensitivities for first and last field
+                            first_field_id = min(map(int, field_ids[ms_index].split(',')))
+                            first_field_full_spw_sensitivity, first_field_eff_ch_bw, first_field_sens_bw = self.get_sensitivity(ms, first_field_id, intSpw, chansel_full, specmode, cell, imsize, weighting, robust, uvtaper)
+                            first_field_sensitivity = first_field_full_spw_sensitivity * (float(nchan_sel)/float(nchan_unflagged))**0.5 / overlap_factor * bw_corr_factor
+                            last_field_id = max(map(int, field_ids[ms_index].split(',')))
+                            last_field_full_spw_sensitivity, last_field_eff_ch_bw, last_field_sens_bw = self.get_sensitivity(ms, last_field_id, intSpw, chansel_full, specmode, cell, imsize, weighting, robust, uvtaper)
+                            last_field_sensitivity = last_field_full_spw_sensitivity * (float(nchan_sel)/float(nchan_unflagged))**0.5 / overlap_factor * bw_corr_factor
+
+                            LOG.info('Sensitivities for MS %s, Field %s, SPW %s for the first, central, and last pointings are: %.3g / %.3g / %.3g Jy/beam' % (os.path.basename(msname), field, str(real_spwid), first_field_sensitivity, center_field_sensitivity, last_field_sensitivity))
+
+                    sensitivities.append(center_field_sensitivity)
+                except Exception as e:
+                    # Simply pass as this could be a case of a source not
+                    # being present in the MS.
+                    pass
+
+        if (len(sensitivities) > 0):
+            sensitivity = 1.0 / np.sqrt(np.sum(1.0 / np.array(sensitivities)**2))
+        else:
+            defaultSensitivity = None
+            LOG.warning('Exception in calculating sensitivity.')
+            sensitivity = defaultSensitivity
+
+        return sensitivity, eff_ch_bw, sum(sens_bws.values()), copy.deepcopy(local_known_sensitivities)
+
+    def get_sensitivity(self, ms_do, field, spw, chansel, specmode, cell, imsize, weighting, robust, uvtaper):
+        """
+        Get sensitivity for a field / spw / chansel combination from CASA's
+        apparentsens method and a correction for effective channel widths
+        in case of online smoothing.
+
+        This heuristic is currently optimized for ALMA data only.
+        """
+
+        real_spwid = self.observing_run.virtual2real_spw_id(spw, ms_do)
         chansel_sensitivities = []
         sens_bw = 0.0
         for chanrange in chansel.split(';'):
@@ -1378,19 +1408,10 @@ class ImageParamsHeuristics(object):
 
                 cstart, cstop = map(int, chanrange.split('~'))
                 nchan = cstop - cstart + 1
-                sens_bw += nchan * physicalBW_of_1chan
 
-                if (N_smooth > 0):
-                    if (nchan > 1):
-                        optimisticBW = nchan * float(effectiveBW_of_1chan)
-                        approximateEffectiveBW = (nchan + 1.12 * (spwchan - nchan) / spwchan / N_smooth) * float(physicalBW_of_1chan)
-                        SCF = (optimisticBW / approximateEffectiveBW)**0.5
-                        corrected_apparentsens_value = apparentsens_value * SCF
-                        LOG.info('Effective BW heuristic: Correcting apparentsens result by %.3g from %.3g Jy/beam to %s Jy/beam' % (SCF, apparentsens_value, corrected_apparentsens_value))
-                    else:
-                        corrected_apparentsens_value = apparentsens_value
-                else:
-                    corrected_apparentsens_value = apparentsens_value 
+                SCF, physicalBW_of_1chan, effectiveBW_of_1chan = self.get_bw_corr_factor(ms_do, spw, nchan)
+                sens_bw += nchan * physicalBW_of_1chan
+                corrected_apparentsens_value = apparentsens_value * SCF
 
                 chansel_sensitivities.append(corrected_apparentsens_value)
 

@@ -363,21 +363,14 @@ class Tclean(cleanbase.CleanBase):
         if inputs.sensitivity is not None:
             # Override with manually set value
             sensitivity = qaTool.convert(inputs.sensitivity, 'Jy')['value']
-            # Dummies for weblog
-            min_sensitivity = sensitivity
-            max_sensitivity = sensitivity
-            min_field_id = 0
-            max_field_id = 0
             eff_ch_bw = 1.0
+            sens_bw = 1.0
         else:
             # Get a noise estimate from the CASA sensitivity calculator
             (sensitivity,
-             min_sensitivity,
-             max_sensitivity,
-             min_field_id,
-             max_field_id,
              eff_ch_bw,
-             sens_bw) = \
+             sens_bw,
+             known_sensitivities) = \
                 self.image_heuristics.calc_sensitivities(inputs.vis, inputs.field, inputs.intent, inputs.spw,
                                                          inputs.nbin, spw_topo_chan_param_dict, inputs.specmode,
                                                          inputs.gridder, inputs.cell, inputs.imsize, inputs.weighting,
@@ -449,10 +442,6 @@ class Tclean(cleanbase.CleanBase):
         #       Save channel selection in result for weblog.
         result.set_aggregate_bw(aggregate_lsrk_bw)
         result.set_eff_ch_bw(eff_ch_bw)
-        result.set_min_sensitivity(min_sensitivity)
-        result.set_max_sensitivity(max_sensitivity)
-        result.set_min_field_id(min_field_id)
-        result.set_max_field_id(max_field_id)
 
         return result
 
