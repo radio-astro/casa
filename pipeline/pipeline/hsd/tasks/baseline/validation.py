@@ -118,9 +118,9 @@ class ValidateLineSinglePointing(basetask.StandardTaskTemplate):
         # for Pre-Defined Spectrum Window
         if len(window) != 0:
             LOG.info('Skip clustering analysis since predefined line window is set.')
-            lines = _to_validated_lines(self.inputs.detect_signal)
-            signal = self.inputs.detect_signal.values()[0]
-            for row in self.inputs.index_list:
+            lines = _to_validated_lines(detect_signal)
+            signal = detect_signal.values()[0]
+            for row in index_list:
                 datatable.putcell('MASKLIST',row,signal[2])
                 datatable.putcell('NOCHANGE',row,False)
             outcome = {'lines': lines,
@@ -241,9 +241,9 @@ class ValidateLineRaster(basetask.StandardTaskTemplate):
         # for Pre-Defined Spectrum Window
         if len(window) != 0:
             LOG.info('Skip clustering analysis since predefined line window is set.')
-            lines = _to_validated_lines(self.inputs.detect_signal)
-            signal = self.inputs.detect_signal.values()[0]
-            for row in self.inputs.index_list:
+            lines = _to_validated_lines(detect_signal)
+            signal = detect_signal.values()[0]
+            for row in index_list:
                 datatable.putcell('MASKLIST',row,signal[2])
                 datatable.putcell('NOCHANGE',row,False)
             outcome = {'lines': lines,

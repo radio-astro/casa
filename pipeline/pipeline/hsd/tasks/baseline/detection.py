@@ -28,10 +28,6 @@ class DetectLineInputs(vdp.StandardInputs):
     edge = vdp.VisDependentProperty(default=(0,0))
     broadline = vdp.VisDependentProperty(default=True)
     
-    @property
-    def spw(self):
-        return self.grid_table[0][0] if len(self.grid_table) > 0 else -1
-    
     def __init__(self, context, window=None, edge=None, broadline=None):
         super(DetectLineInputs, self).__init__()
         
@@ -107,7 +103,8 @@ class DetectLine(basetask.StandardTaskTemplate):
             LOG.info('Skip line detection since line window is set.')
             tRA = datatable.getcol('RA')
             tDEC = datatable.getcol('DEC')
-            predefined_window = self._get_predefined_window(window)
+            spw = grid_table[0][0] if len(grid_table) > 0 else -1
+            predefined_window = self._get_predefined_window(spw, window)
             for row in xrange(nrow):
                 detect_signal[row] = [tRA[row], tDEC[row], predefined_window]
             for dt_row in range(datatable.nrow):
@@ -301,17 +298,16 @@ class DetectLine(basetask.StandardTaskTemplate):
                     flag = True
         return protected
 
-    def _get_predefined_window(self, window):
+    def _get_predefined_window(self, spw, window):
         if len(window) == 0:
             return []
         else:
             if hasattr(window[0], '__iter__'):
-                return map(self._get_linerange, window)
+                return [self._get_linerange(spw, w) for w in window]
             else:
-                return [self._get_linerange(window)]
+                return [self._get_linerange(spw, window)]
 
-    def _get_linerange(self, window):
-        spwid = self.inputs.spw
+    def _get_linerange(self, spwid, window):
         if spwid < 0:
             raise RuntimeError("Invalid spw id ({})".format(spwid))
         
