@@ -228,7 +228,7 @@ class SDBLFlagWorker(basetask.StandardTaskTemplate):
             container.open(msobj)
 
             if not is_baselined:
-                LOG.debug("No baseline subtraction operated to data. Skipping flag by post fit spectra.")
+                LOG.warn("No baseline subtraction operated to data. Skipping flag by post fit spectra.")
                 # Reset MASKLIST for the non-baselined DataTable
                 self.ResetDataTableMaskList(datatable,TimeTable)
                 # force disable post fit flagging (not really effective except for flagSummary)
