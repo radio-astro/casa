@@ -10,11 +10,12 @@ import numpy
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.vdp as vdp
+import pipeline.infrastructure.sessionutils as sessionutils
+import pipeline.infrastructure.mpihelpers as mpihelpers
 from pipeline.domain import DataTable
 from pipeline.hsd.heuristics import MaskDeviationHeuristic
 from pipeline.infrastructure import task_registry
 from . import maskline
-from . import plotter
 from . import worker
 from .. import common
 from ..common import compress
@@ -45,9 +46,12 @@ class SDBaselineInputs(vdp.StandardInputs):
     def vis(self):
         return self.infiles
     
+    # use common implementation for parallel inputs argument
+    parallel = sessionutils.parallel_inputs_impl()
+
     def __init__(self, context, infiles=None, antenna=None, spw=None, pol=None, field=None,
                  linewindow=None, edge=None, broadline=None, fitorder=None,
-                 fitfunc=None, clusteringalgorithm=None, deviationmask=None):
+                 fitfunc=None, clusteringalgorithm=None, deviationmask=None, parallel=None):
         super(SDBaselineInputs, self).__init__()
         
         self.context = context
@@ -63,6 +67,7 @@ class SDBaselineInputs(vdp.StandardInputs):
         self.fitfunc = fitfunc
         self.clusteringalgorithm = clusteringalgorithm
         self.deviationmask = deviationmask
+        self.parallel = parallel
         
             
     def to_casa_args(self):
@@ -218,20 +223,34 @@ class SDBaseline(basetask.StandardTaskTemplate):
             # NOTE: deviation mask is evaluated per ms per field per spw
             if deviationmask:
                 LOG.info('Apply deviation mask to baseline fitting')
+                dvtasks = []
+                dvparams = collections.defaultdict(lambda: ([], [], []))
                 for (ms, fieldid, antennaid, spwid) in utils.iterate_group_member(group_desc, member_list):
                     if (not hasattr(ms, 'deviation_mask')) or ms.deviation_mask is None:
                         ms.deviation_mask = {}
                     if (fieldid, antennaid, spwid) not in ms.deviation_mask:
                         LOG.debug('Evaluating deviation mask for {} field {} antenna {} spw {}',
                                   ms.basename, fieldid, antennaid, spwid)
-                        mask_list = self.evaluate_deviation_mask(ms.name, fieldid, antennaid, spwid, 
-                                                                 consider_flag=True)
-                        LOG.debug('deviation mask = {}', mask_list)
-                        ms.deviation_mask[(fieldid, antennaid, spwid)] = mask_list
-                    deviation_mask[ms.basename][(fieldid, antennaid, spwid)] = ms.deviation_mask[(fieldid, antennaid,
-                                                                                                  spwid)]
-                    LOG.debug('evaluated deviation mask is {v}',
-                              v=ms.deviation_mask[(fieldid, antennaid, spwid)])
+                        #mask_list = self.evaluate_deviation_mask(ms.name, fieldid, antennaid, spwid, 
+                        #                                         consider_flag=True)
+                        dvparams[ms.name][0].append(fieldid)
+                        dvparams[ms.name][1].append(antennaid)
+                        dvparams[ms.name][2].append(spwid)
+                for (vis, params) in dvparams.iteritems():
+                    field_list, antenna_list, spw_list = params
+                    dvtasks.append(deviation_mask_heuristic(vis=vis, field_list=field_list, antenna_list=antenna_list, 
+                                                            spw_list=spw_list, consider_flag=True, parallel=self.inputs.parallel))
+                for vis, dvtask in dvtasks:
+                    dvmasks = dvtask.get_result()
+                    field_list, antenna_list, spw_list = dvparams[vis]
+                    ms = context.observing_run.get_ms(vis)
+                    for field_id, antenna_id, spw_id, mask_list in itertools.izip(field_list, antenna_list, spw_list, dvmasks):
+                        # key: (fieldid, antennaid, spwid)
+                        key = (field_id, antenna_id, spw_id)
+                        LOG.debug('deviation mask: key {0} {1} {2} mask {3}', field_id, antenna_id, spw_id, mask_list)
+                        ms.deviation_mask[key] = mask_list
+                        deviation_mask[ms.basename][key] = ms.deviation_mask[key]
+                        LOG.debug('evaluated deviation mask is {v}', v=ms.deviation_mask[key])
             else:
                 LOG.info('Deviation mask is disabled by the user')
             LOG.debug('deviation_mask={}', deviation_mask)
@@ -285,7 +304,8 @@ class SDBaseline(basetask.StandardTaskTemplate):
         fitter_inputs = vdp.InputsContainer(worker_cls, context, 
                                             vis=vislist, plan=plan, 
                                             fit_order=fitorder, edge=edge, blparam=blparam,
-                                            deviationmask=deviationmask_list)
+                                            deviationmask=deviationmask_list,
+                                            parallel=self.inputs.parallel)
         fitter_task = worker_cls(fitter_inputs)
         fitter_results = self._executor.execute(fitter_task, merge=False)
         
@@ -341,3 +361,86 @@ class SDBaseline(basetask.StandardTaskTemplate):
         mask_list = h.calculate(vis=vis, field_id=field_id, antenna_id=antenna_id, spw_id=spw_id, 
                                 consider_flag=consider_flag)
         return mask_list
+    
+
+class HeuristicsTask(object):
+    def __init__(self, heuristics_cls, *args, **kwargs):
+        self.heuristics = heuristics_cls()
+        #print(args, kwargs)
+        self.args = args
+        self.kwargs = kwargs
+        #print(self.args, self.kwargs)
+
+    def execute(self, dry_run=False):
+        if dry_run:
+            return []
+        
+        return self.heuristics.calculate(*self.args, **self.kwargs)
+    
+    def get_executable(self):
+        return lambda: self.execute(dry_run=False)
+    
+class DeviationMaskHeuristicsTask(HeuristicsTask):
+    def __init__(self, heuristics_cls, vis, field_list, antenna_list, spw_list, consider_flag=False):
+        super(DeviationMaskHeuristicsTask, self).__init__(heuristics_cls, vis=vis, consider_flag=consider_flag)
+        self.vis = vis
+        self.field_list = field_list
+        self.antenna_list = antenna_list
+        self.spw_list = spw_list
+        
+    def execute(self, dry_run=False):
+        if dry_run:
+            return {}
+        
+        result = []
+        for field_id, antenna_id, spw_id in itertools.izip(self.field_list, self.antenna_list, self.spw_list):
+            self.kwargs.update({'field_id': field_id, 'antenna_id': antenna_id, 'spw_id': spw_id})
+            mask_list = super(DeviationMaskHeuristicsTask, self).execute(dry_run)
+            result.append(mask_list)
+        return result
+
+def deviation_mask_heuristic(vis, field_list, antenna_list, spw_list, consider_flag=False, parallel=None):
+    parallel_wanted = mpihelpers.parse_mpi_input_parameter(parallel)
+    mytask = DeviationMaskHeuristicsTask(MaskDeviationHeuristic, vis=vis, field_list=field_list, 
+                            antenna_list=antenna_list, spw_list=spw_list, consider_flag=consider_flag)
+    if parallel_wanted:
+        task = mpihelpers.AsyncTask(mytask)
+    else:
+        task = mpihelpers.SyncTask(mytask)
+    return vis, task
+
+
+def test_deviation_mask_heuristic(spw=None):
+    import glob
+    vislist = glob.glob('uid___A002_X*.ms')
+    print('vislist={0}'.format(vislist))
+    field_list = [1, 1, 1]
+    antenna_list = [0, 1, 2]
+    spw_list = [17, 17, 17] if spw is None else [spw, spw, spw]
+    consider_flag = True
+    import time
+    start_time = time.time()
+    serial_tasks = [deviation_mask_heuristic(vis=vis, field_list=field_list, antenna_list=antenna_list, spw_list=spw_list, consider_flag=consider_flag, parallel=False) for vis in vislist]
+    serial_results = [(v, t.get_result()) for v,t in serial_tasks]
+    end_time = time.time()
+    print('serial execution duration {0}sec'.format(end_time-start_time))
+    start_time = time.time()
+    parallel_tasks = [deviation_mask_heuristic(vis=vis, field_list=field_list, antenna_list=antenna_list, spw_list=spw_list, consider_flag=consider_flag, parallel=True) for vis in vislist]
+    parallel_results = [(v,t.get_result()) for v,t in parallel_tasks]
+    end_time = time.time()
+    print('parallel execution duration {0}sec'.format(end_time-start_time))
+   
+    for vis, smask in serial_results:
+        for _vis, pmask in parallel_results:
+            if vis == _vis:
+                for field_id in field_list:
+                    for antenna_id in antenna_list:
+                        for spw_id in spw_list:
+                            print('vis "{0}", field {1} antenna {2} spw {3}:'.format(vis, field_id, antenna_id, spw_id))
+                            print('     serial mask: {0}'.format(smask))
+                            print('   parallel mask: {0}'.format(pmask))
+                            print('   {0}'.format(smask == pmask))
+    
+    
+    
+    

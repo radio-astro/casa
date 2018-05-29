@@ -109,6 +109,16 @@
 	<value>True</value>
     </param>
 
+    <param type="string" name="parallel" subparam="true">
+        <description>Execute using CASA HPC functionality, if available.</description>
+            <value>automatic</value>
+            <allowed kind="enum">
+                <value>automatic</value>
+                <value>true</value>
+                <value>false</value>
+            </allowed>
+    </param>
+
     <constraints>
 	<when param="pipelinemode">
 	    <equals type="string" value="automatic">
@@ -119,6 +129,7 @@
                 <default param="antenna"><value type="string"></value></default>
                 <default param="spw"><value type="string"></value></default>
                 <default param="pol"><value type="string"></value></default>
+                <default param="parallel"><value type="string">automatic</value></default>
 		<default param="dryrun"><value type="bool">False</value></default>
 		<default param="acceptresults"><value type="bool">True</value></default>
 	    </equals>

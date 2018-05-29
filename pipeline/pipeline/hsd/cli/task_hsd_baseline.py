@@ -6,7 +6,7 @@ def hsd_baseline(fitfunc=None, fitorder=None,
                    linewindow=None, edge=None, broadline=None, 
                    clusteringalgorithm=None, deviationmask=None, pipelinemode=None, 
                    infiles=None, field=None, antenna=None, spw=None, pol=None,
-                   dryrun=None, acceptresults=None):
+                   dryrun=None, acceptresults=None, parallel=None):
 
     ##########################################################################
     #                                                                        #
