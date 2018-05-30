@@ -1287,6 +1287,34 @@ def flatten_dict(d, join=operator.add, lift=lambda x: (x,)):
     return results
 
 
+def set_nested_dict(dct, keys, value):
+    for key in keys[:-1]:
+        dct = dct.setdefault(key, {})
+    dct[keys[-1]] = value
+
+
+def update_sens_dict(dct, udct):
+    '''
+    Update a sensitivity dictionary. All generic solutions
+    tried so far did not do the job. So this method assumes
+    an explicit dictionary structure of
+    ['<MS name>']['<field name'][<spw>][{<sensitivity result>}].
+    '''
+
+    for msname in udct.keys():
+        # Exclude two special primary keys that are not MS names
+        if msname not in ['robust', 'uvtaper']:
+            if msname not in dct:
+                dct[msname] = {}
+            for field in udct[msname].keys():
+                if field not in dct[msname]:
+                    dct[msname][field] = {}
+                for spw in udct[msname][field].keys():
+                    if spw not in dct[msname][field]:
+                        dct[msname][field][spw] = {}
+                    dct[msname][field][spw] = udct[msname][field][spw]
+
+
 def flagged_intervals(vec):
     '''
     Find islands of non-zeros in the vector vec

@@ -20,6 +20,7 @@ from .iterativesequence import IterativeSequence
 from .iterativesequence2 import IterativeSequence2
 from .manualmaskthresholdsequence import ManualMaskThresholdSequence
 from .nomaskthresholdsequence import NoMaskThresholdSequence
+from .resultobjects import TcleanResult
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -181,9 +182,12 @@ class Tclean(cleanbase.CleanBase):
 
     def prepare(self):
         inputs = self.inputs
+        context = self.inputs.context
 
         LOG.info('\nCleaning for intent "%s", field %s, spw %s\n',
                  inputs.intent, inputs.field, inputs.spw)
+
+        per_spw_cont_sensitivities_all_chan = context.per_spw_cont_sensitivities_all_chan
 
         result = None
 
@@ -272,8 +276,12 @@ class Tclean(cleanbase.CleanBase):
 
             if (if0 == -1) or (if1 == -1):
                 LOG.error('No LSRK frequency intersect among selected MSs for Field %s SPW %s' % (inputs.field, inputs.spw))
-                result.error = '%s/%s/spw%s clean error: %s' % (inputs.field, inputs.intent, inputs.spw)
-                return result
+                error_result = TcleanResult(sourcename=inputs.field,
+                                            intent=inputs.intent,
+                                            spw=inputs.spw,
+                                            specmode=inputs.specmode)
+                error_result.error = '%s/%s/spw%s clean error: %s' % (inputs.field, inputs.intent, inputs.spw)
+                return error_result
 
             # Check for manually supplied values
             if0_auto = if0
@@ -284,21 +292,33 @@ class Tclean(cleanbase.CleanBase):
                 if0 = qaTool.convert(inputs.start, 'Hz')['value']
                 if if0 < if0_auto:
                     LOG.error('Supplied start frequency %s < f_low for Field %s SPW %s' % (inputs.start, inputs.field, inputs.spw))
-                    result.error = '%s/%s/spw%s clean error: f_start < f_low_native' % (inputs.field, inputs.intent, inputs.spw)
-                    return result
+                    error_result = TcleanResult(sourcename=inputs.field,
+                                                intent=inputs.intent,
+                                                spw=inputs.spw,
+                                                specmode=inputs.specmode)
+                    error_result.error = '%s/%s/spw%s clean error: f_start < f_low_native' % (inputs.field, inputs.intent, inputs.spw)
+                    return error_result
                 LOG.info('Using supplied start frequency %s' % inputs.start)
 
             if (inputs.width != '') and (inputs.nbin not in (None, -1)):
                 LOG.error('Field %s SPW %s: width and nbin are mutually exclusive' % (inputs.field, inputs.spw))
-                result.error = '%s/%s/spw%s clean error: width and nbin are mutually exclusive' % (inputs.field, inputs.intent, inputs.spw)
-                return result
+                error_result = TcleanResult(sourcename=inputs.field,
+                                            intent=inputs.intent,
+                                            spw=inputs.spw,
+                                            specmode=inputs.specmode)
+                error_result.error = '%s/%s/spw%s clean error: width and nbin are mutually exclusive' % (inputs.field, inputs.intent, inputs.spw)
+                return error_result
 
             if inputs.width != '':
                 channel_width_manual = qaTool.convert(inputs.width, 'Hz')['value']
                 if channel_width_manual < channel_width_auto:
                     LOG.error('User supplied channel width smaller than native value of %s GHz for Field %s SPW %s' % (channel_width_auto, inputs.field, inputs.spw))
-                    result.error = '%s/%s/spw%s clean error: user channel width too small' % (inputs.field, inputs.intent, inputs.spw)
-                    return result
+                    error_result = TcleanResult(sourcename=inputs.field,
+                                                intent=inputs.intent,
+                                                spw=inputs.spw,
+                                                specmode=inputs.specmode)
+                    error_result.error = '%s/%s/spw%s clean error: user channel width too small' % (inputs.field, inputs.intent, inputs.spw)
+                    return error_result
 
                 LOG.info('Using supplied width %s' % inputs.width)
                 channel_width = channel_width_manual
@@ -312,8 +332,12 @@ class Tclean(cleanbase.CleanBase):
                 if1 = if0 + channel_width * inputs.nchan
                 if if1 > if1_auto:
                     LOG.error('Calculated stop frequency %s GHz > f_high_native for Field %s SPW %s' % (if1, inputs.field, inputs.spw))
-                    result.error = '%s/%s/spw%s clean error: f_stop > f_high' % (inputs.field, inputs.intent, inputs.spw)
-                    return result
+                    error_result = TcleanResult(sourcename=inputs.field,
+                                                intent=inputs.intent,
+                                                spw=inputs.spw,
+                                                specmode=inputs.specmode)
+                    error_result.error = '%s/%s/spw%s clean error: f_stop > f_high' % (inputs.field, inputs.intent, inputs.spw)
+                    return error_result
                 LOG.info('Using supplied nchan %d' % inputs.nchan)
 
             # tclean interprets the start frequency as the center of the
@@ -370,16 +394,20 @@ class Tclean(cleanbase.CleanBase):
             (sensitivity,
              eff_ch_bw,
              sens_bw,
-             known_sensitivities) = \
+             per_spw_cont_sensitivities_all_chan) = \
                 self.image_heuristics.calc_sensitivities(inputs.vis, inputs.field, inputs.intent, inputs.spw,
                                                          inputs.nbin, spw_topo_chan_param_dict, inputs.specmode,
                                                          inputs.gridder, inputs.cell, inputs.imsize, inputs.weighting,
-                                                         inputs.robust, inputs.uvtaper)
+                                                         inputs.robust, inputs.uvtaper, known_sensitivities=per_spw_cont_sensitivities_all_chan)
 
         if sensitivity is None:
             LOG.error('Could not calculate the sensitivity for Field %s Intent %s SPW %s' % (inputs.field, inputs.intent, inputs.spw))
-            result.error = '%s/%s/spw%s clean error: no sensitivity' % (inputs.field, inputs.intent, inputs.spw)
-            return result
+            error_result = TcleanResult(sourcename=inputs.field,
+                                        intent=inputs.intent,
+                                        spw=inputs.spw,
+                                        specmode=inputs.specmode)
+            error_result.error = '%s/%s/spw%s clean error: no sensitivity' % (inputs.field, inputs.intent, inputs.spw)
+            return error_result
 
         LOG.info('Sensitivity estimate: %.3g Jy', sensitivity)
 
@@ -436,6 +464,16 @@ class Tclean(cleanbase.CleanBase):
                 sensitivity=sensitivity)
 
         result = self._do_iterative_imaging(sequence_manager=sequence_manager)
+
+        # The updated sensitivity dictionary needs to be transported via the
+        # result object so that one can update the context later on in the
+        # merge_with_context method (direct updates of the context do not
+        # work since we are working on copies and since the HPC case will
+        # have multiple instances which would overwrite each others results).
+        # This result object is, however, only created in cleanbase.py while
+        # we have the dictionary already here in tclean.py. Thus one has to
+        # set this property only after getting the final result object.
+        result.per_spw_cont_sensitivities_all_chan = per_spw_cont_sensitivities_all_chan
 
         # Record aggregate LSRK bandwidth and mosaic field sensitivities for weblog
         # TODO: Record total bandwidth as opposed to range

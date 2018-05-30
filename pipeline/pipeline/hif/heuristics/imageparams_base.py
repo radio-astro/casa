@@ -1192,11 +1192,6 @@ class ImageParamsHeuristics(object):
 
         return False
 
-    def nested_set(self, dic, keys, value):
-        for key in keys[:-1]:
-            dic = dic.setdefault(key, {})
-        dic[keys[-1]] = value
-
     def get_bw_corr_factor(self, ms_do, spw, nchan):
         """
         Calculate effective bandwidth correction factor.
@@ -1301,11 +1296,11 @@ class ImageParamsHeuristics(object):
                             LOG.info('Got request to recalculate sensitivities.')
                             raise Exception('Got request to recalculate sensitivities.')
                         if local_known_sensitivities['robust'] != robust:
-                            LOG.warn('robust value changed (old: %.1f, new: %.1f). Re-calculating sensitivities.' % (local_known_sensitivities['robust'], robust))
+                            LOG.info('robust value changed (old: %.1f, new: %.1f). Re-calculating sensitivities.' % (local_known_sensitivities['robust'], robust))
                             local_known_sensitivities = {}
                             raise Exception('robust value changed (old: %.1f, new: %.1f). Re-calculating sensitivities.' % (local_known_sensitivities['robust'], robust))
                         if local_known_sensitivities['uvtaper'] != uvtaper:
-                            LOG.warn('uvtaper value changed (old: %s, new: %s). Re-calculating sensitivities.' % (str(local_known_sensitivities['uvtaper']), str(uvtaper)))
+                            LOG.info('uvtaper value changed (old: %s, new: %s). Re-calculating sensitivities.' % (str(local_known_sensitivities['uvtaper']), str(uvtaper)))
                             local_known_sensitivities = {}
                             raise Exception('uvtaper value changed (old: %s, new: %s). Re-calculating sensitivities.' % (str(local_known_sensitivities['uvtaper']), str(uvtaper)))
                         center_field_full_spw_sensitivity = cqa.getvalue(cqa.convert(local_known_sensitivities[os.path.basename(msname)][field][intSpw]['sensitivityAllChans'], 'Jy/beam'))
@@ -1319,10 +1314,10 @@ class ImageParamsHeuristics(object):
                         nchan_unflagged = np.where(channel_flags == False)[0].shape[0]
                         local_known_sensitivities['robust'] = robust
                         local_known_sensitivities['uvtaper'] = uvtaper
-                        self.nested_set(local_known_sensitivities, (os.path.basename(msname), field, intSpw, 'sensitivityAllChans'), '%.3g Jy/beam' % (center_field_full_spw_sensitivity))
-                        self.nested_set(local_known_sensitivities, (os.path.basename(msname), field, intSpw, 'nchanUnflagged'), nchan_unflagged)
-                        self.nested_set(local_known_sensitivities, (os.path.basename(msname), field, intSpw, 'effChanBW'), '%s Hz' % (eff_ch_bw))
-                        self.nested_set(local_known_sensitivities, (os.path.basename(msname), field, intSpw, 'sensBW'), '%s Hz' % (sens_bws[intSpw]))
+                        utils.set_nested_dict(local_known_sensitivities, (os.path.basename(msname), field, intSpw, 'sensitivityAllChans'), '%.3g Jy/beam' % (center_field_full_spw_sensitivity))
+                        utils.set_nested_dict(local_known_sensitivities, (os.path.basename(msname), field, intSpw, 'nchanUnflagged'), nchan_unflagged)
+                        utils.set_nested_dict(local_known_sensitivities, (os.path.basename(msname), field, intSpw, 'effChanBW'), '%s Hz' % (eff_ch_bw))
+                        utils.set_nested_dict(local_known_sensitivities, (os.path.basename(msname), field, intSpw, 'sensBW'), '%s Hz' % (sens_bws[intSpw]))
 
                     # Correct from full spw to channel selection
                     bw_uncorrected_center_field_sensitivity = center_field_full_spw_sensitivity * (float(nchan_unflagged)/float(nchan_sel))**0.5

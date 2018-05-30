@@ -2,9 +2,11 @@ from __future__ import absolute_import
 
 import collections
 import os.path
+import copy
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
+import pipeline.infrastructure.utils as utils
 
 from pipeline.h.tasks.common.displays import sky as sky
 
@@ -69,6 +71,16 @@ class TcleanResult(basetask.Results):
         self.error = None
         # Used to make simple telescope-dependent decisions about weblog output
         self.imaging_mode = imaging_mode
+        self.per_spw_cont_sensitivities_all_chan = None
+
+    def merge_with_context(self, context):
+        # Calculated sensitivities for later stages
+        if self.per_spw_cont_sensitivities_all_chan is not None:
+            if self.per_spw_cont_sensitivities_all_chan['robust'] != context.per_spw_cont_sensitivities_all_chan['robust'] or \
+               self.per_spw_cont_sensitivities_all_chan['uvtaper'] != context.per_spw_cont_sensitivities_all_chan['uvtaper']:
+                context.per_spw_cont_sensitivities_all_chan = copy.deepcopy(self.per_spw_cont_sensitivities_all_chan)
+            else:
+                utils.update_sens_dict(context.per_spw_cont_sensitivities_all_chan, self.per_spw_cont_sensitivities_all_chan)
 
     def empty(self):
         return not(self._psf or self._model or self._flux or 

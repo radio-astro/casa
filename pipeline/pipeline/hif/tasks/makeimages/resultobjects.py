@@ -1,9 +1,11 @@
 from __future__ import absolute_import
 
 import os.path
+import copy
 
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.imagelibrary as imagelibrary
+import pipeline.infrastructure.utils as utils
 
 
 class MakeImagesResult(basetask.Results):
@@ -51,6 +53,15 @@ class MakeImagesResult(basetask.Results):
 #            print item['imagename']
 #            print item['sourcename'], item['spwlist'], item['sourcetype']
 #            print item['imageplot']
+
+        # Calculated sensitivities for later stages
+        for result in self.results:
+            if result.per_spw_cont_sensitivities_all_chan is not None:
+                if result.per_spw_cont_sensitivities_all_chan['robust'] != context.per_spw_cont_sensitivities_all_chan['robust'] or \
+                   result.per_spw_cont_sensitivities_all_chan['uvtaper'] != context.per_spw_cont_sensitivities_all_chan['uvtaper']:
+                    context.per_spw_cont_sensitivities_all_chan = copy.deepcopy(result.per_spw_cont_sensitivities_all_chan)
+                else:
+                    utils.update_sens_dict(context.per_spw_cont_sensitivities_all_chan, result.per_spw_cont_sensitivities_all_chan)
 
         # empty the pending list and message
         context.clean_list_pending = []
