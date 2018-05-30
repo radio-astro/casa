@@ -133,7 +133,7 @@ class Context(object):
         self.clean_list_pending = []
         self.clean_list_info = {}
         self.sensitivities = []
-        self.per_spw_cont_sensitivities_all_chan = {}
+        self.per_spw_cont_sensitivities_all_chan = {'robust': None, 'uvtaper': None}
 
         LOG.trace('Creating report directory \'%s\'' % self.report_dir)
         utils.mkdir_p(self.report_dir)
