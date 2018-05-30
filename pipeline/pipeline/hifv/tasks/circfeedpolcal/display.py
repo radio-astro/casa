@@ -5,6 +5,7 @@ import os
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.renderer.logger as logger
 import casa
+import shutil
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -24,6 +25,20 @@ class PolarizationPlotCalChart(object):
 
     def plot(self):
         plots = [self.get_plot_wrapper('plotsummary')]
+
+        # Create a dummy plot to release the cal table
+
+        scratchfile = 'scratchpol.g'
+        shutil.copytree(self.caltable, scratchfile)
+        casa.plotcal(caltable=scratchfile,
+                     xaxis='time', yaxis='phase', poln='', field='',
+                     antenna=str(0), spw='', timerange='',
+                     subplot=111, overplot=False, clearpanel='Auto',
+                     iteration='antenna', plotrange=[0, 0, -180, 180],
+                     showflags=False, plotsymbol='o-', plotcolor='blue',
+                     markersize=5.0, fontsize=10.0, showgui=False, figfile="scratchpol.png")
+        shutil.rmtree(scratchfile)
+
         return [p for p in plots if p is not None]
 
     def create_plot(self, prefix):
