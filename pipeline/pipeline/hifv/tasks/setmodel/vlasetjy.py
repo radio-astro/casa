@@ -35,7 +35,7 @@ def find_standards(positions):
     fields_3C138 = []
     position_3C147 = casatools.measures.direction('j2000', '5h42m36.138', '49d51m7.234')
     fields_3C147 = []
-    position_3C286 = casatools.measures.direction('j2000', '13h31m8.288', '30d30m23.959')
+    position_3C286 = casatools.measures.direction('j2000', '13h31m8.288', '30d30m32.959')
     fields_3C286 = []
 
     for ii in range(0,len(positions)):
