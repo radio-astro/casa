@@ -1664,7 +1664,7 @@ class VectorFlagger(basetask.StandardTaskTemplate):
                     # view.
                     newflags.append(arrayflaggerbase.FlagCmd(
                         reason='min_abs', filename=table, rulename=rulename, spw=spw, axisnames=axisnames,
-                        flagcoords=flagcoords, channel_axis=vector.axis, antenna_id_to_name=antenna_id_to_name))
+                        flagcoords=flagcoords, antenna_id_to_name=antenna_id_to_name))
 
             elif rulename == 'nmedian':
 
@@ -1693,7 +1693,7 @@ class VectorFlagger(basetask.StandardTaskTemplate):
                     # view.
                     newflags.append(arrayflaggerbase.FlagCmd(
                         reason='nmedian', filename=table, rulename=rulename, spw=spw, axisnames=axisnames,
-                        flagcoords=flagcoords, channel_axis=vector.axis, antenna_id_to_name=antenna_id_to_name))
+                        flagcoords=flagcoords, antenna_id_to_name=antenna_id_to_name))
 
             elif rulename == 'outlier':
                 minsample = rule['minsample']
