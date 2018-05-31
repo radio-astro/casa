@@ -519,7 +519,8 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
                 # masked. This should avoid performing a comparison with
                 # flagged data that could include NaNs (that would cause a
                 # RuntimeWarning).
-                data_masked = np.ma.masked_greater(data_masked, mad_max * data_mad)
+                outlier_threshold = mad_max * data_mad
+                data_masked = np.ma.masked_greater(data_masked, outlier_threshold)
 
                 # Get indices to flag as the masked elements that were not
                 # already flagged, i.e. the newly masked elements.
@@ -529,6 +530,21 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
                 # No flagged data.
                 if not np.any(ind2flag):
                     continue
+
+                # If the view is for a specific set of antennas, then
+                # include these in the warning
+                if antenna:
+                    ants_as_str = ", ant {}".format(antenna)
+                else:
+                    ants_as_str = ""
+
+                # Log a debug message with outliers.
+                outliers_as_str = ", ".join(sorted([str(ol) for ol in data_masked[ind2flag].data], reverse=True))
+                LOG.debug("Outliers found with flagging rule '{}' for {}, spw {}, pol {}{}.\n"
+                          "Data: median = {}, MAD = {}. Max MAD threshold = {}, corresponding to {}.\n"
+                          "{} outlier(s) found (highest to lowest): {}"
+                          "".format(rulename, os.path.basename(table), spw, pol, ants_as_str, data_median, data_mad,
+                                    mad_max, outlier_threshold, len(data_masked[ind2flag].data), outliers_as_str))
 
                 i2flag = i[ind2flag]
                 j2flag = j[ind2flag]
@@ -563,7 +579,8 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
                 # masked. This should avoid performing a comparison with
                 # flagged data that could include NaNs (that would cause a
                 # RuntimeWarning).
-                data_masked = np.ma.masked_greater(data_masked, mad_max * data_mad)
+                outlier_threshold = mad_max * data_mad
+                data_masked = np.ma.masked_greater(data_masked, outlier_threshold)
 
                 # Get indices to flag as the masked elements that were not
                 # already flagged, i.e. the newly masked elements.
@@ -573,6 +590,14 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
                 # No flagged data.
                 if not np.any(ind2flag):
                     continue
+
+                # Log a debug message with outliers.
+                outliers_as_str = ", ".join(sorted([str(ol) for ol in data_masked[ind2flag].data], reverse=True))
+                LOG.debug("Outliers found with flagging rule '{}' for {}, spw {}, pol {}.\n"
+                          "Data: median = {}, MAD = {}. Max MAD threshold = {}, corresponding to {}.\n"
+                          "{} outlier(s) found (highest to lowest): {}"
+                          "".format(rulename, os.path.basename(table), spw, pol, data_median, data_mad, mad_max,
+                                    outlier_threshold, len(data_masked[ind2flag].data), outliers_as_str))
 
                 i2flag = i[ind2flag]
                 j2flag = j[ind2flag]
@@ -596,7 +621,7 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
                 if len(valid_data) < minsample:
                     continue
 
-                # Check limits.
+                # Get threshold limit.
                 mad_max = rule['limit']
 
                 # Create masked array with flagged data masked.
@@ -606,7 +631,8 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
                 # masked. This should avoid performing a comparison with
                 # flagged data that could include NaNs (that would cause a
                 # RuntimeWarning).
-                data_masked = np.ma.masked_greater(data_masked, mad_max * data_mad)
+                outlier_threshold = mad_max * data_mad
+                data_masked = np.ma.masked_greater(data_masked, outlier_threshold)
 
                 # Get indices to flag as the masked elements that were not
                 # already flagged, i.e. the newly masked elements.
@@ -615,6 +641,14 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
                 # No flags
                 if not np.any(ind2flag):
                     continue
+
+                # Log a debug message with outliers.
+                outliers_as_str = ", ".join(sorted([str(ol) for ol in data_masked[ind2flag].data], reverse=True))
+                LOG.debug("Outliers found with flagging rule '{}' for {}, spw {}, pol {}.\n"
+                          "Data: median = {}, MAD = {}. Max MAD threshold = {}, corresponding to {}.\n"
+                          "{} outlier(s) found (highest to lowest): {}"
+                          "".format(rulename, os.path.basename(table), spw, pol, data_median, data_mad, mad_max,
+                                    outlier_threshold, len(data_masked[ind2flag].data), outliers_as_str))
 
                 i2flag = i[ind2flag]
                 j2flag = j[ind2flag]
@@ -658,6 +692,14 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
                 if not np.any(ind2flag):
                     continue
 
+                # Log a debug message with outliers.
+                outliers_as_str = ", ".join(sorted([str(ol) for ol in data_masked[ind2flag].data]))
+                LOG.debug("Outliers found with flagging rule '{}' for {}, spw {}, pol {}.\n"
+                          "Minimum threshold = {}.\n"
+                          "{} outlier(s) found (lowest to highest): {}"
+                          "".format(rulename, os.path.basename(table), spw, pol, limit,
+                                    len(data_masked[ind2flag].data), outliers_as_str))
+
                 i2flag = i[ind2flag]
                 j2flag = j[ind2flag]
 
@@ -699,6 +741,14 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
                 # No flags
                 if not np.any(ind2flag):
                     continue
+
+                # Log a debug message with outliers.
+                outliers_as_str = ", ".join(sorted([str(ol) for ol in data_masked[ind2flag].data], reverse=True))
+                LOG.debug("Outliers found with flagging rule '{}' for {}, spw {}, pol {}.\n"
+                          "Maximum threshold = {}.\n"
+                          "{} outlier(s) found (highest to lowest): {}"
+                          "".format(rulename, os.path.basename(table), spw, pol, limit,
+                                    len(data_masked[ind2flag].data), outliers_as_str))
 
                 i2flag = i[ind2flag]
                 j2flag = j[ind2flag]
@@ -871,8 +921,10 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
                 # masked. This should avoid performing a comparison with
                 # flagged data that could include NaNs (that would cause a
                 # RuntimeWarning).
-                data_masked = np.ma.masked_greater(data_masked, hi_limit * data_median)
-                data_masked = np.ma.masked_less(data_masked, lo_limit * data_median)
+                outlier_high_threshold = hi_limit * data_median
+                outlier_low_threshold = lo_limit * data_median
+                data_masked = np.ma.masked_greater(data_masked, outlier_high_threshold)
+                data_masked = np.ma.masked_less(data_masked, outlier_low_threshold)
 
                 # Get indices to flag as the masked elements that were not
                 # already flagged, i.e. the newly masked elements.
@@ -882,6 +934,15 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
                 # No flags
                 if not np.any(ind2flag):
                     continue
+
+                # Log a debug message with outliers.
+                outliers_as_str = ", ".join(sorted([str(ol) for ol in data_masked[ind2flag].data]))
+                LOG.debug("Outliers found with flagging rule '{}' for {}, spw {}, pol {}.\n"
+                          "Data: median = {}. Low, high nmedian thresholds = {}, {}, corresponding to {}, {}.\n"
+                          "{} outlier(s) found (lowest to highest): {}"
+                          "".format(rulename, os.path.basename(table), spw, pol, data_median, lo_limit,
+                                    hi_limit, outlier_low_threshold, outlier_high_threshold,
+                                    len(data_masked[ind2flag].data), outliers_as_str))
 
                 i2flag = i[ind2flag]
                 j2flag = j[ind2flag]
@@ -1634,6 +1695,13 @@ class VectorFlagger(basetask.StandardTaskTemplate):
                 flagcoords = [list(channels_flagged)]
 
                 if len(channels_flagged) > 0:
+                    # Log a debug message with outliers.
+                    flagged_as_str = ", ".join([str(ol) for ol in channels_flagged])
+                    LOG.debug("Outliers found with flagging rule '{}' for {}, spw {}, pol {}.\n"
+                              "The following {} edge channels were flagged: {}"
+                              "".format(rulename, os.path.basename(table), spw, pol, len(channels_flagged),
+                                        flagged_as_str))
+
                     # Add new flag command to flag data underlying the
                     # view.
                     newflags.append(arrayflaggerbase.FlagCmd(
@@ -1674,6 +1742,14 @@ class VectorFlagger(basetask.StandardTaskTemplate):
                 # the MS
                 channels_flagged = channels[ind2flag]
                 flagcoords = [list(channels_flagged)]
+
+                # Log a debug message with outliers.
+                outliers_as_str = ", ".join(sorted([str(ol) for ol in data_masked[ind2flag].data]))
+                LOG.debug("Outliers found with flagging rule '{}' for {}, spw {}, pol {}.\n"
+                          "Minimum threshold = {}.\n"
+                          "{} outlier(s) found (lowest to highest): {}"
+                          "".format(rulename, os.path.basename(table), spw, pol, limit,
+                                    len(data_masked[ind2flag].data), outliers_as_str))
 
                 # Add new flag command to flag data underlying the
                 # view.
@@ -1720,6 +1796,15 @@ class VectorFlagger(basetask.StandardTaskTemplate):
                 channels_flagged = channels[ind2flag]
                 flagcoords = [list(channels_flagged)]
 
+                # Log a debug message with outliers.
+                outliers_as_str = ", ".join(sorted([str(ol) for ol in data_masked[ind2flag].data]))
+                LOG.debug("Outliers found with flagging rule '{}' for {}, spw {}, pol {}.\n"
+                          "Data: median = {}. Low, high nmedian thresholds = {}, {}, corresponding to {}, {}.\n"
+                          "{} outlier(s) found (lowest to highest): {}"
+                          "".format(rulename, os.path.basename(table), spw, pol, data_median, lo_limit,
+                                    hi_limit, outlier_low_threshold, outlier_high_threshold,
+                                    len(data_masked[ind2flag].data), outliers_as_str))
+
                 # Add new flag command to flag data underlying the
                 # view.
                 newflags.append(arrayflaggerbase.FlagCmd(
@@ -1763,6 +1848,14 @@ class VectorFlagger(basetask.StandardTaskTemplate):
                 # the MS
                 channels_flagged = channels[ind2flag]
                 flagcoords = [list(channels_flagged)]
+
+                # Log a debug message with outliers.
+                outliers_as_str = ", ".join(sorted([str(ol) for ol in data_masked[ind2flag].data]))
+                LOG.debug("Outliers found with flagging rule '{}' for {}, spw {}, pol {}.\n"
+                          "Data: median = {}, MAD = {}. Max MAD threshold = {}, corresponding to {}.\n"
+                          "{} outlier(s) found (lowest to highest): {}"
+                          "".format(rulename, os.path.basename(table), spw, pol, data_median, data_mad, limit,
+                                    outlier_threshold, len(channels_flagged), outliers_as_str))
 
                 # Add new flag command to flag data underlying the
                 # view.
@@ -1828,11 +1921,19 @@ class VectorFlagger(basetask.StandardTaskTemplate):
                 flagcoords = [list(channels_flagged)]
 
                 if len(channels_flagged) > 0:
+                    # Log a debug message with outliers.
+                    flagged_as_str = ", ".join([str(ol) for ol in channels_flagged])
+                    LOG.debug("Outliers found with flagging rule '{}' for {}, spw {}, pol {}.\n"
+                              "Sharp feature limit: {}.\n"
+                              "The following {} channels were flagged: {}"
+                              "".format(rulename, os.path.basename(table), spw, pol, limit,
+                                        len(channels_flagged), flagged_as_str))
+
                     # Add new flag command to flag data underlying the
                     # view.
                     newflags.append(arrayflaggerbase.FlagCmd(
-                      reason='sharps', filename=table, rulename=rulename, spw=spw, antenna=antenna, axisnames=axisnames,
-                      flagcoords=flagcoords, antenna_id_to_name=antenna_id_to_name))
+                        reason='sharps', filename=table, rulename=rulename, spw=spw, antenna=antenna,
+                        axisnames=axisnames, flagcoords=flagcoords, antenna_id_to_name=antenna_id_to_name))
 
             elif rulename == 'diffmad':
 
@@ -1876,6 +1977,13 @@ class VectorFlagger(basetask.StandardTaskTemplate):
                 flagcoords = [list(channels_flagged)]
 
                 if len(channels_flagged) > 0:
+                    # Log a debug message with outliers.
+                    flagged_as_str = ", ".join([str(ol) for ol in channels_flagged])
+                    LOG.debug("Outliers found with flagging rule '{}' for {}, spw {}, pol {}.\n"
+                              "The following {} channels were flagged: {}"
+                              "".format(rulename, os.path.basename(table), spw, pol,
+                                        len(channels_flagged), flagged_as_str))
+
                     # Add new flag command to flag data underlying the
                     # view.
                     newflags.append(arrayflaggerbase.FlagCmd(
@@ -1908,6 +2016,15 @@ class VectorFlagger(basetask.StandardTaskTemplate):
                     flagcoords = [list(channels_flagged)]
 
                     if len(channels_flagged) > 0:
+                        # Log a debug message with outliers.
+                        flagged_as_str = ", ".join([str(ol) for ol in channels_flagged])
+                        LOG.debug("Outliers found with flagging rule '{}' for {}, spw {}, pol {}.\n"
+                                  "Limit on fraction channels flagged before all channels are flagged: {}\n"
+                                  "Limit on number channels flagged before all channels are flagged: {}\n"
+                                  "The following {} channels were flagged: {}"
+                                  "".format(rulename, os.path.basename(table), spw, pol, frac_limit,
+                                            nchan_limit, len(channels_flagged), flagged_as_str))
+
                         # Add new flag command to flag data underlying the
                         # view.
                         newflags.append(arrayflaggerbase.FlagCmd(
