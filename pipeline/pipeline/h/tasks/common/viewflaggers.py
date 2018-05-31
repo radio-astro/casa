@@ -504,7 +504,7 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
 
             if rulename == 'outlier':
 
-                # Sample too small
+                # Stop evaluating rule if sample is too small.
                 minsample = rule['minsample']
                 if len(valid_data) < minsample:
                     continue
@@ -548,7 +548,7 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
 
             elif rulename == 'low outlier':
 
-                # Sample too small
+                # Stop evaluating rule if sample is too small.
                 minsample = rule['minsample']
                 if len(valid_data) < minsample:
                     continue
@@ -591,7 +591,7 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
 
             elif rulename == 'high outlier':
 
-                # Sample too small
+                # Stop evaluating rule if sample is too small.
                 minsample = rule['minsample']
                 if len(valid_data) < minsample:
                     continue
@@ -1649,22 +1649,37 @@ class VectorFlagger(basetask.StandardTaskTemplate):
                 # Get limits.
                 limit = rule['limit']
 
-                flag_chan = (np.abs(data) < limit) & np.logical_not(flag)
+                # Create masked array with flagged data masked.
+                data_masked = np.ma.array(np.abs(data), mask=flag)
 
-                # flag the 'view'
-                rflag[flag_chan] = True
+                # Create new masked array from masked array with outliers
+                # masked. This should avoid performing a comparison with
+                # flagged data that could include NaNs (that would cause a
+                # RuntimeWarning).
+                data_masked = np.ma.masked_less(data_masked, limit)
+
+                # Get indices to flag as the masked elements that were not
+                # already flagged, i.e. the newly masked elements.
+                ind2flag = np.logical_and(np.ma.getmask(data_masked),
+                                          np.logical_not(flag))
+
+                # No flags
+                if not np.any(ind2flag):
+                    continue
+
+                # flag the 'view', for any subsequent rules being evaluated.
+                rflag[ind2flag] = True
 
                 # now compose a description of the flagging required on
                 # the MS
-                channels_flagged = channels[flag_chan]
+                channels_flagged = channels[ind2flag]
                 flagcoords = [list(channels_flagged)]
 
-                if len(channels_flagged) > 0:
-                    # Add new flag command to flag data underlying the
-                    # view.
-                    newflags.append(arrayflaggerbase.FlagCmd(
-                        reason='min_abs', filename=table, rulename=rulename, spw=spw, axisnames=axisnames,
-                        flagcoords=flagcoords, antenna_id_to_name=antenna_id_to_name))
+                # Add new flag command to flag data underlying the
+                # view.
+                newflags.append(arrayflaggerbase.FlagCmd(
+                    reason='min_abs', filename=table, rulename=rulename, spw=spw, axisnames=axisnames,
+                    flagcoords=flagcoords, antenna_id_to_name=antenna_id_to_name))
 
             elif rulename == 'nmedian':
 
@@ -1676,50 +1691,84 @@ class VectorFlagger(basetask.StandardTaskTemplate):
                 lo_limit = rule['lo_limit']
                 hi_limit = rule['hi_limit']
 
-                flag_chan = ((data < np.median(data)*lo_limit) |
-                             (data > np.median(data)*hi_limit) &
-                             np.logical_not(flag))
+                # Create masked array with flagged data masked.
+                data_masked = np.ma.array(data, mask=flag)
 
-                # flag the 'view'
-                rflag[flag_chan] = True
+                # Create new masked array from masked array with outliers
+                # masked. This should avoid performing a comparison with
+                # flagged data that could include NaNs (that would cause a
+                # RuntimeWarning).
+                outlier_high_threshold = hi_limit * data_median
+                outlier_low_threshold = lo_limit * data_median
+                data_masked = np.ma.masked_greater(data_masked, outlier_high_threshold)
+                data_masked = np.ma.masked_less(data_masked, outlier_low_threshold)
+
+                # Get indices to flag as the masked elements that were not
+                # already flagged, i.e. the newly masked elements.
+                ind2flag = np.logical_and(np.ma.getmask(data_masked),
+                                          np.logical_not(flag))
+
+                # No flags
+                if not np.any(ind2flag):
+                    continue
+
+                # flag the 'view', for any subsequent rules being evaluated.
+                rflag[ind2flag] = True
 
                 # now compose a description of the flagging required on
                 # the MS
-                channels_flagged = channels[flag_chan]
+                channels_flagged = channels[ind2flag]
                 flagcoords = [list(channels_flagged)]
 
-                if len(channels_flagged) > 0:
-                    # Add new flag command to flag data underlying the
-                    # view.
-                    newflags.append(arrayflaggerbase.FlagCmd(
-                        reason='nmedian', filename=table, rulename=rulename, spw=spw, axisnames=axisnames,
-                        flagcoords=flagcoords, antenna_id_to_name=antenna_id_to_name))
+                # Add new flag command to flag data underlying the
+                # view.
+                newflags.append(arrayflaggerbase.FlagCmd(
+                    reason='nmedian', filename=table, rulename=rulename, spw=spw, axisnames=axisnames,
+                    flagcoords=flagcoords, antenna_id_to_name=antenna_id_to_name))
 
             elif rulename == 'outlier':
+
                 minsample = rule['minsample']
-                limit = rule['limit']
 
                 # Stop evaluating rule if sample is too small.
                 if len(valid_data) < minsample:
                     continue
 
-                # get channels to flag
-                flag_chan = (np.abs(data-data_median) > data_mad*limit) & np.logical_not(flag)
+                # Get limits.
+                limit = rule['limit']
 
-                # flag the 'view'
-                rflag[flag_chan] = True
+                # Create masked array with flagged data masked.
+                data_masked = np.ma.array(np.abs(data - data_median), mask=flag)
+
+                # Create new masked array from masked array with outliers
+                # masked. This should avoid performing a comparison with
+                # flagged data that could include NaNs (that would cause a
+                # RuntimeWarning).
+                outlier_threshold = limit * data_mad
+                data_masked = np.ma.masked_greater(data_masked, outlier_threshold)
+
+                # Get indices to flag as the masked elements that were not
+                # already flagged, i.e. the newly masked elements.
+                ind2flag = np.logical_and(np.ma.getmask(data_masked),
+                                          np.logical_not(flag))
+
+                # No flags
+                if not np.any(ind2flag):
+                    continue
+
+                # flag the 'view', for any subsequent rules being evaluated.
+                rflag[ind2flag] = True
 
                 # now compose a description of the flagging required on
                 # the MS
-                channels_flagged = channels[flag_chan]
+                channels_flagged = channels[ind2flag]
                 flagcoords = [list(channels_flagged)]
 
-                if len(channels_flagged) > 0:
-                    # Add new flag command to flag data underlying the
-                    # view.
-                    newflags.append(arrayflaggerbase.FlagCmd(
-                        reason='outlier', filename=table, rulename=rulename, spw=spw, pol=pol, antenna=antenna,
-                        axisnames=axisnames, flagcoords=flagcoords, antenna_id_to_name=antenna_id_to_name))
+                # Add new flag command to flag data underlying the
+                # view.
+                newflags.append(arrayflaggerbase.FlagCmd(
+                    reason='outlier', filename=table, rulename=rulename, spw=spw, pol=pol, antenna=antenna,
+                    axisnames=axisnames, flagcoords=flagcoords, antenna_id_to_name=antenna_id_to_name))
 
             elif rulename == 'sharps':
 
@@ -1730,6 +1779,7 @@ class VectorFlagger(basetask.StandardTaskTemplate):
                 # Get limits.
                 limit = rule['limit']
 
+                # Compute channel-to-channel difference, and corresponding flag array.
                 diff = abs(rdata[1:] - rdata[:-1])
                 diff_flag = (rflag[1:] | rflag[:-1])
 
@@ -1794,6 +1844,8 @@ class VectorFlagger(basetask.StandardTaskTemplate):
                 limit = rule['limit']
                 nchan_limit = rule['nchan_limit']
 
+                # Compute channel-to-channel difference (and associated median
+                # and MAD), and corresponding flag array.
                 diff = rdata[1:] - rdata[:-1]
                 diff_flag = np.logical_or(rflag[1:], rflag[:-1])
                 median_diff = np.median(diff[diff_flag == 0])
