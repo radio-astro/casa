@@ -424,7 +424,7 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
 
     def generate_flags(self, matrix, rules):
         """
-        Calculate the statistics of a  matrix and flag the data according
+        Calculate the statistics of a matrix and flag the data according
         to a list of specified rules.
 
         Keyword arguments:
@@ -448,6 +448,14 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
         if antenna is not None:
             # deal with antenna id not name
             antenna = antenna[0]
+
+        # Initialize flags
+        newflags = []
+        flag_reason = np.zeros(np.shape(flag), np.int)
+
+        # If there is no valid (non-flagged) data, then return early.
+        if np.all(flag):
+            return newflags, flag_reason
 
         # If requested to use antenna names instead of IDs antenna,
         # create an id-to-name translation and check to make sure this
@@ -480,10 +488,6 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
             spw = [spw.id for spw in ms.get_spectral_windows()
                    if spw.baseband == baseband]
 
-        # Initialize flags
-        newflags = []
-        flag_reason = np.zeros(np.shape(flag), np.int)
-
         # Index arrays
         i, j = np.indices(np.shape(data))
 
@@ -491,731 +495,705 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
         rflag = np.ravel(flag)
         valid_data = rdata[np.logical_not(rflag)]
 
-        # If there is valid data (non-flagged), then proceed with flagging
-        if len(valid_data) > 0:
+        # calculate statistics for valid data
+        data_median, data_mad = arrayflaggerbase.median_and_mad(valid_data)
 
-            # calculate statistics for valid data
-            data_median, data_mad = arrayflaggerbase.median_and_mad(valid_data)
-            
-            # flag data according to each rule in turn
-            for rule in rules:
-                rulename = rule['name']
+        # flag data according to each rule in turn
+        for rule in rules:
+            rulename = rule['name']
 
-                if rulename == 'outlier':
-  
-                    # Sample too small
-                    minsample = rule['minsample']
-                    if len(valid_data) < minsample:
+            if rulename == 'outlier':
+
+                # Sample too small
+                minsample = rule['minsample']
+                if len(valid_data) < minsample:
+                    continue
+
+                # Check limits.
+                mad_max = rule['limit']
+
+                # Create masked array with flagged data masked.
+                data_masked = np.ma.array(np.abs(data - data_median), mask=flag)
+
+                # Create new masked array from masked array with outliers
+                # masked. This should avoid performing a comparison with
+                # flagged data that could include NaNs (that would cause a
+                # RuntimeWarning).
+                data_masked = np.ma.masked_greater(data_masked, mad_max * data_mad)
+
+                # Get indices to flag as the masked elements that were not
+                # already flagged, i.e. the newly masked elements.
+                ind2flag = np.logical_and(np.ma.getmask(data_masked),
+                                          np.logical_not(flag))
+
+                # No flagged data.
+                if not np.any(ind2flag):
+                    continue
+
+                i2flag = i[ind2flag]
+                j2flag = j[ind2flag]
+
+                # Add new flag command to flag data underlying the
+                # view.
+                flagcoords = zip(xdata[i2flag], ydata[j2flag])
+                for flagcoord in flagcoords:
+                    newflags.append(arrayflaggerbase.FlagCmd(
+                        reason='outlier', filename=table, rulename=rulename, spw=spw, antenna=antenna,
+                        axisnames=[xtitle, ytitle], flagcoords=flagcoord, pol=pol,
+                        antenna_id_to_name=antenna_id_to_name))
+
+                # Flag the view, for any subsequent rules being evaluated.
+                flag[i2flag, j2flag] = True
+                flag_reason[i2flag, j2flag] = self.flag_reason_index[rulename]
+
+            elif rulename == 'low outlier':
+
+                # Sample too small
+                minsample = rule['minsample']
+                if len(valid_data) < minsample:
+                    continue
+
+                # Check limits.
+                mad_max = rule['limit']
+
+                # Create masked array with flagged data masked.
+                data_masked = np.ma.array(data_median - data, mask=flag)
+
+                # Create new masked array from masked array with outliers
+                # masked. This should avoid performing a comparison with
+                # flagged data that could include NaNs (that would cause a
+                # RuntimeWarning).
+                data_masked = np.ma.masked_greater(data_masked, mad_max * data_mad)
+
+                # Get indices to flag as the masked elements that were not
+                # already flagged, i.e. the newly masked elements.
+                ind2flag = np.logical_and(np.ma.getmask(data_masked),
+                                          np.logical_not(flag))
+
+                # No flagged data.
+                if not np.any(ind2flag):
+                    continue
+
+                i2flag = i[ind2flag]
+                j2flag = j[ind2flag]
+
+                # Add new flag commands to flag data underlying the
+                # view.
+                flagcoords = zip(xdata[i2flag], ydata[j2flag])
+                for flagcoord in flagcoords:
+                    newflags.append(arrayflaggerbase.FlagCmd(
+                        reason='low_outlier', filename=table, rulename=rulename, spw=spw, axisnames=[xtitle, ytitle],
+                        flagcoords=flagcoord, pol=pol, antenna_id_to_name=antenna_id_to_name))
+
+                # Flag the view, for any subsequent rules being evaluated.
+                flag[i2flag, j2flag] = True
+                flag_reason[i2flag, j2flag] = self.flag_reason_index[rulename]
+
+            elif rulename == 'high outlier':
+
+                # Sample too small
+                minsample = rule['minsample']
+                if len(valid_data) < minsample:
+                    continue
+
+                # Check limits.
+                mad_max = rule['limit']
+
+                # Create masked array with flagged data masked.
+                data_masked = np.ma.array(data - data_median, mask=flag)
+
+                # Create new masked array from masked array with outliers
+                # masked. This should avoid performing a comparison with
+                # flagged data that could include NaNs (that would cause a
+                # RuntimeWarning).
+                data_masked = np.ma.masked_greater(data_masked, mad_max * data_mad)
+
+                # Get indices to flag as the masked elements that were not
+                # already flagged, i.e. the newly masked elements.
+                ind2flag = np.logical_and(np.ma.getmask(data_masked),
+                                          np.logical_not(flag))
+                # No flags
+                if not np.any(ind2flag):
+                    continue
+
+                i2flag = i[ind2flag]
+                j2flag = j[ind2flag]
+
+                # Add new flag commands to flag data underlying the
+                # view.
+                flagcoords = zip(xdata[i2flag], ydata[j2flag])
+                for flagcoord in flagcoords:
+                    newflags.append(arrayflaggerbase.FlagCmd(
+                      reason='high_outlier', filename=table, rulename=rulename, spw=spw, axisnames=[xtitle, ytitle],
+                      flagcoords=flagcoord, pol=pol, antenna_id_to_name=antenna_id_to_name))
+
+                # Flag the view, for any subsequent rules being evaluated.
+                flag[i2flag, j2flag] = True
+                flag_reason[i2flag, j2flag] = self.flag_reason_index[rulename]
+
+            elif rulename == 'min abs':
+
+                # Stop evaluating rule if all data is flagged.
+                if np.all(flag):
+                    continue
+
+                # Check limits.
+                limit = rule['limit']
+
+                # Create masked array with flagged data masked.
+                data_masked = np.ma.array(np.abs(data), mask=flag)
+
+                # Create new masked array from masked array with outliers
+                # masked. This should avoid performing a comparison with
+                # flagged data that could include NaNs (that would cause a
+                # RuntimeWarning).
+                data_masked = np.ma.masked_less(data_masked, limit)
+
+                # Get indices to flag as the masked elements that were not
+                # already flagged, i.e. the newly masked elements.
+                ind2flag = np.logical_and(np.ma.getmask(data_masked),
+                                          np.logical_not(flag))
+
+                # No flags
+                if not np.any(ind2flag):
+                    continue
+
+                i2flag = i[ind2flag]
+                j2flag = j[ind2flag]
+
+                # Add new flag commands to flag data underlying the
+                # view.
+                flagcoords = zip(xdata[i2flag], ydata[j2flag])
+                for flagcoord in flagcoords:
+                    newflags.append(arrayflaggerbase.FlagCmd(
+                        reason='min_abs', filename=table, rulename=rulename, spw=spw, axisnames=[xtitle, ytitle],
+                        flagcoords=flagcoord, pol=pol, antenna_id_to_name=antenna_id_to_name))
+
+                # Flag the view, for any subsequent rules being evaluated.
+                flag[i2flag, j2flag] = True
+                flag_reason[i2flag, j2flag] = self.flag_reason_index[rulename]
+
+            elif rulename == 'max abs':
+
+                # Stop evaluating rule if all data is flagged.
+                if np.all(flag):
+                    continue
+
+                # Check limits.
+                limit = rule['limit']
+
+                # Create masked array with flagged data masked.
+                data_masked = np.ma.array(np.abs(data), mask=flag)
+
+                # Create new masked array from masked array with outliers
+                # masked. This should avoid performing a comparison with
+                # flagged data that could include NaNs (that would cause a
+                # RuntimeWarning).
+                data_masked = np.ma.masked_greater(data_masked, limit)
+
+                # Get indices to flag as the masked elements that were not
+                # already flagged, i.e. the newly masked elements.
+                ind2flag = np.logical_and(np.ma.getmask(data_masked),
+                                          np.logical_not(flag))
+
+                # No flags
+                if not np.any(ind2flag):
+                    continue
+
+                i2flag = i[ind2flag]
+                j2flag = j[ind2flag]
+
+                # Add new flag commands to flag data underlying the
+                # view.
+                flagcoords = zip(xdata[i2flag], ydata[j2flag])
+                for flagcoord in flagcoords:
+                    newflags.append(arrayflaggerbase.FlagCmd(
+                        reason='max_abs', filename=table, rulename=rulename,  spw=spw, axisnames=[xtitle, ytitle],
+                        flagcoords=flagcoord, pol=pol, extendfields=self.inputs.extendfields,
+                        antenna_id_to_name=antenna_id_to_name))
+
+                # Flag the view, for any subsequent rules being evaluated.
+                flag[i2flag, j2flag] = True
+                flag_reason[i2flag, j2flag] = self.flag_reason_index[rulename]
+
+            elif rulename == 'too many flags':
+
+                # Stop evaluating rule if all data is flagged.
+                if np.all(flag):
+                    continue
+
+                maxfraction = rule['limit']
+                maxexcessflags = rule['excess limit']
+                axis = rule['axis']
+                axis = axis.upper().strip()
+
+                if axis == xtitle.upper().strip():
+
+                    # Compute median number flagged
+                    num_flagged = np.zeros([np.shape(data)[1]], np.int)
+                    for iy in np.arange(len(ydata)):
+                        num_flagged[iy] = len(data[:, iy][flag[:, iy]])
+                    median_num_flagged = np.median(num_flagged)
+
+                    # look along x axis
+                    for iy in np.arange(len(ydata)):
+                        if all(flag[:, iy]):
+                            continue
+
+                        # Compute fraction flagged
+                        len_data = len(xdata)
+                        len_no_data = len(data[:, iy][nodata[:, iy]])
+                        len_flagged = len(data[:, iy][flag[:, iy]])
+                        fractionflagged = (
+                          float(len_flagged - len_no_data) /
+                          float(len_data - len_no_data))
+                        if fractionflagged > maxfraction:
+                            i2flag = i[:, iy][np.logical_not(flag[:, iy])]
+                            j2flag = j[:, iy][np.logical_not(flag[:, iy])]
+                        else:
+                            i2flag = np.zeros([0], np.int)
+                            j2flag = np.zeros([0], np.int)
+
+                        # likewise for maxexcessflags
+                        if len_flagged > median_num_flagged + maxexcessflags:
+                            i2flag = np.concatenate((i2flag, i[:, iy][np.logical_not(flag[:, iy])]))
+                            j2flag = np.concatenate((j2flag, j[:, iy][np.logical_not(flag[:, iy])]))
+
+                        # Add new flag commands to flag data underlying
+                        # the view.
+                        flagcoords = zip(xdata[i2flag], ydata[j2flag])
+                        for flagcoord in flagcoords:
+                            newflags.append(arrayflaggerbase.FlagCmd(
+                                reason='too_many_flags', filename=table, rulename=rulename, spw=spw, antenna=antenna,
+                                axisnames=[xtitle, ytitle], flagcoords=flagcoord, pol=pol,
+                                antenna_id_to_name=antenna_id_to_name))
+
+                        # Flag the view, for any subsequent rules being evaluated.
+                        flag[i2flag, j2flag] = True
+                        flag_reason[i2flag, j2flag] =\
+                            self.flag_reason_index[rulename]
+
+                elif axis == ytitle.upper().strip():
+
+                    # Compute median number flagged
+                    num_flagged = np.zeros([np.shape(data)[0]], np.int)
+                    for ix in np.arange(len(xdata)):
+                        num_flagged[ix] = len(data[ix, :][flag[ix, :]])
+                    median_num_flagged = np.median(num_flagged)
+
+                    # look along y axis
+                    for ix in np.arange(len(xdata)):
+                        if all(flag[ix, :]):
+                            continue
+
+                        len_data = len(ydata)
+                        len_no_data = len(data[ix, :][nodata[ix, :]])
+                        len_flagged = len(data[ix, :][flag[ix, :]])
+                        fractionflagged = (
+                            float(len_flagged - len_no_data) /
+                            float(len_data - len_no_data))
+                        if fractionflagged > maxfraction:
+                            i2flag = i[ix, :][np.logical_not(flag[ix, :])]
+                            j2flag = j[ix, :][np.logical_not(flag[ix, :])]
+                        else:
+                            i2flag = np.zeros([0], np.int)
+                            j2flag = np.zeros([0], np.int)
+
+                        len_flagged = len(data[ix, :][flag[ix, :]])
+                        if len_flagged > median_num_flagged + maxexcessflags:
+                            i2flag = np.concatenate((i2flag, i[ix, :][np.logical_not(flag[ix, :])]))
+                            j2flag = np.concatenate((j2flag, j[ix, :][np.logical_not(flag[ix, :])]))
+
+                        # Add new flag commands to flag data underlying
+                        # the view.
+                        flagcoords = zip(xdata[i2flag], ydata[j2flag])
+                        for flagcoord in flagcoords:
+                            newflags.append(arrayflaggerbase.FlagCmd(
+                                reason='too_many_flags', filename=table, rulename=rulename, spw=spw,
+                                axisnames=[xtitle, ytitle], flagcoords=flagcoord, pol=pol,
+                                antenna_id_to_name=antenna_id_to_name))
+
+                        # Flag the view, for any subsequent rules being evaluated.
+                        flag[i2flag, j2flag] = True
+                        flag_reason[i2flag, j2flag] = self.flag_reason_index[rulename]
+
+            elif rulename == 'too many entirely flagged':
+
+                # Stop evaluating rule if all data is flagged.
+                if np.all(flag):
+                    continue
+
+                maxfraction = rule['limit']
+                axis = rule['axis']
+                axis = axis.upper().strip()
+
+                # if flagging for each element on x-axis (i.e. evaluate column by column)
+                if axis == xtitle.upper().strip():
+
+                    # Determine fraction of columns that are entirely flagged
+                    frac_ef = np.count_nonzero(np.all(flag, axis=1)) / float(flag.shape[0])
+
+                    # If the fraction of "entirely flagged" columns exceeds the limit, then
+                    # all non-flagged data will need to be flagged.
+                    if frac_ef > maxfraction:
+
+                        # Indices to flag are all those that are currently not flagged
+                        i2flag = i[np.logical_not(flag)]
+                        j2flag = j[np.logical_not(flag)]
+
+                        # Add new flag commands to flag data underlying
+                        # the view.
+                        flagcoords = zip(xdata[i2flag], ydata[j2flag])
+                        for flagcoord in flagcoords:
+                            newflags.append(arrayflaggerbase.FlagCmd(
+                                reason='too_many_flags', filename=table, rulename=rulename,  spw=spw,
+                                antenna=antenna, axisnames=[xtitle, ytitle], flagcoords=flagcoord, pol=pol,
+                                antenna_id_to_name=antenna_id_to_name))
+
+                        # Flag the view, for any subsequent rules being evaluated.
+                        flag[i2flag, j2flag] = True
+                        flag_reason[i2flag, j2flag] = self.flag_reason_index[rulename]
+
+            elif rulename == 'nmedian':
+
+                # Stop evaluating rule if all data is flagged.
+                if np.all(flag):
+                    continue
+
+                # Check limits.
+                lo_limit = rule['lo_limit']
+                hi_limit = rule['hi_limit']
+
+                # Create masked array with flagged data masked.
+                data_masked = np.ma.array(data, mask=flag)
+
+                # Create new masked array from masked array with outliers
+                # masked. This should avoid performing a comparison with
+                # flagged data that could include NaNs (that would cause a
+                # RuntimeWarning).
+                data_masked = np.ma.masked_greater(data_masked, hi_limit * data_median)
+                data_masked = np.ma.masked_less(data_masked, lo_limit * data_median)
+
+                # Get indices to flag as the masked elements that were not
+                # already flagged, i.e. the newly masked elements.
+                ind2flag = np.logical_and(np.ma.getmask(data_masked),
+                                          np.logical_not(flag))
+
+                # No flags
+                if not np.any(ind2flag):
+                    continue
+
+                i2flag = i[ind2flag]
+                j2flag = j[ind2flag]
+
+                # Add new flag commands to flag the data underlying
+                # the view.
+                flagcoords = zip(xdata[i2flag], ydata[j2flag])
+                for flagcoord in flagcoords:
+                    newflags.append(arrayflaggerbase.FlagCmd(
+                        reason='nmedian', filename=table, rulename=rulename, spw=spw, axisnames=[xtitle, ytitle],
+                        flagcoords=flagcoord, pol=pol, extendfields=self.inputs.extendfields,
+                        antenna_id_to_name=antenna_id_to_name))
+
+                # Flag the view, for any subsequent rules being evaluated.
+                flag[i2flag, j2flag] = True
+                flag_reason[i2flag, j2flag] = self.flag_reason_index[rulename]
+
+            elif rulename == 'bad antenna':
+                # this test should be run before the others as it depends on no other
+                # flags having been set by other rules before it
+                # (because the number of unflagged points on entry are part of the test)
+
+                # Stop evaluating rule if all data is flagged or if the x-axis is not for antenna.
+                if np.all(flag) or 'ANTENNA' not in xtitle.upper():
+                    continue
+
+                # Check limits.
+                mad_max = rule['lo_limit']
+                frac_limit = rule['frac_limit']
+                number_limit = rule['number_limit']
+                minsample = rule['minsample']
+
+                # For every antenna on the x-axis...
+                for iant in range(np.shape(flag)[0]):
+                    # For current antenna, create references to the
+                    # corresponding column in data, flag, and flag_reason.
+                    ant_data = data[iant, :]
+                    ant_flag = flag[iant, :]
+                    ant_flag_reason = flag_reason[iant, :]
+
+                    # Identify valid (non-flagged) data.
+                    valid_ant_data = ant_data[np.logical_not(ant_flag)]
+
+                    # If the sample of unflagged datapoints is smaller than
+                    # the minimum threshold, skip this antenna.
+                    if len(valid_ant_data) < minsample:
                         continue
 
-                    # Check limits.
-                    mad_max = rule['limit']
-
                     # Create masked array with flagged data masked.
-                    data_masked = np.ma.array(np.abs(data - data_median), mask=flag)
+                    ant_data_masked = np.ma.array(data_median - ant_data, mask=ant_flag)
 
                     # Create new masked array from masked array with outliers
                     # masked. This should avoid performing a comparison with
                     # flagged data that could include NaNs (that would cause a
                     # RuntimeWarning).
-                    data_masked = np.ma.masked_greater(data_masked, mad_max * data_mad)
+                    ant_data_masked = np.ma.masked_greater(ant_data_masked, mad_max * data_mad)
 
                     # Get indices to flag as the masked elements that were not
                     # already flagged, i.e. the newly masked elements.
-                    ind2flag = np.logical_and(np.ma.getmask(data_masked),
-                                              np.logical_not(flag))
+                    ind2flag = np.logical_and(np.ma.getmask(ant_data_masked),
+                                              np.logical_not(ant_flag))
 
-                    # No flagged data.
+                    # If no low outliers were found, skip this antenna.
                     if len(ind2flag) <= 0:
                         continue
 
-                    i2flag = i[ind2flag]
-                    j2flag = j[ind2flag]
+                    j2flag_lo = j[iant, :][ind2flag]
 
-                    # Add new flag command to flag data underlying the
-                    # view.
-                    flagcoords = zip(xdata[i2flag], ydata[j2flag])
-                    for flagcoord in flagcoords:
-                        newflags.append(arrayflaggerbase.FlagCmd(
-                            reason='outlier',
-                            filename=table, rulename=rulename,
-                            spw=spw, antenna=antenna,
-                            axisnames=[xtitle, ytitle],
-                            flagcoords=flagcoord, pol=pol,
-                            antenna_id_to_name=antenna_id_to_name))
-  
-                    # Flag the view.
-                    flag[i2flag, j2flag] = True
-                    flag_reason[i2flag, j2flag] = \
-                        self.flag_reason_index[rulename]
+                    # Determine number of points found to be low outliers that
+                    # were not previously flagged.
+                    nflags = len(j2flag_lo)
 
-                elif rulename == 'low outlier':
+                    # Determine fraction of newly found low outliers over
+                    # total number of data points in current antenna data
+                    # selection.
+                    flagsfrac = float(nflags) / float(np.shape(ant_flag)[0])
 
-                    # Sample too small
-                    minsample = rule['minsample']
-                    if len(valid_data) < minsample:
-                        continue
+                    # If the number of newly found low outliers equals-or-exceeds
+                    # a minimum threshold number, and the fraction of newly
+                    # found flags exceeds a minimum threshold fraction, then
+                    # proceed with actually generating flagging commands.
+                    if nflags >= number_limit or flagsfrac > frac_limit:
 
-                    # Check limits.
-                    mad_max = rule['limit']
+                        # If we get here, then a sufficient number and
+                        # fraction of low outliers were identified for
+                        # the current antenna, such that the antenna is
+                        # considered "bad" and should be flagged entirely.
 
-                    # Create masked array with flagged data masked.
-                    data_masked = np.ma.array(data_median - data, mask=flag)
+                        # In this case, the low outlier data points are
+                        # explicitly flagged as "low outlier", while the
+                        # remaining non-flagged data points for this antenna
+                        # are flagged as "bad antenna".
 
-                    # Create new masked array from masked array with outliers
-                    # masked. This should avoid performing a comparison with
-                    # flagged data that could include NaNs (that would cause a
-                    # RuntimeWarning).
-                    data_masked = np.ma.masked_greater(data_masked, mad_max * data_mad)
+                        # For current antenna data selection, flag the points
+                        # that were identified to be low outliers and not
+                        # already flagged, and set corresponding flag reason.
+                        ant_flag[j2flag_lo] = True
+                        ant_flag_reason[j2flag_lo] =\
+                            self.flag_reason_index['low outlier']
 
-                    # Get indices to flag as the masked elements that were not
-                    # already flagged, i.e. the newly masked elements.
-                    ind2flag = np.logical_and(np.ma.getmask(data_masked),
-                                              np.logical_not(flag))
-                    # No flagged data.
-                    if len(ind2flag) <= 0:
-                        continue
+                        # Create a flagging command that flags these
+                        # low outliers in the data.
+                        flagcoords = zip(xdata[[iant]], ydata[j2flag_lo])
+                        for flagcoord in flagcoords:
+                            newflags.append(arrayflaggerbase.FlagCmd(
+                                reason='low outlier', filename=table, rulename='low outlier', spw=spw, pol=pol,
+                                axisnames=[xtitle, ytitle], flagcoords=flagcoord,
+                                antenna_id_to_name=antenna_id_to_name))
 
-                    i2flag = i[ind2flag]
-                    j2flag = j[ind2flag]
+                        # For current antenna data selection, identify the
+                        # remaining non-flagged data points.
+                        j2flag_bad = j[iant, :][np.logical_not(ant_flag)]
 
-                    # Add new flag commands to flag data underlying the
-                    # view.
-                    flagcoords = zip(xdata[i2flag], ydata[j2flag])
-                    for flagcoord in flagcoords:
-                        newflags.append(arrayflaggerbase.FlagCmd(
-                            reason='low_outlier',
-                            filename=table, rulename=rulename,
-                            spw=spw, axisnames=[xtitle, ytitle],
-                            flagcoords=flagcoord, pol=pol,
-                            antenna_id_to_name=antenna_id_to_name))
+                        # Flag the remaining non-flagged data points as
+                        # "bad antenna"; these are references to original view
+                        # which is thus updated for any subsequent rules being evaluated.
+                        ant_flag[j2flag_bad] = True
+                        ant_flag_reason[j2flag_bad] = self.flag_reason_index['bad antenna']
 
-                    # Flag the view.
-                    flag[i2flag, j2flag] = True
-                    flag_reason[i2flag, j2flag] =\
-                        self.flag_reason_index[rulename]
+                        # Create a flagging command that flags the remaining
+                        # data points as "bad antenna".
+                        flagcoords = zip(xdata[[iant]], ydata[j2flag_bad])
+                        for flagcoord in flagcoords:
+                            newflags.append(arrayflaggerbase.FlagCmd(
+                                reason='bad antenna', filename=table, rulename='bad antenna', spw=spw, pol=pol,
+                                axisnames=[xtitle, ytitle], flagcoords=flagcoord,
+                                antenna_id_to_name=antenna_id_to_name))
 
-                elif rulename == 'high outlier':
+            elif rulename == 'bad quadrant':
+                # this test should be run before the others as it depends on no other
+                # flags having been set by other rules before it
+                # (because the number of unflagged points on entry are part of the test)
 
-                    # Sample too small
-                    minsample = rule['minsample']
-                    if len(valid_data) < minsample:
-                        continue
+                # a quadrant is one quarter of the extent of the x-axis
 
-                    # Check limits.
-                    mad_max = rule['limit']
+                # Stop evaluating rule if all data is flagged.
+                if np.all(flag):
+                    continue
 
-                    # Create masked array with flagged data masked.
-                    data_masked = np.ma.array(data - data_median, mask=flag)
+                # Check limits.
+                hilo_limit = rule['hilo_limit']
+                frac_limit = rule['frac_limit']
+                baseline_frac_limit = rule['baseline_frac_limit']
 
-                    # Create new masked array from masked array with outliers
-                    # masked. This should avoid performing a comparison with
-                    # flagged data that could include NaNs (that would cause a
-                    # RuntimeWarning).
-                    data_masked = np.ma.masked_greater(data_masked, mad_max * data_mad)
+                # find outlier flags first
+                # Create masked array with flagged data masked.
+                data_masked = np.ma.array(np.abs(data - data_median), mask=flag)
 
-                    # Get indices to flag as the masked elements that were not
-                    # already flagged, i.e. the newly masked elements.
-                    ind2flag = np.logical_and(np.ma.getmask(data_masked),
-                                              np.logical_not(flag))
-                    # No flags
-                    if len(ind2flag) <= 0:
-                        continue
+                # Create new masked array from masked array with outliers
+                # masked. This should avoid performing a comparison with
+                # flagged data that could include NaNs (that would cause a
+                # RuntimeWarning).
+                data_masked = np.ma.masked_greater(data_masked, hilo_limit * data_mad)
 
-                    i2flag = i[ind2flag]
-                    j2flag = j[ind2flag]
+                # Get indices to flag as the masked elements that were not
+                # already flagged, i.e. the newly masked elements.
+                ind2flag = np.logical_and(np.ma.getmask(data_masked),
+                                          np.logical_not(flag))
 
-                    # Add new flag commands to flag data underlying the
-                    # view.
-                    flagcoords = zip(xdata[i2flag], ydata[j2flag])
-                    for flagcoord in flagcoords:
-                        newflags.append(arrayflaggerbase.FlagCmd(
-                          reason='high_outlier',
-                          filename=table, rulename=rulename,
-                          spw=spw, axisnames=[xtitle, ytitle],
-                          flagcoords=flagcoord, pol=pol,
-                          antenna_id_to_name=antenna_id_to_name))
+                # No flagged data.
+                if len(ind2flag) <= 0:
+                    continue
 
-                    # Flag the view.
-                    flag[i2flag, j2flag] = True
-                    flag_reason[i2flag, j2flag] =\
-                        self.flag_reason_index[rulename]
+                i2flag = i[ind2flag]
+                j2flag = j[ind2flag]
 
-                elif rulename == 'min abs':
+                # have to be careful here not to corrupt the data view
+                # as we go through it testing for bad quadrant/antenna.
+                # Make a copy of the view flags and go though these
+                # one antenna at a time testing for bad quadrant.
+                # If bad, copy 'outlier' and 'bad quadrant' flags to
+                # original view. 'unflagged_flag_copy' is a copy
+                # of the flags made before the 'outlier' flags are
+                # applied - it is used to estimate how many
+                # _additional_ points have been flagged.
+                unflagged_flag_copy = np.copy(flag)
+                flag_copy = np.copy(flag)
+                flag_reason_copy = np.copy(flag_reason)
+                flag_copy[i2flag, j2flag] = True
+                flag_reason_copy[i2flag, j2flag] = self.flag_reason_index['outlier']
 
-                    # Check limits.
-                    limit = rule['limit']
+                # look for bad antenna/quadrants in view copy
+                data_shape = np.shape(data)
+                nchan = data_shape[0]
+                nbaseline = data_shape[1]
+                nant = int(math.sqrt(nbaseline))
 
-                    # Create masked array with flagged data masked.
-                    data_masked = np.ma.array(np.abs(data), mask=flag)
+                quadrant = [
+                    [0, nchan/4],
+                    [nchan/4, nchan/2],
+                    [nchan/2, nchan*3/4],
+                    [nchan*3/4, nchan],
+                ]
 
-                    # Create new masked array from masked array with outliers
-                    # masked. This should avoid performing a comparison with
-                    # flagged data that could include NaNs (that would cause a
-                    # RuntimeWarning).
-                    data_masked = np.ma.masked_less(data_masked, limit)
+                for ant in range(nant):
+                    # flag based on outliers in flag_copy, will set new flags
+                    # in a further copy so that outlier flags are not corrupted
+                    working_copy_flag = np.copy(flag_copy)
+                    working_copy_flag_reason = np.copy(flag_reason_copy)
 
-                    # Get indices to flag as the masked elements that were not
-                    # already flagged, i.e. the newly masked elements.
-                    ind2flag = np.logical_and(np.ma.getmask(data_masked),
-                                              np.logical_not(flag))
-                    # No flags
-                    if len(ind2flag) <= 0:
-                        continue
+                    # baselines involving this antenna
+                    baselines = [baseline
+                                 for baseline in range(nbaseline)
+                                 if (ant*nant <= baseline < (ant+1)*nant)
+                                 or (baseline % nant == ant)]
+                    baselines = np.array(baselines)
 
-                    i2flag = i[ind2flag]
-                    j2flag = j[ind2flag]
+                    for iquad in range(4):
+                        quad_slice = slice(quadrant[iquad][0], quadrant[iquad][1])
+                        ninvalid = np.count_nonzero(
+                            working_copy_flag[quad_slice, baselines])
+                        ninvalid_on_entry = np.count_nonzero(
+                            unflagged_flag_copy[quad_slice, baselines])
+                        nvalid_on_entry = np.count_nonzero(np.logical_not(
+                            unflagged_flag_copy[quad_slice, baselines]))
+                        if nvalid_on_entry:
+                            frac = float(ninvalid - ninvalid_on_entry) /\
+                                   float(nvalid_on_entry)
+                        else:
+                            frac = 0.0
 
-                    # Add new flag commands to flag data underlying the
-                    # view.
-                    flagcoords = zip(xdata[i2flag], ydata[j2flag])
-                    for flagcoord in flagcoords:
-                        newflags.append(arrayflaggerbase.FlagCmd(
-                            reason='min_abs',
-                            filename=table, rulename=rulename, spw=spw,
-                            axisnames=[xtitle, ytitle],
-                            flagcoords=flagcoord, pol=pol,
-                            antenna_id_to_name=antenna_id_to_name))
-
-                    # Flag the view
-                    flag[i2flag, j2flag] = True
-                    flag_reason[i2flag, j2flag] =\
-                        self.flag_reason_index[rulename]
-
-                elif rulename == 'max abs':
-
-                    # Check limits.
-                    limit = rule['limit']
-
-                    # Create masked array with flagged data masked.
-                    data_masked = np.ma.array(np.abs(data), mask=flag)
-
-                    # Create new masked array from masked array with outliers
-                    # masked. This should avoid performing a comparison with
-                    # flagged data that could include NaNs (that would cause a
-                    # RuntimeWarning).
-                    data_masked = np.ma.masked_greater(data_masked, limit)
-
-                    # Get indices to flag as the masked elements that were not
-                    # already flagged, i.e. the newly masked elements.
-                    ind2flag = np.logical_and(np.ma.getmask(data_masked),
-                                              np.logical_not(flag))
-
-                    # No flags
-                    if len(ind2flag) <= 0:
-                        continue
-
-                    i2flag = i[ind2flag]
-                    j2flag = j[ind2flag]
-
-                    # Add new flag commands to flag data underlying the
-                    # view.
-                    flagcoords = zip(xdata[i2flag], ydata[j2flag])
-                    for flagcoord in flagcoords:
-                        newflags.append(arrayflaggerbase.FlagCmd(
-                            reason='max_abs',
-                            filename=table, rulename=rulename,
-                            spw=spw, axisnames=[xtitle, ytitle],
-                            flagcoords=flagcoord, pol=pol,
-                            extendfields=self.inputs.extendfields,
-                            antenna_id_to_name=antenna_id_to_name))
-
-                    # Flag the view
-                    flag[i2flag, j2flag] = True
-                    flag_reason[i2flag, j2flag] =\
-                        self.flag_reason_index[rulename]
-
-                elif rulename == 'too many flags':
- 
-                    maxfraction = rule['limit']
-                    maxexcessflags = rule['excess limit']
-                    axis = rule['axis']
-                    axis = axis.upper().strip()
-
-                    if axis == xtitle.upper().strip():
-
-                        # Compute median number flagged
-                        num_flagged = np.zeros([np.shape(data)[1]], np.int)
-                        for iy in np.arange(len(ydata)):
-                            num_flagged[iy] = len(data[:, iy][flag[:, iy]])
-                        median_num_flagged = np.median(num_flagged)
-
-                        # look along x axis
-                        for iy in np.arange(len(ydata)):
-                            if all(flag[:, iy]):
-                                continue
-
-                            # Compute fraction flagged
-                            len_data = len(xdata)
-                            len_no_data = len(data[:, iy][nodata[:, iy]])
-                            len_flagged = len(data[:, iy][flag[:, iy]])
-                            fractionflagged = (
-                              float(len_flagged - len_no_data) /
-                              float(len_data - len_no_data))
-                            if fractionflagged > maxfraction:
-                                i2flag = i[:, iy][np.logical_not(flag[:, iy])]
-                                j2flag = j[:, iy][np.logical_not(flag[:, iy])]
-                            else:
-                                i2flag = np.zeros([0], np.int)
-                                j2flag = np.zeros([0], np.int)
-
-                            # likewise for maxexcessflags
-                            if len_flagged > median_num_flagged + maxexcessflags:
-                                i2flag = np.concatenate((i2flag, i[:, iy][np.logical_not(flag[:, iy])]))
-                                j2flag = np.concatenate((j2flag, j[:, iy][np.logical_not(flag[:, iy])]))
-
-                            # Add new flag commands to flag data underlying 
-                            # the view.
-                            flagcoords = zip(xdata[i2flag], ydata[j2flag])
+                        if frac > frac_limit:
+                            # Add new flag commands to flag the data
+                            # underlying the view. These will flag the entire
+                            # quadrant/antenna. If the quadrant is not
+                            # bad then any 'outlier' points found
+                            # earlier will not be flagged.
+                            flagcoords = []
+                            for chan in range(
+                                    quadrant[iquad][0], quadrant[iquad][1]):
+                                flagcoords.append((chan, ant))
                             for flagcoord in flagcoords:
                                 newflags.append(arrayflaggerbase.FlagCmd(
-                                    reason='too_many_flags',
-                                    filename=table, rulename=rulename,
-                                    spw=spw, antenna=antenna,
-                                    axisnames=[xtitle, ytitle],
-                                    flagcoords=flagcoord, pol=pol,
+                                    reason='bad quadrant', filename=table, rulename=rulename,  spw=spw,
+                                    axisnames=[xtitle, ytitle], flagcoords=flagcoord, pol=pol,
+                                    extendfields=self.inputs.extendfields,
                                     antenna_id_to_name=antenna_id_to_name))
 
-                            # Flag the view
-                            flag[i2flag, j2flag] = True
-                            flag_reason[i2flag, j2flag] =\
-                                self.flag_reason_index[rulename]
+                            # update working copy view with 'bad quadrant' flags
+                            i2flag = i[quad_slice, baselines][
+                                np.logical_not(working_copy_flag[quad_slice, baselines])]
+                            j2flag = j[quad_slice, baselines][
+                                np.logical_not(working_copy_flag[quad_slice, baselines])]
 
-                    elif axis == ytitle.upper().strip():
+                            if len(i2flag) > 0:
+                                working_copy_flag[i2flag, j2flag] = True
+                                working_copy_flag_reason[i2flag, j2flag] =\
+                                    self.flag_reason_index['bad quadrant']
 
-                        # Compute median number flagged
-                        num_flagged = np.zeros([np.shape(data)[0]], np.int)
-                        for ix in np.arange(len(xdata)):
-                            num_flagged[ix] = len(data[ix, :][flag[ix, :]])
-                        median_num_flagged = np.median(num_flagged)
+                            # copy flag state for this antenna
+                            # back to original
+                            flag[quad_slice, baselines] =\
+                                working_copy_flag[quad_slice, baselines]
+                            flag_reason[quad_slice, baselines] =\
+                                working_copy_flag_reason[quad_slice, baselines]
 
-                        # look along y axis
-                        for ix in np.arange(len(xdata)):
-                            if all(flag[ix, :]):
-                                continue
+                            # whole antenna/quadrant flagged, no need to check
+                            # individual baselines
+                            continue
 
-                            len_data = len(ydata)
-                            len_no_data = len(data[ix, :][nodata[ix, :]])
-                            len_flagged = len(data[ix, :][flag[ix, :]])
-                            fractionflagged = (
-                                float(len_flagged - len_no_data) /
-                                float(len_data - len_no_data))
-                            if fractionflagged > maxfraction:
-                                i2flag = i[ix, :][np.logical_not(flag[ix, :])]
-                                j2flag = j[ix, :][np.logical_not(flag[ix, :])]
-                            else:
-                                i2flag = np.zeros([0], np.int)
-                                j2flag = np.zeros([0], np.int)
-
-                            len_flagged = len(data[ix, :][flag[ix, :]])
-                            if len_flagged > median_num_flagged + maxexcessflags:
-                                i2flag = np.concatenate((i2flag, i[ix, :][np.logical_not(flag[ix, :])]))
-                                j2flag = np.concatenate((j2flag, j[ix, :][np.logical_not(flag[ix, :])]))
-
-                            # Add new flag commands to flag data underlying 
-                            # the view.
-                            flagcoords = zip(xdata[i2flag], ydata[j2flag])
-                            for flagcoord in flagcoords:
-                                newflags.append(arrayflaggerbase.FlagCmd(
-                                  reason='too_many_flags',
-                                  filename=table, rulename=rulename, spw=spw,
-                                  axisnames=[xtitle, ytitle],
-                                  flagcoords=flagcoord, pol=pol,
-                                  antenna_id_to_name=antenna_id_to_name))
-
-                            # Flag the view.
-                            flag[i2flag, j2flag] = True
-                            flag_reason[i2flag, j2flag] =\
-                                self.flag_reason_index[rulename]
-
-                elif rulename == 'too many entirely flagged':
- 
-                    maxfraction = rule['limit']
-                    axis = rule['axis']
-                    axis = axis.upper().strip()
-
-                    # if flagging for each element on x-axis (i.e. evaluate column by column)
-                    if axis == xtitle.upper().strip():
-                        
-                        # Determine fraction of columns that are entirely flagged
-                        frac_ef = np.count_nonzero(np.all(flag, axis=1)) / float(flag.shape[0])
-
-                        # If the fraction of "entirely flagged" columns exceeds the limit, then
-                        # all non-flagged data will need to be flagged.
-                        if frac_ef > maxfraction:
-                            
-                            # Indices to flag are all those that are currently not flagged
-                            i2flag = i[np.logical_not(flag)]
-                            j2flag = j[np.logical_not(flag)]
-                            
-                            # Add new flag commands to flag data underlying 
-                            # the view.
-                            flagcoords = zip(xdata[i2flag], ydata[j2flag])
-                            for flagcoord in flagcoords:
-                                newflags.append(arrayflaggerbase.FlagCmd(
-                                    reason='too_many_flags',
-                                    filename=table, rulename=rulename,
-                                    spw=spw, antenna=antenna,
-                                    axisnames=[xtitle, ytitle],
-                                    flagcoords=flagcoord, pol=pol,
-                                    antenna_id_to_name=antenna_id_to_name))
-
-                            # Flag the view
-                            flag[i2flag, j2flag] = True
-                            flag_reason[i2flag, j2flag] =\
-                                self.flag_reason_index[rulename]
-                
-                elif rulename == 'nmedian':
-
-                    # Check for valid median
-                    if data_median is None:
-                        continue
-
-                    # Check limits.
-                    lo_limit = rule['lo_limit']
-                    hi_limit = rule['hi_limit']
-
-                    # Create masked array with flagged data masked.
-                    data_masked = np.ma.array(data, mask=flag)
-
-                    # Create new masked array from masked array with outliers
-                    # masked. This should avoid performing a comparison with
-                    # flagged data that could include NaNs (that would cause a
-                    # RuntimeWarning).
-                    data_masked = np.ma.masked_greater(data_masked, hi_limit * data_median)
-                    data_masked = np.ma.masked_less(data_masked, lo_limit * data_median)
-
-                    # Get indices to flag as the masked elements that were not
-                    # already flagged, i.e. the newly masked elements.
-                    ind2flag = np.logical_and(np.ma.getmask(data_masked),
-                                              np.logical_not(flag))
-
-                    # No flags
-                    if len(ind2flag) <= 0:
-                        continue
-
-                    i2flag = i[ind2flag]
-                    j2flag = j[ind2flag]
-
-                    # Add new flag commands to flag the data underlying
-                    # the view.
-                    flagcoords = zip(xdata[i2flag], ydata[j2flag])
-                    for flagcoord in flagcoords:
-                        newflags.append(arrayflaggerbase.FlagCmd(
-                            reason='nmedian',
-                            filename=table, rulename=rulename,
-                            spw=spw, axisnames=[xtitle, ytitle],
-                            flagcoords=flagcoord, pol=pol,
-                            extendfields=self.inputs.extendfields,
-                            antenna_id_to_name=antenna_id_to_name))
-
-                    # Flag the view.
-                    flag[i2flag, j2flag] = True
-                    flag_reason[i2flag, j2flag] =\
-                        self.flag_reason_index[rulename]
-
-                elif rulename == 'bad antenna':
-                    # this test should be run before the others 
-                    # as it depends on no other
-                    # flags having been set by other rules before it
-                    # (because the number of unflagged points
-                    # on entry are part of the test)
-
-                    # Check limits.
-                    mad_max = rule['lo_limit']
-                    frac_limit = rule['frac_limit']
-                    number_limit = rule['number_limit']
-                    minsample = rule['minsample']
-
-                    # Only continue if the x-axis is for antenna.
-                    if 'ANTENNA' in xtitle.upper():
-
-                        # For every antenna on the x-axis...
-                        for iant in range(np.shape(flag)[0]):
-                            # For current antenna, create references to the 
-                            # corresponding column in data, flag, and flag_reason.
-                            ant_data = data[iant, :]
-                            ant_flag = flag[iant, :]
-                            ant_flag_reason = flag_reason[iant, :]
-
-                            # Identify valid (non-flagged) data. 
-                            valid_ant_data = ant_data[np.logical_not(ant_flag)]
-
-                            # If the sample of unflagged datapoints is smaller than 
-                            # the minimum threshold, skip this antenna.
-                            if len(valid_ant_data) < minsample:
-                                continue
-
-                            # Create masked array with flagged data masked.
-                            ant_data_masked = np.ma.array(data_median - ant_data, mask=ant_flag)
-
-                            # Create new masked array from masked array with outliers
-                            # masked. This should avoid performing a comparison with
-                            # flagged data that could include NaNs (that would cause a
-                            # RuntimeWarning).
-                            ant_data_masked = np.ma.masked_greater(ant_data_masked, mad_max * data_mad)
-
-                            # Get indices to flag as the masked elements that were not
-                            # already flagged, i.e. the newly masked elements.
-                            ind2flag = np.logical_and(np.ma.getmask(ant_data_masked),
-                                                      np.logical_not(ant_flag))
-
-                            # If no low outliers were found, skip this antenna.
-                            if len(ind2flag) <= 0:
-                                continue
-
-                            j2flag_lo = j[iant, :][ind2flag]
-
-                            # Determine number of points found to be low outliers that
-                            # were not previously flagged. 
-                            nflags = len(j2flag_lo)
-                            
-                            # Determine fraction of newly found low outliers over 
-                            # total number of data points in current antenna data 
-                            # selection.
-                            flagsfrac = float(nflags) / float(np.shape(ant_flag)[0])
-
-                            # If the number of newly found low outliers equals-or-exceeds
-                            # a minimum threshold number, and the fraction of newly 
-                            # found flags exceeds a minimum threshold fraction, then 
-                            # proceed with actually generating flagging commands.
-                            if nflags >= number_limit \
-                                    or flagsfrac > frac_limit:
-
-                                # If we get here, then a sufficient number and 
-                                # fraction of low outliers were identified for 
-                                # the current antenna, such that the antenna is 
-                                # considered "bad" and should be flagged entirely.
-                                
-                                # In this case, the low outlier data points are 
-                                # explicitly flagged as "low outlier", while the 
-                                # remaining non-flagged data points for this antenna 
-                                # are flagged as "bad antenna".
-                                
-                                # For current antenna data selection, flag the points
-                                # that were identified to be low outliers and not
-                                # already flagged, and set corresponding flag reason.
-                                ant_flag[j2flag_lo] = True
-                                ant_flag_reason[j2flag_lo] =\
-                                    self.flag_reason_index['low outlier']
-                                  
-                                # Create a flagging command that flags these 
-                                # low outliers in the data.
-                                flagcoords = zip(xdata[[iant]], ydata[j2flag_lo])
-                                for flagcoord in flagcoords:
-                                    newflags.append(arrayflaggerbase.FlagCmd(
-                                        reason='low outlier', filename=table,
-                                        rulename='low outlier', spw=spw, pol=pol,
-                                        axisnames=[xtitle, ytitle], flagcoords=flagcoord,
-                                        antenna_id_to_name=antenna_id_to_name))
-
-                                # For current antenna data selection, identify the 
-                                # remaining non-flagged data points.
-                                j2flag_bad = j[iant, :][np.logical_not(ant_flag)]
-
-                                # Flag the remaining non-flagged data points as
-                                # "bad antenna". 
-                                ant_flag[j2flag_bad] = True
-                                ant_flag_reason[j2flag_bad] =\
-                                    self.flag_reason_index['bad antenna']
-
-                                # Create a flagging command that flags the remaining
-                                # data points as "bad antenna". 
-                                flagcoords = zip(xdata[[iant]], ydata[j2flag_bad])
-                                for flagcoord in flagcoords:
-                                    newflags.append(arrayflaggerbase.FlagCmd(
-                                        reason='bad antenna', filename=table,
-                                        rulename='bad antenna', spw=spw, pol=pol,
-                                        axisnames=[xtitle, ytitle], flagcoords=flagcoord,
-                                        antenna_id_to_name=antenna_id_to_name))
-
-                elif rulename == 'bad quadrant':
-                    # this test should be run before the others 
-                    # as it depends on no other
-                    # flags having been set by other rules before it
-                    # (because the number of unflagged points
-                    # on entry are part of the test)
-
-                    # a quadrant is one quarter of the extent of the x-axis
-
-                    # Check limits.
-                    hilo_limit = rule['hilo_limit']
-                    frac_limit = rule['frac_limit']
-                    baseline_frac_limit = rule['baseline_frac_limit']
-
-                    # find outlier flags first
-                    # Create masked array with flagged data masked.
-                    data_masked = np.ma.array(np.abs(data - data_median), mask=flag)
-
-                    # Create new masked array from masked array with outliers
-                    # masked. This should avoid performing a comparison with
-                    # flagged data that could include NaNs (that would cause a
-                    # RuntimeWarning).
-                    data_masked = np.ma.masked_greater(data_masked, hilo_limit * data_mad)
-
-                    # Get indices to flag as the masked elements that were not
-                    # already flagged, i.e. the newly masked elements.
-                    ind2flag = np.logical_and(np.ma.getmask(data_masked),
-                                              np.logical_not(flag))
-
-                    # No flagged data.
-                    if len(ind2flag) <= 0:
-                        continue
-
-                    i2flag = i[ind2flag]
-                    j2flag = j[ind2flag]
-
-                    # have to be careful here not to corrupt the data view
-                    # as we go through it testing for bad quadrant/antenna.
-                    # Make a copy of the view flags and go though these
-                    # one antenna at a time testing for bad quadrant.
-                    # If bad, copy 'outlier' and 'bad quadrant' flags to
-                    # original view. 'unflagged_flag_copy' is a copy
-                    # of the flags made before the 'outlier' flags are
-                    # applied - it is used to estimate how many 
-                    # _additional_ points have been flagged.
-                    unflagged_flag_copy = np.copy(flag)
-                    flag_copy = np.copy(flag)
-                    flag_reason_copy = np.copy(flag_reason)
-                    flag_copy[i2flag, j2flag] = True
-                    flag_reason_copy[i2flag, j2flag] = self.flag_reason_index['outlier']
-
-                    # look for bad antenna/quadrants in view copy
-                    data_shape = np.shape(data)
-                    nchan = data_shape[0]
-                    nbaseline = data_shape[1]
-                    nant = int(math.sqrt(nbaseline))
-
-                    quadrant = [
-                        [0, nchan/4],
-                        [nchan/4, nchan/2],
-                        [nchan/2, nchan*3/4],
-                        [nchan*3/4, nchan],
-                    ]
-                    
-                    for ant in range(nant):
-                        # flag based on outliers in flag_copy, will set new flags
-                        # in a further copy so that outlier flags are not corrupted
-                        working_copy_flag = np.copy(flag_copy)
-                        working_copy_flag_reason = np.copy(flag_reason_copy)
-
-                        # baselines involving this antenna
-                        baselines = [baseline
-                                     for baseline in range(nbaseline)
-                                     if (ant*nant <= baseline < (ant+1)*nant)
-                                     or (baseline % nant == ant)]
-                        baselines = np.array(baselines)
-
-                        for iquad in range(4):
-                            quad_slice = slice(quadrant[iquad][0], quadrant[iquad][1])
+                        # look for bad quadrant/baseline
+                        for baseline in baselines:
                             ninvalid = np.count_nonzero(
-                                working_copy_flag[quad_slice, baselines])
+                                working_copy_flag[quad_slice, baseline])
                             ninvalid_on_entry = np.count_nonzero(
-                                unflagged_flag_copy[quad_slice, baselines])
-                            nvalid_on_entry = np.count_nonzero(np.logical_not(
-                                unflagged_flag_copy[quad_slice, baselines]))
+                                unflagged_flag_copy[quad_slice, baseline])
+                            nvalid_on_entry = np.count_nonzero(
+                                np.logical_not(unflagged_flag_copy[quad_slice, baseline]))
                             if nvalid_on_entry:
                                 frac = float(ninvalid - ninvalid_on_entry) /\
-                                       float(nvalid_on_entry)
+                                  float(nvalid_on_entry)
                             else:
                                 frac = 0.0
 
-                            if frac > frac_limit:
-                                # Add new flag commands to flag the data 
-                                # underlying the view. These will flag the entire 
-                                # quadrant/antenna. If the quadrant is not
+                            if frac > baseline_frac_limit:
+
+                                # Add new flag commands to flag the data
+                                # underlying the view. These will flag the entire
+                                # quadrant/baseline. If the quadrant is not
                                 # bad then any 'outlier' points found
                                 # earlier will not be flagged.
                                 flagcoords = []
                                 for chan in range(
                                         quadrant[iquad][0], quadrant[iquad][1]):
-                                    flagcoords.append((chan, ant))
+                                    flagcoords.append((chan, ydata[baseline]))
+
                                 for flagcoord in flagcoords:
                                     newflags.append(arrayflaggerbase.FlagCmd(
-                                        reason='bad quadrant',
-                                        filename=table, rulename=rulename,
-                                        spw=spw, axisnames=[xtitle, ytitle],
-                                        flagcoords=flagcoord, pol=pol,
-                                        extendfields=self.inputs.extendfields,
-                                        antenna_id_to_name=antenna_id_to_name))
+                                        reason='bad quadrant', filename=table, rulename=rulename, spw=spw,
+                                        axisnames=[xtitle, ytitle], flagcoords=flagcoord, pol=pol,
+                                        extendfields=self.inputs.extendfields, antenna_id_to_name=antenna_id_to_name))
 
-                                # update working copy view with 'bad quadrant' flags 
-                                i2flag = i[quad_slice, baselines][
-                                    np.logical_not(working_copy_flag[quad_slice, baselines])]
-                                j2flag = j[quad_slice, baselines][
-                                    np.logical_not(working_copy_flag[quad_slice, baselines])]
+                                # update working copy view with 'bad quadrant' flags
+                                i2flag = i[quad_slice, baseline][
+                                    np.logical_not(working_copy_flag[quad_slice, baseline])]
+                                j2flag = j[quad_slice, baseline][
+                                    np.logical_not(working_copy_flag[quad_slice, baseline])]
 
                                 if len(i2flag) > 0:
                                     working_copy_flag[i2flag, j2flag] = True
                                     working_copy_flag_reason[i2flag, j2flag] =\
                                         self.flag_reason_index['bad quadrant']
- 
-                                # copy flag state for this antenna 
-                                # back to original
-                                flag[quad_slice, baselines] =\
-                                    working_copy_flag[quad_slice, baselines]
-                                flag_reason[quad_slice, baselines] =\
-                                    working_copy_flag_reason[quad_slice, baselines]
 
-                                # whole antenna/quadrant flagged, no need to check 
-                                # individual baselines
-                                continue
+                                # copy flag state for this antenna back to original,
+                                # for any subsequent rules being evaluated.
+                                flag[quad_slice, baseline] = \
+                                    working_copy_flag[quad_slice, baseline]
+                                flag_reason[quad_slice, baseline] = \
+                                    working_copy_flag_reason[quad_slice, baseline]
 
-                            # look for bad quadrant/baseline
-                            for baseline in baselines:
-                                ninvalid = np.count_nonzero(
-                                    working_copy_flag[quad_slice, baseline])
-                                ninvalid_on_entry = np.count_nonzero(
-                                    unflagged_flag_copy[quad_slice, baseline])
-                                nvalid_on_entry = np.count_nonzero(
-                                    np.logical_not(unflagged_flag_copy[quad_slice, baseline]))
-                                if nvalid_on_entry:
-                                    frac = float(ninvalid - ninvalid_on_entry) /\
-                                      float(nvalid_on_entry)
-                                else:
-                                    frac = 0.0
-
-                                if frac > baseline_frac_limit:
-
-                                    # Add new flag commands to flag the data 
-                                    # underlying the view. These will flag the entire 
-                                    # quadrant/baseline. If the quadrant is not
-                                    # bad then any 'outlier' points found
-                                    # earlier will not be flagged.
-                                    flagcoords = []
-                                    for chan in range(
-                                            quadrant[iquad][0], quadrant[iquad][1]):
-                                        flagcoords.append((chan, ydata[baseline]))
-
-                                    for flagcoord in flagcoords:
-                                        newflags.append(arrayflaggerbase.FlagCmd(
-                                            reason='bad quadrant',
-                                            filename=table, rulename=rulename,
-                                            spw=spw, axisnames=[xtitle, ytitle],
-                                            flagcoords=flagcoord, pol=pol,
-                                            extendfields=self.inputs.extendfields,
-                                            antenna_id_to_name=antenna_id_to_name))
-
-                                    # update working copy view with 'bad quadrant' flags 
-                                    i2flag = i[quad_slice, baseline][
-                                        np.logical_not(working_copy_flag[quad_slice, baseline])]
-                                    j2flag = j[quad_slice, baseline][
-                                        np.logical_not(working_copy_flag[quad_slice, baseline])]
-
-                                    if len(i2flag) > 0:
-                                        working_copy_flag[i2flag, j2flag] = True
-                                        working_copy_flag_reason[i2flag, j2flag] =\
-                                            self.flag_reason_index['bad quadrant']
-
-                                    # copy flag state for this antenna 
-                                    # back to original
-                                    flag[quad_slice, baseline] = \
-                                        working_copy_flag[quad_slice, baseline]
-                                    flag_reason[quad_slice, baseline] = \
-                                        working_copy_flag_reason[quad_slice, baseline]
-
-                else:           
-                    raise NameError('bad rule: %s' % rule)
+            else:
+                raise NameError('bad rule: %s' % rule)
 
         # consolidate flagcmds that specify individual channels into fewer
         # flagcmds that specify ranges
@@ -1482,7 +1460,10 @@ class VectorFlagger(basetask.StandardTaskTemplate):
         # Run flag setting task
         flagsetterresult = self._executor.execute(self.inputs.flagsettertask)
 
-        # Initialize "before" and/or "after" summaries.
+        # Initialize "before" and/or "after" summaries. If "real" flagsetter
+        # results are returned (e.g. by WvrgcalFlagSetter), then there will
+        # have been no real flagging summaries created, in which case empty
+        # dictionaries will be returned as empty flagging summaries.
         stats_before = {}
         stats_after = {}
 
@@ -1502,12 +1483,6 @@ class VectorFlagger(basetask.StandardTaskTemplate):
                     stats_before = flagsetterresult.results[0]
                 if flagsetterresult.results[0]['name'] == 'after':
                     stats_after = flagsetterresult.results[0]
-        # In the alternate case, where no "real" flagsetter results were
-        # returned (e.g. by WvrgcalFlagSetter), then there will have been no
-        # real flagging summaries created, in which case empty dictionaries
-        # are returned as empty summaries.
-        else:
-            pass
 
         return stats_before, stats_after
 
@@ -1571,6 +1546,13 @@ class VectorFlagger(basetask.StandardTaskTemplate):
             antenna = antenna[0]
         table = vector.filename
 
+        # Initialize flags
+        newflags = []
+
+        # If there is no valid (non-flagged) data, then return early.
+        if np.all(flag):
+            return newflags
+
         # If requested to use antenna names instead of IDs antenna,
         # create an id-to-name translation and check to make sure this
         # would result in unique non-empty names for all IDs, otherwise
@@ -1600,303 +1582,288 @@ class VectorFlagger(basetask.StandardTaskTemplate):
         if antenna is not None:
             axisnames.append('ANTENNA1')
             flagcoords.append(antenna)
+        axisnames = ['channels']
 
-        # Initialize flags
-        newflags = []
-
+        # Create flattened 1D views of data and flags, with corresponding
+        # channels array. TODO: this should be unnecessary, as VectorFlagger
+        # expects 1D arrays as input.
         rdata = np.ravel(data)
         rflag = np.ravel(flag)
         valid_data = rdata[np.logical_not(rflag)]
 
-        # If there is valid data (non-flagged), then proceed with flagging
-        if len(valid_data) > 0:
+        nchannels = len(rdata)
+        channels = np.arange(nchannels)
 
-            # calculate statistics for valid data
-            data_median, data_mad = arrayflaggerbase.median_and_mad(valid_data)
+        # calculate statistics for valid data
+        data_median, data_mad = arrayflaggerbase.median_and_mad(valid_data)
 
-            # flag data according to each rule in turn
-            for rule in self.inputs.rules:
-                rulename = rule['name']
-                if rulename == 'edges':
-                    limit = rule['limit']
-                    if len(valid_data):
+        # flag data according to each rule in turn
+        for rule in self.inputs.rules:
 
-                        # find left edge
-                        left_edge = VectorFlagger._find_small_diff(
-                            rdata, rflag, limit, vector.description)
+            rulename = rule['name']
 
-                        # and right edge
-                        reverse_data = rdata[-1::-1]
-                        reverse_flag = rflag[-1::-1]
-                        right_edge = VectorFlagger._find_small_diff(
-                            reverse_data, reverse_flag, limit, vector.description)
+            if rulename == 'edges':
 
-                        # flag the 'view'
-                        rflag[:left_edge] = True
-                        if right_edge > 0:
-                            rflag[-right_edge:] = True
+                # Stop evaluating rule if all data is flagged.
+                if np.all(flag):
+                    continue
 
-                        # now compose a description of the flagging required on
-                        # the MS
-                        nchannels = len(rdata)
-                        channels = np.arange(nchannels)
-                        channels_flagged = channels[np.logical_or(
-                            channels < left_edge,
-                            channels > (nchannels-1-right_edge))]
+                # Get limits.
+                limit = rule['limit']
 
-                        axisnames = ['channels']
-                        flagcoords = [list(channels_flagged)]
-                        if len(channels_flagged) > 0:
-                            # Add new flag command to flag data underlying the
-                            # view.
-                            newflags.append(arrayflaggerbase.FlagCmd(
-                                reason='edges',
-                                filename=table,
-                                rulename=rulename, spw=spw, axisnames=axisnames,
-                                flagcoords=flagcoords,
-                                antenna_id_to_name=antenna_id_to_name))
+                # find left edge
+                left_edge = VectorFlagger._find_small_diff(
+                    rdata, rflag, limit, vector.description)
 
-                elif rulename == 'min abs':
-                    limit = rule['limit']
-                    if len(valid_data):
+                # and right edge
+                reverse_data = rdata[-1::-1]
+                reverse_flag = rflag[-1::-1]
+                right_edge = VectorFlagger._find_small_diff(
+                    reverse_data, reverse_flag, limit, vector.description)
 
-                        flag_chan = (np.abs(data) < limit) & np.logical_not(flag)
+                # flag the 'view', for any subsequent rules being evaluated.
+                rflag[:left_edge] = True
+                if right_edge > 0:
+                    rflag[-right_edge:] = True
 
-                        # flag the 'view'
-                        rflag[flag_chan] = True
+                # now compose a description of the flagging required on
+                # the MS
+                channels_flagged = channels[np.logical_or(
+                    channels < left_edge,
+                    channels > (nchannels-1-right_edge))]
+                flagcoords = [list(channels_flagged)]
 
-                        # now compose a description of the flagging required on
-                        # the MS
-                        nchannels = len(rdata)
-                        channels = np.arange(nchannels)
-                        channels_flagged = channels[flag_chan]
+                if len(channels_flagged) > 0:
+                    # Add new flag command to flag data underlying the
+                    # view.
+                    newflags.append(arrayflaggerbase.FlagCmd(
+                        reason='edges', filename=table, rulename=rulename, spw=spw, axisnames=axisnames,
+                        flagcoords=flagcoords, antenna_id_to_name=antenna_id_to_name))
 
-                        axisnames = ['channels']
-                        flagcoords = [list(channels_flagged)]
+            elif rulename == 'min abs':
 
-                        if len(channels_flagged) > 0:
-                            # Add new flag command to flag data underlying the
-                            # view.
-                            newflags.append(arrayflaggerbase.FlagCmd(
-                                reason='min_abs',
-                                filename=table, rulename=rulename,
-                                spw=spw, axisnames=axisnames,
-                                flagcoords=flagcoords,
-                                channel_axis=vector.axis,
-                                antenna_id_to_name=antenna_id_to_name))
+                # Stop evaluating rule if all data is flagged.
+                if np.all(flag):
+                    continue
 
-                elif rulename == 'nmedian':
-                    lo_limit = rule['lo_limit']
-                    hi_limit = rule['hi_limit']
-                    if len(valid_data):
+                # Get limits.
+                limit = rule['limit']
 
-                        flag_chan = ((data < np.median(data)*lo_limit) |
-                                     (data > np.median(data)*hi_limit) &
-                                     np.logical_not(flag))
+                flag_chan = (np.abs(data) < limit) & np.logical_not(flag)
 
-                        # flag the 'view'
-                        rflag[flag_chan] = True
+                # flag the 'view'
+                rflag[flag_chan] = True
 
-                        # now compose a description of the flagging required on
-                        # the MS
-                        nchannels = len(rdata)
-                        channels = np.arange(nchannels)
-                        channels_flagged = channels[flag_chan]
+                # now compose a description of the flagging required on
+                # the MS
+                channels_flagged = channels[flag_chan]
+                flagcoords = [list(channels_flagged)]
 
-                        axisnames = ['channels']
-                        flagcoords = [list(channels_flagged)]
+                if len(channels_flagged) > 0:
+                    # Add new flag command to flag data underlying the
+                    # view.
+                    newflags.append(arrayflaggerbase.FlagCmd(
+                        reason='min_abs', filename=table, rulename=rulename, spw=spw, axisnames=axisnames,
+                        flagcoords=flagcoords, channel_axis=vector.axis, antenna_id_to_name=antenna_id_to_name))
 
-                        if len(channels_flagged) > 0:
-                            # Add new flag command to flag data underlying the
-                            # view.
-                            newflags.append(arrayflaggerbase.FlagCmd(
-                                reason='nmedian',
-                                filename=table, rulename=rulename,
-                                spw=spw, axisnames=axisnames,
-                                flagcoords=flagcoords,
-                                channel_axis=vector.axis,
-                                antenna_id_to_name=antenna_id_to_name))
+            elif rulename == 'nmedian':
 
-                elif rulename == 'outlier':
-                    minsample = rule['minsample']
-                    limit = rule['limit']
+                # Stop evaluating rule if all data is flagged.
+                if np.all(flag):
+                    continue
 
-                    # enough data for valid statistics?
-                    if len(valid_data) < minsample:
-                        continue
-  
-                    # get channels to flag
-                    flag_chan = (np.abs(data-data_median) > data_mad*limit) & np.logical_not(flag)
+                # Get limits.
+                lo_limit = rule['lo_limit']
+                hi_limit = rule['hi_limit']
 
-                    # flag the 'view'
-                    rflag[flag_chan] = True
+                flag_chan = ((data < np.median(data)*lo_limit) |
+                             (data > np.median(data)*hi_limit) &
+                             np.logical_not(flag))
+
+                # flag the 'view'
+                rflag[flag_chan] = True
+
+                # now compose a description of the flagging required on
+                # the MS
+                channels_flagged = channels[flag_chan]
+                flagcoords = [list(channels_flagged)]
+
+                if len(channels_flagged) > 0:
+                    # Add new flag command to flag data underlying the
+                    # view.
+                    newflags.append(arrayflaggerbase.FlagCmd(
+                        reason='nmedian', filename=table, rulename=rulename, spw=spw, axisnames=axisnames,
+                        flagcoords=flagcoords, channel_axis=vector.axis, antenna_id_to_name=antenna_id_to_name))
+
+            elif rulename == 'outlier':
+                minsample = rule['minsample']
+                limit = rule['limit']
+
+                # Stop evaluating rule if sample is too small.
+                if len(valid_data) < minsample:
+                    continue
+
+                # get channels to flag
+                flag_chan = (np.abs(data-data_median) > data_mad*limit) & np.logical_not(flag)
+
+                # flag the 'view'
+                rflag[flag_chan] = True
+
+                # now compose a description of the flagging required on
+                # the MS
+                channels_flagged = channels[flag_chan]
+                flagcoords = [list(channels_flagged)]
+
+                if len(channels_flagged) > 0:
+                    # Add new flag command to flag data underlying the
+                    # view.
+                    newflags.append(arrayflaggerbase.FlagCmd(
+                        reason='outlier', filename=table, rulename=rulename, spw=spw, pol=pol, antenna=antenna,
+                        axisnames=axisnames, flagcoords=flagcoords, antenna_id_to_name=antenna_id_to_name))
+
+            elif rulename == 'sharps':
+
+                # Stop evaluating rule if all data is flagged.
+                if np.all(flag):
+                    continue
+
+                # Get limits.
+                limit = rule['limit']
+
+                diff = abs(rdata[1:] - rdata[:-1])
+                diff_flag = (rflag[1:] | rflag[:-1])
+
+                # flag channels whose slope is greater than the
+                # limit for a 'sharp feature'
+                newflag = (diff > limit) & np.logical_not(diff_flag)
+
+                # now broaden the flags until the diff falls below
+                # 2 times the median diff, to catch the wings of
+                # sharp features
+                if np.any([np.logical_not(diff_flag | newflag)]):
+                    median_diff = np.median(
+                        diff[np.logical_not(diff_flag | newflag)])
+                    median_flag = ((diff > 2 * median_diff)
+                                   & np.logical_not(diff_flag))
+                else:
+                    median_flag = newflag
+
+                start = None
+                for i in np.arange(len(median_flag)):
+                    if median_flag[i]:
+                        end = i
+                        if start is None:
+                            start = i
+                    else:
+                        if start is not None:
+                            # have found start and end of a block
+                            # of contiguous True flags. Does the
+                            # block contain a sharp feature? If
+                            # so broaden the sharp feature flags
+                            # to include the whole block
+                            if np.any(newflag[start:end]):
+                                newflag[start:end] = True
+                            start = None
+
+                flag_chan = np.zeros([len(newflag)+1], np.bool)
+                flag_chan[:-1] = newflag
+                flag_chan[1:] = (flag_chan[1:] | newflag)
+
+                # flag the 'view', for any subsequent rules being evaluated.
+                rflag[flag_chan] = True
+
+                # now compose a description of the flagging required on
+                # the MS
+                channels_flagged = channels[flag_chan]
+                flagcoords = [list(channels_flagged)]
+
+                if len(channels_flagged) > 0:
+                    # Add new flag command to flag data underlying the
+                    # view.
+                    newflags.append(arrayflaggerbase.FlagCmd(
+                      reason='sharps', filename=table, rulename=rulename, spw=spw, antenna=antenna, axisnames=axisnames,
+                      flagcoords=flagcoords, antenna_id_to_name=antenna_id_to_name))
+
+            elif rulename == 'diffmad':
+
+                # Stop evaluating rule if all data is flagged.
+                if np.all(flag):
+                    continue
+
+                # Get limits.
+                limit = rule['limit']
+                nchan_limit = rule['nchan_limit']
+
+                diff = rdata[1:] - rdata[:-1]
+                diff_flag = np.logical_or(rflag[1:], rflag[:-1])
+                median_diff = np.median(diff[diff_flag == 0])
+                mad = np.median(np.abs(diff[diff_flag == 0] - median_diff))
+
+                # first, flag channels further from the median than
+                # limit * MAD
+                newflag = (
+                    (abs(diff-median_diff) > limit*mad)
+                    & (diff_flag == 0))
+
+                # second, flag all channels if more than nchan_limit
+                # were flagged by the first stage
+                if np.count_nonzero(newflag) >= nchan_limit:
+                    newflag = np.ones(diff.shape, np.bool)
+
+                # set channels flagged
+                flag_chan = np.zeros([len(newflag)+1], np.bool)
+                flag_chan[:-1] = newflag
+                flag_chan[1:] = np.logical_or(flag_chan[1:], newflag)
+
+                # flag the 'view', for any subsequent rules being evaluated.
+                rflag[flag_chan] = True
+
+                # now compose a description of the flagging required on
+                # the MS
+                channels_flagged = channels[flag_chan]
+                flagcoords = [list(channels_flagged)]
+
+                if len(channels_flagged) > 0:
+                    # Add new flag command to flag data underlying the
+                    # view.
+                    newflags.append(arrayflaggerbase.FlagCmd(
+                        reason='diffmad', filename=table, rulename=rulename, spw=spw, pol=pol, antenna=antenna,
+                        axisnames=axisnames, flagcoords=flagcoords, antenna_id_to_name=antenna_id_to_name))
+
+            elif rulename == 'tmf':
+
+                # Stop evaluating rule if all data is flagged.
+                if np.all(flag):
+                    continue
+
+                # Get limits.
+                frac_limit = rule['frac_limit']
+                nchan_limit = rule['nchan_limit']
+
+                # flag all channels if fraction already flagged
+                # is greater than tmf_limit of total
+                if (float(np.count_nonzero(rflag)) / len(rdata) >= frac_limit or
+                        np.count_nonzero(rflag) >= nchan_limit):
+
+                    newflag = np.logical_not(rflag)
+
+                    # flag the 'view', for any subsequent rules being evaluated.
+                    rflag[newflag] = True
 
                     # now compose a description of the flagging required on
                     # the MS
-                    nchannels = len(rdata)
-                    channels = np.arange(nchannels)
-                    channels_flagged = channels[flag_chan]
-
-                    axisnames = ['channels']
+                    channels_flagged = channels[newflag]
                     flagcoords = [list(channels_flagged)]
 
                     if len(channels_flagged) > 0:
                         # Add new flag command to flag data underlying the
                         # view.
                         newflags.append(arrayflaggerbase.FlagCmd(
-                            reason='outlier',
-                            filename=table, rulename=rulename,
-                            spw=spw, pol=pol, antenna=antenna,
-                            axisnames=axisnames, flagcoords=flagcoords,
-                            antenna_id_to_name=antenna_id_to_name))
+                            reason='tmf', filename=table, rulename=rulename, spw=spw, pol=pol, antenna=antenna,
+                            axisnames=axisnames, flagcoords=flagcoords, antenna_id_to_name=antenna_id_to_name))
 
-                elif rulename == 'sharps':
-                    limit = rule['limit']
-                    if len(valid_data):
-                        diff = abs(rdata[1:] - rdata[:-1])
-                        diff_flag = (rflag[1:] | rflag[:-1])
-
-                        # flag channels whose slope is greater than the 
-                        # limit for a 'sharp feature'
-                        newflag = (diff > limit) & np.logical_not(diff_flag)
-
-                        # now broaden the flags until the diff falls below
-                        # 2 times the median diff, to catch the wings of
-                        # sharp features
-                        if np.any([np.logical_not(diff_flag | newflag)]):
-                            median_diff = np.median(
-                                diff[np.logical_not(diff_flag | newflag)])
-                            median_flag = ((diff > 2 * median_diff)
-                                           & np.logical_not(diff_flag))
-                        else:
-                            median_flag = newflag
-
-                        start = None
-                        for i in np.arange(len(median_flag)):
-                            if median_flag[i]:
-                                end = i
-                                if start is None:
-                                    start = i
-                            else:
-                                if start is not None:
-                                    # have found start and end of a block
-                                    # of contiguous True flags. Does the
-                                    # block contain a sharp feature? If 
-                                    # so broaden the sharp feature flags 
-                                    # to include the whole block
-                                    if np.any(newflag[start:end]):
-                                        newflag[start:end] = True
-                                    start = None
-
-                        flag_chan = np.zeros([len(newflag)+1], np.bool) 
-                        flag_chan[:-1] = newflag
-                        flag_chan[1:] = (flag_chan[1:] | newflag)
-
-                        # flag the 'view'
-                        rflag[flag_chan] = True
-
-                        # now compose a description of the flagging required on
-                        # the MS
-                        nchannels = len(rdata)
-                        channels = np.arange(nchannels)
-                        channels_flagged = channels[flag_chan]
-
-                        axisnames = ['channels']
-                        flagcoords = [list(channels_flagged)]
-
-                        if len(channels_flagged) > 0:
-                            # Add new flag command to flag data underlying the
-                            # view.
-                            newflags.append(arrayflaggerbase.FlagCmd(
-                              reason='sharps',
-                              filename=table,
-                              rulename=rulename,
-                              spw=spw, antenna=antenna, axisnames=axisnames,
-                              flagcoords=flagcoords,
-                              antenna_id_to_name=antenna_id_to_name))
-
-                elif rulename == 'diffmad':
-                    limit = rule['limit']
-                    nchan_limit = rule['nchan_limit']
-                    if len(valid_data):
-                        diff = rdata[1:] - rdata[:-1]
-                        diff_flag = np.logical_or(rflag[1:], rflag[:-1])
-                        median_diff = np.median(diff[diff_flag == 0])
-                        mad = np.median(
-                          np.abs(diff[diff_flag == 0] - median_diff))
-
-                        # first, flag channels further from the median than
-                        # limit * MAD
-                        newflag = (
-                            (abs(diff-median_diff) > limit*mad)
-                            & (diff_flag == 0))
-
-                        # second, flag all channels if more than nchan_limit 
-                        # were flagged by the first stage
-                        if np.count_nonzero(newflag) >= nchan_limit:
-                            newflag = np.ones(diff.shape, np.bool)
-
-                        # set channels flagged 
-                        flag_chan = np.zeros([len(newflag)+1], np.bool) 
-                        flag_chan[:-1] = newflag
-                        flag_chan[1:] = np.logical_or(flag_chan[1:], newflag)
-
-                        # flag the 'view'
-                        rflag[flag_chan] = True
-
-                        # now compose a description of the flagging required on
-                        # the MS
-                        nchannels = len(rdata)
-                        channels = np.arange(nchannels)
-                        channels_flagged = channels[flag_chan]
-
-                        axisnames = ['channels']
-                        flagcoords = [list(channels_flagged)]
-
-                        if len(channels_flagged) > 0:
-                            # Add new flag command to flag data underlying the
-                            # view.
-                            newflags.append(arrayflaggerbase.FlagCmd(
-                              reason='diffmad',
-                              filename=table, rulename=rulename,
-                              spw=spw, pol=pol, antenna=antenna,
-                              axisnames=axisnames, flagcoords=flagcoords,
-                              antenna_id_to_name=antenna_id_to_name))
-
-                elif rulename == 'tmf':
-                    frac_limit = rule['frac_limit']
-                    nchan_limit = rule['nchan_limit']
-                    if len(valid_data):
-                        # flag all channels if fraction already flagged 
-                        # is greater than tmf_limit of total
-                        if (float(np.count_nonzero(rflag)) / len(rdata) >= frac_limit
-                                or np.count_nonzero(rflag) >= nchan_limit):
-                            newflag = np.logical_not(rflag)
-
-                            # flag the 'view'
-                            rflag[newflag] = True
-
-                            # now compose a description of the flagging required on
-                            # the MS
-                            nchannels = len(rdata)
-                            channels = np.arange(nchannels)
-                            channels_flagged = channels[newflag]
-
-                            axisnames = ['channels']
-                            flagcoords = [list(channels_flagged)]
-
-                            if len(channels_flagged) > 0:
-                                # Add new flag command to flag data underlying the
-                                # view.
-                                newflags.append(arrayflaggerbase.FlagCmd(
-                                    reason='tmf',
-                                    filename=table, rulename=rulename,
-                                    spw=spw, pol=pol, antenna=antenna,
-                                    axisnames=axisnames, flagcoords=flagcoords,
-                                    antenna_id_to_name=antenna_id_to_name))
-
-                else:           
-                    raise NameError('bad rule: %s' % rule)
+            else:
+                raise NameError('bad rule: %s' % rule)
 
         return newflags
 
@@ -1921,10 +1888,9 @@ class VectorFlagger(basetask.StandardTaskTemplate):
         nchan = len(mad)
         median_mad = np.median(mad[:nchan/4][np.logical_not(flag[:nchan/4])])
         for i in range(nchan):
-            if not flag[i]:
-                if mad[i] < 2.0 * median_mad:
-                    noise_edge = i
-                    break
+            if not flag[i] and mad[i] < 2.0 * median_mad:
+                noise_edge = i
+                break
 
         return noise_edge
 
