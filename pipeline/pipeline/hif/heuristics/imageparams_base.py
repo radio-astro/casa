@@ -1312,6 +1312,7 @@ class ImageParamsHeuristics(object):
                         center_field_full_spw_sensitivity, eff_ch_bw, sens_bws[intSpw] = self.get_sensitivity(ms, center_field_ids[ms_index], intSpw, chansel_full, specmode, cell, imsize, weighting, robust, uvtaper)
                         channel_flags = self.get_channel_flags(msname, field, intSpw)
                         nchan_unflagged = np.where(channel_flags == False)[0].shape[0]
+                        local_known_sensitivities['recalc'] = True
                         local_known_sensitivities['robust'] = robust
                         local_known_sensitivities['uvtaper'] = uvtaper
                         utils.set_nested_dict(local_known_sensitivities, (os.path.basename(msname), field, intSpw, 'sensitivityAllChans'), '%.3g Jy/beam' % (center_field_full_spw_sensitivity))

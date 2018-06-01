@@ -57,8 +57,7 @@ class MakeImagesResult(basetask.Results):
         # Calculated sensitivities for later stages
         for result in self.results:
             if result.per_spw_cont_sensitivities_all_chan is not None:
-                if result.per_spw_cont_sensitivities_all_chan['robust'] != context.per_spw_cont_sensitivities_all_chan['robust'] or \
-                   result.per_spw_cont_sensitivities_all_chan['uvtaper'] != context.per_spw_cont_sensitivities_all_chan['uvtaper']:
+                if 'recalc' in result.per_spw_cont_sensitivities_all_chan:
                     context.per_spw_cont_sensitivities_all_chan = copy.deepcopy(result.per_spw_cont_sensitivities_all_chan)
                 else:
                     utils.update_sens_dict(context.per_spw_cont_sensitivities_all_chan, result.per_spw_cont_sensitivities_all_chan)

@@ -108,6 +108,11 @@ Compute clean results from a list of specified targets.
     <value>False</value>
   </param>
 
+  <param type="bool" name="calcsens">
+    <description>Force (re-)calculation of sensitivities</description>
+    <value>False</value>
+  </param>
+
   <param type="string" name="parallel">
     <description>Clean images using MPI cluster</description>
     <value>automatic</value>
@@ -258,6 +263,10 @@ hm_minpercentchange -- Mask size change threshold
 cleancontranges -- Clean continuum frequency ranges in cubes
                    default=False
                    Options: False, True
+
+calcsens -- Force (re-)calculation of sensitivities
+            default=False
+            Options: False, True
 
 parallel -- use multiple CPU nodes to clean images
     default: \'automatic\'

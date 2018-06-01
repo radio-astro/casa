@@ -1,10 +1,13 @@
 from __future__ import absolute_import
 
+import copy
+
 import pipeline.domain.measures as measures
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.api as api
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.casatools as casatools
+import pipeline.infrastructure.utils as utils
 import pipeline.infrastructure.imageparamsfilehandler as imageparamsfilehandler
 import pipeline.infrastructure.vdp as vdp
 from pipeline.h.tasks.common.sensitivity import Sensitivity
@@ -51,7 +54,10 @@ class ImagePreCheckResults(basetask.Results):
 
         # Calculated sensitivities for later stages
         if self.per_spw_cont_sensitivities_all_chan is not None:
-            context.per_spw_cont_sensitivities_all_chan = self.per_spw_cont_sensitivities_all_chan
+            if 'recalc' in self.per_spw_cont_sensitivities_all_chan:
+                context.per_spw_cont_sensitivities_all_chan = copy.deepcopy(self.per_spw_cont_sensitivities_all_chan)
+            else:
+                utils.update_sens_dict(context.per_spw_cont_sensitivities_all_chan, self.per_spw_cont_sensitivities_all_chan)
 
         # Calculated robust and uvtaper values for later stages
         #
@@ -74,9 +80,10 @@ class ImagePreCheckResults(basetask.Results):
 
 
 class ImagePreCheckInputs(vdp.StandardInputs):
-    def __init__(self, context, vis=None):
+    def __init__(self, context, vis=None, calcsens=None):
         self.context = context
         self.vis = vis
+        self.calcsens = calcsens
 
 
 # tell the infrastructure to give us mstransformed data when possible by
@@ -96,6 +103,8 @@ class ImagePreCheck(basetask.StandardTaskTemplate):
         context = self.inputs.context
 
         cqa = casatools.quanta
+
+        calcsens = inputs.calcsens
 
         per_spw_cont_sensitivities_all_chan = context.per_spw_cont_sensitivities_all_chan
 
@@ -170,7 +179,8 @@ class ImagePreCheck(basetask.StandardTaskTemplate):
             if reprBW_mode == 'cube':
                 try:
                     sensitivity, eff_ch_bw, sens_bw, per_spw_cont_sensitivities_all_chan = \
-                        image_heuristics.calc_sensitivities(inputs.vis, repr_field, 'TARGET', str(repr_spw), nbin, {}, 'cube', gridder, cells[(robust, str(default_uvtaper), 'repBW')], imsizes[(robust, str(default_uvtaper), 'repBW')], 'briggs', robust, default_uvtaper, True, per_spw_cont_sensitivities_all_chan)
+                        image_heuristics.calc_sensitivities(inputs.vis, repr_field, 'TARGET', str(repr_spw), nbin, {}, 'cube', gridder, cells[(robust, str(default_uvtaper), 'repBW')], imsizes[(robust, str(default_uvtaper), 'repBW')], 'briggs', robust, default_uvtaper, True, per_spw_cont_sensitivities_all_chan, calcsens)
+                    calcsens = False
                     sensitivities.append(Sensitivity(
                         array=array,
                         field=repr_field,
@@ -206,7 +216,8 @@ class ImagePreCheck(basetask.StandardTaskTemplate):
             # full cont sensitivity (no frequency ranges excluded)
             try:
                 sensitivity, eff_ch_bw, sens_bw, per_spw_cont_sensitivities_all_chan = \
-                    image_heuristics.calc_sensitivities(inputs.vis, repr_field, 'TARGET', cont_spw, -1, {}, 'cont', gridder, cells[(robust, str(default_uvtaper), 'aggBW')], imsizes[(robust, str(default_uvtaper), 'aggBW')], 'briggs', robust, default_uvtaper, True, per_spw_cont_sensitivities_all_chan)
+                    image_heuristics.calc_sensitivities(inputs.vis, repr_field, 'TARGET', cont_spw, -1, {}, 'cont', gridder, cells[(robust, str(default_uvtaper), 'aggBW')], imsizes[(robust, str(default_uvtaper), 'aggBW')], 'briggs', robust, default_uvtaper, True, per_spw_cont_sensitivities_all_chan, calcsens)
+                calcsens = False
                 for cont_sens_bw_mode in cont_sens_bw_modes:
                     sensitivities.append(Sensitivity(
                         array=array,
@@ -260,7 +271,8 @@ class ImagePreCheck(basetask.StandardTaskTemplate):
                     if reprBW_mode == 'cube':
                         try:
                             sensitivity, eff_ch_bw, sens_bw, per_spw_cont_sensitivities_all_chan = \
-                                image_heuristics.calc_sensitivities(inputs.vis, repr_field, 'TARGET', str(repr_spw), nbin, {}, 'cube', gridder, cells[(hm_robust, str(hm_uvtaper), 'repBW')], imsizes[(hm_robust, str(hm_uvtaper), 'repBW')], 'briggs', hm_robust, hm_uvtaper, True, per_spw_cont_sensitivities_all_chan)
+                                image_heuristics.calc_sensitivities(inputs.vis, repr_field, 'TARGET', str(repr_spw), nbin, {}, 'cube', gridder, cells[(hm_robust, str(hm_uvtaper), 'repBW')], imsizes[(hm_robust, str(hm_uvtaper), 'repBW')], 'briggs', hm_robust, hm_uvtaper, True, per_spw_cont_sensitivities_all_chan, calcsens)
+                            calcsens = False
                             sensitivities.append(Sensitivity(
                                 array=array,
                                 field=repr_field,
@@ -291,7 +303,8 @@ class ImagePreCheck(basetask.StandardTaskTemplate):
                     imsizes[(hm_robust, str(hm_uvtaper), 'aggBW')] = image_heuristics.imsize(field_ids, cells[(hm_robust, str(hm_uvtaper), 'aggBW')], primary_beam_size, centreonly=False)
                     try:
                         sensitivity, eff_ch_bw, sens_bw, per_spw_cont_sensitivities_all_chan = \
-                            image_heuristics.calc_sensitivities(inputs.vis, repr_field, 'TARGET', cont_spw, -1, {}, 'cont', gridder, cells[(hm_robust, str(hm_uvtaper), 'aggBW')], imsizes[(hm_robust, str(hm_uvtaper), 'aggBW')], 'briggs', hm_robust, hm_uvtaper, True, per_spw_cont_sensitivities_all_chan)
+                            image_heuristics.calc_sensitivities(inputs.vis, repr_field, 'TARGET', cont_spw, -1, {}, 'cont', gridder, cells[(hm_robust, str(hm_uvtaper), 'aggBW')], imsizes[(hm_robust, str(hm_uvtaper), 'aggBW')], 'briggs', hm_robust, hm_uvtaper, True, per_spw_cont_sensitivities_all_chan, calcsens)
+                        calcsens = False
                         for cont_sens_bw_mode in cont_sens_bw_modes:
                             sensitivities.append(Sensitivity(
                                 array=array,

@@ -18,6 +18,7 @@ LOG = infrastructure.get_logger(__name__)
 
 
 class MakeImagesInputs(vdp.StandardInputs):
+    calcsens = vdp.VisDependentProperty(default=False)
     cleancontranges = vdp.VisDependentProperty(default=False)
     hm_cleaning = vdp.VisDependentProperty(default='rms')
     hm_dogrowprune = vdp.VisDependentProperty(default=True)
@@ -43,7 +44,8 @@ class MakeImagesInputs(vdp.StandardInputs):
                  hm_masking=None, hm_sidelobethreshold=None, hm_noisethreshold=None,
                  hm_lownoisethreshold=None, hm_negativethreshold=None, hm_minbeamfrac=None, hm_growiterations=None,
                  hm_dogrowprune=None, hm_minpercentchange=None,
-                 hm_cleaning=None, tlimit=None, masklimit=None, maxncleans=None, cleancontranges=None, parallel=None,
+                 hm_cleaning=None, tlimit=None, masklimit=None, maxncleans=None,
+                 calcsens=None, cleancontranges=None, parallel=None,
                  # Extra parameters
                  weighting=None):
         self.context = context
@@ -66,6 +68,7 @@ class MakeImagesInputs(vdp.StandardInputs):
         self.masklimit = masklimit
         self.maxncleans = maxncleans
         self.cleancontranges = cleancontranges
+        self.calcsens = calcsens
         self.parallel = parallel
 
 
@@ -205,6 +208,7 @@ class CleanTaskFactory(object):
             'tlimit': inputs.tlimit,
             'masklimit': inputs.masklimit,
             'cleancontranges': inputs.cleancontranges,
+            'calcsens': inputs.calcsens,
             'parallel': parallel,
         })
 

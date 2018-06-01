@@ -28,6 +28,7 @@ LOG = infrastructure.get_logger(__name__)
 class TcleanInputs(cleanbase.CleanBaseInputs):
     # simple properties ------------------------------------------------------------------------------------------------
 
+    calcsens = vdp.VisDependentProperty(default=False)
     cleancontranges = vdp.VisDependentProperty(default=False)
     hm_cleaning = vdp.VisDependentProperty(default='rms')
     masklimit = vdp.VisDependentProperty(default=4.0)
@@ -109,7 +110,7 @@ class TcleanInputs(cleanbase.CleanBaseInputs):
                  hm_lownoisethreshold=None, hm_negativethreshold=None, hm_minbeamfrac=None, hm_growiterations=None,
                  hm_dogrowprune=None, hm_minpercentchange=None, hm_cleaning=None,
                  iter=None, mask=None, niter=None, threshold=None, tlimit=None, masklimit=None, maxncleans=None,
-                 cleancontranges=None, parallel=None,
+                 calcsens=None, cleancontranges=None, parallel=None,
                  # Extra parameters not in the CLI task interface
                  weighting=None, robust=None, uvtaper=None, scales=None, nsigma=None, cycleniter=None, cyclefactor=None,
                  sensitivity=None, reffreq=None, conjbeams=None, is_per_eb=None,
@@ -132,6 +133,7 @@ class TcleanInputs(cleanbase.CleanBaseInputs):
                                            sensitivity=sensitivity, conjbeams=conjbeams, is_per_eb=is_per_eb, parallel=parallel,
                                            heuristics=heuristics)
 
+        self.calcsens = calcsens
         self.cleancontranges = cleancontranges
         self.hm_cleaning = hm_cleaning
         self.image_heuristics = heuristics
@@ -398,7 +400,7 @@ class Tclean(cleanbase.CleanBase):
                 self.image_heuristics.calc_sensitivities(inputs.vis, inputs.field, inputs.intent, inputs.spw,
                                                          inputs.nbin, spw_topo_chan_param_dict, inputs.specmode,
                                                          inputs.gridder, inputs.cell, inputs.imsize, inputs.weighting,
-                                                         inputs.robust, inputs.uvtaper, known_sensitivities=per_spw_cont_sensitivities_all_chan)
+                                                         inputs.robust, inputs.uvtaper, known_sensitivities=per_spw_cont_sensitivities_all_chan, force_calc=inputs.calcsens)
 
         if sensitivity is None:
             LOG.error('Could not calculate the sensitivity for Field %s Intent %s SPW %s' % (inputs.field, inputs.intent, inputs.spw))

@@ -1302,8 +1302,8 @@ def update_sens_dict(dct, udct):
     '''
 
     for msname in udct.keys():
-        # Exclude two special primary keys that are not MS names
-        if msname not in ['robust', 'uvtaper']:
+        # Exclude special primary keys that are not MS names
+        if msname not in ['recalc', 'robust', 'uvtaper']:
             if msname not in dct:
                 dct[msname] = {}
             for field in udct[msname].keys():
