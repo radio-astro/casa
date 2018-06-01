@@ -1298,7 +1298,7 @@ def update_sens_dict(dct, udct):
     Update a sensitivity dictionary. All generic solutions
     tried so far did not do the job. So this method assumes
     an explicit dictionary structure of
-    ['<MS name>']['<field name'][<spw>][{<sensitivity result>}].
+    ['<MS name>']['<field name']['<intent>'][<spw>]: {<sensitivity result>}.
     '''
 
     for msname in udct.keys():
@@ -1309,10 +1309,13 @@ def update_sens_dict(dct, udct):
             for field in udct[msname].keys():
                 if field not in dct[msname]:
                     dct[msname][field] = {}
-                for spw in udct[msname][field].keys():
-                    if spw not in dct[msname][field]:
-                        dct[msname][field][spw] = {}
-                    dct[msname][field][spw] = udct[msname][field][spw]
+                for intent in udct[msname][field].keys():
+                    if intent not in dct[msname][field]:
+                        dct[msname][field][intent] = {}
+                    for spw in udct[msname][field][intent].keys():
+                        if spw not in dct[msname][field][intent]:
+                            dct[msname][field][intent][spw] = {}
+                        dct[msname][field][intent][spw] = udct[msname][field][intent][spw]
 
 
 def flagged_intervals(vec):

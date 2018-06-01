@@ -1315,10 +1315,10 @@ class ImageParamsHeuristics(object):
                         local_known_sensitivities['recalc'] = True
                         local_known_sensitivities['robust'] = robust
                         local_known_sensitivities['uvtaper'] = uvtaper
-                        utils.set_nested_dict(local_known_sensitivities, (os.path.basename(msname), field, intSpw, 'sensitivityAllChans'), '%.3g Jy/beam' % (center_field_full_spw_sensitivity))
-                        utils.set_nested_dict(local_known_sensitivities, (os.path.basename(msname), field, intSpw, 'nchanUnflagged'), nchan_unflagged)
-                        utils.set_nested_dict(local_known_sensitivities, (os.path.basename(msname), field, intSpw, 'effChanBW'), '%s Hz' % (eff_ch_bw))
-                        utils.set_nested_dict(local_known_sensitivities, (os.path.basename(msname), field, intSpw, 'sensBW'), '%s Hz' % (sens_bws[intSpw]))
+                        utils.set_nested_dict(local_known_sensitivities, (os.path.basename(msname), field, intent, intSpw, 'sensitivityAllChans'), '%.3g Jy/beam' % (center_field_full_spw_sensitivity))
+                        utils.set_nested_dict(local_known_sensitivities, (os.path.basename(msname), field, intent, intSpw, 'nchanUnflagged'), nchan_unflagged)
+                        utils.set_nested_dict(local_known_sensitivities, (os.path.basename(msname), field, intent, intSpw, 'effChanBW'), '%s Hz' % (eff_ch_bw))
+                        utils.set_nested_dict(local_known_sensitivities, (os.path.basename(msname), field, intent, intSpw, 'sensBW'), '%s Hz' % (sens_bws[intSpw]))
 
                     # Correct from full spw to channel selection
                     bw_uncorrected_center_field_sensitivity = center_field_full_spw_sensitivity * (float(nchan_unflagged)/float(nchan_sel))**0.5
