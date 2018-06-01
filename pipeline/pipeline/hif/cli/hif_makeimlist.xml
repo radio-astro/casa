@@ -129,7 +129,7 @@ Create a a list of images to be cleaned.
 
   <param type="bool" name="clearlist" subparam="true">
     <description>Clear any previous target list</description>
-    <value>False</value>
+    <value>True</value>
   </param>
 
   <param type="bool" name="per_eb" subparam="true">
@@ -181,7 +181,7 @@ Create a a list of images to be cleaned.
         <default param="nbins"><value type="string"></value></default>
         <default param="robust"><value type="double">-999.0</value></default>
         <default param="uvtaper"><value type="stringArray"></value></default>
-        <default param="clearlist"><value type="bool">False</value></default>
+        <default param="clearlist"><value type="bool">True</value></default>
         <default param="per_eb"><value type="bool">False</value></default>
         <default param="dryrun"><value type="bool">False</value></default>
         <default param="acceptresults"><value type="bool">True</value></default>
@@ -348,8 +348,8 @@ start -- First channel for frequency mode images.
     example: '22.3GHz'
 
 clearlist -- Clear previous iamge target list.
-    default False
-    example: True
+    default True
+    example: False
 
 per_eb -- Make an image target per EB.
     default False

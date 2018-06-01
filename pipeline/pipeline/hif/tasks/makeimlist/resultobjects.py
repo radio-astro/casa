@@ -12,7 +12,7 @@ class MakeImListResult(basetask.Results):
         self.targets = []
         self.clean_list_info = {}
         self._max_num_targets = 0
-        self.clearlist = False
+        self.clearlist = True
 
     def add_target(self, target):
         self.targets.append(target)

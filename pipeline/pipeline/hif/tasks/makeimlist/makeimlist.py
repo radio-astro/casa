@@ -30,7 +30,7 @@ class MakeImListInputs(vdp.StandardInputs):
     start = vdp.VisDependentProperty(default='')
     uvrange = vdp.VisDependentProperty(default='')
     width = vdp.VisDependentProperty(default='')
-    clearlist = vdp.VisDependentProperty(default=False)
+    clearlist = vdp.VisDependentProperty(default=True)
     pbe_eb = vdp.VisDependentProperty(default=False)
 
     # properties requiring some processing or MS-dependent logic -------------------------------------------------------
