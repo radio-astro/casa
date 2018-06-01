@@ -809,6 +809,19 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
                             i2flag = np.concatenate((i2flag, i[:, iy][np.logical_not(flag[:, iy])]))
                             j2flag = np.concatenate((j2flag, j[:, iy][np.logical_not(flag[:, iy])]))
 
+                        # If row did not have too many flags, skip row.
+                        if len(i2flag) <= 0:
+                            continue
+
+                        # Log a debug message about outliers.
+                        LOG.debug("Outliers found with flagging rule '{}' for {}, spw {}, pol {}.\n"
+                                  "Max fraction threshold {}; max nr excess flags above median nr of flags {}.\n"
+                                  "Data: medium nr flagged {}.\n"
+                                  "For row {}, number flagged = {}, fraction flagged = {}, exceeding thresholds; "
+                                  " entire row will be flagged."
+                                  "".format(rulename, os.path.basename(table), spw, pol, maxfraction, maxexcessflags,
+                                            median_num_flagged, iy, len_flagged, fractionflagged))
+
                         # Add new flag commands to flag data underlying
                         # the view.
                         flagcoords = zip(xdata[i2flag], ydata[j2flag])
@@ -854,6 +867,19 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
                             i2flag = np.concatenate((i2flag, i[ix, :][np.logical_not(flag[ix, :])]))
                             j2flag = np.concatenate((j2flag, j[ix, :][np.logical_not(flag[ix, :])]))
 
+                        # If no column had too many flags, skip column.
+                        if len(i2flag) <= 0:
+                            continue
+
+                        # Log a debug message about outliers.
+                        LOG.debug("Outliers found with flagging rule '{}' for {}, spw {}, pol {}.\n"
+                                  "Max fraction threshold {}; max nr excess flags above median nr of flags {}.\n"
+                                  "Data: medium nr flagged {}.\n"
+                                  "For column {}, number flagged = {}, fraction flagged = {}, exceeding thresholds; "
+                                  " entire column will be flagged."
+                                  "".format(rulename, os.path.basename(table), spw, pol, maxfraction, maxexcessflags,
+                                            median_num_flagged, ix, len_flagged, fractionflagged))
+
                         # Add new flag commands to flag data underlying
                         # the view.
                         flagcoords = zip(xdata[i2flag], ydata[j2flag])
@@ -890,6 +916,12 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
                         # Indices to flag are all those that are currently not flagged
                         i2flag = i[np.logical_not(flag)]
                         j2flag = j[np.logical_not(flag)]
+
+                        # Log a debug message about outliers.
+                        LOG.debug("Outliers found with flagging rule '{}' for {}, spw {}, pol {}.\n"
+                                  "Threshold for entirely flagged columns: {}.\n"
+                                  "Number of entirely flagged columns {} exceeded threshold, entire view will be"
+                                  " flagged.".format(rulename, os.path.basename(table), spw, pol, maxfraction, frac_ef))
 
                         # Add new flag commands to flag data underlying
                         # the view.
@@ -998,7 +1030,8 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
                     # masked. This should avoid performing a comparison with
                     # flagged data that could include NaNs (that would cause a
                     # RuntimeWarning).
-                    ant_data_masked = np.ma.masked_greater(ant_data_masked, mad_max * data_mad)
+                    outlier_threshold = mad_max * data_mad
+                    ant_data_masked = np.ma.masked_greater(ant_data_masked, outlier_threshold)
 
                     # Get indices to flag as the masked elements that were not
                     # already flagged, i.e. the newly masked elements.
@@ -1006,7 +1039,7 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
                                               np.logical_not(ant_flag))
 
                     # If no low outliers were found, skip this antenna.
-                    if len(ind2flag) <= 0:
+                    if not np.any(ind2flag):
                         continue
 
                     j2flag_lo = j[iant, :][ind2flag]
@@ -1043,6 +1076,17 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
                         ant_flag_reason[j2flag_lo] =\
                             self.flag_reason_index['low outlier']
 
+                        # Log a debug message with outliers.
+                        outliers_as_str = ", ".join(sorted([str(ol) for ol in ant_data_masked[ind2flag].data]))
+                        LOG.debug("Outliers found with flagging rule '{}' for {}, spw {}, pol {}.\n"
+                                  "Data: median = {}, MAD = {}. Max MAD threshold = {}, corresponding to {}.\n"
+                                  "For antenna {}: {} low outlier(s) found, representing {} fraction of its data"
+                                  " points, which is above number threshold ({}) for number and/or above fraction"
+                                  " threshold ({}); flagging these data points for antenna {} as low outliers: {}."
+                                  "".format(rulename, os.path.basename(table), spw, pol, data_median, data_mad,
+                                            mad_max, outlier_threshold, iant, nflags, flagsfrac, number_limit,
+                                            frac_limit, iant, outliers_as_str))
+
                         # Create a flagging command that flags these
                         # low outliers in the data.
                         flagcoords = zip(xdata[[iant]], ydata[j2flag_lo])
@@ -1061,6 +1105,9 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
                         # which is thus updated for any subsequent rules being evaluated.
                         ant_flag[j2flag_bad] = True
                         ant_flag_reason[j2flag_bad] = self.flag_reason_index['bad antenna']
+
+                        # Log a debug message for this antenna.
+                        LOG.debug("Flagging remaining data points for antenna {} as 'bad antenna'.".format(iant))
 
                         # Create a flagging command that flags the remaining
                         # data points as "bad antenna".
@@ -1171,9 +1218,18 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
                             # bad then any 'outlier' points found
                             # earlier will not be flagged.
                             flagcoords = []
-                            for chan in range(
-                                    quadrant[iquad][0], quadrant[iquad][1]):
+                            channels_to_flag = range(quadrant[iquad][0], quadrant[iquad][1])
+                            for chan in channels_to_flag:
                                 flagcoords.append((chan, ant))
+
+                            # Log a debug message with outliers.
+                            LOG.debug("Outliers found with flagging rule '{}' for {}, spw {}, pol {}.\n"
+                                      "Threshold for maximum number of outliers per channel quadrant per antenna: {}.\n"
+                                      "For antenna {}, channels quadrant {}: fraction outliers = {}, exceeding "
+                                      "threshold => entire quadrant will be flagged."
+                                      "".format(rulename, os.path.basename(table), spw, pol, frac_limit, ant, iquad,
+                                                frac))
+
                             for flagcoord in flagcoords:
                                 newflags.append(arrayflaggerbase.FlagCmd(
                                     reason='bad quadrant', filename=table, rulename=rulename,  spw=spw,
@@ -1228,6 +1284,15 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
                                 for chan in range(
                                         quadrant[iquad][0], quadrant[iquad][1]):
                                     flagcoords.append((chan, ydata[baseline]))
+
+                                # Log a debug message with outliers.
+                                LOG.debug("Outliers found with flagging rule '{}' for {}, spw {}, pol {}.\n"
+                                          "Threshold for maximum number of outliers per channel quadrant per baseline:"
+                                          " {}.\n"
+                                          "For baseline {}, channels quadrant {}: fraction outliers = {}, exceeding "
+                                          "threshold => entire quadrant will be flagged."
+                                          "".format(rulename, os.path.basename(table), spw, pol, baseline_frac_limit,
+                                                    baseline, iquad, frac))
 
                                 for flagcoord in flagcoords:
                                     newflags.append(arrayflaggerbase.FlagCmd(
