@@ -433,7 +433,9 @@ class CleanBase(basetask.StandardTaskTemplate):
            (tclean_job_parameters['restoration'] == True) and \
            (tclean_job_parameters['restoringbeam'] == 'common'):
 
-            tclean_job_parameters['restoration'] = False
+            # CAS-11322 asks to temporarily leave restoration set to True
+            # DMU, 2018-06-01
+            #tclean_job_parameters['restoration'] = False
             tclean_job_parameters['restoringbeam'] = ''
             job = casa_tasks.tclean(**tclean_job_parameters)
             tclean_result = self._executor.execute(job)
