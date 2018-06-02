@@ -270,7 +270,8 @@ class SDImagingWorker(basetask.StandardTaskTemplate):
         known_ephemeris_list = ['MERCURY', 'VENUS', 'MARS', 'JUPITER', 'SATURN', 'URANUS', 'NEPTUNE', 'PLUTO', 'SUN',
                                 'MOON']
         ephemsrcname = ''
-        source_name = reference_data.fields[fieldid_list[0]].name
+        reference_field = reference_data.fields[fieldid_list[0]]
+        source_name = reference_field.name
         if source_name.upper() in known_ephemeris_list:
             ephemsrcname = source_name.upper()
             LOG.info("Generating an image of ephemeris source. Setting ephemsrcname='%s'" % ephemsrcname)
@@ -301,10 +302,19 @@ class SDImagingWorker(basetask.StandardTaskTemplate):
             nchan = 1
 
         # restfreq
-        rest_freq = ref_spwobj.ref_frequency
-        if rest_freq is not None:
+        # first try using SOURCE.REST_FREQUENCY 
+        # if it is not available, use SPECTRAL_WINDOW.REF_FREQUENCY instead
+        source_id = reference_field.source_id
+        rest_freq_value = utils.get_restfrequency(vis=infiles[0], spwid=ref_spwobj.id, source_id=source_id)
+        rest_freq_unit = 'Hz'
+        if rest_freq_value is None:
+            # REST_FREQUENCY is not defined in the SOURCE tableq
+            rest_freq = ref_spwobj.ref_frequency
+            rest_freq_value = numpy.double(rest_freq.value)
+            rest_freq_unit = rest_freq.units['symbol']
+        if rest_freq_value is not None:
             qa = casatools.quanta
-            restfreq = qa.tos(qa.quantity(numpy.double(rest_freq.value), rest_freq.units['symbol']))
+            restfreq = qa.tos(qa.quantity(rest_freq_value, rest_freq_unit))
         else:
             raise RuntimeError, "Could not get reference frequency of Spw %d" % ref_spwid
 
