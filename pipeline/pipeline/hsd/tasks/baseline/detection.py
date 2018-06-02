@@ -326,7 +326,7 @@ def get_linerange(window, spwid, ms):
         center_freq = window[0] * 1.0e9  # GHz -> Hz
         target_fields = ms.get_fields(intent='TARGET')
         source_id = target_fields[0].source_id
-        restfreq = get_restfrequency(ms.name, spwid, source_id)
+        restfreq = utils.get_restfrequency(ms.name, spwid, source_id)
         if restfreq is None:
             restfreq = float(spw.ref_frequency.to_units(measures.FrequencyUnits.HERTZ).value)
         #restfreq = spw.refval if len(spw.rest_frequencies) == 0 else spw.rest_frequencies[0]
@@ -342,17 +342,17 @@ def get_linerange(window, spwid, ms):
         raise RuntimeError('Invalid linewindow format')
 
 
-def get_restfrequency(vis, spwid, source_id):
-    source_table = os.path.join(vis, 'SOURCE')
-    with casatools.TableReader(source_table) as tb:
-        tsel = tb.query('SOURCE_ID == {} && SPECTRAL_WINDOW_ID == {}'.format(source_id, spwid))
-        try:
-            if tsel.nrows() == 0:
-                return None
-            else:
-                if tsel.iscelldefined('REST_FREQUENCY', 0):
-                    return tsel.getcell('REST_FREQUENCY', 0)[0]
-                else:
-                    return None
-        finally:
-            tsel.close()
+# def get_restfrequency(vis, spwid, source_id):
+#     source_table = os.path.join(vis, 'SOURCE')
+#     with casatools.TableReader(source_table) as tb:
+#         tsel = tb.query('SOURCE_ID == {} && SPECTRAL_WINDOW_ID == {}'.format(source_id, spwid))
+#         try:
+#             if tsel.nrows() == 0:
+#                 return None
+#             else:
+#                 if tsel.iscelldefined('REST_FREQUENCY', 0):
+#                     return tsel.getcell('REST_FREQUENCY', 0)[0]
+#                 else:
+#                     return None
+#         finally:
+#             tsel.close()

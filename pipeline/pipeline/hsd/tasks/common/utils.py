@@ -829,3 +829,18 @@ def _read_polarization_table(vis):
 
         rows = zip(rowids, num_corrs, corr_types, corr_products, flag_rows)
         return rows
+
+def get_restfrequency(vis, spwid, source_id):
+    source_table = os.path.join(vis, 'SOURCE')
+    with casatools.TableReader(source_table) as tb:
+        tsel = tb.query('SOURCE_ID == {} && SPECTRAL_WINDOW_ID == {}'.format(source_id, spwid))
+        try:
+            if tsel.nrows() == 0:
+                return None
+            else:
+                if tsel.iscelldefined('REST_FREQUENCY', 0):
+                    return tsel.getcell('REST_FREQUENCY', 0)[0]
+                else:
+                    return None
+        finally:
+            tsel.close()
