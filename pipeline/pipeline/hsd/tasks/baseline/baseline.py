@@ -236,6 +236,8 @@ class SDBaseline(basetask.StandardTaskTemplate):
                         dvparams[ms.name][0].append(fieldid)
                         dvparams[ms.name][1].append(antennaid)
                         dvparams[ms.name][2].append(spwid)
+                    else:
+                        deviation_mask[ms.basename][(fieldid, antennaid, spwid)] = ms.deviation_mask[(fieldid, antennaid, spwid)]
                 for (vis, params) in dvparams.iteritems():
                     field_list, antenna_list, spw_list = params
                     dvtasks.append(deviation_mask_heuristic(vis=vis, field_list=field_list, antenna_list=antenna_list, 
