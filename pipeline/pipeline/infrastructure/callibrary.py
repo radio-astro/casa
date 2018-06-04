@@ -13,7 +13,6 @@ import weakref
 
 import pipeline.extern
 import intervaltree
-import sortedcontainers
 
 from . import logging
 from . import utils
