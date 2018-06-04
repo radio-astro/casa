@@ -79,13 +79,15 @@ class BandpassflagInputs(ALMAPhcorBandpassInputs):
                  antenna=None, hm_phaseup=None, phaseupsolint=None, phaseupbw=None, phaseupsnr=None, phaseupnsols=None,
                  hm_bandpass=None, solint=None, maxchannels=None, evenbpints=None, bpsnr=None, bpnsols=None,
                  combine=None, refant=None, minblperant=None, minsnr=None, solnorm=None, antnegsig=None, antpossig=None,
-                 tmantint=None, tmint=None, tmbl=None, antblnegsig=None, antblpossig=None, relaxed_factor=None):
+                 tmantint=None, tmint=None, tmbl=None, antblnegsig=None, antblpossig=None, relaxed_factor=None,
+                 mode='channel'):
         super(BandpassflagInputs, self).__init__(
             context, output_dir=output_dir, vis=vis, caltable=caltable, intent=intent, field=field, spw=spw,
             antenna=antenna, hm_phaseup=hm_phaseup, phaseupsolint=phaseupsolint, phaseupbw=phaseupbw,
             phaseupsnr=phaseupsnr, phaseupnsols=phaseupnsols, hm_bandpass=hm_bandpass, solint=solint,
             maxchannels=maxchannels, evenbpints=evenbpints, bpsnr=bpsnr, bpnsols=bpnsols, combine=combine,
-            refant=refant, minblperant=minblperant, minsnr=minsnr, solnorm=solnorm)
+            refant=refant, minblperant=minblperant, minsnr=minsnr, solnorm=solnorm, mode=mode
+        )
 
         # flagging parameters
         self.antnegsig = antnegsig

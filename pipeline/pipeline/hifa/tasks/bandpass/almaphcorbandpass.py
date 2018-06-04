@@ -60,7 +60,7 @@ class ALMAPhcorBandpassInputs(bandpassmode.BandpassModeInputs):
     phaseupsolint = vdp.VisDependentProperty(default='int')
     solint = vdp.VisDependentProperty(default='inf')
 
-    def __init__(self, context, output_dir=None, vis=None, mode=None, hm_phaseup=None, phaseupbw=None,
+    def __init__(self, context, output_dir=None, vis=None, mode='channel', hm_phaseup=None, phaseupbw=None,
                  phaseupsolint=None, phaseupsnr=None, phaseupnsols=None, hm_bandpass=None, solint=None,
                  maxchannels=None, evenbpints=None, bpsnr=None, bpnsols=None, **parameters):
         super(ALMAPhcorBandpassInputs, self).__init__(context, output_dir=output_dir, vis=vis, mode=mode, **parameters)

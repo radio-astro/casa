@@ -362,12 +362,10 @@ combine -- Data axes to combine for solving. Axes are '', 'scan','spw','field'
     example: combine='scan,field'
 
 minblperant -- Minimum number of baselines required per antenna for each solve
-    Antennas with fewer baselines are excluded from solutions. Used for
-    hm_bandtype='channel' only.
+    Antennas with fewer baselines are excluded from solutions.
     default: 4
 
-minsnr -- Solutions below this SNR are rejected. Used for hm_bandtype=
-    'channel' only
+minsnr -- Solutions below this SNR are rejected.
     default: 3.0
 
 ---- pipeline context defined parameter arguments which can be set only in

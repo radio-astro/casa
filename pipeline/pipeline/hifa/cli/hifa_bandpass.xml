@@ -12,169 +12,149 @@ window in each MeasurementSet.
 </description>
 <input>
 
-  <param type="stringArray" name="vis" subparam="true">
-    <description>List of input MeasurementSets</description>
-    <value></value>
-  </param>
+    <param type="stringArray" name="vis" subparam="true">
+        <description>List of input MeasurementSets</description>
+        <value></value>
+    </param>
 
-  <param type="stringArray" name="caltable" subparam="true">
-    <description>List of output caltables</description>
-    <value></value>
-  </param>
+    <param type="stringArray" name="caltable" subparam="true">
+        <description>List of output caltables</description>
+        <value></value>
+    </param>
 
-  <param type="string" name="field" subparam="true">
-    <description>Set of data selection field names or ids</description>
-    <value></value>
-  </param>
+    <param type="string" name="field" subparam="true">
+        <description>Set of data selection field names or ids</description>
+        <value></value>
+    </param>
 
-  <param type="string" name="intent" subparam="true">
-    <description>Set of data selection intents</description>
-    <value></value>
-  </param>
+    <param type="string" name="intent" subparam="true">
+        <description>Set of data selection intents</description>
+        <value></value>
+    </param>
 
-  <param type="string" name="spw" subparam="true">
-    <description>Set of data selection spectral window/channels</description>
-    <value></value>
-  </param>
+    <param type="string" name="spw" subparam="true">
+        <description>Set of data selection spectral window/channels</description>
+        <value></value>
+    </param>
 
-   <param type="string" name="antenna" subparam="true">
-	<description>Set of data selection antenna IDs</description>
-	<value></value>
-   </param>
+    <param type="string" name="antenna" subparam="true">
+        <description>Set of data selection antenna IDs</description>
+        <value></value>
+    </param>
 
-  <param type="string" name="hm_phaseup">
-     <description>Phaseup before computing the bandpass</description>
-     <value>snr</value>
-       <allowed kind="enum">
-         <value>snr</value>
-         <value>manual</value>
-         <value></value>
-       </allowed>
-  </param>
+    <param type="string" name="hm_phaseup">
+        <description>Phaseup before computing the bandpass</description>
+        <value>snr</value>
+        <allowed kind="enum">
+            <value>snr</value>
+            <value>manual</value>
+            <value></value>
+        </allowed>
+    </param>
 
-  <param type="any" name="phaseupsolint" subparam="true">
-    <description>Phaseup correction solution interval</description>
-    <any type="variant"/>
-    <value type="string">int</value>
-  </param>
+    <param type="any" name="phaseupsolint" subparam="true">
+        <description>Phaseup correction solution interval</description>
+        <any type="variant"/>
+        <value type="string">int</value>
+    </param>
 
-  <param type="string" name="phaseupbw" subparam="true">
-    <description>Bandwidth to use for phaseup</description>
-    <value></value>
-  </param>
+    <param type="string" name="phaseupbw" subparam="true">
+        <description>Bandwidth to use for phaseup</description>
+        <value></value>
+    </param>
 
-  <param type="double" name="phaseupsnr" subparam="true">
-    <description>SNR for phaseup solution</description>
-    <value>20.0</value>
-  </param>
+    <param type="double" name="phaseupsnr" subparam="true">
+        <description>SNR for phaseup solution</description>
+        <value>20.0</value>
+    </param>
 
-  <param type="int" name="phaseupnsols" subparam="true">
-    <description>Minimum number of phaseup gain solutions</description>
-    <value>2</value>
-  </param>
+    <param type="int" name="phaseupnsols" subparam="true">
+        <description>Minimum number of phaseup gain solutions</description>
+        <value>2</value>
+    </param>
 
-  <param type="string" name="hm_bandpass">
-     <description>Bandpass solution heuristics</description>
-     <value>snr</value>
-       <allowed kind="enum">
-         <value>snr</value>
-         <value>smoothed</value>
-         <value>fixed</value>
-       </allowed>
-  </param>
+    <param type="string" name="hm_bandpass">
+        <description>Bandpass solution heuristics</description>
+        <value>snr</value>
+        <allowed kind="enum">
+            <value>snr</value>
+            <value>smoothed</value>
+            <value>fixed</value>
+        </allowed>
+    </param>
 
-  <param type="any" name="solint" subparam="true">
-    <description>Solution intervals</description>
-    <any type="variant"/>
-    <value type="string">inf</value>
-  </param>
+    <param type="any" name="solint" subparam="true">
+        <description>Solution intervals</description>
+        <any type="variant"/>
+        <value type="string">inf</value>
+    </param>
 
-  <param type="int" name="maxchannels" subparam="true">
-    <description>The smoothing factor in channels</description>
-    <value>240</value>
-  </param>
+    <param type="int" name="maxchannels" subparam="true">
+        <description>The smoothing factor in channels</description>
+        <value>240</value>
+    </param>
 
-  <param type="bool" name="evenbpints" subparam="true">
-    <description>Force frequency solint to even bandpass intervals</description>
-    <value>True</value>
-  </param>
+    <param type="bool" name="evenbpints" subparam="true">
+        <description>Force frequency solint to even bandpass intervals</description>
+        <value>True</value>
+    </param>
 
-  <param type="double" name="bpsnr" subparam="true">
-    <description>SNR for bandpass solution</description>
-    <value>50.0</value>
-  </param>
+    <param type="double" name="bpsnr" subparam="true">
+        <description>SNR for bandpass solution</description>
+        <value>50.0</value>
+    </param>
 
-  <param type="int" name="bpnsols" subparam="true">
-    <description>Minimum number of bandpass solutions</description>
-    <value>8</value>
-  </param>
+    <param type="int" name="bpnsols" subparam="true">
+        <description>Minimum number of bandpass solutions</description>
+        <value>8</value>
+    </param>
 
-  <param type="string" name="hm_bandtype">
-     <description>Bandpass solution type</description>
-     <value>channel</value>
-       <allowed kind="enum">
-         <value>channel</value>
-         <value>polynomial</value>
-       </allowed>
-  </param>
+    <param type="string" name="combine">
+        <description>Data axes which to combine for solve (scan, spw, and/or field)</description>
+        <value>scan</value>
+    </param>
 
-  <param type="string" name="combine">
-    <description>Data axes which to combine for solve (scan, spw, and/or field)</description>
-    <value>scan</value>
-  </param>
+    <param type="string" name="refant" subparam="true">
+        <description>Reference antenna names</description>
+        <value></value>
+    </param>
 
-  <param type="string" name="refant" subparam="true">
-    <description>Reference antenna names</description>
-    <value></value>
-  </param>
+    <param type="bool" name="solnorm">
+        <description>Normalise the bandpass solution</description>
+        <value type="bool">True</value>
+    </param>
 
-  <param type="bool" name="solnorm">
-    <description>Normalise the bandpass solution</description>
-    <value type="bool">True</value>
-  </param>
+    <param type="int" name="minblperant" subparam="true">
+        <description>Minimum baselines per antenna required for solve</description>
+        <value>4</value>
+    </param>
 
-  <param type="int" name="minblperant" subparam="true">
-    <description>Minimum baselines per antenna required for solve</description>
-    <value>4</value>
-  </param>
+    <param type="double" name="minsnr" subparam="true">
+        <description>Reject solutions below this SNR</description>
+        <value>3.0</value>
+    </param>
 
-  <param type="double" name="minsnr" subparam="true">
-    <description>Reject solutions below this SNR</description>
-    <value>3.0</value>
-  </param>
+    <param type="string" name="pipelinemode">
+        <description>The pipeline operating mode</description>
+        <value>automatic</value>
+        <allowed kind="enum">
+            <value>automatic</value>
+            <value>interactive</value>
+            <value>getinputs</value>
+        </allowed>
+    </param>
 
-  <param type="variant" name="degamp" subparam="true">
-    <description>Degree for polynomial amplitude solution</description>
-    <value type="string"></value>
-  </param>
+    <param type="bool" name="dryrun" subparam="true">
+        <description>Run the task (False) or display the command(True)</description>
+        <value>False</value>
+    </param>
 
-  <param type="variant" name="degphase" subparam="true">
-    <description>Degree for polynomial phase solution</description>
-    <value type="string"></value>
-  </param>
+    <param type="bool" name="acceptresults" subparam="true">
+        <description>Add the results to the pipeline context</description>
+        <value>True</value>
+    </param>
 
-  <param type="string" name="pipelinemode">
-    <description>The pipeline operating mode</description>
-    <value>automatic</value>
-    <allowed kind="enum">
-      <value>automatic</value>
-      <value>interactive</value>
-      <value>getinputs</value>
-    </allowed>
-  </param>
-
-  <param type="bool" name="dryrun" subparam="true">
-    <description>Run the task (False) or display the command(True)</description>
-    <value>False</value>
-  </param>
-
-  <param type="bool" name="acceptresults" subparam="true">
-    <description>Add the results to the pipeline context</description>
-   <value>True</value>
-  </param>
-
-
-  <constraints>
+    <constraints>
 
     <when param="hm_phaseup">
       <equals type="string" value="snr">
@@ -203,17 +183,6 @@ window in each MeasurementSet.
       </equals>
       <equals type="string" value="fixed">
         <default param="solint"><value type="string">inf,7.8125MHz</value></default>
-      </equals>
-    </when>
-
-    <when param="hm_bandtype">
-      <equals type="string" value="channel">
-        <default param="minblperant"><value type="int">4</value></default>
-        <default param="minsnr"><value type="double">3.0</value></default>
-      </equals>
-      <equals type="string" value="polynomial">
-        <default param="degamp"><value type="string"></value></default>
-        <default param="degphase"><value type="string"></value></default>
       </equals>
     </when>
 
@@ -332,21 +301,16 @@ bpnsols -- The minimum number of bandpass solutions. Used only if
     hm_bandpass='snr'.
     default: 8
 
-hm_bandtype -- The type of bandpass. The options are 'channel' and
-    'polynomial' for CASA bandpass types = 'B' and 'BPOLY' respectively.
-
 combine -- Data axes to combine for solving. Axes are '', 'scan','spw','field'
     or any comma-separated combination.
     default; 'scan'
     example: combine='scan,field' 
 
 minblperant -- Minimum number of baselines required per antenna for each solve
-    Antennas with fewer baselines are excluded from solutions. Used for
-    hm_bandtype='channel' only.
+    Antennas with fewer baselines are excluded from solutions.
     default: 4
 
-minsnr -- Solutions below this SNR are rejected. Used for hm_bandtype=
-    'channel' only
+minsnr -- Solutions below this SNR are rejected.
     default: 3.0 
 
 

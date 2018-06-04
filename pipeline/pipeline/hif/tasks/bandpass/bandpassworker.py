@@ -1,7 +1,6 @@
 from __future__ import absolute_import
 
 import pipeline.infrastructure.basetask as basetask
-import pipeline.infrastructure.vdp as vdp
 import pipeline.infrastructure.callibrary as callibrary
 import pipeline.infrastructure as infrastructure
 from pipeline.infrastructure import casa_tasks
@@ -17,13 +16,10 @@ class BandpassWorkerInputs(common.VdpCommonBandpassInputs):
     task.
     """
 
-    def __init__(self, context, output_dir=None, vis=None, caltable=None, 
-        field=None, spw=None, antenna=None, intent=None,
-        solint=None, combine=None, refant=None, minblperant=None,
-        minsnr=None, solnorm=None, bandtype=None, fillgaps=None, 
-        degamp=None, degphase=None, visnorm=None, maskcenter=None,
-        maskedge=None, append=None, scan=None,
-        opacity=None, parang=None):
+    def __init__(self, context, output_dir=None, vis=None, caltable=None, field=None, spw=None, antenna=None,
+                 intent=None, solint=None, combine=None, refant=None, minblperant=None, minsnr=None, solnorm=None,
+                 bandtype=None, fillgaps=None, degamp=None, degphase=None, visnorm=None, maskcenter=None, maskedge=None,
+                 append=None, scan=None, opacity=None, parang=None):
 
         self.context = context
         self.vis = vis
@@ -38,7 +34,7 @@ class BandpassWorkerInputs(common.VdpCommonBandpassInputs):
         self.solint = solint
         self.combine = combine
         self.refant = refant
-        self.minblperant
+        self.minblperant = minblperant
 
         self.minsnr = minsnr
         self.solnorm = solnorm

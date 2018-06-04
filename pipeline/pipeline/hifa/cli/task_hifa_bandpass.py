@@ -5,14 +5,10 @@ from taskinit import casalog
 import pipeline.h.cli.utils as utils
 
 
-def hifa_bandpass(vis=None, caltable=None, field=None, intent=None, spw=None, 
-                 antenna=None, hm_phaseup=None, phaseupsolint=None, 
-                 phaseupbw=None, phaseupsnr=None, phaseupnsols=None,
-		 hm_bandpass=None, solint=None, maxchannels=None,
-		 evenbpints=None, bpsnr=None, bpnsols=None, hm_bandtype=None, 
-                 combine=None, refant=None, solnorm=None, minblperant=None, 
-                 minsnr=None, degamp=None, degphase=None, pipelinemode=None, 
-                 dryrun=None, acceptresults=None):
+def hifa_bandpass(vis=None, caltable=None, field=None, intent=None, spw=None, antenna=None, hm_phaseup=None,
+                  phaseupsolint=None, phaseupbw=None, phaseupsnr=None, phaseupnsols=None, hm_bandpass=None, solint=None,
+                  maxchannels=None, evenbpints=None, bpsnr=None, bpnsols=None, combine=None, refant=None, solnorm=None,
+                  minblperant=None, minsnr=None, pipelinemode=None, dryrun=None, acceptresults=None):
 
     ##########################################################################
     #                                                                        #
