@@ -1480,3 +1480,27 @@ class ImageParamsHeuristics(object):
 
     def pb_correction(self):
         return True
+
+    def majority_antenna_ids(self, vislist=None):
+
+        '''Get the IDs of the majority (by diameter) antennas per MS.'''
+
+        if vislist is None:
+            local_vislist = self.vislist
+        else:
+            local_vislist = vislist
+
+        # Determine majority diameter
+        antenna_diameters = {}
+        for vis in local_vislist:
+            for antenna in self.observing_run.get_ms(vis).antennas:
+                if antenna.diameter not in antenna_diameters:
+                    antenna_diameters[antenna.diameter] = 0
+                antenna_diameters[antenna.diameter] += 1
+        majority_diameter = sorted(antenna_diameters.items(), key=operator.itemgetter(1))[-1][0]
+
+        majority_antenna_ids = {}
+        for vis in local_vislist:
+            majority_antenna_ids[os.path.basename(vis)] = [antenna.id for antenna in self.observing_run.get_ms(vis).antennas if antenna.diameter == majority_diameter]
+
+        return majority_antenna_ids
