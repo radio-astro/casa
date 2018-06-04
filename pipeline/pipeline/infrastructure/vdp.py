@@ -181,6 +181,23 @@ class VisDependentProperty(object):
        is run through the optional postprocess function, which gives a final
        opportunity to change the value depending on the state/value of other
        properties.
+
+    A VisDependentProperty can be made read-only by specifying 'readonly=True'
+    when creating the instance.
+
+    A VisDependentProperty can be hidden from the containing Inputs string
+    representation by setting 'hidden=True' when creating the instance. This
+    will hide the property from the web log and CLI getInputs calls.
+
+    Each VisDependentProperty has a set of values it considers equivalent to
+    null. When the user sets the VDP value to one of these null values, the
+    VDP machinery converts this to a private NullObject marker that signifies
+    the property is now unset, resulting in the default value being returned
+    next time the property is read. Developers can specify which values should
+    be converted to NullObject by specifying null_input at creation time, e.g.,
+
+    solint = @VisDependentProperty(default=5, null_input=[None, '', 'RESET', -1])
+
     """
     # TODO check whether this can be replaced with NULL
     NO_DEFAULT = NoDefaultMarker()
@@ -353,27 +370,59 @@ class InputsContainer(object):
         self._task_cls = task_cls
         self._initargs = kwargs.copy()
 
-        # Inspect the Inputs constructor specification to find out which
-        # attribute sets the scope (=the data sets to process) for that task.
+        # For ModeInputs, the scope attribute is defined by one of the classes
+        # that the ModeInputs switches between, rather than the ModeInputs
+        # constructor itself.
+        if issubclass(task_cls.Inputs, ModeInputs):
+            if 'mode' not in kwargs:
+                # user intends for the class to use the default mode. Inspect
+                # the constructor to find what that value is.
+                constructor = task_cls.Inputs.__init__
+                code = constructor.func_code
+                argcount = code.co_argcount
+                argnames = code.co_varnames[:argcount]
+                fn_defaults = constructor.func_defaults or list()
+                argdefs = dict(zip(argnames[-len(fn_defaults):], fn_defaults))
+
+                # user intends for the class to use the default mode. Inspect
+                # the constructor to find what that value is
+                if 'mode' not in argdefs:
+                    raise KeyError('The mode attribute must be specified for ModeInputs constructors')
+                mode = argdefs['mode']
+
+            else:
+                mode = kwargs['mode']
+
+            current_inputs_cls = task_cls.Inputs._modes[mode].Inputs
+        else:
+            current_inputs_cls = task_cls.Inputs
+
+        # to support ModeInputs we introduce a level of indirection: this
+        # variable points to the Inputs class that code should inspect
+        self._current_inputs_cls = current_inputs_cls
+
+        # Inspect the targeted Inputs constructor specification to find out
+        # which attribute sets the scope (=the data sets to process) for that
+        # task.
         #
         # note: _scope_attr must be set for __setattr__ to function correctly
         #
-        constructor_spec = inspect.getargspec(task_cls.Inputs.__init__)
+        constructor_spec = inspect.getargspec(current_inputs_cls.__init__)
         if 'vis' in constructor_spec.args:
             self._scope_attr = 'vis'
         elif 'infiles' in constructor_spec.args:
             self._scope_attr = 'infiles'
         else:
-            msg = 'No scope argument recognised in {!s} constructor' ''.format(self._task_cls.Inputs.__name__)
+            msg = 'No scope argument recognised in {!s} constructor' ''.format(task_cls.Inputs.__name__)
             raise AttributeError(msg)
 
         # all arguments must be of kev/value type for processing
-        named_args = name_all_arguments(self._task_cls.Inputs.__init__, context, *args, **kwargs)
+        named_args = name_all_arguments(current_inputs_cls.__init__, context, *args, **kwargs)
 
         # if no datasets are specified, set the dataset scope to all those
         # registered with the context
         try:
-            scope_property = getattr(self._task_cls.Inputs, self._scope_attr)
+            scope_property = getattr(current_inputs_cls, self._scope_attr)
             scope_null = scope_property.null
         except:
             scope_null = _NULL
@@ -383,12 +432,20 @@ class InputsContainer(object):
         if scope_is_null:
             # TODO SJW move fn to this module
             from . import basetask
+            # note that for ModeInputs this queries whether the ModeInputs is
+            # registered for imaging MSes, not the Inputs that is selected.
             imaging_preferred = basetask.get_imaging_preferred(self._task_cls.Inputs)
             ms_pool = self._context.observing_run.get_measurement_sets(imaging_preferred=imaging_preferred)
             named_args[self._scope_attr] = [ms.name for ms in ms_pool]
 
         # multi-vis tasks do not require any further processing
-        self._multivis = task_cls.is_multi_vis_task
+        from . import sessionutils
+        # CAS-11443. ParallelTaskTemplate is a multivis task, in the sense that
+        # one instance of ParallelTaskTemplate executes for all MSes, but the
+        # Inputs should be treated as non-multivis so that the input arguments
+        # for HPC tasks can be mapped to MSes using the same VDP logic as for
+        # non-HPC tasks.
+        self._multivis = task_cls.is_multi_vis_task and not issubclass(task_cls, sessionutils.ParallelTemplate)
         if self._multivis:
             self._cls_instances = {'all': task_cls.Inputs(**named_args)}
             self._active_instances = self._cls_instances.values()
@@ -534,7 +591,7 @@ class InputsContainer(object):
         # private variables, add it to our __dict__ using the standard
         # __setattr__ method
         if name in ('_context', '_task_cls', '_cls_instances', '_active_instances', '_scope_attr', '_initargs',
-                    '_multivis'):
+                    '_multivis', '_current_inputs_cls'):
             if LOG.isEnabledFor(logging.TRACE):
                 LOG.trace('Setting {!s}.{!s} = {!r}'.format(self.__class__.__name__, name, val))
             return super(InputsContainer, self).__setattr__(name, val)
@@ -550,6 +607,13 @@ class InputsContainer(object):
             if LOG.isEnabledFor(logging.TRACE):
                 LOG.trace('Setting {!s}.{!s} = {!r}'.format(inputs.__class__.__name__, name, user_arg))
             setattr(inputs, name, user_arg)
+
+        if name == 'mode' and issubclass(self._task_cls.Inputs, ModeInputs):
+            # can only have one active class at a time, so it's safe to take
+            # the first instance
+            new_cls = self._active_instances[0]._active.__class__
+            LOG.trace('Setting VDP target inputs class to {!s}'.format(new_cls.__name__))
+            self._current_inputs_cls = new_cls
 
     def _map_args_to_vis(self, val):
         """
@@ -581,6 +645,8 @@ class InputsContainer(object):
             scope = self._cls_instances.keys()
 
         # the key for inputs instances is the basename vis
+        if isinstance(scope, str):
+            scope = [scope]
         basenames = [os.path.basename(v) for v in scope]
 
         #
@@ -602,8 +668,13 @@ class InputsContainer(object):
     def __str__(self):
         if not self._active_instances:
             return 'Empty'
-        attrs = {name for name in dir(self._task_cls.Inputs) if not name.startswith('_')}
-        methods = {fn_name for fn_name, _ in inspect.getmembers(self._task_cls.Inputs, inspect.ismethod)}
+
+        attrs = {name for name in dir(self._current_inputs_cls) if not name.startswith('_')}
+        # We should also print the mode for ModeInputs
+        if issubclass(self._task_cls.Inputs, ModeInputs):
+            attrs.add('mode')
+
+        methods = {fn_name for fn_name, _ in inspect.getmembers(self._current_inputs_cls, inspect.ismethod)}
         props = attrs - methods
         props.discard('context')
         props.discard('ms')
@@ -620,6 +691,15 @@ class InputsContainer(object):
             properties[key] = format_value_list(vals)
 
         return properties
+
+
+def get_properties(inputs_cls):
+    attrs = {name for name in dir(inputs_cls) if not name.startswith('_')}
+    methods = {fn_name for fn_name, _ in inspect.getmembers(inputs_cls, inspect.ismethod)}
+    props = attrs - methods
+    props.discard('context')
+    props.discard('ms')
+    return props
 
 
 class StandardInputs(api.Inputs):

@@ -533,6 +533,10 @@ class ModeInputs(api.Inputs):
 
 
 class ModeTask(api.Task):
+    # override this if your inputs needs visibility of all measurement sets in
+    # scope
+    is_multi_vis_task = False
+
     def __init__(self, inputs):
         super(ModeTask, self).__init__()
 

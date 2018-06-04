@@ -175,27 +175,27 @@ class BaselineSubtractionWorkerInputs(BaselineSubtractionInputsBase):
     edge = vdp.VisDependentProperty(default=(0,0))
     deviationmask = vdp.VisDependentProperty(default={})
     
-    # workaround for possible bug in ParallelTaskTemplate CAS-11443
-    @plan.postprocess
-    def plan(self, unprocessed):
-        if type(self.vis) == list:
-            vis = self.vis[0]
-        else:
-            vis = self.vis
-        if type(unprocessed) == list and hasattr(self, 'plandict'):
-            return self.plandict[vis]
-        return unprocessed
-    
-    # workaround for possible bug in ParallelTaskTemplate CAS-11443
-    @deviationmask.postprocess
-    def deviationmask(self, unprocessed):
-        if type(self.vis) == list:
-            vis = self.vis[0]
-        else:
-            vis = self.vis
-        if type(unprocessed) == list and hasattr(self, 'dmdict'):
-            return self.dmdict[vis]
-        return unprocessed
+    # # workaround for possible bug in ParallelTaskTemplate CAS-11443
+    # @plan.postprocess
+    # def plan(self, unprocessed):
+    #     if type(self.vis) == list:
+    #         vis = self.vis[0]
+    #     else:
+    #         vis = self.vis
+    #     if type(unprocessed) == list and hasattr(self, 'plandict'):
+    #         return self.plandict[vis]
+    #     return unprocessed
+    #
+    # # workaround for possible bug in ParallelTaskTemplate CAS-11443
+    # @deviationmask.postprocess
+    # def deviationmask(self, unprocessed):
+    #     if type(self.vis) == list:
+    #         vis = self.vis[0]
+    #     else:
+    #         vis = self.vis
+    #     if type(unprocessed) == list and hasattr(self, 'dmdict'):
+    #         return self.dmdict[vis]
+    #     return unprocessed
     
     @vdp.VisDependentProperty
     def prefix(self):
@@ -205,16 +205,16 @@ class BaselineSubtractionWorkerInputs(BaselineSubtractionInputsBase):
     def blparam(self):
         return self.prefix + '_blparam.txt'
     
-    # workaround for possible bug in ParallelTaskTemplate CAS-11443
-    @blparam.postprocess
-    def blparam(self, unprocessed):
-        if type(self.vis) == list:
-            vis = self.vis[0]
-        else:
-            vis = self.vis
-        if type(unprocessed) == list and hasattr(self, 'blparamdict'):
-            return self.blparamdict[vis]
-        return unprocessed
+    # # workaround for possible bug in ParallelTaskTemplate CAS-11443
+    # @blparam.postprocess
+    # def blparam(self, unprocessed):
+    #     if type(self.vis) == list:
+    #         vis = self.vis[0]
+    #     else:
+    #         vis = self.vis
+    #     if type(unprocessed) == list and hasattr(self, 'blparamdict'):
+    #         return self.blparamdict[vis]
+    #     return unprocessed
        
     @vdp.VisDependentProperty
     def bloutput(self):
@@ -260,24 +260,24 @@ class BaselineSubtractionWorkerInputs(BaselineSubtractionInputsBase):
         self.blparam = blparam
         self.bloutput = bloutput
         
-        # workaround for possible bug in ParallelTaskTemplate CAS-11443
-        if type(self.vis) == list:
-            if type(self.plan) == list:
-                assert len(self.vis) == len(self.plan)
-                self.plandict = dict((k,v) for (k,v) in zip(self.vis, self.plan))
-            else:
-                self.plandict = dict((k,self.plan) for k in self.vis)
-            if type(self.deviationmask) == list:
-                assert len(self.vis) == len(self.deviationmask)
-                self.dmdict = dict((k,v) for (k,v) in zip(self.vis, self.deviationmask))
-            else:
-                self.dmdict = dict((k,self.deviationmask) for k in self.vis)
-            if type(self.blparam) == list:
-                assert len(self.vis) == len(self.blparam)
-                self.blparamdict = dict((k,v) for (k,v) in zip(self.vis, self.blparam))
-            else:
-                self.blparamdict = dict((k,self.blparam) for k in self.vis)
-            
+        # # workaround for possible bug in ParallelTaskTemplate CAS-11443
+        # if type(self.vis) == list:
+        #     if type(self.plan) == list:
+        #         assert len(self.vis) == len(self.plan)
+        #         self.plandict = dict((k,v) for (k,v) in zip(self.vis, self.plan))
+        #     else:
+        #         self.plandict = dict((k,self.plan) for k in self.vis)
+        #     if type(self.deviationmask) == list:
+        #         assert len(self.vis) == len(self.deviationmask)
+        #         self.dmdict = dict((k,v) for (k,v) in zip(self.vis, self.deviationmask))
+        #     else:
+        #         self.dmdict = dict((k,self.deviationmask) for k in self.vis)
+        #     if type(self.blparam) == list:
+        #         assert len(self.vis) == len(self.blparam)
+        #         self.blparamdict = dict((k,v) for (k,v) in zip(self.vis, self.blparam))
+        #     else:
+        #         self.blparamdict = dict((k,self.blparam) for k in self.vis)
+
         
 
 # Base class for workers

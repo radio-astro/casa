@@ -172,7 +172,7 @@ class VDPTaskFactory(object):
             executable = mpihelpers.Tier0PipelineTask(self.__task, valid_args, self.__context_path)
             return valid_args, mpihelpers.AsyncTask(executable)
         else:
-            inputs = self.__task.Inputs(self.__context, **valid_args)
+            inputs = vdp.InputsContainer(self.__task, self.__context, **valid_args)
             task = self.__task(inputs)
             return valid_args, mpihelpers.SyncTask(task, self.__executor)
 
@@ -293,6 +293,8 @@ def remap_spw_str(source_ms, target_ms, spws):
 
 
 class ParallelTemplate(basetask.StandardTaskTemplate):
+    is_multi_vis_task = True
+
     @abc.abstractproperty
     def Task(self):
         """
@@ -303,8 +305,6 @@ class ParallelTemplate(basetask.StandardTaskTemplate):
 
     def __init__(self, inputs):
         super(ParallelTemplate, self).__init__(inputs)
-
-    is_multi_vis_task = True
 
     def get_result_for_exception(self, vis, result):
         raise NotImplementedError
