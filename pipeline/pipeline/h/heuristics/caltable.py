@@ -110,8 +110,10 @@ class GaincalCaltable(CaltableNamer):
 
     def customise(self, namer, task_args):
         namer.spectral_window_nochan(task_args.get('spw', None))
-        solint = task_args.get('solint', None)
-        namer.solint(utils.truncate_floats(solint, 3))
+        if 'solint' in task_args:
+            # convert integer solints to str for truncation
+            solint = str(task_args['solint'])
+            namer.solint(utils.truncate_floats(solint, 3))
 
         if 'gaintype' in task_args:
             if task_args['gaintype'] == 'GSPLINE':
