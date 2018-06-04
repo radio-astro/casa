@@ -1,8 +1,6 @@
 from __future__ import absolute_import
 import copy
-import collections
 import itertools
-import operator
 import os
 import operator
 import platform
