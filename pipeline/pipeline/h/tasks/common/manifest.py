@@ -64,6 +64,15 @@ class PipelineManifest(object):
                 return session
         return None
 
+    def get_asdm (self, session, asdm_name):
+	"""
+        Get an ASDM element in a SESSION element and return it 
+	"""
+        for asdm in seesion.iter('asdm'):
+            if asdm.attrib['name'] == asdm_name:
+                return sdm
+        return None
+
 
     def add_caltables (self, session, caltables_file):
         eltree.SubElement(session, "caltables", name=caltables_file)
@@ -92,6 +101,16 @@ class PipelineManifest(object):
         asdm = eltree.SubElement (session, "asdm", name=asdm_name)
 	eltree.SubElement(asdm, "finalflags", name=flags_file)
 	eltree.SubElement(asdm, "applycmds", name=calapply_file)
+
+    def add_asdm_imlist (self, session, asdm_name, flags_file, calapply_file, imagelist, type):
+	"""
+        Add an ASDM element to a SESSION element
+	"""
+        asdm = eltree.SubElement (session, "asdm", name=asdm_name)
+	eltree.SubElement(asdm, "finalflags", name=flags_file)
+	eltree.SubElement(asdm, "applycmds", name=calapply_file)
+        for image in imagelist:
+	    eltree.SubElement(asdm, "image", name=image, imtype=type)
 
     def add_auxasdm (self, session, asdm_name, calapply_file):
 	"""
@@ -130,7 +149,8 @@ class PipelineManifest(object):
 
     def add_images(self, ous, imagelist, type):
 	"""
-        Add a list of images to the OUS element
+        Add a list of images to the OUS element. Note that this does not have
+        to be an ous element, e.d. an asdm element will do
 	"""
         for image in imagelist:
 	    eltree.SubElement(ous, "image", name=image, imtype=type)
