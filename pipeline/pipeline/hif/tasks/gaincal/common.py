@@ -2,7 +2,6 @@ from __future__ import absolute_import
 
 import copy
 import os
-import types
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
@@ -43,6 +42,17 @@ class VdpCommonGaincalInputs(commoncalinputs.VdpCommonCalibrationInputs):
         if isinstance(value, str):
             value = value.replace('*', '')
         return value
+
+    def __init__(self, context, output_dir=None, vis=None, caltable=None, intent=None, field=None, spw=None,
+                 refant=None, antenna=None, minblperant=None, opacity=None, selectdata=None, uvrange=None,
+                 calmode=None):
+        super(VdpCommonGaincalInputs, self).__init__(context, output_dir=output_dir, vis=vis, intent=intent,
+                                                     field=field, spw=spw, refant=refant, antenna=antenna,
+                                                     minblperant=minblperant, opacity=opacity, selectdata=selectdata,
+                                                     uvrange=uvrange)
+        self.calmode = calmode
+        self.caltable = caltable
+
 
 class GaincalResults(basetask.Results):
     """

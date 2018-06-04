@@ -18,124 +18,123 @@ Previous calibrations are applied on the fly.
 </description>
 <input>
     <param type="stringArray" name="vis" subparam="true">
-	<description>List of input MeasurementSets</description>
-	<value></value>
-   </param>
+        <description>List of input MeasurementSets</description>
+        <value></value>
+    </param>
 
-   <param type="stringArray" name="caltable" subparam="true">
-	<description>List of output caltables</description>
-	<value type="string"></value>
-   </param>
+    <param type="stringArray" name="caltable" subparam="true">
+        <description>List of output caltables</description>
+        <value type="string"></value>
+    </param>
 
-   <param type="string" name="field" subparam="true">
-	<description>Set of data selection field names or ids</description>
-	<value></value>
-   </param>
+    <param type="string" name="field" subparam="true">
+        <description>Set of data selection field names or ids</description>
+        <value></value>
+    </param>
 
-   <param type="string" name="intent" subparam="true">
-	<description>Set of data selection observing intents</description>
-	<value></value>
-   </param>
+    <param type="string" name="intent" subparam="true">
+        <description>Set of data selection observing intents</description>
+        <value></value>
+    </param>
 
-   <param type="string" name="spw" subparam="true">
-	<description>Set of data selection spectral window/channels</description>
-	<value></value>
-   </param>
+    <param type="string" name="spw" subparam="true">
+        <description>Set of data selection spectral window/channels</description>
+        <value></value>
+    </param>
 
-   <param type="string" name="antenna" subparam="true">
-	<description>Set of data selection antenna ids</description>
-	<value></value>
-   </param>
+    <param type="string" name="antenna" subparam="true">
+        <description>Set of data selection antenna ids</description>
+        <value></value>
+    </param>
 
-   <param type="string" name="hm_gaintype">
-	<description>The gain solution type (gtype or gpsline)</description>
-	<value>gtype</value>
-	<allowed kind="enum">
-	    <value>gtype</value>
-	    <value>gpline</value>
-	    <value></value>
-	</allowed>
+    <param type="string" name="hm_gaintype">
+        <description>The gain solution type (gtype or gspline)</description>
+        <value>gtype</value>
+        <allowed kind="enum">
+            <value>gtype</value>
+            <value>gspline</value>
+        </allowed>
     </param>
 
     <param type="string" name="calmode">
-	<description>Type of solution" (ap, p, a)</description>
-	<value>ap</value>
-	<allowed kind="enum">
-	    <value>a</value>
-	    <value>p</value>
-	    <value>ap</value>
-	</allowed>
+        <description>Type of solution" (ap, p, a)</description>
+        <value>ap</value>
+        <allowed kind="enum">
+            <value>a</value>
+            <value>p</value>
+            <value>ap</value>
+        </allowed>
     </param>
 
     <param type="any" name="solint" subparam="true">
         <description>Solution intervals</description>
-	<any type="variant"/>
-	<value type="string">inf</value>
+        <any type="variant"/>
+        <value type="string">inf</value>
     </param>
 
     <param type="string" name="combine" subparam="true">
-	<description>Data axes which to combine for solve (scan, spw, and/or field)</description>
-	<value type="string"></value>
+        <description>Data axes which to combine for solve (scan, spw, and/or field)</description>
+        <value type="string"></value>
     </param>
 
     <param type="string" name="refant" subparam="true">
-	<description>Reference antenna names</description>
-	<value></value>
+        <description>Reference antenna names</description>
+        <value></value>
     </param>
 
     <param type="bool" name="solnorm" subparam="true">
-	<description>Normalize average solution amplitudes to 1.0</description>
-	<value>False</value>
+        <description>Normalize average solution amplitudes to 1.0</description>
+        <value>False</value>
     </param>
 
     <param type="int" name="minblperant" subparam="true">
-	<description>Minimum baselines per antenna required for solve</description>
-	<value>4</value>
+        <description>Minimum baselines per antenna required for solve</description>
+        <value>4</value>
     </param>
 
     <param type="double" name="minsnr" subparam="true">
-	<description>Reject solutions below this SNR</description>
-	<value>3.0</value>
+        <description>Reject solutions below this SNR</description>
+        <value>3.0</value>
     </param>
 
     <param type="doubleArray" name="smodel" subparam="true">
-	<description>Point source Stokes parameters for source model</description>
-	<value></value>
+        <description>Point source Stokes parameters for source model</description>
+        <value></value>
     </param>
 
     <param type="double" name="splinetime" subparam="true">
-	<description>Spline timescale(sec)</description>
-	<value>3600.0</value>
+        <description>Spline timescale(sec)</description>
+        <value>3600.0</value>
     </param>
 
     <param type="int" name="npointaver" subparam="true">
-	<description>The phase-unwrapping algorithm</description>
-	<value>3</value>
+        <description>The phase-unwrapping algorithm</description>
+        <value>3</value>
     </param>
 
     <param type="double" name="phasewrap" subparam="true">
-	<description>Wrap the phase for jumps greater than this value (degrees)</description>
-	<value>180.0</value>
+        <description>Wrap the phase for jumps greater than this value (degrees)</description>
+        <value>180.0</value>
     </param>
 
     <param type="string" name="pipelinemode">
-	<description>The pipeline operating mode</description>
-	<value>automatic</value>
-	<allowed kind="enum">
-	    <value>automatic</value>
-	    <value>interactive</value>
-	    <value>getinputs</value>
-	</allowed>
+        <description>The pipeline operating mode</description>
+        <value>automatic</value>
+        <allowed kind="enum">
+            <value>automatic</value>
+            <value>interactive</value>
+            <value>getinputs</value>
+        </allowed>
     </param>
 
     <param type="bool" name="dryrun" subparam="true">
-	<description>Run task (False) or display the command(True)</description>
-	<value type="bool">False</value>
+        <description>Run task (False) or display the command(True)</description>
+        <value type="bool">False</value>
     </param>
 
     <param type="bool" name="acceptresults" subparam="true">
-	<description>Automatically accept results into the context</description>
-	<value type="bool">True</value>
+        <description>Automatically accept results into the context</description>
+        <value type="bool">True</value>
     </param>
 
     <constraints>

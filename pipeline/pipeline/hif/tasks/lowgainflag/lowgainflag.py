@@ -341,11 +341,9 @@ class LowgainflagData(basetask.StandardTaskTemplate):
             bpcal.accept(inputs.context)
 
         # Calculate gain phases
-        gpcal_inputs = gaincal.GTypeGaincal.Inputs(
-            context=inputs.context, vis=inputs.vis,
-            intent=inputs.intent, spw=inputs.spw,
-            refant=inputs.refant,
-            calmode='p', minsnr=2.0, solint='int', gaintype='G')
+        gpcal_inputs = gaincal.GTypeGaincal.Inputs(context=inputs.context, vis=inputs.vis, intent=inputs.intent,
+                                                   spw=inputs.spw, refant=inputs.refant, calmode='p', minsnr=2.0,
+                                                   solint='int')
         gpcal_task = gaincal.GTypeGaincal(gpcal_inputs)
         gpcal = self._executor.execute(gpcal_task, merge=False)
         if not gpcal.final:
