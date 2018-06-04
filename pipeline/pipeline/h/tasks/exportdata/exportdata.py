@@ -524,6 +524,15 @@ class ExportData(basetask.StandardTaskTemplate):
         Generate the manifest file
         '''
 
+        # Separate the calibrator images into per ous and per ms images
+        # based on the image values of prefix.
+        per_ous_calimages = []; per_ms_calimages = []
+        for image in calimages:
+            if image.startswith(oussid) or image.startswith('oussid') or image.startswith('unknown'):
+                per_ous_calimages.append(image)
+            else:
+                per_ms_calimages.append(image)
+
         # Initialize the manifest document and the top level ous status.
         pipemanifest = self._init_pipemanifest(oussid)
         ouss = pipemanifest.set_ous(oussid)
@@ -534,16 +543,20 @@ class ExportData(basetask.StandardTaskTemplate):
         if stdfproducts.ppr_file:
             pipemanifest.add_pprfile (ouss, os.path.basename(stdfproducts.ppr_file))
 
+
         # Add the flagging and calibration products
         for session_name in sessiondict:
             session = pipemanifest.set_session(ouss, session_name)
             pipemanifest.add_caltables(session, sessiondict[session_name][1])
             for vis_name in sessiondict[session_name][0]:
+                immatchlist = [imname for imname in per_ms_calimages if imname.startswith(vis_name)]
                 if exportmses:
                     pipemanifest.add_ms (session, vis_name, visdict[vis_name])
                 else:
-                    pipemanifest.add_asdm (session, vis_name, visdict[vis_name][0],
-                        visdict[vis_name][1])
+                    #pipemanifest.add_asdm (session, vis_name, visdict[vis_name][0],
+                        #visdict[vis_name][1])
+                    pipemanifest.add_asdm_imlist (session, vis_name, visdict[vis_name][0],
+                        visdict[vis_name][1], immatchlist, 'calibrator')
 
         # Add a tar file of the web log
         pipemanifest.add_weblog (ouss, os.path.basename(stdfproducts.weblog_file))
@@ -563,7 +576,8 @@ class ExportData(basetask.StandardTaskTemplate):
             pipemanifest.add_restorescript (ouss, os.path.basename(stdfproducts.casa_restore_script))
 
         # Add the calibrator images
-        pipemanifest.add_images (ouss, calimages, 'calibrator')
+        #pipemanifest.add_images (ouss, calimages, 'calibrator')
+        pipemanifest.add_images (ouss, per_ous_calimages, 'calibrator')
 
         # Add the target images
         pipemanifest.add_images (ouss, targetimages, 'target')
