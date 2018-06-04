@@ -504,9 +504,16 @@ class ImageParamsHeuristics(object):
 
     def gridder(self, intent, field):
         # the field heuristic which decides whether this is a mosaic or not
+        # and sets self._mosaic (a bit convoluted...)
         self.field(intent, field)
 
-        if self._mosaic:
+        # also need to use mosaic gridder when gridding antennas with different
+        # diameters (only for calibrators)
+        if self._mosaic or (len(self.antenna_diameters()) > 1 and intent != 'TARGET'):
+            # Setting this here because it is used in other places in the heuristics
+            # TODO: this is flaky since it requires "gridder" to be called before
+            #       other methods using self._mosaic
+            self._mosaic = True
             return 'mosaic'
         else:
             return 'standard'
@@ -1481,6 +1488,24 @@ class ImageParamsHeuristics(object):
     def pb_correction(self):
         return True
 
+    def antenna_diameters(self, vislist=None):
+
+        '''Count the antennas of given diameters per MS.'''
+
+        if vislist is None:
+            local_vislist = self.vislist
+        else:
+            local_vislist = vislist
+
+        antenna_diameters = {}
+        for vis in local_vislist:
+            for antenna in self.observing_run.get_ms(vis).antennas:
+                if antenna.diameter not in antenna_diameters:
+                    antenna_diameters[antenna.diameter] = 0
+                antenna_diameters[antenna.diameter] += 1
+
+        return antenna_diameters
+
     def majority_antenna_ids(self, vislist=None):
 
         '''Get the IDs of the majority (by diameter) antennas per MS.'''
@@ -1491,12 +1516,7 @@ class ImageParamsHeuristics(object):
             local_vislist = vislist
 
         # Determine majority diameter
-        antenna_diameters = {}
-        for vis in local_vislist:
-            for antenna in self.observing_run.get_ms(vis).antennas:
-                if antenna.diameter not in antenna_diameters:
-                    antenna_diameters[antenna.diameter] = 0
-                antenna_diameters[antenna.diameter] += 1
+        antenna_diameters = self.antenna_diameters(local_vislist)
         majority_diameter = sorted(antenna_diameters.items(), key=operator.itemgetter(1))[-1][0]
 
         majority_antenna_ids = {}
