@@ -6,6 +6,7 @@ import os
 import tempfile
 
 from pipeline.infrastructure import basetask
+from pipeline.infrastructure import exceptions
 from . import mpihelpers
 from . import utils
 from . import vdp
@@ -324,7 +325,7 @@ class ParallelTemplate(basetask.StandardTaskTemplate):
             for (vis, (task_args, task)) in task_queue:
                 try:
                     worker_result = task.get_result()
-                except mpihelpers.PipelineError as e:
+                except exceptions.PipelineException as e:
                     assessed.append((vis, task_args, e))
                 else:
                     assessed.append((vis, task_args, worker_result))

@@ -9,6 +9,7 @@ import pipeline.infrastructure.api as api
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.mpihelpers as mpihelpers
 import pipeline.infrastructure.vdp as vdp
+from pipeline.infrastructure import exceptions
 from pipeline.infrastructure import task_registry
 from .resultobjects import MakeImagesResult
 from ..tclean import Tclean
@@ -104,7 +105,7 @@ class MakeImages(basetask.StandardTaskTemplate):
             for (target, task) in task_queue:
                 try:
                     worker_result = task.get_result()
-                except mpihelpers.PipelineError:
+                except exceptions.PipelineException:
                     result.add_result(TcleanResult(), target, outcome='failure')
                 else:
                     result.add_result(worker_result, target, outcome='success')

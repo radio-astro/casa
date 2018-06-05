@@ -1,6 +1,7 @@
 import abc
 import copy_reg
 import os
+
 try:
     import cPickle as pickle
 except:
@@ -11,22 +12,13 @@ import types
 from mpi4casa.MPICommandClient import MPICommandClient
 from mpi4casa.MPIEnvironment import MPIEnvironment
 
-from . import logging
+from pipeline.infrastructure import exceptions
+from pipeline.infrastructure import logging
 
 # global variable for toggling MPI usage
 USE_MPI = True
 
 LOG = logging.get_logger(__name__)
-
-
-class PipelineError(Exception):
-    """
-    Warning! This class is here temporarily and could disappear at any time!
-
-    References to this class should be replaced with references to the real
-    Pipeline exception classes, once that module has been created.
-    """
-    pass
 
 
 class AsyncTask(object):
@@ -54,7 +46,7 @@ class AsyncTask(object):
 
         :return: the Result returned by the executing task
         :rtype: pipeline.infrastructure.api.Result
-        :except PipelineError: if the task did not complete successfully.
+        :except PipelineException: if the task did not complete successfully.
         """
         response = mpiclient.get_command_response(self.__pid,
                                                   block=True,
@@ -65,7 +57,7 @@ class AsyncTask(object):
         else:
             err_msg = "Failure executing job on MPI server {}, " \
                       "with traceback\n {}".format(response['server'], response['traceback'])
-            raise PipelineError(err_msg)
+            raise exceptions.PipelineException(err_msg)
 
 
 class SyncTask(object):
@@ -93,7 +85,7 @@ class SyncTask(object):
 
         :return: the Result returned by the executing task
         :rtype: pipeline.infrastructure.api.Result
-        :except PipelineError: if the task did not complete successfully.
+        :except PipelineException: if the task did not complete successfully.
         """
         try:
             if self.__executor:
@@ -105,7 +97,7 @@ class SyncTask(object):
             import traceback
             err_msg = "Failure executing job by an exception {} " \
                       "with the following traceback\n {}".format(e.__class__.__name__, traceback.format_exc())
-            raise PipelineError(err_msg)
+            raise exceptions.PipelineException(err_msg)
 
 
 class Tier1Executable(object):
@@ -227,7 +219,7 @@ def mpiexec(tier0_executable):
 
     This function is used to recreate and execute tasks on cluster nodes.
 
-    :param executable: the Tier0Executable task to execute
+    :param tier0_executable: the Tier0Executable task to execute
     :return: the Result returned by executing the task
     """
     LOG.trace('rank%s@%s: mpiexec(%s)', MPIEnvironment.mpi_processor_rank,
@@ -281,6 +273,7 @@ def _unpickle_method(func_name, obj, cls):
         else:
             break
     return func.__get__(obj, cls)
+
 
 copy_reg.pickle(types.MethodType, _pickle_method, _unpickle_method)
 

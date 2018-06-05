@@ -19,7 +19,7 @@ from pipeline.h.tasks.common import commonfluxresults
 from pipeline.hif.tasks import gaincal
 from pipeline.hif.tasks.fluxscale import fluxscale
 from pipeline.hif.tasks.setmodel import setjy
-from pipeline.infrastructure import mpihelpers
+from pipeline.infrastructure import exceptions
 from pipeline.infrastructure import task_registry
 from . import fluxes
 from ... import heuristics
@@ -466,7 +466,7 @@ class SessionGcorFluxscale(basetask.StandardTaskTemplate):
                     continue
                 try:
                     worker_result = task.get_result()
-                except mpihelpers.PipelineError as e:
+                except exceptions.PipelineException as e:
                     assessed.append(sessionutils.VisResultTuple(vis, task_args, e))
                 else:
                     assessed.append(sessionutils.VisResultTuple(vis, task_args, worker_result))
