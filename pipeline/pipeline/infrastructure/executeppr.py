@@ -18,7 +18,8 @@ import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.project as project
 import pipeline.infrastructure.utils as utils
 import pipeline.infrastructure.vdp as vdp
-from . import task_registry
+from pipeline.infrastructure import task_registry
+from pipeline.infrastructure import exceptions
 
 # Make sure CASA exceptions are rethrown
 try:
@@ -266,17 +267,6 @@ def executeppr(pprXmlFile, importonly=True, breakpoint='breakpoint',
             finally:
                 gc.collect()
 
-            # Stop execution if result is a failed task result or a list
-            # containing a failed task result.
-            tracebacks = utils.get_tracebacks(results)
-            if len(tracebacks) > 0:
-                casatools.post_to_log("Unexpected error encountered during {}".format(pipeline_task_name),
-                                      echo_to_screen=echo_to_screen)
-                for tb in tracebacks:
-                    casatools.post_to_log("{}".format(tb), echo_to_screen=echo_to_screen)
-                errorfile = utils.write_errorexit_file(workingDir, 'errorexit', 'txt')
-                break
-
             if pipeline_task_name == 'ImportData' and importonly:
                 casatools.post_to_log(
                     "Terminating execution after running " + pipeline_task_name,
@@ -308,10 +298,27 @@ def executeppr(pprXmlFile, importonly=True, breakpoint='breakpoint',
         except Exception, e:
             # Log message if an exception occurred that was not handled by
             # standardtask template (not turned into failed task result).
+            casatools.post_to_log("Unhandled error in executeppr while running pipeline task {}"
+                                  "".format(pipeline_task_name), echo_to_screen=echo_to_screen)
             errstr = traceback.format_exc()
             casatools.post_to_log(errstr, echo_to_screen=echo_to_screen)
             errorfile = utils.write_errorexit_file(workingDir, 'errorexit', 'txt')
             break
+
+        # Stop execution if result is a failed task result or a list
+        # containing a failed task result.
+        tracebacks = utils.get_tracebacks(results)
+        if len(tracebacks) > 0:
+            # Save the context
+            context.save()
+
+            # Restore setting for rethrowing CASA exceptions.
+            __rethrow_casa_exceptions = default__rethrow_casa_exceptions
+            casatools.set_log_origin(fromwhere='')
+
+            errorfile = utils.write_errorexit_file(workingDir, 'errorexit', 'txt')
+            previous_tracebacks_as_string = "{}".format("\n".join([tb for tb in tracebacks]))
+            raise exceptions.PipelineException(previous_tracebacks_as_string)
 
     # Save the context
     context.save()

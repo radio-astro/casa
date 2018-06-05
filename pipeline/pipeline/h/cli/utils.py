@@ -10,7 +10,9 @@ import pipeline.infrastructure.vdp as vdp
 
 import pipeline.h.cli.cli as cli
 import pipeline.h.heuristics as heuristics
+from pipeline.infrastructure import exceptions
 from pipeline.infrastructure import task_registry
+from pipeline.infrastructure import utils
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -86,6 +88,11 @@ def execute_task(context, casa_task, casa_args):
 
     # before returning them
     gc.collect()
+
+    tracebacks = utils.get_tracebacks(results)
+    if len(tracebacks) > 0:
+        previous_tracebacks_as_string = "{}".format("\n".join([tb for tb in tracebacks]))
+        raise exceptions.PipelineException(previous_tracebacks_as_string)
 
     return results
 

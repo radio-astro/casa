@@ -16,7 +16,8 @@ import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.project as project
 import pipeline.infrastructure.utils as utils
 import pipeline.infrastructure.vdp as vdp
-from . import task_registry
+from pipeline.infrastructure import task_registry
+from pipeline.infrastructure import exceptions
 
 # Make sure CASA exceptions are rethrown
 try:
@@ -27,6 +28,7 @@ __rethrow_casa_exceptions=True
 
 # Setup path
 #sys.path.insert (0, os.path.expandvars("$SCIPIPE_HEURISTICS"))
+
 
 def executeppr (pprXmlFile, importonly=True, dry_run=False, loglevel='info',
     plotlevel='summary', interactive=True):
@@ -195,17 +197,6 @@ def executeppr (pprXmlFile, importonly=True, dry_run=False, loglevel='info',
                     casatools.post_to_log("Error: Failed to update context for " + pipeline_task_name, echo_to_screen=echo_to_screen)
                     raise
 
-            # Stop execution if result is a failed task result or a list
-            # containing a failed task result.
-            tracebacks = utils.get_tracebacks(results)
-            if len(tracebacks) > 0:
-                casatools.post_to_log("Unexpected error encountered during {}".format(pipeline_task_name),
-                                      echo_to_screen=echo_to_screen)
-                for tb in tracebacks:
-                    casatools.post_to_log("{}".format(tb), echo_to_screen=echo_to_screen)
-                errorfile = utils.write_errorexit_file(workingDir, 'errorexit', 'txt')
-                break
-
             if pipeline_task_name == 'ImportData' and importonly:
                 casatools.post_to_log("Terminating execution after running " + pipeline_task_name, echo_to_screen=echo_to_screen)
                 break
@@ -221,21 +212,39 @@ def executeppr (pprXmlFile, importonly=True, dry_run=False, loglevel='info',
         except Exception, e:
             # Log message if an exception occurred that was not handled by
             # standardtask template (not turned into failed task result).
+            casatools.post_to_log("Unhandled error in executevlappr while running pipeline task {}"
+                                  "".format(pipeline_task_name), echo_to_screen=echo_to_screen)
             errstr = traceback.format_exc()
             casatools.post_to_log(errstr, echo_to_screen=echo_to_screen)
             errorfile = utils.write_errorexit_file(workingDir, 'errorexit', 'txt')
             break
 
+        # Stop execution if result is a failed task result or a list
+        # containing a failed task result.
+        tracebacks = utils.get_tracebacks(results)
+        if len(tracebacks) > 0:
+            # Save the context
+            context.save()
+
+            # Restore setting for rethrowing CASA exceptions.
+            __rethrow_casa_exceptions = default__rethrow_casa_exceptions
+            casatools.set_log_origin(fromwhere='')
+
+            errorfile = utils.write_errorexit_file(workingDir, 'errorexit', 'txt')
+            previous_tracebacks_as_string = "{}".format("\n".join([tb for tb in tracebacks]))
+            raise exceptions.PipelineException(previous_tracebacks_as_string)
+
     # Save the context
     context.save()
 
-    casatools.post_to_log ("Terminating procedure execution ...", 
-        echo_to_screen=echo_to_screen)
+    casatools.post_to_log("Terminating procedure execution ...",
+                          echo_to_screen=echo_to_screen)
 
     __rethrow_casa_exceptions = default__rethrow_casa_exceptions
     casatools.set_log_origin(fromwhere='')
 
     return
+
 
 # Return the intents list, the ASDM list, and the processing commands
 # for the first processing request. There should in general be only
@@ -243,7 +252,6 @@ def executeppr (pprXmlFile, importonly=True, dry_run=False, loglevel='info',
 #
 # TDB: Turn some print statement into CASA log statements
 #
-
 def _getFirstRequest (pprXmlFile):
 
     # Initialize
@@ -306,16 +314,16 @@ def _getFirstRequest (pprXmlFile):
 
     return info, structure, relativePath, intentsDict, asdmList, procedureName, commandsList
 
+
 # Give the path to the pipeline processing request XML file return the pipeline
 # processing request object.
-
 def _getPprObject(pprXmlFile):
     pprObject = XmlObjectifier.XmlObject (fileName=pprXmlFile)
     return pprObject
 
+
 # Given the pipeline processing request object print some project summary
 # information. Returns a list of tuples to preserve order (key, (prompt, value))
-
 def _getProjectSummary(pprObject):
 
     ppr_summary = pprObject.SciPipeRequest.ProjectSummary
@@ -336,8 +344,7 @@ def _getProjectSummary(pprObject):
     return summaryList
 
 # Given the pipeline processing request object print some project structure
-# information. Returns a 
-
+# information. Returns a
 def _getProjectStructure(pprObject):
 
     # backwards compatibility test
@@ -349,7 +356,6 @@ def _getProjectStructure(pprObject):
 # Given the pipeline processing request object return the number of processing
 # requests. For EVLA this should always be 1 but check. Assume a single scheduling block
 # per processing request.
-
 def _getNumRequests(pprObject):
 
     ppr_prequests = pprObject.SciPipeRequest.ProcessingRequests
@@ -378,15 +384,12 @@ def _getNumRequests(pprObject):
             else:
                 pass
 
-
     # Return the number of requests.
     return numRequests
 
 
-
 # Given the pipeline processing request object return a list of processing
 # intents in the form of a keyword and value dictionary
-
 def _getIntents (pprObject, requestId, numRequests):
 
     if numRequests == 1:
@@ -454,7 +457,6 @@ def _getPerformanceParameters(intentsDict):
 # Given the pipeline processing request object return a list of processing
 # commands where each element in the list is a tuple consisting of the
 # processing command name and the parameter set dictionary.
-
 def _getCommands (pprObject, requestId, numRequests):
 
     if numRequests == 1:
@@ -489,9 +491,9 @@ def _getCommands (pprObject, requestId, numRequests):
 
     return procedureName, numCommands, commandsList
 
+
 # Given the pipeline processing request object return the number of scheduling
 # block sets. For the EVLA there can be only one.
-
 def _getNumSchedBlockSets (pprObject, requestId, numRequests):
 
     if numRequests == 1:
@@ -509,10 +511,10 @@ def _getNumSchedBlockSets (pprObject, requestId, numRequests):
 
     return numSchedBlockSets
 
+
 # Given the pipeline processing request object return a list of ASDMs
 # where each element in the list is a tuple consisting of the path
-# to the ASDM, the name of the ASDM, and the UID of the ASDM. 
-
+# to the ASDM, the name of the ASDM, and the UID of the ASDM.
 def _getAsdmList (pprObject, sbsetId, numSbSets, requestId, numRequests):
 
     if numRequests == 1:
@@ -537,9 +539,9 @@ def _getAsdmList (pprObject, sbsetId, numSbSets, requestId, numRequests):
 
     return relativePath, numAsdms, asdmList
 
+
 # Given a parameter set object retrieve the parameter set dictionary for
 # each command.
-
 def _getParameters (ppsetObject):
 
     numParams = 0
