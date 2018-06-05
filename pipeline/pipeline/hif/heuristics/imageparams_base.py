@@ -1524,3 +1524,22 @@ class ImageParamsHeuristics(object):
             majority_antenna_ids[os.path.basename(vis)] = [antenna.id for antenna in self.observing_run.get_ms(vis).antennas if antenna.diameter == majority_diameter]
 
         return majority_antenna_ids
+
+    def antenna_ids(self, intent, vislist=None):
+
+        '''Get the antenna IDs to be used for imaging.'''
+
+        if vislist is None:
+            local_vislist = self.vislist
+        else:
+            local_vislist = vislist
+
+        if intent != 'TARGET':
+            # For calibrators use all antennas
+            antenna_ids = {}
+            for vis in local_vislist:
+                antenna_ids[os.path.basename(vis)] = [antenna.id for antenna in self.observing_run.get_ms(vis).antennas]
+            return antenna_ids
+        else:
+            # For science targets use majority antennas only
+            return self.majority_antenna_ids(local_vislist)
