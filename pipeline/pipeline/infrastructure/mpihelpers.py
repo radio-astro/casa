@@ -85,7 +85,8 @@ class SyncTask(object):
 
         :return: the Result returned by the executing task
         :rtype: pipeline.infrastructure.api.Result
-        :except PipelineException: if the task did not complete successfully.
+        :except pipeline.infrastructure.exceptions.PipelineException: if the
+        task did not complete successfully.
         """
         try:
             if self.__executor:
@@ -93,7 +94,6 @@ class SyncTask(object):
             else:
                 return self.__task.execute(dry_run=False)
         except Exception, e:
-            # TODO add exception to error
             import traceback
             err_msg = "Failure executing job by an exception {} " \
                       "with the following traceback\n {}".format(e.__class__.__name__, traceback.format_exc())
