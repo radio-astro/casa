@@ -213,7 +213,13 @@ class FindCont(basetask.StandardTaskTemplate):
                     else:
                         uvtaper = None
 
-                    job = casa_tasks.tclean(vis=vislist, imagename=findcont_basename, datacolumn=datacolumn, spw=real_spwsel,
+                    if target['antenna'] not in ([], None):
+                        antenna = target['antenna']
+                    else:
+                        antenna = None
+
+                    job = casa_tasks.tclean(vis=vislist, imagename=findcont_basename, datacolumn=datacolumn,
+                                            antenna=antenna, spw=real_spwsel,
                                             intent=utils.to_CASA_intent(inputs.ms[0], target['intent']),
                                             field=target['field'], start=start, width=width, nchan=nchan,
                                             outframe='LSRK', scan=scanidlist, specmode='cube', gridder=gridder,
