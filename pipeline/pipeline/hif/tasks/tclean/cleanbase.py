@@ -21,6 +21,7 @@ class CleanBaseInputs(vdp.StandardInputs):
 
     # simple properties ------------------------------------------------------------------------------------------------
 
+    antenna = vdp.VisDependentProperty(default='')
     datacolumn = vdp.VisDependentProperty(default='')
     deconvolver = vdp.VisDependentProperty(default='')
     cyclefactor = vdp.VisDependentProperty(default=None)
@@ -102,8 +103,8 @@ class CleanBaseInputs(vdp.StandardInputs):
                  hm_sidelobethreshold=None, hm_noisethreshold=None, hm_lownoisethreshold=None,
                  hm_negativethreshold=None, hm_minbeamfrac=None, hm_growiterations=None, hm_dogrowprune=None,
                  hm_minpercentchange=None, pblimit=None, niter=None,
-                 threshold=None, sensitivity=None, reffreq=None, conjbeams=None, is_per_eb=None, result=None, parallel=None,
-                 heuristics=None):
+                 threshold=None, sensitivity=None, reffreq=None, conjbeams=None, is_per_eb=None, antenna=None,
+                 result=None, parallel=None, heuristics=None):
         self.context = context
         self.output_dir = output_dir
         self.vis = vis
@@ -157,6 +158,7 @@ class CleanBaseInputs(vdp.StandardInputs):
         self.result = result
         self.parallel = parallel
         self.is_per_eb = is_per_eb
+        self.antenna = antenna
         self.heuristics = heuristics
 
 
@@ -265,6 +267,7 @@ class CleanBase(basetask.StandardTaskTemplate):
             'vis':           inputs.vis,
             'imagename':     '%s.%s.iter%s' % (os.path.basename(inputs.imagename), inputs.stokes, iter),
             'datacolumn':    inputs.datacolumn,
+            'antenna':       inputs.antenna,
             'field':         inputs.field,
             'spw':           real_spwsel,
             'intent':        utils.to_CASA_intent(inputs.ms[0], inputs.intent),

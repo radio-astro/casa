@@ -113,12 +113,12 @@ class TcleanInputs(cleanbase.CleanBaseInputs):
                  calcsens=None, cleancontranges=None, parallel=None,
                  # Extra parameters not in the CLI task interface
                  weighting=None, robust=None, uvtaper=None, scales=None, nsigma=None, cycleniter=None, cyclefactor=None,
-                 sensitivity=None, reffreq=None, conjbeams=None, is_per_eb=None,
+                 sensitivity=None, reffreq=None, conjbeams=None, is_per_eb=None, antenna=None,
                  # End of extra parameters
                  heuristics=None):
-        super(TcleanInputs, self).__init__(context, output_dir=output_dir, vis=vis, imagename=imagename, intent=intent,
-                                           field=field, spw=spw, uvrange=uvrange, specmode=specmode, gridder=gridder,
-                                           deconvolver=deconvolver, uvtaper=uvtaper, nterms=nterms,
+        super(TcleanInputs, self).__init__(context, output_dir=output_dir, vis=vis, imagename=imagename, antenna=antenna,
+                                           intent=intent, field=field, spw=spw, uvrange=uvrange, specmode=specmode,
+                                           gridder=gridder, deconvolver=deconvolver, uvtaper=uvtaper, nterms=nterms,
                                            cycleniter=cycleniter, cyclefactor=cyclefactor, scales=scales,
                                            outframe=outframe, imsize=imsize, cell=cell, phasecenter=phasecenter,
                                            nchan=nchan, start=start, width=width, stokes=stokes, weighting=weighting,
@@ -130,8 +130,8 @@ class TcleanInputs(cleanbase.CleanBaseInputs):
                                            hm_negativethreshold=hm_negativethreshold, hm_minbeamfrac=hm_minbeamfrac,
                                            hm_growiterations=hm_growiterations, hm_dogrowprune=hm_dogrowprune,
                                            hm_minpercentchange=hm_minpercentchange, niter=niter, threshold=threshold,
-                                           sensitivity=sensitivity, conjbeams=conjbeams, is_per_eb=is_per_eb, parallel=parallel,
-                                           heuristics=heuristics)
+                                           sensitivity=sensitivity, conjbeams=conjbeams, is_per_eb=is_per_eb,
+                                           parallel=parallel, heuristics=heuristics)
 
         self.calcsens = calcsens
         self.cleancontranges = cleancontranges
@@ -151,6 +151,7 @@ class TcleanInputs(cleanbase.CleanBaseInputs):
         self.cont_freq_ranges = ''
 
         self.is_per_eb = is_per_eb
+        self.antenna = antenna
 
 
 # tell the infrastructure to give us mstransformed data when possible by
@@ -213,23 +214,28 @@ class Tclean(cleanbase.CleanBase):
         inputs.vis = [inputs.vis[i] for i in visindexlist]
 
         # Generate the image name if one is not supplied.
-        if inputs.imagename in ('', None):
+        if inputs.imagename in (None, ''):
             inputs.imagename = self.image_heuristics.imagename(intent=inputs.intent,
                                                                field=inputs.field,
                                                                spwspec=inputs.spw,
                                                                specmode=inputs.specmode)
 
         # Determine the default gridder
-        if inputs.gridder in ('', None):
+        if inputs.gridder in (None, ''):
             inputs.gridder = self.image_heuristics.gridder(inputs.intent, inputs.field)
 
         # Determine deconvolver
-        if inputs.deconvolver in ('', None):
+        if inputs.deconvolver in (None, ''):
             inputs.deconvolver = self.image_heuristics.deconvolver(inputs.specmode, inputs.spw)
 
         # Determine nterms
         if (inputs.nterms in ('', None)) and (inputs.deconvolver == 'mtmfs'):
             inputs.nterms = self.image_heuristics.nterms()
+
+        # Determine antennas to be used
+        if inputs.antenna in (None, [], ''):
+            antenna_ids = self.image_heuristics.antenna_ids(inputs.intent)
+            inputs.antenna = [','.join(map(str, antenna_ids.get(os.path.basename(v), ''))) for v in inputs.vis]
 
         # Determine the phase center
         if inputs.phasecenter in ('', None):
@@ -746,6 +752,7 @@ class Tclean(cleanbase.CleanBase):
                                                   vis=inputs.vis,
                                                   is_per_eb=inputs.is_per_eb,
                                                   imagename=inputs.imagename,
+                                                  antenna=inputs.antenna,
                                                   intent=inputs.intent,
                                                   field=inputs.field,
                                                   spw=inputs.spw,

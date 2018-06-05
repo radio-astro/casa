@@ -3,6 +3,7 @@ class CleanTarget(dict):
     '''Clean target template definition.'''
 
     def __init__(self, *args, **kwargs):
+         self['antenna'] = None         # list of strings
          self['field'] = None           # string
          self['intent'] = None          # string
          self['spw'] = None             # string

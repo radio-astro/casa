@@ -284,6 +284,10 @@ class MakeImList(basetask.StandardTaskTemplate):
                 imaging_mode=inputs.context.project_summary.telescope
             )
 
+            # get list of antenna IDs
+            antenna_ids = self.heuristics.antenna_ids(inputs.intent)
+            antenna = [','.join(map(str, antenna_ids.get(os.path.basename(v), ''))) for v in vislist]
+
             if inputs.specmode == 'cont':
                 # Make sure the spw list is sorted numerically
                 spwlist = [','.join(map(str, sorted(map(int, spwlist))))]
@@ -573,6 +577,7 @@ class MakeImList(basetask.StandardTaskTemplate):
                         any_non_imaging_ms = any([not inputs.context.observing_run.get_ms(vis).is_imaging_ms for vis in vislist])
 
                         target = CleanTarget(
+                            antenna=antenna,
                             field=field_intent[0],
                             intent=field_intent[1],
                             spw=new_spwspec,
