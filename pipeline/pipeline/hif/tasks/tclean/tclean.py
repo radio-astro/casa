@@ -268,7 +268,7 @@ class Tclean(cleanbase.CleanBase):
                 field_ids = self.image_heuristics.field('TARGET', inputs.field, exclude_intent='ATMOSPHERE')
             else:
                 field_ids = self.image_heuristics.field(inputs.intent, inputs.field)
-            largest_primary_beam = self.image_heuristics.largest_primary_beam_size(spwspec=inputs.spw)
+            largest_primary_beam = self.image_heuristics.largest_primary_beam_size(spwspec=inputs.spw, intent=inputs.intent)
             imsize = self.image_heuristics.imsize(fields=field_ids,
                                                   cell=inputs.cell,
                                                   primary_beam=largest_primary_beam)

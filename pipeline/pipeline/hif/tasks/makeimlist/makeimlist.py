@@ -425,7 +425,7 @@ class MakeImList(basetask.StandardTaskTemplate):
                 # get primary beams for each spwspec
                 largest_primary_beams = {}
                 for spwspec in max_freq_spwlist:
-                    largest_primary_beams[spwspec] = self.heuristics.largest_primary_beam_size(spwspec=spwspec)
+                    largest_primary_beams[spwspec] = self.heuristics.largest_primary_beam_size(spwspec=spwspec, intent=list(field_intent_list)[0][1])
 
                 for field_intent in field_intent_list:
                     max_x_size = 1

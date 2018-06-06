@@ -70,19 +70,21 @@ class ImageParamsHeuristics(object):
             spwidsclean = map(int, spwidsclean)
             self.spwids.update(spwidsclean)
 
-    def primary_beam_size(self, spwid):
+    def primary_beam_size(self, spwid, intent):
 
         '''Calculate primary beam size in arcsec.'''
 
         cqa = casatools.quanta
 
         # get the diameter of the smallest antenna used among all vis sets
+        antenna_ids = self.antenna_ids(intent)
         diameters = []
         for vis in self.vislist:
             ms = self.observing_run.get_ms(name=vis)
             antennas = ms.antennas
             for antenna in antennas:
-                diameters.append(antenna.diameter)
+                if antenna.id in antenna_ids[os.path.basename(vis)]:
+                    diameters.append(antenna.diameter)
         smallest_diameter = np.min(np.array(diameters))
 
         # get spw info from first vis set, assume spws uniform
@@ -266,7 +268,7 @@ class ImageParamsHeuristics(object):
 
         return scanidlist, visindexlist
 
-    def largest_primary_beam_size(self, spwspec):
+    def largest_primary_beam_size(self, spwspec, intent):
 
         # get the spwids in spwspec
         p=re.compile(r"[ ,]+(\d+)")
@@ -277,7 +279,7 @@ class ImageParamsHeuristics(object):
         # find largest beam among spws in spwspec
         largest_primary_beam_size = 0.0
         for spwid in spwids:
-            largest_primary_beam_size = max(largest_primary_beam_size, self.primary_beam_size(spwid))
+            largest_primary_beam_size = max(largest_primary_beam_size, self.primary_beam_size(spwid, intent))
 
         return largest_primary_beam_size
 
@@ -310,7 +312,7 @@ class ImageParamsHeuristics(object):
         #spwids = [max_freq_spwid]
 
         # find largest primary beam size among spws in spwspec
-        largest_primary_beam_size = self.largest_primary_beam_size(spwspec)
+        largest_primary_beam_size = self.largest_primary_beam_size(spwspec, list(field_intent_list)[0][1])
 
         # put code in try-block to ensure that imager.done gets
         # called at the end
@@ -327,16 +329,17 @@ class ImageParamsHeuristics(object):
                 for vis in self.vislist:
                     for spwid in spwids:
                         ms = self.observing_run.get_ms(name=vis)
-                        ms.get_scans()
                         scanids = [str(scan.id) for scan in ms.scans
                                    if intent in scan.intents
                                    and field in [fld.name for fld in scan.fields]]
                         scanids = ','.join(scanids)
                         try:
                             real_spwid = self.observing_run.virtual2real_spw_id(spwid, self.observing_run.get_ms(vis))
+                            antenna_ids = self.antenna_ids(intent, [os.path.basename(vis)])
+                            taql = '||'.join(['ANTENNA1==%d' % i for i in antenna_ids[os.path.basename(vis)]])
                             casatools.imager.selectvis(vis=vis,
                               field=field, spw=real_spwid, scan=scanids,
-                              usescratch=False)
+                              taql=taql, usescratch=False)
                             # flag to say that imager has some valid data to work
                             # on
                             valid_data[(field, intent)] = True
@@ -371,13 +374,17 @@ class ImageParamsHeuristics(object):
                     # Now get better estimate from makePSF
                     tmp_psf_filename = str(uuid.uuid4())
 
+                    antenna_ids = self.antenna_ids(intent, valid_vis_list)
+                    antenna = [','.join(map(str, antenna_ids.get(os.path.basename(v), ''))) for v in valid_vis_list]
+                    gridder = self.gridder(intent, field)
                     paramList = ImagerParameters(msname=valid_vis_list,
+                                                 antenna=antenna,
                                                  spw=map(str, valid_real_spwid_list),
                                                  field=field,
                                                  imagename=tmp_psf_filename,
                                                  imsize=cleanhelper.cleanhelper.getOptimumSize(int(2.0*largest_primary_beam_size/cellv)),
                                                  cell='%.2g%s' % (cellv, cellu),
-                                                 gridder='standard',
+                                                 gridder=gridder,
                                                  weighting='briggs',
                                                  robust=robust,
                                                  uvtaper=uvtaper,
@@ -481,10 +488,11 @@ class ImageParamsHeuristics(object):
                         scanids = ','.join(scanids)
                         real_spwspec = ','.join([str(self.observing_run.virtual2real_spw_id(spwid, ms)) for spwid in spwspec.split(',')])
                         try:
-                            casatools.imager.selectvis(vis=vis,
-                              field=field_intent[0], spw=real_spwspec, scan=scanids,
-                              usescratch=False)
-                            aipsfieldofview = '%4.1farcsec' % (2.0 * self.largest_primary_beam_size(spwspec))
+                            antenna_ids = self.antenna_ids(field_intent[1], [os.path.basename(vis)])
+                            taql = '||'.join(['ANTENNA1==%d' % i for i in antenna_ids[os.path.basename(vis)]])
+                            casatools.imager.selectvis(vis=vis, field=field_intent[0],
+                              taql=taql, spw=real_spwspec, scan=scanids, usescratch=False)
+                            aipsfieldofview = '%4.1farcsec' % (2.0 * self.largest_primary_beam_size(spwspec, field_intent[1]))
                             # Need to run advise to check if the current selection is completely flagged
                             rtn = casatools.imager.advise(takeadvice=False, amplitudeloss=0.5, fieldofview=aipsfieldofview)
                             casatools.imager.done()
@@ -1316,7 +1324,7 @@ class ImageParamsHeuristics(object):
                         sens_bws[intSpw] = cqa.getvalue(cqa.convert(local_known_sensitivities[os.path.basename(msname)][field][intSpw]['sensBW'], 'Hz'))
                     except:
                         calc_sens = True
-                        center_field_full_spw_sensitivity, eff_ch_bw, sens_bws[intSpw] = self.get_sensitivity(ms, center_field_ids[ms_index], intSpw, chansel_full, specmode, cell, imsize, weighting, robust, uvtaper)
+                        center_field_full_spw_sensitivity, eff_ch_bw, sens_bws[intSpw] = self.get_sensitivity(ms, center_field_ids[ms_index], intent, intSpw, chansel_full, specmode, cell, imsize, weighting, robust, uvtaper)
                         channel_flags = self.get_channel_flags(msname, field, intSpw)
                         nchan_unflagged = np.where(channel_flags == False)[0].shape[0]
                         local_known_sensitivities['recalc'] = True
@@ -1346,10 +1354,10 @@ class ImageParamsHeuristics(object):
                         if calc_sens and not center_only:
                             # Calculate diagnostic sensitivities for first and last field
                             first_field_id = min(map(int, field_ids[ms_index].split(',')))
-                            first_field_full_spw_sensitivity, first_field_eff_ch_bw, first_field_sens_bw = self.get_sensitivity(ms, first_field_id, intSpw, chansel_full, specmode, cell, imsize, weighting, robust, uvtaper)
+                            first_field_full_spw_sensitivity, first_field_eff_ch_bw, first_field_sens_bw = self.get_sensitivity(ms, first_field_id, intent, intSpw, chansel_full, specmode, cell, imsize, weighting, robust, uvtaper)
                             first_field_sensitivity = first_field_full_spw_sensitivity * (float(nchan_sel)/float(nchan_unflagged))**0.5 / overlap_factor * bw_corr_factor
                             last_field_id = max(map(int, field_ids[ms_index].split(',')))
-                            last_field_full_spw_sensitivity, last_field_eff_ch_bw, last_field_sens_bw = self.get_sensitivity(ms, last_field_id, intSpw, chansel_full, specmode, cell, imsize, weighting, robust, uvtaper)
+                            last_field_full_spw_sensitivity, last_field_eff_ch_bw, last_field_sens_bw = self.get_sensitivity(ms, last_field_id, intent, intSpw, chansel_full, specmode, cell, imsize, weighting, robust, uvtaper)
                             last_field_sensitivity = last_field_full_spw_sensitivity * (float(nchan_sel)/float(nchan_unflagged))**0.5 / overlap_factor * bw_corr_factor
 
                             LOG.info('Sensitivities for MS %s, Field %s, SPW %s for the first, central, and last pointings are: %.3g / %.3g / %.3g Jy/beam' % (os.path.basename(msname), field, str(real_spwid), first_field_sensitivity, center_field_sensitivity, last_field_sensitivity))
@@ -1369,7 +1377,7 @@ class ImageParamsHeuristics(object):
 
         return sensitivity, eff_ch_bw, sum(sens_bws.values()), copy.deepcopy(local_known_sensitivities)
 
-    def get_sensitivity(self, ms_do, field, spw, chansel, specmode, cell, imsize, weighting, robust, uvtaper):
+    def get_sensitivity(self, ms_do, field, intent, spw, chansel, specmode, cell, imsize, weighting, robust, uvtaper):
         """
         Get sensitivity for a field / spw / chansel combination from CASA's
         apparentsens method and a correction for effective channel widths
@@ -1385,8 +1393,13 @@ class ImageParamsHeuristics(object):
 
             try:
                 with casatools.ImagerReader(ms_do.name) as imTool:
-                    imTool.selectvis(spw='%s:%s' % (real_spwid, chanrange), field=field)
-                    # TODO: Add scan selection ?
+                    scanids = [str(scan.id) for scan in ms_do.scans
+                               if intent in scan.intents
+                               and field in [fld.name for fld in scan.fields]]
+                    scanids = ','.join(scanids)
+                    antenna_ids = self.antenna_ids(intent, [os.path.basename(ms_do.name)])
+                    taql = '||'.join(['ANTENNA1==%d' % i for i in antenna_ids[os.path.basename(ms_do.name)]])
+                    imTool.selectvis(spw='%s:%s' % (real_spwid, chanrange), field=field, scan=scanids, taql=taql)
                     imTool.defineimage(mode=specmode if specmode=='cube' else 'mfs', spw=real_spwid,
                                        cellx=cell[0], celly=cell[0],
                                        nx=imsize[0], ny=imsize[1])

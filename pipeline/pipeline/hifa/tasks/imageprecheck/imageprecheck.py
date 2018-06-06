@@ -148,7 +148,7 @@ class ImagePreCheck(basetask.StandardTaskTemplate):
             nbin = -1
             cont_sens_bw_modes = ['repBW', 'aggBW']
 
-        primary_beam_size = image_heuristics.largest_primary_beam_size(spwspec=str(repr_spw))
+        primary_beam_size = image_heuristics.largest_primary_beam_size(spwspec=str(repr_spw), intent='TARGET')
         gridder = image_heuristics.gridder('TARGET', repr_field)
         if gridder == 'mosaic':
             # Only pass phase center for mosaics to avoid filtering single fields with
