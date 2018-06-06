@@ -376,8 +376,6 @@ class ValidateLineRaster(basetask.StandardTaskTemplate):
 
         # Bestlines: [[center, width, T/F],[],,,[]]
         clustering_algorithm = self.inputs.clusteringalgorithm
-        # 2017/7/25 fix to Hierarchical Clustering for test
-        clustering_algorithm = 'hierarchy'
         LOG.debug('clustering algorithm is \'{}\'', clustering_algorithm)
         if clustering_algorithm == 'kmean':
             (Ncluster, Bestlines, BestCategory, Region) = self.clustering_kmean(Region, Region2)
