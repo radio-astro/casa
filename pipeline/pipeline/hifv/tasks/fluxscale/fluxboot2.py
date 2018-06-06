@@ -342,7 +342,14 @@ class Fluxboot2(basetask.StandardTaskTemplate):
             secondary_keys_to_remove = ['fitRefFreq', 'spidxerr', 'spidx', 'fitFluxd', 'fieldName', 'fitFluxdErr']
             spwkeys = [spw_id for spw_id in secondary_keys if spw_id not in secondary_keys_to_remove]
 
-            for spw_id in spwkeys:
+            # fluxscale results  give all spectral windows
+            # Take the intersection of the domain object spws and fluxscale results to match the earlier setjy execution
+            # in this task
+
+            scispws = [spw.id for spw in m.get_spectral_windows()]
+            newspwkeys = list(set(scispws) & set(spwkeys))
+
+            for spw_id in newspwkeys:
                 flux_d = list(fluxscale_result[field_id][spw_id]['fluxd'])
                 flux_d_err = list(fluxscale_result[field_id][spw_id]['fluxdErr'])
                 # spwslist  = list(int(spw_id))
