@@ -330,7 +330,7 @@ def get_index_list_for_ms3(datatable_dict, group_desc, member_list, srctype=None
         index_dict[_ms.basename].extend(arr)
     for vis in index_dict.iterkeys():
         index_dict[vis] = numpy.asarray(index_dict[vis])
-        index_dict[vis].sort()
+        #index_dict[vis].sort()
     return index_dict
 
 def get_valid_ms_members(group_desc, msname_filter, ant_selection, field_selection, spw_selection):
