@@ -261,7 +261,7 @@ class GriddingBase(basetask.StandardTaskTemplate):
 
         ### test code (to check selected index_list meets selection)
         if DO_TEST:
-           ants = numpy.fromiter(_g2('ANTENNA'), dtype=numpy.int32, count=len(index_list))
+            ants = numpy.fromiter(_g2('ANTENNA'), dtype=numpy.int32, count=len(index_list))
             fids = numpy.fromiter(_g2('FIELD_ID'), dtype=numpy.int32, count=len(index_list))
             ifnos = numpy.fromiter(_g2('IF'), dtype=numpy.int32, count=len(index_list))
             for _i in xrange(len(rows)):
