@@ -312,7 +312,10 @@ class ImageParamsHeuristics(object):
         #spwids = [max_freq_spwid]
 
         # find largest primary beam size among spws in spwspec
-        largest_primary_beam_size = self.largest_primary_beam_size(spwspec, list(field_intent_list)[0][1])
+        if list(field_intent_list) != []:
+            largest_primary_beam_size = self.largest_primary_beam_size(spwspec, list(field_intent_list)[0][1])
+        else:
+            largest_primary_beam_size = self.largest_primary_beam_size(spwspec, 'TARGET')
 
         # put code in try-block to ensure that imager.done gets
         # called at the end
