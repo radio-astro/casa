@@ -10,7 +10,7 @@ import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.vdp as vdp
 import pipeline.infrastructure.casatools as casatools
-from pipeline.domain.datatable import DataTableImpl as DataTable
+from pipeline.domain.datatable import DataTableIndexer
 from .. import common
 from ..common import utils
 
@@ -54,20 +54,16 @@ class SDSimpleGriddingResults(common.SingleDishResults):
 class SDSimpleGridding(basetask.StandardTaskTemplate):
     Inputs = SDSimpleGriddingInputs
 
-    def prepare(self, datatable=None, index_list=None):
-        if datatable is None:
-            LOG.debug('#PNP# instantiate local datatable')
-            datatable = DataTable(self.inputs.context.observing_run.ms_datatable_name)
-        else:
-            LOG.debug('datatable is propagated from parent task')
+    def prepare(self, datatable_dict=None, index_list=None):
             
+        assert datatable_dict is not None
         assert index_list is not None
 
-        grid_table = self.make_grid_table(datatable, index_list)
+        grid_table = self.make_grid_table(datatable_dict, index_list)
         # LOG.debug('work_dir=%s'%(work_dir))
         import time
         start = time.time()
-        retval = self.grid(grid_table=grid_table, datatable=datatable)
+        retval = self.grid(grid_table=grid_table, datatable_dict=datatable_dict)
         end = time.time()
         LOG.debug('Elapsed time: {} sec', (end - start))
         
@@ -84,7 +80,7 @@ class SDSimpleGridding(basetask.StandardTaskTemplate):
     def analyse(self, result):
         return result
 
-    def make_grid_table(self, datatable, index_list):
+    def make_grid_table(self, datatable_dict, index_list):
         """
         Calculate Parameters for grid by RA/DEC positions
         """
@@ -94,8 +90,14 @@ class SDSimpleGridding(basetask.StandardTaskTemplate):
         beam_size = reference_data.beam_sizes[reference_antenna][reference_spw]
         grid_size = casatools.quanta.convert(beam_size, 'deg')['value']
         
-        ras = datatable.getcol('RA').take(index_list)
-        decs = datatable.getcol('DEC').take(index_list)
+        indexer = DataTableIndexer(self.inputs.context)
+        def _g(colname):
+            for i in index_list:
+                vis, j = indexer.serial2perms(i)
+                datatable = datatable_dict[vis]
+                yield datatable.getcell(colname, j)
+        ras = numpy.fromiter(_g('RA'), dtype=numpy.float64)
+        decs = numpy.fromiter(_g('DEC'), dtype=numpy.float64)
         
         # Curvature has not been taken account
         dec_corr = 1.0 / cos(decs[0] / 180.0 * 3.141592653)
@@ -151,6 +153,9 @@ class SDSimpleGridding(basetask.StandardTaskTemplate):
         vIF = reference_spw
         vPOL = 0
 
+        msid_list = {}
+        for i, ms in enumerate(self.inputs.context.observing_run.measurement_sets):
+            msid_list[ms.basename] = i
         for y in range(ngrid_dec):
             DEC = min_dec + grid_dec * (y + 0.5)
             for x in range(ngrid_ra):
@@ -170,11 +175,13 @@ class SDSimpleGridding(basetask.StandardTaskTemplate):
                         #Delta = sqrt((ras[index] - RA) * (ras[index] - RA)
                         #             * dec_corr * dec_corr 
                         #             + (decs[index] - DEC) * (decs[index] - DEC))
-                        datatable_index = index_list[index]
+                        _index = index_list[index]
+                        vis, datatable_index = indexer.serial2perms(_index)
+                        datatable = datatable_dict[vis]
                         row = datatable.getcell('ROW', datatable_index)
                         #stat = datatable.getcell('STATISTICS', datatable_index)[0] 
                         ant = datatable.getcell('ANTENNA', datatable_index)
-                        msid = datatable.getcell('MS', datatable_index)
+                        msid = msid_list[vis]
                         line[6].append([row, None, None, datatable_index, ant, msid])
                     line[6] = numpy.array(line[6])
                     grid_table.append(line)
@@ -183,7 +190,7 @@ class SDSimpleGridding(basetask.StandardTaskTemplate):
         LOG.info('ngrid_ra = {}  ngrid_dec = {}', ngrid_ra, ngrid_dec)
         return grid_table
 
-    def grid(self, grid_table, datatable):
+    def grid(self, grid_table, datatable_dict):
         """
         The process does re-map and combine spectrum for each position
         grid_table format:
@@ -210,32 +217,30 @@ class SDSimpleGridding(basetask.StandardTaskTemplate):
         npol = reference_data.get_data_description(spw=reference_spw).num_polarizations
         LOG.debug('nrow={} nchan={} npol={}', nrow,nchan,npol)
         
-        #tTSYS = datatable.getcol('TSYS')
-        tEXPT = datatable.getcol('EXPOSURE')
-        #tSFLAG = datatable.getcol('FLAG_SUMMARY')
-            
         # loop for all ROWs in grid_table to make dictionary that 
         # associates spectra in data_in and weights with grids.
         # bind_to_grid = dict([(k,[]) for k in self.data_in.keys()])
         bind_to_grid = collections.defaultdict(list)
+        vislist = map(lambda x: x.basename, self.inputs.context.observing_run.measurement_sets)
         for grid_table_row in xrange(nrow):
             [IF, POL, X, Y, RAcent, DECcent, RowDelta] = grid_table[grid_table_row]
             for [_data_row, _, _, _index, _ant, _msid] in RowDelta:
                 index = int(_index)
                 msid = int(_msid)
+                vis = vislist[msid]
+                datatable = datatable_dict[vis]
                 ms = self.inputs.context.observing_run.measurement_sets[msid]
                 data_row = int(_data_row)
                 tSFLAG = datatable.getcell('FLAG_SUMMARY', index)
                 tTSYS = datatable.getcell('TSYS', index)
-                #tEXPT = datatable.getcell('EXPOSURE', index)
-                exposure = tEXPT[index]
+                tEXPT = datatable.getcell('EXPOSURE', index)
                 pols = []
                 flags = []
                 weights = []
                 for (pol, flag_summary) in enumerate(tSFLAG):
                     if flag_summary == 1:
-                        if tTSYS[pol] > 0.5 and exposure > 0.0:
-                            Weight = exposure / (tTSYS[pol] ** 2.0)
+                        if tTSYS[pol] > 0.5 and tEXPT > 0.0:
+                            Weight = tEXPT / (tTSYS[pol] ** 2.0)
                         else:
                             Weight = 1.0
                         pols.append(pol)

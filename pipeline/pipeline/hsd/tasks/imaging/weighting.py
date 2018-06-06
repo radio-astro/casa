@@ -159,7 +159,8 @@ class WeightMS(basetask.StandardTaskTemplate):
         fieldid = self.inputs.fieldid
 
         context = inputs.context
-        datatable = DataTable(name=context.observing_run.ms_datatable_name, readonly=True)
+        datatable_name = os.path.join(context.observing_run.ms_datatable_name, os.path.basename(infile))
+        datatable = DataTable(name=datatable_name, readonly=True)
         
         # get corresponding datatable rows (only IDs of target scans will be retruned)
         index_list = common.get_index_list_for_ms(datatable, [infile], [antid], [fieldid], [spwid])

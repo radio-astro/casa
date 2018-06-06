@@ -57,10 +57,6 @@ class DetectLineResults(common.SingleDishResults):
     def signals(self):
         return self._get_outcome('signals')
         
-    @property
-    def datatable(self):
-        return self._get_outcome('datatable')
-        
     def _outcome_name(self):
         return ''
 
@@ -74,24 +70,18 @@ class DetectLine(basetask.StandardTaskTemplate):
         super(DetectLine, self).__init__(inputs)
         self.line_finder = self.LineFinder()
 
-    def prepare(self, datatable=None, grid_table=None, spectral_data=None):
+    def prepare(self, datatable_dict=None, grid_table=None, spectral_data=None):
         """
         The process finds emission lines and determines protection regions for baselinefit
         """
         assert spectral_data is not None
         assert grid_table is not None
+        assert datatable_dict is not None
         spectra = spectral_data
         masks = (spectra != NoData)
         window = self.inputs.window
         edge = self.inputs.edge
         broadline = self.inputs.broadline
-        if datatable is None:
-            LOG.debug('#PNP# instantiate local datatable')
-            datatable = DataTable(self.inputs.context.observing_run.ms_datatable_name)
-            datatable_out = datatable
-        else:
-            LOG.debug('datatable is propagated from parent task')
-            datatable_out = None
         
         detect_signal = {}
 
@@ -101,19 +91,20 @@ class DetectLine(basetask.StandardTaskTemplate):
         # Pre-Defined Spectrum Window
         if len(window) != 0:
             LOG.info('Skip line detection since line window is set.')
-            tRA = datatable.getcol('RA')
-            tDEC = datatable.getcol('DEC')
             spw = grid_table[0][0] if len(grid_table) > 0 else -1
             predefined_window = self._get_predefined_window(spw, window)
             for row in xrange(nrow):
-                detect_signal[row] = [tRA[row], tDEC[row], predefined_window]
-            for dt_row in range(datatable.nrow):
-                datatable.putcell('MASKLIST', dt_row, predefined_window)
-                    
+                grid_info = grid_table[row]
+                ra = grid_info[4]
+                dec = grid_info[5]
+                detect_signal[row] = [ra, dec, predefined_window]
+            for datatable in datatable_dict.itervalues():
+                for dt_row in xrange(datatable.nrow):
+                    datatable.putcell('MASKLIST', dt_row, predefined_window)
+                
             result = DetectLineResults(task=self.__class__,
                                        success=True,
-                                       outcome={'signals': detect_signal,
-                                                'datatable': datatable_out})
+                                       outcome={'signals': detect_signal})
 
             result.task = self.__class__
 
@@ -207,8 +198,7 @@ class DetectLine(basetask.StandardTaskTemplate):
         #LOG.debug('DetectSignal = %s'%(detect_signal))
         result = DetectLineResults(task=self.__class__,
                                    success=True,
-                                   outcome={'signals': detect_signal, 
-                                            'datatable': datatable_out})
+                                   outcome={'signals': detect_signal})
                 
         result.task = self.__class__
                 

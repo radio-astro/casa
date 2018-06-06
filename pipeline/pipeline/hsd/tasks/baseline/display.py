@@ -319,7 +319,8 @@ class ClusterValidationDisplay(ClusterDisplayWorker):
         (RAlocator, DEClocator, RAformatter, DECformatter) = RADEClabel(span)
 
         # direction reference
-        datatable_name = self.context.observing_run.ms_datatable_name
+        reference_ms = self.context.observing_run.measurement_sets[0]
+        datatable_name = os.path.join(self.context.observing_run.ms_datatable_name, reference_ms.basename)
         datatable = DataTable()
         datatable.importdata(datatable_name, minimal=False, readonly=True)
         direction_reference = datatable.direction_ref

@@ -297,10 +297,9 @@ class SingleDishPointingChart(object):
             return self._get_plot_object()
         
         ms = self.ms
-        ms_id = self.context.observing_run.measurement_sets.index(ms)
         antenna_id = self.antenna.id
         
-        datatable_name = self.context.observing_run.ms_datatable_name
+        datatable_name = os.path.join(self.context.observing_run.ms_datatable_name, ms.basename)
         datatable = DataTable()
         datatable.importdata(datatable_name, minimal=False, readonly=True)
 
@@ -322,33 +321,32 @@ class SingleDishPointingChart(object):
         beam_size = casatools.quanta.convert(ms.beam_sizes[antenna_id][spw_id], 'deg')
         beam_size_in_deg = casatools.quanta.getvalue(beam_size)
         obs_pattern = ms.observing_pattern[antenna_id][spw_id]
-        ms_ids = datatable.getcol('MS')
         antenna_ids = datatable.getcol('ANTENNA')
         spw_ids = datatable.getcol('IF')
         if self.target_field is None or self.reference_field is None:
             # plot pointings regardless of field
             if self.target_only == True:
                 srctypes = datatable.getcol('SRCTYPE')
-                func = lambda i, j, k, l: i == ms_id and j == antenna_id and k == spw_id and l == 0
+                func = lambda j, k, l: j == antenna_id and k == spw_id and l == 0
                 vfunc = numpy.vectorize(func)
-                dt_rows = vfunc(ms_ids, antenna_ids, spw_ids, srctypes)
+                dt_rows = vfunc(antenna_ids, spw_ids, srctypes)
             else:
-                func = lambda i, j, k: i == ms_id and j == antenna_id and k == spw_id
+                func = lambda j, k: j == antenna_id and k == spw_id
                 vfunc = numpy.vectorize(func)
-                dt_rows = vfunc(ms_ids, antenna_ids, spw_ids)
+                dt_rows = vfunc(antenna_ids, spw_ids)
         else:
             field_ids = datatable.getcol('FIELD_ID')
             if self.target_only == True:
                 srctypes = datatable.getcol('SRCTYPE')
                 field_id = [self.target_field.id]
-                func = lambda i, f, j, k, l: i == ms_id and f in field_id and j == antenna_id and k == spw_id and l == 0
+                func = lambda f, j, k, l: f in field_id and j == antenna_id and k == spw_id and l == 0
                 vfunc = numpy.vectorize(func)
-                dt_rows = vfunc(ms_ids, field_ids, antenna_ids, spw_ids, srctypes)
+                dt_rows = vfunc(field_ids, antenna_ids, spw_ids, srctypes)
             else:
                 field_id = [self.target_field.id, self.reference_field.id]
-                func = lambda i, f, j, k: i == ms_id and f in field_id and j == antenna_id and k == spw_id 
+                func = lambda f, j, k: f in field_id and j == antenna_id and k == spw_id 
                 vfunc = numpy.vectorize(func)
-                dt_rows = vfunc(ms_ids, field_ids, antenna_ids, spw_ids)
+                dt_rows = vfunc(field_ids, antenna_ids, spw_ids)
         
         RA = datatable.getcol('RA')[dt_rows]
         if len(RA) == 0: # no row found

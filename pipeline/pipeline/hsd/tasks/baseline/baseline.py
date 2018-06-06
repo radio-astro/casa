@@ -145,8 +145,6 @@ class SDBaseline(basetask.StandardTaskTemplate):
         LOG.debug('Starting SDMDBaseline.prepare')
         inputs = self.inputs
         context = inputs.context
-        datatable_name = context.observing_run.ms_datatable_name
-        datatable = DataTable(datatable_name)
         reduction_group = context.observing_run.ms_reduction_group
         vis_list = inputs.vis
         ms_list = inputs.ms
@@ -262,8 +260,7 @@ class SDBaseline(basetask.StandardTaskTemplate):
             maskline_inputs = maskline.MaskLine.Inputs(context, iteration, group_id, member_list, 
                                                        window, edge, broadline, clusteringalgorithm)
             maskline_task = maskline.MaskLine(maskline_inputs)
-            job = common.ParameterContainerJob(maskline_task, datatable=datatable)
-            maskline_result = self._executor.execute(job, merge=False)
+            maskline_result = self._executor.execute(maskline_task, merge=False)
             grid_table = maskline_result.outcome['grid_table']
             if grid_table is None:
                 LOG.info('Skip reduction group {}', group_id)

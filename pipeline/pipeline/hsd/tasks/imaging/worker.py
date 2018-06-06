@@ -67,30 +67,43 @@ def ALMAImageCoordinateUtil(context, ms_names, ant_list, spw_list, fieldid_list)
     LOG.info('Calculating image coordinate of field \'%s\', reference frequency %fGHz' % (fnames[0], freq_hz * 1.e-9))
     LOG.info('cell=%s' % (qa.tos(cellx)))
 
-    datatable = DataTable(name=context.observing_run.ms_datatable_name, readonly=True)
+
     # nx, ny and center
     parent_mses = [utils.get_parent_ms_name(context, name) for name in ms_names]
-    index_list = common.get_index_list_for_ms(datatable, parent_mses, ant_list, fieldid_list, spw_list)
+    ra = []
+    dec = []
+    outref = None
+    for vis, ant_id, field_id, spw_id in itertools.izip(parent_mses, ant_list, fieldid_list, spw_list):
+        
+        datatable_name = os.path.join(context.observing_run.ms_datatable_name, os.path.basename(vis))
+        datatable = DataTable(name=datatable_name, readonly=True)
+        
+        if (datatable.getcolkeyword('RA', 'UNIT') != 'deg') or \
+            (datatable.getcolkeyword('DEC', 'UNIT') != 'deg'):
+            raise RuntimeError, "Found unexpected unit of RA/DEC in DataTable. It should be in 'deg'"
+        
+        index_list = common.get_index_list_for_ms(datatable, [vis], [ant_id], [field_id], [spw_id])
+        
+        index_list.sort()
+        
+        _ra = datatable.getcol('RA').take(index_list)
+        _dec = datatable.getcol('DEC').take(index_list)
+        
+        ra.extend(_ra)
+        dec.extend(_dec)
 
-    if len(index_list) == 0:
+        outref = datatable.direction_ref
+        del datatable
+       
+    if len(ra) == 0:
         antenna_name = ref_msobj.antennas[ant_list[0]].name
         LOG.warn('No valid data for source %s antenna %s spw %s in %s. Image will not be created.' % (
         source_name, antenna_name, ref_spw, ref_msobj.basename))
         return False
 
-    index_list.sort()
-
-    # the unit of RA and DEC should be in deg
-    ra = datatable.getcol('RA').take(index_list)
-    dec = datatable.getcol('DEC').take(index_list)
-    if (datatable.getcolkeyword('RA', 'UNIT') != 'deg') or \
-        (datatable.getcolkeyword('DEC', 'UNIT') != 'deg'):
-        raise RuntimeError, "Found unexpected unit of RA/DEC in DataTable. It should be in 'deg'"
-    outref = datatable.direction_ref
     if outref is None:
         LOG.warn('No direction reference is set. Assuming ICRS')
         outref = 'ICRS'
-    del datatable
 
     ra_min = min(ra)
     ra_max = max(ra)

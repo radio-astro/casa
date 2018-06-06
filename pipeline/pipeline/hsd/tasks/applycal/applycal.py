@@ -3,9 +3,9 @@ from __future__ import absolute_import
 import os
 
 import pipeline.infrastructure as infrastructure
+from pipeline.domain.datatable import DataTableImpl as DataTable
 import pipeline.infrastructure.vdp as vdp
 from pipeline.h.tasks.applycal.applycal import Applycal, ApplycalInputs
-from pipeline.hsd.tasks.common import common
 from pipeline.infrastructure import task_registry
 
 LOG = infrastructure.get_logger(__name__)
@@ -27,7 +27,7 @@ class SDApplycalInputs(ApplycalInputs):
 
 @task_registry.set_equivalent_casa_task('hsd_applycal')
 @task_registry.set_casa_commands_comment('Calibrations are applied to the data. Final flagging summaries are computed')
-class SDApplycal(Applycal, common.SingleDishTask):
+class SDApplycal(Applycal):
     """
     Applycal executes CASA applycal tasks for the current context state,
     applying calibrations registered with the pipeline context to the target
@@ -62,15 +62,18 @@ class SDApplycal(Applycal, common.SingleDishTask):
 
         # Update Tsys in datatable
         context = self.inputs.context
-        datatable = self.datatable_instance
         # this task uses _handle_multiple_vis framework 
         msobj = self.inputs.ms
-        datatable._update_flag(context, msobj.name)
+        datatable_name = os.path.join(context.observing_run.ms_datatable_name, msobj.basename)
+        datatable = DataTable()
+        datatable.importdata(name=datatable_name, readonly=False)
+        datatable._update_flag(msobj.name)
         for calapp in results.applied:
             filename = os.path.join(context.output_dir, calapp.vis)
             fieldids = [fieldobj.id for fieldobj in msobj.get_fields(name=calapp.field)]
             for _calfrom in calapp.calfrom:
                 if _calfrom.caltype == 'tsys':
+                    LOG.info('Updating Tsys for {0}'.format(os.path.join(calapp.vis)))
                     tsystable = _calfrom.gaintable
                     spwmap = _calfrom.spwmap
                     gainfield = _calfrom.gainfield

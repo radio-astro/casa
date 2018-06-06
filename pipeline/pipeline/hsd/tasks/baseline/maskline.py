@@ -9,6 +9,7 @@ import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.vdp as vdp
 import pipeline.infrastructure.casatools as casatools
 from pipeline.domain.datatable import DataTableImpl as DataTable
+from pipeline.domain.datatable import DataTableIndexer
 from . import simplegrid
 from . import detection
 from . import validation
@@ -62,7 +63,7 @@ class MaskLineResults(common.SingleDishResults):
 class MaskLine(basetask.StandardTaskTemplate):
     Inputs = MaskLineInputs
 
-    def prepare(self, datatable=None):
+    def prepare(self):
         context = self.inputs.context
 
         start_time = time.time()
@@ -76,17 +77,29 @@ class MaskLine(basetask.StandardTaskTemplate):
         reference_antenna = reference_member.antenna_id
         reference_field = reference_member.field_id
         reference_spw = reference_member.spw_id
-        if datatable is None:
-            LOG.info('instantiate local datatable')
-            dt = DataTable(context.observing_run.ms_datatable_name, readonly=False)
-        else:
-            LOG.info('datatable is propagated from parent task')
-            dt = datatable
+        mses = context.observing_run.measurement_sets
+        dt_dict = dict((ms.basename, DataTable(os.path.join(context.observing_run.ms_datatable_name, ms.basename))) 
+                       for ms in mses)
         srctype = 0  # reference_data.calibration_strategy['srctype']
-        index_list = numpy.fromiter(utils.get_index_list_for_ms2(dt, group_desc, member_list, srctype),
-                                    dtype=numpy.int64)
+        t0 = time.time()
+        index_dict = utils.get_index_list_for_ms3(dt_dict, group_desc, member_list, srctype)
+        t1 = time.time()
+        LOG.info('Elapsed time for generating index_dict: {0} sec'.format(t1 - t0))
+        
 
-        LOG.debug('index_list={}', index_list)
+        LOG.debug('index_dict={}', index_dict)
+        # debugging
+        t0 = time.time()
+        indexer = DataTableIndexer(context)
+        def _g():
+            for ms in mses:
+                if ms.basename in index_dict:
+                    for i in index_dict[ms.basename]:
+                        yield indexer.perms2serial(ms.basename, i)
+        index_list = numpy.fromiter(_g(), dtype=numpy.int64)
+        LOG.info('index_list={}', index_list)
+        t1 = time.time()
+        LOG.info('Elapsed time for generating index_list: {0} sec'.format(t1 - t0))
         # LOG.trace('all(spwid == {}) ? {}', spwid_list[0], numpy.all(dt.getcol('IF').take(index_list) == spwid_list[0]))
         # LOG.trace('all(fieldid == {}) ? {}', field_list[0], numpy.all(dt.getcol('FIELD_ID').take(index_list) == field_list[0]))
         if len(index_list) == 0:
@@ -131,7 +144,7 @@ class MaskLine(basetask.StandardTaskTemplate):
         t0 = time.time()
         gridding_inputs = simplegrid.SDSimpleGridding.Inputs(context, group_id, member_list)
         gridding_task = simplegrid.SDSimpleGridding(gridding_inputs)
-        job = common.ParameterContainerJob(gridding_task, datatable=dt, index_list=index_list)
+        job = common.ParameterContainerJob(gridding_task, datatable_dict=dt_dict, index_list=index_list)
         gridding_result = self._executor.execute(job, merge=False)
         spectra = gridding_result.outcome['spectral_data']
         grid_table = gridding_result.outcome['grid_table']
@@ -158,20 +171,10 @@ class MaskLine(basetask.StandardTaskTemplate):
         t0 = time.time()
         detection_inputs = detection.DetectLine.Inputs(context, window, edge, broadline)
         line_finder = detection.DetectLine(detection_inputs)
-        job = common.ParameterContainerJob(line_finder, datatable=dt, grid_table=grid_table, 
+        job = common.ParameterContainerJob(line_finder, datatable_dict=dt_dict, grid_table=grid_table, 
                                            spectral_data=spectra)
         detection_result = self._executor.execute(job, merge=False)
         detect_signal = detection_result.signals
-        datatable_out = detection_result.datatable
-        if datatable_out is not None:
-            # the task returns updated datatable which is different instance from the one 
-            # passed to the task, so datatable_out needs to be exported and datatable 
-            # must be replaced
-            LOG.debug('Replacing datatable with the one in the result object')
-            datatable_out.exportdata(minimal=True)
-            datatable = datatable_out
-        else:
-            datatable.exportdata(minimal=True)
         t1 = time.time()
  
         LOG.trace('detect_signal={}', detect_signal)
@@ -186,7 +189,7 @@ class MaskLine(basetask.StandardTaskTemplate):
                                                  clusteringalgorithm=clusteringalgorithm)
         line_validator = validator_cls(validation_inputs)
         LOG.trace('len(index_list)={}', len(index_list))
-        job = common.ParameterContainerJob(line_validator, datatable=datatable, index_list=index_list, 
+        job = common.ParameterContainerJob(line_validator, datatable_dict=dt_dict, index_list=index_list, 
                                            grid_table=grid_table, detect_signal=detect_signal)
         validation_result = self._executor.execute(job, merge=False)
         lines = validation_result.outcome['lines']
@@ -195,15 +198,9 @@ class MaskLine(basetask.StandardTaskTemplate):
         else:
             channelmap_range = validation_result.outcome['lines']
         cluster_info = validation_result.outcome['cluster_info']
-        datatable_out = validation_result.datatable
-        if datatable_out is not None:
-            # the task returns updated datatable which is different instance from the one 
-            # passed to the task, so datatable_out needs to be exported and datatable 
-            # must be replaced
-            LOG.debug('Replacing datatable with the one in the result object')
-            datatable_out.exportdata(minimal=True)
-            datatable = datatable_out
-        else:
+
+        # export datatables
+        for datatable in dt_dict.itervalues():
             datatable.exportdata(minimal=True)
         t1 = time.time()
  

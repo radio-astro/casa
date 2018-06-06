@@ -159,6 +159,9 @@ class SDBLFlagWorker(basetask.StandardTaskTemplate):
         context = self.inputs.context
         clip_niteration = self.inputs.clip_niteration
         ms_list = self.inputs.ms_list
+        # top-level task (SDBLFlag) is per-MS task
+        # so that given ms domain objects are identical
+        assert numpy.all([m == ms_list[0] for m in ms_list])
         antid_list = self.inputs.antenna_list
         fieldid_list = self.inputs.fieldid_list
         spwid_list = self.inputs.spwid_list
@@ -167,7 +170,8 @@ class SDBLFlagWorker(basetask.StandardTaskTemplate):
         flagRule = self.inputs.flagRule
         userFlag = self.inputs.userFlag
         edge = self.inputs.edge
-        datatable = DataTable(name=context.observing_run.ms_datatable_name, readonly=False)
+        datatable_name = os.path.join(context.observing_run.ms_datatable_name, ms_list[0].basename)
+        datatable = DataTable(name=datatable_name, readonly=False)
         rowmap = self.inputs.rowmap
         
         LOG.debug('Members to be processed in worker class:')

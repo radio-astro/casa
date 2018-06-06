@@ -30,8 +30,12 @@ class SDBLFlagSummary(object):
         Constructor of worker class
         """
         self.context = context
-        self.datatable = DataTable(name=self.context.observing_run.ms_datatable_name, readonly=True)
         self.ms_list = ms_list
+        # top-level task (SDBLFlag) is per-MS task
+        # so that given ms domain objects are identical
+        assert numpy.all([self.ms_list[0] == m for m in self.ms_list])
+        datatable_name = os.path.join(self.context.observing_run.ms_datatable_name, self.ms_list[0].basename)
+        self.datatable = DataTable(name=datatable_name, readonly=True)
         self.antid_list = antid_list
         self.fieldid_list = fieldid_list
         self.spwid_list = spwid_list

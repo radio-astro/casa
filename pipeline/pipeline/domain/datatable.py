@@ -147,6 +147,63 @@ def timetable_key(table_type, antenna, spw, polarization=None, ms=None, field_id
     return key
 
 
+class DataTableIndexer(object):
+    """
+    DataTableIndexer is responsible for mapping between classical 
+    (serial) row indices and per-MS row indices.
+    """
+    @property
+    def mses(self):
+        return self.context.observing_run.measurement_sets
+    
+    def __init__(self, context):
+        self.context = context
+        self.nrow_per_ms = []
+        for ms in context.observing_run.measurement_sets:
+            ro_table_name = os.path.join(context.observing_run.ms_datatable_name, ms.basename, 'RO')
+            with casatools.TableReader(ro_table_name) as tb:
+                self.nrow_per_ms.append(tb.nrows())
+        self.num_mses = len(self.nrow_per_ms)
+    
+    def serial2perms(self, i):
+        """
+        Return two indices. The former indicates a MS index while 
+        the later corresponds to the row index of the datatable for 
+        that MS.
+        
+        i -- serial index
+        """
+        base = 0
+        for j in xrange(self.num_mses):
+            past_base = base
+            base += self.nrow_per_ms[j]
+            if i < base:
+                return self.mses[j].basename, i - past_base
+            
+        raise RuntimeError('Internal Consistency Error. ')
+                
+    def perms2serial(self, vis, i):
+        """
+        Return serial index.
+        
+        vis -- basename of the MS
+        i -- per MS datatable row index
+        """
+        j = self.mses.index(self.context.observing_run.get_ms(vis))
+        assert j < self.num_mses
+        assert i < self.nrow_per_ms[j]
+        
+        base = sum(self.nrow_per_ms[:j])
+        return base + i
+    
+    def per_ms_index_list(self, ms, index_list):
+        j = self.mses.index(ms)
+        base = sum(self.nrow_per_ms[:j])
+        length = self.nrow_per_ms[j]
+        perms_list = numpy.where(numpy.logical_and(index_list >= base, 
+                                                   index_list < base + length), index_list)
+        return perms_list - base
+
 class DataTableImpl(object):
     """
     DataTable is an object to hold meta data of scantable on memory. 
@@ -405,7 +462,7 @@ class DataTableImpl(object):
         abspath = absolute_path(name)
         basename = os.path.basename(abspath)
         if not os.path.exists(abspath):
-            os.mkdir(abspath)
+            os.makedirs(abspath)
         elif overwrite:
             LOG.debug('Overwrite existing DataTable %s...' % name)
             # os.system( 'rm -rf %s/*'%(abspath) )
@@ -730,8 +787,6 @@ class DataTableImpl(object):
                 flag = tb.getcell('FLAG', i)
                 tsys_masked[i] = numpy.ma.masked_array(tsys, mask=(flag == True))
 
-        file_list = self.getkeyword('FILENAMES').tolist()
-        msid = file_list.index(os.path.abspath(infile.rstrip('/')))
         msobj = context.observing_run.get_ms(infile)
         to_antids = [a.id for a in msobj.antennas]
         from_fields = []
@@ -756,6 +811,8 @@ class DataTableImpl(object):
                 end_atmchan = start_atmchan + 1
             return start_atmchan, end_atmchan
 
+        dt_antenna = self.getcol('ANTENNA')
+        dt_spw = self.getcol('IF')
         for spw_to, spw_from in enumerate(spwmap):
             atm_spw = msobj.get_spectral_window(spw_from)
             science_spw = msobj.get_spectral_window(spw_to)
@@ -766,7 +823,7 @@ class DataTableImpl(object):
                 cal_idxs = numpy.where(numpy.logical_and(spws == spw_from, antids == ant_to))[0]
                 if len(cal_idxs) == 0:
                     continue
-                dtrows = self.get_row_index(msid, ant_to, spw_to, None)
+                dtrows = numpy.where(numpy.logical_and(dt_antenna == ant_to, dt_spw == spw_to))[0]
                 time_sel = times.take(cal_idxs)  # in sec
                 field_sel = fieldids.take(cal_idxs)
                 for dt_id in dtrows:
@@ -794,7 +851,7 @@ class DataTableImpl(object):
                         self.putcell('TSYS', dt_id, itsys)
 
     # @memory_profiler.profile
-    def _update_flag(self, context, infile):
+    def _update_flag(self, infile):
         """
         Read MS and update online flag status of DataTable.
         Arguments:
@@ -803,30 +860,23 @@ class DataTableImpl(object):
         NOTE this method should be called before applying the other flags.
         """
         LOG.info('Updating online flag for %s' % (os.path.basename(infile)))
-        msobj = context.observing_run.get_ms(name=os.path.abspath(infile))
-        msidx = None
-        for i in xrange(len(context.observing_run.measurement_sets)):
-            if msobj == context.observing_run.measurement_sets[i]:
-                msidx = i
-                break
-        LOG.info('MS idx=%d' % msidx)
+        filename = self.getkeyword('FILENAMES')
+        assert os.path.basename(infile) == os.path.basename(filename[0])
 
         # back to previous impl. with reduced memory usage
         # (performance degraded)
-        ms_ids = self.getcol('MS')
-        dt_rows = numpy.where(ms_ids == msidx)[0]
-        del ms_ids
-        rows = self.getcol('ROW')
-        ms_rows = rows[dt_rows]
+        ms_rows = self.getcol('ROW')
+        tmp_array = numpy.empty((4,1,), dtype=numpy.int32)
         with casatools.TableReader(infile) as tb:
             # for dt_row in index[0]:
-            for dt_row, ms_row in itertools.izip(dt_rows, ms_rows):
+            for dt_row, ms_row in enumerate(ms_rows):
                 # ms_row = rows[dt_row]
                 flag = tb.getcell('FLAG', ms_row)
                 rowflag = tb.getcell('FLAG_ROW', ms_row)
                 # irow += 1
                 npol = flag.shape[0]
-                online_flag = numpy.empty((npol, 1,), dtype=numpy.int32)
+                #online_flag = numpy.empty((npol, 1,), dtype=numpy.int32)
+                online_flag = tmp_array[:npol, :]
                 if rowflag == True:
                     online_flag[:] = 0
                 else:

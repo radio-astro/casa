@@ -13,7 +13,7 @@ import pipeline.infrastructure.mpihelpers as mpihelpers
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.casatools as casatools
-from pipeline.domain.datatable import OnlineFlagIndex
+from pipeline.domain.datatable import OnlineFlagIndex, DataTableIndexer
 
 _LOG = infrastructure.get_logger(__name__)
 
@@ -307,6 +307,31 @@ def get_index_list_for_ms2(datatable, group_desc, member_list, srctype=None):
                 if any(online_flag == 1):
                     yield row    
                
+def get_index_list_for_ms3(datatable_dict, group_desc, member_list, srctype=None):
+    # use time_table instead of data selection
+    #online_flag = datatable.getcolslice('FLAG_PERMANENT', [0, OnlineFlagIndex], [-1, OnlineFlagIndex], 1)[0]
+    #LOG.info('online_flag=%s'%(online_flag))
+    index_dict = collections.defaultdict(list)
+    for (_ms, _field, _ant, _spw) in iterate_group_member(group_desc, member_list):
+        print('{0} {1} {2} {3}'.format(_ms.basename, _field, _ant, _spw))
+        _vis = _ms.name
+        datatable = datatable_dict[_ms.basename]
+        time_table = datatable.get_timetable(_ant, _spw, None, os.path.basename(_vis), _field)
+        # time table separated by large time gap
+        the_table = time_table[1]
+        def _g():
+            for group in the_table:
+                for row in group[1]:
+                    permanent_flag = datatable.getcell('FLAG_PERMANENT', row)
+                    online_flag = permanent_flag[:, OnlineFlagIndex]
+                    if any(online_flag == 1):
+                        yield row
+        arr = numpy.fromiter(_g(), dtype=numpy.int64)
+        index_dict[_ms.basename].extend(arr)
+    for vis in index_dict.iterkeys():
+        index_dict[vis] = numpy.asarray(index_dict[vis])
+        index_dict[vis].sort()
+    return index_dict
 
 def get_valid_ms_members(group_desc, msname_filter, ant_selection, field_selection, spw_selection):
     for member_id in xrange(len(group_desc)):

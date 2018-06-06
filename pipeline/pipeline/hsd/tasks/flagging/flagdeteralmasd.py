@@ -1,5 +1,6 @@
 from __future__ import absolute_import
 
+import os
 import collections
 
 import pipeline.infrastructure as infrastructure
@@ -64,10 +65,11 @@ class FlagDeterALMASingleDishResults(flagdeterbase.FlagDeterBaseResults):
         super(FlagDeterALMASingleDishResults, self).merge_with_context(context)
         
         # update datatable
-        datatable = DataTable(name=context.observing_run.ms_datatable_name, readonly=False)
         # this task uses _handle_multiple_vis framework 
         msobj = context.observing_run.get_ms(self.inputs['vis'])
-        datatable._update_flag(context, msobj.name)
+        table_name = os.path.join(context.observing_run.ms_datatable_name, msobj.basename)
+        datatable = DataTable(name=table_name, readonly=False)
+        datatable._update_flag(msobj.name)
         datatable.exportdata(minimal=False)
         
         # regenerate pointing plots

@@ -13,7 +13,7 @@ import scipy.cluster.vq as VQ
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.vdp as vdp
-from pipeline.domain.datatable import DataTableImpl as DataTable
+from pipeline.domain.datatable import DataTableIndexer
 from . import rules
 from .. import common
 from ..common import utils
@@ -78,10 +78,6 @@ class ValidateLineResults(common.SingleDishResults):
 #         datatable = self.outcome.pop('datatable')
 #         datatable.exportdata(minimal=True)
         
-    @property
-    def datatable(self):
-        return self._get_outcome('datatable')
-
     def _outcome_name(self):
         return ''
 
@@ -89,7 +85,7 @@ class ValidateLineResults(common.SingleDishResults):
 class ValidateLineSinglePointing(basetask.StandardTaskTemplate):
     Inputs = ValidateLineInputs
 
-    def prepare(self, datatable=None, index_list=None, grid_table=None, detect_signal=None):
+    def prepare(self, datatable_dict=None, index_list=None, grid_table=None, detect_signal=None):
         """
         ValidateLine class for single-pointing or multi-pointing (collection of 
         fields with single-pointing). Accept all detected lines without 
@@ -107,26 +103,26 @@ class ValidateLineSinglePointing(basetask.StandardTaskTemplate):
         window = self.inputs.window
         LOG.debug('window={}', window)
         
-        if datatable is None:
-            LOG.debug('#PNP# instantiate local datatable')
-            datatable = DataTable(self.inputs.context.observing_run.ms_datatable_name)
-            datatable_out = datatable
-        else:
-            LOG.debug('datatable is propagated from parent task')
-            datatable_out = None
+        assert datatable_dict is not None 
+        assert index_list is not None
+        assert detect_signal is not None
 
+        # indexer translates serial index into per-MS index 
+        indexer = DataTableIndexer(self.inputs.context)
+        
         # for Pre-Defined Spectrum Window
         if len(window) != 0:
             LOG.info('Skip clustering analysis since predefined line window is set.')
             lines = _to_validated_lines(detect_signal)
             signal = detect_signal.values()[0]
-            for row in index_list:
+            for i in index_list:
+                vis, row = indexer.serial2perms(i)
+                datatable = datatable_dict[vis]
                 datatable.putcell('MASKLIST',row,signal[2])
                 datatable.putcell('NOCHANGE',row,False)
             outcome = {'lines': lines,
                        'channelmap_range': lines,
-                       'cluster_info': {},
-                       'datatable': datatable_out}
+                       'cluster_info': {}}
             result = ValidateLineResults(task=self.__class__,
                                          success=True,
                                          outcome=outcome)
@@ -142,13 +138,12 @@ class ValidateLineSinglePointing(basetask.StandardTaskTemplate):
 
         iteration = self.inputs.iteration
         
-        assert index_list is not None
-        assert detect_signal is not None
-
         # First cycle
         #if len(grid_table) == 0:
         if iteration == 0:
-            for row in index_list:
+            for i in index_list:
+                vis, row = indexer.serial2perms(i)
+                datatable = datatable_dict[vis]
                 mask_list = datatable.getcell('MASKLIST',row)
                 no_change = datatable.getcell('NOCHANGE',row)
                 #LOG.debug('DataTable = %s, detect_signal = %s, OldFlag = %s' % (mask_list, detect_signal[row][2], no_change))
@@ -157,7 +152,9 @@ class ValidateLineSinglePointing(basetask.StandardTaskTemplate):
 
         # Iteration case
         else:
-            for row in index_list:
+            for i in index_list:
+                vis, row = indexer.serial2perms(i)
+                datatable = datatable_dict[vis]
                 mask_list = datatable.getcell('MASKLIST',row)
                 no_change = datatable.getcell('NOCHANGE',row)
                 #LOG.debug('DataTable = %s, detect_signal = %s, OldFlag = %s' % (mask_list, detect_signal[0][2], no_change))
@@ -175,8 +172,7 @@ class ValidateLineSinglePointing(basetask.StandardTaskTemplate):
                     datatable.putcell('NOCHANGE',row,False)
         outcome = {'lines': lines,
                    'channelmap_range': lines,
-                   'cluster_info': {},
-                   'datatable': datatable_out}
+                   'cluster_info': {}}
         result = ValidateLineResults(task=self.__class__,
                                      success=True,
                                      outcome=outcome)
@@ -213,7 +209,7 @@ class ValidateLineRaster(basetask.StandardTaskTemplate):
         nchan = spw.num_channels
         return int(max(0, nchan - num_edge) / 3)
 
-    def prepare(self, datatable=None, index_list=None, grid_table=None, detect_signal=None):
+    def prepare(self, datatable_dict=None, index_list=None, grid_table=None, detect_signal=None):
         """
         2D fit line characteristics calculated in Process3
         Sigma clipping iterations will be applied if nsigma is positive
@@ -230,26 +226,27 @@ class ValidateLineRaster(basetask.StandardTaskTemplate):
         """
         window = self.inputs.window
 
-        if datatable is None:
-            LOG.debug('#PNP# instantiate local datatable')
-            datatable = DataTable(self.inputs.context.observing_run.ms_datatable_name)
-            datatable_out = datatable
-        else:
-            LOG.debug('datatable is propagated from parent task')
-            datatable_out = None
+        assert datatable_dict is not None
+        assert grid_table is not None
+        assert index_list is not None
+        assert detect_signal is not None
+
+        # indexer translates serial index into per-MS index 
+        indexer = DataTableIndexer(self.inputs.context)
 
         # for Pre-Defined Spectrum Window
         if len(window) != 0:
             LOG.info('Skip clustering analysis since predefined line window is set.')
             lines = _to_validated_lines(detect_signal)
             signal = detect_signal.values()[0]
-            for row in index_list:
+            for i in index_list:
+                vis, row = indexer.serial2perms(i)
+                datatable = datatable_dict[vis]
                 datatable.putcell('MASKLIST',row,signal[2])
                 datatable.putcell('NOCHANGE',row,False)
             outcome = {'lines': lines,
                        'channelmap_range': lines,
-                       'cluster_info': {},
-                       'datatable': datatable_out}
+                       'cluster_info': {}}
             result = ValidateLineResults(task=self.__class__,
                                          success=True,
                                          outcome=outcome)
@@ -258,16 +255,15 @@ class ValidateLineRaster(basetask.StandardTaskTemplate):
 
         iteration = self.inputs.iteration
         
-        assert grid_table is not None
-        assert index_list is not None
-        assert detect_signal is not None
+        reference_member = self.inputs.reference_member
+        reference_ms = reference_member.ms
 
         grid_ra = self.inputs.grid_ra
         grid_dec = self.inputs.grid_dec
         broad_component = self.inputs.broad_component
         xorder = self.inputs.xorder
         yorder = self.inputs.yorder
-        self.nchan = datatable.getcell('NCHAN', index_list[0])
+        self.nchan = datatable_dict[reference_ms.basename].getcell('NCHAN', index_list[0])
         self.nsigma = self.inputs.nsigma
 
         ProcStartTime = time.time()
@@ -321,8 +317,7 @@ class ValidateLineRaster(basetask.StandardTaskTemplate):
         if Npos == 0 or len(Region2) == 0: 
             outcome = {'lines': [],
                        'channelmap_range': [],
-                       'cluster_info': {},
-                       'datatable': datatable_out}
+                       'cluster_info': {}}
             result = ValidateLineResults(task=self.__class__,
                                          success=True,
                                          outcome=outcome)
@@ -332,8 +327,16 @@ class ValidateLineRaster(basetask.StandardTaskTemplate):
             return result
 
         # 2008/9/20 Dec Effect was corrected
-        PosList = numpy.array([numpy.take(datatable.getcol('RA'),index_list),
-                               numpy.take(datatable.getcol('DEC'),index_list)])
+        def _g(colname):
+            for i in index_list:
+                vis, j = indexer.serial2perms(i)
+                datatable = datatable_dict[vis]
+                yield datatable.getcell(colname, j)
+        ras = numpy.fromiter(_g('RA'), dtype=numpy.float64)
+        decs = numpy.fromiter(_g('DEC'), dtype=numpy.float64)
+        PosList = numpy.asarray([ras, decs])
+#         PosList = numpy.array([numpy.take(datatable.getcol('RA'),index_list),
+#                                numpy.take(datatable.getcol('DEC'),index_list)])
         DecCorrection = 1.0 / math.cos(PosList[1][0] / 180.0 * 3.141592653)
         grid_ra *= DecCorrection
         # Calculate Parameters for Gridding
@@ -358,7 +361,7 @@ class ValidateLineRaster(basetask.StandardTaskTemplate):
         # Grid2SpectrumID stores index of index_list instead of row numbers 
         # that are held by index_list.
         Grid2SpectrumID = [[[] for y in xrange(ndec)] for x in xrange(nra)]
-        for i in range(len(index_list)):
+        for i in range(len(PosList[0])):
             Grid2SpectrumID[int((PosList[0][i] - x0)/grid_ra)][int((PosList[1][i] - y0)/grid_dec)].append(i)
 
         ProcEndTime = time.time()
@@ -387,8 +390,7 @@ class ValidateLineRaster(basetask.StandardTaskTemplate):
         if Ncluster == 0: 
             outcome = {'lines': [],
                        'channelmap_range': [],
-                       'cluster_info': {},
-                       'datatable': datatable_out}
+                       'cluster_info': {}}
             result = ValidateLineResults(task=self.__class__,
                                          success=True,
                                          outcome=outcome)
@@ -452,7 +454,10 @@ class ValidateLineRaster(basetask.StandardTaskTemplate):
         ProcStartTime = time.time()
         LOG.info('Clustering: Final Stage Start')
 
-        (RealSignal, lines, channelmap_range) = self.final_stage(GridCluster, GridMember, Region, Region2, lines, category, grid_ra, grid_dec, broad_component, xorder, yorder, x0, y0, Grid2SpectrumID, index_list, PosList)
+        # create virtual index_list
+        (RealSignal, lines, channelmap_range) = self.final_stage(GridCluster, GridMember, Region, Region2, 
+                                                                 lines, category, grid_ra, grid_dec, broad_component, 
+                                                                 xorder, yorder, x0, y0, Grid2SpectrumID, index_list, PosList)
 
         ProcEndTime = time.time()
         LOG.info('Clustering: Final Stage End: Elapsed time = {} sec', (ProcEndTime - ProcStartTime))
@@ -462,13 +467,16 @@ class ValidateLineRaster(basetask.StandardTaskTemplate):
         LOG.info('Clustering: Merging Start')
         # RealSignal should have all row's as its key
         tmp_index = 0
-        for row in index_list:
-            if row in RealSignal:
-                signal = self.__merge_lines(RealSignal[row][2], self.nchan)
+        for vrow in index_list:
+            if vrow in RealSignal:
+                signal = self.__merge_lines(RealSignal[vrow][2], self.nchan)
             else:
                 signal = [[-1, -1]]
                 #RealSignal[row] = [PosList[0][tmp_index], PosList[1][tmp_index], signal]
             tmp_index += 1
+
+            vis, row = indexer.serial2perms(vrow)
+            datatable = datatable_dict[vis]
 
             # In the following code, access to MASKLIST and NOCHANGE columns 
             # is direct to underlying table object instead of access via 
@@ -510,8 +518,7 @@ class ValidateLineRaster(basetask.StandardTaskTemplate):
         
         outcome = {'lines': lines,
                    'channelmap_range': channelmap_range,
-                   'cluster_info': self.cluster_info,
-                   'datatable': datatable_out}
+                   'cluster_info': self.cluster_info}
         result = ValidateLineResults(task=self.__class__,
                                      success=True,
                                      outcome=outcome)

@@ -298,7 +298,8 @@ class BaselineSubtractionWorker(basetask.StandardTaskTemplate):
         super(BaselineSubtractionWorker, self).__init__(inputs)
         
         # initialize plotter
-        self.datatable = DataTable(self.inputs.context.observing_run.ms_datatable_name)
+        self.datatable = DataTable(os.path.join(self.inputs.context.observing_run.ms_datatable_name,
+                                                self.inputs.ms.basename))
     
     def prepare(self):
         vis = self.inputs.vis
@@ -371,6 +372,7 @@ class BaselineSubtractionWorker(basetask.StandardTaskTemplate):
         plot_list = []
         for (field_id, antenna_id, spw_id, grid_table, channelmap_range) in accum.iterate_all():
              
+            LOG.info('field {0} antenna {1} spw {2}', field_id, antenna_id, spw_id)
             if (field_id, antenna_id, spw_id) in deviationmask_list:
                 deviationmask = deviationmask_list[(field_id, antenna_id, spw_id)]
             else:

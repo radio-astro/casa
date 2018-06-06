@@ -5,12 +5,14 @@ import math
 import numpy
 import time
 import itertools
+import collections
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.vdp as vdp
 import pipeline.infrastructure.casatools as casatools
 from pipeline.domain import DataTable
+from pipeline.domain.datatable import DataTableIndexer
 from .. import common 
 from ..common import compress
 
@@ -184,25 +186,63 @@ class GriddingBase(basetask.StandardTaskTemplate):
         """
         start = time.time()
 
-        datatable = DataTable(name=self.inputs.context.observing_run.ms_datatable_name, readonly=True)
-        table = datatable.tb1
-        index_list = common.get_index_list_for_ms(datatable, DataIn, self.antenna, self.field, self.spw)
+        context = self.inputs.context
+        mses = context.observing_run.measurement_sets
+        dt_dict = dict((ms.basename, DataTable(os.path.join(context.observing_run.ms_datatable_name, ms.basename))) 
+                       for ms in mses)
+        index_dict = collections.defaultdict(list)
+        for msid, ant, fld, spw in itertools.izip(self.msidxs, self.antenna, self.field, self.spw):
+            basename = mses[msid].basename
+            vis = mses[msid].name
+            _index_list = common.get_index_list_for_ms(dt_dict[basename], [vis], [ant], [fld], [spw])
+            index_dict[basename].extend(_index_list)
+        indexer = DataTableIndexer(context)
+        def _g():
+            for ms in mses:
+                if ms.basename in index_dict:
+                    for i in index_dict[ms.basename]:
+                        yield indexer.perms2serial(ms.basename, i)
+        index_list = numpy.fromiter(_g(), dtype=numpy.int64)
+        num_spectra = len(index_list)
 
-        rows = table.getcol('ROW').take(index_list)
-        if len(rows) == 0:
+        if len(index_list) == 0:
             # no valid data, return empty table
             return []
+            
 
-        msids = table.getcol('MS').take(index_list)
-        ras = table.getcol('RA').take(index_list)
-        decs = table.getcol('DEC').take(index_list)
-        exposure = table.getcol('EXPOSURE').take(index_list)
+        def _g2(colname):
+            for i in index_list:
+                vis, j = indexer.serial2perms(i)
+                datatable = dt_dict[vis]
+                yield datatable.getcell(colname, j)
+        def _g3(colname):
+            for msid in self.msidxs:
+                basename = mses[msid].basename
+                datatable = dt_dict[basename]
+                _list = index_dict[basename]
+                yield datatable.getcol(colname).take(_list, axis=-1)
+                
+        #rows = table.getcol('ROW').take(index_list)
+        rows = numpy.fromiter(_g2('ROW'), dtype=numpy.int64, count=len(index_list))
+
+        vislist = map(lambda x: x.basename, mses)
+        #LOG.info('self.msidxs={0}'.format(self.msidxs))
+        num_spectra_per_data = dict((i,len(index_dict[vislist[i]])) for i in self.msidxs)
+        #LOG.info('num_spectra_per_data={0}'.format(num_spectra_per_data))
+        msids = numpy.asarray([i for i in self.msidxs for j in xrange(num_spectra_per_data[i])])
+        #LOG.info('msids={}'.format(msids))
+        ras = numpy.fromiter(_g2('RA'), dtype=numpy.float64, count=num_spectra)
+        decs = numpy.fromiter(_g2('DEC'), dtype=numpy.float64, count=num_spectra)
+        exposure = numpy.fromiter(_g2('EXPOSURE'), dtype=numpy.float64, count=num_spectra)
         polids = numpy.array([self.polid[i] for i in msids])
         # TSYS and FLAG_SUMMARY cols have NPOL x nrow elements
-        ttsys = table.getcol('TSYS').take(index_list, axis=1)
-        tnet_flag = datatable.getcol('FLAG_SUMMARY').take(index_list, axis=1)
+        ttsys = numpy.concatenate(list(_g3('TSYS')), axis=-1)
+        tnet_flag = numpy.concatenate(list(_g3('FLAG_SUMMARY')), axis=-1)
         # STATISTICS col has NPOL x 7 x nrow elements -> stats 7 x selected nrow elements
-        tstats = datatable.getcol('STATISTICS').take(index_list, axis=2)
+        tstats = numpy.concatenate(list(_g3('STATISTICS')), axis=-1)
+        #LOG.info('ttsys.shape={0}'.format(list(ttsys.shape)))
+        #LOG.info('tnet_flag.shape={0}'.format(list(tnet_flag.shape)))
+        #LOG.info('tstats.shape={0}'.format(list(tstats.shape)))
         # filter polid of each row
         if len(set(polids)) == 1:
             tsys = ttsys[polids[0]]
@@ -221,9 +261,9 @@ class GriddingBase(basetask.StandardTaskTemplate):
 
         ### test code (to check selected index_list meets selection)
         if DO_TEST:
-            ants = table.getcol('ANTENNA').take(index_list)
-            fids = datatable.getcol('FIELD_ID').take(index_list)
-            ifnos = datatable.getcol('IF').take(index_list)
+           ants = numpy.fromiter(_g2('ANTENNA'), dtype=numpy.int32, count=len(index_list))
+            fids = numpy.fromiter(_g2('FIELD_ID'), dtype=numpy.int32, count=len(index_list))
+            ifnos = numpy.fromiter(_g2('IF'), dtype=numpy.int32, count=len(index_list))
             for _i in xrange(len(rows)):
                 _msid = msids[_i]
                 _ant = ants[_i]
@@ -240,17 +280,13 @@ class GriddingBase(basetask.StandardTaskTemplate):
         # Re-Gridding
         # 2008/09/20 Spacing should be identical between RA and DEC direction
         # Curvature has not been taken account
-        dec_corr = 1.0 / math.cos(datatable.getcell('DEC',0) / 180.0 * 3.141592653)
+        dec_corr = 1.0 / math.cos(decs[0] / 180.0 * 3.141592653)
 
 ###### TODO: Proper handling of POL
         GridTable = self._group(index_list, rows, msids, ras, decs, stats, combine_radius, allowance_radius, grid_spacing, dec_corr)
         
         # create storage
-        num_spectra = len(index_list)
         _counter = 0
-        num_spectra_per_data = dict([(i,0) for i in self.msidxs])
-        for i in xrange(num_spectra):
-            num_spectra_per_data[msids[i]] += 1
         LOG.trace('num_spectra_per_data=%s'%(num_spectra_per_data))
 
         LOG.info('Processing %d spectra...' % num_spectra)
