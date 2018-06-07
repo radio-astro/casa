@@ -55,10 +55,14 @@ class MakeImagesResult(basetask.Results):
 #            print item['imageplot']
 
         # Calculated sensitivities for later stages
+        skip_recalc = False
         for result in self.results:
             if result.per_spw_cont_sensitivities_all_chan is not None:
-                if 'recalc' in result.per_spw_cont_sensitivities_all_chan:
+                if 'recalc' in result.per_spw_cont_sensitivities_all_chan and not skip_recalc:
                     context.per_spw_cont_sensitivities_all_chan = copy.deepcopy(result.per_spw_cont_sensitivities_all_chan)
+                    del context.per_spw_cont_sensitivities_all_chan['recalc']
+                    # Copy only the first recalculated dictionary
+                    skip_recalc = True
                 else:
                     utils.update_sens_dict(context.per_spw_cont_sensitivities_all_chan, result.per_spw_cont_sensitivities_all_chan)
 
