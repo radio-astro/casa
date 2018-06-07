@@ -268,7 +268,7 @@ class MakeImList(basetask.StandardTaskTemplate):
 
         for vislist in vislists:
             if inputs.per_eb:
-                imagename_prefix=os.path.basename(vislist[0])
+                imagename_prefix=os.path.basename(vislist[0]).strip('.ms')
             else:
                 imagename_prefix=inputs.context.project_structure.ousstatus_entity_id
 
