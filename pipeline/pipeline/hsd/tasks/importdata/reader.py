@@ -97,7 +97,6 @@ class MetaDataReader(object):
             filenames = numpy.concatenate((filenames, [name]))
         else:
             filenames = [name]
-        ms_id = len(filenames) - 1
         self.datatable.putkeyword('FILENAMES', filenames)
 
         # 2018/04/18 TN
@@ -268,8 +267,6 @@ class MetaDataReader(object):
         self.datatable.putcol('POSGRP', intArr, startrow=ID)
         self.datatable.putcol('ANTENNA', Tant, startrow=ID)
         self.datatable.putcol('SRCTYPE', Tsrctype, startrow=ID)
-        intArr[:] = ms_id
-        self.datatable.putcol('MS', intArr, startrow=ID)
         
         # row base storing
         masklist = ColMaskList.NoMask

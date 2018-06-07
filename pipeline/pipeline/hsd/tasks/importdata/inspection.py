@@ -169,10 +169,6 @@ class SDInspection(object):
         ms_name = self.ms.name
         filenames = datatable.getkeyword('FILENAMES')
         assert ms_name in filenames
-        ms_index = numpy.argwhere(filenames == ms_name)[0][0]
-
-        ms_id = datatable.getcol('MS', startrow=startrow, nrow=nrow)
-        assert numpy.all(ms_id == ms_index)
 
         by_antenna = {}
         by_spw = {}

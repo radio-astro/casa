@@ -80,7 +80,6 @@ def __tabledescro():
         __coldesc('string', 0, 0, -1, 'Target name'),
         __coldesc('integer', 0, 0, -1, 'Antenna index'),
         __coldesc('integer', 0, 0, -1, 'Source type enum'),
-        __coldesc('integer', 0, 0, -1, 'MS index'),
         __coldesc('integer', 0, 0, -1, 'Field ID')
     ]
 
@@ -88,7 +87,7 @@ def __tabledescro():
         'ROW', 'SCAN', 'IF', 'NPOL', 'BEAM', 'DATE',
         'TIME', 'ELAPSED', 'EXPOSURE', 'RA', 'DEC',
         'AZ', 'EL', 'NCHAN', 'TSYS', 'TARGET', 'ANTENNA',
-        'SRCTYPE', 'MS', 'FIELD_ID'
+        'SRCTYPE', 'FIELD_ID'
     ]
     return dict(itertools.izip(name, TD_DESC_RO))
 
@@ -332,22 +331,6 @@ class DataTableImpl(object):
             return group_id
         else:
             return 0
-
-    def get_row_index_simple(self, col, val):
-        vals = self.getcol(col)
-        return [i for i in xrange(self.nrow) if vals[i] == val]
-
-    def get_row_index(self, msid, antenna, ifno, polno=None):
-        mses = self.getcol('MS')
-        ants = self.getcol('ANTENNA')
-        ifs = self.getcol('IF')
-        if polno is None:
-            ref = [msid, antenna, ifno]
-            return [i for i in xrange(self.nrow) if [mses[i], ants[i], ifs[i]] == ref]
-        else:
-            pols = self.getcol('POL')
-            ref = [msid, antenna, ifno, polno]
-            return [i for i in xrange(self.nrow) if [mses[i], ants[i], ifs[i], pols[i]] == ref]
 
     def haskeyword(self, name):
         return name in self.tb2.keywordnames()
