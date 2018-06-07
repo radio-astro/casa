@@ -8,6 +8,8 @@ import numpy as np
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
+import pipeline.infrastructure.casatools as casatools
+import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.vdp as vdp
 from pipeline.h.tasks.common import arrayflaggerbase
 from pipeline.h.tasks.common import flaggableviewresults
@@ -39,6 +41,19 @@ def _get_ant_id_to_name_dict(ms):
         antenna_id_to_name = {}
 
     return antenna_id_to_name
+
+
+def _log_outlier(msg):
+    """
+    Pipeline DEBUG messages are only logged to the terminal unless the
+    CASA logging priority level is also lowered. This method will log
+    the outlier message as well as record it in the CASA log, so it can
+    be referenced afterwards.
+    """
+    if LOG.isEnabledFor(logging.DEBUG):
+        LOG.debug(msg)
+        # Log outliers directly to CASA log (CAS-11313)
+        casatools.post_to_log(msg)
 
 
 class MatrixFlaggerInputs(vdp.StandardInputs):
@@ -552,11 +567,12 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
 
                 # Log a debug message with outliers.
                 outliers_as_str = ", ".join(sorted([str(ol) for ol in data_masked[ind2flag].data], reverse=True))
-                LOG.debug("Outliers found with flagging rule '{}' for {}, spw {}, pol {}{}.\n"
-                          "Data: median = {}, MAD = {}. Max MAD threshold = {}, corresponding to {}.\n"
-                          "{} outlier(s) found (highest to lowest): {}"
-                          "".format(rulename, os.path.basename(table), spw, pol, ants_as_str, data_median, data_mad,
-                                    mad_max, outlier_threshold, len(data_masked[ind2flag].data), outliers_as_str))
+                msg = ("Outliers found with flagging rule '{}' for {}, spw {}, pol {}{}.\n"
+                       "Data: median = {}, MAD = {}. Max MAD threshold = {}, corresponding to {}.\n"
+                       "{} outlier(s) found (highest to lowest): {}"
+                       "".format(rulename, os.path.basename(table), spw, pol, ants_as_str, data_median, data_mad,
+                                 mad_max, outlier_threshold, len(data_masked[ind2flag].data), outliers_as_str))
+                _log_outlier(msg)
 
                 i2flag = i[ind2flag]
                 j2flag = j[ind2flag]
@@ -605,11 +621,12 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
 
                 # Log a debug message with outliers.
                 outliers_as_str = ", ".join(sorted([str(ol) for ol in data_masked[ind2flag].data], reverse=True))
-                LOG.debug("Outliers found with flagging rule '{}' for {}, spw {}, pol {}.\n"
-                          "Data: median = {}, MAD = {}. Max MAD threshold = {}, corresponding to {}.\n"
-                          "{} outlier(s) found (highest to lowest): {}"
-                          "".format(rulename, os.path.basename(table), spw, pol, data_median, data_mad, mad_max,
-                                    outlier_threshold, len(data_masked[ind2flag].data), outliers_as_str))
+                msg = ("Outliers found with flagging rule '{}' for {}, spw {}, pol {}.\n"
+                       "Data: median = {}, MAD = {}. Max MAD threshold = {}, corresponding to {}.\n"
+                       "{} outlier(s) found (highest to lowest): {}"
+                       "".format(rulename, os.path.basename(table), spw, pol, data_median, data_mad, mad_max,
+                                 outlier_threshold, len(data_masked[ind2flag].data), outliers_as_str))
+                _log_outlier(msg)
 
                 i2flag = i[ind2flag]
                 j2flag = j[ind2flag]
@@ -656,11 +673,12 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
 
                 # Log a debug message with outliers.
                 outliers_as_str = ", ".join(sorted([str(ol) for ol in data_masked[ind2flag].data], reverse=True))
-                LOG.debug("Outliers found with flagging rule '{}' for {}, spw {}, pol {}.\n"
-                          "Data: median = {}, MAD = {}. Max MAD threshold = {}, corresponding to {}.\n"
-                          "{} outlier(s) found (highest to lowest): {}"
-                          "".format(rulename, os.path.basename(table), spw, pol, data_median, data_mad, mad_max,
-                                    outlier_threshold, len(data_masked[ind2flag].data), outliers_as_str))
+                msg = ("Outliers found with flagging rule '{}' for {}, spw {}, pol {}.\n"
+                       "Data: median = {}, MAD = {}. Max MAD threshold = {}, corresponding to {}.\n"
+                       "{} outlier(s) found (highest to lowest): {}"
+                       "".format(rulename, os.path.basename(table), spw, pol, data_median, data_mad, mad_max,
+                                 outlier_threshold, len(data_masked[ind2flag].data), outliers_as_str))
+                _log_outlier(msg)
 
                 i2flag = i[ind2flag]
                 j2flag = j[ind2flag]
@@ -706,11 +724,12 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
 
                 # Log a debug message with outliers.
                 outliers_as_str = ", ".join(sorted([str(ol) for ol in data_masked[ind2flag].data]))
-                LOG.debug("Outliers found with flagging rule '{}' for {}, spw {}, pol {}.\n"
-                          "Minimum threshold = {}.\n"
-                          "{} outlier(s) found (lowest to highest): {}"
-                          "".format(rulename, os.path.basename(table), spw, pol, limit,
-                                    len(data_masked[ind2flag].data), outliers_as_str))
+                msg = ("Outliers found with flagging rule '{}' for {}, spw {}, pol {}.\n"
+                       "Minimum threshold = {}.\n"
+                       "{} outlier(s) found (lowest to highest): {}"
+                       "".format(rulename, os.path.basename(table), spw, pol, limit,
+                                 len(data_masked[ind2flag].data), outliers_as_str))
+                _log_outlier(msg)
 
                 i2flag = i[ind2flag]
                 j2flag = j[ind2flag]
@@ -756,11 +775,12 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
 
                 # Log a debug message with outliers.
                 outliers_as_str = ", ".join(sorted([str(ol) for ol in data_masked[ind2flag].data], reverse=True))
-                LOG.debug("Outliers found with flagging rule '{}' for {}, spw {}, pol {}.\n"
-                          "Maximum threshold = {}.\n"
-                          "{} outlier(s) found (highest to lowest): {}"
-                          "".format(rulename, os.path.basename(table), spw, pol, limit,
-                                    len(data_masked[ind2flag].data), outliers_as_str))
+                msg = ("Outliers found with flagging rule '{}' for {}, spw {}, pol {}.\n"
+                       "Maximum threshold = {}.\n"
+                       "{} outlier(s) found (highest to lowest): {}"
+                       "".format(rulename, os.path.basename(table), spw, pol, limit,
+                                 len(data_masked[ind2flag].data), outliers_as_str))
+                _log_outlier(msg)
 
                 i2flag = i[ind2flag]
                 j2flag = j[ind2flag]
@@ -826,13 +846,14 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
                             continue
 
                         # Log a debug message about outliers.
-                        LOG.debug("Outliers found with flagging rule '{}' for {}, spw {}, pol {}.\n"
-                                  "Max fraction threshold {}; max nr excess flags above median nr of flags {}.\n"
-                                  "Data: medium nr flagged {}.\n"
-                                  "For row {}, number flagged = {}, fraction flagged = {}, exceeding thresholds; "
-                                  " entire row will be flagged."
-                                  "".format(rulename, os.path.basename(table), spw, pol, maxfraction, maxexcessflags,
-                                            median_num_flagged, iy, len_flagged, fractionflagged))
+                        msg = ("Outliers found with flagging rule '{}' for {}, spw {}, pol {}.\n"
+                               "Max fraction threshold {}; max nr excess flags above median nr of flags {}.\n"
+                               "Data: medium nr flagged {}.\n"
+                               "For row {}, number flagged = {}, fraction flagged = {}, exceeding thresholds; "
+                               " entire row will be flagged."
+                               "".format(rulename, os.path.basename(table), spw, pol, maxfraction, maxexcessflags,
+                                         median_num_flagged, iy, len_flagged, fractionflagged))
+                        _log_outlier(msg)
 
                         # Add new flag commands to flag data underlying
                         # the view.
@@ -884,13 +905,14 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
                             continue
 
                         # Log a debug message about outliers.
-                        LOG.debug("Outliers found with flagging rule '{}' for {}, spw {}, pol {}.\n"
-                                  "Max fraction threshold {}; max nr excess flags above median nr of flags {}.\n"
-                                  "Data: medium nr flagged {}.\n"
-                                  "For column {}, number flagged = {}, fraction flagged = {}, exceeding thresholds; "
-                                  " entire column will be flagged."
-                                  "".format(rulename, os.path.basename(table), spw, pol, maxfraction, maxexcessflags,
-                                            median_num_flagged, ix, len_flagged, fractionflagged))
+                        msg = ("Outliers found with flagging rule '{}' for {}, spw {}, pol {}.\n"
+                               "Max fraction threshold {}; max nr excess flags above median nr of flags {}.\n"
+                               "Data: medium nr flagged {}.\n"
+                               "For column {}, number flagged = {}, fraction flagged = {}, exceeding thresholds; "
+                               " entire column will be flagged."
+                               "".format(rulename, os.path.basename(table), spw, pol, maxfraction, maxexcessflags,
+                                         median_num_flagged, ix, len_flagged, fractionflagged))
+                        _log_outlier(msg)
 
                         # Add new flag commands to flag data underlying
                         # the view.
@@ -930,10 +952,11 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
                         j2flag = j[np.logical_not(flag)]
 
                         # Log a debug message about outliers.
-                        LOG.debug("Outliers found with flagging rule '{}' for {}, spw {}, pol {}.\n"
-                                  "Threshold for entirely flagged columns: {}.\n"
-                                  "Number of entirely flagged columns {} exceeded threshold, entire view will be"
-                                  " flagged.".format(rulename, os.path.basename(table), spw, pol, maxfraction, frac_ef))
+                        msg = ("Outliers found with flagging rule '{}' for {}, spw {}, pol {}.\n"
+                               "Threshold for entirely flagged columns: {}.\n"
+                               "Number of entirely flagged columns {} exceeded threshold, entire view will be"
+                               " flagged.".format(rulename, os.path.basename(table), spw, pol, maxfraction, frac_ef))
+                        _log_outlier(msg)
 
                         # Add new flag commands to flag data underlying
                         # the view.
@@ -981,12 +1004,13 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
 
                 # Log a debug message with outliers.
                 outliers_as_str = ", ".join(sorted([str(ol) for ol in data_masked[ind2flag].data]))
-                LOG.debug("Outliers found with flagging rule '{}' for {}, spw {}, pol {}.\n"
-                          "Data: median = {}. Low, high nmedian thresholds = {}, {}, corresponding to {}, {}.\n"
-                          "{} outlier(s) found (lowest to highest): {}"
-                          "".format(rulename, os.path.basename(table), spw, pol, data_median, lo_limit,
-                                    hi_limit, outlier_low_threshold, outlier_high_threshold,
-                                    len(data_masked[ind2flag].data), outliers_as_str))
+                msg = ("Outliers found with flagging rule '{}' for {}, spw {}, pol {}.\n"
+                       "Data: median = {}. Low, high nmedian thresholds = {}, {}, corresponding to {}, {}.\n"
+                       "{} outlier(s) found (lowest to highest): {}"
+                       "".format(rulename, os.path.basename(table), spw, pol, data_median, lo_limit,
+                                 hi_limit, outlier_low_threshold, outlier_high_threshold,
+                                 len(data_masked[ind2flag].data), outliers_as_str))
+                _log_outlier(msg)
 
                 i2flag = i[ind2flag]
                 j2flag = j[ind2flag]
@@ -1090,14 +1114,15 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
 
                         # Log a debug message with outliers.
                         outliers_as_str = ", ".join(sorted([str(ol) for ol in ant_data_masked[ind2flag].data]))
-                        LOG.debug("Outliers found with flagging rule '{}' for {}, spw {}, pol {}.\n"
-                                  "Data: median = {}, MAD = {}. Max MAD threshold = {}, corresponding to {}.\n"
-                                  "For antenna {}: {} low outlier(s) found, representing {} fraction of its data"
-                                  " points, which is above number threshold ({}) for number and/or above fraction"
-                                  " threshold ({}); flagging these data points for antenna {} as low outliers: {}."
-                                  "".format(rulename, os.path.basename(table), spw, pol, data_median, data_mad,
-                                            mad_max, outlier_threshold, iant, nflags, flagsfrac, number_limit,
-                                            frac_limit, iant, outliers_as_str))
+                        msg = ("Outliers found with flagging rule '{}' for {}, spw {}, pol {}.\n"
+                               "Data: median = {}, MAD = {}. Max MAD threshold = {}, corresponding to {}.\n"
+                               "For antenna {}: {} low outlier(s) found, representing {} fraction of its data"
+                               " points, which is above number threshold ({}) for number and/or above fraction"
+                               " threshold ({}); flagging these data points for antenna {} as low outliers: {}."
+                               "".format(rulename, os.path.basename(table), spw, pol, data_median, data_mad,
+                                         mad_max, outlier_threshold, iant, nflags, flagsfrac, number_limit,
+                                         frac_limit, iant, outliers_as_str))
+                        _log_outlier(msg)
 
                         # Create a flagging command that flags these
                         # low outliers in the data.
@@ -1235,12 +1260,13 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
                                 flagcoords.append((chan, ant))
 
                             # Log a debug message with outliers.
-                            LOG.debug("Outliers found with flagging rule '{}' for {}, spw {}, pol {}.\n"
-                                      "Threshold for maximum number of outliers per channel quadrant per antenna: {}.\n"
-                                      "For antenna {}, channels quadrant {}: fraction outliers = {}, exceeding "
-                                      "threshold => entire quadrant will be flagged."
-                                      "".format(rulename, os.path.basename(table), spw, pol, frac_limit, ant, iquad,
-                                                frac))
+                            msg = ("Outliers found with flagging rule '{}' for {}, spw {}, pol {}.\n"
+                                   "Threshold for maximum number of outliers per channel quadrant per antenna: {}.\n"
+                                   "For antenna {}, channels quadrant {}: fraction outliers = {}, exceeding "
+                                   "threshold => entire quadrant will be flagged."
+                                   "".format(rulename, os.path.basename(table), spw, pol, frac_limit, ant, iquad,
+                                             frac))
+                            _log_outlier(msg)
 
                             for flagcoord in flagcoords:
                                 newflags.append(arrayflaggerbase.FlagCmd(
@@ -1298,13 +1324,14 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
                                     flagcoords.append((chan, ydata[baseline]))
 
                                 # Log a debug message with outliers.
-                                LOG.debug("Outliers found with flagging rule '{}' for {}, spw {}, pol {}.\n"
-                                          "Threshold for maximum number of outliers per channel quadrant per baseline:"
-                                          " {}.\n"
-                                          "For baseline {}, channels quadrant {}: fraction outliers = {}, exceeding "
-                                          "threshold => entire quadrant will be flagged."
-                                          "".format(rulename, os.path.basename(table), spw, pol, baseline_frac_limit,
-                                                    baseline, iquad, frac))
+                                msg = ("Outliers found with flagging rule '{}' for {}, spw {}, pol {}.\n"
+                                       "Threshold for maximum number of outliers per channel quadrant per baseline:"
+                                       " {}.\n"
+                                       "For baseline {}, channels quadrant {}: fraction outliers = {}, exceeding "
+                                       "threshold => entire quadrant will be flagged."
+                                       "".format(rulename, os.path.basename(table), spw, pol, baseline_frac_limit,
+                                                 baseline, iquad, frac))
+                                _log_outlier(msg)
 
                                 for flagcoord in flagcoords:
                                     newflags.append(arrayflaggerbase.FlagCmd(
@@ -1760,10 +1787,11 @@ class VectorFlagger(basetask.StandardTaskTemplate):
                 if len(channels_flagged) > 0:
                     # Log a debug message with outliers.
                     flagged_as_str = ", ".join([str(ol) for ol in channels_flagged])
-                    LOG.debug("Outliers found with flagging rule '{}' for {}, spw {}, pol {}.\n"
-                              "The following {} edge channels were flagged: {}"
-                              "".format(rulename, os.path.basename(table), spw, pol, len(channels_flagged),
-                                        flagged_as_str))
+                    msg = ("Outliers found with flagging rule '{}' for {}, spw {}, pol {}.\n"
+                           "The following {} edge channels were flagged: {}"
+                           "".format(rulename, os.path.basename(table), spw, pol, len(channels_flagged),
+                                     flagged_as_str))
+                    _log_outlier(msg)
 
                     # Add new flag command to flag data underlying the
                     # view.
@@ -1808,11 +1836,12 @@ class VectorFlagger(basetask.StandardTaskTemplate):
 
                 # Log a debug message with outliers.
                 outliers_as_str = ", ".join(sorted([str(ol) for ol in data_masked[ind2flag].data]))
-                LOG.debug("Outliers found with flagging rule '{}' for {}, spw {}, pol {}.\n"
-                          "Minimum threshold = {}.\n"
-                          "{} outlier(s) found (lowest to highest): {}"
-                          "".format(rulename, os.path.basename(table), spw, pol, limit,
-                                    len(data_masked[ind2flag].data), outliers_as_str))
+                msg = ("Outliers found with flagging rule '{}' for {}, spw {}, pol {}.\n"
+                       "Minimum threshold = {}.\n"
+                       "{} outlier(s) found (lowest to highest): {}"
+                       "".format(rulename, os.path.basename(table), spw, pol, limit,
+                                 len(data_masked[ind2flag].data), outliers_as_str))
+                _log_outlier(msg)
 
                 # Add new flag command to flag data underlying the
                 # view.
@@ -1861,12 +1890,13 @@ class VectorFlagger(basetask.StandardTaskTemplate):
 
                 # Log a debug message with outliers.
                 outliers_as_str = ", ".join(sorted([str(ol) for ol in data_masked[ind2flag].data]))
-                LOG.debug("Outliers found with flagging rule '{}' for {}, spw {}, pol {}.\n"
-                          "Data: median = {}. Low, high nmedian thresholds = {}, {}, corresponding to {}, {}.\n"
-                          "{} outlier(s) found (lowest to highest): {}"
-                          "".format(rulename, os.path.basename(table), spw, pol, data_median, lo_limit,
-                                    hi_limit, outlier_low_threshold, outlier_high_threshold,
-                                    len(data_masked[ind2flag].data), outliers_as_str))
+                msg = ("Outliers found with flagging rule '{}' for {}, spw {}, pol {}.\n"
+                       "Data: median = {}. Low, high nmedian thresholds = {}, {}, corresponding to {}, {}.\n"
+                       "{} outlier(s) found (lowest to highest): {}"
+                       "".format(rulename, os.path.basename(table), spw, pol, data_median, lo_limit,
+                                 hi_limit, outlier_low_threshold, outlier_high_threshold,
+                                 len(data_masked[ind2flag].data), outliers_as_str))
+                _log_outlier(msg)
 
                 # Add new flag command to flag data underlying the
                 # view.
@@ -1914,11 +1944,12 @@ class VectorFlagger(basetask.StandardTaskTemplate):
 
                 # Log a debug message with outliers.
                 outliers_as_str = ", ".join(sorted([str(ol) for ol in data_masked[ind2flag].data]))
-                LOG.debug("Outliers found with flagging rule '{}' for {}, spw {}, pol {}.\n"
-                          "Data: median = {}, MAD = {}. Max MAD threshold = {}, corresponding to {}.\n"
-                          "{} outlier(s) found (lowest to highest): {}"
-                          "".format(rulename, os.path.basename(table), spw, pol, data_median, data_mad, limit,
-                                    outlier_threshold, len(channels_flagged), outliers_as_str))
+                msg = ("Outliers found with flagging rule '{}' for {}, spw {}, pol {}.\n"
+                       "Data: median = {}, MAD = {}. Max MAD threshold = {}, corresponding to {}.\n"
+                       "{} outlier(s) found (lowest to highest): {}"
+                       "".format(rulename, os.path.basename(table), spw, pol, data_median, data_mad, limit,
+                                 outlier_threshold, len(channels_flagged), outliers_as_str))
+                _log_outlier(msg)
 
                 # Add new flag command to flag data underlying the
                 # view.
@@ -1986,11 +2017,12 @@ class VectorFlagger(basetask.StandardTaskTemplate):
                 if len(channels_flagged) > 0:
                     # Log a debug message with outliers.
                     flagged_as_str = ", ".join([str(ol) for ol in channels_flagged])
-                    LOG.debug("Outliers found with flagging rule '{}' for {}, spw {}, pol {}.\n"
-                              "Sharp feature limit: {}.\n"
-                              "The following {} channels were flagged: {}"
-                              "".format(rulename, os.path.basename(table), spw, pol, limit,
-                                        len(channels_flagged), flagged_as_str))
+                    msg = ("Outliers found with flagging rule '{}' for {}, spw {}, pol {}.\n"
+                           "Sharp feature limit: {}.\n"
+                           "The following {} channels were flagged: {}"
+                           "".format(rulename, os.path.basename(table), spw, pol, limit,
+                                     len(channels_flagged), flagged_as_str))
+                    _log_outlier(msg)
 
                     # Add new flag command to flag data underlying the
                     # view.
@@ -2042,10 +2074,11 @@ class VectorFlagger(basetask.StandardTaskTemplate):
                 if len(channels_flagged) > 0:
                     # Log a debug message with outliers.
                     flagged_as_str = ", ".join([str(ol) for ol in channels_flagged])
-                    LOG.debug("Outliers found with flagging rule '{}' for {}, spw {}, pol {}.\n"
-                              "The following {} channels were flagged: {}"
-                              "".format(rulename, os.path.basename(table), spw, pol,
-                                        len(channels_flagged), flagged_as_str))
+                    msg = ("Outliers found with flagging rule '{}' for {}, spw {}, pol {}.\n"
+                           "The following {} channels were flagged: {}"
+                           "".format(rulename, os.path.basename(table), spw, pol,
+                                     len(channels_flagged), flagged_as_str))
+                    _log_outlier(msg)
 
                     # Add new flag command to flag data underlying the
                     # view.
@@ -2081,12 +2114,13 @@ class VectorFlagger(basetask.StandardTaskTemplate):
                     if len(channels_flagged) > 0:
                         # Log a debug message with outliers.
                         flagged_as_str = ", ".join([str(ol) for ol in channels_flagged])
-                        LOG.debug("Outliers found with flagging rule '{}' for {}, spw {}, pol {}.\n"
-                                  "Limit on fraction channels flagged before all channels are flagged: {}\n"
-                                  "Limit on number channels flagged before all channels are flagged: {}\n"
-                                  "The following {} channels were flagged: {}"
-                                  "".format(rulename, os.path.basename(table), spw, pol, frac_limit,
-                                            nchan_limit, len(channels_flagged), flagged_as_str))
+                        msg = ("Outliers found with flagging rule '{}' for {}, spw {}, pol {}.\n"
+                               "Limit on fraction channels flagged before all channels are flagged: {}\n"
+                               "Limit on number channels flagged before all channels are flagged: {}\n"
+                               "The following {} channels were flagged: {}"
+                               "".format(rulename, os.path.basename(table), spw, pol, frac_limit,
+                                         nchan_limit, len(channels_flagged), flagged_as_str))
+                        _log_outlier(msg)
 
                         # Add new flag command to flag data underlying the
                         # view.
