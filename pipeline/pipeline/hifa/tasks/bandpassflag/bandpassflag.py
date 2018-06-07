@@ -374,19 +374,8 @@ class Bandpassflag(basetask.StandardTaskTemplate):
         intents = result.cafresult.inputs['intent'].split(',')
         spwids = map(int, result.cafresult.inputs['spw'].split(','))
 
-        # Create an antenna id-to-name translation dictionary.
-        antenna_id_to_name = {ant.id: ant.name
-                              for ant in ms.antennas
-                              if ant.name.strip()}
-
-        # Check that each antenna ID is represented by a unique non-empty
-        # name, by testing that the unique set of antenna names is same
-        # length as list of IDs. If not, then unset the translation
-        # dictionary to revert back to flagging by ID.
-        if len(set(antenna_id_to_name.values())) != len(ms.antennas):
-            LOG.info('No unique name available for each antenna ID:'
-                     ' flagging by antenna ID instead of by name.')
-            antenna_id_to_name = None
+        # Get translation dictionary for antenna id to name.
+        antenna_id_to_name = self._get_ant_id_to_name_dict(ms)
 
         # Initialize flagging state
         ants_fully_flagged = collections.defaultdict(set)
@@ -589,6 +578,32 @@ class Bandpassflag(basetask.StandardTaskTemplate):
                     'the reference antenna list.'.format(ms.basename))
 
         return result
+
+    @staticmethod
+    def _get_ant_id_to_name_dict(ms):
+        """
+        Return dictionary with antenna ID mapped to antenna name.
+        If no unique antenna name can be assigned to each antenna ID,
+        then return empty dictionary.
+
+        :param ms: MeasurementSet
+        :return: dictionary
+        """
+        # Create an antenna id-to-name translation dictionary.
+        antenna_id_to_name = {ant.id: ant.name
+                              for ant in ms.antennas
+                              if ant.name.strip()}
+
+        # Check that each antenna ID is represented by a unique non-empty
+        # name, by testing that the unique set of antenna names is same
+        # length as list of IDs. If not, then unset the translation
+        # dictionary to revert back to flagging by ID.
+        if len(set(antenna_id_to_name.values())) != len(ms.antennas):
+            LOG.info('No unique name available for each antenna ID:'
+                     ' flagging by antenna ID instead of by name.')
+            antenna_id_to_name = {}
+
+        return antenna_id_to_name
 
     @staticmethod
     def _copy_calfrom_with_gaintable(old_calfrom, gaintable):

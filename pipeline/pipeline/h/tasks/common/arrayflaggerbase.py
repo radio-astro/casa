@@ -106,7 +106,7 @@ def median_and_mad(data):
         data_mad = np.median(np.abs(data - data_median))
     return data_median, data_mad
 
- 
+
 class FlagCmd(object):
     """
     Create a flagcmd.
@@ -202,21 +202,19 @@ class FlagCmd(object):
                 # If provided a dictionary to translate antenna IDs
                 # to antenna names, then use antenna names in the 
                 # flagging commands.
-                if antenna_id_to_name is None:
-                    flagcmd += " antenna='%s'" % (ax_antenna)
-                else:
+                if antenna_id_to_name:
                     # Antenna axis can be either single antenna or a
                     # baseline.
-                    ax_antenna_name = '&'.join(
-                      [antenna_id_to_name[int(ant)] for ant 
-                      in str(ax_antenna).split('&')])
-                    flagcmd += " antenna='%s'" % (ax_antenna_name)
-                
+                    ax_antenna_name = '&'.join([antenna_id_to_name[int(ant)] for ant in str(ax_antenna).split('&')])
+                    flagcmd += " antenna='%s'" % ax_antenna_name
+                else:
+                    flagcmd += " antenna='%s'" % ax_antenna
+
 #                self.antenna = ax_antenna
 
             flag_time = None
-            for k,name in enumerate(axisnames):
-                if name.upper()=='TIME':
+            for k, name in enumerate(axisnames):
+                if name.upper() == 'TIME':
                     flag_time = flagcoords[k]
 
             self.start_time = None
@@ -236,15 +234,13 @@ class FlagCmd(object):
             # If provided a dictionary to translate antenna IDs
             # to antenna names, then use antenna names in the 
             # flagging commands.
-            if antenna_id_to_name is None:
-                flagcmd += " antenna='%s'" % (self.antenna)
-            else:
+            if antenna_id_to_name:
                 # Antenna axis can be either single antenna or a
                 # baseline.
-                antenna_name = '&'.join(
-                  [antenna_id_to_name[int(ant)] for ant 
-                  in str(self.antenna).split('&')])
-                flagcmd += " antenna='%s'" % (antenna_name)
+                antenna_name = '&'.join([antenna_id_to_name[int(ant)] for ant in str(self.antenna).split('&')])
+                flagcmd += " antenna='%s'" % antenna_name
+            else:
+                flagcmd += " antenna='%s'" % self.antenna
 
         # Add time to flagging command, unless it was already added
         # as part of flagcoords.

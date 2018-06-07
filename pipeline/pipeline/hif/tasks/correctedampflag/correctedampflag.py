@@ -133,24 +133,8 @@ class Correctedampflag(basetask.StandardTaskTemplate):
         # Get the MS object.
         ms = inputs.context.observing_run.get_ms(name=inputs.vis)
 
-        # Get number of antennas.
-        antenna_names, antenna_ids = \
-            commonhelpermethods.get_antenna_names(ms)
-        nants = len(antenna_names)
-
-        # Create an antenna id-to-name translation dictionary.
-        antenna_id_to_name = {ant.id: ant.name
-                              for ant in ms.antennas
-                              if ant.name.strip()}
-
-        # Check that each antenna ID is represented by a unique non-empty
-        # name, by testing that the unique set of antenna names is same
-        # length as list of IDs. If not, then unset the translation
-        # dictionary to revert back to flagging by ID.
-        if len(set(antenna_id_to_name.values())) != len(ms.antennas):
-            LOG.info('No unique name available for each antenna ID:'
-                     ' flagging by antenna ID instead of by name.')
-            antenna_id_to_name = None
+        # Get translation dictionary for antenna id to name.
+        antenna_id_to_name = self._get_ant_id_to_name_dict(ms)
 
         # Initialize list of newly found flags.
         newflags = []
@@ -178,9 +162,8 @@ class Correctedampflag(basetask.StandardTaskTemplate):
                 # Evaluate flagging heuristics separately for each spw.
                 for spwid in spwids:
 
-                    flags_for_intent_field_spw = self.evaluate_heuristic(
-                        ms, intent, field, spwid, nants,
-                        antenna_id_to_name)
+                    flags_for_intent_field_spw = self._evaluate_heuristic(
+                        ms, intent, field, spwid, antenna_id_to_name)
                     newflags.extend(flags_for_intent_field_spw)
 
         if newflags:
@@ -191,7 +174,7 @@ class Correctedampflag(basetask.StandardTaskTemplate):
             newflags = self._propagate_phase_flags(newflags, ms, antenna_id_to_name)
 
         # Apply flags and get before/after summary.
-        stats_before, stats_after = self.apply_flags(newflags)
+        stats_before, stats_after = self._apply_flags(newflags)
 
         # Store newly identified flags in result.
         result.addflags(newflags)
@@ -204,8 +187,33 @@ class Correctedampflag(basetask.StandardTaskTemplate):
     def analyse(self, result):
         return result
 
-    def evaluate_heuristic(self, ms, intent, field, spwid, nants,
-                           antenna_id_to_name):
+    @staticmethod
+    def _get_ant_id_to_name_dict(ms):
+        """
+        Return dictionary with antenna ID mapped to antenna name.
+        If no unique antenna name can be assigned to each antenna ID,
+        then return empty dictionary.
+
+        :param ms: MeasurementSet
+        :return: dictionary
+        """
+        # Create an antenna id-to-name translation dictionary.
+        antenna_id_to_name = {ant.id: ant.name
+                              for ant in ms.antennas
+                              if ant.name.strip()}
+
+        # Check that each antenna ID is represented by a unique non-empty
+        # name, by testing that the unique set of antenna names is same
+        # length as list of IDs. If not, then set the translation
+        # dictionary to an empty dictionary (to revert back to flagging by ID.)
+        if len(set(antenna_id_to_name.values())) != len(ms.antennas):
+            LOG.info('No unique name available for each antenna ID:'
+                     ' flagging by antenna ID instead of by name.')
+            antenna_id_to_name = {}
+
+        return antenna_id_to_name
+
+    def _evaluate_heuristic(self, ms, intent, field, spwid, antenna_id_to_name):
 
         inputs = self.inputs
 
@@ -244,6 +252,9 @@ class Correctedampflag(basetask.StandardTaskTemplate):
 
         # Get number of scans in MS for this intent.
         nscans = len(ms.get_scans(scan_intent=intent))
+
+        # Get number of antennas.
+        nants = len(ms.antennas)
 
         # If there are multiple scans for this intent, then scale up the
         # threshold for timestamps with outliers.
@@ -422,7 +433,7 @@ class Correctedampflag(basetask.StandardTaskTemplate):
                 # timestamps set by a threshold, then evaluate the antenna
                 # based heuristics for those timestamps.
                 if 0 < len(time_sel_highsig_uniq) <= n_time_with_highsig_max:
-                    newflags = self.evaluate_antbased_heuristics(
+                    newflags = self._evaluate_antbased_heuristics(
                         ms, spwid, intent, icorr, field, newflags,
                         ants_in_outlier_baseline_scans_thresh,
                         ants_in_outlier_baseline_scans_partial_thresh,
@@ -434,7 +445,7 @@ class Correctedampflag(basetask.StandardTaskTemplate):
                 # number of timestamps set by a threshold, then evaluate the
                 # antenna based heuristics for those timestamps.
                 elif 0 < len(time_sel_veryhighsig_uniq) <= n_time_with_veryhighsig_max:
-                    newflags = self.evaluate_antbased_heuristics(
+                    newflags = self._evaluate_antbased_heuristics(
                         ms, spwid, intent, icorr, field, newflags,
                         ants_in_outlier_baseline_scans_thresh,
                         ants_in_outlier_baseline_scans_partial_thresh,
@@ -579,7 +590,7 @@ class Correctedampflag(basetask.StandardTaskTemplate):
         return newflags
 
     @staticmethod
-    def evaluate_antbased_heuristics(
+    def _evaluate_antbased_heuristics(
             ms, spwid, intent, icorr, field, newflags,
             ants_in_outlier_baseline_scans_thresh,
             ants_in_outlier_baseline_scans_partial_thresh,
@@ -701,7 +712,7 @@ class Correctedampflag(basetask.StandardTaskTemplate):
 
         return newflags
 
-    def apply_flags(self, flags):
+    def _apply_flags(self, flags):
 
         inputs = self.inputs
 

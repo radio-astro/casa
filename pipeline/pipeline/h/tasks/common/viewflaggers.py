@@ -15,6 +15,32 @@ from pipeline.h.tasks.common import flaggableviewresults
 LOG = infrastructure.get_logger(__name__)
 
 
+def _get_ant_id_to_name_dict(ms):
+    """
+    Return dictionary with antenna ID mapped to antenna name.
+    If no unique antenna name can be assigned to each antenna ID,
+    then return empty dictionary.
+
+    :param ms: MeasurementSet
+    :return: dictionary
+    """
+    # Create an antenna id-to-name translation dictionary.
+    antenna_id_to_name = {ant.id: ant.name
+                          for ant in ms.antennas
+                          if ant.name.strip()}
+
+    # Check that each antenna ID is represented by a unique non-empty
+    # name, by testing that the unique set of antenna names is same
+    # length as list of IDs. If not, then set the translation
+    # dictionary to an empty dictionary (to revert back to flagging by ID.)
+    if len(set(antenna_id_to_name.values())) != len(ms.antennas):
+        LOG.info('No unique name available for each antenna ID:'
+                 ' flagging by antenna ID instead of by name.')
+        antenna_id_to_name = {}
+
+    return antenna_id_to_name
+
+
 class MatrixFlaggerInputs(vdp.StandardInputs):
     prepend = vdp.VisDependentProperty(default='')
     use_antenna_names = vdp.VisDependentProperty(default=True)
@@ -462,23 +488,9 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
         # would result in unique non-empty names for all IDs, otherwise
         # revert back to flagging by ID
         if self.inputs.use_antenna_names:
-            
-            # create translation dictionary, reject empty antenna name strings
-            antenna_id_to_name = {ant.id: ant.name
-                                  for ant in self.inputs.ms.antennas
-                                  if ant.name.strip()}
-
-            # Check that each antenna ID is represented by a unique non-empty
-            # name, by testing that the unique set of antenna names is same
-            # length as list of IDs. If not, then unset the translation
-            # dictionary to revert back to flagging by ID
-            if len(set(antenna_id_to_name.values())) != len(
-                    self.inputs.ms.antennas):
-                LOG.info('No unique name available for each antenna ID:'
-                         ' flagging by antenna ID instead of by name.')
-                antenna_id_to_name = None
+            antenna_id_to_name = _get_ant_id_to_name_dict(self.inputs.ms)
         else:
-            antenna_id_to_name = None
+            antenna_id_to_name = {}
             
         # If requested, expand current spw to all spws within the same
         # baseband, thus changing spw from an integer to a list of integers
@@ -1150,7 +1162,7 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
                                           np.logical_not(flag))
 
                 # No flagged data.
-                if len(ind2flag) <= 0:
+                if not np.any(ind2flag):
                     continue
 
                 i2flag = i[ind2flag]
@@ -1684,23 +1696,9 @@ class VectorFlagger(basetask.StandardTaskTemplate):
         # would result in unique non-empty names for all IDs, otherwise
         # revert back to flagging by ID
         if self.inputs.use_antenna_names:
-            
-            # create translation dictionary, reject empty antenna name strings
-            antenna_id_to_name = {ant.id: ant.name
-                                  for ant in self.inputs.ms.antennas
-                                  if ant.name.strip()}
-
-            # Check that each antenna ID is represented by a unique non-empty
-            # name, by testing that the unique set of antenna names is same 
-            # length as list of IDs. If not, then unset the translation 
-            # dictionary to revert back to flagging by ID.
-            if len(set(antenna_id_to_name.values())) != len(
-                    self.inputs.ms.antennas):
-                LOG.info('No unique name available for each antenna ID: '
-                         'flagging by antenna ID instead of by name.')
-                antenna_id_to_name = None
+            antenna_id_to_name = _get_ant_id_to_name_dict(self.inputs.ms)
         else:
-            antenna_id_to_name = None
+            antenna_id_to_name = {}
 
         # any flags found will apply to this subset of the data
         axisnames = []
@@ -1711,8 +1709,8 @@ class VectorFlagger(basetask.StandardTaskTemplate):
         axisnames = ['channels']
 
         # Create flattened 1D views of data and flags, with corresponding
-        # channels array. TODO: this should be unnecessary, as VectorFlagger
-        # expects 1D arrays as input.
+        # channels array.
+        # TODO: this should be unnecessary, as VectorFlagger expects 1D arrays as input.
         rdata = np.ravel(data)
         rflag = np.ravel(flag)
         valid_data = rdata[np.logical_not(rflag)]
