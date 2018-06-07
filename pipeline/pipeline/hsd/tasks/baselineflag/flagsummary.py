@@ -337,11 +337,13 @@ class SDBLFlagSummary(object):
                 os.remove(Filename)
             # Assuming single MS, antenna, field, spw, and polid
             ID0 = ids[0]
-            msid = DataTable.getcell('MS', ID0)
+            # top-level task (SDBLFlag) is per-MS task
+            # so that given ms domain objects are identical
+            assert numpy.all([m == self.ms_list[0] for m in self.ms_list])
+            msobj = self.ms_list[0]
             antid = DataTable.getcell('ANTENNA', ID0)
             fieldid = DataTable.getcell('FIELD_ID', ID0)
             spwid = DataTable.getcell('IF', ID0)
-            msobj = self.context.observing_run.measurement_sets[msid]
             asdm = asdm = common.asdm_name_from_ms(msobj)
             ant_name = msobj.get_antenna(antid)[0].name
             field_name = msobj.get_fields(field_id=fieldid)[0].name
