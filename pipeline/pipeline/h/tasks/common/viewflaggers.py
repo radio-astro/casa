@@ -9,6 +9,7 @@ import numpy as np
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.casatools as casatools
+import pipeline.infrastructure.exceptions as exceptions
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.vdp as vdp
 from pipeline.h.tasks.common import arrayflaggerbase
@@ -370,6 +371,10 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
         # If the flagsetter returned results from the CASA flag data task,
         # then proceed to extract "before" and/or "after" flagging summaries.
         if flagsetterresult.results:
+            # CAS-10407: if MPI version of flagdata failed and returned invalid
+            # results, then raise an exception.
+            if flagsetterresult.results[0] is None:
+                raise exceptions.PipelineException("Results from flagdata are empty, cannot continue.")
             if all(['report' in k for k in flagsetterresult.results[0].keys()]):
                 # Go through dictionary of reports.
                 for report in flagsetterresult.results[0].keys():
@@ -1635,6 +1640,10 @@ class VectorFlagger(basetask.StandardTaskTemplate):
         # If the flagsetter returned results from the CASA flag data task,
         # then proceed to extract "before" and/or "after" flagging summaries.
         if flagsetterresult.results:
+            # CAS-10407: if MPI version of flagdata failed and returned invalid
+            # results, then raise an exception.
+            if flagsetterresult.results[0] is None:
+                raise exceptions.PipelineException("Results from flagdata are empty, cannot continue.")
             if all(['report' in k for k in flagsetterresult.results[0].keys()]):
                 # Go through dictionary of reports...
                 for report in flagsetterresult.results[0].keys():
