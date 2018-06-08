@@ -6,6 +6,7 @@ import pipeline.h.tasks.importdata.importdata as importdata
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.vdp as vdp
+import pipeline.infrastructure.sessionutils as sessionutils
 from pipeline.domain.datatable import absolute_path
 from pipeline.infrastructure import task_registry
 from . import inspection
@@ -109,3 +110,40 @@ class SDImportData(importdata.ImportData):
         
         myresults.origin = results.origin
         return myresults
+
+
+### Tier-0 parallelization
+class HpcSDImportDataInputs(SDImportDataInputs):
+    # use common implementation for parallel inputs argument
+    parallel = sessionutils.parallel_inputs_impl()
+
+    def __init__(self, context, vis=None, output_dir=None, asis=None, process_caldevice=None, session=None,
+                 overwrite=None, nocopy=None, bdfflags=None, save_flagonline=None, lazy=None,
+                 with_pointing_correction=None, createmms=None, ocorr_mode=None, parallel=None):
+        super(HpcSDImportDataInputs, self).__init__(context, vis=vis, output_dir=output_dir, asis=asis,
+                                                    process_caldevice=process_caldevice, session=session,
+                                                    overwrite=overwrite, nocopy=nocopy, bdfflags=bdfflags, lazy=lazy,
+                                                    save_flagonline=save_flagonline, 
+                                                    with_pointing_correction=with_pointing_correction,
+                                                    createmms=createmms, ocorr_mode=ocorr_mode)
+        self.parallel = parallel
+
+
+class HpcSDImportData(sessionutils.ParallelTemplate):    
+    Inputs = HpcSDImportDataInputs
+    Task = SDImportData
+    
+    def __init__(self, inputs):
+        super(HpcSDImportData, self).__init__(inputs)
+
+    @basetask.result_finaliser
+    def get_result_for_exception(self, vis, exception):
+        LOG.error('Error operating target flag for {!s}'.format(os.path.basename(vis)))
+        LOG.error('{0}({1})'.format(exception.__class__.__name__, exception.message))
+        import traceback
+        tb = traceback.format_exc()
+        if tb.startswith('None'):
+            tb = '{0}({1})'.format(exception.__class__.__name__, exception.message)
+        return basetask.FailedTaskResults(self, exception, tb)
+
+    
