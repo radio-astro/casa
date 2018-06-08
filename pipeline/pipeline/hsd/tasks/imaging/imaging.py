@@ -18,6 +18,7 @@ from pipeline.h.heuristics import fieldnames
 from pipeline.h.tasks.common.sensitivity import Sensitivity
 from pipeline.infrastructure import casa_tasks
 from pipeline.infrastructure import task_registry
+from pipeline.domain import DataTable
 from . import gridding
 from . import sdcombine
 from . import weighting
@@ -183,6 +184,9 @@ class SDImaging(basetask.StandardTaskTemplate):
             LOG.info('No SDBaselineResults available. Set edge as [0,0]')
             edge = [0, 0]
          
+        dt_dict = dict((ms.basename, DataTable(os.path.join(context.observing_run.ms_datatable_name, ms.basename))) 
+                       for ms in ms_list)
+        
         # loop over reduction group (spw and source combination)
         for (group_id, group_desc) in reduction_group.iteritems():
             LOG.debug('Processing Reduction Group %s' % group_id)
@@ -320,7 +324,8 @@ class SDImaging(basetask.StandardTaskTemplate):
                                                        infiles=original_ms, outfiles=work_ms,
                                                        antenna=antids, spwid=spwids, fieldid=fieldids)
                 weighting_task = weighting.WeightMS(weighting_inputs)
-                weighting_result = self._executor.execute(weighting_task)
+                job = common.ParameterContainerJob(weighting_task, datatable_dict=dt_dict)
+                weighting_result = self._executor.execute(job, merge=False)
                 del weighting_result # Not used
                    
                 # Step 2.
@@ -408,7 +413,8 @@ class SDImaging(basetask.StandardTaskTemplate):
                                                                  poltypes=_pols,
                                                                  nx=nx, ny=ny)
                         gridding_task = grid_task_class(gridding_inputs)
-                        gridding_result = self._executor.execute(gridding_task)
+                        job = common.ParameterContainerJob(gridding_task, datatable_dict=dt_dict)
+                        gridding_result = self._executor.execute(job, merge=False)
 
                         # Extract RMS and number of spectra from grid_tables
                         if isinstance(gridding_result.outcome, compress.CompressedObj):
@@ -548,7 +554,8 @@ class SDImaging(basetask.StandardTaskTemplate):
                                                              poltypes=_pols,
                                                              nx=nx, ny=ny)
                     gridding_task = grid_task_class(gridding_inputs)
-                    gridding_result = self._executor.execute(gridding_task)
+                    job = common.ParameterContainerJob(gridding_task, datatable_dict=dt_dict)
+                    gridding_result = self._executor.execute(job, merge=False)
                     # Extract RMS and number of spectra from grid_tables
                     if isinstance(gridding_result.outcome, compress.CompressedObj):
                         grid_table = gridding_result.outcome.decompress()

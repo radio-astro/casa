@@ -11,7 +11,6 @@ import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.vdp as vdp
 import pipeline.infrastructure.casatools as casatools
-from pipeline.domain import DataTable
 from pipeline.domain.datatable import DataTableIndexer
 from .. import common 
 from ..common import compress
@@ -85,8 +84,9 @@ class GriddingBase(basetask.StandardTaskTemplate):
 
     is_multi_vis_task = True
 
-    def prepare(self):
+    def prepare(self, datatable_dict=None):
         start = time.time()
+        assert datatable_dict is not None
         inputs = self.inputs
         context = inputs.context
         if type(inputs.antennaids) == int:
@@ -114,6 +114,7 @@ class GriddingBase(basetask.StandardTaskTemplate):
         else:
             self.poltype = inputs.poltypes
         LOG.debug('self.files=%s'%(self.files))
+        LOG.debug('self.msidxs=%s'%(self.msidxs))
         LOG.debug('self.antenna=%s'%(self.antenna))
         LOG.debug('self.spw=%s'%(self.spw))
         LOG.debug('self.field=%s'%(self.field))
@@ -145,7 +146,7 @@ class GriddingBase(basetask.StandardTaskTemplate):
         spacing = self.grid_ra / 9.0
         DataIn = self.files
         LOG.info('DataIn=%s'%(DataIn))
-        grid_table = self.dogrid(DataIn, kernel_width, combine_radius, allowance, spacing)
+        grid_table = self.dogrid(DataIn, kernel_width, combine_radius, allowance, spacing, datatable_dict=datatable_dict)
         end = time.time()
         LOG.info('execute: elapsed time %s sec'%(end-start))
         result = GriddingResults(task=self.__class__,
@@ -164,7 +165,7 @@ class GriddingBase(basetask.StandardTaskTemplate):
     def analyse(self, result):
         return result
         
-    def dogrid(self, DataIn, kernel_width, combine_radius, allowance_radius, grid_spacing, loglevel=2):
+    def dogrid(self, DataIn, kernel_width, combine_radius, allowance_radius, grid_spacing, loglevel=2, datatable_dict=None):
         """
         The process does re-map and combine spectrum for each position
         GridTable format:
@@ -188,20 +189,22 @@ class GriddingBase(basetask.StandardTaskTemplate):
 
         context = self.inputs.context
         mses = context.observing_run.measurement_sets
-        dt_dict = dict((ms.basename, DataTable(os.path.join(context.observing_run.ms_datatable_name, ms.basename))) 
-                       for ms in mses)
+        dt_dict = datatable_dict
         index_dict = collections.defaultdict(list)
+        index_dict_key = 0
         for msid, ant, fld, spw in itertools.izip(self.msidxs, self.antenna, self.field, self.spw):
             basename = mses[msid].basename
             vis = mses[msid].name
             _index_list = common.get_index_list_for_ms(dt_dict[basename], [vis], [ant], [fld], [spw])
-            index_dict[basename].extend(_index_list)
+            index_dict[index_dict_key].extend(_index_list)
+            index_dict_key += 1
         indexer = DataTableIndexer(context)
         def _g():
-            for ms in mses:
-                if ms.basename in index_dict:
-                    for i in index_dict[ms.basename]:
-                        yield indexer.perms2serial(ms.basename, i)
+            for x in xrange(index_dict_key):
+                msid = self.msidxs[x]
+                ms = mses[msid]
+                for i in index_dict[x]:
+                    yield indexer.perms2serial(ms.basename, i)
         index_list = numpy.fromiter(_g(), dtype=numpy.int64)
         num_spectra = len(index_list)
 
@@ -216,10 +219,10 @@ class GriddingBase(basetask.StandardTaskTemplate):
                 datatable = dt_dict[vis]
                 yield datatable.getcell(colname, j)
         def _g3(colname):
-            for msid in self.msidxs:
+            for key, msid in enumerate(self.msidxs):
                 basename = mses[msid].basename
                 datatable = dt_dict[basename]
-                _list = index_dict[basename]
+                _list = index_dict[key]
                 yield datatable.getcol(colname).take(_list, axis=-1)
                 
         #rows = table.getcol('ROW').take(index_list)
@@ -227,9 +230,11 @@ class GriddingBase(basetask.StandardTaskTemplate):
 
         vislist = map(lambda x: x.basename, mses)
         #LOG.info('self.msidxs={0}'.format(self.msidxs))
-        num_spectra_per_data = dict((i,len(index_dict[vislist[i]])) for i in self.msidxs)
+        #num_spectra_per_data = dict((i,len(index_dict[vislist[i]])) for i in self.msidxs)
+        #num_spectra_per_data = dict((i,len(index_dict[v])) for i,v in enumerate(vislist))
         #LOG.info('num_spectra_per_data={0}'.format(num_spectra_per_data))
-        msids = numpy.asarray([i for i in self.msidxs for j in xrange(num_spectra_per_data[i])])
+        #msids = numpy.asarray([i for i in self.msidxs for j in xrange(num_spectra_per_data[i])])
+        msids = numpy.asarray([i for key, i in enumerate(self.msidxs) for j in xrange(len(index_dict[key]))])
         #LOG.info('msids={}'.format(msids))
         ras = numpy.fromiter(_g2('RA'), dtype=numpy.float64, count=num_spectra)
         decs = numpy.fromiter(_g2('DEC'), dtype=numpy.float64, count=num_spectra)
@@ -287,6 +292,9 @@ class GriddingBase(basetask.StandardTaskTemplate):
         
         # create storage
         _counter = 0
+        num_spectra_per_data = dict([(i,0) for i in self.msidxs])
+        for i in xrange(num_spectra):
+            num_spectra_per_data[msids[i]] += 1
         LOG.trace('num_spectra_per_data=%s'%(num_spectra_per_data))
 
         LOG.info('Processing %d spectra...' % num_spectra)

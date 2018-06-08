@@ -68,7 +68,7 @@ class WeightMS(basetask.StandardTaskTemplate):
             'WeightRMS': True,
             'WeightTsysExpTime': False}
    
-    def prepare(self):
+    def prepare(self, datatable_dict=None):
         # for each data
         outfile = self.inputs.outfiles
         is_full_resolution = (self.inputs.spwtype.upper() in ["TDM", "FDM"])
@@ -88,8 +88,12 @@ class WeightMS(basetask.StandardTaskTemplate):
             minmaxclip = False
             weight_rms = False
             weight_tintsys = True
+        datatable = None
+        if datatable_dict is not None:
+            datatable = datatable_dict[self.inputs.ms.basename]
         self._set_weight(row_map, minmaxclip=minmaxclip, weight_rms=weight_rms,
-                         weight_tintsys=weight_tintsys, try_fallback=is_full_resolution)
+                         weight_tintsys=weight_tintsys, try_fallback=is_full_resolution,
+                         default_datatable=datatable)
 
         result = WeightMSResults(task=self.__class__,
                                  success=True,
@@ -150,7 +154,7 @@ class WeightMS(basetask.StandardTaskTemplate):
     
         return row_map
          
-    def _set_weight(self, row_map, minmaxclip, weight_rms, weight_tintsys, try_fallback=False):
+    def _set_weight(self, row_map, minmaxclip, weight_rms, weight_tintsys, try_fallback=False, default_datatable=None):
         inputs = self.inputs
         infile = inputs.infiles
         outfile = inputs.outfiles
@@ -159,8 +163,14 @@ class WeightMS(basetask.StandardTaskTemplate):
         fieldid = self.inputs.fieldid
 
         context = inputs.context
-        datatable_name = os.path.join(context.observing_run.ms_datatable_name, os.path.basename(infile))
-        datatable = DataTable(name=datatable_name, readonly=True)
+        datatable = None
+        if default_datatable is not None:
+            filename = default_datatable.getkeyword('FILENAMES')[0]
+            if os.path.basename(filename) == os.path.basename(infile):
+                datatable = default_datatable
+        if datatable is None:
+            datatable_name = os.path.join(context.observing_run.ms_datatable_name, os.path.basename(infile))
+            datatable = DataTable(name=datatable_name, readonly=True)
         
         # get corresponding datatable rows (only IDs of target scans will be retruned)
         index_list = common.get_index_list_for_ms(datatable, [infile], [antid], [fieldid], [spwid])
