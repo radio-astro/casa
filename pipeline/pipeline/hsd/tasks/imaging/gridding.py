@@ -226,9 +226,9 @@ class GriddingBase(basetask.StandardTaskTemplate):
                 yield datatable.getcol(colname).take(_list, axis=-1)
                 
         #rows = table.getcol('ROW').take(index_list)
-        rows = numpy.fromiter(_g2('ROW'), dtype=numpy.int64, count=len(index_list))
+        rows = numpy.fromiter(_g2('ROW'), dtype=numpy.int64, count=num_spectra)
 
-        vislist = map(lambda x: x.basename, mses)
+        #vislist = map(lambda x: x.basename, mses)
         #LOG.info('self.msidxs={0}'.format(self.msidxs))
         #num_spectra_per_data = dict((i,len(index_dict[vislist[i]])) for i in self.msidxs)
         #num_spectra_per_data = dict((i,len(index_dict[v])) for i,v in enumerate(vislist))
@@ -254,9 +254,9 @@ class GriddingBase(basetask.StandardTaskTemplate):
             net_flag = tnet_flag[polids[0]]
             stats = tstats[polids[0]]
         else: # variable polids need to go hard way
-            tsys = numpy.ones(len(index_list))
-            net_flag = numpy.ones(len(index_list))
-            stats = numpy.zeros(tstats.shape[1:])
+            tsys = numpy.empty(num_spectra, dtype=numpy.float32)
+            net_flag = numpy.empty(num_spectra, dtype=numpy.float32)
+            stats = numpy.empty(tstats.shape[1:], dtype=numpy.float32)
             for i in xrange(len(index_list)):
                 ipol = polids[i]
                 tsys[i] = ttsys[ipol, i]
@@ -266,9 +266,9 @@ class GriddingBase(basetask.StandardTaskTemplate):
 
         ### test code (to check selected index_list meets selection)
         if DO_TEST:
-            ants = numpy.fromiter(_g2('ANTENNA'), dtype=numpy.int32, count=len(index_list))
-            fids = numpy.fromiter(_g2('FIELD_ID'), dtype=numpy.int32, count=len(index_list))
-            ifnos = numpy.fromiter(_g2('IF'), dtype=numpy.int32, count=len(index_list))
+            ants = numpy.fromiter(_g2('ANTENNA'), dtype=numpy.int32, count=num_spectra)
+            fids = numpy.fromiter(_g2('FIELD_ID'), dtype=numpy.int32, count=num_spectra)
+            ifnos = numpy.fromiter(_g2('IF'), dtype=numpy.int32, count=num_spectra)
             for _i in xrange(len(rows)):
                 _msid = msids[_i]
                 _ant = ants[_i]
