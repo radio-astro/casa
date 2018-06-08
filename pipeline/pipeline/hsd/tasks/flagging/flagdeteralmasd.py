@@ -7,6 +7,7 @@ import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.vdp as vdp
+import pipeline.infrastructure.sessionutils as sessionutils
 from pipeline.domain import DataTable
 from pipeline.h.tasks.flagging import flagdeterbase
 from pipeline.infrastructure import task_registry
@@ -238,3 +239,36 @@ class FlagDeterALMASingleDish(flagdeterbase.FlagDeterBase):
                 flag_cmds[i] += " intent='OBSERVE_TARGET#ON_SOURCE'"
         
         return flag_cmds
+
+
+### Tier-0 parallelization
+class HpcFlagDeterALMASingleDishInputs(FlagDeterALMASingleDishInputs):
+    # use common implementation for parallel inputs argument
+    parallel = sessionutils.parallel_inputs_impl()
+
+    def __init__(self, context, vis=None, output_dir=None, flagbackup=None, autocorr=None, shadow=None, scan=None,
+                 scannumber=None, intents=None, edgespw=None, fracspw=None, fracspwfps=None, online=None,
+                 fileonline=None, template=None, filetemplate=None, hm_tbuff=None, tbuff=None, qa0=None, qa2=None, 
+                 parallel=None):
+        super(HpcFlagDeterALMASingleDishInputs, self).__init__(
+            context, vis=vis, output_dir=output_dir, flagbackup=flagbackup, autocorr=autocorr, shadow=shadow, scan=scan,
+            scannumber=scannumber, intents=intents, edgespw=edgespw, fracspw=fracspw, fracspwfps=fracspwfps,
+            online=online, fileonline=fileonline, template=template, filetemplate=filetemplate, hm_tbuff=hm_tbuff,
+            tbuff=tbuff, qa0=qa0, qa2=qa2)
+        self.parallel = parallel
+
+
+class HpcFlagDeterALMASingleDish(sessionutils.ParallelTemplate):
+    Inputs = HpcFlagDeterALMASingleDishInputs
+    Task = FlagDeterALMASingleDish
+    
+    @basetask.result_finaliser
+    def get_result_for_exception(self, vis, exception):
+        LOG.error('Error operating target flag for {!s}'.format(os.path.basename(vis)))
+        LOG.error('{0}({1})'.format(exception.__class__.__name__, exception.message))
+        import traceback
+        tb = traceback.format_exc()
+        if tb.startswith('None'):
+            tb = '{0}({1})'.format(exception.__class__.__name__, exception.message)
+        return basetask.FailedTaskResults(self, exception, tb)
+    
