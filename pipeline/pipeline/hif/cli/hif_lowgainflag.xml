@@ -38,12 +38,12 @@ Flag antennas with low or high gain.
 
     <param type="double" name="fnm_lo_limit" subparam="true">
         <description>Flag values lower than fnm_lo_limit * median</description>
-        <value>0.7</value>
+        <value>0.5</value>
     </param>
 
     <param type="double" name="fnm_hi_limit" subparam="true">
         <description>Flag values higher than fnm_hi_limit * median</description>
-        <value>1.3</value>
+        <value>1.5</value>
     </param>
 
     <param type="string" name="pipelinemode">
@@ -87,8 +87,8 @@ Flag antennas with low or high gain.
 
         <when param="flag_nmedian">
             <equals type="bool" value="True">
-                <default param="fnm_lo_limit"><value type="float">0.7</value></default>
-                <default param="fnm_hi_limit"><value type="float">1.3</value></default>
+                <default param="fnm_lo_limit"><value type="float">0.5</value></default>
+                <default param="fnm_hi_limit"><value type="float">1.5</value></default>
             </equals>
             <equals type="bool" value="False">
             </equals>
@@ -127,10 +127,10 @@ flag_nmedian -- True to flag figures of merit greater than
     default True
 
 fnm_lo_limit -- Points lower than fnm_lo_limit * median are flagged.
-    default 0.7
+    default 0.5
 
 fnm_hi_limit -- Points greater than fnm_hi_limit * median are flagged.
-    default 1.3
+    default 1.5
 
 ---- pipeline context defined parameter arguments which can be set only in
 'interactive mode'
@@ -184,4 +184,3 @@ is outside the range [fnm_lo_limit * median, fnm_hi_limit * median].
 
 </task>
 </casaxml>
-

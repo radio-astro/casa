@@ -110,8 +110,8 @@ A separate view is created for spw. Each view is a matrix with axes "time" vs. "
 
 The views are evaluated against the "nmedian" matrix flagging rule, where data points are identified as outliers if:
 
-1. their value is smaller than a threshold-factor * median of all non-flagged data points, where the threshold is 'fnm_lo_limit' (default: 0.7), or,
-2. their value is larger than a threshold-factor * median of all non-flagged data points, where the threshold is 'fnm_hi_limit' (default: 1.3).
+1. their value is smaller than a threshold-factor * median of all non-flagged data points, where the threshold is 'fnm_lo_limit', or,
+2. their value is larger than a threshold-factor * median of all non-flagged data points, where the threshold is 'fnm_hi_limit'.
 
 Flagging commands are generated for each of the identified outlier data points.
 

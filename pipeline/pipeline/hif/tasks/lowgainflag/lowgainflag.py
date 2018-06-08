@@ -33,8 +33,8 @@ class LowgainflagInputs(vdp.StandardInputs):
     LowgainflagInputs defines the inputs for the Lowgainflag pipeline task.
     """
     flag_nmedian = vdp.VisDependentProperty(default=True)
-    fnm_hi_limit = vdp.VisDependentProperty(default=1.3)
-    fnm_lo_limit = vdp.VisDependentProperty(default=0.7)
+    fnm_hi_limit = vdp.VisDependentProperty(default=1.5)
+    fnm_lo_limit = vdp.VisDependentProperty(default=0.5)
 
     @vdp.VisDependentProperty
     def intent(self):
