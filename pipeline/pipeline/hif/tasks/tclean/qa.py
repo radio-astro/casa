@@ -31,7 +31,7 @@ class TcleanQAHandler(pqa.QAPlugin):
         if ('VLA' in observatory):
             result.qa.pool[:] = [pqa.QAScore(1.0)]
         elif (result.error is not None):
-            result.qa.pool[:] = [pqa.QAScore(0.0, longmsg=result.error.longmsg, shortmsg=result.error.shortmsg)]
+            result.qa.pool[:] = [pqa.QAScore(0.0, longmsg=result.error, shortmsg=result.error)]
         else:
             qaTool = casac.quanta()
             try:
@@ -55,11 +55,11 @@ class TcleanQAHandler(pqa.QAPlugin):
             #    Be careful about the source name vs field name issue
             if result.intent == 'CHECK' and result.inputs['specmode'] == 'mfs':
                 mses = [context.observing_run.get_ms(name=vis) for vis in result.inputs['vis']]
-                fieldname = result.sourcename 
+                fieldname = result.sourcename
                 intent = result.intent
                 spwid = int(result.spw)
-                imagename = result.image 
-                checkscore = scorecalc.score_checksources (mses, fieldname, spwid, imagename) 
+                imagename = result.image
+                checkscore = scorecalc.score_checksources (mses, fieldname, spwid, imagename)
                 result.qa.pool.append (checkscore)
 
 
