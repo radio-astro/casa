@@ -538,7 +538,7 @@ class ImageParamsHeuristics(object):
             vislist = self.vislist
 
         mdirections = []
-        for ivis, vis in enumerate(self.vislist):
+        for ivis, vis in enumerate(vislist):
 
 	    # Get the visibilities
             ms = self.observing_run.get_ms(name=vis)

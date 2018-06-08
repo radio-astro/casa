@@ -3,6 +3,7 @@ from __future__ import absolute_import
 import ast
 import os
 import types
+import copy
 
 import pipeline.domain.measures as measures
 import pipeline.infrastructure as infrastructure
@@ -283,10 +284,6 @@ class MakeImList(basetask.StandardTaskTemplate):
                 imaging_params=inputs.context.imaging_parameters,
                 imaging_mode=inputs.context.project_summary.telescope
             )
-
-            # get list of antenna IDs
-            antenna_ids = self.heuristics.antenna_ids(inputs.intent)
-            antenna = [','.join(map(str, antenna_ids.get(os.path.basename(v), ''))) for v in vislist]
 
             if inputs.specmode == 'cont':
                 # Make sure the spw list is sorted numerically
@@ -577,7 +574,20 @@ class MakeImList(basetask.StandardTaskTemplate):
                           cells[spwspec], imsizes[(field_intent[0],spwspec)],
                           phasecenters[field_intent[0]]))
 
-                        any_non_imaging_ms = any([not inputs.context.observing_run.get_ms(vis).is_imaging_ms for vis in vislist])
+                        # Remove MSs that do not contain data for the given field/intent combination
+                        scanidlist, visindexlist = self.heuristics.get_scanidlist(vislist, field_intent[0], field_intent[1])
+                        filtered_vislist = [vislist[i] for i in visindexlist]
+
+                        # Save the filtered vislist in a copy of the heuristics object tailored to the
+                        # current imaging target
+                        target_heuristics = copy.deepcopy(self.heuristics)
+                        target_heuristics.vislist = filtered_vislist
+
+                        # Get list of antenna IDs
+                        antenna_ids = target_heuristics.antenna_ids(inputs.intent)
+                        antenna = [','.join(map(str, antenna_ids.get(os.path.basename(v), ''))) for v in filtered_vislist]
+
+                        any_non_imaging_ms = any([not inputs.context.observing_run.get_ms(vis).is_imaging_ms for vis in filtered_vislist])
 
                         target = CleanTarget(
                             antenna=antenna,
@@ -599,8 +609,8 @@ class MakeImList(basetask.StandardTaskTemplate):
                             uvrange=inputs.uvrange,
                             uvtaper=uvtaper,
                             stokes='I',
-                            heuristics=self.heuristics,
-                            vis=vislist if inputs.per_eb or any_non_imaging_ms else None,
+                            heuristics=target_heuristics,
+                            vis=filtered_vislist if inputs.per_eb or any_non_imaging_ms else None,
                             is_per_eb=inputs.per_eb if inputs.per_eb else None
                         )
 
