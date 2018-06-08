@@ -287,59 +287,6 @@ class SDImageDisplayInputs(SingleDishDisplayInputs):
         return self.result.outcome['image'].sourcename
 
 
-class SDInspectionDisplay(object):
-    __metaclass__ = abc.ABCMeta
-    Inputs = SingleDishDisplayInputs
-    MATPLOTLIB_FIGURE_ID = -1
-    AxesManager = None
-    
-    def __init__(self, inputs):
-        self.inputs = inputs
-        self.context = self.inputs.context
-        self.result = self.inputs.result
-        self.datatable = self.context.observing_run.datatable_instance
-
-    def plot(self):
-        inputs = self.inputs
-        result = inputs.result
-        
-        if result.outcome is None or result.success is None or result.success is False:
-            # result object seems to be empty, return empty list
-            return []
-
-        if ShowPlot:
-            pl.ion()
-        else:
-            pl.ioff()
-        pl.figure(self.MATPLOTLIB_FIGURE_ID)
-        if ShowPlot:
-            pl.ioff()
-        pl.clf()
-
-        self.axes_manager = self.AxesManager()
-        
-        plots = []
-        report_dir = self.context.report_dir
-        stage_dir = os.path.join(report_dir, 'stage%d'%(result.stage_number))
-        LOG.debug('report_dir=%s'%(report_dir))
-        filenames = self.datatable.getkeyword('FILENAMES')
-        LOG.debug('filenames=%s'%(filenames))
-        for idx in xrange(len(filenames)):
-            t0 = time.time()
-            plot = self.doplot(idx, stage_dir)
-            t1 = time.time()
-            LOG.trace('PROFILE: %s.doplot elapsed time %s sec'%(self.__class__.__name__,t1-t0))
-            if isinstance(plot, list):
-                plots.extend(plot)
-            elif plot is not None:
-                plots.append(plot)
-        return [plots]
-
-    @abc.abstractmethod
-    def doplot(self, idx, stage_dir):
-        raise NotImplementedError()
-
-
 class SDCalibrationDisplay(object):
     __metaclass__ = abc.ABCMeta
     Inputs = SingleDishDisplayInputs

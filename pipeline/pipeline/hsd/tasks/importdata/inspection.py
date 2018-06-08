@@ -167,8 +167,8 @@ class SDInspection(object):
 
     def __select_data(self, datatable, ms_ant_map, startrow=0, nrow=-1):
         ms_name = self.ms.name
-        filenames = datatable.getkeyword('FILENAMES')
-        assert ms_name in filenames
+        filename = datatable.getkeyword('FILENAME')
+        assert os.path.basename(ms_name) == os.path.basename(filename)
 
         by_antenna = {}
         by_spw = {}

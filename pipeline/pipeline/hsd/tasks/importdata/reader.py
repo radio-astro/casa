@@ -87,17 +87,9 @@ class MetaDataReader(object):
         
         #Rad2Deg = 180. / 3.141592653
         
+        # FILENAME keyword stores name of the MS
         LOG.info('name=%s' % name)
-        if self.datatable.haskeyword('FILENAMES'):
-            filenames = self.datatable.getkeyword('FILENAMES')
-            if name in filenames:
-                # the data is already registered, return
-                self.appended_row = 0
-                return
-            filenames = numpy.concatenate((filenames, [name]))
-        else:
-            filenames = [name]
-        self.datatable.putkeyword('FILENAMES', filenames)
+        self.datatable.putkeyword('FILENAME', name)
 
         # 2018/04/18 TN
         # CAS-10874 single dish pipeline should use ICRS instead of J2000

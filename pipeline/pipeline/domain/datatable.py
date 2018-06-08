@@ -843,8 +843,8 @@ class DataTableImpl(object):
         NOTE this method should be called before applying the other flags.
         """
         LOG.info('Updating online flag for %s' % (os.path.basename(infile)))
-        filename = self.getkeyword('FILENAMES')
-        assert os.path.basename(infile) == os.path.basename(filename[0])
+        filename = self.getkeyword('FILENAME')
+        assert os.path.basename(infile) == os.path.basename(filename)
 
         # back to previous impl. with reduced memory usage
         # (performance degraded)

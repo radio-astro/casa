@@ -165,7 +165,7 @@ class WeightMS(basetask.StandardTaskTemplate):
         context = inputs.context
         datatable = None
         if default_datatable is not None:
-            filename = default_datatable.getkeyword('FILENAMES')[0]
+            filename = default_datatable.getkeyword('FILENAME')
             if os.path.basename(filename) == os.path.basename(infile):
                 datatable = default_datatable
         if datatable is None:
