@@ -4,7 +4,9 @@ import os
 
 import pipeline.infrastructure as infrastructure
 from pipeline.domain.datatable import DataTableImpl as DataTable
+import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.vdp as vdp
+import pipeline.infrastructure.sessionutils as sessionutils
 from pipeline.h.tasks.applycal.applycal import Applycal, ApplycalInputs
 from pipeline.infrastructure import task_registry
 
@@ -83,3 +85,32 @@ class SDApplycal(Applycal):
         datatable.exportdata(minimal=False)
 
         return results
+    
+
+### Tier-0 parallelization
+class HpcSDApplycalInputs(SDApplycalInputs):
+    # use common implementation for parallel inputs argument
+    parallel = sessionutils.parallel_inputs_impl()
+
+    def __init__(self, context, output_dir=None, vis=None, field=None, spw=None, antenna=None, intent=None, parang=None,
+                 applymode=None, flagbackup=None, flagsum=None, flagdetailedsum=None, parallel=None):
+        super(HpcSDApplycalInputs, self).__init__(context, output_dir=output_dir, vis=vis, field=field, spw=spw,
+                                               antenna=antenna, intent=intent, parang=parang, applymode=applymode,
+                                               flagbackup=flagbackup, flagsum=flagsum, flagdetailedsum=flagdetailedsum)
+        self.parallel = parallel
+        
+
+class HpcSDApplycal(sessionutils.ParallelTemplate):
+    Inputs = HpcSDApplycalInputs
+    Task = SDApplycal
+    
+    @basetask.result_finaliser
+    def get_result_for_exception(self, vis, exception):
+        LOG.error('Error operating target flag for {!s}'.format(os.path.basename(vis)))
+        LOG.error('{0}({1})'.format(exception.__class__.__name__, exception.message))
+        import traceback
+        tb = traceback.format_exc()
+        if tb.startswith('None'):
+            tb = '{0}({1})'.format(exception.__class__.__name__, exception.message)
+        return basetask.FailedTaskResults(self, exception, tb)
+
