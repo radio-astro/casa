@@ -34,6 +34,10 @@
 	<value>True</value>
     </param>
 
+    <param type="doubleArray" name="clipminmax" subparam="true">
+	<description>Range to use for flag clipping</description>
+	<value>[0.0,0.25]</value>
+    </param>
 
     <param type="string" name="pipelinemode">
 	<description>The pipeline operating mode</description>
@@ -111,6 +115,9 @@ leakage_poltype -- string of poltype to use for override in the first polcal exe
 
 mbdkcross -- run gaincal KCROSS grouped by basenad
     default: False
+
+clipminmax --  Range to use for clipping
+    default: [0.0,0.25]
 
 pipelinemode -- The pipeline operating mode. In 'automatic' mode the pipeline
    determines the values of all context defined pipeline inputs

@@ -5,7 +5,8 @@ from taskinit import casalog
 import pipeline.h.cli.utils as utils
 
 
-def hifv_circfeedpolcal(vis=None, Dterm_solint=None, refantignore=None, leakage_poltype=None, mbdkcross=None, pipelinemode=None, dryrun=None, acceptresults=None):
+def hifv_circfeedpolcal(vis=None, Dterm_solint=None, refantignore=None, leakage_poltype=None, mbdkcross=None,
+                        clipminmax=None, pipelinemode=None, dryrun=None, acceptresults=None):
 
     ##########################################################################
     #                                                                        #

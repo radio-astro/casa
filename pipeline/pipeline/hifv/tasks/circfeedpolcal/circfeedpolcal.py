@@ -2,6 +2,7 @@ from __future__ import absolute_import
 
 import os
 import math
+import ast
 import collections
 
 import pipeline.hif.heuristics.findrefant as findrefant
@@ -68,8 +69,12 @@ class CircfeedpolcalInputs(vdp.StandardInputs):
     leakage_poltype = vdp.VisDependentProperty(default='')
     mbdkcross = vdp.VisDependentProperty(default=True)
 
+    @vdp.VisDependentProperty
+    def clipminmax(self):
+        return [0.0, 0.25]
+
     def __init__(self, context, vis=None, Dterm_solint=None, refantignore=None, leakage_poltype=None,
-                 mbdkcross=None):
+                 mbdkcross=None, clipminmax=None):
         super(CircfeedpolcalInputs, self).__init__()
         self.context = context
         self.vis = vis
@@ -77,6 +82,7 @@ class CircfeedpolcalInputs(vdp.StandardInputs):
         self.refantignore = refantignore
         self.leakage_poltype = leakage_poltype
         self.mbdkcross = mbdkcross
+        self.clipminmax = clipminmax
 
 
 @task_registry.set_equivalent_casa_task('hifv_circfeedpolcal')
@@ -210,6 +216,9 @@ class Circfeedpolcal(polarization.Polarization):
                        gainfield=[''], kcrossspwmap=tablesToAdd[0][2], solint='inf,{!s}'.format(self.inputs.Dterm_solint),
                        minsnr=5.0)
 
+        # Clip flagging
+        self._do_clipflag(tablesToAdd[1][0])
+
         # 2MHz pieces, minsnr of 3.0
         self.do_polcal(tablesToAdd[2][0], kcrosstable=tablesToAdd[0][0], poltype='Xf', field=polanglefield,
                        intent='CALIBRATE_POL_ANGLE#UNSPECIFIED',
@@ -228,6 +237,30 @@ class Circfeedpolcal(polarization.Polarization):
                               'fluxcal'          : fluxcal,
                               'polanglefield'    : polanglefield,
                               'polleakagefield'  : polleakagefield}
+
+    def _modifyGainTables(self, GainTables):
+        '''
+
+        Args:
+            GainTables: Python List of tables from the calibrary
+
+        Returns: replaces the finalphasegaincal name with the phaseshortgaincal table from hifv_finalcals
+
+        '''
+
+        idx = -1  # Should be last element
+        newtable = ''
+        for i, table in enumerate(GainTables):
+            if 'finalphasegaincal' in table:
+                idx = i
+                try:
+                    finalcals_result = self.inputs.context.results[-1].read()[0]
+                except Exception as e:
+                    finalcals_result = self.inputs.context.results[-1].read()
+                newtable = finalcals_result.phaseshortgaincaltable
+        GainTables[idx] = newtable
+
+        return GainTables
 
     def do_gaincal(self, caltable, field='', spw='', combine='scan', addcallib=False):
 
@@ -253,6 +286,8 @@ class Circfeedpolcal(polarization.Polarization):
 
         GainTables = GainTables[0]
         interp = interp[0]
+
+        GainTables = self._modifyGainTables(GainTables)
 
         # Similar inputs to hifa/linpolcal.py
         task_inputs = gaincal.GTypeGaincal.Inputs(self.inputs.context,
@@ -326,6 +361,8 @@ class Circfeedpolcal(polarization.Polarization):
                 spwmap.append(kcrossspwmap)
             else:
                 spwmap.append([])
+
+        GainTables = self._modifyGainTables(GainTables)
 
         task_args = {'vis': self.inputs.vis,
                      'caltable'   : caltable,
@@ -502,5 +539,25 @@ class Circfeedpolcal(polarization.Polarization):
             spwmap.extend(basebandmap)
 
         return spwmap
+
+    def _do_clipflag(self, dcaltable):
+
+        clipminmax = self.inputs.clipminmax
+        if type(self.inputs.clipminmax) is str:
+            clipminmax = ast.literal_eval(self.inputs.clipminmax)
+
+        task_args = {'vis': dcaltable,
+                     'mode': 'clip',
+                     'datacolumn': 'CPARAM',
+                     'clipminmax': clipminmax,
+                     'correlation': 'ABS_ALL',
+                     'clipoutside': True,
+                     'flagbackup': False,
+                     'savepars': False,
+                     'action': 'apply'}
+
+        job = casa_tasks.flagdata(**task_args)
+
+        return self._executor.execute(job)
 
 
