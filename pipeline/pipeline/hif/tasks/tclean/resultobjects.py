@@ -30,9 +30,10 @@ class BoxResult(basetask.Results):
 
 
 class TcleanResult(basetask.Results):
-    def __init__(self, sourcename=None, intent=None, spw=None, orig_specmode=None, specmode=None, multiterm=None, plotdir=None,
+    def __init__(self, vis=None, sourcename=None, intent=None, spw=None, orig_specmode=None, specmode=None, multiterm=None, plotdir=None,
                  imaging_mode=None):
         super(TcleanResult, self).__init__()
+        self.vis = vis
         self.sourcename = sourcename
         self.intent = intent
         self.spw = spw
@@ -72,6 +73,7 @@ class TcleanResult(basetask.Results):
         # Used to make simple telescope-dependent decisions about weblog output
         self.imaging_mode = imaging_mode
         self.per_spw_cont_sensitivities_all_chan = None
+        self.check_source_fit = None
 
     def merge_with_context(self, context):
         # Calculated sensitivities for later stages

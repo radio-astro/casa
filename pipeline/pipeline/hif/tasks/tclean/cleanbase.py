@@ -196,7 +196,8 @@ class CleanBase(basetask.StandardTaskTemplate):
         if not inputs.result:
             plotdir = os.path.join(inputs.context.report_dir,
                                    'stage%s' % inputs.context.stage.split('_')[0])
-            result = TcleanResult(sourcename=inputs.field,
+            result = TcleanResult(vis=inputs.vis,
+                                  sourcename=inputs.field,
                                   intent=inputs.intent,
                                   spw=inputs.spw,
                                   orig_specmode=inputs.orig_specmode,

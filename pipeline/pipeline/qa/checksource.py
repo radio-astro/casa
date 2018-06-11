@@ -7,16 +7,17 @@ import pipeline.infrastructure.casatools as casatools
 # reference direction and the fraction of flux lost
 # with respect to the reference flux.
 
-def checkimage (imagename, refdirection, refflux):
+def checkimage (imagename, rms, refdirection, refflux):
 
     '''
        imagename - The image of the source
+             rms - The image rms
     refdirection - The reference direction measure for the source that is imaged
          refflux - The reference flux quanta for the source that is imaged. It may be None
     '''
 
     # Get the fit dictionary
-    fitdict = fitimage(imagename)
+    fitdict = fitimage(imagename, rms)
     if not fitdict:
         return {}
 
@@ -54,10 +55,11 @@ def checkimage (imagename, refdirection, refflux):
 # in a dictionary along with the peak of the image and an estimate of the
 # size of the restoring beam.
 
-def fitimage (imagename, fitradius=15):
+def fitimage (imagename, rms, fitradius=15):
 
     '''
        imagename - The image of the source
+             rms - The image rms
           radius - The radius of a circular region around the center of the imaged
                    used to computed the fit paramaters and image statistics
     '''
@@ -82,7 +84,7 @@ def fitimage (imagename, fitradius=15):
         imagepeak = imstatresults['max'][0]
 
         # Fit the source
-        fitresults = image.fitcomponents(region=region)
+        fitresults = image.fitcomponents(region=region, rms=rms)
 
     # Check that there is a restoring beam
     if not restoring_beam:

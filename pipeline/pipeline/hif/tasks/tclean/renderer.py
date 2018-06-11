@@ -22,10 +22,12 @@ LOG = logging.get_logger(__name__)
 
 
 ImageRow = collections.namedtuple('ImageInfo', (
-    'field spw spwnames pol frequency_label frequency beam beam_pa sensitivity '
+    'vis field fieldname intent spw spwnames pol frequency_label frequency beam beam_pa sensitivity '
     'cleaning_threshold residual_ratio non_pbcor_label non_pbcor pbcor score '
-    'fractional_bw_label fractional_bw aggregate_bw_label aggregate_bw '
-    'image_file nchan plot qa_url iterdone stopcode stopreason'))
+    'fractional_bw_label fractional_bw aggregate_bw_label aggregate_bw aggregate_bw_num '
+    'image_file nchan plot qa_url iterdone stopcode stopreason '
+    'chk_pos_offset chk_frac_beam_offset chk_fitflux chk_fitpeak_fitflux_ratio img_snr '
+    'chk_gfluxscale chk_gfluxscale_snr chk_fitflux_gfluxscale_ratio'))
 
 
 class T2_4MDetailsTcleanRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
@@ -66,7 +68,11 @@ class T2_4MDetailsTcleanRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
 
             maxiter = max(r.iterations.keys())
 
+            vis = ','.join([os.path.basename(v).strip('.ms') for v in r.vis])
+
             field = None
+            fieldname = None
+            intent = None
 
             image_path = r.iterations[maxiter]['image'].replace('.image', '.image%s' % extension)
 
@@ -96,6 +102,8 @@ class T2_4MDetailsTcleanRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                 spwnames = None
             if 'field' in info:
                 field = '%s (%s)' % (info['field'], r.intent)
+                fieldname = info['field']
+                intent = r.intent
 
             coord_names = numpy.array(coordsys.names())
             coord_refs = coordsys.referencevalue(format='s')
@@ -285,6 +293,7 @@ class T2_4MDetailsTcleanRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
             #
             aggregate_bw_GHz = qaTool.convert(r.aggregate_bw, 'GHz')['value']
             row_aggregate_bw = '%.3g GHz (LSRK)' % aggregate_bw_GHz
+            row_aggregate_bw_num = '%.4g' % aggregate_bw_GHz
 
             #
             #  score value
@@ -295,12 +304,59 @@ class T2_4MDetailsTcleanRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
             else:
                 row_score = '-'
 
+            #
+            # check source fit parameters
+            #
+            if r.check_source_fit is not None:
+                chk_pos_offset = '%.2f' % (r.check_source_fit['offset'])
+                chk_frac_beam_offset = '%.2f' % (r.check_source_fit['beams'])
+                chk_fitflux = '%d' % (int(round(r.check_source_fit['fitflux'] * 1000.)))
+
+                if r.check_source_fit['fitflux'] != 0.0:
+                    chk_fitpeak_fitflux_ratio = '%.2f' % (r.check_source_fit['fitpeak'] / r.check_source_fit['fitflux'] * 1000.)
+                else:
+                    chk_fitpeak_fitflux_ratio = 'N/A'
+
+                if r.check_source_fit['gfluxscale'] is not None and r.check_source_fit['gfluxscale_err'] is not None:
+                    chk_gfluxscale = '%.2f +/- %.2f' % (r.check_source_fit['gfluxscale'], r.check_source_fit['gfluxscale_err'])
+
+                    if r.check_source_fit['gfluxscale_err'] != 0.0:
+                        chk_gfluxscale_snr = '%.2f' % (r.check_source_fit['gfluxscale'] / r.check_source_fit['gfluxscale_err'])
+                    else:
+                        chk_gfluxscale_snr = 'N/A'
+
+                    if r.check_source_fit['gfluxscale'] != 0.0:
+                        chk_fitflux_gfluxscale_ratio = '%.2f' % (r.check_source_fit['fitflux'] * 1000. / r.check_source_fit['gfluxscale'])
+                    else:
+                        chk_fitflux_gfluxscale_ratio = 'N/A'
+
+                else:
+                    chk_gfluxscale = 'N/A'
+                    chk_gfluxscale_snr = 'N/A'
+                    chk_fitflux_gfluxscale_ratio = 'N/A'
+            else:
+                chk_pos_offset = 'N/A'
+                chk_frac_beam_offset = 'N/A'
+                chk_fitflux = 'N/A'
+                chk_fitpeak_fitflux_ratio = 'N/A'
+                chk_gfluxscale = 'N/A'
+                chk_gfluxscale_snr = 'N/A'
+                chk_fitflux_gfluxscale_ratio = 'N/A'
+
+            if r.image_max is not None and r.image_rms is not None:
+                img_snr = '%.2f' % (r.image_max / r.image_rms)
+            else:
+                img_snr = 'N/A'
+
             # create our table row for this image.
             # Plot is set to None as we have a circular dependency: the row
             # needs the plot, but the plot generator needs the image_stats
             # cache. We will later set plot to the correct value.
             row = ImageRow(
+                vis=vis,
                 field=field,
+                fieldname=fieldname,
+                intent=intent,
                 spw=spw,
                 spwnames=spwnames,
                 pol=pol,
@@ -319,6 +375,7 @@ class T2_4MDetailsTcleanRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                 fractional_bw=row_fractional_bw,
                 aggregate_bw_label=row_bandwidth_label,
                 aggregate_bw=row_aggregate_bw,
+                aggregate_bw_num=row_aggregate_bw_num,
                 image_file=image_name.replace('.pbcor', ''),
                 nchan=nchan,
                 plot=None,
@@ -326,6 +383,14 @@ class T2_4MDetailsTcleanRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                 iterdone=row_iterdone,
                 stopcode=row_stopcode,
                 stopreason=row_stopreason,
+                chk_pos_offset=chk_pos_offset,
+                chk_frac_beam_offset=chk_frac_beam_offset,
+                chk_fitflux=chk_fitflux,
+                chk_fitpeak_fitflux_ratio=chk_fitpeak_fitflux_ratio,
+                img_snr=img_snr,
+                chk_gfluxscale=chk_gfluxscale,
+                chk_gfluxscale_snr=chk_gfluxscale_snr,
+                chk_fitflux_gfluxscale_ratio=chk_fitflux_gfluxscale_ratio
             )
             image_rows.append(row)
 

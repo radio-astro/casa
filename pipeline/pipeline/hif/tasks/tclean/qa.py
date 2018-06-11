@@ -5,6 +5,7 @@ import collections
 import numpy
 from casac import casac
 
+import pipeline.domain.measures as measures
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.pipelineqa as pqa
 import pipeline.infrastructure.utils as utils
@@ -59,8 +60,25 @@ class TcleanQAHandler(pqa.QAPlugin):
                 intent = result.intent
                 spwid = int(result.spw)
                 imagename = result.image
-                checkscore = scorecalc.score_checksources (mses, fieldname, spwid, imagename)
+                rms = result.image_rms
+                checkscore, offset, beams, fitflux, fitpeak = scorecalc.score_checksources (mses, fieldname, spwid, imagename, rms)
                 result.qa.pool.append (checkscore)
+                gfluxscale = 1.0
+                gfluxscale_err = 0.1
+                if len(result.vis) == 1:
+                    try:
+                        ms_do = context.observing_run.get_ms(result.vis[0])
+                        field_id = [field.id for field in ms_do.fields if utils.dequote(field.name) == utils.dequote(fieldname)][0]
+                        fluxresult = [fr for fr in ms_do.derived_fluxes[str(field_id)] if fr.spw_id == str(spwid)][0]
+                        gfluxscale = float(fluxresult.I.convert_to(measures.FluxDensityUnits.MILLIJANSKY).value)
+                        gfluxscale_err = float(fluxresult.uncertainty.I.convert_to(measures.FluxDensityUnits.MILLIJANSKY).value)
+                    except Exception as e:
+                        gfluxscale = None
+                        gfluxscale_err = None
+                else:
+                    gfluxscale = None
+                    gfluxscale_err = None
+                result.check_source_fit = {'offset': offset, 'beams': beams, 'fitflux': fitflux, 'fitpeak': fitpeak, 'gfluxscale': gfluxscale, 'gfluxscale_err': gfluxscale_err}
 
 
 class TcleanListQAHandler(pqa.QAPlugin):

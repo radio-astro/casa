@@ -30,10 +30,53 @@ except:
     long_description = ''
 %>Tclean/MakeImages${long_description}</%block>
 
+%if len(result[0].targets) != 0:
+    %if image_info[0].intent == 'CHECK':
+        <h2>Check Source Fit Results</h2>
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>EB</th>
+                        <th>Field</th>
+                        <th>Virtual SPW</th>
+                        <th>Bandwidth (GHz)</th>
+                        <th>Position offset (mas)</th>
+                        <th>Fractional beam position offset</th>
+                        <th>Fitted integrated intensity (mJy)</th>
+                        <th>Image S/N</th>
+                        <th>Fitted Image Peak Intensity / Flux Density ratio</th>
+                        <th>gfluxscale Derived Flux</th>
+                        <th>gfluxscale S/N</th>
+                        <th>Fitted flux density to gfluxscale ratio</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    % for row in image_info:
+                        %if row.frequency is not None:
+                            <tr>
+                                <td>${row.vis}</td>
+                                <td>${row.fieldname}</td>
+                                <td>${row.spw}</td>
+                                <td>${row.aggregate_bw_num}</td>
+                                <td>${row.chk_pos_offset}</td>
+                                <td>${row.chk_frac_beam_offset}</td>
+                                <td>${row.chk_fitflux}</td>
+                                <td>${row.img_snr}</td>
+                                <td>${row.chk_fitpeak_fitflux_ratio}</td>
+                                <td>${row.chk_gfluxscale}</td>
+                                <td>${row.chk_gfluxscale_snr}</td>
+                                <td>${row.chk_fitflux_gfluxscale_ratio}</td>
+                            </tr>
+                        %endif
+                    %endfor
+                </tbody>
+            </table>
+    %endif
+%endif
 
 <h2>Image Details</h2>
 
-%if not len(result[0].targets):
+%if len(result[0].targets) == 0:
     %if result[0].clean_list_info == {}:
         <p>There are no clean targets.
     %else:

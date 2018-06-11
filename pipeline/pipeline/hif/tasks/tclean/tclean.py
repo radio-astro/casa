@@ -284,7 +284,8 @@ class Tclean(cleanbase.CleanBase):
 
             if (if0 == -1) or (if1 == -1):
                 LOG.error('No LSRK frequency intersect among selected MSs for Field %s SPW %s' % (inputs.field, inputs.spw))
-                error_result = TcleanResult(sourcename=inputs.field,
+                error_result = TcleanResult(vis=inputs.vis,
+                                            sourcename=inputs.field,
                                             intent=inputs.intent,
                                             spw=inputs.spw,
                                             specmode=inputs.specmode)
@@ -300,7 +301,8 @@ class Tclean(cleanbase.CleanBase):
                 if0 = qaTool.convert(inputs.start, 'Hz')['value']
                 if if0 < if0_auto:
                     LOG.error('Supplied start frequency %s < f_low for Field %s SPW %s' % (inputs.start, inputs.field, inputs.spw))
-                    error_result = TcleanResult(sourcename=inputs.field,
+                    error_result = TcleanResult(vis=inputs.vis,
+                                                sourcename=inputs.field,
                                                 intent=inputs.intent,
                                                 spw=inputs.spw,
                                                 specmode=inputs.specmode)
@@ -310,7 +312,8 @@ class Tclean(cleanbase.CleanBase):
 
             if (inputs.width != '') and (inputs.nbin not in (None, -1)):
                 LOG.error('Field %s SPW %s: width and nbin are mutually exclusive' % (inputs.field, inputs.spw))
-                error_result = TcleanResult(sourcename=inputs.field,
+                error_result = TcleanResult(vis=inputs.vis,
+                                            sourcename=inputs.field,
                                             intent=inputs.intent,
                                             spw=inputs.spw,
                                             specmode=inputs.specmode)
@@ -321,7 +324,8 @@ class Tclean(cleanbase.CleanBase):
                 channel_width_manual = qaTool.convert(inputs.width, 'Hz')['value']
                 if channel_width_manual < channel_width_auto:
                     LOG.error('User supplied channel width smaller than native value of %s GHz for Field %s SPW %s' % (channel_width_auto, inputs.field, inputs.spw))
-                    error_result = TcleanResult(sourcename=inputs.field,
+                    error_result = TcleanResult(vis=inputs.vis,
+                                                sourcename=inputs.field,
                                                 intent=inputs.intent,
                                                 spw=inputs.spw,
                                                 specmode=inputs.specmode)
@@ -340,7 +344,8 @@ class Tclean(cleanbase.CleanBase):
                 if1 = if0 + channel_width * inputs.nchan
                 if if1 > if1_auto:
                     LOG.error('Calculated stop frequency %s GHz > f_high_native for Field %s SPW %s' % (if1, inputs.field, inputs.spw))
-                    error_result = TcleanResult(sourcename=inputs.field,
+                    error_result = TcleanResult(vis=inputs.vis,
+                                                sourcename=inputs.field,
                                                 intent=inputs.intent,
                                                 spw=inputs.spw,
                                                 specmode=inputs.specmode)
@@ -410,7 +415,8 @@ class Tclean(cleanbase.CleanBase):
 
         if sensitivity is None:
             LOG.error('Could not calculate the sensitivity for Field %s Intent %s SPW %s' % (inputs.field, inputs.intent, inputs.spw))
-            error_result = TcleanResult(sourcename=inputs.field,
+            error_result = TcleanResult(vis=inputs.vis,
+                                        sourcename=inputs.field,
                                         intent=inputs.intent,
                                         spw=inputs.spw,
                                         specmode=inputs.specmode)

@@ -67,10 +67,14 @@ def log_qa(method):
     def f(self, *args, **kw):
         # get the size of the CASA log before task execution
         qascore = method(self, *args, **kw)
-        if qascore.score >= rutils.SCORE_THRESHOLD_SUBOPTIMAL:
-            LOG.info(qascore.longmsg)
+        if isinstance(qascore, tuple):
+            _qascore = qascore[0]
         else:
-            LOG.warning(qascore.longmsg)
+            _qascore = qascore
+        if _qascore.score >= rutils.SCORE_THRESHOLD_SUBOPTIMAL:
+            LOG.info(_qascore.longmsg)
+        else:
+            LOG.warning(_qascore.longmsg)
         return qascore
 
     return f
@@ -1700,7 +1704,7 @@ def score_sd_line_detection_for_ms(group_id_list, field_id_list, spw_id_list, li
 
 
 @log_qa
-def score_checksources(mses, fieldname, spwid, imagename):
+def score_checksources(mses, fieldname, spwid, imagename, rms):
     """
     Score a single field image of a point source by comparing the source
     reference position to the fitted position and the source reference flux
@@ -1788,13 +1792,17 @@ def score_checksources(mses, fieldname, spwid, imagename):
         refflux = qa.quantity(median_flux, 'Jy')
 
     # Do the fit and compute positions offsets and flux ratios
-    fitdict = checksource.checkimage(imagename, refdirection, refflux)
+    fitdict = checksource.checkimage(imagename, rms, refdirection, refflux)
 
     msnames = ','.join([os.path.basename(ms.name) for ms in mses])
 
     # Compute the scores the default score is the geometric mean of
     # the position and flux scores if both are available.
     if not fitdict:
+        offset = None
+        beams = None
+        fitflux = None
+        fitpeak = None
         score = 0.0
         longmsg = 'Check source fit failed for %s field %s spwid %d' % (msnames, fieldname, spwid)
         shortmsg = 'Check source fit failed'
@@ -1805,6 +1813,7 @@ def score_checksources(mses, fieldname, spwid, imagename):
         offset = fitdict['positionoffset']['value'] * 1000.0
         beams = fitdict['beamoffset']['value']
         fitflux = fitdict['fitflux']['value']
+        fitpeak = fitdict['fitpeak']['value']
         shortmsg = 'Check source fit successful'
         if not refflux:
             score = max(0.0, 1.0 - min(1.0, beams))
@@ -1832,7 +1841,7 @@ def score_checksources(mses, fieldname, spwid, imagename):
                           metric_score=metric_score,
                           metric_units=metric_units)
 
-    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg, origin=origin)
+    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg, origin=origin), offset, beams, fitflux, fitpeak
 
 
 @log_qa
