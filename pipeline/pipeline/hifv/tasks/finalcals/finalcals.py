@@ -179,8 +179,8 @@ class Finalcals(basetask.StandardTaskTemplate):
             LOG.info("Using power-law fit results from original hifv_fluxboot task.")
             powerfit_results = self._do_powerfit(field_spws)
             powerfit_setjy = self._do_powerfitsetjy1(calMs, powerfit_results)
-            LOG.info("Using power-law fits results from fluxscale and hifv_fluxboot2 task.")
         if self.inputs.context.evla['msinfo'][m.name].fbversion == 'fb2':
+            LOG.info("Using power-law fits results from fluxscale and hifv_fluxboot2 task.")
             powerfit_setjy = self._do_powerfitsetjy2(calMs)
 
         new_gain_solint1 = context.evla['msinfo'][m.name].new_gain_solint1
