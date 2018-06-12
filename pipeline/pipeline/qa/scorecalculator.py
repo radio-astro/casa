@@ -3,20 +3,20 @@ Created on 9 Jan 2014
 
 @author: sjw
 """
-import os
 import collections
 import datetime
-import operator
 import math
+import operator
+import os
+
 import numpy as np
 
 import pipeline.domain.measures as measures
-import pipeline.infrastructure.utils as utils
 import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.pipelineqa as pqa
 import pipeline.infrastructure.renderer.rendererutils as rutils
-
+import pipeline.infrastructure.utils as utils
 import pipeline.qa.checksource as checksource
 
 __all__ = ['score_polintents',                                # ALMA specific
@@ -24,7 +24,7 @@ __all__ = ['score_polintents',                                # ALMA specific
            'score_bwswitching',                               # ALMA specific
            'score_tsysspwmap',                                # ALMA specific
            'score_number_antenna_offsets',                    # ALMA specific
-           '_score_missing_derived_fluxes',                   # ALMA specific
+           'score_missing_derived_fluxes',                    # ALMA specific
            'score_derived_fluxes_snr',                        # ALMA specific
            'score_phaseup_mapping_fraction',                  # ALMA specific
            'score_refspw_mapping_fraction',                   # ALMA specific
@@ -79,47 +79,33 @@ def log_qa(method):
 
     return f
 
+
 # struct to hold flagging statistics
 AgentStats = collections.namedtuple("AgentStats", "name flagged total")
 
 
-def calc_flags_per_agent(summaries):
-    stats = []
-    for idx in range(0, len(summaries)):
-        flagcount = int(summaries[idx]['flagged'])
-        totalcount = int(summaries[idx]['total'])
-
-        # From the second summary onwards, subtract counts from the previous 
-        # one
-        if idx > 0:
-            flagcount -= int(summaries[idx - 1]['flagged'])
-        
-        stat = AgentStats(name=summaries[idx]['name'],
-                          flagged=flagcount,
-                          total=totalcount)
-        stats.append(stat)
-
-    return stats
-
-
-def calc_flags_for_scans_per_agent(summaries, scanids):
+def calc_flags_per_agent(summaries, scanids=None):
     stats = []
 
     # Go through summary for each agent.
-    for ind, summary in enumerate(summaries):
-        flagcount = 0
-        totalcount = 0
-
-        # Add up flagged and total from all scans.
-        for scanid in scanids:
-            if scanid in summary['scan']:
-                flagcount += int(summary['scan'][scanid]['flagged'])
-                totalcount += int(summary['scan'][scanid]['total'])
+    for idx, summary in enumerate(summaries):
+        if scanids:
+            # Add up flagged and total for specified scans.
+            flagcount = 0
+            totalcount = 0
+            for scanid in scanids:
+                if scanid in summary['scan']:
+                    flagcount += int(summary['scan'][scanid]['flagged'])
+                    totalcount += int(summary['scan'][scanid]['total'])
+        else:
+            # Add up flagged and total for all data.
+            flagcount = int(summary['flagged'])
+            totalcount = int(summary['total'])
 
         # From the second summary onwards, subtract counts from the previous
         # one.
-        if ind > 0:
-            flagcount -= stats[ind-1].flagged
+        if idx > 0:
+            flagcount -= stats[idx-1].flagged
 
         # Create agent stats object, append to output.
         stat = AgentStats(name=summary['name'],
@@ -548,49 +534,6 @@ def score_applycal_agents(ms, summaries):
 
 
 @log_qa
-def score_flagging_view_exists(filename, result):
-    """
-    Assign a score of zero if the flagging view cannot be computed
-    """
-
-    # By default, assume no flagging views were found.
-    score = 0.0
-    longmsg = 'No flagging views for %s' % filename
-    shortmsg = 'No flagging views'
-
-    # Check if this is a flagging result for a single metric, where
-    # the flagging view is stored directly in the result.
-    try:
-        view = result.view
-        if view:
-            score = 1.0
-            longmsg = 'Flagging views exist for %s' % filename
-            shortmsg = 'Flagging views exist'
-    except AttributeError:
-        pass
-    
-    # Check if this flagging results contains multiple metrics,
-    # and look for flagging views among components.
-    try:
-        # Set score to 1 as soon as a single metric contains a
-        # valid flagging view.
-        for metricresult in result.components.values():
-            view = metricresult.view
-            if view:
-                score = 1.0
-                longmsg = 'Flagging views exist for %s' % filename
-                shortmsg = 'Flagging views exist'
-    except AttributeError:
-        pass
-
-    origin = pqa.QAOrigin(metric_name='score_flagging_view_exists',
-                          metric_score=bool(score),
-                          metric_units='Presence of flagging view')
-
-    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg, vis=filename, origin=origin)
-
-
-@log_qa
 def score_total_data_flagged(filename, summaries):
     """
     Calculate a score for the flagging task based on the total fraction of
@@ -695,7 +638,7 @@ def linear_score_fraction_unflagged_newly_flagged_for_intent(ms, summaries, inte
     scanids = [str(scan.id) for scan in ms.get_scans(scan_intent=intent)]
 
     # Calculate flags for scans belonging to intent.
-    agent_stats = calc_flags_for_scans_per_agent(summaries, scanids)
+    agent_stats = calc_flags_per_agent(summaries, scanids=scanids)
 
     # Calculate counts of unflagged data.
     unflaggedcount = agent_stats[0].total - agent_stats[0].flagged
@@ -1441,6 +1384,7 @@ def score_file_exists(filedir, filename, filetype):
 
     return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg, origin=origin)
 
+
 @log_qa
 def score_mses_exist(filedir, visdict):
     """
@@ -1480,6 +1424,7 @@ def score_mses_exist(filedir, visdict):
 
     return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg, origin=origin)
 
+
 @log_qa
 def score_flags_exist(filedir, visdict):
     """
@@ -1517,6 +1462,49 @@ def score_flags_exist(filedir, visdict):
                           metric_units='Number of missing flagging product files')
 
     return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg, origin=origin)
+
+
+@log_qa
+def score_flagging_view_exists(filename, result):
+    """
+    Assign a score of zero if the flagging view cannot be computed
+    """
+
+    # By default, assume no flagging views were found.
+    score = 0.0
+    longmsg = 'No flagging views for %s' % filename
+    shortmsg = 'No flagging views'
+
+    # Check if this is a flagging result for a single metric, where
+    # the flagging view is stored directly in the result.
+    try:
+        view = result.view
+        if view:
+            score = 1.0
+            longmsg = 'Flagging views exist for %s' % filename
+            shortmsg = 'Flagging views exist'
+    except AttributeError:
+        pass
+
+    # Check if this flagging results contains multiple metrics,
+    # and look for flagging views among components.
+    try:
+        # Set score to 1 as soon as a single metric contains a
+        # valid flagging view.
+        for metricresult in result.components.values():
+            view = metricresult.view
+            if view:
+                score = 1.0
+                longmsg = 'Flagging views exist for %s' % filename
+                shortmsg = 'Flagging views exist'
+    except AttributeError:
+        pass
+
+    origin = pqa.QAOrigin(metric_name='score_flagging_view_exists',
+                          metric_score=bool(score),
+                          metric_units='Presence of flagging view')
+
+    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg, vis=filename, origin=origin)
 
 
 @log_qa
