@@ -27,8 +27,8 @@ class SDApplycalInputs(ApplycalInputs):
                                                flagbackup=flagbackup, flagsum=flagsum, flagdetailedsum=flagdetailedsum)
 
 
-@task_registry.set_equivalent_casa_task('hsd_applycal')
-@task_registry.set_casa_commands_comment('Calibrations are applied to the data. Final flagging summaries are computed')
+#@task_registry.set_equivalent_casa_task('hsd_applycal')
+#@task_registry.set_casa_commands_comment('Calibrations are applied to the data. Final flagging summaries are computed')
 class SDApplycal(Applycal):
     """
     Applycal executes CASA applycal tasks for the current context state,
@@ -100,6 +100,8 @@ class HpcSDApplycalInputs(SDApplycalInputs):
         self.parallel = parallel
         
 
+@task_registry.set_equivalent_casa_task('hsd_applycal')
+@task_registry.set_casa_commands_comment('Calibrations are applied to the data. Final flagging summaries are computed')
 class HpcSDApplycal(sessionutils.ParallelTemplate):
     Inputs = HpcSDApplycalInputs
     Task = SDApplycal
