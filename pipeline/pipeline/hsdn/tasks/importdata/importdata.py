@@ -43,9 +43,9 @@ class NROImportDataResults(sd_importdata.SDImportDataResults):
     SetJy results generated from flux entries in Source.xml.
     """
     
-    def __init__(self, mses=None, reduction_group_list=None, datatable_name=None, setjy_results=None):
+    def __init__(self, mses=None, reduction_group_list=None, datatable_prefix=None, setjy_results=None):
         super(NROImportDataResults, self).__init__(mses=mses, reduction_group_list=reduction_group_list,
-                                                   datatable_name=datatable_name, setjy_results=setjy_results)
+                                                   datatable_prefix=datatable_prefix, setjy_results=setjy_results)
         
     def merge_with_context(self, context):
         super(NROImportDataResults, self).merge_with_context(context)
@@ -68,6 +68,6 @@ class NROImportData(sd_importdata.SDImportData):
         # get results object by running super.prepare()
         results = super(NROImportData, self).prepare()
         myresults = NROImportDataResults(mses=results.mses, reduction_group_list=results.reduction_group_list,
-                                         datatable_name=results.datatable_name, setjy_results=results.setjy_results)
+                                         datatable_prefix=results.datatable_prefix, setjy_results=results.setjy_results)
         myresults.origin = results.origin
         return myresults
