@@ -197,7 +197,7 @@ class ContFileHandler(object):
             try:
                 if field != -1:
                     for freq_range in freq_ranges:
-                        imTool.selectvis(vis=msname, field=field, spw=real_spw_id)
+                        imTool.selectvis(vis=msname, field=field, spw=real_spw_id, writeaccess=False)
                         result = imTool.advisechansel(freqstart=freq_range[0], freqend=freq_range[1], freqstep=100.,
                                                       freqframe='LSRK')
                         imTool.done()

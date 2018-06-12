@@ -342,7 +342,7 @@ class ImageParamsHeuristics(object):
                             taql = '||'.join(['ANTENNA1==%d' % i for i in antenna_ids[os.path.basename(vis)]])
                             casatools.imager.selectvis(vis=vis,
                               field=field, spw=real_spwid, scan=scanids,
-                              taql=taql, usescratch=False)
+                              taql=taql, usescratch=False, writeaccess=False)
                             # flag to say that imager has some valid data to work
                             # on
                             valid_data[(field, intent)] = True
@@ -494,7 +494,7 @@ class ImageParamsHeuristics(object):
                             antenna_ids = self.antenna_ids(field_intent[1], [os.path.basename(vis)])
                             taql = '||'.join(['ANTENNA1==%d' % i for i in antenna_ids[os.path.basename(vis)]])
                             casatools.imager.selectvis(vis=vis, field=field_intent[0],
-                              taql=taql, spw=real_spwspec, scan=scanids, usescratch=False)
+                              taql=taql, spw=real_spwspec, scan=scanids, usescratch=False, writeaccess=False)
                             aipsfieldofview = '%4.1farcsec' % (2.0 * self.largest_primary_beam_size(spwspec, field_intent[1]))
                             # Need to run advise to check if the current selection is completely flagged
                             rtn = casatools.imager.advise(takeadvice=False, amplitudeloss=0.5, fieldofview=aipsfieldofview)
@@ -1187,7 +1187,7 @@ class ImageParamsHeuristics(object):
             if nfi.shape != (0,):
                 with casatools.ImagerReader(msname) as imager:
                     # Just the edges. Skip one extra channel in final frequency range.
-                    imager.selectvis(field=field, spw='%s:%d~%d' % (real_spw, nfi[0], nfi[-1]))
+                    imager.selectvis(field=field, spw='%s:%d~%d' % (real_spw, nfi[0], nfi[-1]), writeaccess=False)
                     result = imager.advisechansel(getfreqrange=True, freqframe='LSRK')
 
                 f0 = result['freqstart']
@@ -1402,7 +1402,7 @@ class ImageParamsHeuristics(object):
                     scanids = ','.join(scanids)
                     antenna_ids = self.antenna_ids(intent, [os.path.basename(ms_do.name)])
                     taql = '||'.join(['ANTENNA1==%d' % i for i in antenna_ids[os.path.basename(ms_do.name)]])
-                    imTool.selectvis(spw='%s:%s' % (real_spwid, chanrange), field=field, scan=scanids, taql=taql)
+                    imTool.selectvis(spw='%s:%s' % (real_spwid, chanrange), field=field, scan=scanids, taql=taql, writeaccess=False)
                     imTool.defineimage(mode=specmode if specmode=='cube' else 'mfs', spw=real_spwid,
                                        cellx=cell[0], celly=cell[0],
                                        nx=imsize[0], ny=imsize[1])
