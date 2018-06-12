@@ -313,7 +313,7 @@ class T2_4MDetailsTcleanRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                 chk_fitflux = '%d' % (int(round(r.check_source_fit['fitflux'] * 1000.)))
 
                 if r.check_source_fit['fitflux'] != 0.0:
-                    chk_fitpeak_fitflux_ratio = '%.2f' % (r.check_source_fit['fitpeak'] / r.check_source_fit['fitflux'] * 1000.)
+                    chk_fitpeak_fitflux_ratio = '%.2f' % (r.check_source_fit['fitpeak'] / r.check_source_fit['fitflux'] / 1000.)
                 else:
                     chk_fitpeak_fitflux_ratio = 'N/A'
 
