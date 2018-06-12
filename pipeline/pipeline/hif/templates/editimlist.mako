@@ -50,7 +50,11 @@ import pipeline.infrastructure.renderer.htmlrenderer as hr
             %if key in target.keys() and key not in ('imagename', 'phasecenter', 'cell', 'imsize', 'field', 'heuristics'):
                 <tr>
                     <td><strong>${key}</strong></td>
-                    <td>${target[key]}</td>
+                    %if key == 'stokes' and result[0].img_mode == 'VLASS-SE-CUBE':
+                        <td>IQU</td>
+                    %else:
+                        <td>${target[key]}</td>
+                    %endif
                 </tr>
             %endif
         %endfor
