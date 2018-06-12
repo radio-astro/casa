@@ -156,6 +156,7 @@ class ALMAExportData(exportdata.ExportData):
             flags_file_list = glob.glob('*.flagtargetstemplate.txt')
         elif not vislist:
             flags_file_list = glob.glob('*.flagtemplate.txt')
+            flags_file_list.extend(glob.glob('*.flagtsystemplate.txt'))
         else:
             flags_file_list = glob.glob('*.flag*template.txt')
         for file_name in flags_file_list:
