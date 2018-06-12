@@ -1,5 +1,7 @@
 from __future__ import absolute_import
 
+import os
+
 import pipeline.h.tasks.tsysflag.tsysflag as tsysflag
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
@@ -40,8 +42,8 @@ class TsysflagInputs(tsysflag.TsysflagInputs):
             metric_order=metric_order, normalize_tsys=normalize_tsys)
 
 
-@task_registry.set_equivalent_casa_task('hsd_tsysflag')
-@task_registry.set_casa_commands_comment('The Tsys calibration and spectral window map is computed.')
+#@task_registry.set_equivalent_casa_task('hsd_tsysflag')
+#@task_registry.set_casa_commands_comment('The Tsys calibration and spectral window map is computed.')
 class Tsysflag(tsysflag.Tsysflag):
     Inputs = TsysflagInputs
 
@@ -72,6 +74,8 @@ class HpcTsysflagInputs(TsysflagInputs):
         self.parallel = parallel
 
 
+@task_registry.set_equivalent_casa_task('hsd_tsysflag')
+@task_registry.set_casa_commands_comment('The Tsys calibration and spectral window map is computed.')
 class HpcTsysflag(sessionutils.ParallelTemplate):
     Inputs = HpcTsysflagInputs
     Task = Tsysflag
