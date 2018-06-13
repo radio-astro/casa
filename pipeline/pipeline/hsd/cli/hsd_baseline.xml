@@ -204,7 +204,12 @@ linewindow -- Pre-defined line window. If this is set, specified line
       [[min_freq0, max_freq0], [min_freq1, max_freq1], ...]
       
    Note that the specified frequencies are assumed to be the value in 
-   LSRK frame. 
+   LSRK frame. Note also that there is a limitation when multiple MSs are 
+   processed. If native frequency frame of the data is not LSRK (e.g. TOPO), 
+   frequencies need to be converted to that frame. As a result, corresponding 
+   chnnnel range may vary between MSs. However, current implementation is 
+   not able to handle such case. Frequencies are converted to desired frame 
+   using representative MS (time, position, direction). 
       
    In the above cases, specified line windows are applied to all science 
    spws. In case when line windows vary with spw, line windows can be 
