@@ -169,7 +169,7 @@ class MaskLine(basetask.StandardTaskTemplate):
  
         # line finding
         t0 = time.time()
-        detection_inputs = detection.DetectLine.Inputs(context, window, edge, broadline)
+        detection_inputs = detection.DetectLine.Inputs(context, group_id, window, edge, broadline)
         line_finder = detection.DetectLine(detection_inputs)
         job = common.ParameterContainerJob(line_finder, datatable_dict=dt_dict, grid_table=grid_table, 
                                            spectral_data=spectra)
