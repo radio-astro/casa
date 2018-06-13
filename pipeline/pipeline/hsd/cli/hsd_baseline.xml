@@ -33,9 +33,10 @@
 	<value>-1</value>
     </param>
     
-    <param type="intArray" name="linewindow">
+    <param type="any" name="linewindow">
         <description>Pre-defined line window</description>
-	<value></value>
+        <any type="variant"/>
+	    <value type="intArray"></value>
     </param>
 
     <param type="intArray" name="edge">
@@ -181,21 +182,58 @@ fitorder -- Fitting order for polynomial. For cubic spline, it is used
 
 linewindow -- Pre-defined line window. If this is set, specified line 
    windows are used as a line mask for baseline subtraction instead to 
-   determine masks based on line detection and validation stage. Two 
-   types of format are acceptable. One is channel-based specification, 
+   determine masks based on line detection and validation stage. Several  
+   types of format are acceptable. One is channel-based window, 
    
-      [min_chan,max_chan] 
-
-   and the other is specification by central frequency in GHz plus 
-   line range as velocity in km/s, 
+      [min_chan, max_chan] 
+      
+   where min_chan and max_chan should be an integer. For multiple 
+   windows, nested list is also acceptable, 
    
-      [center_freq, min_vel, max_vel]
-
-   You can set multiple line windows by using nested list. However, 
-   the above notation must not be mixed in the list for multiple line 
-   windows.
+      [[min_chan0, max_chan0], [min_chan1, max_chan1], ...]
+      
+   Another way is frequency-based window, 
+   
+      [min_freq, max_freq]
+      
+   where min_freq and max_freq should be either a float or a string. 
+   If float value is given, it is interpreted as a frequency in Hz. 
+   String should be a quantity consisting of "value" and "unit", e.g., 
+   '100GHz'. Multiple windows are also supported.
+   
+      [[min_freq0, max_freq0], [min_freq1, max_freq1], ...]
+      
+   Note that the specified frequencies are assumed to be the value in 
+   LSRK frame. 
+      
+   In the above cases, specified line windows are applied to all science 
+   spws. In case when line windows vary with spw, line windows can be 
+   specified by a dictionary whose key is spw id while value is line window.
+   For example, the following dictionary gives different line windows 
+   to spws 17 and 19. Other spws, if available, will have an empty line 
+   window.
+   
+      {17: [[100, 200], [1200, 1400]], 19: ['112115MHz', '112116MHz']}
+      
+   Furthermore, linewindow accepts MS selection string. The following 
+   string gives [[100,200],[1200,1400]] for spw 17 while [1000,1500] 
+   for spw 21.
+   
+      "17:100~200;1200~1400,21:1000~1500"
+      
+   The string also accepts frequency with units. Note, however, that 
+   frequency reference frame in this case is not fixed to LSRK. 
+   Instead, the frame will be taken from the MS (typically TOPO for ALMA). 
+   Thus, the following two frequency-based line windows result different 
+   channel selections.
+   
+      {19: ['112115MHz', '112116MHz']} # frequency frame is LSRK
+      "19:11215MHz~11216MHz" # frequency frame is taken from the data
+                             # (TOPO for ALMA)
+   
    default: [] (do line detection and validation)
-   example: [100.0,200.0], [115.0,-10.0,10.0]
+   example: [100,200] (channel), [115e9, 115.1e9] (frequency in Hz)
+            ['115GHz', '115.1GHz'], see above for more examples
 
 edge -- number of edge channels to be dropped from baseline subtraction.
    the value must be a list with length of 2, whose values specifies
