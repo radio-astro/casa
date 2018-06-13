@@ -54,21 +54,39 @@ class ImagePreCheckHeuristics(object):
                 hm_robust = -0.5
                 hm_robust_scoreA = (0.75, 'Predicted robust=0.5 beam is outside PI requested range', 'Beam outside range')
             else:
-                hm_robust = 0.5
-                hm_robust_scoreA = (0.25, 'Predicted robust=0.5 beam is outside PI requested range and cannot be mitigated by robust', 'Cannot mitigate by robust')
+                beamArea_m0p5 = cqa.mul(beams[-0.5]['minor'], beams[-0.5]['major'])
+                beamArea_0p5 = cqa.mul(beams[0.5]['minor'], beams[0.5]['major'])
+                meanARBeamArea = cqa.pow(cqa.mul(cqa.add(minAR, maxAR), 0.5), 2)
+                delta_m0p5 = cqa.abs(cqa.sub(meanARBeamArea, beamArea_m0p5))
+                delta_0p5 = cqa.abs(cqa.sub(meanARBeamArea, beamArea_0p5))
+                if cqa.lt(delta_m0p5, delta_0p5):
+                    hm_robust = -0.5
+                    hm_robust_scoreA = (0.75, 'Predicted robust=0.5 beam is outside PI requested range', 'Beam outside range')
+                else:
+                    hm_robust = 0.5
+                    hm_robust_scoreA = (0.25, 'Predicted robust=0.5 beam is outside PI requested range and cannot be mitigated by robust', 'Cannot mitigate by robust')
         elif cqa.lt(beams[0.5]['minor'], minAR) and \
              cqa.le(minAR, beams[0.5]['major']) and \
              cqa.le(beams[0.5]['major'], maxAR):
             # Minor axis is too small, major axis in range -> robust=2.0, unless
-            # it results in the majoror axis falling outside of the range, in which
+            # it results in the major axis falling outside of the range, in which
             # case the default value should be used.
             if cqa.le(minAR, beams[2.0]['major']) and \
                cqa.le(beams[2.0]['major'], maxAR):
                 hm_robust = 2.0
                 hm_robust_scoreA = (0.75, 'Predicted robust=0.5 beam is outside PI requested range', 'Beam outside range')
             else:
-                hm_robust = 0.5
-                hm_robust_scoreA = (0.25, 'Predicted robust=0.5 beam is outside PI requested range and cannot be mitigated by robust', 'Cannot mitigate by robust')
+                beamArea_2p0 = cqa.mul(beams[2.0]['minor'], beams[2.0]['major'])
+                beamArea_0p5 = cqa.mul(beams[0.5]['minor'], beams[0.5]['major'])
+                meanARBeamArea = cqa.pow(cqa.mul(cqa.add(minAR, maxAR), 0.5), 2)
+                delta_2p0 = cqa.abs(cqa.sub(meanARBeamArea, beamArea_2p0))
+                delta_0p5 = cqa.abs(cqa.sub(meanARBeamArea, beamArea_0p5))
+                if cqa.lt(delta_2p0, delta_0p5):
+                    hm_robust = 2.0
+                    hm_robust_scoreA = (0.75, 'Predicted robust=0.5 beam is outside PI requested range', 'Beam outside range')
+                else:
+                    hm_robust = 0.5
+                    hm_robust_scoreA = (0.25, 'Predicted robust=0.5 beam is outside PI requested range and cannot be mitigated by robust', 'Cannot mitigate by robust')
         else:
             raise Exception, 'Unexpected case: beam(robust=-0.5)=%s, beam(robust=0.5)=%s, beam(robust=2.0)=%s, minAR=%s, maxAR=%s' % (str(beams[-0.5]), str(beams[0.5]), str(beams[2.0]), str(minAR), str(maxAR))
 
