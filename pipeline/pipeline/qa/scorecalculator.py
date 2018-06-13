@@ -85,6 +85,10 @@ AgentStats = collections.namedtuple("AgentStats", "name flagged total")
 
 
 def calc_flags_per_agent(summaries, scanids=None):
+    """
+    Calculate flagging statistics per agents. If scanids are provided,
+    restrict statistics to just those scans.
+    """
     stats = []
 
     # Go through summary for each agent.
@@ -117,6 +121,11 @@ def calc_flags_per_agent(summaries, scanids=None):
 
 
 def calc_frac_total_flagged(summaries, agents=None, scanids=None):
+    """
+    Calculate total fraction of data that is flagged. If agents are provided,
+    then restrict to statistics for those agents. If scanids are provided,
+    then restrict to statistics for those scans.
+    """
 
     agent_stats = calc_flags_per_agent(summaries, scanids=scanids)
 
@@ -128,7 +137,12 @@ def calc_frac_total_flagged(summaries, agents=None, scanids=None):
 
 
 def calc_frac_newly_flagged(summaries, agents=None, scanids=None):
-
+    """
+    Calculate fraction of data that is newly flagged, i.e. exclude pre-existing
+    flags (assumed to be represented in first summary). If agents are provided,
+    then restrict to statistics for those agents. If scanids are provided,
+    then restrict to statistics for those scans.
+    """
     agent_stats = calc_flags_per_agent(summaries, scanids=scanids)
 
     # sum the number of flagged rows for the selected agents
@@ -156,20 +170,36 @@ def linear_score(x, x1, x2, y1=0.0, y2=1.0):
     return m*clipped_x + c
 
 
-def score_data_flagged_by_agents(ms, summaries, min_frac, max_frac, agents=None):
+def score_data_flagged_by_agents(ms, summaries, min_frac, max_frac, agents, intents=None):
     """
     Calculate a score for the agentflagger summaries based on the fraction of
-    data flagged by certain flagging agents.
+    data flagged by certain flagging agents. If intents are provided, then
+    restrict scoring to the scans that match one or more of these intents.
 
     min_frac < flagged < max_frac maps to score of 1-0
     """
-    frac_flagged = calc_frac_total_flagged(summaries, agents=agents)
+    # If intents are provided, identify which scans to calculate flagging
+    # fraction for.
+    if intents:
+        scanids = {str(scan.id) for intent in intents for scan in ms.get_scans(scan_intent=intent)}
+        if not scanids:
+            LOG.warning("Cannot restrict QA score to intent(s) {}, since no matching scans were found."
+                        " Score will be based on scans for all intents.".format(utils.commafy(intents, quotes=False)))
+    else:
+        scanids = None
 
+    # Calculate fraction of flagged data.
+    frac_flagged = calc_frac_total_flagged(summaries, agents=agents, scanids=scanids)
+
+    # Convert fraction of flagged data into a score.
     score = linear_score(frac_flagged, min_frac, max_frac, 1.0, 0.0)
 
+    # Set score messages and origin.
     percent = 100.0 * frac_flagged
     longmsg = ('%0.2f%% data in %s flagged by %s flagging agents'
-               '' % (percent, ms.basename, utils.commafy(agents, False)))
+               '' % (percent, ms.basename, utils.commafy(agents, quotes=False)))
+    if intents:
+        longmsg += ' for intent(s): {}'.format(utils.commafy(intents, quotes=False))
     shortmsg = '%0.2f%% data flagged' % percent
 
     origin = pqa.QAOrigin(metric_name='score_data_flagged_by_agents',
@@ -535,7 +565,8 @@ def score_applycal_agents(ms, summaries):
 
     0 < score < 1 === 60% < frac_flagged < 5%
     """
-    score = score_data_flagged_by_agents(ms, summaries, 0.05, 0.6, ['applycal'])
+    # Get score for 'applycal' agent and 'TARGET' intent.
+    score = score_data_flagged_by_agents(ms, summaries, 0.05, 0.6, ['applycal'], intents=['TARGET'])
 
     new_origin = pqa.QAOrigin(metric_name='score_applycal_agents',
                               metric_score=score.origin.metric_score,
@@ -554,14 +585,17 @@ def score_total_data_flagged(filename, summaries):
     0%-5% flagged   -> 1
     5%-50% flagged  -> 0.5
     50-100% flagged -> 0
-    """    
+    """
+    # Calculate fraction of flagged data.
     frac_flagged = calc_frac_total_flagged(summaries)
 
+    # Convert fraction of flagged data into a score.
     if frac_flagged > 0.5:
         score = 0
     else:
         score = linear_score(frac_flagged, 0.05, 0.5, 1.0, 0.5)
 
+    # Set score messages and origin.
     percent = 100.0 * frac_flagged
     longmsg = '%0.2f%% of data in %s was flagged' % (percent, filename)
     shortmsg = '%0.2f%% data flagged' % percent
@@ -582,14 +616,17 @@ def score_fraction_newly_flagged(filename, summaries, vis):
     0%-5% flagged   -> 1
     5%-50% flagged  -> 0.5
     50-100% flagged -> 0
-    """    
+    """
+    # Calculate fraction of flagged data.
     frac_flagged = calc_frac_newly_flagged(summaries)
 
+    # Convert fraction of flagged data into a score.
     if frac_flagged > 0.5:
         score = 0
     else:
         score = linear_score(frac_flagged, 0.05, 0.5, 1.0, 0.5)
 
+    # Set score messages and origin.
     percent = 100.0 * frac_flagged
     longmsg = '%0.2f%% of data in %s was newly flagged' % (percent, filename)
     shortmsg = '%0.2f%% data flagged' % percent
@@ -609,10 +646,13 @@ def linear_score_fraction_newly_flagged(filename, summaries, vis):
     
     fraction flagged   -> score
     """
+    # Calculate fraction of flagged data.
     frac_flagged = calc_frac_newly_flagged(summaries)
 
-    score = 1.0 - frac_flagged        
+    # Convert fraction of flagged data into a score.
+    score = 1.0 - frac_flagged
 
+    # Set score messages and origin.
     percent = 100.0 * frac_flagged
     longmsg = '%0.2f%% of data in %s was newly flagged' % (percent, filename)
     shortmsg = '%0.2f%% data flagged' % percent
