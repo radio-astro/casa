@@ -94,18 +94,25 @@ def savitzky_golay(y, window_size, order, deriv=0, rate=1):
 
 
 class SyspowerResults(basetask.Results):
-    def __init__(self, gaintable=None, spowerdict=None):
+    def __init__(self, gaintable=None, spowerdict=None, dat_common=None,
+                               clip_sp_template=None):
 
         if gaintable is None:
             gaintable = ''
         if spowerdict is None:
             spowerdict = {}
+        if dat_common is None:
+            dat_common = np.array([])
+        if clip_sp_template is None:
+            clip_sp_template = []
 
         super(SyspowerResults, self).__init__()
 
         self.pipeline_casa_task = 'Syspower'
         self.gaintable = gaintable
         self.spowerdict = spowerdict
+        self.dat_common = dat_common
+        self.clip_sp_template = clip_sp_template
 
     def merge_with_context(self, context):
         """
@@ -153,7 +160,7 @@ class Syspower(basetask.StandardTaskTemplate):
 
         # get switched power from MS
         with casatools.TableReader(self.inputs.vis + '/SYSPOWER') as tb:
-            stb = tb.query('SPECTRAL_WINDOW_ID > 1')  # VLASS specific?
+            stb = tb.query('SPECTRAL_WINDOW_ID > '+str(min(spws)-1))  # VLASS specific?
             sp_time = stb.getcol('TIME')
             sp_ant = stb.getcol('ANTENNA_ID')
             sp_spw = stb.getcol('SPECTRAL_WINDOW_ID')
@@ -334,7 +341,8 @@ class Syspower(basetask.StandardTaskTemplate):
             except Exception as ex:
                 LOG.warn('Error writing final RQ table - switched power will not be applied' + str(ex))
 
-        return SyspowerResults(gaintable=rq_table, spowerdict=spowerdict)
+        return SyspowerResults(gaintable=rq_table, spowerdict=spowerdict, dat_common=dat_common,
+                               clip_sp_template=clip_sp_template)
 
     def analyse(self, results):
         return results

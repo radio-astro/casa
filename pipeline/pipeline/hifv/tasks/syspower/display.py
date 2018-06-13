@@ -1,5 +1,7 @@
 from __future__ import absolute_import
 import os
+import numpy as np
+import pylab as pb
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.renderer.logger as logger
@@ -9,56 +11,122 @@ import casa
 LOG = infrastructure.get_logger(__name__)
 
 
-class syspowerSummaryChart(object):
+class syspowerBoxChart(object):
     def __init__(self, context, result):
         self.context = context
         self.result = result
         self.ms = context.observing_run.get_ms(result.inputs['vis'])
         self.caltable = result.gaintable
-        #results[4].read()[0].rq_result[0].final[0].gaintable
+        # results[4].read()[0].rq_result[0].final[0].gaintable
 
     def plot(self):
         # science_spws = self.ms.get_spectral_windows(science_windows_only=True)
-        plots = [self.get_plot_wrapper('syspower_sample')]
+        plots = [self.get_plot_wrapper('syspower_box')]
         return [p for p in plots if p is not None]
 
     def create_plot(self, prefix):
         figfile = self.get_figfile(prefix)
 
-        antPlot = '0~2'
+        antenna_names = [a.name for a in self.ms.antennas]
 
-        plotmax = 100
+        # box plot of Pdiff template
+        dat_common = self.result.dat_common
+        clip_sp_template = self.result.clip_sp_template
 
-        # Dummy plot
-        #casa.plotcal(caltable=self.caltable, xaxis='time', yaxis='amp', poln='', field='', antenna=antPlot,
-        #             spw='',
-        #             timerange='', subplot=311, overplot=False, clearpanel='Auto', iteration='antenna',
-        #             plotrange=[0, 0, 0, plotmax], showflags=False, plotsymbol='o', plotcolor='blue', markersize=5.0,
-        #             fontsize=10.0, showgui=False, figfile=figfile)
-        casa.plotms(vis=self.caltable, xaxis='time', yaxis='amp', field='',
-                    antenna=antPlot, spw='', timerange='',
-                    plotrange=[0,0,0,plotmax], coloraxis='spw',
-                    title='Sys Power  rq.tbl   Antenna: {!s}'.format('0~2'),
-                    titlefont=8, xaxisfont=7, yaxisfont=7, showgui=False, plotfile=figfile)
+        LOG.info("Creating syspower box chart...")
+        pb.clf()
+        dshape = dat_common.shape
+        ant_dat = np.reshape(dat_common, newshape=(dshape[0], np.product(dshape[1:])))
+        ant_dat = np.ma.array(ant_dat)
+        ant_dat.mask = np.ma.getmaskarray(ant_dat)
+        ant_dat = np.ma.masked_outside(ant_dat, clip_sp_template[0], clip_sp_template[1])
+        ant_dat_filtered = [ant_dat[i][~ant_dat.mask[i]] for i in range(dshape[0])]
+        pb.boxplot(ant_dat_filtered, whis=10, sym='.')
+        pb.xticks(rotation=45)
+        pb.ylim(clip_sp_template[0], clip_sp_template[1])
+        pb.ylabel('Template Pdiff')
+        pb.xlabel('Antenna')
+        pb.savefig(figfile)
 
     def get_figfile(self, prefix):
         return os.path.join(self.context.report_dir,
                             'stage%s' % self.result.stage_number,
-                            'syspower' + prefix + '-%s-summary.png' % self.ms.basename)
+                            'syspower' + prefix + '-%s-box.png' % self.ms.basename)
 
     def get_plot_wrapper(self, prefix):
         figfile = self.get_figfile(prefix)
 
-        wrapper = logger.Plot(figfile,
-                              x_axis='freq',
-                              y_axis='amp',
+        wrapper = logger.Plot(figfile, x_axis='freq', y_axis='amp',
                               parameters={'vis': self.ms.basename,
                                           'type': prefix,
                                           'spw': ''})
 
         if not os.path.exists(figfile):
-            LOG.trace('syspower summary plot not found. Creating new '
-                      'plot.')
+            LOG.trace('syspower summary plot not found. Creating new plot.')
+            try:
+                self.create_plot(prefix)
+            except Exception as ex:
+                LOG.error('Could not create ' + prefix + ' plot.')
+                LOG.exception(ex)
+                return None
+
+        return wrapper
+
+
+class syspowerBarChart(object):
+    def __init__(self, context, result):
+        self.context = context
+        self.result = result
+        self.ms = context.observing_run.get_ms(result.inputs['vis'])
+        self.caltable = result.gaintable
+        # results[4].read()[0].rq_result[0].final[0].gaintable
+
+    def plot(self):
+        # science_spws = self.ms.get_spectral_windows(science_windows_only=True)
+        plots = [self.get_plot_wrapper('syspower_bar')]
+        return [p for p in plots if p is not None]
+
+    def create_plot(self, prefix):
+        figfile = self.get_figfile(prefix)
+
+        antenna_names = [a.name for a in self.ms.antennas]
+
+        # box plot of Pdiff template
+        dat_common = self.result.dat_common
+        clip_sp_template = self.result.clip_sp_template
+
+        LOG.info("Creating syspower bar chart...")
+        pb.clf()
+        dshape = dat_common.shape
+        ant_dat = np.reshape(dat_common, newshape=(dshape[0], np.product(dshape[1:])))
+        ant_dat = np.ma.array(ant_dat)
+        ant_dat.mask = np.ma.getmaskarray(ant_dat)
+        ant_dat = np.ma.masked_outside(ant_dat, clip_sp_template[0], clip_sp_template[1])
+
+        # fraction of flagged data in Pdiff template
+        percent_flagged_by_antenna = [100. * np.sum(ant_dat.mask[i]) / ant_dat.mask[i].size for i in range(dshape[0])]
+        pb.bar(range(dshape[0]), percent_flagged_by_antenna, color='red')
+        pb.xticks(rotation=45)
+        pb.ylabel('Fraction of Flagged Solutions (%)')
+        pb.xlabel('Antenna')
+
+        pb.savefig(figfile)
+
+    def get_figfile(self, prefix):
+        return os.path.join(self.context.report_dir,
+                            'stage%s' % self.result.stage_number,
+                            'syspower' + prefix + '-%s-bar.png' % self.ms.basename)
+
+    def get_plot_wrapper(self, prefix):
+        figfile = self.get_figfile(prefix)
+
+        wrapper = logger.Plot(figfile, x_axis='freq', y_axis='amp',
+                              parameters={'vis': self.ms.basename,
+                                          'type': prefix,
+                                          'spw': ''})
+
+        if not os.path.exists(figfile):
+            LOG.trace('syspower summary plot not found. Creating new plot.')
             try:
                 self.create_plot(prefix)
             except Exception as ex:
@@ -74,14 +142,13 @@ class syspowerPerAntennaChart(object):
         self.context = context
         self.result = result
         self.ms = context.observing_run.get_ms(result.inputs['vis'])
-        ms = self.ms
         self.yaxis = yaxis
         self.caltable = result.gaintable
 
         self.json = {}
         self.json_filename = os.path.join(context.report_dir,
                                           'stage%s' % result.stage_number,
-                                          yaxis + 'syspower-%s.json' % ms)
+                                          yaxis + 'syspower-%s.json' % self.ms)
 
     def plot(self):
         context = self.context
@@ -107,13 +174,13 @@ class syspowerPerAntennaChart(object):
             plotrange = []
 
             if self.yaxis == 'spgain':
-                plotrange = [0,0,0,1.0]
+                plotrange = [0, 0, 0, 1.0]
             if self.yaxis == 'tsys':
-                plotrange = [0,0,0,100]
+                plotrange = [0, 0, 0, 100]
                 spws = m.get_all_spectral_windows()
                 freqs = sorted(set([spw.max_frequency.value for spw in spws]))
                 if float(max(freqs)) >= 18000000000.0:
-                    plotrange = [0,0,0,200]
+                    plotrange = [0, 0, 0, 200]
 
             if not os.path.exists(figfile):
                 try:
@@ -132,7 +199,7 @@ class syspowerPerAntennaChart(object):
                                 title='Sys Power  rq.tbl   Antenna: {!s}'.format(antName),
                                 titlefont=8, xaxisfont=7, yaxisfont=7, showgui=False, plotfile=figfile)
 
-                except:
+                except Exception as ex:
                     LOG.warn("Unable to plot " + filename)
             else:
                 LOG.debug('Using existing ' + filename + ' plot.')
@@ -145,7 +212,7 @@ class syspowerPerAntennaChart(object):
                                                'type': self.yaxis,
                                                'file': os.path.basename(figfile)})
                 plots.append(plot)
-            except:
+            except Exception as ex:
                 LOG.warn("Unable to add plot to stack")
                 plots.append(None)
 

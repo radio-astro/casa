@@ -56,11 +56,65 @@ $(document).ready(function() {
         %endfor
         This table has been modified.
 
-        %for ms in summary_plots.keys():
+        %for ms in bar_plots.keys():
 
             <h4>Syspower Plots:
-                <a class="replace" href="${os.path.relpath(os.path.join(dirname, syspowerspgain_subpages[ms]), pcontext.report_dir)}">Syspower SPgain plots</a> |
+                <a class="replace" href="${os.path.relpath(os.path.join(dirname, syspowerspgain_subpages[ms]), pcontext.report_dir)}">Syspower SPgain plots</a>
             </h4>
 
         %endfor
     %endif
+
+<%self:plot_group plot_dict="${box_plots}"
+                                  url_fn="${lambda ms:  'noop'}">
+
+        <%def name="title()">
+            Syspower box plot
+        </%def>
+
+        <%def name="preamble()">
+
+
+        </%def>
+
+
+        <%def name="mouseover(plot)">Box window </%def>
+
+
+
+        <%def name="fancybox_caption(plot)">
+          Syspower box plot
+        </%def>
+
+
+        <%def name="caption_title(plot)">
+          Syspower box plot
+        </%def>
+</%self:plot_group>
+
+
+
+<%self:plot_group plot_dict="${bar_plots}"
+                                  url_fn="${lambda ms:  'noop'}">
+
+        <%def name="title()">
+            Syspower bar plot
+        </%def>
+
+        <%def name="preamble()">
+
+        </%def>
+
+
+        <%def name="mouseover(plot)">Bar window </%def>
+
+
+        <%def name="fancybox_caption(plot)">
+          Syspower bar plot
+        </%def>
+
+
+        <%def name="caption_title(plot)">
+          Syspower bar plot
+        </%def>
+</%self:plot_group>

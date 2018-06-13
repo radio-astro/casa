@@ -1,12 +1,11 @@
-'''
+"""
 Created on 24 Oct 2014
 
 @author: brk
-'''
+"""
 
 import contextlib
 import os
-
 
 import display as syspowerdisplay
 import pipeline.infrastructure.filenamer as filenamer
@@ -78,8 +77,8 @@ class T2_4MDetailssyspowerRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
     def __init__(self, uri='syspower.mako',
                  description='Syspower (modified rq gains)',
                  always_rerender=False):
-        super(T2_4MDetailssyspowerRenderer, self).__init__(uri=uri,
-                                                           description=description, always_rerender=always_rerender)
+        super(T2_4MDetailssyspowerRenderer, self).__init__(uri=uri, description=description,
+                                                           always_rerender=always_rerender)
 
     def get_display_context(self, context, results):
         super_cls = super(T2_4MDetailssyspowerRenderer, self)
@@ -93,14 +92,20 @@ class T2_4MDetailssyspowerRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
         center_frequencies = {}
         opacities = {}
         swpowspgain_subpages = {}
-        summary_plots = {}
+        box_plots = {}
+        bar_plots = {}
 
         for result in results:
 
-            plotter = syspowerdisplay.syspowerSummaryChart(context, result)
-            # plots = plotter.plot()
+            plotter = syspowerdisplay.syspowerBoxChart(context, result)
+            plots = plotter.plot()
             ms = os.path.basename(result.inputs['vis'])
-            summary_plots[ms] = None
+            box_plots[ms] = plots
+
+            plotter = syspowerdisplay.syspowerBarChart(context, result)
+            plots = plotter.plot()
+            ms = os.path.basename(result.inputs['vis'])
+            bar_plots[ms] = plots
 
             # generate switched power plots and JSON file
             plotter = syspowerdisplay.syspowerPerAntennaChart(context, result, 'spgain')
@@ -118,7 +123,8 @@ class T2_4MDetailssyspowerRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                     'center_frequencies': center_frequencies,
                     'opacities': opacities,
                     'dirname': weblog_dir,
-                    'summary_plots': summary_plots,
+                    'box_plots': box_plots,
+                    'bar_plots': bar_plots,
                     'syspowerspgain_subpages': swpowspgain_subpages,
                     'tec_plotfile': ''})
 
