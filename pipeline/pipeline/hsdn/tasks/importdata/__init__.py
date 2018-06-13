@@ -1,11 +1,13 @@
 from __future__ import absolute_import
 
+import pipeline.infrastructure.renderer.weblog as weblog
 import pipeline.hsd.tasks.importdata.renderer as super_renderer
 import pipeline.infrastructure.renderer.qaadapter as qaadapter
-import pipeline.infrastructure.pipelineqa as pipelineqa
-import pipeline.infrastructure.renderer.weblog as weblog
-
 from .importdata import NROImportData as NROImportData
+from .importdata import NROImportDataResults as NROImportDataResults
+
+qaadapter.registry.register_to_dataset_topic(NROImportDataResults)
+
 # from . import qa
 # from . import renderer
 # 

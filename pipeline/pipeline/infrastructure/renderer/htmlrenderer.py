@@ -1640,7 +1640,7 @@ def group_into_sessions(context, task_results):
 
 def group_into_measurement_sets(context, task_results):
     def get_vis(r):
-        if type(r).__name__ in ('ImportDataResults', 'SDImportDataResults'):
+        if type(r).__name__ in ('ImportDataResults', 'SDImportDataResults', 'NROImportDataResults'):
             # in splitting by vis, there's only one MS in the mses array
             return r.mses[0].basename
         return os.path.basename(r.inputs['vis'])
@@ -1671,7 +1671,7 @@ def sort_by_time(mses):
 
 def get_rootdir(r):
     try:
-        if type(r).__name__ in ('ImportDataResults', 'SDImportDataResults'):
+        if type(r).__name__ in ('ImportDataResults', 'SDImportDataResults', 'NROImportDataResults'):
             # in splitting by vis, there's only one MS in the mses array
             return r.mses[0].basename
         return os.path.basename(r.inputs['vis'])
