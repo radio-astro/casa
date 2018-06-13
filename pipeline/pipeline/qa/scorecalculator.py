@@ -886,7 +886,7 @@ def score_setjy_measurements(ms, reqfields, reqintents, reqspws, measurements):
 
 
 @log_qa
-def score_number_antenna_offsets(ms, antenna, offsets):
+def score_number_antenna_offsets(ms, offsets):
     """
     Score is 1.0 if no antenna needed a position offset correction, and
     set to the "suboptimal" threshold if at least one antenna needed a 

@@ -22,19 +22,18 @@ class ALMAAntposQAHandler(pqa.QAPlugin):
         vis = result.inputs['vis']
         ms = context.observing_run.get_ms(vis)
 
-        # Check for existence of field / spw combinations for which
-        # the derived fluxes are missing.
-        score1 = self._number_antenna_offsets(ms, result.antenna, result.offsets)
+        # Check for existence of antenna position corrections.
+        score1 = self._number_antenna_offsets(ms, result.offsets)
         scores = [score1]
             
         result.qa.pool.extend(scores)
     
     @staticmethod
-    def _number_antenna_offsets(ms, antenna, offsets):
+    def _number_antenna_offsets(ms, offsets):
         """
         Check whether there are antenna position corrections
         """
-        return qacalc.score_number_antenna_offsets(ms, antenna, offsets)
+        return qacalc.score_number_antenna_offsets(ms, offsets)
 
 
 class ALMAAntposListQAHandler(pqa.QAPlugin):
