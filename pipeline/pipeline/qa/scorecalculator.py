@@ -116,6 +116,28 @@ def calc_flags_per_agent(summaries, scanids=None):
     return stats
 
 
+def calc_frac_total_flagged(summaries, agents=None, scanids=None):
+
+    agent_stats = calc_flags_per_agent(summaries, scanids=scanids)
+
+    # sum the number of flagged rows for the selected agents
+    frac_flagged = reduce(operator.add,
+                          [float(s.flagged)/s.total for s in agent_stats if not agents or s.name in agents], 0)
+
+    return frac_flagged
+
+
+def calc_frac_newly_flagged(summaries, agents=None, scanids=None):
+
+    agent_stats = calc_flags_per_agent(summaries, scanids=scanids)
+
+    # sum the number of flagged rows for the selected agents
+    frac_flagged = reduce(operator.add,
+                          [float(s.flagged)/s.total for s in agent_stats[1:] if not agents or s.name in agents], 0)
+
+    return frac_flagged
+
+
 def linear_score(x, x1, x2, y1=0.0, y2=1.0):
     """
     Calculate the score for the given data value, assuming the
@@ -134,26 +156,17 @@ def linear_score(x, x1, x2, y1=0.0, y2=1.0):
     return m*clipped_x + c
 
 
-def score_data_flagged_by_agents(ms, summaries, min_frac, max_frac, 
-                                 agents=None):
+def score_data_flagged_by_agents(ms, summaries, min_frac, max_frac, agents=None):
     """
     Calculate a score for the agentflagger summaries based on the fraction of
     data flagged by certain flagging agents.
 
     min_frac < flagged < max_frac maps to score of 1-0
     """
-    agent_stats = calc_flags_per_agent(summaries)
-
-    if agents is None:
-        agents = []
-    match_all_agents = True if len(agents) is 0 else False
-
-    # sum the number of flagged rows for the selected agents     
-    frac_flagged = reduce(operator.add, 
-                          [float(s.flagged)/s.total for s in agent_stats
-                           if s.name in agents or match_all_agents], 0)
+    frac_flagged = calc_frac_total_flagged(summaries, agents=agents)
 
     score = linear_score(frac_flagged, min_frac, max_frac, 1.0, 0.0)
+
     percent = 100.0 * frac_flagged
     longmsg = ('%0.2f%% data in %s flagged by %s flagging agents'
                '' % (percent, ms.basename, utils.commafy(agents, False)))
@@ -309,7 +322,7 @@ def score_bands(mses):
     score = 1.0
     score_map = {'8': -1.0,
                  '9': -1.0,
-                '10': -1.0}
+                 '10': -1.0}
 
     unsupported = set(score_map.keys())
 
@@ -347,7 +360,6 @@ def score_bands(mses):
                           metric_units='MS score based on presence of high-frequency data')
 
     # Make score linear
-    #return pqa.QAScore(max(0.0, score), longmsg=longmsg, shortmsg=shortmsg, origin=origin)
     return pqa.QAScore(max(rutils.SCORE_THRESHOLD_SUBOPTIMAL, score), longmsg=longmsg, shortmsg=shortmsg, origin=origin)
 
 
@@ -543,11 +555,7 @@ def score_total_data_flagged(filename, summaries):
     5%-50% flagged  -> 0.5
     50-100% flagged -> 0
     """    
-    agent_stats = calc_flags_per_agent(summaries)
-
-    # sum the number of flagged rows for the selected agents     
-    frac_flagged = reduce(operator.add, 
-                          [float(s.flagged)/s.total for s in agent_stats], 0)
+    frac_flagged = calc_frac_total_flagged(summaries)
 
     if frac_flagged > 0.5:
         score = 0
@@ -575,12 +583,8 @@ def score_fraction_newly_flagged(filename, summaries, vis):
     5%-50% flagged  -> 0.5
     50-100% flagged -> 0
     """    
-    agent_stats = calc_flags_per_agent(summaries)
+    frac_flagged = calc_frac_newly_flagged(summaries)
 
-    # sum the number of flagged rows for the selected agents     
-    frac_flagged = reduce(operator.add, 
-                          [float(s.flagged)/s.total for s in agent_stats[1:]], 0)
-        
     if frac_flagged > 0.5:
         score = 0
     else:
@@ -604,12 +608,8 @@ def linear_score_fraction_newly_flagged(filename, summaries, vis):
     data newly flagged.
     
     fraction flagged   -> score
-    """    
-    agent_stats = calc_flags_per_agent(summaries)
-
-    # sum the number of flagged rows for the selected agents     
-    frac_flagged = reduce(operator.add, 
-                          [float(s.flagged)/s.total for s in agent_stats[1:]], 0)
+    """
+    frac_flagged = calc_frac_newly_flagged(summaries)
 
     score = 1.0 - frac_flagged        
 
@@ -745,8 +745,7 @@ def score_wvrgcal(ms_name, wvr_score):
                           metric_score=wvr_score,
                           metric_units='Phase RMS improvement after applying WVR correction')
 
-    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg, vis=os.path.basename(ms_name),
-        origin=origin)
+    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg, vis=os.path.basename(ms_name), origin=origin)
 
 
 @log_qa
@@ -1027,7 +1026,7 @@ def score_phaseup_mapping_fraction(ms, fullcombine, phaseup_spwmap):
     elif fullcombine is True:
         nunmapped = 0
         score = rutils.SCORE_THRESHOLD_WARNING
-        longmsg = 'Combined spw mapping for %s ' % (ms.basename)
+        longmsg = 'Combined spw mapping for %s ' % ms.basename
         shortmsg = 'Combined spw mapping'
     else:
         # Expected science windows
@@ -1037,7 +1036,7 @@ def score_phaseup_mapping_fraction(ms, fullcombine, phaseup_spwmap):
 
         nunmapped = 0
         samesideband = True
-        for spwid, scispw in zip (scispwids, scispws):
+        for spwid, scispw in zip(scispwids, scispws):
             if spwid == phaseup_spwmap[spwid]:
                 nunmapped += 1
             else:
@@ -1052,11 +1051,11 @@ def score_phaseup_mapping_fraction(ms, fullcombine, phaseup_spwmap):
             # Replace the previous score with a warning
             if samesideband is True:
                 score = rutils.SCORE_THRESHOLD_SUBOPTIMAL
-                longmsg = 'Spw mapping within sidebands for %s' % (ms.basename)
+                longmsg = 'Spw mapping within sidebands for %s' % ms.basename
                 shortmsg = 'Spw mapping within sidebands'
             else:
                 score = rutils.SCORE_THRESHOLD_WARNING
-                longmsg = 'Spw mapping across sidebands required for %s' % (ms.basename)
+                longmsg = 'Spw mapping across sidebands required for %s' % ms.basename
                 shortmsg = 'Spw mapping across sidebands'
 
     origin = pqa.QAOrigin(metric_name='score_phaseup_mapping_fraction',
@@ -1586,7 +1585,7 @@ def score_caltables_exist(filedir, sessiondict):
 
 
 @log_qa
-def score_images_exist (filesdir, imaging_products_only, calimages, targetimages):
+def score_images_exist(filesdir, imaging_products_only, calimages, targetimages):
     if imaging_products_only:
         if len(targetimages) <= 0:
             score = 0.0
@@ -1615,6 +1614,7 @@ def score_images_exist (filesdir, imaging_products_only, calimages, targetimages
                           metric_units='Number of exported images')
 
     return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg, origin=origin)
+
 
 @log_qa
 def score_sd_line_detection(group_id_list, spw_id_list, lines_list):
@@ -1734,7 +1734,8 @@ def score_checksources(mses, fieldname, spwid, imagename, rms):
         if chkfield is None:
             continue
         # Found field, get reference direction in ICRS coordinates
-        LOG.info('Using field name %s id %s to determine check source reference direction' %(chkfield.name, str(chkfield.id)))
+        LOG.info('Using field name %s id %s to determine check source reference direction' %
+                 (chkfield.name, str(chkfield.id)))
         refdirection = me.measure(chkfield.mdirection, 'ICRS')
         break
 
@@ -1747,7 +1748,6 @@ def score_checksources(mses, fieldname, spwid, imagename, rms):
         if not ms.derived_fluxes:
             continue
         for field_arg, measurements in ms.derived_fluxes.items():
-            #mfield = ms.get_fields(field_arg)[0]
             mfield = ms.get_fields(field_arg)
             chkfield = None
             for mfielditem in mfield:
@@ -1760,7 +1760,8 @@ def score_checksources(mses, fieldname, spwid, imagename, rms):
             # No matching check field for this ms
             if chkfield is None:
                 continue
-            LOG.info('Using field name %s id %s to identify check source flux densities' %(chkfield.name, str(chkfield.id)))
+            LOG.info('Using field name %s id %s to identify check source flux densities' %
+                     (chkfield.name, str(chkfield.id)))
             for measurement in sorted(measurements, key=lambda m: int(m.spw_id)):
                 if int(measurement.spw_id) != spwid:
                     continue
