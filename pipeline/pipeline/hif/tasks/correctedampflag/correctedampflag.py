@@ -215,6 +215,61 @@ class Correctedampflag(basetask.StandardTaskTemplate):
 
     def _evaluate_heuristic(self, ms, intent, field, spwid, antenna_id_to_name):
 
+        # Initialize flags.
+        allflags = []
+
+        # Determine which baseline sets to evaluate separately.
+        baseline_sets = self._identify_baseline_sets(ms)
+
+        # If no baseline sets were received, then evaluate heuristics for
+        # all baselines at once.
+        if not baseline_sets:
+            allflags.extend(self._evaluate_heuristic_for_baseline_set(
+                ms, intent, field, spwid, antenna_id_to_name))
+        else:
+            # Evaluate heuristic for each set of baselines.
+            for baseline_set in baseline_sets:
+                newflags = self._evaluate_heuristic_for_baseline_set(
+                    ms, intent, field, spwid, antenna_id_to_name, baseline_set)
+                allflags.extend(newflags)
+
+        return allflags
+
+    @staticmethod
+    def _identify_baseline_sets(ms):
+
+        # Determine unique antenna diameters.
+        uniq_diams = {ant.diameter for ant in ms.antennas}
+
+        if len(uniq_diams) <= 1:
+            # If dataset contains only antennas with the same antenna diameter,
+            # then heuristics should be evaluated for all baselines together.
+            baseline_sets = []
+        else:
+            # If the dataset contains antennas of different diameters, then
+            # check that these are ALMA with the expected diameters.
+            if ms.antenna_array.name == 'ALMA' and uniq_diams == {7.0, 12.0}:
+                # Always add the mixed-array as a baseline set.
+                baseline_sets = [('7m-12m', 'CM*&D*;CM*&PM*')]
+
+                # If more than one 7m antenna is present, add these as a
+                # separate baseline set.
+                if len([ant for ant in ms.antennas if ant.diameter == 7.0]) > 1:
+                    baseline_sets.append(('7m-7m', 'CM*&CM*'))
+                if len([ant for ant in ms.antennas if ant.diameter == 12.0]) > 1:
+                    baseline_sets.append(('12m-12m', 'D*&D*;D*&PM*;PM*&PM*'))
+            # If the mixed-array dataset is not recognized as ALMA diameters,
+            # then continue with evaluating all baselines at once.
+            else:
+                baseline_sets = []
+                LOG.warning("Found mixed-array with multiple antenna diameters, but unanticipated non-ALMA diameters"
+                            " (do not know how to select data). Continuing with heuristic evaluation for all baselines"
+                            " at once.")
+
+        return baseline_sets
+
+    def _evaluate_heuristic_for_baseline_set(self, ms, intent, field, spwid, antenna_id_to_name, baseline_set=None):
+
         inputs = self.inputs
 
         # Set "default" scale factor by which the thresholds
@@ -247,9 +302,6 @@ class Correctedampflag(basetask.StandardTaskTemplate):
         # whether to relax the threshold scaling factor.
         relaxsig = 6.5
 
-        # Initialize flags.
-        newflags = []
-
         # Get number of scans in MS for this intent.
         nscans = len(ms.get_scans(scan_intent=intent))
 
@@ -263,37 +315,13 @@ class Correctedampflag(basetask.StandardTaskTemplate):
         else:
             tmantint = inputs.tmantint
 
-        # Get number of channels and correlations for this spw.
-        nchans = ms.get_spectral_windows(str(spwid))[0].num_channels
-        ncorrs = len(commonhelpermethods.get_corr_products(ms, spwid))
+        # Initialize flags.
+        newflags = []
 
-        # Read in data from MS.
-        LOG.info(
-            'Reading data for intent {}, field {}, and spw '
-            '{}'.format(intent, field, spwid))
-        with casatools.MSReader(ms.name) as openms:
-            try:
-                # Select data for current field, intent, spw.
-                openms.msselect(
-                    {'field': field,
-                     'scanintent': '*%s*' % utils.to_CASA_intent(ms, intent),
-                     'spw': str(spwid)})
-
-                # Set channel selection to take the average of all
-                # channels.
-                openms.selectchannel(1, 0, nchans, 1)
-            except:
-                LOG.warning(
-                    'Unable to compute flagging for intent {}, field {}, spw '
-                    ' {}'.format(intent, field, spwid))
-                openms.close()
-                # Return early.
-                return newflags
-
-            # Extract data from MS.
-            data = openms.getdata(
-                ['corrected_data', 'model_data', 'antenna1',
-                 'antenna2', 'flag', 'time'])
+        # Read in data from MS. If no valid data could be read, return early with no flags.
+        data = self._read_data_from_ms(ms, intent, field, spwid, baseline_set=baseline_set)
+        if not data:
+            return newflags
 
         # Remove the channel dimension (should be of length 1 as we asked
         # for average across all channels).
@@ -310,6 +338,9 @@ class Correctedampflag(basetask.StandardTaskTemplate):
         time = data['time'][id_nonac]
         ant1 = data['antenna1'][id_nonac]
         ant2 = data['antenna2'][id_nonac]
+
+        # Get number of correlations for this spw.
+        ncorrs = len(commonhelpermethods.get_corr_products(ms, spwid))
 
         # Evaluate flagging heuristics separately for each polarisation.
         for icorr in range(ncorrs):
@@ -588,6 +619,42 @@ class Correctedampflag(basetask.StandardTaskTemplate):
                                 antenna_id_to_name=antenna_id_to_name))
 
         return newflags
+
+    @staticmethod
+    def _read_data_from_ms(ms, intent, field, spwid, baseline_set=None):
+
+        # Initialize data selection.
+        data_selection = {'field': field,
+                          'scanintent': '*%s*' % utils.to_CASA_intent(ms, intent),
+                          'spw': str(spwid)}
+
+        # Add baseline set to data selection if provided; log selection.
+        if baseline_set:
+            LOG.info('Reading data for intent {}, field {}, spw {}, and {} baselines ({})'.format(
+                intent, field, spwid, baseline_set[0], baseline_set[1]))
+            data_selection['baseline'] = baseline_set[1]
+        else:
+            LOG.info('Reading data for intent {}, field {}, spw {}, and all baselines'.format(intent, field, spwid))
+
+        # Get number of channels for this spw.
+        nchans = ms.get_spectral_windows(str(spwid))[0].num_channels
+
+        # Read in data from MS.
+        with casatools.MSReader(ms.name) as openms:
+            try:
+                # Apply data selection, and set channel selection to take the
+                # average of all channels.
+                openms.msselect(data_selection)
+                openms.selectchannel(1, 0, nchans, 1)
+
+                # Extract data from MS.
+                data = openms.getdata(['corrected_data', 'model_data', 'antenna1', 'antenna2', 'flag', 'time'])
+            except:
+                LOG.warning('Unable to compute flagging for intent {}, field {}, spw {}'.format(intent, field, spwid))
+                data = None
+                openms.close()
+
+        return data
 
     @staticmethod
     def _evaluate_antbased_heuristics(
