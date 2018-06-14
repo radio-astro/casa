@@ -688,6 +688,28 @@ class ImageParamsHeuristics(object):
                     is_eph_obj = True
             return is_eph_obj
 
+    def aggregate_bandwidth(self, spwids=None):
+
+        if spwids is None:
+            local_spwids = self.spwids
+        else:
+            local_spwids = spwids
+
+        msname = self.vislist[0]
+        ms = self.observing_run.get_ms(name=msname)
+
+        spw_frequency_ranges = []
+        for spwid in local_spwids:
+            real_spwid = self.observing_run.virtual2real_spw_id(spwid, ms)
+            spw = ms.get_spectral_window(real_spwid)
+            min_frequency_Hz = float(spw.min_frequency.convert_to(measures.FrequencyUnits.HERTZ).value)
+            max_frequency_Hz = float(spw.max_frequency.convert_to(measures.FrequencyUnits.HERTZ).value)
+            spw_frequency_ranges.append([min_frequency_Hz, max_frequency_Hz])
+
+        aggregate_bandwidth_Hz = np.sum([r[1]-r[0] for r in utils.merge_ranges(spw_frequency_ranges)])
+
+        return {'value': aggregate_bandwidth_Hz, 'unit': 'Hz'}
+
     def representative_target(self):
 
         cqa = casatools.quanta
@@ -704,7 +726,12 @@ class ImageParamsHeuristics(object):
             # Check if representative bandwidth is larger than spw bandwidth. If so, switch to fullcont.
             repr_spw_obj = repr_ms.get_spectral_window(repr_spw)
             repr_spw_bw = cqa.quantity(float(repr_spw_obj.bandwidth.convert_to(measures.FrequencyUnits.HERTZ).value), 'Hz')
-            if cqa.gt(repr_target[2], cqa.mul(repr_spw_bw, 0.2)):
+            cont_spw_ids = self.observing_run.virtual_science_spw_ids.keys()
+            agg_bw = self.aggregate_bandwidth(cont_spw_ids)
+            if cqa.gt(repr_target[2], repr_spw_bw) and cqa.le(repr_target[2], cqa.mul(agg_bw, 0.9)):
+                LOG.info('Image heuristics does not currently handle repBW > bandwidth of repSPW but < aggBW; using aggBW for repBW')
+                reprBW_mode = 'cont'
+            elif cqa.gt(repr_target[2], cqa.mul(repr_spw_bw, 0.9)):
                 reprBW_mode = 'cont'
 
             # Check if there is a non-zero min/max angular resolution
