@@ -119,7 +119,7 @@ class T2_4MDetailsplotsummaryRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
             plots = self.create_plots(context,
                                       results_list,
                                       applycal.VLAAmpVsFrequencySummaryChart,
-                                      intents, correlation=corrstring)
+                                      intents, correlation=corrstring, iteraxis='')
 
             for vis, vis_plots in plots.items():
                 vis_plots_mod = []
@@ -135,7 +135,7 @@ class T2_4MDetailsplotsummaryRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
             plots = self.create_plots(context,
                                       results_list,
                                       applycal.PhaseVsFrequencyPerBasebandSummaryChart,
-                                      intents, correlation=corrstring)
+                                      intents, correlation=corrstring, iteraxis='')
 
             for vis, vis_plots in plots.items():
                 vis_plots_mod = []
@@ -161,7 +161,7 @@ class T2_4MDetailsplotsummaryRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
                                       results_list,
                                       applycal.PhaseVsFrequencyPerBasebandSummaryChart,
                                       intents, correlation=correlation, coloraxis='corr', avgtime='1e8',
-                                      avgbaseline=True, avgantenna=False, plotrange=[0, 0, -180, 180])
+                                      avgbaseline=True, avgantenna=False, plotrange=[0, 0, -180, 180], iteraxis='')
 
             use_pol_plots = False
             for vis, vis_plots in plots.items():
@@ -183,7 +183,7 @@ class T2_4MDetailsplotsummaryRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
                                       results_list,
                                       applycal.AmpVsFrequencyPerBasebandSummaryChart,
                                       intents, correlation=correlation, coloraxis='corr', avgtime='1e8',
-                                      avgbaseline=True, avgantenna=False, plotrange=[])
+                                      avgbaseline=True, avgantenna=False, plotrange=[], iteraxis='')
 
             use_pol_plots = False
             for vis, vis_plots in plots.items():
