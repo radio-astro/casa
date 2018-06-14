@@ -754,7 +754,7 @@ class Finalcals(basetask.StandardTaskTemplate):
         keys_to_remove = ['freq', 'spwName', 'spwID']
         dictkeys = [field_id for field_id in dictkeys if field_id not in keys_to_remove]
 
-        scispws = [spw.id for spw in m.get_spectral_windows()]
+        scispws = [spw.id for spw in m.get_spectral_windows(science_windows_only=True)]
 
         for fieldid in dictkeys:
             jobs_calMs = []

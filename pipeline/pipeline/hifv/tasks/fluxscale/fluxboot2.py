@@ -346,7 +346,7 @@ class Fluxboot2(basetask.StandardTaskTemplate):
             # Take the intersection of the domain object spws and fluxscale results to match the earlier setjy execution
             # in this task
 
-            scispws = [spw.id for spw in m.get_spectral_windows()]
+            scispws = [spw.id for spw in m.get_spectral_windows(science_windows_only=True)]
             newspwkeys = [str(spwint) for spwint in list(set(scispws) & set(spwkeys))]
 
             for spw_id in newspwkeys:
