@@ -61,9 +61,21 @@
         <ParameterSet>
         </ParameterSet>
     </ProcessingCommand>
+    
+    <ProcessingCommand>
+        <Command xmlns="">hsd_blflag</Command>
+        <ParameterSet>
+        </ParameterSet>
+    </ProcessingCommand>
 
     <ProcessingCommand>
         <Command xmlns="">hsd_baseline</Command>
+        <ParameterSet>
+        </ParameterSet>
+    </ProcessingCommand>
+    
+    <ProcessingCommand>
+        <Command xmlns="">hsd_blflag</Command>
         <ParameterSet>
         </ParameterSet>
     </ProcessingCommand>
