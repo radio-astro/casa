@@ -41,7 +41,7 @@
                 <th>hm_imsize</th>
                 <th>hm_cell</th>
                 <th>field</th>
-                <th>spw (cube)</th>
+                <th>spw</th>
             </tr>
         </thead>
         <tbody>
