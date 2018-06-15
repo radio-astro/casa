@@ -182,7 +182,7 @@ class SDImagingWorkerInputs(vdp.StandardInputs):
     def vis(self):
         return self.infiles
     
-    def __init__(self, context, infiles, outfile, mode, antids, spwids, fieldids, stokes, edge=None, phasecenter=None,
+    def __init__(self, context, infiles, outfile, mode, antids, spwids, fieldids, restfreq, stokes, edge=None, phasecenter=None,
                  cellx=None, celly=None, nx=None, ny=None):
         # NOTE: spwids and pols are list of numeric id list while scans
         #       is string (mssel) list
@@ -195,6 +195,7 @@ class SDImagingWorkerInputs(vdp.StandardInputs):
         self.antids = antids
         self.spwids = spwids
         self.fieldids = fieldids
+        self.restfreq = restfreq
         self.stokes = stokes
         self.edge = edge
         self.phasecenter = phasecenter
@@ -313,23 +314,34 @@ class SDImagingWorker(basetask.StandardTaskTemplate):
         if imagemode == 'AMPCAL':
             step = nchan
             nchan = 1
-
         # restfreq
-        # first try using SOURCE.REST_FREQUENCY 
-        # if it is not available, use SPECTRAL_WINDOW.REF_FREQUENCY instead
-        source_id = reference_field.source_id
-        rest_freq_value = utils.get_restfrequency(vis=infiles[0], spwid=ref_spwobj.id, source_id=source_id)
-        rest_freq_unit = 'Hz'
-        if rest_freq_value is None:
-            # REST_FREQUENCY is not defined in the SOURCE tableq
-            rest_freq = ref_spwobj.ref_frequency
-            rest_freq_value = numpy.double(rest_freq.value)
-            rest_freq_unit = rest_freq.units['symbol']
-        if rest_freq_value is not None:
-            qa = casatools.quanta
-            restfreq = qa.tos(qa.quantity(rest_freq_value, rest_freq_unit))
+        restfreq = self.inputs.restfreq
+        assert type(restfreq) == str , "Invalid type for restfreq {0}".format(type(restfreq))
+        if restfreq == '':
+            # if restfreq not given by user
+            # first try using SOURCE.REST_FREQUENCY 
+            # if it is not available, use SPECTRAL_WINDOW.REF_FREQUENCY instead
+            source_id = reference_field.source_id
+            rest_freq_value = utils.get_restfrequency(vis=infiles[0], spwid=ref_spwobj.id, source_id=source_id)
+            rest_freq_unit = 'Hz'
+            if rest_freq_value is None:
+                # REST_FREQUENCY is not defined in the SOURCE tableq
+                rest_freq = ref_spwobj.ref_frequency
+                rest_freq_value = numpy.double(rest_freq.value)
+                rest_freq_unit = rest_freq.units['symbol']
+            if rest_freq_value is not None:
+                qa = casatools.quanta
+                restfreq = qa.tos(qa.quantity(rest_freq_value, rest_freq_unit))
+            else:
+                raise RuntimeError, "Could not get reference frequency of Spw %d" % ref_spwid
         else:
-            raise RuntimeError, "Could not get reference frequency of Spw %d" % ref_spwid
+            # restfreq is specified by user
+            try:
+                # check if restfreq is valid
+                x = qa.quantity(restfreq)
+                x = qa.convert(x, 'Hz')
+            except:
+                raise RuntimeError, "Invalid restfreq {0}".format(restfreq)
 
         # outframe
         outframe = 'LSRK'

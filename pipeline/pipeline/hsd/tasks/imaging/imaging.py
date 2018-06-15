@@ -93,6 +93,8 @@ class SDImagingInputs(vdp.StandardInputs):
 
         self.context = context
         self.restfreq = restfreq
+        if self.restfreq is None:
+            self.restfreq = ''
         self.mode = mode
         self.infiles = infiles
         self.field = field
@@ -157,6 +159,9 @@ class SDImaging(basetask.StandardTaskTemplate):
         context = inputs.context
         reduction_group = context.observing_run.ms_reduction_group
         infiles = inputs.infiles
+        restfreq_list = inputs.restfreq
+        # TODO: implement to pick one value from list
+        restfreq = restfreq_list
         # list of ms to process
         ms_list = inputs.ms
         ms_names = [msobj.name for msobj in ms_list]
@@ -354,6 +359,7 @@ class SDImaging(basetask.StandardTaskTemplate):
                                                               antids=antids,
                                                               spwids=spwids,
                                                               fieldids=fieldids,
+                                                              restfreq=restfreq,
                                                               stokes = self.stokes,
                                                               edge=edge,
                                                               phasecenter=phasecenter,
