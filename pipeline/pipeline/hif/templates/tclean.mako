@@ -71,6 +71,15 @@ except:
                     %endfor
                 </tbody>
             </table>
+            <h4>
+            NOTE: The Position offset uncertainties only include the error in
+            the fitted position; the uncertainty in the source catalog
+            positions are not available. Additionally, the Peak Fitted
+            Intensity, Fitted Flux Density, and gfluxscale Derived Flux may be
+            low due to a number of factors other than decorrelation, including
+            low S/N, and spatially resolved (non point-like) emission.
+            </h4>
+            <br>
     %endif
 %endif
 
