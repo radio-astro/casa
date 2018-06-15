@@ -892,19 +892,23 @@ def merge_jobs(jobs, task, merge=None, ignore=None):
     return zip(merged_jobs.values(), component_jobs.values())
 
 
-def plotms_iterate(jobs_and_wrappers, iteraxis):
+def plotms_iterate(jobs_and_wrappers, iteraxis=None):
     # CAS-11220: Some Pipeline Plots Do Not Contain Spw Number
     # fix: replace job, adding iteraxis='spw' so that spw is always in title
-    if iteraxis == 'spw':
-        jobs_and_wrappers = [(jobrequest.JobRequest(job.fn, *job.args, iteraxis='spw', **job.kw),
-                              wrappers)
+    if (# iteraxis must be spw,...
+        iteraxis == 'spw' and
+        # .. only add for single jobs that wouldn't otherwise use iteraxis...
+        len(jobs_and_wrappers) == 1 and
+        # .. when we're not plotting basebands, i.e., comma-separated spws
+        ',' not in jobs_and_wrappers[0][0].kw.get(iteraxis, '')):
+        jobs_and_wrappers = [(jobrequest.JobRequest(job.fn, *job.args, iteraxis='spw', **job.kw), wrappers)
                              for job, wrappers in jobs_and_wrappers]
 
     # component jobs containing a comma should be executed as they are. An
     # example situation is calling plotms for all spws in a baseband. Here,
     # the multiple spw argument should be left as-is and iteration left
     # disabled.
-    mergeable = [j for j,_ in jobs_and_wrappers if ',' not in j.kw[iteraxis]]
+    mergeable = [j for j,_ in jobs_and_wrappers if ',' not in j.kw.get(iteraxis, '')]
     non_mergeable = [j for j,_ in jobs_and_wrappers if j not in mergeable]
 
     from pipeline.infrastructure import casa_tasks

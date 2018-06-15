@@ -118,8 +118,8 @@ class T2_4MDetailsplotsummaryRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
         for intents in [['PHASE'], ['BANDPASS']]:
             plots = self.create_plots(context,
                                       results_list,
-                                      applycal.VLAAmpVsFrequencySummaryChart,
-                                      intents, correlation=corrstring, iteraxis='')
+                                      applycal.VLAAmpVsFrequencyBasebandSummaryChart,
+                                      intents, correlation=corrstring)
 
             for vis, vis_plots in plots.items():
                 vis_plots_mod = []
@@ -135,7 +135,7 @@ class T2_4MDetailsplotsummaryRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
             plots = self.create_plots(context,
                                       results_list,
                                       applycal.PhaseVsFrequencyPerBasebandSummaryChart,
-                                      intents, correlation=corrstring, iteraxis='')
+                                      intents, correlation=corrstring)
 
             for vis, vis_plots in plots.items():
                 vis_plots_mod = []
@@ -161,7 +161,7 @@ class T2_4MDetailsplotsummaryRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
                                       results_list,
                                       applycal.PhaseVsFrequencyPerBasebandSummaryChart,
                                       intents, correlation=correlation, coloraxis='corr', avgtime='1e8',
-                                      avgbaseline=True, avgantenna=False, plotrange=[0, 0, -180, 180], iteraxis='')
+                                      avgbaseline=True, avgantenna=False, plotrange=[0, 0, -180, 180])
 
             use_pol_plots = False
             for vis, vis_plots in plots.items():
@@ -183,7 +183,7 @@ class T2_4MDetailsplotsummaryRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
                                       results_list,
                                       applycal.AmpVsFrequencyPerBasebandSummaryChart,
                                       intents, correlation=correlation, coloraxis='corr', avgtime='1e8',
-                                      avgbaseline=True, avgantenna=False, plotrange=[], iteraxis='')
+                                      avgbaseline=True, avgantenna=False, plotrange=[])
 
             use_pol_plots = False
             for vis, vis_plots in plots.items():
@@ -319,7 +319,7 @@ class T2_4MDetailsplotsummaryRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
             for field in plotfields:
                 plots = self.science_plots_for_result(context,
                                                       result,
-                                                      applycal.VLAAmpVsFrequencySummaryChart,
+                                                      applycal.VLAAmpVsFrequencyBasebandSummaryChart,
                                                       [field.id],
                                                       uv_range, correlation=correlation)
 
@@ -350,7 +350,7 @@ class T2_4MDetailsplotsummaryRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
             for source_id, brightest_field in brightest_fields.items()[0:len(brightest_fields.items()):Nplots]:
                 plots = self.science_plots_for_result(context,
                                                       result,
-                                                      applycal.VLAAmpVsFrequencySummaryChart,
+                                                      applycal.VLAAmpVsFrequencyBasebandSummaryChart,
                                                       [brightest_field.id],
                                                       uv_range, correlation=correlation)
                 amp_vs_freq_summary_plots[vis][source_id] = plots
@@ -381,7 +381,7 @@ class T2_4MDetailsplotsummaryRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
                 # detail pages; we don't create plots per spw or antenna
                 self.science_plots_for_result(context,
                                               result,
-                                              applycal.VLAAmpVsFrequencySummaryChart,
+                                              applycal.VLAAmpVsFrequencyBasebandSummaryChart,
                                               fields,
                                               uv_range,
                                               ApplycalAmpVsFreqSciencePlotRenderer, correlation=correlation)

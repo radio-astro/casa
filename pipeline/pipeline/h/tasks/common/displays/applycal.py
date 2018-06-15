@@ -618,7 +618,7 @@ class AmpVsFrequencySummaryChart(SpwSummaryChart):
                                                          intent=intent, **plot_args)
 
 
-class VLAAmpVsFrequencySummaryChart(BasebandSummaryChart):
+class VLAAmpVsFrequencyBasebandSummaryChart(BasebandSummaryChart):
     """
     Create an amplitude vs time plot for each spw, overplotting by antenna.
     """
@@ -637,8 +637,8 @@ class VLAAmpVsFrequencySummaryChart(BasebandSummaryChart):
         }
         plot_args.update(kwargs)
 
-        super(VLAAmpVsFrequencySummaryChart, self).__init__(context, output_dir, calto, xaxis='freq', yaxis='amp',
-                                                            intent=intent, **plot_args)
+        super(VLAAmpVsFrequencyBasebandSummaryChart, self).__init__(context, output_dir, calto, xaxis='freq', yaxis='amp',
+                                                                    intent=intent, **plot_args)
 
 
 class PhaseVsFrequencyPerSpwSummaryChart(SpwSummaryChart):

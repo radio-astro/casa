@@ -26,8 +26,8 @@ class PlotmsBasebandComposite(BasebandComposite):
 
     def plot(self):
         # merge separate spw jobs into one job using plotms iterator
-        jobs_and_wrappers = super(PlotmsBasebandComposite, self).plot()        
-        successful_wrappers = utils.plotms_iterate(jobs_and_wrappers, 'spw')
+        jobs_and_wrappers = super(PlotmsBasebandComposite, self).plot()
+        successful_wrappers = utils.plotms_iterate(jobs_and_wrappers)
         return successful_wrappers
         
 
