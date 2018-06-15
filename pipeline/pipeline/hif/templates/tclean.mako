@@ -51,23 +51,12 @@ except:
                     </tr>
                 </thead>
                 <tbody>
-                    % for row in image_info:
-                        %if row.frequency is not None:
-                            <tr>
-                                <td>${row.vis}</td>
-                                <td>${row.fieldname}</td>
-                                <td>${row.spw}</td>
-                                <td>${row.aggregate_bw_num}</td>
-                                <td>${row.chk_pos_offset}</td>
-                                <td>${row.chk_frac_beam_offset}</td>
-                                <td>${row.chk_fitflux}</td>
-                                <td>${row.img_snr}</td>
-                                <td>${row.chk_fitpeak_fitflux_ratio}</td>
-                                <td>${row.chk_gfluxscale}</td>
-                                <td>${row.chk_gfluxscale_snr}</td>
-                                <td>${row.chk_fitflux_gfluxscale_ratio}</td>
-                            </tr>
-                        %endif
+                    %for row in chk_fit_info:
+                        <tr>
+                        %for td in row:
+                            ${td}
+                        %endfor
+                        </tr>
                     %endfor
                 </tbody>
             </table>
@@ -104,7 +93,7 @@ except:
         </thead>
         <tbody>
 
-            % for row in image_info:
+            %for row in image_info:
                 %if row.frequency is not None:
                 <tr>
                     %if row.nchan is not None:

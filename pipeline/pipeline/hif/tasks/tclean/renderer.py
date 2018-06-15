@@ -426,14 +426,21 @@ class T2_4MDetailsTcleanRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                 final_rows.append(new_row)
             except:
                 final_rows.append(row)
-        # primary sort images by field, secondary sort on spw, then by pol
-        final_rows.sort(key=lambda row: (row.field, utils.natural_sort(row.spw), row.pol))
+        # primary sort images by vis, field, secondary sort on spw, then by pol
+        final_rows.sort(key=lambda row: (row.vis, row.field, utils.natural_sort(row.spw), row.pol))
+
+        chk_fit_rows = []
+        for row in final_rows:
+            if row.frequency is not None:
+                chk_fit_rows.append((row.vis, row.fieldname, row.spw, row.aggregate_bw_num, row.chk_pos_offset, row.chk_frac_beam_offset, row.chk_fitflux, row.img_snr, row.chk_fitpeak_fitflux_ratio, row.chk_gfluxscale, row.chk_gfluxscale_snr, row.chk_fitflux_gfluxscale_ratio))
+        chk_fit_rows = utils.merge_td_columns(chk_fit_rows, num_to_merge=2)
 
         ctx.update({
             'plots': plots,
             'plots_dict': plots_dict,
             'image_info': final_rows,
-            'dirname': weblog_dir
+            'dirname': weblog_dir,
+            'chk_fit_info': chk_fit_rows
         })
 
 
