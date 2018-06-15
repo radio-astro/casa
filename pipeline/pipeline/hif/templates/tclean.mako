@@ -41,13 +41,13 @@ except:
                         <th>Virtual SPW</th>
                         <th>Bandwidth (GHz)</th>
                         <th>Position offset (mas)</th>
-                        <th>Fractional beam position offset</th>
-                        <th>Fitted integrated intensity (mJy)</th>
+                        <th>Position offset (synth beam)</th>
+                        <th>Fitted Flux Density (mJy)</th>
                         <th>Image S/N</th>
-                        <th>Fitted Image Peak Intensity / Flux Density ratio</th>
+                        <th>Fitted [Peak Intensity / Flux Density] Ratio</th>
                         <th>gfluxscale Derived Flux</th>
                         <th>gfluxscale S/N</th>
-                        <th>Fitted flux density to gfluxscale ratio</th>
+                        <th>[Fitted / gfluxscale] Flux Density Ratio</th>
                     </tr>
                 </thead>
                 <tbody>
