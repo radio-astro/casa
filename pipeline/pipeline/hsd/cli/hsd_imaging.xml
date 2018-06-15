@@ -19,6 +19,11 @@
 	</allowed>
     </param>
 
+    <param type="string" name="restfreq">
+	<description>Rest frequency</description>
+	<value></value>
+    </param>
+
     <param type="string" name="pipelinemode">
 	<description>The pipeline operating mode</description>
 	<value>automatic</value>

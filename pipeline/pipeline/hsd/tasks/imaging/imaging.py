@@ -88,10 +88,11 @@ class SDImagingInputs(vdp.StandardInputs):
     def vis(self):
         return self.infiles
     
-    def __init__(self, context, mode=None, infiles=None, field=None, spw=None):
+    def __init__(self, context, mode=None, restfreq=None, infiles=None, field=None, spw=None):
         super(SDImagingInputs, self).__init__()
 
         self.context = context
+        self.restfreq = restfreq
         self.mode = mode
         self.infiles = infiles
         self.field = field

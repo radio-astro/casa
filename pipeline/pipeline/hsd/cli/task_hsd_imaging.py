@@ -2,7 +2,7 @@ import sys
 
 import pipeline.h.cli.utils as utils
 
-def hsd_imaging(mode=None, pipelinemode=None, 
+def hsd_imaging(mode=None, restfreq=None, pipelinemode=None, 
                   infiles=None, field=None, spw=None, 
                   dryrun=None, acceptresults=None):
 
