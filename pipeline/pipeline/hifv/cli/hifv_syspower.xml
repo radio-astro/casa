@@ -14,6 +14,10 @@
 	<value></value>
     </param>
 
+    <param type="doubleArray" name="clip_sp_template">
+	<description>Clipping range</description>
+	<value>0.7, 1.2</value>
+    </param>
 
     <param type="string" name="pipelinemode">
 	<description>The pipeline operating mode</description>
@@ -41,9 +45,9 @@
 	    </equals>
 	    <equals type="string" value="interactive">
                 <default param="vis"><value type="stringArray"></value></default>
-
-		<default param="dryrun"><value type="bool">False</value></default>
-		<default param="acceptresults"><value type="bool">True</value></default>
+                <default param="clip_sp_template"><value type="doubleArray"></value></default>
+		        <default param="dryrun"><value type="bool">False</value></default>
+		        <default param="acceptresults"><value type="bool">True</value></default>
 	    </equals>
 	    <equals type="string" value="getinputs">
                 <default param="vis"><value type="stringArray"></value></default>
@@ -77,7 +81,8 @@ vis -- List of visisbility  data files. These may be ASDMs, tar files of ASDMs,
    default: []
    example: vis=['X227.ms', 'asdms.tar.gz']
 
-
+clip_sp_template -- clipping range
+    default: [0.7, 1.2]
 
 pipelinemode -- The pipeline operating mode. In 'automatic' mode the pipeline
    determines the values of all context defined pipeline inputs

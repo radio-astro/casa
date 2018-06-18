@@ -94,8 +94,7 @@ def savitzky_golay(y, window_size, order, deriv=0, rate=1):
 
 
 class SyspowerResults(basetask.Results):
-    def __init__(self, gaintable=None, spowerdict=None, dat_common=None,
-                               clip_sp_template=None):
+    def __init__(self, gaintable=None, spowerdict=None, dat_common=None, clip_sp_template=None):
 
         if gaintable is None:
             gaintable = ''
@@ -127,9 +126,15 @@ class SyspowerResults(basetask.Results):
 
 
 class SyspowerInputs(vdp.StandardInputs):
-    def __init__(self, context, vis=None):
+
+    @vdp.VisDependentProperty
+    def clip_sp_template(self):
+        return [0.7, 1.2]
+
+    def __init__(self, context, vis=None, clip_sp_template=None):
         self.context = context
         self.vis = vis
+        self.clip_sp_template = clip_sp_template
 
 
 @task_registry.set_equivalent_casa_task('hifv_syspower')
@@ -141,7 +146,7 @@ class Syspower(basetask.StandardTaskTemplate):
         m = self.inputs.context.observing_run.get_ms(self.inputs.vis)
 
         # flag normalized p_diff outside this range
-        clip_sp_template = [0.7, 1.2]
+        clip_sp_template = self.inputs.clip_sp_template
 
         try:
             rq_table = self.inputs.context.results[4].read()[0].rq_result[0].final[0].gaintable
