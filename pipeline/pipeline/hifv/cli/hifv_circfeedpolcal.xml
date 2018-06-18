@@ -34,9 +34,9 @@
 	<value>True</value>
     </param>
 
-    <param type="doubleArray" name="clipminmax" subparam="true">
+    <param type="doubleArray" name="clipminmax">
 	<description>Range to use for flag clipping</description>
-	<value>[0.0,0.25]</value>
+	<value>0.0,0.25</value>
     </param>
 
     <param type="string" name="pipelinemode">
