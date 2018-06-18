@@ -731,7 +731,7 @@ class ImageParamsHeuristics(object):
             if cqa.gt(repr_target[2], repr_spw_bw) and cqa.le(repr_target[2], cqa.mul(agg_bw, 0.9)):
                 LOG.info('Image heuristics does not currently handle repBW > bandwidth of repSPW but < aggBW; using aggBW for repBW')
                 reprBW_mode = 'cont'
-            elif cqa.gt(repr_target[2], cqa.mul(repr_spw_bw, 0.9)):
+            elif cqa.gt(repr_target[2], cqa.mul(agg_bw, 0.9)):
                 reprBW_mode = 'cont'
 
             # Check if there is a non-zero min/max angular resolution
