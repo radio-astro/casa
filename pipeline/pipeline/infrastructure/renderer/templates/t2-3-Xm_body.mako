@@ -1,7 +1,9 @@
 <%!
-navbar_active='By Topic'
+import operator
 import pipeline.infrastructure.renderer.htmlrenderer as hr
 import pipeline.infrastructure.renderer.rendererutils as rendererutils
+
+navbar_active='By Topic'
 
 tablerow_css_classes = {'QA Error'   : 'error',
 						'QA Warning' : 'warning',
@@ -10,6 +12,12 @@ tablerow_css_classes = {'QA Error'   : 'error',
 
 def get_tablerow_class(row):
 	return tablerow_css_classes.get(row.type, '')
+
+def results_by_stage_number(d):
+    all_results = []
+    for v in d.itervalues():
+        all_results.extend(v)
+    return sorted(all_results, key=operator.attrgetter('stage_number'))
 
 %>
 <%inherit file="base.mako"/>
@@ -28,16 +36,12 @@ def get_tablerow_class(row):
 		</tr>
 	</thead>
 	<tbody>
-	% for result_type, results_list in topic.results_by_type.items():
-		% if results_list:
-			% for results in results_list:
+	% for results in results_by_stage_number(topic.results_by_type):
 		<tr>
 			<td><a href="t2-4m.html?sidebar=sidebar_stage${results.stage_number}">${hr.get_task_description(results, pcontext)}</a><span class="pull-right">${scores[results.stage_number].shortmsg}</span></td>
 			<td><div class="progress" style="margin-bottom:0px;"><div class="progress-bar${rendererutils.get_bar_class(scores[results.stage_number])}" role="progressbar" style="width:${rendererutils.get_bar_width(scores[results.stage_number])}%;"><span class="text-center"></span></div></div></td>
 			<td><span class="badge${rendererutils.get_badge_class(scores[results.stage_number])}">${rendererutils.format_score(scores[results.stage_number])}</span></td>
 		</tr>
-			% endfor
-		% endif
 	% endfor
 	</tbody>
 </table>
