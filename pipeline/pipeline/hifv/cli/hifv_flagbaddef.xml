@@ -14,7 +14,10 @@
 	<value></value>
     </param>
 
-
+    <param type="bool" name="doflagundernspwlimit">
+	<description>If bad spws is greater than zero keyword is True, then spws are flagged individually.</description>
+	<value>True</value>
+    </param>
 
     <param type="string" name="pipelinemode">
 	<description>The pipeline operating mode</description>
@@ -76,8 +79,9 @@ vis -- List of visibility data files. These may be ASDMs, tar files of ASDMs,
    default: []
    example: vis=['X227.ms', 'asdms.tar.gz']
 
-
-
+doflagundernspwlimit --  if the number of bad spws is greater than zero and
+   doflagundernspwlimit is set to True, then spws are flagged individually.
+   default: True
 
 pipelinemode -- The pipeline operating mode. In 'automatic' mode the pipeline
    determines the values of all context defined pipeline inputs

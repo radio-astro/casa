@@ -13,10 +13,13 @@ LOG = infrastructure.get_logger(__name__)
 
 
 class FlagBadDeformattersInputs(vdp.StandardInputs):
-    def __init__(self, context, vis=None):
+    doflagundernspwlimit = vdp.VisDependentProperty(default=True)
+
+    def __init__(self, context, vis=None, doflagundernspwlimit=None):
         super(FlagBadDeformattersInputs, self).__init__()
         self.context = context
         self.vis = vis
+        self.doflagundernspwlimit = doflagundernspwlimit
 
 
 class FlagBadDeformattersResults(basetask.Results):
@@ -59,7 +62,7 @@ class FlagBadDeformatters(basetask.StandardTaskTemplate):
                        'testlimit': 0.15,   # Limit for test (flag values under/over this limit)
                        'testunder': True,
                        'nspwlimit': 4,      # Number of spw per baseband to trigger flagging entire baseband
-                       'doflagundernspwlimit': True,  # Flag individual spws when below nspwlimit
+                       'doflagundernspwlimit': self.inputs.doflagundernspwlimit,  # Flag individual spws when below nspwlimit
                        'doflagemptyspws': False,  # Flag data for spws with no unflagged channel solutions in any poln?
                        'calBPtablename': self.inputs.context.results[-1].read()[0].bpcaltable,  # Define the table to run this on
                        'flagreason': 'bad_deformatters_amp or RFI'}  # Define the REASON given for the flags
@@ -72,7 +75,7 @@ class FlagBadDeformatters(basetask.StandardTaskTemplate):
                        'testlimit': 50,
                        'testunder': False,
                        'nspwlimit': 4,
-                       'doflagundernspwlimit': True,
+                       'doflagundernspwlimit': self.inputs.doflagundernspwlimit,
                        'doflagemptyspws': False,
                        'calBPtablename': self.inputs.context.results[-1].read()[0].bpcaltable,
                        'flagreason': 'bad_deformatters_phase or RFI'}

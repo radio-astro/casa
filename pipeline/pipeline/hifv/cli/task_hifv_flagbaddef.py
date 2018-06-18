@@ -5,7 +5,7 @@ from taskinit import casalog
 import pipeline.h.cli.utils as utils
 
 
-def hifv_flagbaddef(vis=None, pipelinemode=None, dryrun=None, acceptresults=None):
+def hifv_flagbaddef(vis=None, doflagundernspwlimit=None, pipelinemode=None, dryrun=None, acceptresults=None):
 
     ##########################################################################
     #                                                                        #
