@@ -577,6 +577,7 @@ class Fluxboot2(basetask.StandardTaskTemplate):
 
     def _do_setjy(self, calMs, fluxscale_result):
 
+        m = self.inputs.context.observing_run.get_ms(self.inputs.vis)
         dictkeys = fluxscale_result.keys()
         keys_to_remove = ['freq', 'spwName', 'spwID']
         dictkeys = [field_id for field_id in dictkeys if field_id not in keys_to_remove]
@@ -586,10 +587,14 @@ class Fluxboot2(basetask.StandardTaskTemplate):
             jobs_calMs = []
             jobs_vis = []
 
+            spws = list(fluxscale_result['spwID'])
+            scispws = [spw.id for spw in m.get_spectral_windows(science_windows_only=True)]
+            newspws = [str(spwint) for spwint in list(set(scispws) & set(spws))]
+
             LOG.info('Running setjy for field ' + str(fieldid) + ': ' +  str(fluxscale_result[fieldid]['fieldName']))
             task_args = {'vis': calMs,
                          'field': fluxscale_result[fieldid]['fieldName'],
-                         'spw': ','.join([str(spw) for spw in list(fluxscale_result['spwID'])]),
+                         'spw': ','.join(newspws),
                          'selectdata': False,
                          'model': '',
                          'listmodels': False,

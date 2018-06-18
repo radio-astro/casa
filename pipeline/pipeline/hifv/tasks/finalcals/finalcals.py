@@ -754,16 +754,18 @@ class Finalcals(basetask.StandardTaskTemplate):
         keys_to_remove = ['freq', 'spwName', 'spwID']
         dictkeys = [field_id for field_id in dictkeys if field_id not in keys_to_remove]
 
-        scispws = [spw.id for spw in m.get_spectral_windows(science_windows_only=True)]
-
         for fieldid in dictkeys:
             jobs_calMs = []
+
+            spws = list(fluxscale_result['spwID'])
+            scispws = [spw.id for spw in m.get_spectral_windows(science_windows_only=True)]
+            newspws = [str(spwint) for spwint in list(set(scispws) & set(spws))]
 
             try:
                 LOG.info('Running setjy for field ' + str(fieldid) + ': ' + str(fluxscale_result[fieldid]['fieldName']))
                 task_args = {'vis': calMs,
                              'field': fluxscale_result[fieldid]['fieldName'],
-                             'spw': ','.join([str(spw) for spw in list(fluxscale_result['spwID']) if int(spw) in scispws]),
+                             'spw': ','.join(newspws),
                              'selectdata': False,
                              'model': '',
                              'listmodels': False,
