@@ -733,6 +733,8 @@ class ImageParamsHeuristics(object):
                 reprBW_mode = 'cont'
             elif cqa.gt(repr_target[2], cqa.mul(agg_bw, 0.9)):
                 reprBW_mode = 'cont'
+            elif cqa.gt(repr_target[2], cqa.mul(repr_spw_bw, 0.2)):
+                reprBW_mode = 'mfs'
 
             # Check if there is a non-zero min/max angular resolution
             minAcceptableAngResolution = cqa.convert(self.proj_params.min_angular_resolution, 'arcsec')
