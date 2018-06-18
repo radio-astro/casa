@@ -5,6 +5,7 @@ import contextlib
 import datetime
 import itertools
 import math
+import operator
 import os
 import pydoc
 import re
@@ -1114,31 +1115,26 @@ class T2_3_XMBaseRenderer(RendererBase):
             if not list_of_results_lists:
                 continue
             
-            for results_list in list_of_results_lists:
+            # CAS-11344: present results ordered by stage number
+            for results_list in sorted(list_of_results_lists, key=operator.attrgetter('stage_number')):
                 qa_errors = cls._filter_qascores(results_list, -0.1, 0.33)
-                tablerows.extend(cls._qascores_to_tablerows(qa_errors,
-                                                            results_list,
-                                                            'QA Error'))
+                tablerows.extend(cls._qascores_to_tablerows(qa_errors, results_list, 'QA Error'))
                     
                 qa_warnings = cls._filter_qascores(results_list, 0.33, 0.66)
-                tablerows.extend(cls._qascores_to_tablerows(qa_warnings,
-                                                            results_list,
-                                                            'QA Warning'))
+                tablerows.extend(cls._qascores_to_tablerows(qa_warnings, results_list, 'QA Warning'))
 
                 error_msgs = utils.get_logrecords(results_list, logging.ERROR)
-                tablerows.extend(cls._logrecords_to_tablerows(error_msgs,
-                                                              results_list,
-                                                              'Error'))
+                tablerows.extend(cls._logrecords_to_tablerows(error_msgs, results_list, 'Error'))
 
                 warning_msgs = utils.get_logrecords(results_list, logging.WARNING)
-                tablerows.extend(cls._logrecords_to_tablerows(warning_msgs,
-                                                              results_list,
-                                                              'Warning'))
-                
-        return {'pcontext'  : context,
-                'scores'    : scores,
-                'tablerows' : tablerows,
-                'topic'     : topic     }
+                tablerows.extend(cls._logrecords_to_tablerows(warning_msgs, results_list, 'Warning'))
+
+        return {
+            'pcontext': context,
+            'scores': scores,
+            'tablerows': tablerows,
+            'topic': topic
+        }
                 
     @classmethod
     def _filter_qascores(cls, results_list, lo, hi):
@@ -1160,8 +1156,7 @@ class T2_3_XMBaseRenderer(RendererBase):
             vis = qascore.target.get('vis', None)
             return '&ms=%s' % vis if vis else ''
         
-        return [cls._create_tablerow(results, qascore.longmsg, msgtype, 
-                                     get_target(qascore))
+        return [cls._create_tablerow(results, qascore.longmsg, msgtype, get_target(qascore))
                 for qascore in qascores]
 
     @classmethod
