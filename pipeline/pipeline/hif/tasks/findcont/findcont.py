@@ -238,6 +238,7 @@ class FindCont(basetask.StandardTaskTemplate):
                     single_continuum = 'Single_Continuum' in spw_transitions
                     cont_range, png = findcont_heuristics.find_continuum(dirty_cube = '%s.residual' % findcont_basename,
                                                                          pb_cube = '%s.pb' % findcont_basename,
+                                                                         psf_cube = '%s.psf' % findcont_basename,
                                                                          single_continuum = single_continuum)
                     cont_ranges['fields'][source_name][spwid] = cont_range
 
