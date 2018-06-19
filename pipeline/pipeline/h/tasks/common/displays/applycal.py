@@ -610,7 +610,6 @@ class AmpVsFrequencySummaryChart(SpwSummaryChart):
             'showatm': True,
             # CAS-10875: applycal plots should have global y-scale per source/dataset
             'yselfscale': True,
-            'ysharedaxis': True
         }
         plot_args.update(kwargs)
 
@@ -814,9 +813,7 @@ class CAS9216AmpVsUVDetailChart(FieldSpwAntDetailChart):
             'coloraxis': 'corr',
             'overwrite': True,
             'xselfscale': True,
-            'xsharedaxis': True,
             'yselfscale': True,
-            'ysharedaxis': True,
         }
         plot_args.update(**overrides)
 
@@ -886,9 +883,7 @@ class CAS9154AmpVsTimeDetailChart(SpwAntDetailChart):
             'coloraxis': 'corr',
             'overwrite': True,
             'xselfscale': True,
-            'xsharedaxis': True,
             'yselfscale': True,
-            'ysharedaxis': True,
         }
         plot_args.update(**overrides)
 
