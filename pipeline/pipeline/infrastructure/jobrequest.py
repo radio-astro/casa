@@ -31,7 +31,6 @@ import immoments_cli
 import imregrid_pg
 import impbcor_pg
 import importasdm_cli
-import importevla_cli
 import imstat_cli
 import imsubimage_cli
 import initweights_cli
@@ -453,9 +452,6 @@ class CASATaskJobGenerator(object):
 
     def importasdm(self, *v, **k):
         return self._get_job(importasdm_cli.importasdm_cli, *v, **k)
-
-    def importevla(self, *v, **k):
-        return self._get_job(importevla_cli.importevla_cli, *v, **k)
 
     def imstat(self, *v, **k):
         return self._get_job(imstat_cli.imstat_cli, *v, **k)
