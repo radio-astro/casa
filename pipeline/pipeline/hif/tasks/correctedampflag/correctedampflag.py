@@ -249,15 +249,36 @@ class Correctedampflag(basetask.StandardTaskTemplate):
             # If the dataset contains antennas of different diameters, then
             # check that these are ALMA with the expected diameters.
             if ms.antenna_array.name == 'ALMA' and uniq_diams == {7.0, 12.0}:
-                # Always add the mixed-array as a baseline set.
-                baseline_sets = [('7m-12m', 'CM*&D*;CM*&PM*')]
+
+                # For 12m antennas, identify number of "PM*" and "D*" antennas.
+                ant_names = [ant.name for ant in ms.antennas]
+                n_pm = len([name for name in ant_names if "PM" in name])
+                n_d = len([name for name in ant_names if "D" in name])
+
+                # Always add the mixed-array 7m-12m as a baseline set.
+                bl_str = []
+                if n_pm > 0:
+                    bl_str.append("CM*&PM*")
+                if n_d > 0:
+                    bl_str.append("CM*&D*")
+                baseline_sets = [('7m-12m', ';'.join(bl_str))]
 
                 # If more than one 7m antenna is present, add these as a
                 # separate baseline set.
                 if len([ant for ant in ms.antennas if ant.diameter == 7.0]) > 1:
-                    baseline_sets.append(('7m-7m', 'CM*&CM*'))
-                if len([ant for ant in ms.antennas if ant.diameter == 12.0]) > 1:
-                    baseline_sets.append(('12m-12m', 'D*&D*;D*&PM*;PM*&PM*'))
+                    baseline_sets.append(('7m-7m', "CM*&CM*"))
+
+                # If more than one 12m antenna is present, add these as a
+                # separate baseline set.
+                if n_pm + n_d > 1:
+                    bl_str = []
+                    if n_pm > 1:
+                        bl_str.append("PM*&PM*")
+                    if n_d > 1:
+                        bl_str.append("D*&D*")
+                    if n_pm > 0 and n_d > 0:
+                        bl_str.append("PM*&D*")
+                    baseline_sets.append(('12m-12m', ';'.join(bl_str)))
             # If the mixed-array dataset is not recognized as ALMA diameters,
             # then continue with evaluating all baselines at once.
             else:
