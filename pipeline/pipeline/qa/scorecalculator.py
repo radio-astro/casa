@@ -1848,7 +1848,7 @@ def score_checksources(mses, fieldname, spwid, imagename, rms):
             score = max(0.0, 1.0 - min(1.0, beams))
             if score <= 0.9:
                 shortmsg = 'Check source fit not optimal'
-            longmsg = ('Check source fit for %s field %s spwid %d:  offet %0.3fmarcsec %0.3fbeams  fit flux %0.3fJy  '
+            longmsg = ('Check source fit for %s field %s spwid %d:  offset %0.3fmarcsec %0.3fbeams  fit flux %0.3fJy  '
                        'decoherence None' % (msnames, fieldname, spwid, offset, beams, fitflux))
             metric_score = beams
             metric_units = 'beams'
@@ -1860,7 +1860,7 @@ def score_checksources(mses, fieldname, spwid, imagename, rms):
             score = math.sqrt(fluxscore * offsetscore)
             if score <= 0.9:
                 shortmsg = 'Check source fit not optimal'
-            longmsg = ('Check source fit for %s field %s spwid %d:  offet %0.3fmarcsec %0.3fbeams  fit flux %0.3fJy  '
+            longmsg = ('Check source fit for %s field %s spwid %d:  offset %0.3fmarcsec %0.3fbeams  fit flux %0.3fJy  '
                        'decoherence %0.3f percent' % (msnames, fieldname, spwid, offset, beams, fitflux, coherence))
 
             metric_score = (fluxscore, offsetscore)
