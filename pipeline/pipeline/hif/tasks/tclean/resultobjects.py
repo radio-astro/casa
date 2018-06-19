@@ -281,10 +281,14 @@ class TcleanResult(basetask.Results):
         return self._tclean_stopreason
 
     def set_tclean_stopreason(self, tclean_stopcode):
-        stopreasons = ['iteration limit', 'threshold', 'force stop',
+        stopreasons = ['iteration limit',
+                       'threshold',
+                       'force stop',
                        'no change in peak residual across two major cycles',
-                       'peak residual increased by more than 5 times from the previous major cycle',
-                       'peak residual increased by more than 5 times from the minimum reached', 'zero mask']
+                       'peak residual increased by more than 3 times from the previous major cycle',
+                       'peak residual increased by more than 3 times from the minimum reached',
+                       'zero mask',
+                       'any combination of n-sigma and other valid exit criterion']
         assert 0 < tclean_stopcode <= len(stopreasons),\
             "tclean stop code {} does not index into stop reasons list".format(tclean_stopcode)
         self._tclean_stopreason = stopreasons[tclean_stopcode-1]
