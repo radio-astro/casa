@@ -338,6 +338,7 @@ class SDImagingWorker(basetask.StandardTaskTemplate):
             # restfreq is specified by user
             try:
                 # check if restfreq is valid
+                qa = casatools.quanta
                 x = qa.quantity(restfreq)
                 x = qa.convert(x, 'Hz')
             except:
