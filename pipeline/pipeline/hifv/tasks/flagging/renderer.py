@@ -5,6 +5,7 @@ import shutil
 import pipeline.hif.tasks.common.flagging_renderer_utils as fru
 #import pipeline.infrastructure.displays.flagging as flagging
 import pipeline.h.tasks.common.displays.flagging as flagging
+import displaycheckflag as displaycheckflag
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.renderer.basetemplates as basetemplates
 import pipeline.infrastructure.utils as utils
@@ -191,4 +192,30 @@ class T2_4MDetailstargetflagRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
         ctx.update({'summary_plots'   : summary_plots,
                     'dirname'         : weblog_dir})
                 
+        return ctx
+
+
+class T2_4MDetailscheckflagRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
+    def __init__(self, uri='checkflag.mako', description='Checkflag summary',
+                 always_rerender=False):
+        super(T2_4MDetailscheckflagRenderer, self).__init__(uri=uri, description=description,
+                                                            always_rerender=always_rerender)
+
+    def get_display_context(self, context, results):
+        super_cls = super(T2_4MDetailscheckflagRenderer, self)
+        ctx = super_cls.get_display_context(context, results)
+
+        weblog_dir = os.path.join(context.report_dir, 'stage%s' % results.stage_number)
+
+        summary_plots = {}
+
+        for result in results:
+            plotter = displaycheckflag.checkflagSummaryChart(context, result)
+            plots = plotter.plot()
+            ms = os.path.basename(result.inputs['vis'])
+            summary_plots[ms] = plots
+
+        ctx.update({'summary_plots': summary_plots,
+                    'dirname': weblog_dir})
+
         return ctx

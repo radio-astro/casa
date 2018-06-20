@@ -38,12 +38,14 @@ weblog.add_renderer(FlagBadDeformatters,
                                                               description='Flag bad deformatters'),
                     group_by=weblog.UNGROUPED)
 
-weblog.add_renderer(Checkflag,
-                    basetemplates.T2_4MDetailsDefaultRenderer(uri='checkflag.mako',
-                                                              description='Flag possible RFI using rflag and tfcrop'),
-                    group_by=weblog.UNGROUPED)
+#weblog.add_renderer(Checkflag,
+#                    basetemplates.T2_4MDetailsDefaultRenderer(uri='checkflag.mako',
+#                                                             description='Flag possible RFI using rflag and tfcrop'),
+#                    group_by=weblog.UNGROUPED)
 
-# weblog.add_renderer(Targetflag, renderer.T2_4MDetailstargetflagRenderer(), group_by=weblog.UNGROUPED)
+weblog.add_renderer(Checkflag,
+                    renderer.T2_4MDetailscheckflagRenderer(),
+                    group_by=weblog.UNGROUPED)
 
 weblog.add_renderer(Targetflag, basetemplates.T2_4MDetailsDefaultRenderer(uri='targetflag.mako',
                                                                           description='Targetflag'),
