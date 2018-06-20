@@ -61,7 +61,7 @@ class TcleanQAHandler(pqa.QAPlugin):
                 spwid = int(result.spw)
                 imagename = result.image
                 rms = result.image_rms
-                checkscore, offset, beams, fitflux, fitpeak = scorecalc.score_checksources (mses, fieldname, spwid, imagename, rms)
+                checkscore, offset, offset_err, beams, beams_err, fitflux, fitflux_err, fitpeak = scorecalc.score_checksources (mses, fieldname, spwid, imagename, rms)
                 result.qa.pool.append (checkscore)
                 gfluxscale = 1.0
                 gfluxscale_err = 0.1
@@ -78,7 +78,7 @@ class TcleanQAHandler(pqa.QAPlugin):
                 else:
                     gfluxscale = None
                     gfluxscale_err = None
-                result.check_source_fit = {'offset': offset, 'beams': beams, 'fitflux': fitflux, 'fitpeak': fitpeak, 'gfluxscale': gfluxscale, 'gfluxscale_err': gfluxscale_err}
+                result.check_source_fit = {'offset': offset, 'offset_err': offset_err, 'beams': beams, 'beams_err': beams_err, 'fitflux': fitflux, 'fitflux_err': fitflux_err, 'fitpeak': fitpeak, 'gfluxscale': gfluxscale, 'gfluxscale_err': gfluxscale_err}
 
 
 class TcleanListQAHandler(pqa.QAPlugin):

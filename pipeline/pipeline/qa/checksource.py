@@ -27,8 +27,10 @@ def checkimage (imagename, rms, refdirection, refflux):
     # Compare the reference direction to the fitted direction. Compute the angular separation in
     # arcseconds and the ratio of the separation to the estimate of the synthesized beams
 
-    positionoffset = qa.convert (me.separation (refdirection, fitdict['fitdirection']), 'arcsec')
+    positionoffset = qa.convert(me.separation (refdirection, fitdict['fitdirection']), 'arcsec')
+    positionoffset_err = qa.convert(fitdict['fitdirection_err'], 'arcsec')
     beamoffset = qa.convert(qa.div (positionoffset, fitdict['syntheticbeam']), '')
+    beamoffset_err = qa.convert(qa.div (positionoffset_err, fitdict['syntheticbeam']), '')
 
     # Compare the reference flux to the fitted flux
     # There is a bit of a discrepancy between the ticket and the script with
@@ -44,7 +46,9 @@ def checkimage (imagename, rms, refdirection, refflux):
 
     fitdict['refdirection'] = refdirection
     fitdict['positionoffset'] = positionoffset
+    fitdict['positionoffset_err'] = positionoffset_err
     fitdict['beamoffset'] = beamoffset
+    fitdict['beamoffset_err'] = beamoffset_err
     fitdict['refflux'] = refflux
     fitdict['fluxloss'] = fluxloss
 
@@ -103,6 +107,8 @@ def fitimage (imagename, rms, fitradius=15):
     ra  = fitresults['results']['component0']['shape']['direction']['m0']
     dec = fitresults['results']['component0']['shape']['direction']['m1']
     refer = fitresults['results']['component0']['shape']['direction']['refer']
+    ra_err = fitresults['results']['component0']['shape']['direction']['error']['longitude']
+    dec_err = fitresults['results']['component0']['shape']['direction']['error']['latitude']
 
     # Get the beam. Should be the same as the restoring beam
     #    Use instead of image value
@@ -111,6 +117,7 @@ def fitimage (imagename, rms, fitradius=15):
 
     # Get the fitted flux
     flux  = fitresults['results']['component0']['flux']['value']
+    flux_err  = fitresults['results']['component0']['flux']['error']
     fluxunit  = fitresults['results']['component0']['flux']['unit']
 
     # Get the fitted peak
@@ -121,6 +128,8 @@ def fitimage (imagename, rms, fitradius=15):
     fitdirection = me.direction(refer, qa.quantity(qa.getvalue(ra), qa.getunit(ra)),
         qa.quantity(qa.getvalue(dec), qa.getunit(dec))) 
     fitdict['fitdirection'] = fitdirection
+    fitdirection_err = qa.convert(qa.sqrt(qa.add(qa.pow(ra_err, 2), qa.pow(dec_err, 2))), 'arcsec')
+    fitdict['fitdirection_err'] = fitdirection_err
 
     # Construct the synthesized beam estimate
     synthetic_beam = qa.convert(qa.sqrt(qa.mul(qa.convert(restoring_beam['major'], 'arcsec'),
@@ -130,6 +139,8 @@ def fitimage (imagename, rms, fitradius=15):
     # Get the fitted flux
     fitflux = qa.quantity (flux[0], fluxunit)
     fitdict['fitflux'] = fitflux
+    fitflux_err = qa.quantity (flux_err[0], fluxunit)
+    fitdict['fitflux_err'] = fitflux_err
 
     # Get the fitted peak flux
     fitpeak = qa.quantity (peak, peakunit)

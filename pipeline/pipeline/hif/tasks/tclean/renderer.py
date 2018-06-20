@@ -308,9 +308,9 @@ class T2_4MDetailsTcleanRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
             # check source fit parameters
             #
             if r.check_source_fit is not None:
-                chk_pos_offset = '%.2f' % (r.check_source_fit['offset'])
-                chk_frac_beam_offset = '%.2f' % (r.check_source_fit['beams'])
-                chk_fitflux = '%d' % (int(round(r.check_source_fit['fitflux'] * 1000.)))
+                chk_pos_offset = '%.2f +/- %.2f' % (r.check_source_fit['offset'], r.check_source_fit['offset_err'])
+                chk_frac_beam_offset = '%.2f +/- %.3f' % (r.check_source_fit['beams'], r.check_source_fit['beams_err'])
+                chk_fitflux = '%d +/- %d' % (int(round(r.check_source_fit['fitflux'] * 1000.)), int(round(r.check_source_fit['fitflux_err'] * 1000.)))
 
                 if r.check_source_fit['fitflux'] != 0.0:
                     chk_fitpeak_fitflux_ratio = '%.2f' % (r.check_source_fit['fitpeak'] / r.check_source_fit['fitflux'])

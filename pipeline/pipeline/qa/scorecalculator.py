@@ -1829,8 +1829,11 @@ def score_checksources(mses, fieldname, spwid, imagename, rms):
     # the position and flux scores if both are available.
     if not fitdict:
         offset = None
+        offset_err = None
         beams = None
+        beams_err = None
         fitflux = None
+        fitflux_err = None
         fitpeak = None
         score = 0.0
         longmsg = 'Check source fit failed for %s field %s spwid %d' % (msnames, fieldname, spwid)
@@ -1840,8 +1843,11 @@ def score_checksources(mses, fieldname, spwid, imagename, rms):
 
     else:
         offset = fitdict['positionoffset']['value'] * 1000.0
+        offset_err = fitdict['positionoffset_err']['value'] * 1000.0
         beams = fitdict['beamoffset']['value']
+        beams_err = fitdict['beamoffset_err']['value']
         fitflux = fitdict['fitflux']['value']
+        fitflux_err = fitdict['fitflux_err']['value']
         fitpeak = fitdict['fitpeak']['value']
         shortmsg = 'Check source fit successful'
         if not refflux:
@@ -1870,7 +1876,7 @@ def score_checksources(mses, fieldname, spwid, imagename, rms):
                           metric_score=metric_score,
                           metric_units=metric_units)
 
-    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg, origin=origin), offset, beams, fitflux, fitpeak
+    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg, origin=origin), offset, offset_err, beams, beams_err, fitflux, fitflux_err, fitpeak
 
 
 @log_qa
