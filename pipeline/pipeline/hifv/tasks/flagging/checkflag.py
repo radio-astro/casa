@@ -23,14 +23,17 @@ class CheckflagInputs(vdp.StandardInputs):
     
 
 class CheckflagResults(basetask.Results):
-    def __init__(self, jobs=None):
+    def __init__(self, jobs=None, summarydict=None):
 
         if jobs is None:
             jobs = []
+        if summarydict is None:
+            summarydict = {}
 
         super(CheckflagResults, self).__init__()
 
         self.jobs = jobs
+        self.summarydict = summarydict
         
     def __repr__(self):
         s = 'Checkflag (rflag mode) results:\n'
@@ -208,8 +211,12 @@ class Checkflag(basetask.StandardTaskTemplate):
                            'flagbackup'  : False}
         
         checkflag_result = self._do_checkflag(**method_args)
-        
-        return checkflag_result
+
+        job = casa_tasks.flagdata(vis=self.inputs.vis, mode='summary')
+
+        summarydict = self._executor.execute(job)
+
+        return CheckflagResults([job], summarydict=summarydict)
     
     def _do_checkflag(self, mode='rflag', field=None, correlation=None, scan=None,
                       ntime='scan', datacolumn='corrected', flagbackup=False, timedevscale=4.0,
