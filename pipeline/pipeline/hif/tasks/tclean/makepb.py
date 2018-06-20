@@ -55,10 +55,8 @@ def makePB(vis='', field='', spw='', timerange='', uvrange='',
                        csysa.units()[3])
 
     LOG.info('MAKEPB : Starting imager tool')
-    with casatools.ImagerReader(vis) as im:
-        im.selectvis(field=field, spw=spw, time=timerange, intent=intent,
-                     scan=scan, uvrange=uvrange, baseline=antenna,
-                     observation=observation, writeaccess=False)
+    with casatools.SelectvisReader(vis, field=field, spw=spw, time=timerange, intent=intent, scan=scan, uvrange=uvrange,
+                                   baseline=antenna, observation=observation) as im:
         im.defineimage(nx=shp[0], ny=shp[0], phasecenter=phasecenter,
                        cellx=qa.tos(cellx), celly=qa.tos(celly), nchan=nchan,
                        start=mestart, step=step, mode=mode)

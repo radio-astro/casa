@@ -151,6 +151,33 @@ def context_manager_factory(tool):
             tool.close()
     return f
 
+
+def selectvis_context_manager(tool):
+    """
+    Create an imager tool context manager function that opens the MS using
+    im.selectvis in read-only mode.
+
+    The returned context manager function takes one argument: a filename. The
+    function opens the file using the CASA imager tool, returning the tool so that it
+    may be used for queries or other operations pertaining to the tool. The
+    tool is closed once it falls out of scope or an exception is raised.
+    """
+    tool_name = tool.__class__.__name__
+
+    @contextlib.contextmanager
+    def f(filename, **kwargs):
+        if not os.path.exists(filename):
+            raise IOError('No such file or directory: {!r}'.format(filename))
+        LOG.trace('{!s} tool: opening {!r} using .selectvis(writeaccess=False)'.format(tool_name, filename))
+        tool.selectvis(filename, writeaccess=False, **kwargs)
+        try:
+            yield tool
+        finally:
+            LOG.trace('{!s} tool: closing {!r}'.format(tool_name, filename))
+            tool.close()
+    return f
+
+
 # context managers for frequently used CASA tools
 CalAnalysis = context_manager_factory(calanalysis)
 ImageReader = context_manager_factory(image)
@@ -158,6 +185,7 @@ ImagerReader = context_manager_factory(imager)
 MSReader = context_manager_factory(ms)
 TableReader = context_manager_factory(table)
 MSMDReader = context_manager_factory(msmd)
+SelectvisReader = selectvis_context_manager(imager)
 
 # C extensions cannot be pickled, so ignore the CASA logger on pickle and
 # replace with it with the current CASA logger on unpickle
