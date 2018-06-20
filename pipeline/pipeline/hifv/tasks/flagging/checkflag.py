@@ -214,7 +214,10 @@ class Checkflag(basetask.StandardTaskTemplate):
 
         job = casa_tasks.flagdata(vis=self.inputs.vis, mode='summary')
 
-        summarydict = self._executor.execute(job)
+        if self.inputs.checkflagmode in ('semi', ''):
+            summarydict = self._executor.execute(job)
+        else:
+            summarydict = None
 
         return CheckflagResults([job], summarydict=summarydict)
     
