@@ -9,7 +9,7 @@ from . import checkflag
 from . import targetflag
 from . import renderer
 
-# from . import qa
+from . import qa
 
 from .flagdetervla import FlagDeterVLA
 from .flagbaddeformatters import FlagBadDeformatters
@@ -21,9 +21,9 @@ from .flagcal import Flagcal
 # pipelineqa.registry.add_handler(qa.FlagBadDeformattersListQAHandler())
 # qaadapter.registry.register_to_dataset_topic(flagbaddeformatters.FlagBadDeformattersResults)
 
-# pipelineqa.registry.add_handler(qa.CheckflagQAHandler())
-# pipelineqa.registry.add_handler(qa.CheckflagListQAHandler())
-# qaadapter.registry.register_to_dataset_topic(checkflag.CheckflagResults)
+pipelineqa.qa_registry.add_handler(qa.CheckflagQAHandler())
+# pipelineqa.registry_qa.add_handler(qa.CheckflagListQAHandler())
+qaadapter.registry.register_to_dataset_topic(checkflag.CheckflagResults)
 
 # pipelineqa.registry.add_handler(qa.TargetflagQAHandler())
 # pipelineqa.registry.add_handler(qa.TargetflagListQAHandler())
