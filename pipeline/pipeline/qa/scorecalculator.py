@@ -48,6 +48,7 @@ __all__ = ['score_polintents',                                # ALMA specific
            'score_online_shadow_template_agents',
            'score_applycal_agents',
            'score_total_data_flagged',
+           'score_total_data_flagged_vla',
            'score_ms_model_data_column_present',
            'score_ms_history_entries_present',
            'score_contiguous_session',
@@ -603,6 +604,37 @@ def score_total_data_flagged(filename, summaries):
     origin = pqa.QAOrigin(metric_name='score_total_data_flagged',
                           metric_score=frac_flagged,
                           metric_units='Total fraction of data that is flagged')
+
+    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg, vis=os.path.basename(filename), origin=origin)
+
+
+@log_qa
+def score_total_data_flagged_vla(filename, summaries):
+    """
+    Calculate a score for the flagging task based on the total fraction of
+    data flagged.
+
+    0%-5% flagged   -> 1
+    5%-60% flagged  -> 0.99 to 0.33
+    60-100% flagged -> 0
+    """
+    # Calculate fraction of flagged data.
+    frac_flagged = calc_frac_total_flagged(summaries)
+
+    # Convert fraction of flagged data into a score.
+    if frac_flagged > 0.6:
+        score = 0
+    else:
+        score = linear_score(frac_flagged, 0.05, 0.6, 1.0, 0.33)
+
+    # Set score messages and origin.
+    percent = 100.0 * frac_flagged
+    longmsg = '%0.2f%% of data in %s was flagged' % (percent, filename)
+    shortmsg = '%0.2f%% data flagged' % percent
+
+    origin = pqa.QAOrigin(metric_name='score_total_data_flagged_vla',
+                          metric_score=frac_flagged,
+                          metric_units='Total fraction of VLA data that is flagged')
 
     return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg, vis=os.path.basename(filename), origin=origin)
 
