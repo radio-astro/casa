@@ -413,7 +413,7 @@ class ImageDisplay(object):
                 cb = plt.colorbar(shrink=shrink, fraction=fraction)
             else:
                 cb = plt.colorbar(shrink=shrink, fraction=fraction,
-                                  format='%.1e')
+                                  format='%.2e')
         # Set size of labels on the color-bar.
         for label in cb.ax.get_yticklabels():
             label.set_fontsize(7)
