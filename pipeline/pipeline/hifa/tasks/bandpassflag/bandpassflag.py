@@ -331,17 +331,9 @@ class Bandpassflag(basetask.StandardTaskTemplate):
         """
         Analyses the Bandpassflag result:
 
-        If new flags were found, run evaluation of flagging commands for
-        identifying updates to the reference antenna list.
+        Evaluate result to identify updates for the reference antennas list.
         """
-
-        # Retrieve flagging commands from correctedampflag result.
-        flags = result.cafresult.flagcmds()
-
-        # If new flags were found, evaluate them for updates to the
-        # refant list.
-        if flags:
-            result = self._evaluate_refant_update(result, flags)
+        result = self._identify_refants_to_update(result)
 
         return result
 
@@ -357,25 +349,49 @@ class Bandpassflag(basetask.StandardTaskTemplate):
                                   caltype=old_calfrom.caltype,
                                   calwt=old_calfrom.calwt)
 
-    def _evaluate_refant_update(self, result, flags):
-        """
+    def _identify_refants_to_update(self, result):
+        """Updates the Bandpassflag result with lists of "bad" and "poor"
+        antennas, for reference antenna update.
+
         Identifies "bad" antennas as those that got flagged in all spws
         (entire timestamp) which are to be removed from the reference antenna
-        list. Identifies "poor" antennas as those that got flagged in at least
+        list.
+
+        Identifies "poor" antennas as those that got flagged in at least
         one spw, but not all, which are to be moved to the end of the reference
         antenna list.
-        """
 
+        :param result: BandpassflagResults object
+        :return: BandpassflagResults object
+        """
+        # Identify bad antennas to demote/remove from refant list.
+        ants_to_demote, ants_to_remove = self._identify_bad_refants(result)
+
+        # Update result to mark antennas for demotion/removal as refant.
+        result = self._mark_antennas_for_refant_update(result, ants_to_demote, ants_to_remove)
+
+        return result
+
+    def _identify_bad_refants(self, result):
         # Get the MS object.
         ms = self.inputs.context.observing_run.get_ms(name=self.inputs.vis)
 
-        # Retrieve which intents and spws were evaluated by
-        # correctedampflag.
-        intents = result.cafresult.inputs['intent'].split(',')
-        spwids = map(int, result.cafresult.inputs['spw'].split(','))
-
         # Get translation dictionary for antenna id to name.
         antenna_id_to_name = self._get_ant_id_to_name_dict(ms)
+
+        # Identify antennas to demote as refant.
+        ants_to_demote, ants_fully_flagged = self._identify_ants_to_demote(result, ms, antenna_id_to_name)
+
+        # Identify antennas to remove as refant.
+        ants_to_remove = self._identify_ants_to_remove(result, ms, ants_fully_flagged, antenna_id_to_name)
+
+        return ants_to_demote, ants_to_remove
+
+    @staticmethod
+    def _identify_ants_to_demote(result, ms, antenna_id_to_name):
+        # Retrieve flags and which intents and spws were evaluated by
+        # correctedampflag.
+        flags = result.cafresult.flagcmds()
 
         # Initialize flagging state
         ants_fully_flagged = collections.defaultdict(set)
@@ -414,6 +430,21 @@ class Bandpassflag(basetask.StandardTaskTemplate):
                     msname=ms.basename, intent=intent_str,
                     fieldname=field, spw=spwid,
                     ants=ants_str))
+
+        # Store the set of antennas that were fully flagged in at least
+        # one spw, for any of the fields for any of the intents.
+        ants_to_demote_as_refant = {
+            antenna_id_to_name[iant]
+            for iants in ants_fully_flagged.values()
+            for iant in iants}
+
+        return ants_to_demote_as_refant, ants_fully_flagged
+
+    @staticmethod
+    def _identify_ants_to_remove(result, ms, ants_fully_flagged, antenna_id_to_name):
+        # Get the spw ids and intents from the inputs.
+        intents = result.cafresult.inputs['intent'].split(',')
+        spwids = map(int, result.cafresult.inputs['spw'].split(','))
 
         # Initialize set of antennas that are fully flagged for all spws, for any intent
         ants_fully_flagged_in_all_spws_any_intent = set()
@@ -473,16 +504,18 @@ class Bandpassflag(basetask.StandardTaskTemplate):
             antenna_id_to_name[iant]
             for iant in ants_fully_flagged_in_all_spws_any_intent}
 
-        # Store the set of antennas that were fully flagged in at least
-        # one spw, for any of the fields for any of the intents.
-        ants_to_demote_as_refant = {
-            antenna_id_to_name[iant]
-            for iants in ants_fully_flagged.values()
-            for iant in iants}
+        return ants_to_remove_as_refant
+
+    def _mark_antennas_for_refant_update(self, result, ants_to_demote, ants_to_remove):
+        # Get the intents from the inputs.
+        intents = result.cafresult.inputs['intent'].split(',')
+
+        # Get the MS object
+        ms = self.inputs.context.observing_run.get_ms(name=self.inputs.vis)
 
         # If any reference antennas were found to be candidates for
         # removal or demotion (move to end of list), then proceed...
-        if ants_to_remove_as_refant or ants_to_demote_as_refant:
+        if ants_to_remove or ants_to_demote:
 
             # If a list of reference antennas was registered with the MS..
             if (hasattr(ms, 'reference_antenna') and
@@ -495,7 +528,7 @@ class Bandpassflag(basetask.StandardTaskTemplate):
                 # and store in result.
                 result.refants_to_remove = {
                     ant for ant in refant
-                    if ant in ants_to_remove_as_refant}
+                    if ant in ants_to_remove}
 
                 # If any refants were found to be removed...
                 if result.refants_to_remove:
@@ -534,7 +567,7 @@ class Bandpassflag(basetask.StandardTaskTemplate):
                 # list (demoted) upon merging the result into the context.
                 result.refants_to_demote = {
                     ant for ant in refant
-                    if ant in ants_to_demote_as_refant
+                    if ant in ants_to_demote
                     and ant not in result.refants_to_remove}
 
                 # If any refants were found to be demoted...
