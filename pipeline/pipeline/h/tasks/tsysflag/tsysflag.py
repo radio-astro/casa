@@ -233,15 +233,15 @@ class Tsysflag(basetask.StandardTaskTemplate):
         if result.task_incomplete_reason:
             return result
         else:
-            result = self._update_reference_antennas(result)
+            result = self._identify_refants_to_update(result)
 
         return result
 
-    def _update_reference_antennas(self, result):
+    def _identify_refants_to_update(self, result):
         """
-        Updates the Tsysflag result to mark any antennas that were found to be
-        fully flagged any any or all Tsys spws to be demoted/removed from the
-        refant list when the result gets accepted.
+        Updates the Tsysflag result with lists of antennas to remove from the
+        reference antenna list, or to demote to end of the reference antenna list,
+        due to being fully flagged in any or all Tsys spws.
 
         :param result: TsysflagResults object
         :return: TsysflagResults object
@@ -410,12 +410,12 @@ class Tsysflag(basetask.StandardTaskTemplate):
 
         # Store the set of antennas that were fully flagged in at least
         # one Tsys spw, for any of the fields for any of the intents.
-        ants_to_demote = {
+        ants_to_demote_as_refant = {
             antenna_id_to_name[iant]
             for iants in ants_fully_flagged.values()
             for iant in iants}
 
-        return ants_to_demote, ants_fully_flagged
+        return ants_to_demote_as_refant, ants_fully_flagged
 
     @staticmethod
     def _identify_ants_to_remove(result, ms, metric_to_test,
