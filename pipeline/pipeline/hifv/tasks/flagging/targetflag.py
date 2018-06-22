@@ -31,15 +31,18 @@ class TargetflagInputs(vdp.StandardInputs):
 
 
 class TargetflagResults(basetask.Results):
-    def __init__(self, jobs=None):
+    def __init__(self, jobs=None, summarydict=None):
 
         if jobs is None:
             jobs = []
+        if summarydict is None:
+            summarydict = {}
 
         super(TargetflagResults, self).__init__()
 
         self.jobs = jobs
-        
+        self.summarydict = summarydict
+
     def __repr__(self):
         s = 'Targetflag (rflag mode) results:\n'
         for job in self.jobs:
@@ -94,7 +97,10 @@ class Targetflag(basetask.StandardTaskTemplate):
 
             rflag_result = self._do_rflag(**method_args)
 
-            return TargetflagResults([rflag_result])
+            job = casa_tasks.flagdata(vis=self.inputs.vis, mode='summary')
+            summarydict = self._executor.execute(job)
+
+            return TargetflagResults([rflag_result], summarydict=summarydict)
 
         if ('TARGET' in self.inputs.intents and fielddict != {}):
             LOG.info("TARGETFLAG INFO:  Spectral line heuristics for intent=*TARGET*")
@@ -108,8 +114,10 @@ class Targetflag(basetask.StandardTaskTemplate):
 
                 rflag_result = self._do_rflag(**method_args)
 
+        job = casa_tasks.flagdata(vis=self.inputs.vis, mode='summary')
+        summarydict = self._executor.execute(job)
 
-        return TargetflagResults([rflag_result])
+        return TargetflagResults([rflag_result], summarydict=summarydict)
     
     def analyse(self, results):
         return results

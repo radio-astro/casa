@@ -69,12 +69,6 @@ class CheckflagQAHandler(pqa.QAPlugin):
 
         result.qa.pool.extend(scores)
 
-    def _ms_exists(self, output_dir, ms):
-        """
-        Check for the existence of the target MS
-        """
-        return qacalc.score_path_exists(output_dir, ms, 'Checkflag')
-
 
 class CheckflagListQAHandler(pqa.QAPlugin):
     """
@@ -102,16 +96,15 @@ class TargetflagQAHandler(pqa.QAPlugin):
     def handle(self, context, result):
 
         # Check for existence of the the target MS.
-        score1 = self._ms_exists(os.path.dirname(result.inputs['vis']), os.path.basename(result.inputs['vis']))
+        # get a QA score for flagging
+        # < 5%   of data flagged  --> 1.0
+        # 5%-60% of data flagged  --> 0.99 to 0.33
+        # > 60%  of data flagged  --> 0.0
+        score1 = qacalc.score_total_data_flagged_vla(os.path.basename(result.inputs['vis']),
+                                                     [result.summarydict])
         scores = [score1]
 
         result.qa.pool.extend(scores)
-
-    def _ms_exists(self, output_dir, ms):
-        """
-        Check for the existence of the target MS
-        """
-        return qacalc.score_path_exists(output_dir, ms, 'Targetflag')
 
 
 class TargetflagListQAHandler(pqa.QAPlugin):
