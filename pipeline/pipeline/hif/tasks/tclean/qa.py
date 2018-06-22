@@ -2,6 +2,7 @@ from __future__ import absolute_import
 
 import collections
 
+import os
 import numpy
 from casac import casac
 
@@ -63,8 +64,6 @@ class TcleanQAHandler(pqa.QAPlugin):
                 rms = result.image_rms
                 checkscore, offset, offset_err, beams, beams_err, fitflux, fitflux_err, fitpeak = scorecalc.score_checksources (mses, fieldname, spwid, imagename, rms)
                 result.qa.pool.append (checkscore)
-                gfluxscale = 1.0
-                gfluxscale_err = 0.1
                 if len(result.vis) == 1:
                     try:
                         ms_do = context.observing_run.get_ms(result.vis[0])
@@ -78,6 +77,33 @@ class TcleanQAHandler(pqa.QAPlugin):
                 else:
                     gfluxscale = None
                     gfluxscale_err = None
+
+                warnings = []
+                if beams > 0.15:
+                    warnings.append('large fitted offset of %.2f marcsec and %.2f synth beam' % (offset, beams))
+                if gfluxscale != 0.0:
+                    chk_fitflux_gfluxscale_ratio = fitflux * 1000. / gfluxscale
+                    if chk_fitflux_gfluxscale_ratio < 0.8:
+                        warnings.append('a low [Fitted / gfluxscale] Flux Density Ratio of %.2f' % (chk_fitflux_gfluxscale_ratio))
+                else:
+                    warnings.append('gfluxscale value of 0.0 mJy')
+                if fitflux != 0.0:
+                    chk_fitpeak_fitflux_ratio = fitpeak / fitflux
+                    if chk_fitpeak_fitflux_ratio < 0.7:
+                        warnings.append('low Fitted [Peak Intensity / Flux Density] Ratio of %.2f' % (chk_fitpeak_fitflux_ratio))
+                else:
+                    warnings.append('Fitted Flux Density value of 0.0 mJy')
+
+                snr_msg = ''
+                if gfluxscale_err != 0.0:
+                    chk_gfluxscale_snr = gfluxscale / gfluxscale_err
+                    if chk_gfluxscale_snr < 20.:
+                       snr_msg = ', however, the S/N of the gfluxscale measurement is low'
+
+                if warnings != []:
+                    msnames = ','.join([os.path.basename(ms.name).strip('.ms') for ms in mses])
+                    LOG.warn('%s field %s spwid %d: has a %s%s' % (msnames, fieldname, spwid, ' and a '.join(warnings), snr_msg))
+
                 result.check_source_fit = {'offset': offset, 'offset_err': offset_err, 'beams': beams, 'beams_err': beams_err, 'fitflux': fitflux, 'fitflux_err': fitflux_err, 'fitpeak': fitpeak, 'gfluxscale': gfluxscale, 'gfluxscale_err': gfluxscale_err}
 
 
