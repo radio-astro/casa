@@ -971,7 +971,43 @@ class MeasurementSet(object):
             with contextlib.closing(table.query(taql)) as subtable:
                 integration = subtable.getcol('INTERVAL')          
             return numpy.median(integration)
-    
+
+    def update_reference_antennas(self, ants_to_demote=None, ants_to_remove=None):
+        """Update the reference antenna list by demoting and/or removing
+        specified antennas.
+
+        If the same antenna is specified to be demoted and to be removed, it
+        is removed.
+
+        :param ants_to_demote: list of antenna names to demote
+        :param ants_to_remove: list of antenna names to remove
+        """
+        if ants_to_demote is None:
+            ants_to_demote = []
+        if ants_to_remove is None:
+            ants_to_remove = []
+
+        # Return early if no refants are registered (None, or empty string).
+        if not (self.reference_antenna and self.reference_antenna.strip()):
+            LOG.warning("No reference antennas registered set for MS {}, "
+                        "cannot update its reference antenna list."
+                        "".format(self.name))
+            return
+
+        # Create updated refant list.
+        refants_to_keep = []
+        refants_to_move = []
+        for ant in self.reference_antenna.split(','):
+            if ant not in ants_to_remove:
+                if ant in ants_to_demote:
+                    refants_to_move.append(ant)
+                else:
+                    refants_to_keep.append(ant)
+        refants_to_keep.extend(refants_to_move)
+
+        # Update refant list.
+        self.reference_antenna = ','.join(refants_to_keep)
+
     @property
     def session(self):
         return self._session

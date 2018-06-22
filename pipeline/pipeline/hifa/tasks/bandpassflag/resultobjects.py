@@ -38,29 +38,10 @@ class BandpassflagResults(basetask.Results):
             LOG.debug('Adding calibration to callibrary:\n%s\n%s' % (calapp.calto, calapp.calfrom))
             context.callibrary.add(calapp.calto, calapp.calfrom)
 
-        # Update refant list if necessary.
-        if self.refants_to_remove or self.refants_to_demote:
-
-            # Get the MS
-            ms = context.observing_run.get_ms(name=self.vis)
-
-            # Fetch list of current refants
-            refants = ms.reference_antenna.split(',')
-
-            # Create updated refant list.
-            updated_refants = []
-            refants_to_move = []
-            for ant in refants:
-                if ant in self.refants_to_remove:
-                    pass
-                elif ant in self.refants_to_demote:
-                    refants_to_move.append(ant)
-                else:
-                    updated_refants.append(ant)
-            updated_refants.extend(refants_to_move)
-
-            # Update MS with new refant list.
-            ms.reference_antenna = ','.join(updated_refants)
+        # Update reference antennas for MS.
+        ms = context.observing_run.get_ms(name=self.vis)
+        ms.update_reference_antennas(ants_to_demote=self.refants_to_demote,
+                                     ants_to_remove=self.refants_to_remove)
 
     def __repr__(self):
         s = 'BandpassflagResults'
