@@ -316,9 +316,10 @@ class SDImagingWorker(basetask.StandardTaskTemplate):
             nchan = 1
         # restfreq
         restfreq = self.inputs.restfreq
-        assert type(restfreq) == str , "Invalid type for restfreq {0}".format(type(restfreq))
+        if type(restfreq) != str:
+            raise RuntimeError, "Invalid type for restfreq '{0}' (not a string)".format(restfreq)
         if restfreq == '':
-            # if restfreq not given by user
+            # if restfreq is NOT given by user
             # first try using SOURCE.REST_FREQUENCY 
             # if it is not available, use SPECTRAL_WINDOW.REF_FREQUENCY instead
             source_id = reference_field.source_id
@@ -335,14 +336,15 @@ class SDImagingWorker(basetask.StandardTaskTemplate):
             else:
                 raise RuntimeError, "Could not get reference frequency of Spw %d" % ref_spwid
         else:
-            # restfreq is specified by user
-            try:
-                # check if restfreq is valid
-                qa = casatools.quanta
-                x = qa.quantity(restfreq)
-                x = qa.convert(x, 'Hz')
-            except:
-                raise RuntimeError, "Invalid restfreq {0}".format(restfreq)
+            # restfreq is given by user
+            # check if user provided restfreq is valid
+            qa = casatools.quanta
+            x = qa.quantity(restfreq)
+            if x['value'] <= 0:
+                raise RuntimeError, "Invalid restfreq '{0}' (must be positive)".format(restfreq)
+            x = qa.convert(x, 'Hz') 
+            if qa.getunit(x) != 'Hz':
+                raise RuntimeError, "Invalid restfreq '{0}' (inappropriate unit)".format(restfreq)
 
         # outframe
         outframe = 'LSRK'
