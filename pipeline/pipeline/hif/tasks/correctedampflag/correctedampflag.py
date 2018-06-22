@@ -319,6 +319,10 @@ class Correctedampflag(basetask.StandardTaskTemplate):
         # Set sigma threshold for identifying very high outliers.
         antveryhighsig = 10.0
 
+        # Set sigma thresholds for identifying ultra low/high outliers.
+        antultrahighsig = 12.0
+        antultralowsig = 13.0
+
         # Set sigma outlier threshold for purpose of evaluating
         # whether to relax the threshold scaling factor.
         relaxsig = 6.5
@@ -441,6 +445,10 @@ class Correctedampflag(basetask.StandardTaskTemplate):
             # series of antenna-based heuristics to flag one or more antennas
             # within a timestamp or to flag an entire timestamp if necessary.
             #
+            # If outliers are identified, but not flagged by the antenna-based
+            # heuristics, then any existing ultra high outlier
+            # baseline-timestamp combination will be flagged.
+            #
 
             # Based on the input antenna based negative and positive sigma
             # outlier thresholds, identify outliers. If an antenna-based
@@ -462,6 +470,13 @@ class Correctedampflag(basetask.StandardTaskTemplate):
                 np.logical_or(
                     cmetric_sel < (med - mad * antveryhighsig),
                     cmetric_sel > (med + mad * antveryhighsig)))[0]
+
+            # Based on the "ultra low/high" sigma outlier thresholds, identify
+            # both negative and positive outliers.
+            id_ultrahighsig = np.where(
+                np.logical_or(
+                    cmetric_sel < (med - mad * antultralowsig),
+                    cmetric_sel > (med + mad * antultrahighsig)))[0]
 
             # If outliers were found and checking for positive outliers...
             if len(id_highsig) > 0 and tmantint > 0:
@@ -485,25 +500,49 @@ class Correctedampflag(basetask.StandardTaskTemplate):
                 # timestamps set by a threshold, then evaluate the antenna
                 # based heuristics for those timestamps.
                 if 0 < len(time_sel_highsig_uniq) <= n_time_with_highsig_max:
-                    newflags = self._evaluate_antbased_heuristics(
-                        ms, spwid, intent, icorr, field, newflags,
+                    new_antbased_flags = self._evaluate_antbased_heuristics(
+                        ms, spwid, intent, icorr, field,
                         ants_in_outlier_baseline_scans_thresh,
                         ants_in_outlier_baseline_scans_partial_thresh,
                         max_frac_outlier_scans,
                         antenna_id_to_name, ant1_sel, ant2_sel, nants,
                         id_highsig, time_sel_highsig, time_sel_highsig_uniq)
+                    newflags.extend(new_antbased_flags)
+
+                    # If no new flags were found among the high sigma outliers,
+                    # but ultra high outliers were found, then proceed to at
+                    # least flag the ultra high outliers for corresponding
+                    # baseline/timestamp.
+                    if not new_antbased_flags and len(id_ultrahighsig) > 0:
+                        bad_timestamps = time_sel[id_ultrahighsig]
+                        bad_bls = zip(ant1_sel[id_ultrahighsig], ant2_sel[id_ultrahighsig])
+                        newflags.extend(
+                            self._create_flags_for_ultrahigh_baselines_timestamps(
+                                ms, spwid, intent, icorr, field, bad_timestamps, bad_bls, antenna_id_to_name))
 
                 # If all very high outliers were concentrated within a small
                 # number of timestamps set by a threshold, then evaluate the
                 # antenna based heuristics for those timestamps.
                 elif 0 < len(time_sel_veryhighsig_uniq) <= n_time_with_veryhighsig_max:
-                    newflags = self._evaluate_antbased_heuristics(
-                        ms, spwid, intent, icorr, field, newflags,
+                    new_antbased_flags = self._evaluate_antbased_heuristics(
+                        ms, spwid, intent, icorr, field,
                         ants_in_outlier_baseline_scans_thresh,
                         ants_in_outlier_baseline_scans_partial_thresh,
                         max_frac_outlier_scans,
                         antenna_id_to_name, ant1_sel, ant2_sel, nants,
                         id_veryhighsig, time_sel_veryhighsig, time_sel_veryhighsig_uniq)
+                    newflags.extend(new_antbased_flags)
+
+                    # If no new flags were found among the very high sigma
+                    # outliers, but ultra high outliers were found, then
+                    # proceed to at least flag the ultra high outliers for
+                    # corresponding baseline/timestamp.
+                    if not new_antbased_flags and len(id_ultrahighsig) > 0:
+                        bad_timestamps = time_sel[id_ultrahighsig]
+                        bad_bls = zip(ant1_sel[id_ultrahighsig], ant2_sel[id_ultrahighsig])
+                        newflags.extend(
+                            self._create_flags_for_ultrahigh_baselines_timestamps(
+                                ms, spwid, intent, icorr, field, bad_timestamps, bad_bls, antenna_id_to_name))
 
             #
             # The following part considers all timestamps at once, and
@@ -678,13 +717,36 @@ class Correctedampflag(basetask.StandardTaskTemplate):
         return data
 
     @staticmethod
+    def _create_flags_for_ultrahigh_baselines_timestamps(
+            ms, spwid, intent, icorr, field, timestamps, baselines, antenna_id_to_name):
+
+        newflags = []
+        for idx in range(len(baselines)):
+            newflags.append(
+                FlagCmd(
+                    filename=ms.name,
+                    spw=spwid,
+                    antenna="%s&%s" % baselines[idx],
+                    intent=utils.to_CASA_intent(ms, intent),
+                    pol=icorr,
+                    time=timestamps[idx],
+                    field=field,
+                    reason='ultrahigh baseline timestamp',
+                    antenna_id_to_name=antenna_id_to_name))
+
+        return newflags
+
+    @staticmethod
     def _evaluate_antbased_heuristics(
-            ms, spwid, intent, icorr, field, newflags,
+            ms, spwid, intent, icorr, field,
             ants_in_outlier_baseline_scans_thresh,
             ants_in_outlier_baseline_scans_partial_thresh,
             max_frac_outlier_scans,
             antenna_id_to_name, ant1_sel, ant2_sel, nants,
             id_highsig, time_sel_highsig, time_sel_highsig_uniq):
+
+        # Initialize flags.
+        newflags = []
 
         # For each of the few bad timestamps...
         for timestamp in time_sel_highsig_uniq:
@@ -795,8 +857,6 @@ class Correctedampflag(basetask.StandardTaskTemplate):
                             field=field,
                             reason='bad CAI-dependent data',
                             antenna_id_to_name=antenna_id_to_name))
-            else:
-                pass
 
         return newflags
 
