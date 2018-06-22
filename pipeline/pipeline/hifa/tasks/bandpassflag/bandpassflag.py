@@ -257,6 +257,9 @@ class Bandpassflag(basetask.StandardTaskTemplate):
                 vis=inputs.vis, mode='restore', versionname=flag_backup_name_prebpf)
             self._executor.execute(task)
 
+        # Store flagging task result.
+        result.cafresult = cafresult
+
         # If new outliers were identified...
         if cafflags:
             # Re-apply the newly found flags from correctedampflag.
@@ -271,6 +274,13 @@ class Bandpassflag(basetask.StandardTaskTemplate):
             # Import the calstate before BPFLAG
             LOG.info('Restoring back-up of calibration state.')
             inputs.context.callibrary.import_state(calstate_backup_name)
+
+            # Check for need to update reference antennas, and apply to local
+            # copy of the MS.
+            result = self._identify_refants_to_update(result)
+            ms = inputs.context.observing_run.get_ms(name=inputs.vis)
+            ms.update_reference_antennas(ants_to_demote=result.refants_to_demote,
+                                         ants_to_remove=result.refants_to_remove)
 
             # If flags were found in the bandpass calibrator,
             # recompute the phase-up and bandpass calibration table.
@@ -322,19 +332,9 @@ class Bandpassflag(basetask.StandardTaskTemplate):
         # Store bandpass task result.
         result.bpresult = bpresult
 
-        # Store flagging task result.
-        result.cafresult = cafresult
-
         return result
 
     def analyse(self, result):
-        """
-        Analyses the Bandpassflag result:
-
-        Evaluate result to identify updates for the reference antennas list.
-        """
-        result = self._identify_refants_to_update(result)
-
         return result
 
     def _mod_last_interp(self, l, interp):
