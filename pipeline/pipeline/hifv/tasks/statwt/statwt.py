@@ -67,7 +67,7 @@ class Statwt(basetask.StandardTaskTemplate):
                          'spw'          : '',
                          'datacolumn'   : 'corrected'}
                      
-            job = casa_tasks.statwt2(**task_args)
+            job = casa_tasks.statwt(**task_args)
             
             return self._executor.execute(job)
 
@@ -82,7 +82,7 @@ class Statwt(basetask.StandardTaskTemplate):
                          'spw'          : '',
                          'datacolumn'   : 'corrected'}
 
-                job = casa_tasks.statwt2(**task_args)
+                job = casa_tasks.statwt(**task_args)
 
                 statwt_result = self._executor.execute(job)
 

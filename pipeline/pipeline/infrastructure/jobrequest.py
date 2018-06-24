@@ -46,7 +46,6 @@ import polcal_cli
 import setjy_pg
 import split_cli
 import statwt_cli
-import statwt2_cli
 import tclean_pg
 import wvrgcal_cli
 import visstat_cli
