@@ -287,7 +287,7 @@ class CheckProductSizeHeuristics(object):
         # Check for case with many targets which will cause long run times in spite
         # of any mitigation.
         max_num_sciencetargets = 30
-        if (nfields > max_num_sciencetargets) and (all([nchan > 960 for nchan in nchans.values()])):
+        if (nfields > max_num_sciencetargets) and (sum(nchans.values()) > 960):
             LOG.warn('The number of science targets is > 30 and the total number of spectral channels across all science spws > 960. The imaging pipeline will take substantial time to run on this MOUS.')
 
         if size_mitigation_parameters != {}:
