@@ -18,6 +18,7 @@ import pipeline.infrastructure.pipelineqa as pqa
 import pipeline.infrastructure.renderer.rendererutils as rutils
 import pipeline.infrastructure.utils as utils
 import pipeline.qa.checksource as checksource
+import pipeline.infrastructure.basetask
 
 __all__ = ['score_polintents',                                # ALMA specific
            'score_bands',                                     # ALMA specific
@@ -63,19 +64,21 @@ def log_qa(method):
     """
     Decorator that logs QA evaluations as they return with a log level of
     INFO for scores between perfect and 'slightly suboptimal' scores and
-    WARNING for any other level.
+    WARNING for any other level. These messages are meant for pipeline runs
+    without a weblog output.
     """
     def f(self, *args, **kw):
         # get the size of the CASA log before task execution
         qascore = method(self, *args, **kw)
-        if isinstance(qascore, tuple):
-            _qascore = qascore[0]
-        else:
-            _qascore = qascore
-        if _qascore.score >= rutils.SCORE_THRESHOLD_SUBOPTIMAL:
-            LOG.info(_qascore.longmsg)
-        else:
-            LOG.warning(_qascore.longmsg)
+        if pipeline.infrastructure.basetask.DISABLE_WEBLOG:
+            if isinstance(qascore, tuple):
+                _qascore = qascore[0]
+            else:
+                _qascore = qascore
+            if _qascore.score >= rutils.SCORE_THRESHOLD_SUBOPTIMAL:
+                LOG.info(_qascore.longmsg)
+            else:
+                LOG.warning(_qascore.longmsg)
         return qascore
 
     return f
