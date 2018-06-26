@@ -62,7 +62,7 @@ class Statwt(basetask.StandardTaskTemplate):
                          'fitspw'       : '',
                          'fitcorr'      : '',
                          'combine'      : '',
-                         'minsamp'      : 2,
+                         'minsamp'      : 10,
                          'field'        : '',
                          'spw'          : '',
                          'datacolumn'   : 'corrected'}
@@ -77,7 +77,7 @@ class Statwt(basetask.StandardTaskTemplate):
                          'fitspw'       : fielddict[field],
                          'fitcorr'      : '',
                          'combine'      : '',
-                         'minsamp'      : 2,
+                         'minsamp'      : 10,
                          'field'        : field,
                          'spw'          : '',
                          'datacolumn'   : 'corrected'}
