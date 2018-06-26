@@ -1364,13 +1364,10 @@ class ImageParamsHeuristics(object):
                         utils.set_nested_dict(local_known_sensitivities, (os.path.basename(msname), field, intent, intSpw, 'sensBW'), '%s Hz' % (sens_bws[intSpw]))
 
                     # Correct from full spw to channel selection
-                    if specmode == 'cube':
-                        bw_uncorrected_center_field_sensitivity = center_field_full_spw_sensitivity * (float(nchan_unflagged) / float(nchan_sel)) ** 0.5
-                        sens_bws[intSpw] = sens_bws[intSpw] * float(nchan_sel) / float(spw_do.num_channels)
-                    else:
-                        bw_uncorrected_center_field_sensitivity = center_field_full_spw_sensitivity
+                    bw_uncorrected_center_field_sensitivity = center_field_full_spw_sensitivity * (float(nchan_unflagged) / float(nchan_sel)) ** 0.5
+                    sens_bws[intSpw] = sens_bws[intSpw] * float(nchan_sel) / float(spw_do.num_channels)
 
-                    # Correct for effective bandiwdth effects
+                    # Correct for effective bandwidth effects
                     bw_corr_factor, physicalBW_of_1chan, effectiveBW_of_1chan = self.get_bw_corr_factor(ms, intSpw, nchan_sel)
                     center_field_sensitivity = bw_uncorrected_center_field_sensitivity * bw_corr_factor
                     if bw_corr_factor != 1.0:
