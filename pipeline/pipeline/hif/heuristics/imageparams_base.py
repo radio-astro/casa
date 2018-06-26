@@ -1383,17 +1383,19 @@ class ImageParamsHeuristics(object):
                         diameter = np.median([a.diameter for a in ms.antennas])
                         overlap_factor = mosaicoverlap.mosaicOverlapFactorMS(ms, source_name, intSpw, diameter)
                         LOG.info('Dividing by mosaic overlap improvement factor of %s.' % (overlap_factor))
-                        center_field_full_spw_sensitivity /= overlap_factor
-                        center_field_sensitivity /= overlap_factor
+                        center_field_sensitivity = center_field_sensitivity / overlap_factor
 
                         if calc_sens and not center_only:
                             # Calculate diagnostic sensitivities for first and last field
                             first_field_id = min(map(int, field_ids[ms_index].split(',')))
                             first_field_full_spw_sensitivity, first_field_eff_ch_bw, first_field_sens_bw = self.get_sensitivity(ms, first_field_id, intent, intSpw, chansel_full, specmode, cell, imsize, weighting, robust, uvtaper)
-                            first_field_sensitivity = first_field_full_spw_sensitivity * (float(nchan_unflagged)/float(nchan_sel))**0.5 / overlap_factor * bw_corr_factor
+                            first_field_sensitivity = first_field_full_spw_sensitivity / overlap_factor * bw_corr_factor
                             last_field_id = max(map(int, field_ids[ms_index].split(',')))
                             last_field_full_spw_sensitivity, last_field_eff_ch_bw, last_field_sens_bw = self.get_sensitivity(ms, last_field_id, intent, intSpw, chansel_full, specmode, cell, imsize, weighting, robust, uvtaper)
-                            last_field_sensitivity = last_field_full_spw_sensitivity * (float(nchan_unflagged)/float(nchan_sel))**0.5 / overlap_factor * bw_corr_factor
+                            last_field_sensitivity = last_field_full_spw_sensitivity / overlap_factor * bw_corr_factor
+                            if specmode == 'cube':
+                                first_field_sensitivity = first_field_sensitivity * (float(nchan_unflagged) / float(nchan_sel)) ** 0.5
+                                last_field_sensitivity = last_field_sensitivity * (float(nchan_unflagged) / float(nchan_sel)) ** 0.5
 
                             LOG.info('Sensitivities for MS %s, Field %s, SPW %s for the first, central, and last pointings are: %.3g / %.3g / %.3g Jy/beam' % (os.path.basename(msname), field, str(real_spwid), first_field_sensitivity, center_field_sensitivity, last_field_sensitivity))
 
