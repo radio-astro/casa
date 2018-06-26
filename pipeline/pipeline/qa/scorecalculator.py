@@ -94,6 +94,7 @@ def calc_flags_per_agent(summaries, scanids=None):
     restrict statistics to just those scans.
     """
     stats = []
+    flagsum = 0
 
     # Go through summary for each agent.
     for idx, summary in enumerate(summaries):
@@ -113,13 +114,17 @@ def calc_flags_per_agent(summaries, scanids=None):
         # From the second summary onwards, subtract counts from the previous
         # one.
         if idx > 0:
-            flagcount -= stats[idx-1].flagged
+            flagcount -= flagsum
 
         # Create agent stats object, append to output.
         stat = AgentStats(name=summary['name'],
                           flagged=flagcount,
                           total=totalcount)
         stats.append(stat)
+
+        # Keep count of total number of flags found in summaries, for
+        # subsequent summaries.
+        flagsum += flagcount
 
     return stats
 
