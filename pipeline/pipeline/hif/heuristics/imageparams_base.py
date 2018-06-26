@@ -1409,7 +1409,7 @@ class ImageParamsHeuristics(object):
             sensitivity = 1.0 / np.sqrt(np.sum(1.0 / np.array(sensitivities) ** 2))
             # Calculate total bandwidth for this selection
             sens_bw = sum(sens_bws.values())
-            if specmode == 'cont':
+            if specmode == 'cont' and spw_topo_chan_param_dict == {}:
                 # Correct for spw frequency overlaps
                 agg_bw = cqa.getvalue(cqa.convert(self.aggregate_bandwidth(map(int, spw.split(','))), 'Hz'))
                 sensitivity = sensitivity * (sens_bw / agg_bw) ** 0.5
