@@ -1299,7 +1299,7 @@ class ImageParamsHeuristics(object):
 
         for ms_index, msname in enumerate(vis):
             ms = self.observing_run.get_ms(name=msname)
-            for intSpw in [int(s) for s in spw.split(',')]:
+            for intSpw in map(int, spw.split(',')):
                 try:
                     real_spwid = self.observing_run.virtual2real_spw_id(intSpw, self.observing_run.get_ms(msname))
                     spw_do = ms.get_spectral_window(real_spwid)
@@ -1312,24 +1312,20 @@ class ImageParamsHeuristics(object):
                         else:
                             chansel = '%d~%d' % (int(spw_do.num_channels / 2.0), int(spw_do.num_channels / 2.0))
                             nchan_sel = 1
-                        bw_corr_factor, physicalBW_of_1chan, effectiveBW_of_1chan = self.get_bw_corr_factor(ms, intSpw, nchan_sel)
                     else:
                         if spw_topo_chan_param_dict.get(os.path.basename(msname), False):
                             if spw_topo_chan_param_dict[os.path.basename(msname)].get(str(intSpw), '') != '':
                                 # Use continuum frequency selection
                                 chansel = spw_topo_chan_param_dict[os.path.basename(msname)][str(intSpw)]
                                 nchan_sel = np.sum([c[1]-c[0]+1 for c in [map(int, sel.split('~')) for sel in chansel.split(';')]])
-                                bw_corr_factor = 1.0
                             else:
                                 # Use full spw
                                 chansel = '0~%d' % (spw_do.num_channels - 1)
                                 nchan_sel = spw_do.num_channels
-                                bw_corr_factor = 1.0
                         else:
                             # Use full spw
                             chansel = '0~%d' % (spw_do.num_channels - 1)
                             nchan_sel = spw_do.num_channels
-                            bw_corr_factor = 1.0
 
                     chansel_full = '0~%d' % (spw_do.num_channels - 1)
 
@@ -1340,8 +1336,8 @@ class ImageParamsHeuristics(object):
                             # Reset flag to avoid clearing the dictionary several times
                             force_calc = False
                             local_known_sensitivities = {}
-                            LOG.info('Got request to recalculate sensitivities.')
-                            raise Exception('Got request to recalculate sensitivities.')
+                            LOG.info('Got manual request to recalculate sensitivities.')
+                            raise Exception('Got manual request to recalculate sensitivities.')
                         if local_known_sensitivities['robust'] != robust:
                             LOG.info('robust value changed (old: %.1f, new: %.1f). Re-calculating sensitivities.' % (local_known_sensitivities['robust'], robust))
                             local_known_sensitivities = {}
@@ -1368,11 +1364,18 @@ class ImageParamsHeuristics(object):
                         utils.set_nested_dict(local_known_sensitivities, (os.path.basename(msname), field, intent, intSpw, 'sensBW'), '%s Hz' % (sens_bws[intSpw]))
 
                     # Correct from full spw to channel selection
-                    bw_uncorrected_center_field_sensitivity = center_field_full_spw_sensitivity * (float(nchan_unflagged)/float(nchan_sel))**0.5
+                    if specmode == 'cube':
+                        bw_uncorrected_center_field_sensitivity = center_field_full_spw_sensitivity * (float(nchan_unflagged) / float(nchan_sel)) ** 0.5
+                        sens_bws[intSpw] = sens_bws[intSpw] * float(nchan_sel) / float(spw_do.num_channels)
+                    else:
+                        bw_uncorrected_center_field_sensitivity = center_field_full_spw_sensitivity
+
+                    # Correct for effective bandiwdth effects
+                    bw_corr_factor, physicalBW_of_1chan, effectiveBW_of_1chan = self.get_bw_corr_factor(ms, intSpw, nchan_sel)
                     center_field_sensitivity = bw_uncorrected_center_field_sensitivity * bw_corr_factor
                     if bw_corr_factor != 1.0:
                         LOG.info('Effective BW heuristic: Correcting apparentsens result by %.3g from %.3g Jy/beam to %s Jy/beam' % (bw_corr_factor, bw_uncorrected_center_field_sensitivity, center_field_sensitivity))
-                    sens_bws[intSpw] = sens_bws[intSpw] * float(nchan_sel) / float(spw_do.num_channels)
+
 
                     if gridder == 'mosaic':
                         # Correct for mosaic overlap factor
@@ -1387,10 +1390,10 @@ class ImageParamsHeuristics(object):
                             # Calculate diagnostic sensitivities for first and last field
                             first_field_id = min(map(int, field_ids[ms_index].split(',')))
                             first_field_full_spw_sensitivity, first_field_eff_ch_bw, first_field_sens_bw = self.get_sensitivity(ms, first_field_id, intent, intSpw, chansel_full, specmode, cell, imsize, weighting, robust, uvtaper)
-                            first_field_sensitivity = first_field_full_spw_sensitivity * (float(nchan_sel)/float(nchan_unflagged))**0.5 / overlap_factor * bw_corr_factor
+                            first_field_sensitivity = first_field_full_spw_sensitivity * (float(nchan_unflagged)/float(nchan_sel))**0.5 / overlap_factor * bw_corr_factor
                             last_field_id = max(map(int, field_ids[ms_index].split(',')))
                             last_field_full_spw_sensitivity, last_field_eff_ch_bw, last_field_sens_bw = self.get_sensitivity(ms, last_field_id, intent, intSpw, chansel_full, specmode, cell, imsize, weighting, robust, uvtaper)
-                            last_field_sensitivity = last_field_full_spw_sensitivity * (float(nchan_sel)/float(nchan_unflagged))**0.5 / overlap_factor * bw_corr_factor
+                            last_field_sensitivity = last_field_full_spw_sensitivity * (float(nchan_unflagged)/float(nchan_sel))**0.5 / overlap_factor * bw_corr_factor
 
                             LOG.info('Sensitivities for MS %s, Field %s, SPW %s for the first, central, and last pointings are: %.3g / %.3g / %.3g Jy/beam' % (os.path.basename(msname), field, str(real_spwid), first_field_sensitivity, center_field_sensitivity, last_field_sensitivity))
 
@@ -1402,12 +1405,21 @@ class ImageParamsHeuristics(object):
 
         if (len(sensitivities) > 0):
             sensitivity = 1.0 / np.sqrt(np.sum(1.0 / np.array(sensitivities) ** 2))
+            # Calculate total bandwidth for this selection
+            sens_bw = sum(sens_bws.values())
+            if specmode == 'cont':
+                # Correct for spw frequency overlaps
+                agg_bw = cqa.getvalue(cqa.convert(self.aggregate_bandwidth(map(int, spw.split(','))), 'Hz'))
+                sensitivity = sensitivity * (sens_bw / agg_bw) ** 0.5
+                sens_bw = agg_bw
+
         else:
             defaultSensitivity = None
             LOG.warning('Exception in calculating sensitivity.')
             sensitivity = defaultSensitivity
+            sens_bw = None
 
-        return sensitivity, eff_ch_bw, sum(sens_bws.values()), copy.deepcopy(local_known_sensitivities)
+        return sensitivity, eff_ch_bw, sens_bw, copy.deepcopy(local_known_sensitivities)
 
     def get_sensitivity(self, ms_do, field, intent, spw, chansel, specmode, cell, imsize, weighting, robust, uvtaper):
         """
@@ -1459,9 +1471,8 @@ class ImageParamsHeuristics(object):
 
                 SCF, physicalBW_of_1chan, effectiveBW_of_1chan = self.get_bw_corr_factor(ms_do, spw, nchan)
                 sens_bw += nchan * physicalBW_of_1chan
-                corrected_apparentsens_value = apparentsens_value * SCF
 
-                chansel_sensitivities.append(corrected_apparentsens_value)
+                chansel_sensitivities.append(apparentsens_value)
 
             except Exception as e:
                 if (str(e) != 'Empty selection'):

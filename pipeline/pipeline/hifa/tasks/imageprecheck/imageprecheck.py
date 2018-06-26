@@ -218,8 +218,6 @@ class ImagePreCheck(basetask.StandardTaskTemplate):
                 sensitivity, eff_ch_bw, sens_bw, per_spw_cont_sensitivities_all_chan = \
                     image_heuristics.calc_sensitivities(inputs.vis, repr_field, 'TARGET', cont_spw, -1, {}, 'cont', gridder, cells[(robust, str(default_uvtaper), 'aggBW')], imsizes[(robust, str(default_uvtaper), 'aggBW')], 'briggs', robust, default_uvtaper, True, per_spw_cont_sensitivities_all_chan, calcsens)
                 calcsens = False
-                # Replace cont bandwidth with better estimate from image heuristics that takes care of overlapping frequency ranges
-                sens_bw = cqa.getvalue(cqa.convert(image_heuristics.aggregate_bandwidth(cont_spwids), 'Hz'))
                 for cont_sens_bw_mode in cont_sens_bw_modes:
                     sensitivities.append(Sensitivity(
                         array=array,
@@ -272,6 +270,7 @@ class ImagePreCheck(basetask.StandardTaskTemplate):
                     imsizes[(hm_robust, str(hm_uvtaper), 'repBW')] = image_heuristics.imsize(field_ids, cells[(hm_robust, str(hm_uvtaper), 'repBW')], primary_beam_size, centreonly=False)
                     if reprBW_mode != 'cont':
                         try:
+                            # TODO: Call calc_sensitivities with specmode='cont' and scale to repBW if repBW > repSPW_BW and < aggBW
                             sensitivity, eff_ch_bw, sens_bw, per_spw_cont_sensitivities_all_chan = \
                                 image_heuristics.calc_sensitivities(inputs.vis, repr_field, 'TARGET', str(repr_spw), nbin, {}, 'cube', gridder, cells[(hm_robust, str(hm_uvtaper), 'repBW')], imsizes[(hm_robust, str(hm_uvtaper), 'repBW')], 'briggs', hm_robust, hm_uvtaper, True, per_spw_cont_sensitivities_all_chan, calcsens)
                             calcsens = False
@@ -306,8 +305,6 @@ class ImagePreCheck(basetask.StandardTaskTemplate):
                     try:
                         sensitivity, eff_ch_bw, sens_bw, per_spw_cont_sensitivities_all_chan = \
                             image_heuristics.calc_sensitivities(inputs.vis, repr_field, 'TARGET', cont_spw, -1, {}, 'cont', gridder, cells[(hm_robust, str(hm_uvtaper), 'aggBW')], imsizes[(hm_robust, str(hm_uvtaper), 'aggBW')], 'briggs', hm_robust, hm_uvtaper, True, per_spw_cont_sensitivities_all_chan, calcsens)
-                        # Replace cont bandwidth with better estimate from image heuristics that takes care of overlapping frequency ranges
-                        sens_bw = cqa.getvalue(cqa.convert(image_heuristics.aggregate_bandwidth(cont_spwids), 'Hz'))
                         calcsens = False
                         for cont_sens_bw_mode in cont_sens_bw_modes:
                             sensitivities.append(Sensitivity(
