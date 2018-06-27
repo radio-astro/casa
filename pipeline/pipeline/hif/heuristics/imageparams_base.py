@@ -1364,14 +1364,14 @@ class ImageParamsHeuristics(object):
                         utils.set_nested_dict(local_known_sensitivities, (os.path.basename(msname), field, intent, intSpw, 'sensBW'), '%s Hz' % (sens_bws[intSpw]))
 
                     # Correct from full spw to channel selection
-                    bw_uncorrected_center_field_sensitivity = center_field_full_spw_sensitivity * (float(nchan_unflagged) / float(nchan_sel)) ** 0.5
+                    chansel_corrected_center_field_sensitivity = center_field_full_spw_sensitivity * (float(nchan_unflagged) / float(nchan_sel)) ** 0.5
                     sens_bws[intSpw] = sens_bws[intSpw] * float(nchan_sel) / float(spw_do.num_channels)
 
                     # Correct for effective bandwidth effects
                     bw_corr_factor, physicalBW_of_1chan, effectiveBW_of_1chan = self.get_bw_corr_factor(ms, intSpw, nchan_sel)
-                    center_field_sensitivity = bw_uncorrected_center_field_sensitivity * bw_corr_factor
+                    center_field_sensitivity = chansel_corrected_center_field_sensitivity * bw_corr_factor
                     if bw_corr_factor != 1.0:
-                        LOG.info('Effective BW heuristic: Correcting apparentsens result by %.3g from %.3g Jy/beam to %s Jy/beam' % (bw_corr_factor, bw_uncorrected_center_field_sensitivity, center_field_sensitivity))
+                        LOG.info('Effective BW heuristic: Correcting apparentsens result by %.3g from %.3g Jy/beam to %s Jy/beam' % (bw_corr_factor, chansel_corrected_center_field_sensitivity, center_field_sensitivity))
 
 
                     if gridder == 'mosaic':
@@ -1386,13 +1386,10 @@ class ImageParamsHeuristics(object):
                             # Calculate diagnostic sensitivities for first and last field
                             first_field_id = min(map(int, field_ids[ms_index].split(',')))
                             first_field_full_spw_sensitivity, first_field_eff_ch_bw, first_field_sens_bw = self.get_sensitivity(ms, first_field_id, intent, intSpw, chansel_full, specmode, cell, imsize, weighting, robust, uvtaper)
-                            first_field_sensitivity = first_field_full_spw_sensitivity / overlap_factor * bw_corr_factor
+                            first_field_sensitivity = first_field_full_spw_sensitivity * (float(nchan_unflagged) / float(nchan_sel)) ** 0.5 * bw_corr_factor / overlap_factor
                             last_field_id = max(map(int, field_ids[ms_index].split(',')))
                             last_field_full_spw_sensitivity, last_field_eff_ch_bw, last_field_sens_bw = self.get_sensitivity(ms, last_field_id, intent, intSpw, chansel_full, specmode, cell, imsize, weighting, robust, uvtaper)
-                            last_field_sensitivity = last_field_full_spw_sensitivity / overlap_factor * bw_corr_factor
-                            if specmode == 'cube':
-                                first_field_sensitivity = first_field_sensitivity * (float(nchan_unflagged) / float(nchan_sel)) ** 0.5
-                                last_field_sensitivity = last_field_sensitivity * (float(nchan_unflagged) / float(nchan_sel)) ** 0.5
+                            last_field_sensitivity = last_field_full_spw_sensitivity * (float(nchan_unflagged) / float(nchan_sel)) ** 0.5 * bw_corr_factor / overlap_factor
 
                             LOG.info('Sensitivities for MS %s, Field %s, SPW %s for the first, central, and last pointings are: %.3g / %.3g / %.3g Jy/beam' % (os.path.basename(msname), field, str(real_spwid), first_field_sensitivity, center_field_sensitivity, last_field_sensitivity))
 
