@@ -205,10 +205,10 @@ class MakeImList(basetask.StandardTaskTemplate):
                 LOG.info('No representative target found. No PI cube will be made.')
                 result.set_info({'msg': 'No representative target found. No PI cube will be made.', 'intent': 'TARGET', 'specmode': 'repBW'})
             # The PI cube shall only be created for cube mode
-            elif reprBW_mode == 'cont':
+            elif reprBW_mode in ['multi_spw', 'all_spw']:
                 LOG.info("Representative target bandwidth specifies aggregate continuum. No PI cube will be made since specmode='cont' already covers this case.")
                 result.set_info({'msg': "Representative target bandwidth specifies aggregate continuum. No PI cube will be made since specmode='cont' already covers this case.", 'intent': 'TARGET', 'specmode': 'repBW'})
-            elif reprBW_mode == 'mfs':
+            elif reprBW_mode == 'repr_spw':
                 LOG.info("Representative target bandwidth specifies per spw continuum. No PI cube will be made since specmode='mfs' already covers this case.")
                 result.set_info({'msg': "Representative target bandwidth specifies per spw continuum. No PI cube will be made since specmode='mfs' already covers this case.", 'intent': 'TARGET', 'specmode': 'repBW'})
             else:

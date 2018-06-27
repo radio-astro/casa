@@ -717,7 +717,7 @@ class ImageParamsHeuristics(object):
         repr_ms = self.observing_run.get_ms(self.vislist[0])
         repr_target = repr_ms.representative_target
 
-        reprBW_mode = 'cube'
+        reprBW_mode = 'nbin'
         if repr_target != (None, None, None):
             real_repr_target = True
             repr_freq = repr_target[1]
@@ -728,13 +728,12 @@ class ImageParamsHeuristics(object):
             repr_spw_bw = cqa.quantity(float(repr_spw_obj.bandwidth.convert_to(measures.FrequencyUnits.HERTZ).value), 'Hz')
             cont_spw_ids = self.observing_run.virtual_science_spw_ids.keys()
             agg_bw = self.aggregate_bandwidth(cont_spw_ids)
-            if cqa.gt(repr_target[2], repr_spw_bw) and cqa.le(repr_target[2], cqa.mul(agg_bw, 0.9)):
-                LOG.info('Image heuristics does not currently handle repBW > bandwidth of repSPW but < aggBW; using aggBW for repBW')
-                reprBW_mode = 'cont'
-            elif cqa.gt(repr_target[2], cqa.mul(agg_bw, 0.9)):
-                reprBW_mode = 'cont'
+            if cqa.gt(repr_target[2], cqa.mul(agg_bw, 0.9)):
+                reprBW_mode = 'all_spw'
+            elif cqa.gt(repr_target[2], repr_spw_bw) and cqa.le(repr_target[2], cqa.mul(agg_bw, 0.9)):
+                reprBW_mode = 'multi_spw'
             elif cqa.gt(repr_target[2], cqa.mul(repr_spw_bw, 0.2)):
-                reprBW_mode = 'mfs'
+                reprBW_mode = 'repr_spw'
 
             # Check if there is a non-zero min/max angular resolution
             minAcceptableAngResolution = cqa.convert(self.proj_params.min_angular_resolution, 'arcsec')
