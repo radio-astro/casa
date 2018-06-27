@@ -31,13 +31,14 @@ class SDSimpleGriddingInputs(vdp.StandardInputs):
     def reference_member(self):
         return self.group_desc[self.member_list[0]]
 
-    def __init__(self, context, group_id, member_list, 
+    def __init__(self, context, group_id, member_list, window, 
                  nplane=None):
         super(SDSimpleGriddingInputs, self).__init__()
         
         self.context = context
         self.group_id = group_id
         self.member_list = member_list
+        self.window = window
         self.nplane = nplane
 
 class SDSimpleGriddingResults(common.SingleDishResults):
@@ -61,11 +62,15 @@ class SDSimpleGridding(basetask.StandardTaskTemplate):
 
         grid_table = self.make_grid_table(datatable_dict, index_list)
         # LOG.debug('work_dir=%s'%(work_dir))
-        import time
-        start = time.time()
-        retval = self.grid(grid_table=grid_table, datatable_dict=datatable_dict)
-        end = time.time()
-        LOG.debug('Elapsed time: {} sec', (end - start))
+        if len(self.inputs.window) != 0:
+            # gridding should not be necessary
+            retval = [None, None]
+        else:
+            import time
+            start = time.time()
+            retval = self.grid(grid_table=grid_table, datatable_dict=datatable_dict)
+            end = time.time()
+            LOG.debug('Elapsed time: {} sec', (end - start))
         
         outcome = {'spectral_data': retval[0],
                    'meta_data': retval[1],

@@ -142,7 +142,7 @@ class MaskLine(basetask.StandardTaskTemplate):
  
         # simple gridding
         t0 = time.time()
-        gridding_inputs = simplegrid.SDSimpleGridding.Inputs(context, group_id, member_list)
+        gridding_inputs = simplegrid.SDSimpleGridding.Inputs(context, group_id, member_list, window)
         gridding_task = simplegrid.SDSimpleGridding(gridding_inputs)
         job = common.ParameterContainerJob(gridding_task, datatable_dict=dt_dict, index_list=index_list)
         gridding_result = self._executor.execute(job, merge=False)
@@ -151,7 +151,7 @@ class MaskLine(basetask.StandardTaskTemplate):
         t1 = time.time()
  
         # return empty result if grid_table is empty
-        if len(grid_table) == 0 or len(spectra) == 0:
+        if len(grid_table) == 0: # or len(spectra) == 0:
             LOG.warn('Line detection/validation will not be done since grid table is empty. Maybe all the data are flagged out in the previous step.')
             outcome = {'detected_lines': [],
                        'cluster_info': {},

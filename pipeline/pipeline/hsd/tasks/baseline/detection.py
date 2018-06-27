@@ -75,7 +75,6 @@ class DetectLine(basetask.StandardTaskTemplate):
         """
         The process finds emission lines and determines protection regions for baselinefit
         """
-        assert spectral_data is not None
         assert grid_table is not None
         assert datatable_dict is not None
         spectra = spectral_data
@@ -86,12 +85,11 @@ class DetectLine(basetask.StandardTaskTemplate):
         
         detect_signal = {}
 
-        #(nchan,nrow) = spectra.shape
-        (nrow, nchan) = spectra.shape
-
         # Pre-Defined Spectrum Window
         if len(window) != 0:
             LOG.info('Skip line detection since line window is set.')
+            nrow = len(grid_table)
+            assert nrow > 0
             spw = grid_table[0][0] if len(grid_table) > 0 else -1
             predefined_window = self._get_predefined_window(spw, window)
             LOG.trace('predefined_window={0}'.format(predefined_window))
@@ -111,6 +109,13 @@ class DetectLine(basetask.StandardTaskTemplate):
             result.task = self.__class__
 
             return result
+
+        # move assertion for spectral_data here since spectral_data is 
+        # not necessary when line window is specified
+        assert spectral_data is not None
+
+        #(nchan,nrow) = spectra.shape
+        (nrow, nchan) = spectra.shape
 
         LOG.info('Search regions for protection against the background subtraction...')
         LOG.info('DetectLine: Processing {} spectra...', nrow)
