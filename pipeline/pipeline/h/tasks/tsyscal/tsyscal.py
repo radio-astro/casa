@@ -9,12 +9,10 @@ from pipeline.h.heuristics.tsysspwmap import tsysspwmap
 from pipeline.infrastructure import casa_tasks
 from pipeline.infrastructure import task_registry
 from . import resultobjects
-import sys
 
 __all__ = [
     'Tsyscal',
     'TsyscalInputs',
-    'TsyscalResults'
 ]
 
 LOG = infrastructure.get_logger(__name__)
