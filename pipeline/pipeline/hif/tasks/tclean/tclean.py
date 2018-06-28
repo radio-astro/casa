@@ -423,8 +423,6 @@ class Tclean(cleanbase.CleanBase):
             error_result.error = '%s/%s/spw%s clean error: no sensitivity' % (inputs.field, inputs.intent, inputs.spw)
             return error_result
 
-        LOG.info('Sensitivity estimate: %.3g Jy', sensitivity)
-
         # Choose TOPO frequency selections
         if inputs.specmode != 'cube':
             inputs.spwsel_topo = spw_topo_freq_param

@@ -1345,11 +1345,12 @@ class ImageParamsHeuristics(object):
                             LOG.info('uvtaper value changed (old: %s, new: %s). Re-calculating sensitivities.' % (str(local_known_sensitivities['uvtaper']), str(uvtaper)))
                             local_known_sensitivities = {}
                             raise Exception('uvtaper value changed (old: %s, new: %s). Re-calculating sensitivities.' % (str(local_known_sensitivities['uvtaper']), str(uvtaper)))
-                        center_field_full_spw_sensitivity = cqa.getvalue(cqa.convert(local_known_sensitivities[os.path.basename(msname)][field][intSpw]['sensitivityAllChans'], 'Jy/beam'))
-                        nchan_unflagged = local_known_sensitivities[os.path.basename(msname)][field][intSpw]['nchanUnflagged']
-                        eff_ch_bw = cqa.getvalue(cqa.convert(local_known_sensitivities[os.path.basename(msname)][field][intSpw]['effChanBW'], 'Hz'))
-                        sens_bws[intSpw] = cqa.getvalue(cqa.convert(local_known_sensitivities[os.path.basename(msname)][field][intSpw]['sensBW'], 'Hz'))
-                    except:
+                        center_field_full_spw_sensitivity = cqa.getvalue(cqa.convert(local_known_sensitivities[os.path.basename(msname)][field][intent][intSpw]['sensitivityAllChans'], 'Jy/beam'))[0]
+                        nchan_unflagged = local_known_sensitivities[os.path.basename(msname)][field][intent][intSpw]['nchanUnflagged']
+                        eff_ch_bw = cqa.getvalue(cqa.convert(local_known_sensitivities[os.path.basename(msname)][field][intent][intSpw]['effChanBW'], 'Hz'))[0]
+                        sens_bws[intSpw] = cqa.getvalue(cqa.convert(local_known_sensitivities[os.path.basename(msname)][field][intent][intSpw]['sensBW'], 'Hz'))[0]
+                        LOG.info('Using previously calculated full SPW apparentsens value of %.3g Jy/beam for Field %s Intent %s SPW %s' % (center_field_full_spw_sensitivity, field, intent, str(intSpw)))
+                    except Exception as e:
                         calc_sens = True
                         center_field_full_spw_sensitivity, eff_ch_bw, sens_bws[intSpw] = self.get_sensitivity(ms, center_field_ids[ms_index], intent, intSpw, chansel_full, specmode, cell, imsize, weighting, robust, uvtaper)
                         channel_flags = self.get_channel_flags(msname, field, intSpw)
@@ -1365,12 +1366,13 @@ class ImageParamsHeuristics(object):
                     # Correct from full spw to channel selection
                     chansel_corrected_center_field_sensitivity = center_field_full_spw_sensitivity * (float(nchan_unflagged) / float(nchan_sel)) ** 0.5
                     sens_bws[intSpw] = sens_bws[intSpw] * float(nchan_sel) / float(spw_do.num_channels)
+                    LOG.info('Channel selection bandwidth heuristic (nbin or findcont; (spw BW / nchan_sel BW) ** 0.5): Correcting sensitivity for Field %s SPW %s by %.3g from %.3g Jy/beam to %.3g Jy/beam' % (field, str(intSpw), (float(nchan_unflagged) / float(nchan_sel)) ** 0.5, center_field_full_spw_sensitivity, chansel_corrected_center_field_sensitivity))
 
                     # Correct for effective bandwidth effects
                     bw_corr_factor, physicalBW_of_1chan, effectiveBW_of_1chan = self.get_bw_corr_factor(ms, intSpw, nchan_sel)
                     center_field_sensitivity = chansel_corrected_center_field_sensitivity * bw_corr_factor
                     if bw_corr_factor != 1.0:
-                        LOG.info('Effective BW heuristic: Correcting apparentsens result by %.3g from %.3g Jy/beam to %s Jy/beam' % (bw_corr_factor, chansel_corrected_center_field_sensitivity, center_field_sensitivity))
+                        LOG.info('Effective BW heuristic: Correcting sensitivity for Field %s SPW %s by %.3g from %.3g Jy/beam to %.3g Jy/beam' % (field, str(intSpw), bw_corr_factor, chansel_corrected_center_field_sensitivity, center_field_sensitivity))
 
 
                     if gridder == 'mosaic':
@@ -1378,7 +1380,7 @@ class ImageParamsHeuristics(object):
                         source_name = [f.source.name for f in ms.fields if (utils.dequote(f.name) == utils.dequote(field) and intent in f.intents)][0]
                         diameter = np.median([a.diameter for a in ms.antennas])
                         overlap_factor = mosaicoverlap.mosaicOverlapFactorMS(ms, source_name, intSpw, diameter)
-                        LOG.info('Dividing by mosaic overlap improvement factor of %s.' % (overlap_factor))
+                        LOG.info('Dividing by mosaic overlap improvement factor of %s corrects sensitivity for Field %s SPW %s from %.3g Jy/beam to %.3g Jy/beam.' % (overlap_factor, field, str(intSpw), center_field_sensitivity, center_field_sensitivity / overlap_factor))
                         center_field_sensitivity = center_field_sensitivity / overlap_factor
 
                         if calc_sens and not center_only:
@@ -1390,7 +1392,7 @@ class ImageParamsHeuristics(object):
                             last_field_full_spw_sensitivity, last_field_eff_ch_bw, last_field_sens_bw = self.get_sensitivity(ms, last_field_id, intent, intSpw, chansel_full, specmode, cell, imsize, weighting, robust, uvtaper)
                             last_field_sensitivity = last_field_full_spw_sensitivity * (float(nchan_unflagged) / float(nchan_sel)) ** 0.5 * bw_corr_factor / overlap_factor
 
-                            LOG.info('Sensitivities for MS %s, Field %s, SPW %s for the first, central, and last pointings are: %.3g / %.3g / %.3g Jy/beam' % (os.path.basename(msname), field, str(real_spwid), first_field_sensitivity, center_field_sensitivity, last_field_sensitivity))
+                            LOG.info('Corrected sensitivities for MS %s, Field %s, SPW %s for the first, central, and last pointings are: %.3g / %.3g / %.3g Jy/beam' % (os.path.basename(msname), field, str(real_spwid), first_field_sensitivity, center_field_sensitivity, last_field_sensitivity))
 
                     sensitivities.append(center_field_sensitivity)
                 except Exception as e:
@@ -1407,7 +1409,7 @@ class ImageParamsHeuristics(object):
                 agg_bw = cqa.getvalue(cqa.convert(self.aggregate_bandwidth(map(int, spw.split(','))), 'Hz'))
                 sensitivity = sensitivity * (sens_bw / agg_bw) ** 0.5
                 sens_bw = agg_bw
-
+            LOG.info('Final sensitivity estimate for Field %s, SPW %s specmode %s: %.3g Jy/beam', field, str(spw), specmode, sensitivity)
         else:
             defaultSensitivity = None
             LOG.warning('Exception in calculating sensitivity.')
