@@ -47,7 +47,7 @@
 
 	<param type="double" name="fracspw" subparam="true">
 	    <description>Fraction of baseline correlator edge channels to be flagged</description>
-	    <value>0.0625</value>
+	    <value>0.03125</value>
 	</param>
 
 	<param type="double" name="fracspwfps" subparam="true">
@@ -152,7 +152,7 @@
 
 	    <when param="edgespw">
 	        <equals type="bool" value="True">
-		    <default param="fracspw"><value type="double">0.0625</value></default>
+		    <default param="fracspw"><value type="double">0.03125</value></default>
 		    <default param="fracspwfps"><value type="double">0.048387</value></default>
 	        </equals>
 	        <equals type="bool" value="False">
@@ -236,7 +236,7 @@ edgespw -- Flag the edge spectral window channels.
     default: True
 
 fracspw -- Fraction of the baseline correlator TDM edge channels to be flagged.
-    default: 0.0625
+    default: 0.03125
 
 fracspwfps -- Fraction of the ACA correlator TDM edge channels to be flagged.
     default: 0.048387

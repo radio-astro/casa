@@ -20,7 +20,7 @@ class FlagDeterALMAInputs(flagdeterbase.FlagDeterBaseInputs):
     """
     edgespw = vdp.VisDependentProperty(default=True)
     flagbackup = vdp.VisDependentProperty(default=True)
-    fracspw = vdp.VisDependentProperty(default=0.0625)
+    fracspw = vdp.VisDependentProperty(default=0.03125)
     template = vdp.VisDependentProperty(default=True)
 
     # new property for ACA correlator
