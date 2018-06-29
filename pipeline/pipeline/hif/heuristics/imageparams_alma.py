@@ -40,6 +40,9 @@ class ImageParamsHeuristicsALMA(ImageParamsHeuristics):
 
         '''Adjustment of uvtaper parameter based on desired resolution or representative baseline length.'''
 
+        # Disabled heuristic for ALMA Cycle 6
+        return []
+
         if 'uvtaper' in self.imaging_params:
             uvtaper = self.imaging_params['uvtaper']
             LOG.info('ALMA uvtaper heuristics: Using imageprecheck value of uvtaper=%s' % (str(uvtaper)))
