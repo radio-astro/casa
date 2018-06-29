@@ -13,6 +13,8 @@ cqa = casatools.quanta
 real_repr_target = result[0].real_repr_target
 repr_source = result[0].repr_source
 repr_spw = '%s' % (result[0].repr_spw)
+reprBW_mode = '%s' % (result[0].reprBW_mode)
+reprBW_nbin = '%d' % (result[0].reprBW_nbin)
 repr_freq = '%.4f GHz' % (cqa.getvalue(cqa.convert(result[0].repr_target[1], 'GHz')))
 repr_bw = '%.4g MHz' % (cqa.getvalue(cqa.convert(result[0].repr_target[2], 'MHz')))
 sens_bw = '%.4g MHz' % (cqa.getvalue(cqa.convert(result[0].sensitivity_bandwidth, 'MHz')))
@@ -44,7 +46,9 @@ Representative Frequency: ${repr_freq} (SPW ${repr_spw})
 <br>
 Bandwidth for Sensitivity: ${repr_bw}
 %if real_repr_target:
-(rounded to nearest integer #channels, repBW = ${sens_bw})
+    %if reprBW_mode=='nbin' or reprBW_mode=='repr_spw':
+(rounded to nearest integer #channels (${reprBW_nbin}), repBW = ${sens_bw})
+    %endif
 %else:
 (repBW=${repr_bw}, channel width of first science spw)
 %endif

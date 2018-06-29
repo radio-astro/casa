@@ -20,6 +20,7 @@ LOG = infrastructure.get_logger(__name__)
 
 class ImagePreCheckResults(basetask.Results):
     def __init__(self, real_repr_target=False, repr_target='', repr_source='', repr_spw=None,
+                 reprBW_mode=None, reprBW_nbin=None,
                  minAcceptableAngResolution='0.0arcsec', maxAcceptableAngResolution='0.0arcsec',
                  sensitivityGoal='0mJy', hm_robust=0.5, hm_uvtaper=[],
                  sensitivities=None, sensitivity_bandwidth=None, score=None, single_continuum=False,
@@ -33,6 +34,8 @@ class ImagePreCheckResults(basetask.Results):
         self.repr_target = repr_target
         self.repr_source = repr_source
         self.repr_spw = repr_spw
+        self.reprBW_mode = reprBW_mode
+        self.reprBW_nbin = reprBW_nbin
         self.minAcceptableAngResolution = minAcceptableAngResolution
         self.maxAcceptableAngResolution = maxAcceptableAngResolution
         self.sensitivityGoal = sensitivityGoal
@@ -262,7 +265,7 @@ class ImagePreCheck(basetask.StandardTaskTemplate):
                 sens_bw = 0.0
 
             if sensitivity_bandwidth is None:
-                sensitivity_bandwidth = cqa.quantity(sens_bw, 'Hz')
+                sensitivity_bandwidth = cqa.quantity(_bandwidth, 'Hz')
 
         # Apply robust heuristic based on beam sizes for robust=(-0.5, 0.5, 2.0)
         hm_robust, hm_robust_score = imageprecheck_heuristics.compare_beams( \
@@ -369,6 +372,8 @@ class ImagePreCheck(basetask.StandardTaskTemplate):
             repr_target,
             repr_source,
             repr_spw,
+            reprBW_mode,
+            nbin,
             minAcceptableAngResolution=minAcceptableAngResolution,
             maxAcceptableAngResolution=maxAcceptableAngResolution,
             sensitivityGoal=sensitivityGoal,
