@@ -272,7 +272,7 @@ class BaselineSubtractionPlotManager(object):
                                                              map_data_storage=self.postfit_storage.map_data,
                                                              map_mask_storage=self.postfit_storage.map_mask)
         if line_range is not None:
-            lines_map = get_lines(self.datatable, num_ra, rowlist)
+            lines_map = get_lines(self.datatable, num_ra, npol, rowlist)
         else:
             lines_map = None
     
@@ -280,7 +280,6 @@ class BaselineSubtractionPlotManager(object):
     
         # plot post-fit spectra
         plot_list['post_fit'] = {}
-        plotter.setup_lines(line_range, lines_map)
         plotter.setup_reference_level(0.0)
         plotter.set_deviation_mask(deviation_mask)
         plotter.set_atm_transmission(atm_transmission, atm_frequency)
@@ -288,6 +287,10 @@ class BaselineSubtractionPlotManager(object):
         for ipol in xrange(npol):
             postfit_figfile = postfit_figfile_prefix + '_pol%s.png' % ipol
             #LOG.info('#TIMING# Begin SDSparseMapPlotter.plot(postfit,pol%s)'%(ipol))
+            if lines_map is not None:
+                plotter.setup_lines(line_range, lines_map[ipol])
+            else:
+                plotter.setup_lines(line_range)
             plotter.plot(postfit_map_data[:, :, ipol, :],
                          postfit_integrated_data[ipol], 
                          frequency, figfile=postfit_figfile)
@@ -323,6 +326,10 @@ class BaselineSubtractionPlotManager(object):
         for ipol in xrange(npol):
             prefit_figfile = prefit_figfile_prefix + '_pol%s.png'%(ipol)
             #LOG.info('#TIMING# Begin SDSparseMapPlotter.plot(prefit,pol%s)'%(ipol))
+            if lines_map is not None:
+                plotter.setup_lines(line_range, lines_map[ipol])
+            else:
+                plotter.setup_lines(line_range)
             plotter.plot(prefit_map_data[:, :, ipol, :],
                          prefit_integrated_data[ipol], 
                          frequency, fit_result=fit_result[:, :, ipol, :], figfile=prefit_figfile)
@@ -369,17 +376,13 @@ def analyze_plot_table(ms, ms_id, antid, spwid, polids, grid_table):
                     LOG.trace('Adding {} to dataids', i)
                     yield i
         dataids = numpy.fromiter(g(), dtype=numpy.int64)
-        if len(dataids) > 0:
-            midx = median_index(dataids)
-        else:
-            midx = None
         raid = plot_table[each_plane[0]][0]
         decid = plot_table[each_plane[0]][1]
         ra = plot_table[each_plane[0]][2]
         dec = plot_table[each_plane[0]][3]
         rowlist[row_index].update(
                 {"RAID": raid, "DECID": decid, "RA": ra, "DEC": dec,
-                 "IDS": dataids, "MEDIAN_INDEX": midx})
+                 "IDS": dataids})
         LOG.trace('RA {} DEC {}: dataids={}',
                   raid, decid, dataids)
         
@@ -455,7 +458,6 @@ def get_data(infile, dtrows, num_ra, num_dec, num_chan, num_pol, rowlist, rowmap
         map_mask[:] = False
     else:
         map_mask = numpy.zeros((num_ra, num_dec, num_pol, num_chan), dtype=bool)
-    nrow = 0
     
     # column name for spectral data
     with casatools.TableReader(infile) as tb:
@@ -472,32 +474,50 @@ def get_data(infile, dtrows, num_ra, num_dec, num_chan, num_pol, rowlist, rowmap
             iy = d['DECID']
             idxs = d['IDS']
             if len(idxs) > 0:
-                midx = d['MEDIAN_INDEX']
-                median_row = dtrows[idxs[midx]]
-                mapped_row = rowmap[median_row]
-                LOG.debug('median row for ({},{}) is {} (mapped to {})',
-                          ix, iy, median_row, mapped_row)
-                nrow += len(idxs)
-                this_data = tb.getcell(colname, mapped_row)
-                this_mask = tb.getcell('FLAG', mapped_row)
-                map_data[ix, iy] = this_data.real
-                map_mask[ix, iy] = this_mask
                 # to access MS rows in sorted order (avoid jumping distant row, accessing back and forth)
                 rows = dtrows[idxs].copy()
-                rows.sort()
-                for row in rows:
+                sorted_index = numpy.argsort(rows)
+                idxperpol = [[], [], [], []]
+                for isort in sorted_index:
+                    row = rows[isort]
                     mapped_row = rowmap[row]
                     LOG.debug('row {}: mapped_row {}', row, mapped_row)
                     this_data = tb.getcell(colname, mapped_row)
                     this_mask = tb.getcell('FLAG', mapped_row)
                     LOG.trace('this_mask.shape={}', this_mask.shape)
-                    LOG.trace('all(this_mask==True) = {}',
-                              numpy.all(this_mask == True))
+                    for ipol in xrange(num_pol):
+                        pmask = this_mask[ipol]
+                        allflagged = numpy.all(pmask == True)
+                        LOG.trace('all(this_mask==True) = {}', allflagged)
+                        if allflagged == False:
+                            idxperpol[ipol].append(idxs[isort])
+                        else:
+                            LOG.debug('spectrum for pol {0} is completely flagged at {1}, {2} (row {3})', 
+                                      ipol, ix, iy, mapped_row)
                     binary_mask = numpy.asarray(numpy.logical_not(this_mask), dtype=int)
                     integrated_data += this_data.real * binary_mask 
                     num_accumulated += binary_mask 
+                midxperpol = []
+                for ipol in xrange(num_pol):
+                    pidxs = idxperpol[ipol]
+                    if len(pidxs) > 0:
+                        midx = median_index(pidxs)
+                        median_row = dtrows[pidxs[midx]]
+                        mapped_row = rowmap[median_row]
+                        LOG.debug('median row for ({},{}) with pol {} is {} (mapped to {})',
+                                  ix, iy, ipol, median_row, mapped_row)
+                        this_data = tb.getcell(colname, mapped_row)
+                        this_mask = tb.getcell('FLAG', mapped_row)
+                        map_data[ix, iy, ipol] = this_data[ipol].real
+                        map_mask[ix, iy, ipol] = this_mask[ipol]
+                        midxperpol.append(midx)
+                    else:
+                        midxperpol.append(None)
             else:
                 LOG.debug('no data is available for ({},{})', ix, iy)
+                midxperpol = [None for ipol in xrange(num_pol)]
+            d['MEDIAN_INDEX'] = midxperpol
+            LOG.debug('MEDIAN_INDEX for {0}, {1} is {2}', ix, iy, midxperpol)
     integrated_data_masked = numpy.ma.masked_array(integrated_data, num_accumulated == 0)
     integrated_data_masked /= num_accumulated
     map_data_masked = numpy.ma.masked_array(map_data, map_mask)
@@ -508,19 +528,23 @@ def get_data(infile, dtrows, num_ra, num_dec, num_chan, num_pol, rowlist, rowmap
     return integrated_data_masked, map_data_masked
 
 
-def get_lines(datatable, num_ra, rowlist):
-    lines_map = collections.defaultdict(dict)
+def get_lines(datatable, num_ra, num_pol, rowlist):
+    lines_map = [collections.defaultdict(dict)] * num_pol
     #with casatools.TableReader(rwtablename) as tb:
     for d in rowlist:
         ix = num_ra - 1 - d['RAID']
         iy = d['DECID']
         ids = d['IDS']
         midx = d['MEDIAN_INDEX']
-        if midx is not None:
-            masklist = datatable.getcell('MASKLIST', ids[midx])
-            lines_map[ix][iy] = None if (len(masklist) == 0 or numpy.all(masklist == -1))else masklist
-        else:
-            lines_map[ix][iy] = None
+        for ipol in xrange(len(midx)):
+            if midx is not None:
+                if midx[ipol] is not None:
+                    masklist = datatable.getcell('MASKLIST', ids[midx[ipol]])
+                    lines_map[ipol][ix][iy] = None if (len(masklist) == 0 or numpy.all(masklist == -1))else masklist
+                else:
+                    lines_map[ipol][ix][iy] = None
+            else:
+                lines_map[ipol][ix][iy] = None
     return lines_map
 
 
