@@ -109,6 +109,7 @@ class CheckProductSizeHeuristics(object):
             LOG.info('nbin mitigation leads to a maximum cube size of %s GB' % (maxcubesize))
 
         # If still too large, try changing the FoV (in makeimlist this is applied to single fields only)
+        PB_limit = 0.2
         if (self.inputs.maxcubesize != -1.0) and (maxcubesize > self.inputs.maxcubesize):
 
             # Calculate PB level at which the largest cube size of all targets
@@ -122,6 +123,8 @@ class CheckProductSizeHeuristics(object):
             PB_mitigation = max(PB_mitigation, 0.2)
             # Round to 2 significant digits
             PB_mitigation = round(PB_mitigation, 2)
+
+            PB_limit = PB_mitigation
 
             LOG.info('Size mitigation: Setting hm_imsize to %.2gpb' % (PB_mitigation))
             size_mitigation_parameters['hm_imsize'] = '%.2gpb' % (PB_mitigation)
@@ -220,7 +223,7 @@ class CheckProductSizeHeuristics(object):
                 # Cap at PB=0.7
                 PB_mitigation = min(PB_mitigation, 0.7)
                 # Cap at PB=0.2
-                PB_mitigation = max(PB_mitigation, 0.2)
+                PB_mitigation = max(PB_mitigation, PB_limit)
                 # Round to 2 significant digits
                 PB_mitigation = round(PB_mitigation, 2)
 
