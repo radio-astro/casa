@@ -16,14 +16,20 @@ class MakeImListQAHandler(pqa.QAPlugin):
 
     def handle(self, context, result):
         # calculate QA score comparing number of targets against expected number
-        if (result.max_num_targets == 0):
+        if result.mitigation_error:
+            score = 0.0
+            longmsg = 'Size mitigation error. No targets were created.'
+            shortmsg = 'Size mitigation error.'
+        elif result.max_num_targets == 0:
             score = 1.0
+            longmsg = 'No clean targets expected.'
+            shortmsg = ''
         else:
             score = float(result.num_targets)/float(result.max_num_targets)
-        longmsg, shortmsg = ('All clean targets defined', '') if score == 1.0 else \
-            ('Expected %d clean targets but got only %d.' % \
-             (result.max_num_targets, result.num_targets), \
-             'Expected %d clean targets' % (result.max_num_targets))
+            longmsg, shortmsg = ('All clean targets defined', '') if score == 1.0 else \
+                ('Expected %d clean targets but got only %d.' % \
+                 (result.max_num_targets, result.num_targets), \
+                 'Expected %d clean targets' % (result.max_num_targets))
         result.qa.pool[:] = [pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg)]
 
 

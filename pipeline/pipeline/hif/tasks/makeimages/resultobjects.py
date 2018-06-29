@@ -14,6 +14,7 @@ class MakeImagesResult(basetask.Results):
         self.targets = []
         self.results = []
         self.plot_path = None
+        self.mitigation_error = False
 
     def add_result(self, result, target, outcome):
         target['outcome'] = outcome

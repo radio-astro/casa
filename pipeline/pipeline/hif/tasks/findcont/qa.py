@@ -15,7 +15,11 @@ class FindContQAHandler(pqa.QAPlugin):
     child_cls = None
 
     def handle(self, context, result):
-        if result.num_total != 0:
+        if result.mitigation_error:
+            score = 0.0
+            longmsg = 'Size mitigation error. No targets were processed.'
+            shortmsg = 'Size mitigation error.'
+        elif result.num_total != 0:
             score = float(result.num_found) / float(result.num_total)
             longmsg, shortmsg = ('Found continuum ranges', '') if score == 1.0 else \
                 ('Found only %d of %d continuum ranges' % (result.num_found, result.num_total), 'Missing continuum ranges')

@@ -13,6 +13,7 @@ class MakeImListResult(basetask.Results):
         self.clean_list_info = {}
         self._max_num_targets = 0
         self.clearlist = True
+        self.mitigation_error = False
 
     def add_target(self, target):
         self.targets.append(target)

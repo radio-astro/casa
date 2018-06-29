@@ -88,15 +88,21 @@ class MakeImages(basetask.StandardTaskTemplate):
     def prepare(self):
         inputs = self.inputs
 
-        # make sure inputs.vis is a list, even it is one that contains a
-        # single measurement set
-        if type(inputs.vis) is not types.ListType:
-            inputs.vis = [inputs.vis]
-
         result = MakeImagesResult()
 
         # Carry any message from hif_makeimlist (e.g. for missing PI cube target)
         result.set_info(inputs.context.clean_list_info)
+
+        # Check for size mitigation errors.
+        if 'status' in inputs.context.size_mitigation_parameters:
+            if inputs.context.size_mitigation_parameters['status'] == 'ERROR':
+                result.mitigation_error = True
+                return result
+
+        # make sure inputs.vis is a list, even it is one that contains a
+        # single measurement set
+        if type(inputs.vis) is not types.ListType:
+            inputs.vis = [inputs.vis]
 
         with CleanTaskFactory(inputs, self._executor) as factory:
             task_queue = [(target, factory.get_task(target))

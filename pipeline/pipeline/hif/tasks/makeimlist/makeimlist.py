@@ -174,6 +174,20 @@ class MakeImList(basetask.StandardTaskTemplate):
         result = MakeImListResult()
         result.clearlist = inputs.clearlist
 
+        # describe the function of this task by interpreting the inputs
+        # parameters to give an execution context
+        long_descriptions = [_DESCRIPTIONS.get((intent.strip(), inputs.specmode), inputs.specmode) for intent in inputs.intent.split(',')]
+        result.metadata['long description'] = 'Set-up parameters for %s imaging' % ' & '.join(set(long_descriptions))
+
+        # Check for size mitigation errors.
+        if 'status' in inputs.context.size_mitigation_parameters:
+            if inputs.context.size_mitigation_parameters['status'] == 'ERROR':
+                result.mitigation_error = True
+                result.set_info({'msg': 'Size mitigation had failed. No imaging targets were created.', 'intent': inputs.intent, 'specmode': inputs.specmode})
+                result.contfile = None
+                result.linesfile = None
+                return result
+
         # make sure inputs.vis is a list, even it is one that contains a
         # single measurement set
         if type(inputs.vis) is not types.ListType:
@@ -204,13 +218,22 @@ class MakeImList(basetask.StandardTaskTemplate):
             if not real_repr_target:
                 LOG.info('No representative target found. No PI cube will be made.')
                 result.set_info({'msg': 'No representative target found. No PI cube will be made.', 'intent': 'TARGET', 'specmode': 'repBW'})
+                result.contfile = None
+                result.linesfile = None
+                return result
             # The PI cube shall only be created for cube mode
             elif reprBW_mode in ['multi_spw', 'all_spw']:
                 LOG.info("Representative target bandwidth specifies aggregate continuum. No PI cube will be made since specmode='cont' already covers this case.")
                 result.set_info({'msg': "Representative target bandwidth specifies aggregate continuum. No PI cube will be made since specmode='cont' already covers this case.", 'intent': 'TARGET', 'specmode': 'repBW'})
+                result.contfile = None
+                result.linesfile = None
+                return result
             elif reprBW_mode == 'repr_spw':
                 LOG.info("Representative target bandwidth specifies per spw continuum. No PI cube will be made since specmode='mfs' already covers this case.")
                 result.set_info({'msg': "Representative target bandwidth specifies per spw continuum. No PI cube will be made since specmode='mfs' already covers this case.", 'intent': 'TARGET', 'specmode': 'repBW'})
+                result.contfile = None
+                result.linesfile = None
+                return result
             else:
                 repr_spw_nbin = 1
                 if inputs.context.size_mitigation_parameters.get('nbins', '') != '':
@@ -238,6 +261,9 @@ class MakeImList(basetask.StandardTaskTemplate):
                 else:
                     LOG.info('Representative target bandwidth is less or equal than 4 times the nbin averaged default cube channel width. No PI cube will be made since the default cube already covers this case.')
                     result.set_info({'msg': 'Representative target bandwidth is less or equal than 4 times the nbin averaged default cube channel width. No PI cube will be made since the default cube already covers this case.', 'intent': 'TARGET', 'specmode': 'repBW'})
+                    result.contfile = None
+                    result.linesfile = None
+                    return result
         else:
             repr_target_mode = False
             image_repr_target = False
@@ -507,19 +533,6 @@ class MakeImList(basetask.StandardTaskTemplate):
 
             # now construct the list of imaging command parameter lists that must
             # be run to obtain the required images
-
-            # describe the function of this task by interpreting the inputs
-            # parameters to give an execution context
-            long_descriptions = [_DESCRIPTIONS.get((intent.strip(), inputs.specmode), inputs.specmode) for intent in inputs.intent.split(',')]
-            result.metadata['long description'] = 'Set-up parameters for %s imaging' % ' & '.join(set(long_descriptions))
-
-            # Check for size mitigation errors.
-            if 'status' in inputs.context.size_mitigation_parameters:
-                if inputs.context.size_mitigation_parameters['status'] == 'ERROR':
-                    LOG.error('Size mitigation had failed. Will not create any clean targets.')
-                    result.contfile = None
-                    result.linesfile = None
-                    return result
 
             # Remember if there are targets for this vislist
             have_targets[','.join(vislist)] = len(field_intent_list) > 0

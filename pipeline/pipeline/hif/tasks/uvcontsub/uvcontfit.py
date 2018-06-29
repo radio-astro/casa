@@ -158,6 +158,13 @@ class UVcontFit(basetask.StandardTaskTemplate):
     def prepare(self):
         inputs = self.inputs
 
+        # Check for size mitigation errors.
+        if 'status' in inputs.context.size_mitigation_parameters:
+            if inputs.context.size_mitigation_parameters['status'] == 'ERROR':
+                result = UVcontFitResults()
+                result.mitigation_error = True
+                return result
+
         # Compute the spw list from the frequency selection string
         #    This is passed to callibrary
         orig_spw = ','.join([spw.split(':')[0] for spw in inputs.spw.split(',')])
@@ -430,6 +437,7 @@ class UVcontFitResults(basetask.Results):
         self.final = final[:]
         self.preceding = preceding[:]
         self.error = set()
+        self.mitigation_error = False
 
     def merge_with_context(self, context):
         """

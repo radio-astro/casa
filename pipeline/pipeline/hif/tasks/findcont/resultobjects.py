@@ -16,6 +16,7 @@ class FindContResult(basetask.Results):
         self.cont_ranges = cont_ranges
         self.num_found = num_found
         self.num_total = num_total
+        self.mitigation_error = False
         self.plot_path = None
 
     def merge_with_context(self, context):

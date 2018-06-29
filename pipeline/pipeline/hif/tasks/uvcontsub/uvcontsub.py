@@ -5,6 +5,7 @@ import os
 from parallel.parallel_task_helper import ParallelTaskHelper
 
 import pipeline.h.tasks.applycal.applycal as applycal
+import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.api as api
 import pipeline.infrastructure.vdp as vdp
@@ -35,6 +36,15 @@ class UVcontSub(applycal.Applycal):
     # Override prepare method with one which sets and unsets the VI1CAL
     # environment variable.
     def prepare(self):
+        inputs = self.inputs
+
+        # Check for size mitigation errors.
+        if 'status' in inputs.context.size_mitigation_parameters:
+            if inputs.context.size_mitigation_parameters['status'] == 'ERROR':
+                result = UVcontSubResults()
+                result.mitigation_error = True
+                return result
+
         remove_vi1cal = False
         if 'VI1CAL' not in os.environ:
             os.environ['VI1CAL'] = '1'
@@ -55,8 +65,19 @@ class UVcontSub(applycal.Applycal):
             if remove_vi1cal:
                 del os.environ['VI1CAL']
 
+        return UVcontSubResults()
 
-# May need this in the future
+# Simple results class to transport any mitigation error
+class UVcontSubResults(basetask.Results):
+    """
+    UVcontSubResults is the results class for the pipeline UVcontSub task.
+    """
+
+    def __init__(self, applied=[]):
+        super(UVcontSubResults, self).__init__()
+        self.mitigation_error = False
+
+# May need this full class in the future
 #
 #
 #class UVcontSubResults(basetask.Results):

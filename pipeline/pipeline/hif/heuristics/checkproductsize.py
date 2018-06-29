@@ -157,8 +157,8 @@ class CheckProductSizeHeuristics(object):
                        cube_mitigated_productsize, \
                        maxcubesize, productsize, \
                        True, \
-                       {'longmsg': 'Maximum cube size cannot be mitigated. Remaining factor: %.4f and cube size larger than limit of %s GB.' % (maxcubesize / self.inputs.maxcubesize, self.inputs.maxcubelimit), \
-                        'shortmsg': 'Cube size mitigation error'}
+                       {'longmsg': 'Cube size could not be mitigated. Remaining factor: %.4f and cube size larger than limit of %s GB.' % (maxcubesize / self.inputs.maxcubesize, self.inputs.maxcubelimit), \
+                        'shortmsg': 'Cube size could not be mitigated'}
             else:
                 LOG.info('Maximum cube size cannot be mitigated. Remaining factor: %.4f. But cube size is smaller than limit of %s GB.' % (maxcubesize / self.inputs.maxcubesize, self.inputs.maxcubelimit))
 
@@ -281,8 +281,8 @@ class CheckProductSizeHeuristics(object):
                    cube_mitigated_productsize, \
                    maxcubesize, productsize, \
                    True, \
-                   {'longmsg': 'Product size cannot be mitigated. Remaining factor: %.4f.' % (productsize / self.inputs.maxproductsize / nfields), \
-                    'shortmsg': 'Product size mitigation error'}
+                   {'longmsg': 'Product size could not be mitigated. Remaining factor: %.4f.' % (productsize / self.inputs.maxproductsize / nfields), \
+                    'shortmsg': 'Product size could not be mitigated'}
 
         # Check for case with many targets which will cause long run times in spite
         # of any mitigation.

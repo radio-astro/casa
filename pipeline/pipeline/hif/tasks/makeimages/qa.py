@@ -16,7 +16,9 @@ class MakeImagesQAHandler(pqa.QAPlugin):
 
     def handle(self, context, result):
         # calculate QA score as minimum of all sub-scores
-        if len(result.results) > 0:
+        if result.mitigation_error:
+            result.qa.pool[:] = [pqa.QAScore(0.0, longmsg = 'Size mitigation error. No targets were processed.', shortmsg = 'Size mitigation error')]
+        elif len(result.results) > 0:
             score_objects = reduce(lambda x,y: x+y, [item.qa.pool for item in result.results])
             result.qa.pool[:] = score_objects
         else:
