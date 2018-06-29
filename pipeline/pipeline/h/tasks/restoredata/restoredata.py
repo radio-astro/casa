@@ -511,8 +511,12 @@ class RestoreData(basetask.StandardTaskTemplate):
 
             # Open the tarfile and get the names
             if ouss is not None:
-                tarfilename = os.path.join(inputs.rawdata_dir,
-                                           pipemanifest.get_caltables(ouss)[session])
+                try:
+                    tarfilename = os.path.join(inputs.rawdata_dir,
+                                               pipemanifest.get_caltables(ouss)[session])
+                except Exception as e:
+                    tarfilename = os.path.join(inputs.rawdata_dir,
+                                               pipemanifest.get_caltables(ouss)['default'])
             elif ousid == '':
                 tarfilename = glob.glob(os.path.join(inputs.rawdata_dir,
                                                      '*' + session + '.caltables.tgz'))[0]
