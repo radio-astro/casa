@@ -359,20 +359,28 @@ class MakeImList(basetask.StandardTaskTemplate):
             if inputs.specmode == 'cont':
                 spwlist = [reduce(lambda x,y: x+','+y, filtered_spwlist)]
 
+                min_freq_spwlist = spwlist
                 max_freq_spwlist = spwlist
             else:
                 spwlist = filtered_spwlist
 
-                # Select only the highest frequency spw to get the smallest beams
+                # Select only the lowest / highest frequency spw to get the smallest (for cell size)
+                # and largest beam (for imsize)
                 ref_ms = inputs.context.observing_run.get_ms(vislist[0])
+                min_freq = 1e15
                 max_freq = 0.0
+                min_freq_spwid = -1
                 max_freq_spwid = -1
                 for spwid in filtered_spwlist:
                     real_spwid = inputs.context.observing_run.virtual2real_spw_id(spwid, ref_ms)
                     spwid_centre_freq = ref_ms.get_spectral_window(real_spwid).centre_frequency.to_units(measures.FrequencyUnits.HERTZ)
+                    if spwid_centre_freq < min_freq:
+                        min_freq = spwid_centre_freq
+                        min_freq_spwid = spwid
                     if spwid_centre_freq > max_freq:
                         max_freq = spwid_centre_freq
                         max_freq_spwid = spwid
+                min_freq_spwlist = [str(min_freq_spwid)]
                 max_freq_spwlist = [str(max_freq_spwid)]
 
             # Get robust and uvtaper values
@@ -448,9 +456,9 @@ class MakeImList(basetask.StandardTaskTemplate):
                 sfpblimit = 0.2
             imsizes = {}
             if imsize == []:
-                # get primary beams for each spwspec
+                # get primary beams
                 largest_primary_beams = {}
-                for spwspec in max_freq_spwlist:
+                for spwspec in min_freq_spwlist:
                     if list(field_intent_list) != []:
                         largest_primary_beams[spwspec] = self.heuristics.largest_primary_beam_size(spwspec=spwspec, intent=list(field_intent_list)[0][1])
                     else:
@@ -459,7 +467,7 @@ class MakeImList(basetask.StandardTaskTemplate):
                 for field_intent in field_intent_list:
                     max_x_size = 1
                     max_y_size = 1
-                    for spwspec in max_freq_spwlist:
+                    for spwspec in min_freq_spwlist:
 
                         try:
                             gridder = self.heuristics.gridder(field_intent[1], field_intent[0])
