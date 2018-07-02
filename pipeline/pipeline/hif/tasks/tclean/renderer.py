@@ -308,25 +308,46 @@ class T2_4MDetailsTcleanRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
             # check source fit parameters
             #
             if r.check_source_fit is not None:
-                chk_pos_offset = '%.2f +/- %.2f' % (r.check_source_fit['offset'], r.check_source_fit['offset_err'])
-                chk_frac_beam_offset = '%.2f +/- %.3f' % (r.check_source_fit['beams'], r.check_source_fit['beams_err'])
-                chk_fitflux = '%d +/- %d' % (int(round(r.check_source_fit['fitflux'] * 1000.)), int(round(r.check_source_fit['fitflux_err'] * 1000.)))
+                try:
+                    chk_pos_offset = '%.2f +/- %.2f' % (r.check_source_fit['offset'], r.check_source_fit['offset_err'])
+                except:
+                    chk_pos_offset = 'N/A'
+                try:
+                    chk_frac_beam_offset = '%.2f +/- %.3f' % (r.check_source_fit['beams'], r.check_source_fit['beams_err'])
+                except:
+                    chk_frac_beam_offset = 'N/A'
+                try:
+                    chk_fitflux = '%d +/- %d' % (int(round(r.check_source_fit['fitflux'] * 1000.)), int(round(r.check_source_fit['fitflux_err'] * 1000.)))
+                except:
+                    chk_fitflux = 'N/A'
 
                 if r.check_source_fit['fitflux'] != 0.0:
-                    chk_fitpeak_fitflux_ratio = '%.2f' % (r.check_source_fit['fitpeak'] / r.check_source_fit['fitflux'])
+                    try:
+                        chk_fitpeak_fitflux_ratio = '%.2f' % (r.check_source_fit['fitpeak'] / r.check_source_fit['fitflux'])
+                    except:
+                        chk_fitpeak_fitflux_ratio = 'N/A'
                 else:
                     chk_fitpeak_fitflux_ratio = 'N/A'
 
                 if r.check_source_fit['gfluxscale'] is not None and r.check_source_fit['gfluxscale_err'] is not None:
-                    chk_gfluxscale = '%.2f +/- %.2f' % (r.check_source_fit['gfluxscale'], r.check_source_fit['gfluxscale_err'])
+                    try:
+                        chk_gfluxscale = '%.2f +/- %.2f' % (r.check_source_fit['gfluxscale'], r.check_source_fit['gfluxscale_err'])
+                    except:
+                        chk_gfluxscale = 'N/A'
 
                     if r.check_source_fit['gfluxscale_err'] != 0.0:
-                        chk_gfluxscale_snr = '%.2f' % (r.check_source_fit['gfluxscale'] / r.check_source_fit['gfluxscale_err'])
+                        try:
+                            chk_gfluxscale_snr = '%.2f' % (r.check_source_fit['gfluxscale'] / r.check_source_fit['gfluxscale_err'])
+                        except:
+                            chk_gfluxscale_snr = 'N/A'
                     else:
                         chk_gfluxscale_snr = 'N/A'
 
                     if r.check_source_fit['gfluxscale'] != 0.0:
-                        chk_fitflux_gfluxscale_ratio = '%.2f' % (r.check_source_fit['fitflux'] * 1000. / r.check_source_fit['gfluxscale'])
+                        try:
+                            chk_fitflux_gfluxscale_ratio = '%.2f' % (r.check_source_fit['fitflux'] * 1000. / r.check_source_fit['gfluxscale'])
+                        except:
+                            chk_fitflux_gfluxscale_ratio = 'N/A'
                     else:
                         chk_fitflux_gfluxscale_ratio = 'N/A'
 
@@ -344,7 +365,10 @@ class T2_4MDetailsTcleanRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                 chk_fitflux_gfluxscale_ratio = 'N/A'
 
             if r.image_max is not None and r.image_rms is not None:
-                img_snr = '%.2f' % (r.image_max / r.image_rms)
+                try:
+                    img_snr = '%.2f' % (r.image_max / r.image_rms)
+                except:
+                    img_snr = 'N/A'
             else:
                 img_snr = 'N/A'
 
