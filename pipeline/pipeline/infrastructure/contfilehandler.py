@@ -218,7 +218,6 @@ class ContFileHandler(object):
                             topo_freq_selection.append((fLow, fHigh))
             except Exception as e:
                 LOG.info('Cannot calculate TOPO range for MS %s Field %s SPW %s' % (msname, field, real_spw_id))
-                print('ERROR_DM: {}'.format(e))
 
             topo_chan_selections.append(';'.join('%d~%d' % (item[0], item[1]) for item in topo_chan_selection))
             topo_freq_selections.append('%s TOPO' % (';'.join('%s~%sGHz' %
