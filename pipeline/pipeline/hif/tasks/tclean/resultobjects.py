@@ -84,6 +84,9 @@ class TcleanResult(basetask.Results):
             else:
                 utils.update_sens_dict(context.per_spw_cont_sensitivities_all_chan, self.per_spw_cont_sensitivities_all_chan)
 
+        # Remove heuristics objects to avoid accumulating large amounts of unnecessary memory
+        del self.inputs['image_heuristics']
+
     def empty(self):
         return not(self._psf or self._model or self._flux or 
           self.iterations!={})

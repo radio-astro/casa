@@ -35,6 +35,10 @@ class MakeImListResult(basetask.Results):
         context.contfile = self.contfile
         context.linesfile = self.linesfile
 
+        # Remove heuristics objects to avoid accumulating large amounts of unnecessary memory
+        for target in self.targets:
+            del target['heuristics']
+
     @property
     def num_targets(self):
         return len(self.targets)

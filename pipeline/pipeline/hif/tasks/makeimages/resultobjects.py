@@ -18,6 +18,8 @@ class MakeImagesResult(basetask.Results):
 
     def add_result(self, result, target, outcome):
         target['outcome'] = outcome
+        # Remove heuristics object to avoid accumulating large amounts of unnecessary memory
+        del target['heuristics']
         self.targets.append(target)
         self.results.append(result)
 
@@ -70,7 +72,14 @@ class MakeImagesResult(basetask.Results):
         # empty the pending list and message
         context.clean_list_pending = []
         context.clean_list_info = {}
-        
+
+        # Remove heuristics objects to avoid accumulating large amounts of unnecessary memory
+        for target in self.inputs['target_list']:
+            del target['heuristics']
+
+        for result in self.results:
+            del result.inputs['image_heuristics']
+
     def __repr__(self):
         repr = 'MakeImages:'
 
