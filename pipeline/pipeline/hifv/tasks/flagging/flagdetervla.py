@@ -444,12 +444,12 @@ class FlagDeterVLA(flagdeterbase.FlagDeterBase):
         if inputs.template:
             if not os.path.exists(inputs.filetemplate):
                 LOG.warning('Template flag file \'%s\' was not found. Template '
-                            'flagging for %s disabled.' % (inputs.filetemplate, 
+                            'flagging for %s disabled.' % (inputs.filetemplate,
                                                            inputs.ms.basename))
             else:
                 flag_cmds.extend(self._read_flagfile(inputs.filetemplate))
                 flag_cmds.append('mode=\'summary\' name=\'template\'')
-                
+
         # Flag autocorrelations?
         #if inputs.autocorr:
         #    #flag_cmds.append('mode=manual antenna=*&&&')
@@ -492,9 +492,11 @@ class FlagDeterVLA(flagdeterbase.FlagDeterBase):
             if to_flag:
                 flag_cmds.append(to_flag)
                 flag_cmds.append('mode=\'summary\' name=\'baseband\'')
-        
-        if (flag_cmds[-1]== '') : flag_cmds=flag_cmds[0:-1]
-        
+
+        if flag_cmds:
+            if flag_cmds[-1] == '':
+                flag_cmds = flag_cmds[0:-1]
+
         # summarise the state before flagging rather than assuming the initial
         # state is unflagged
         if flag_cmds:
