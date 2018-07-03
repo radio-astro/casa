@@ -102,6 +102,15 @@ class ImagePreCheckHeuristics(object):
                  cqa.getvalue(cqa.convert(maxAR, 'arcsec')), \
                  hm_robust), \
                 'Non-default robust beam outside range')
+        elif cqa.gt(beams[hm_robust]['major'], maxAR) and cqa.lt(beams[hm_robust]['minor'], minAR):
+            hm_robust_scoreB = (0.25, \
+                'Predicted beam %#.3g x %#.3g arcsec still has both axes outside of user requested range %#.3g-%#.3g arcsec (but in opposite directions) using a non-default robust value of %.1f' % \
+                (cqa.getvalue(cqa.convert(beams[hm_robust]['major'], 'arcsec')), \
+                 cqa.getvalue(cqa.convert(beams[hm_robust]['minor'], 'arcsec')), \
+                 cqa.getvalue(cqa.convert(minAR, 'arcsec')), \
+                 cqa.getvalue(cqa.convert(maxAR, 'arcsec')), \
+                 hm_robust), \
+                'Non-default robust beam outside range')
         elif cqa.gt(beams[hm_robust]['major'], maxAR) and \
              cqa.le(minAR, beams[hm_robust]['minor']) and \
              cqa.le(beams[hm_robust]['minor'], maxAR):
