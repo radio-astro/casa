@@ -141,6 +141,7 @@ class SingleDishPlotmsLeaf(object):
         self.coloraxis = coloraxis
 
         ms = context.observing_run.get_ms(self.vis)
+
         num_fields = len(ms.fields)
         if self.field.isdigit() and int(self.field) < num_fields:
             self.field_id = int(self.field)
@@ -150,21 +151,30 @@ class SingleDishPlotmsLeaf(object):
             fields = ms.get_fields(name=self.field)
             assert len(fields) == 1
             self.field_id = fields[0].id
+
         LOG.debug('field: ID %s Name \'%s\'' % (self.field_id, self.field_name))
 
-        self.antenna_selection = '*&&&'
+        self.antmap = dict((a.id, a.name) for a in ms.antennas)
+        if len(self.antenna) == 0:
+            self.antenna_selection = 'summary'
+        else:
+            self.antenna_selection = self.antmap.values()[int(self.antenna)]
+        LOG.info('antenna: ID %s Name \'%s\'' % (self.antenna, self.antenna_selection))
+#        self.antenna_selection = '*&&&'
 
         self._figroot = os.path.join(context.report_dir, 
                                      'stage%s' % result.stage_number)
         
     def plot(self):
-        prefix = '{caltable}-{y}_vs_{x}-{field}-spw{spw}'.format(
-            caltable=os.path.basename(self.caltable), y=self.yaxis, x=self.xaxis, field=self.field_name, spw=self.spw)
-        title = '{caltable} \nField "{field}" Spw {spw}'.format(
-            caltable=os.path.basename(self.caltable), field=self.field_name, spw=self.spw)
-            
+
+        prefix = '{caltable}-{y}_vs_{x}-{field}-{ant}-spw{spw}'.format(
+            caltable=os.path.basename(self.caltable), y=self.yaxis, x=self.xaxis, field=self.field_name, ant=self.antenna_selection, spw=self.spw)
+
+        title = '{caltable} \nField "{field}" Antenna {ant} Spw {spw}'.format(
+            caltable=os.path.basename(self.caltable), field=self.field_name, ant=self.antenna_selection, spw=self.spw)
+
         figfile = os.path.join(self._figroot, '{prefix}.png'.format(prefix=prefix))
-        
+
         task = self._create_task(title, figfile)
         if os.path.exists(figfile):
             LOG.debug('Returning existing plot')
@@ -172,7 +182,7 @@ class SingleDishPlotmsLeaf(object):
             task.execute()
             
         return [self._get_plot_object(figfile, task)]
-    
+        
     def _create_task(self, title, figfile):
         task_args = {'vis': self.caltable,
                      'xaxis': self.xaxis,
@@ -182,7 +192,7 @@ class SingleDishPlotmsLeaf(object):
                      'showgui': False,
                      'field': self.field,
                      'spw': self.spw,
-                     'antenna': self.antenna_selection,
+                     'antenna': self.antenna,
                      'title': title,
                      'showlegend': True,
                      'averagedata': True,
@@ -192,7 +202,7 @@ class SingleDishPlotmsLeaf(object):
     
     def _get_plot_object(self, figfile, task):
         parameters = {'vis': os.path.basename(self.vis),
-                      'ant': '',
+                      'ant': self.antenna_selection,
                       'spw': self.spw,
                       'field': self.field_name}
         
