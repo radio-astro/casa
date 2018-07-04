@@ -509,17 +509,6 @@ class Correctedampflag(basetask.StandardTaskTemplate):
                         id_highsig, time_sel_highsig, time_sel_highsig_uniq)
                     newflags.extend(new_antbased_flags)
 
-                    # If no new flags were found among the high sigma outliers,
-                    # but ultra high outliers were found, then proceed to at
-                    # least flag the ultra high outliers for corresponding
-                    # baseline/timestamp.
-                    if not new_antbased_flags and len(id_ultrahighsig) > 0:
-                        bad_timestamps = time_sel[id_ultrahighsig]
-                        bad_bls = zip(ant1_sel[id_ultrahighsig], ant2_sel[id_ultrahighsig])
-                        newflags.extend(
-                            self._create_flags_for_ultrahigh_baselines_timestamps(
-                                ms, spwid, intent, icorr, field, bad_timestamps, bad_bls, antenna_id_to_name))
-
                 # If all very high outliers were concentrated within a small
                 # number of timestamps set by a threshold, then evaluate the
                 # antenna based heuristics for those timestamps.
@@ -533,16 +522,13 @@ class Correctedampflag(basetask.StandardTaskTemplate):
                         id_veryhighsig, time_sel_veryhighsig, time_sel_veryhighsig_uniq)
                     newflags.extend(new_antbased_flags)
 
-                    # If no new flags were found among the very high sigma
-                    # outliers, but ultra high outliers were found, then
-                    # proceed to at least flag the ultra high outliers for
-                    # corresponding baseline/timestamp.
-                    if not new_antbased_flags and len(id_ultrahighsig) > 0:
-                        bad_timestamps = time_sel[id_ultrahighsig]
-                        bad_bls = zip(ant1_sel[id_ultrahighsig], ant2_sel[id_ultrahighsig])
-                        newflags.extend(
-                            self._create_flags_for_ultrahigh_baselines_timestamps(
-                                ms, spwid, intent, icorr, field, bad_timestamps, bad_bls, antenna_id_to_name))
+                # Flag any ultra high outliers for corresponding baseline/timestamp.
+                if len(id_ultrahighsig) > 0:
+                    bad_timestamps = time_sel[id_ultrahighsig]
+                    bad_bls = zip(ant1_sel[id_ultrahighsig], ant2_sel[id_ultrahighsig])
+                    newflags.extend(
+                        self._create_flags_for_ultrahigh_baselines_timestamps(
+                            ms, spwid, intent, icorr, field, bad_timestamps, bad_bls, antenna_id_to_name))
 
             #
             # The following part considers all timestamps at once, and
