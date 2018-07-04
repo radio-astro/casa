@@ -361,6 +361,13 @@ class MakeImList(basetask.StandardTaskTemplate):
             else:
                 spwlist = filtered_spwlist
 
+            # Need all spw keys (individual and cont) to distribute the
+            # cell and imsize heuristic results which work on the
+            # highest/lowest frequency spw only.
+            # The deep copy is necessary to avoid modifying filtered_spwlist
+            all_spw_keys = copy.deepcopy(filtered_spwlist)
+            all_spw_keys.append(reduce(lambda x,y: x+','+y, filtered_spwlist))
+
             # Select only the lowest / highest frequency spw to get the smallest (for cell size)
             # and largest beam (for imsize)
             ref_ms = inputs.context.observing_run.get_ms(vislist[0])
@@ -413,10 +420,12 @@ class MakeImList(basetask.StandardTaskTemplate):
                 # Rounding to two significant figures
                 min_cell = ['%.2g%s' % (qaTool.getvalue(min_cell[0]), qaTool.getunit(min_cell[0]))]
                 # Use same cell size for all spws (in a band (TODO))
-                for spwspec in spwlist:
+                # Need to populate all spw keys because the imsize heuristic picks
+                # up the lowest frequency spw.
+                for spwspec in all_spw_keys:
                     cells[spwspec] = min_cell
             else:
-                for spwspec in spwlist:
+                for spwspec in all_spw_keys:
                     cells[spwspec] = cell
 
             # if phase center not set then use heuristic code to calculate the
@@ -489,12 +498,14 @@ class MakeImList(basetask.StandardTaskTemplate):
                             pass
 
                     # Use same size for all spws (in a band (TODO))
-                    for spwspec in spwlist:
+                    # Need to populate all spw keys because the imsize for the cont
+                    # target is taken from this dictionary.
+                    for spwspec in all_spw_keys:
                         imsizes[(field_intent[0],spwspec)] = [max_x_size, max_y_size]
  
             else:
                 for field_intent in field_intent_list:
-                    for spwspec in spwlist:
+                    for spwspec in all_spw_keys:
                         imsizes[(field_intent[0],spwspec)] = imsize
 
             # if nchan is not set then use heuristic code to calculate it
