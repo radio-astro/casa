@@ -357,7 +357,7 @@ class MakeImList(basetask.StandardTaskTemplate):
 
             # Collapse cont spws
             if inputs.specmode == 'cont':
-                spwlist = [reduce(lambda x,y: x+','+y, filtered_spwlist)]
+                spwlist = [','.join(filtered_spwlist)]
             else:
                 spwlist = filtered_spwlist
 
@@ -366,7 +366,7 @@ class MakeImList(basetask.StandardTaskTemplate):
             # highest/lowest frequency spw only.
             # The deep copy is necessary to avoid modifying filtered_spwlist
             all_spw_keys = copy.deepcopy(filtered_spwlist)
-            all_spw_keys.append(reduce(lambda x,y: x+','+y, filtered_spwlist))
+            all_spw_keys.append(','.join(filtered_spwlist))
 
             # Select only the lowest / highest frequency spw to get the smallest (for cell size)
             # and largest beam (for imsize)
