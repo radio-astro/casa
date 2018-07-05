@@ -19,7 +19,7 @@
 	</allowed>
     </param>
 
-    <param type="string" name="restfreq">
+    <param type="stringArray" name="restfreq">
 	<description>Rest frequency</description>
 	<value></value>
     </param>

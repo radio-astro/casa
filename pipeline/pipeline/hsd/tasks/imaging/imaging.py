@@ -160,8 +160,6 @@ class SDImaging(basetask.StandardTaskTemplate):
         reduction_group = context.observing_run.ms_reduction_group
         infiles = inputs.infiles
         restfreq_list = inputs.restfreq
-        # TODO: implement to pick one value from list
-        restfreq = restfreq_list
         # list of ms to process
         ms_list = inputs.ms
         ms_names = [msobj.name for msobj in ms_list]
@@ -321,7 +319,21 @@ class SDImaging(basetask.StandardTaskTemplate):
                 namer.polarization(self.stokes)
                 imagename = namer.get_filename()
                 LOG.info("Output image name: %s" % imagename)
-                 
+
+                # pick restfreq from restfreq_list
+                if type(restfreq_list) == list:
+                    v_spwid = context.observing_run.real2virtual_spw_id(spwids[0], msobjs[0])
+                    v_idx = in_spw.split(',').index(str(v_spwid))
+                    if len(restfreq_list) > v_idx:
+                        restfreq = restfreq_list[v_idx]
+                        LOG.info( "Picked restfreq = %s from %s" % (restfreq, restfreq_list) )
+                    else:
+                        restfreq = ''
+                        LOG.warning( "No restfreq for spw %s in %s. Applying default value." % (v_spwid, restfreq_list) )
+                else:
+                    restfreq = restfreq_list
+                    LOG.info("Processing with restfreq = %s" % restfreq )
+
                 # Step 1.
                 # Initialize weight column based on baseline RMS.
                 original_ms = [msobj.name for msobj in msobjs]
