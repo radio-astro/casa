@@ -326,7 +326,9 @@ class SDImaging(basetask.StandardTaskTemplate):
                     v_idx = in_spw.split(',').index(str(v_spwid))
                     if len(restfreq_list) > v_idx:
                         restfreq = restfreq_list[v_idx]
-                        LOG.info( "Picked restfreq = %s from %s" % (restfreq, restfreq_list) )
+                        if restfreq is None:
+                            restfreq = ''
+                        LOG.info( "Picked restfreq = '%s' from %s" % (restfreq, restfreq_list) )
                     else:
                         restfreq = ''
                         LOG.warning( "No restfreq for spw %s in %s. Applying default value." % (v_spwid, restfreq_list) )
