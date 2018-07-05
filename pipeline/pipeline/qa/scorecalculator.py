@@ -1772,7 +1772,7 @@ def score_sd_line_detection_for_ms(group_id_list, field_id_list, spw_id_list, li
 
 
 @log_qa
-def score_checksources(mses, fieldname, spwid, imagename, rms):
+def score_checksources(mses, fieldname, spwid, imagename, rms, gfluxscale, gfluxscale_err):
     """
     Score a single field image of a point source by comparing the source
     reference position to the fitted position and the source reference flux
@@ -1863,7 +1863,7 @@ def score_checksources(mses, fieldname, spwid, imagename, rms):
     # Do the fit and compute positions offsets and flux ratios
     fitdict = checksource.checkimage(imagename, rms, refdirection, refflux)
 
-    msnames = ','.join([os.path.basename(ms.name) for ms in mses])
+    msnames = ','.join([os.path.basename(ms.name).strip('.ms') for ms in mses])
 
     # Compute the scores the default score is the geometric mean of
     # the position and flux scores if both are available.
@@ -1894,8 +1894,8 @@ def score_checksources(mses, fieldname, spwid, imagename, rms):
             score = max(0.0, 1.0 - min(1.0, beams))
             if score <= 0.9:
                 shortmsg = 'Check source fit not optimal'
-            longmsg = ('Check source fit for %s field %s spwid %d:  offset %0.3fmarcsec=%0.3fbeams  fit flux %0.3fJy  '
-                       'decoherence None' % (msnames, fieldname, spwid, offset, beams, fitflux))
+            #longmsg = ('Check source fit for %s field %s spwid %d:  offset %0.3fmarcsec=%0.3fbeams  fit flux %0.3fJy  '
+            #           'decoherence None' % (msnames, fieldname, spwid, offset, beams, fitflux))
             metric_score = beams
             metric_units = 'beams'
 
@@ -1906,11 +1906,49 @@ def score_checksources(mses, fieldname, spwid, imagename, rms):
             score = math.sqrt(fluxscore * offsetscore)
             if score <= 0.9:
                 shortmsg = 'Check source fit not optimal'
-            longmsg = ('Check source fit for %s field %s spwid %d:  offset %0.3fmarcsec=%0.3fbeams  fit flux %0.3fJy  '
-                       'decoherence %0.3f percent' % (msnames, fieldname, spwid, offset, beams, fitflux, coherence))
+            #longmsg = ('Check source fit for %s field %s spwid %d:  offset %0.3fmarcsec=%0.3fbeams  fit flux %0.3fJy  '
+            #           'decoherence %0.3f percent' % (msnames, fieldname, spwid, offset, beams, fitflux, coherence))
 
             metric_score = (fluxscore, offsetscore)
             metric_units = 'flux score, offset score'
+
+        warnings = []
+
+        if beams is None:
+            warnings.append('unfitted offset')
+        elif beams > 0.15:
+            warnings.append('large fitted offset of %.2f marcsec and %.2f synth beam' % (offset, beams))
+
+        if gfluxscale is None:
+            warnings.append('undefined gfluxscale result')
+        elif gfluxscale == 0.0:
+            warnings.append('gfluxscale value of 0.0 mJy')
+        else:
+            chk_fitflux_gfluxscale_ratio = fitflux * 1000. / gfluxscale
+            if chk_fitflux_gfluxscale_ratio < 0.8:
+                warnings.append('a low [Fitted / gfluxscale] Flux Density Ratio of %.2f' % (chk_fitflux_gfluxscale_ratio))
+
+        if fitflux is None:
+            warnings.append('undefined check fit result')
+        elif fitflux == 0.0:
+            warnings.append('Fitted Flux Density value of 0.0 mJy')
+        else:
+            chk_fitpeak_fitflux_ratio = fitpeak / fitflux
+            if chk_fitpeak_fitflux_ratio < 0.7:
+                warnings.append('low Fitted [Peak Intensity / Flux Density] Ratio of %.2f' % (chk_fitpeak_fitflux_ratio))
+
+        snr_msg = ''
+        if gfluxscale is not None and gfluxscale_err is not None:
+            if gfluxscale_err != 0.0:
+                chk_gfluxscale_snr = gfluxscale / gfluxscale_err
+                if chk_gfluxscale_snr < 20.:
+                   snr_msg = ', however, the S/N of the gfluxscale measurement is low'
+
+        if warnings != []:
+            longmsg = '%s field %s spwid %d: has a %s%s' % (msnames, fieldname, spwid, ' and a '.join(warnings), snr_msg)
+            LOG.warn(longmsg)
+        else:
+            longmsg = 'Check source fit successful'
 
     origin = pqa.QAOrigin(metric_name='score_checksources',
                           metric_score=metric_score,

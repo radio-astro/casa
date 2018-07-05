@@ -63,9 +63,8 @@ class TcleanQAHandler(pqa.QAPlugin):
                     spwid = int(result.spw)
                     imagename = result.image
                     rms = result.image_rms
-                    checkscore, offset, offset_err, beams, beams_err, fitflux, fitflux_err, fitpeak = scorecalc.score_checksources (mses, fieldname, spwid, imagename, rms)
-                    result.qa.pool.append (checkscore)
-                    warnings = []
+
+                    # For now handling per EB case only
                     if len(result.vis) == 1:
                         try:
                             ms_do = context.observing_run.get_ms(result.vis[0])
@@ -74,46 +73,14 @@ class TcleanQAHandler(pqa.QAPlugin):
                             gfluxscale = float(fluxresult.I.convert_to(measures.FluxDensityUnits.MILLIJANSKY).value)
                             gfluxscale_err = float(fluxresult.uncertainty.I.convert_to(measures.FluxDensityUnits.MILLIJANSKY).value)
                         except Exception as e:
-                            warnings.append('undefined gfluxscale fit')
                             gfluxscale = None
                             gfluxscale_err = None
                     else:
                         gfluxscale = None
                         gfluxscale_err = None
 
-                    if beams is None:
-                        warnings.append('unfitted offset')
-                    elif beams > 0.15:
-                        warnings.append('large fitted offset of %.2f marcsec and %.2f synth beam' % (offset, beams))
-
-                    if gfluxscale is None:
-                        warnings.append('undefined gfluxscale result')
-                    elif gfluxscale == 0.0:
-                        warnings.append('gfluxscale value of 0.0 mJy')
-                    else:
-                        chk_fitflux_gfluxscale_ratio = fitflux * 1000. / gfluxscale
-                        if chk_fitflux_gfluxscale_ratio < 0.8:
-                            warnings.append('a low [Fitted / gfluxscale] Flux Density Ratio of %.2f' % (chk_fitflux_gfluxscale_ratio))
-
-                    if fitflux is None:
-                        warnings.append('undefined check fit result')
-                    elif fitflux == 0.0:
-                        warnings.append('Fitted Flux Density value of 0.0 mJy')
-                    else:
-                        chk_fitpeak_fitflux_ratio = fitpeak / fitflux
-                        if chk_fitpeak_fitflux_ratio < 0.7:
-                            warnings.append('low Fitted [Peak Intensity / Flux Density] Ratio of %.2f' % (chk_fitpeak_fitflux_ratio))
-
-                    snr_msg = ''
-                    if gfluxscale is not None and gfluxscale_err is not None:
-                        if gfluxscale_err != 0.0:
-                            chk_gfluxscale_snr = gfluxscale / gfluxscale_err
-                            if chk_gfluxscale_snr < 20.:
-                               snr_msg = ', however, the S/N of the gfluxscale measurement is low'
-
-                    if warnings != []:
-                        msnames = ','.join([os.path.basename(ms.name).strip('.ms') for ms in mses])
-                        LOG.warn('%s field %s spwid %d: has a %s%s' % (msnames, fieldname, spwid, ' and a '.join(warnings), snr_msg))
+                    checkscore, offset, offset_err, beams, beams_err, fitflux, fitflux_err, fitpeak = scorecalc.score_checksources (mses, fieldname, spwid, imagename, rms, gfluxscale, gfluxscale_err)
+                    result.qa.pool.append (checkscore)
 
                     result.check_source_fit = {'offset': offset, 'offset_err': offset_err, 'beams': beams, 'beams_err': beams_err, 'fitflux': fitflux, 'fitflux_err': fitflux_err, 'fitpeak': fitpeak, 'gfluxscale': gfluxscale, 'gfluxscale_err': gfluxscale_err}
                 except Exception as e:
