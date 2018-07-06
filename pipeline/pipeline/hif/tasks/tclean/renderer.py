@@ -11,6 +11,7 @@ import string
 import numpy
 
 import pipeline.infrastructure.casatools as casatools
+from pipeline.infrastructure import casa_tasks
 from . import display
 import pipeline.infrastructure.filenamer as filenamer
 import pipeline.infrastructure.logging as logging
@@ -151,23 +152,28 @@ class T2_4MDetailsTcleanRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
             # centre frequency heading
             #
             if nchan > 1:
-                row_frequency_label = 'centre frequency of cube'
+                row_frequency_label = 'centre / rest frequency of cube'
             elif nchan == 1:
                 row_frequency_label = 'centre frequency of image'
             else:
                 row_frequency_label = 'centre frequency'
 
             #
-            # centre frequency value
+            # centre and optionally rest frequency value
             #
             try:
                 frequency_axis = list(summary['axisnames']).index('Frequency')
                 center_frequency = summary['refval'][frequency_axis] + \
                     (summary['shape'][frequency_axis] / 2.0 - 0.5 - summary['refpix'][frequency_axis]) \
                     * summary['incr'][frequency_axis]
-                centre_ghz = qaTool.convert('%s %s' % (center_frequency, summary['axisunits'][frequency_axis]),
-                                            'GHz')
-                row_frequency = '%s (LSRK)' % casatools.quanta.tos(centre_ghz, 4)
+                centre_ghz = qaTool.convert('%s %s' % (center_frequency, summary['axisunits'][frequency_axis]), 'GHz')
+                if nchan > 1:
+                    job = casa_tasks.imhead(image_path,mode='get',hdkey='restfreq')
+                    restfreq = job.execute(dry_run=False)
+                    rest_ghz = qaTool.convert(restfreq, 'GHz')
+                    row_frequency = '%s / %s (LSRK)' % (casatools.quanta.tos(centre_ghz, 4), casatools.quanta.tos(rest_ghz, 4))
+                else:
+                    row_frequency = '%s (LSRK)' % casatools.quanta.tos(centre_ghz, 4)
             except:
                 row_frequency = '-'
 
