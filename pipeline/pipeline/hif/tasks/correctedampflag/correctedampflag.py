@@ -20,6 +20,395 @@ from .resultobjects import CorrectedampflagResults
 LOG = infrastructure.get_logger(__name__)
 
 
+def _consolidate_flags(flags):
+    """
+    Method to consolidate a list of FlagCmd objects ("flags").
+    """
+
+    # Consolidate by polarisation.
+    flags = _consolidate_flags_with_same_pol(flags)
+
+    # Consolidate by timestamps.
+    flags = _consolidate_flags_by_timestamps(flags)
+
+    # Consolidate by antennas.
+    flags = _consolidate_flags_by_antennas(flags)
+
+    # Consolidate duplicate flags.
+    flags = _consolidate_duplicate_flags(flags)
+
+    return flags
+
+
+def _consolidate_flags_with_same_pol(flags):
+    """
+    Method to consolidate a list of FlagCmd objects ("flags") by removing
+    flags that differ only in polarisation.
+
+    This method belongs to correctedampflag, by making assumptions on which
+    properties of the FlagCmd it needs to compare.
+    """
+
+    # Get flag commands.
+    flagcmds = [flag.flagcmd for flag in flags]
+
+    # If all flag commands are unique, then there is nothing to
+    # consolidate.
+    if len(flagcmds) == len(set(flagcmds)):
+        cflags = flags
+
+    # If duplicate flag commands exist, go through each one, verify that
+    # the duplication is just due to difference in polarisation, and for
+    # those where this is true, replace them with a single flag.
+    else:
+        # Identify the flags that have non-unique flagging commands:
+        uval, uind, ucnt = np.unique(flagcmds, return_inverse=True,
+                                     return_counts=True)
+
+        # Build new list of flags.
+        cflags = []
+        for ind, cnt in enumerate(ucnt):
+            # For flags that appear twice...
+            if cnt == 2:
+                # Identify which flags these were.
+                flag1, flag2 = [flags[i]
+                                for i, val in enumerate(uind)
+                                if val == ind]
+                # Check that the flag commands differ only in polarisation
+                if (flag1.filename == flag2.filename and
+                        flag1.spw == flag2.spw and
+                        flag1.antenna == flag2.antenna and
+                        flag1.intent == flag2.intent and
+                        flag1.time == flag2.time and
+                        flag1.field == flag2.field and
+                        flag1.reason == flag2.reason and
+                        flag1.pol != flag2.pol):
+
+                    # Copy across just first flag, but set its polarisation
+                    # to empty.
+                    flag1.pol = ''
+                    cflags.append(flag1)
+                    LOG.debug('Consolidated 2 duplicate flags that '
+                              'differed only in polarisation.')
+                # If they differed in a non-anticipated manner, copy across
+                # both.
+                else:
+                    cflags.extend([flag1, flag2])
+                    LOG.debug('Unable to consolidate 2 flags with same flag '
+                              'command, appear to differ in unanticipated '
+                              'manner.')
+
+            # If flags do not appear twice, they either appear once
+            # (commonly expected) or more than twice (never expected).
+            # Either way, don't attempt any consolidation for these cases
+            # and just copy them to the output array.
+            else:
+                cflags.extend([flags[i]
+                               for i, val in enumerate(uind)
+                               if val == ind])
+                if cnt > 2:
+                    # If the flag appeared more than twice, something must
+                    # have gone wrong, insofar that flags differed by a
+                    # metric that is not the polarisation but that was not
+                    # included in flagging command. This should not happen,
+                    # but log it as a "trace" message for potential
+                    # debugging.
+                    LOG.debug('Unable to consolidate 3+ flags with same flag '
+                              'command, unanticipated case.')
+
+    return cflags
+
+
+def _consolidate_flags_by_timestamps(flags):
+    """
+    Method to consolidate a list of FlagCmd objects ("flags") by removing
+    flags with timestamps if for the same (spw, field, intent), the antenna
+    and/or baseline is covered by a flagging command without timestamp
+    (covering same baseline, or an antenna from baseline, or all antennas).
+
+    This method belongs to correctedampflag, by making assumptions on which
+    properties of the FlagCmd it needs to compare.
+    """
+
+    # Identify list of properties of flag commands without timestamps.
+    flags_without_timestamps = collections.defaultdict(list)
+    for flag in flags:
+        if flag.time is None:
+            flags_without_timestamps[(flag.filename, flag.spw, flag.intent, flag.field)].append(flag.antenna)
+
+    # If flag commands without timestamp exist, go through every flag
+    # command and remove the ones that are cover the same
+    # (filename, intent, field, spw, antenna), ignoring differences in
+    # reason and polarisation.
+    if flags_without_timestamps:
+
+        # Build new list of flags, and preserve skipped flag commands to
+        # report.
+        cflags = []
+        skipped_flagcmds = []
+
+        # Go through list of flags.
+        for flag in flags:
+
+            # If the current flag matches in properties with one of the
+            # flagging commands without timestamps:
+            idx = (flag.filename, flag.spw, flag.intent, flag.field)
+            if idx in flags_without_timestamps:
+
+                # If flag for current file, spw, intent, and field is
+                # time-stamp specific, check if any of matching
+                # no-timestamp flags cover an antenna that also appears in
+                # the current flag command (same antenna, same baseline,
+                # and/or an antenna in current baseline).
+                if flag.time is not None:
+                    # Skip if antenna or baseline is covered by no-timestamp flags.
+                    if flag.antenna in flags_without_timestamps[idx]:
+                        skipped_flagcmds.append(flag.flagcmd)
+                    # Skip if any ant in baseline is covered by no-timestamp flags.
+                    elif any(str(ant) in str(flag.antenna).split('&') for ant in flags_without_timestamps[idx]):
+                        skipped_flagcmds.append(flag.flagcmd)
+                    else:
+                        cflags.append(flag)
+                else:
+                    cflags.append(flag)
+
+            # If the current flag does not match with any of the flagging
+            # commands without timestamps, then preserve it.
+            else:
+                cflags.append(flag)
+
+        # Log a summary of consolidated flag commands:
+        if len(skipped_flagcmds) > 0:
+            LOG.debug('The following {} time-specific flag commands were '
+                      'consolidated into one or more flag commands '
+                      'without a timestamp:\n'
+                      '{}'.format(len(skipped_flagcmds), '\n'.join(skipped_flagcmds)))
+
+    # If no flag commands with timestamp exist, then there is nothing to
+    # consolidate => return flags unmodified.
+    else:
+        cflags = flags
+
+    return cflags
+
+
+def _consolidate_flags_by_antennas(flags):
+    """
+    Method to consolidate a list of FlagCmd objects ("flags")
+    by antennas.
+
+    This method belongs to correctedampflag, by making assumptions on which
+    properties of the FlagCmd it needs to compare.
+    """
+    # Consolidate flags matching a non-antenna specific flag.
+    flags = _consolidate_flags_non_antenna_specific(flags)
+
+    # Consolidate flags with baselines matching a flag for one of
+    # the baseline ants.
+    flags = _consolidate_flags_for_ant_in_baselines(flags)
+
+    return flags
+
+
+def _consolidate_flags_non_antenna_specific(flags):
+    """
+    Method to consolidate a list of FlagCmd objects ("flags") by removing
+    flags with antennas/baselines if the same (timestamp, spw, field,
+    intent) is covered by a flagging command without antennas (i.e. all
+    antennas).
+
+    This method belongs to correctedampflag, by making assumptions on which
+    properties of the FlagCmd it needs to compare.
+    """
+    # Identify list of properties of flag commands without antenna.
+    flags_without_ant = collections.defaultdict(list)
+    for flag in flags:
+        if flag.antenna is None:
+            flags_without_ant[(flag.filename, flag.spw, flag.intent, flag.field)].append(flag.time)
+
+    # If flag commands without antenna exist, go through every flag
+    # command and remove the ones that are cover the same
+    # (filename, intent, field, spw, timestamp), ignoring differences in
+    # reason and polarisation.
+    if flags_without_ant:
+
+        # Build new list of flags, and preserve skipped flag commands to
+        # report.
+        cflags = []
+        skipped_flagcmds = []
+
+        # Go through list of flags.
+        for flag in flags:
+
+            # If the current flag matches in properties with one of the
+            # flagging commands without antennas:
+            idx = (flag.filename, flag.spw, flag.intent, flag.field)
+            if idx in flags_without_ant:
+
+                # If the current flag is antenna-specific but its timestamp
+                # is covered by one of the no-antenna flags, then skip this
+                # flag; otherwise preserve it.
+                if flag.antenna is not None and flag.time in flags_without_ant[idx]:
+                    skipped_flagcmds.append(flag.flagcmd)
+                else:
+                    cflags.append(flag)
+
+                # If the current flag does not match with any of the flagging
+                # commands without antennas, then preserve it.
+            else:
+                cflags.append(flag)
+
+        if len(skipped_flagcmds) > 0:
+            LOG.debug('The following {} antenna-specific flag commands were '
+                      'consolidated into one or more flag commands '
+                      'without an antenna:\n'
+                      '{}'.format(len(skipped_flagcmds), '\n'.join(skipped_flagcmds)))
+
+    # If no flag commands with timestamp exist, then there is nothing to
+    # consolidate => return flags unmodified.
+    else:
+        cflags = flags
+
+    return cflags
+
+
+def _consolidate_flags_for_ant_in_baselines(flags):
+    """Method to consolidate a list of FlagCmd objects ("flags") by removing
+    flags with baselines if the same (timestamp, spw, field, intent) is
+    covered by a flagging command for one of the antennas in the baseline.
+
+    This method belongs to correctedampflag, by making assumptions on which
+    properties of the FlagCmd it needs to compare.
+    """
+    # Identify list of properties of flag commands with a single antenna.
+    flags_for_single_ant = collections.defaultdict(list)
+    for flag in flags:
+        if flag.antenna is not None and '&' not in str(flag.antenna):
+            flags_for_single_ant[(flag.filename, flag.spw, flag.intent, flag.field, flag.time)].append(
+                str(flag.antenna))
+
+    # If flag commands for a single antenna exist, go through every flag
+    # command and remove the ones that are cover the same
+    # (filename, intent, field, spw, timestamp) for which their baseline
+    # includes an antenna covered by a single antenna (ignoring differences in
+    # reason and polarisation).
+    if flags_for_single_ant:
+
+        # Build new list of flags, and preserve skipped flag commands to
+        # report.
+        cflags = []
+        skipped_flagcmds = []
+
+        # Go through list of flags.
+        for flag in flags:
+
+            # If the current flag matches in properties with one of the
+            # flagging commands without antennas:
+            idx = (flag.filename, flag.spw, flag.intent, flag.field, flag.time)
+            if (idx in flags_for_single_ant and
+                    str(flag.antenna) not in flags_for_single_ant[idx] and
+                    any(ant in str(flag.antenna).split('&') for ant in flags_for_single_ant[idx])):
+                skipped_flagcmds.append(flag.flagcmd)
+            else:
+                cflags.append(flag)
+
+        if len(skipped_flagcmds) > 0:
+            LOG.debug('The following {} baseline-specific flag commands were '
+                      'consolidated into one or more flag commands '
+                      'covering one of its antennas:\n'
+                      '{}'.format(len(skipped_flagcmds), '\n'.join(skipped_flagcmds)))
+
+    # If no flag commands with timestamp exist, then there is nothing to
+    # consolidate => return flags unmodified.
+    else:
+        cflags = flags
+
+    return cflags
+
+
+def _consolidate_duplicate_flags(flags):
+    """Method to consolidate a list of FlagCmd objects ("flags") by removing
+    duplicate flags that result in the same flagging command.
+    """
+
+    # Build new list of flags, and preserve skipped flag commands to
+    # report.
+    cflags = []
+    keep_flagcmds = []
+    skipped_flagcmds = []
+
+    for flag in flags:
+        if flag.flagcmd not in keep_flagcmds:
+            cflags.append(flag)
+            keep_flagcmds.append(flag.flagcmd)
+        else:
+            skipped_flagcmds.append(flag.flagcmd)
+
+    if len(skipped_flagcmds) > 0:
+        LOG.debug('The following {} flag commands were consolidated as duplicates.'
+                  '\n:{}'.format(len(skipped_flagcmds), '\n'.join(skipped_flagcmds)))
+
+    return cflags
+
+
+def _propagate_phase_flags(flags, ms, antenna_id_to_name):
+    """
+    Method to take a list of FlagCmd objects ("flags") and propagate
+    flags with reason = 'bad baseline' and intent = PHASE to intents
+    TARGET and CHECK.
+    """
+
+    # Intents to propagate to.
+    intents_propto = ["TARGET", "CHECK"]
+
+    # Check for presence of intents in current MS, and if valid intent,
+    # retrieve corresponding fields from MS.
+    valid_intents = []
+    valid_intents_fields = {}
+    for intent in intents_propto:
+        casa_intent = utils.to_CASA_intent(ms, intent)
+        if casa_intent:
+            valid_intents.append(casa_intent)
+            fields = {field.name
+                      for field in ms.get_fields(intent=intent)}
+            valid_intents_fields[casa_intent] = ','.join(fields)
+
+    # Proceed if there are valid intents to propagate to.
+    propagated_flags = []
+    nr_propagated_flags = 0
+    if valid_intents:
+
+        # Go through each flag, looking for 'bad baseline' reason and
+        # "PHASE" intent...
+        for flag in flags:
+            if (flag.reason == 'bad baseline'
+                    and flag.intent == utils.to_CASA_intent(ms, "PHASE")):
+
+                nr_propagated_flags += 1
+
+                # If a match was found, propagate to each of the valid
+                # intents.
+                for intent in valid_intents:
+                    propagated_flags.append(
+                        FlagCmd(
+                            filename=flag.filename,
+                            spw=flag.spw,
+                            antenna=flag.antenna,
+                            intent=intent,
+                            pol=flag.pol,
+                            field=valid_intents_fields[intent],
+                            reason='bad baseline propagated from PHASE',
+                            antenna_id_to_name=antenna_id_to_name))
+
+    if propagated_flags:
+        LOG.info('Propagated {} flagging command(s) with reason '
+                 '\"bad baseline\" from PHASE intent to TARGET '
+                 'and CHECK intent (where present).'.format(nr_propagated_flags))
+        flags.extend(propagated_flags)
+
+    return flags
+
+
 class CorrectedampflagInputs(vdp.StandardInputs):
     """
     CorrectedampflagInputs defines the inputs for the Correctedampflag pipeline task.
@@ -168,10 +557,14 @@ class Correctedampflag(basetask.StandardTaskTemplate):
 
         if newflags:
             # Consolidate flagging commands.
-            newflags = self._consolidate_flags(newflags)
+            newflags = _consolidate_flags(newflags)
 
             # Propagate PHASE 'bad baseline' flags to TARGET.
-            newflags = self._propagate_phase_flags(newflags, ms, antenna_id_to_name)
+            newflags = _propagate_phase_flags(newflags, ms, antenna_id_to_name)
+
+            # Report final number of new flags.
+            LOG.warning("Evaluation of {} raised {} flagging command(s)"
+                        "".format(os.path.basename(inputs.vis), len(newflags)))
 
         # Apply flags and get before/after summary.
         stats_before, stats_after = self._apply_flags(newflags)
@@ -859,10 +1252,6 @@ class Correctedampflag(basetask.StandardTaskTemplate):
         # If new flags were found, apply these as part of the flagdata call,
         # and add an "after" summary.
         if flags:
-            LOG.warning('Evaluation of {0} raised {1} flagging '
-                        'command(s)'.format(os.path.basename(inputs.vis),
-                                            len(flags)))
-
             LOG.info('Applying newly found flags.')
             allflagcmds.extend(flags)
             allflagcmds.append("mode='summary' name='after'")
@@ -899,212 +1288,3 @@ class Correctedampflag(basetask.StandardTaskTemplate):
             stats_after = copy.deepcopy(stats_before)
 
         return stats_before, stats_after
-
-    def _consolidate_flags(self, flags):
-        """
-        Method to consolidate a list of FlagCmd objects ("flags").
-        """
-
-        # Consolidate by polarisation.
-        flags = self._consolidate_flags_with_same_pol(flags)
-
-        # Consolidate by timestamps.
-        flags = self._consolidate_flags_by_timestamps(flags)
-
-        return flags
-
-    @staticmethod
-    def _consolidate_flags_with_same_pol(flags):
-        """
-        Method to consolidate a list of FlagCmd objects ("flags") by removing
-        flags that differ only in polarisation.
-
-        This method belongs to correctedampflag, by making assumptions on which
-        properties of the FlagCmd it needs to compare.
-        """
-
-        # Get flag commands.
-        flagcmds = [flag.flagcmd for flag in flags]
-
-        # If all flag commands are unique, then there is nothing to
-        # consolidate.
-        if len(flagcmds) == len(set(flagcmds)):
-            cflags = flags
-
-        # If duplicate flag commands exist, go through each one, verify that
-        # the duplication is just due to difference in polaristion, and for
-        # those where this is true, replace them with a single flag.
-        else:
-            # Identify the flags that have non-unique flagging commands:
-            uval, uind, ucnt = np.unique(flagcmds, return_inverse=True,
-                                         return_counts=True)
-
-            # Build new list of flags.
-            cflags = []
-            for ind, cnt in enumerate(ucnt):
-                # For flags that appear twice...
-                if cnt == 2:
-                    # Identify which flags these were.
-                    flag1, flag2 = [flags[i]
-                                    for i, val in enumerate(uind)
-                                    if val == ind]
-                    # Check that the flag commands differ only in polarisation
-                    if (flag1.filename == flag2.filename and
-                            flag1.spw == flag2.spw and
-                            flag1.antenna == flag2.antenna and
-                            flag1.intent == flag2.intent and
-                            flag1.time == flag2.time and
-                            flag1.field == flag2.field and
-                            flag1.reason == flag2.reason and
-                            flag1.pol != flag2.pol):
-
-                        # Copy across just first flag, but set its polarisation
-                        # to empty.
-                        flag1.pol = ''
-                        cflags.append(flag1)
-                        LOG.trace('Consolidated 2 duplicate flags that '
-                                  'differed only in polarisation.')
-                    # If they differed in a non-anticipated manner, copy across
-                    # both.
-                    else:
-                        cflags.extend([flag1, flag2])
-                        LOG.trace('Unable to consolidate 2 flags with same flag '
-                                  'command, appear to differ in unanticipated '
-                                  'manner.')
-
-                # If flags do not appear twice, they either appear once
-                # (commonly expected) or more than twice (never expected).
-                # Either way, don't attempt any consolidation for these cases
-                # and just copy them to the output array.
-                else:
-                    cflags.extend([flags[i]
-                                   for i, val in enumerate(uind)
-                                   if val == ind])
-                    if cnt > 2:
-                        # If the flag appeared more than twice, something must
-                        # have gone wrong, insofar that flags differed by a
-                        # metric that is not the polarisation but that was not
-                        # included in flagging command. This should not happen,
-                        # but log it as a "trace" message for potential
-                        # debugging.
-                        LOG.trace('Unable to consolidate 3+ flags with same flag '
-                                  'command, unanticipated case.')
-
-        return cflags
-
-    @staticmethod
-    def _consolidate_flags_by_timestamps(flags):
-        """
-        Method to consolidate a list of FlagCmd objects ("flags") by removing
-        flags with timestamps if the same (ant, spw, field) is covered by
-        a flagging command without timestamp (i.e. across all timestamps).
-
-        This method belongs to correctedampflag, by making assumptions on which
-        properties of the FlagCmd it needs to compare.
-        """
-
-        # Identify list of properties of flag commands without timestamps.
-        flags_without_timestamps = [
-            (flag.filename, flag.spw, flag.antenna, flag.intent, flag.field)
-            for flag in flags if flag.time is None]
-
-        # If flag commands without timestamp exist, go through every flag
-        # command and remove the ones that are cover the same
-        # (filename, intent, field, spw, antenna), ignoring differences in
-        # reason and polarisation.
-        if flags_without_timestamps:
-
-            # Build new list of flags, and preserve skipped flag commands to
-            # report.
-            cflags = []
-            skipped_flagcmds = []
-
-            # Go through list of flags.
-            for flag in flags:
-
-                # If the current flag matches in properties with one of the
-                # flagging commands without timestamps:
-                if (flag.filename, flag.spw, flag.antenna, flag.intent, flag.field) in flags_without_timestamps:
-
-                    # Preserve flag if it has no timestamp.
-                    if flag.time is None:
-                        cflags.append(flag)
-                    # Skip flags that have explicit timestamps.
-                    else:
-                        skipped_flagcmds.append(flag.flagcmd)
-
-                # If the current flag does not match with any of the flagging
-                # commands without timestamps, then preserve it.
-                else:
-                    cflags.append(flag)
-
-            # Log a summary of consolidated flag commands:
-            LOG.info('The following time-specific flag commands were '
-                     'consolidated into one or more flag commands '
-                     'without a timestamp:\n'
-                     '{}'.format('\n'.join(skipped_flagcmds)))
-
-        # If no flag commands with timestamp exist, then there is nothing to
-        # consolidate => return flags unmodified.
-        else:
-            cflags = flags
-
-        return cflags
-
-    @staticmethod
-    def _propagate_phase_flags(flags, ms, antenna_id_to_name):
-        """
-        Method to take a list of FlagCmd objects ("flags") and propagate
-        flags with reason = 'bad baseline' and intent = PHASE to intents
-        TARGET and CHECK.
-        """
-
-        # Intents to propagate to.
-        intents_propto = ["TARGET", "CHECK"]
-
-        # Check for presence of intents in current MS, and if valid intent,
-        # retrieve corresponding fields from MS.
-        valid_intents = []
-        valid_intents_fields = {}
-        for intent in intents_propto:
-            casa_intent = utils.to_CASA_intent(ms, intent)
-            if casa_intent:
-                valid_intents.append(casa_intent)
-                fields = {field.name
-                          for field in ms.get_fields(intent=intent)}
-                valid_intents_fields[casa_intent] = ','.join(fields)
-
-        # Proceed if there are valid intents to propagate to.
-        propagated_flags = []
-        nr_propagated_flags = 0
-        if valid_intents:
-
-            # Go through each flag, looking for 'bad baseline' reason and
-            # "PHASE" intent...
-            for flag in flags:
-                if (flag.reason == 'bad baseline'
-                        and flag.intent == utils.to_CASA_intent(ms, "PHASE")):
-
-                    nr_propagated_flags += 1
-
-                    # If a match was found, propagate to each of the valid
-                    # intents.
-                    for intent in valid_intents:
-                        propagated_flags.append(
-                            FlagCmd(
-                                filename=flag.filename,
-                                spw=flag.spw,
-                                antenna=flag.antenna,
-                                intent=intent,
-                                pol=flag.pol,
-                                field=valid_intents_fields[intent],
-                                reason='bad baseline propagated from PHASE',
-                                antenna_id_to_name=antenna_id_to_name))
-
-        if propagated_flags:
-            LOG.info('Propagated {} flagging command(s) with reason '
-                     '\"bad baseline\" from PHASE intent to TARGET '
-                     'and CHECK intent (where present).'.format(nr_propagated_flags))
-            flags.extend(propagated_flags)
-
-        return flags
