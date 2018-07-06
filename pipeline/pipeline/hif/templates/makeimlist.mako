@@ -41,6 +41,7 @@ def get_message(result):
         <p>${get_message(result)}
     %endif
 %else:
+    <p>${get_message(result)}
     <%
     target = result[0].targets[0]
     %>

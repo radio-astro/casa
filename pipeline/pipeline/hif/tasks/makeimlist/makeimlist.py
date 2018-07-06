@@ -650,10 +650,13 @@ class MakeImList(basetask.StandardTaskTemplate):
 
         if (inputs.intent == 'CHECK'):
             if not any(have_targets.values()):
-                LOG.info('No check source found.')
-                result.set_info({'msg': 'No check source found', 'intent': 'CHECK', 'specmode': inputs.specmode})
-            if inputs.per_eb and (not all(have_targets.values())):
-                LOG.warn('No check source in these datasets: %s' % ([os.path.basename(k) for k,v in have_targets.iteritems() if not v]))
+                info_msg = 'No check source found.'
+                LOG.info(info_msg)
+                result.set_info({'msg': info_msg, 'intent': 'CHECK', 'specmode': inputs.specmode})
+            elif inputs.per_eb and (not all(have_targets.values())):
+                info_msg = 'No check source data found in EBs %s.' % (','.join([os.path.basename(k) for k,v in have_targets.iteritems() if not v]))
+                LOG.info(info_msg)
+                result.set_info({'msg': info_msg, 'intent': 'CHECK', 'specmode': inputs.specmode})
 
         # Record total number of expected clean targets
         result.set_max_num_targets(max_num_targets)
