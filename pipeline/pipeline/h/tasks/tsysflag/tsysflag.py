@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 
 import collections
+import os
 import re
 
 import numpy as np
@@ -1078,47 +1079,52 @@ class TsysflagView(object):
                           intent=intent)
                         tsysmedians.addview(tsysmedian.description, tsysmedian)
                     
-                    # Initialize the data and flagging state for the flagging
-                    # view, and get values for the 'times' axis.
-                    times = np.sort(list(times))
-                    data = np.zeros([antenna_ids[-1]+1, len(times)])
-                    flag = np.ones([antenna_ids[-1]+1, len(times)], np.bool)
-                    
-                    # Populate the flagging view based on the flagging metric
-                    for description in tsysspectra[pol].descriptions():
-                        tsysspectrum = tsysspectra[pol].last(description)
-                        metric = tsysspectrum.median
-                        metricflag = np.all(tsysspectrum.flag)
-                        
-                        ant = tsysspectrum.ant
-                        caltime = tsysspectrum.time
-                        
-                        data[ant[0], caltime == times] = metric
-                        flag[ant[0], caltime == times] = metricflag
-                    
-                    # Create axes for flagging view
-                    axes = [
-                        commonresultobjects.ResultAxis(
-                            name='Antenna1', units='id',
-                            data=np.arange(antenna_ids[-1]+1)),
-                        commonresultobjects.ResultAxis(
-                            name='Time', units='', data=times)
-                    ]
-                    
-                    # Convert flagging view into an ImageResult
-                    viewresult = commonresultobjects.ImageResult(
-                        filename=tsystable.name, data=data, flag=flag,
-                        axes=axes, datatype='Median Tsys', spw=spwid,
-                        intent=intent, pol=corr_type[pol][0], field_id=fieldid,
-                        field_name=field_name_for_id[fieldid])
-                    
-                    # Store the spectra contributing to this view as 'children'
-                    viewresult.children['tsysmedians'] = tsysmedians
-                    viewresult.children['tsysspectra'] = tsysspectra[pol]
-                    
-                    # Add the view results to the class result structure
-                    self.result.addview(viewresult.description, viewresult)
-        
+                        # Initialize the data and flagging state for the flagging
+                        # view, and get values for the 'times' axis.
+                        times = np.sort(list(times))
+                        data = np.zeros([antenna_ids[-1]+1, len(times)])
+                        flag = np.ones([antenna_ids[-1]+1, len(times)], np.bool)
+
+                        # Populate the flagging view based on the flagging metric
+                        for description in tsysspectra[pol].descriptions():
+                            tsysspectrum = tsysspectra[pol].last(description)
+                            metric = tsysspectrum.median
+                            metricflag = np.all(tsysspectrum.flag)
+
+                            ant = tsysspectrum.ant
+                            caltime = tsysspectrum.time
+
+                            data[ant[0], caltime == times] = metric
+                            flag[ant[0], caltime == times] = metricflag
+
+                        # Create axes for flagging view
+                        axes = [
+                            commonresultobjects.ResultAxis(
+                                name='Antenna1', units='id',
+                                data=np.arange(antenna_ids[-1]+1)),
+                            commonresultobjects.ResultAxis(
+                                name='Time', units='', data=times)
+                        ]
+
+                        # Convert flagging view into an ImageResult
+                        viewresult = commonresultobjects.ImageResult(
+                            filename=tsystable.name, data=data, flag=flag,
+                            axes=axes, datatype='Median Tsys', spw=spwid,
+                            intent=intent, pol=corr_type[pol][0], field_id=fieldid,
+                            field_name=field_name_for_id[fieldid])
+
+                        # Store the spectra contributing to this view as 'children'
+                        viewresult.children['tsysmedians'] = tsysmedians
+                        viewresult.children['tsysspectra'] = tsysspectra[pol]
+
+                        # Add the view results to the class result structure
+                        self.result.addview(viewresult.description, viewresult)
+
+                    else:
+                        LOG.warning("{}: no data found for field {}, spw {}, pol {}, no "
+                                    "flagging view created.".format(os.path.basename(tsystable.name), fieldid, spwid,
+                                                                    corr_type[pol][0]))
+
         # If not splitting by field...
         else:
             # Select Tsysspectra and corresponding times for specified spwid
@@ -1171,45 +1177,50 @@ class TsysflagView(object):
                       intent=intent)
                     tsysmedians.addview(tsysmedian.description, tsysmedian)
                 
-                # Initialize the data and flagging state for the flagging view,
-                # and get values for the 'times' axis.
-                times = np.sort(list(times))
-                data = np.zeros([antenna_ids[-1]+1, len(times)])
-                flag = np.ones([antenna_ids[-1]+1, len(times)], np.bool)
-                
-                # Populate the flagging view based on the flagging metric
-                for description in tsysspectra[pol].descriptions():
-                    tsysspectrum = tsysspectra[pol].last(description)
-                    metric = tsysspectrum.median
-                    metricflag = np.all(tsysspectrum.flag)
-                    
-                    ant = tsysspectrum.ant
-                    caltime = tsysspectrum.time
-                    
-                    data[ant[0], caltime == times] = metric
-                    flag[ant[0], caltime == times] = metricflag
-                
-                # Create axes for flagging view
-                axes = [
-                    commonresultobjects.ResultAxis(
-                        name='Antenna1', units='id',
-                        data=np.arange(antenna_ids[-1]+1)),
-                    commonresultobjects.ResultAxis(
-                        name='Time', units='', data=times)
-                ]
-                
-                # Convert flagging view into an ImageResult
-                viewresult = commonresultobjects.ImageResult(
-                    filename=tsystable.name, data=data, flag=flag, axes=axes,
-                    datatype='Median Tsys', spw=spwid, intent=intent,
-                    pol=corr_type[pol][0])
-                
-                # Store the spectra contributing to this view as 'children'
-                viewresult.children['tsysmedians'] = tsysmedians
-                viewresult.children['tsysspectra'] = tsysspectra[pol]
-                
-                # Add the view results to the class result structure
-                self.result.addview(viewresult.description, viewresult)
+                    # Initialize the data and flagging state for the flagging view,
+                    # and get values for the 'times' axis.
+                    times = np.sort(list(times))
+                    data = np.zeros([antenna_ids[-1]+1, len(times)])
+                    flag = np.ones([antenna_ids[-1]+1, len(times)], np.bool)
+
+                    # Populate the flagging view based on the flagging metric
+                    for description in tsysspectra[pol].descriptions():
+                        tsysspectrum = tsysspectra[pol].last(description)
+                        metric = tsysspectrum.median
+                        metricflag = np.all(tsysspectrum.flag)
+
+                        ant = tsysspectrum.ant
+                        caltime = tsysspectrum.time
+
+                        data[ant[0], caltime == times] = metric
+                        flag[ant[0], caltime == times] = metricflag
+
+                    # Create axes for flagging view
+                    axes = [
+                        commonresultobjects.ResultAxis(
+                            name='Antenna1', units='id',
+                            data=np.arange(antenna_ids[-1]+1)),
+                        commonresultobjects.ResultAxis(
+                            name='Time', units='', data=times)
+                    ]
+
+                    # Convert flagging view into an ImageResult
+                    viewresult = commonresultobjects.ImageResult(
+                        filename=tsystable.name, data=data, flag=flag, axes=axes,
+                        datatype='Median Tsys', spw=spwid, intent=intent,
+                        pol=corr_type[pol][0])
+
+                    # Store the spectra contributing to this view as 'children'
+                    viewresult.children['tsysmedians'] = tsysmedians
+                    viewresult.children['tsysspectra'] = tsysspectra[pol]
+
+                    # Add the view results to the class result structure
+                    self.result.addview(viewresult.description, viewresult)
+
+                else:
+                    LOG.warning("{}: no data found for spw {}, pol {}, no "
+                                "flagging view created.".format(os.path.basename(tsystable.name), spwid,
+                                                                corr_type[pol][0]))
 
     def calculate_derivative_view(self, tsystable, spwid, intent, fieldids):
         """
