@@ -413,10 +413,23 @@ class LineWindowParser(object):
     def parse(self, field_id):
         # convert self.window into dictionary
         if type(self.window) == str:
-            # shoudl be MS channel selection syntax
-            # convert string into dictionary
-            # then, filter out non-science spectral windows
-            processed = self._exclude_non_science_spws(self._string2dict(self.window))
+            if self.window.strip().startswith('{'):
+                # should be a dictionary as a string (PPR execution)
+                # convert string into dictionary
+                s = 'tmpdict={}'.format(self.window.strip())
+                exec(s)
+                processed = self._exclude_non_science_spws(self._dict2dict(tmpdict))
+            elif self.window.strip().startswith('['):
+                # should be a list as a string (PPR execution)
+                # convert string into list
+                s = 'tmplist={}'.format(self.window.strip())
+                exec(s)
+                processed = self._list2dict(tmplist)
+            else:
+                # should be MS channel selection syntax
+                # convert string into dictionary
+                # then, filter out non-science spectral windows
+                processed = self._exclude_non_science_spws(self._string2dict(self.window))
         elif type(self.window) == list or type(self.window) == numpy.ndarray:
             # convert string into dictionary
             # keys are all science spectral window ids
