@@ -56,7 +56,7 @@ class ImagePreCheckHeuristics(object):
             else:
                 beamArea_m0p5 = cqa.mul(beams[-0.5]['minor'], beams[-0.5]['major'])
                 beamArea_0p5 = cqa.mul(beams[0.5]['minor'], beams[0.5]['major'])
-                meanARBeamArea = cqa.pow(cqa.mul(cqa.add(minAR, maxAR), 0.5), 2)
+                meanARBeamArea = cqa.mul(maxAR, minAR)
                 delta_m0p5 = cqa.abs(cqa.sub(meanARBeamArea, beamArea_m0p5))
                 delta_0p5 = cqa.abs(cqa.sub(meanARBeamArea, beamArea_0p5))
                 if cqa.lt(delta_m0p5, delta_0p5):
@@ -78,7 +78,7 @@ class ImagePreCheckHeuristics(object):
             else:
                 beamArea_2p0 = cqa.mul(beams[2.0]['minor'], beams[2.0]['major'])
                 beamArea_0p5 = cqa.mul(beams[0.5]['minor'], beams[0.5]['major'])
-                meanARBeamArea = cqa.pow(cqa.mul(cqa.add(minAR, maxAR), 0.5), 2)
+                meanARBeamArea = cqa.mul(maxAR, minAR)
                 delta_2p0 = cqa.abs(cqa.sub(meanARBeamArea, beamArea_2p0))
                 delta_0p5 = cqa.abs(cqa.sub(meanARBeamArea, beamArea_0p5))
                 if cqa.lt(delta_2p0, delta_0p5):
