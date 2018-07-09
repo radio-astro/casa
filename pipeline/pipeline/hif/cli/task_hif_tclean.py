@@ -12,7 +12,7 @@ def hif_tclean(vis=None, imagename=None, intent=None, field=None, spw=None, spws
                hm_noisethreshold=None, hm_lownoisethreshold=None, hm_negativethreshold=None, hm_minbeamfrac=None,
                hm_growiterations=None, hm_dogrowprune=None, hm_minpercentchange=None,
                hm_cleaning=None, mask=None, niter=None, threshold=None, tlimit=None,
-               masklimit=None, maxncleans=None, cleancontranges=None, calcsens=None,
+               masklimit=None, maxncleans=None, cleancontranges=None, calcsb=None,
                parallel=None, pipelinemode=None, dryrun=None,
                acceptresults=None):
 

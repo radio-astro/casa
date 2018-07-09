@@ -31,6 +31,11 @@ Check interferometry imaging product size and try to mitigate to maximum allowed
      <value>-1.0</value>
   </param>
 
+  <param type="bool" name="calcsb">
+    <description>Force (re-)calculation of sensitivities and beams</description>
+    <value>False</value>
+  </param>
+
   <param type="string" name="parallel">
     <description>Compute dirty images using MPI cluster</description>
     <value>automatic</value>
@@ -137,6 +142,10 @@ maxproductsize -- Maximum allowed product size mitigation goal
                   and failure limit in GB.
     default: -1 (automatic from performance parameters)
     example: 200.0
+
+calcsb -- Force (re-)calculation of sensitivities and beams
+            default=False
+            Options: False, True
 
 parallel -- use multiple CPU nodes to compute dirty images
     default: \'automatic\'

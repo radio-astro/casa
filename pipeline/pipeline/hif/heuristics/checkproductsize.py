@@ -51,6 +51,7 @@ class CheckProductSizeHeuristics(object):
         makeimlist_inputs.intent = 'TARGET'
         makeimlist_inputs.specmode = 'cube'
         makeimlist_inputs.clearlist = True
+        makeimlist_inputs.calcsb = self.inputs.calcsb
 
         # Create makeimlist task for size calculations
         makeimlist_task = makeimlist.MakeImList(makeimlist_inputs)

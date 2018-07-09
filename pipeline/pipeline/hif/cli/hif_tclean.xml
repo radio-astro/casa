@@ -255,8 +255,8 @@ Compute a clean map.
     <value>False</value>
   </param>
 
-  <param type="bool" name="calcsens">
-    <description>Force (re-)calculation of sensitivities</description>
+  <param type="bool" name="calcsb">
+    <description>Force (re-)calculation of sensitivities and beams</description>
     <value>False</value>
   </param>
 
@@ -583,7 +583,7 @@ cleancontranges -- Clean continuum frequency ranges in cubes
                    default=False
                    Options: False, True
 
-calcsens -- Force (re-)calculation of sensitivities
+calcsb -- Force (re-)calculation of sensitivities and beams
             default=False
             Options: False, True
 

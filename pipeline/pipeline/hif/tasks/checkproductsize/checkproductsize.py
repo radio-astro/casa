@@ -28,7 +28,7 @@ class CheckProductSizeInputs(vdp.StandardInputs):
         return project.PerformanceParameters().max_product_size
 
     def __init__(self, context, output_dir=None, vis=None, maxcubesize=None, maxcubelimit=None, maxproductsize=None,
-                 parallel=None):
+                 calcsb=None, parallel=None):
         super(CheckProductSizeInputs, self).__init__()
 
         self.context = context
@@ -38,6 +38,7 @@ class CheckProductSizeInputs(vdp.StandardInputs):
         self.maxcubesize = maxcubesize
         self.maxcubelimit = maxcubelimit
         self.maxproductsize = maxproductsize
+        self.calcsb = calcsb
         self.parallel = parallel
 
 
