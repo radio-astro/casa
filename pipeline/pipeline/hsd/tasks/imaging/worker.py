@@ -318,7 +318,7 @@ class SDImagingWorker(basetask.StandardTaskTemplate):
         restfreq = self.inputs.restfreq
         if type(restfreq) != str:
             raise RuntimeError, "Invalid type for restfreq '{0}' (not a string)".format(restfreq)
-        if restfreq == '':
+        if restfreq.strip() == '':
             # if restfreq is NOT given by user
             # first try using SOURCE.REST_FREQUENCY 
             # if it is not available, use SPECTRAL_WINDOW.REF_FREQUENCY instead
