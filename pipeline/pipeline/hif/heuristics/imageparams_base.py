@@ -283,11 +283,15 @@ class ImageParamsHeuristics(object):
 
         return largest_primary_beam_size
 
-    def synthesized_beam(self, field_intent_list, spwspec, robust=0.5, uvtaper=[], pixperbeam=5.0):
+    def synthesized_beam(self, field_intent_list, spwspec, robust=0.5, uvtaper=[], pixperbeam=5.0, known_beams={}, force_calc=False):
 
         '''Calculate synthesized beam for a given field / spw selection.'''
 
         qaTool = casatools.quanta
+
+        # Need to work on a local copy of known_beams to avoid setting the
+        # method default value inadvertently
+        local_known_beams = copy.deepcopy(known_beams)
 
         # reset state of imager
         casatools.imager.done()
@@ -324,94 +328,122 @@ class ImageParamsHeuristics(object):
         makepsf_beams = []
         try:
             for field, intent in field_intent_list:
-                valid_data[(field, intent)] = False
-                valid_vis_list = []
-                valid_real_spwid_list = []
-                valid_virtual_spwid_list = []
-                # select data to be imaged
-                for vis in self.vislist:
-                    for spwid in spwids:
-                        ms = self.observing_run.get_ms(name=vis)
-                        scanids = [str(scan.id) for scan in ms.scans
-                                   if intent in scan.intents
-                                   and field in [fld.name for fld in scan.fields]]
-                        scanids = ','.join(scanids)
-                        try:
-                            real_spwid = self.observing_run.virtual2real_spw_id(spwid, self.observing_run.get_ms(vis))
-                            antenna_ids = self.antenna_ids(intent, [os.path.basename(vis)])
-                            taql = '||'.join(['ANTENNA1==%d' % i for i in antenna_ids[os.path.basename(vis)]])
-                            casatools.imager.selectvis(vis=vis,
-                                                       field=field, spw=real_spwid, scan=scanids,
-                                                       taql=taql, usescratch=False, writeaccess=False)
-                            # flag to say that imager has some valid data to work
-                            # on
-                            valid_data[(field, intent)] = True
-                            valid_vis_list.append(vis)
-                            valid_real_spwid_list.append(real_spwid)
-                            valid_virtual_spwid_list.append(spwid)
-                        except:
-                            pass
+                try:
+                    if force_calc:
+                        # Reset flag to avoid clearing the dictionary several times
+                        force_calc = False
+                        local_known_beams = {}
+                        LOG.info('Got manual request to recalculate beams.')
+                        raise Exception('Got manual request to recalculate beams.')
+                    if local_known_beams['robust'] != robust:
+                        LOG.info('robust value changed (old: %.1f, new: %.1f). Re-calculating beams.' % (local_known_beams['robust'], robust))
+                        local_known_beams = {}
+                        raise Exception('robust value changed (old: %.1f, new: %.1f). Re-calculating beams.' % (local_known_beams['robust'], robust))
+                    if local_known_beams['uvtaper'] != uvtaper:
+                        LOG.info('uvtaper value changed (old: %s, new: %s). Re-calculating beams.' % (str(local_known_beams['uvtaper']), str(uvtaper)))
+                        local_known_beams = {}
+                        raise Exception('uvtaper value changed (old: %s, new: %s). Re-calculating beams.' % (str(local_known_beams['uvtaper']), str(uvtaper)))
+                    makepsf_beam = local_known_beams[field][intent][','.join(map(str,sorted(spwids)))]['beam']
+                    LOG.info('Using previously calculated beam of %s for Field %s Intent %s SPW %s' % (str(makepsf_beam), field, intent, ','.join(map(str,sorted(spwids)))))
+                    if makepsf_beam != 'invalid':
+                        makepsf_beams.append(makepsf_beam)
+                except Exception as e:
+                    local_known_beams['recalc'] = True
+                    local_known_beams['robust'] = robust
+                    local_known_beams['uvtaper'] = uvtaper
 
-                if not valid_data[(field, intent)]:
-                    # no point carrying on for this field/intent
-                    LOG.debug('No data for field %s' % (field))
-                    continue
-
-                # use imager.advise to get the maximum cell size
-                aipsfieldofview = '%4.1farcsec' % (2.0 * largest_primary_beam_size)
-                rtn = casatools.imager.advise(takeadvice=False,
-                                              amplitudeloss=0.5, fieldofview=aipsfieldofview)
-                casatools.imager.done()
-                if not rtn[0]:
-                    # advise can fail if all selected data are flagged
-                    # - not documented but assuming bool in first field of returned
-                    # record indicates success or failure
-                    LOG.warning('imager.advise failed for field/intent %s/%s spw %s - no valid data?'
-                                % (field, intent, spwid))
                     valid_data[(field, intent)] = False
-                else:
-                    cellv = qaTool.convert(rtn[2], 'arcsec')['value']
-                    cellu = 'arcsec'
-                    cellv /= (0.5 * pixperbeam)
+                    valid_vis_list = []
+                    valid_real_spwid_list = []
+                    valid_virtual_spwid_list = []
+                    # select data to be imaged
+                    for vis in self.vislist:
+                        for spwid in spwids:
+                            ms = self.observing_run.get_ms(name=vis)
+                            scanids = [str(scan.id) for scan in ms.scans
+                                       if intent in scan.intents
+                                       and field in [fld.name for fld in scan.fields]]
+                            scanids = ','.join(scanids)
+                            try:
+                                real_spwid = self.observing_run.virtual2real_spw_id(spwid, self.observing_run.get_ms(vis))
+                                antenna_ids = self.antenna_ids(intent, [os.path.basename(vis)])
+                                taql = '||'.join(['ANTENNA1==%d' % i for i in antenna_ids[os.path.basename(vis)]])
+                                casatools.imager.selectvis(vis=vis,
+                                                           field=field, spw=real_spwid, scan=scanids,
+                                                           taql=taql, usescratch=False, writeaccess=False)
+                                # flag to say that imager has some valid data to work
+                                # on
+                                valid_data[(field, intent)] = True
+                                valid_vis_list.append(vis)
+                                valid_real_spwid_list.append(real_spwid)
+                                valid_virtual_spwid_list.append(spwid)
+                            except:
+                                pass
 
-                    # Now get better estimate from makePSF
-                    tmp_psf_filename = str(uuid.uuid4())
+                    if not valid_data[(field, intent)]:
+                        # no point carrying on for this field/intent
+                        LOG.debug('No data for field %s' % (field))
+                        utils.set_nested_dict(local_known_beams, (field, intent, ','.join(map(str,sorted(spwids))), 'beam'), 'invalid')
+                        continue
 
-                    antenna_ids = self.antenna_ids(intent, valid_vis_list)
-                    antenna = [','.join(map(str, antenna_ids.get(os.path.basename(v), ''))) for v in valid_vis_list]
-                    gridder = self.gridder(intent, field)
-                    paramList = ImagerParameters(msname=valid_vis_list,
-                                                 antenna=antenna,
-                                                 spw=map(str, valid_real_spwid_list),
-                                                 field=field,
-                                                 imagename=tmp_psf_filename,
-                                                 imsize=cleanhelper.cleanhelper.getOptimumSize(int(2.0*largest_primary_beam_size/cellv)),
-                                                 cell='%.2g%s' % (cellv, cellu),
-                                                 gridder=gridder,
-                                                 weighting='briggs',
-                                                 robust=robust,
-                                                 uvtaper=uvtaper,
-                                                 specmode='mfs')
-                    makepsf_imager = PySynthesisImager(params=paramList)
-                    makepsf_imager.initializeImagers()
-                    makepsf_imager.initializeNormalizers()
-                    makepsf_imager.setWeighting()
-                    makepsf_imager.makePSF()
-                    makepsf_imager.deleteTools()
+                    # use imager.advise to get the maximum cell size
+                    aipsfieldofview = '%4.1farcsec' % (2.0 * largest_primary_beam_size)
+                    rtn = casatools.imager.advise(takeadvice=False,
+                                              amplitudeloss=0.5, fieldofview=aipsfieldofview)
+                    casatools.imager.done()
+                    if not rtn[0]:
+                        # advise can fail if all selected data are flagged
+                        # - not documented but assuming bool in first field of returned
+                        # record indicates success or failure
+                        LOG.warning('imager.advise failed for field/intent %s/%s spw %s - no valid data?'
+                                    % (field, intent, spwid))
+                        valid_data[(field, intent)] = False
+                        utils.set_nested_dict(local_known_beams, (field, intent, ','.join(map(str,sorted(spwids))), 'beam'), 'invalid')
+                    else:
+                        cellv = qaTool.convert(rtn[2], 'arcsec')['value']
+                        cellu = 'arcsec'
+                        cellv /= (0.5 * pixperbeam)
 
-                    with casatools.ImageReader('%s.psf' % (tmp_psf_filename)) as image:
-                        # Avoid bad PSFs
-                        if all(qaTool.getvalue(qaTool.convert(image.restoringbeam()['minor'], 'arcsec')) > 1e-5):
-                            makepsf_beams.append(image.restoringbeam())
+                        # Now get better estimate from makePSF
+                        tmp_psf_filename = str(uuid.uuid4())
 
-                    tmp_psf_images = glob.glob('%s.*' % (tmp_psf_filename))
-                    for tmp_psf_image in tmp_psf_images:
-                        shutil.rmtree(tmp_psf_image)
+                        antenna_ids = self.antenna_ids(intent, valid_vis_list)
+                        antenna = [','.join(map(str, antenna_ids.get(os.path.basename(v), ''))) for v in valid_vis_list]
+                        gridder = self.gridder(intent, field)
+                        paramList = ImagerParameters(msname=valid_vis_list,
+                                                     antenna=antenna,
+                                                     spw=map(str, valid_real_spwid_list),
+                                                     field=field,
+                                                     imagename=tmp_psf_filename,
+                                                     imsize=cleanhelper.cleanhelper.getOptimumSize(int(2.0*largest_primary_beam_size/cellv)),
+                                                     cell='%.2g%s' % (cellv, cellu),
+                                                     gridder=gridder,
+                                                     weighting='briggs',
+                                                     robust=robust,
+                                                     uvtaper=uvtaper,
+                                                     specmode='mfs')
+                        makepsf_imager = PySynthesisImager(params=paramList)
+                        makepsf_imager.initializeImagers()
+                        makepsf_imager.initializeNormalizers()
+                        makepsf_imager.setWeighting()
+                        makepsf_imager.makePSF()
+                        makepsf_imager.deleteTools()
 
+                        with casatools.ImageReader('%s.psf' % (tmp_psf_filename)) as image:
+                            # Avoid bad PSFs
+                            if all(qaTool.getvalue(qaTool.convert(image.restoringbeam()['minor'], 'arcsec')) > 1e-5):
+                                makepsf_beams.append(image.restoringbeam())
+                                utils.set_nested_dict(local_known_beams, (field, intent, ','.join(map(str,sorted(spwids))), 'beam'), image.restoringbeam())
+                            else:
+                                utils.set_nested_dict(local_known_beams, (field, intent, ','.join(map(str,sorted(spwids))), 'beam'), 'invalid')
+
+                        tmp_psf_images = glob.glob('%s.*' % (tmp_psf_filename))
+                        for tmp_psf_image in tmp_psf_images:
+                            shutil.rmtree(tmp_psf_image)
         finally:
             casatools.imager.done()
 
-        if makepsf_beams:
+        if makepsf_beams != []:
             # beam that's good for all field/intents
             smallest_beam = {'minor': '1e9arcsec', 'major': '1e9arcsec', 'positionangle': '0.0deg'}
             for beam in makepsf_beams:
@@ -421,7 +453,7 @@ class ImageParamsHeuristics(object):
         else:
             smallest_beam = 'invalid'
 
-        return smallest_beam
+        return smallest_beam, copy.deepcopy(local_known_beams)
 
     def cell(self, beam, pixperbeam=5.0):
 

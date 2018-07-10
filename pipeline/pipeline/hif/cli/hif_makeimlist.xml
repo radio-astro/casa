@@ -137,6 +137,11 @@ Create a a list of images to be cleaned.
     <value>False</value>
   </param>
 
+  <param type="bool" name="calcsb">
+    <description>Force (re-)calculation of sensitivities and beams</description>
+    <value>False</value>
+  </param>
+
   <param type="string" name="pipelinemode">
     <description>The pipeline operating mode</description>
     <value>automatic</value>

@@ -1322,6 +1322,28 @@ def update_sens_dict(dct, udct):
                         dct[msname][field][intent][spw] = udct[msname][field][intent][spw]
 
 
+def update_beams_dict(dct, udct):
+    '''
+    Update a beams dictionary. All generic solutions
+    tried so far did not do the job. So this method assumes
+    an explicit dictionary structure of
+    ['<field name']['<intent>'][<spwids>]: {<beam>}.
+    '''
+
+    for field in udct.keys():
+        # Exclude special primary keys that are not MS names
+        if field not in ['recalc', 'robust', 'uvtaper']:
+            if field not in dct:
+                dct[field] = {}
+            for intent in udct[field].keys():
+                if intent not in dct[field]:
+                    dct[field][intent] = {}
+                for spwids in udct[field][intent].keys():
+                    if spwids not in dct[field][intent]:
+                        dct[field][intent][spwids] = {}
+                    dct[field][intent][spwids] = udct[field][intent][spwids]
+
+
 def flagged_intervals(vec):
     '''
     Find islands of non-zeros in the vector vec

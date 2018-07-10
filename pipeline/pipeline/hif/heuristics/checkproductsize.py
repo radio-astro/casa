@@ -41,6 +41,8 @@ class CheckProductSizeHeuristics(object):
 
     def mitigate_sizes(self):
 
+        known_synthesized_beams = self.context.synthesized_beams
+
         # Initialize mitigation parameter dictionary
         # Possible keys:
         # 'nbins', 'hm_imsize', 'hm_cell', 'field'
@@ -57,7 +59,9 @@ class CheckProductSizeHeuristics(object):
         makeimlist_task = makeimlist.MakeImList(makeimlist_inputs)
 
         # Get default target setup
+        makeimlist_inputs.known_synthesized_beams = known_synthesized_beams
         makeimlist_result = makeimlist_task.prepare()
+        known_synthesized_beams = makeimlist_result.synthesized_beams
         imlist = makeimlist_result.targets
 
         # Extract some information for later
@@ -109,7 +113,9 @@ class CheckProductSizeHeuristics(object):
 
             # Recalculate sizes
             makeimlist_inputs.nbins = size_mitigation_parameters['nbins']
+            makeimlist_inputs.known_synthesized_beams = known_synthesized_beams
             makeimlist_result = makeimlist_task.prepare()
+            known_synthesized_beams = makeimlist_result.synthesized_beams
             imlist = makeimlist_result.targets
             cubesizes, maxcubesize, productsizes, total_productsize = self.calculate_sizes(imlist)
             LOG.info('nbin mitigation leads to a maximum cube size of %s GB' % (maxcubesize))
@@ -137,7 +143,9 @@ class CheckProductSizeHeuristics(object):
 
             # Recalculate sizes
             makeimlist_inputs.hm_imsize = size_mitigation_parameters['hm_imsize']
+            makeimlist_inputs.known_synthesized_beams = known_synthesized_beams
             makeimlist_result = makeimlist_task.prepare()
+            known_synthesized_beams = makeimlist_result.synthesized_beams
             imlist = makeimlist_result.targets
             cubesizes, maxcubesize, productsizes, total_productsize = self.calculate_sizes(imlist)
             LOG.info('hm_imsize mitigation leads to a maximum cube size of %s GB' % (maxcubesize))
@@ -149,7 +157,9 @@ class CheckProductSizeHeuristics(object):
 
             # Recalculate sizes
             makeimlist_inputs.hm_cell = size_mitigation_parameters['hm_cell']
+            makeimlist_inputs.known_synthesized_beams = known_synthesized_beams
             makeimlist_result = makeimlist_task.prepare()
+            known_synthesized_beams = makeimlist_result.synthesized_beams
             imlist = makeimlist_result.targets
             cubesizes, maxcubesize, productsizes, total_productsize = self.calculate_sizes(imlist)
             LOG.info('hm_cell mitigation leads to a maximum cube size of %s GB' % (maxcubesize))
@@ -167,7 +177,8 @@ class CheckProductSizeHeuristics(object):
                        maxcubesize, total_productsize, \
                        True, \
                        {'longmsg': 'Cube size could not be mitigated. Remaining factor: %.4f and cube size larger than limit of %s GB.' % (maxcubesize / self.inputs.maxcubesize, self.inputs.maxcubelimit), \
-                        'shortmsg': 'Cube size could not be mitigated'}
+                        'shortmsg': 'Cube size could not be mitigated'}, \
+                       known_synthesized_beams
             else:
                 LOG.info('Maximum cube size cannot be mitigated. Remaining factor: %.4f. But cube size is smaller than limit of %s GB.' % (maxcubesize / self.inputs.maxcubesize, self.inputs.maxcubelimit))
 
@@ -192,7 +203,9 @@ class CheckProductSizeHeuristics(object):
 
             # Recalculate sizes
             makeimlist_inputs.field = size_mitigation_parameters['field']
+            makeimlist_inputs.known_synthesized_beams = known_synthesized_beams
             makeimlist_result = makeimlist_task.prepare()
+            known_synthesized_beams = makeimlist_result.synthesized_beams
             imlist = makeimlist_result.targets
             cubesizes, maxcubesize, productsizes, total_productsize = self.calculate_sizes(imlist)
             LOG.info('field / target mitigation leads to product size of %s GB' % (total_productsize))
@@ -213,7 +226,9 @@ class CheckProductSizeHeuristics(object):
 
                 # Recalculate sizes
                 makeimlist_inputs.nbins = size_mitigation_parameters['nbins']
+                makeimlist_inputs.known_synthesized_beams = known_synthesized_beams
                 makeimlist_result = makeimlist_task.prepare()
+                known_synthesized_beams = makeimlist_result.synthesized_beams
                 imlist = makeimlist_result.targets
                 cubesizes, maxcubesize, productsizes, total_productsize = self.calculate_sizes(imlist)
                 LOG.info('nbin mitigation leads to a maximum cube size of %s GB' % (maxcubesize))
@@ -238,7 +253,9 @@ class CheckProductSizeHeuristics(object):
 
                 # Recalculate sizes
                 makeimlist_inputs.hm_imsize = size_mitigation_parameters['hm_imsize']
+                makeimlist_inputs.known_synthesized_beams = known_synthesized_beams
                 makeimlist_result = makeimlist_task.prepare()
+                known_synthesized_beams = makeimlist_result.synthesized_beams
                 imlist = makeimlist_result.targets
                 cubesizes, maxcubesize, productsizes, total_productsize = self.calculate_sizes(imlist)
                 LOG.info('hm_imsize mitigation leads to a maximum cube size of %s GB' % (maxcubesize))
@@ -251,7 +268,9 @@ class CheckProductSizeHeuristics(object):
 
                 # Recalculate sizes
                 makeimlist_inputs.hm_cell = size_mitigation_parameters['hm_cell']
+                makeimlist_inputs.known_synthesized_beams = known_synthesized_beams
                 makeimlist_result = makeimlist_task.prepare()
+                known_synthesized_beams = makeimlist_result.synthesized_beams
                 imlist = makeimlist_result.targets
                 cubesizes, maxcubesize, productsizes, total_productsize = self.calculate_sizes(imlist)
                 LOG.info('hm_cell mitigation leads to a maximum cube size of %s GB' % (maxcubesize))
@@ -292,7 +311,9 @@ class CheckProductSizeHeuristics(object):
 
                 # Recalculate sizes
                 makeimlist_inputs.spw = size_mitigation_parameters['spw']
+                makeimlist_inputs.known_synthesized_beams = known_synthesized_beams
                 makeimlist_result = makeimlist_task.prepare()
+                known_synthesized_beams = makeimlist_result.synthesized_beams
                 imlist = makeimlist_result.targets
                 cubesizes, maxcubesize, productsizes, total_productsize = self.calculate_sizes(imlist)
                 LOG.info('spw mitigation leads to product size of %s GB' % (total_productsize))
@@ -308,7 +329,8 @@ class CheckProductSizeHeuristics(object):
                    maxcubesize, total_productsize, \
                    True, \
                    {'longmsg': 'Product size could not be mitigated. Remaining factor: %.4f.' % (total_productsize / self.inputs.maxproductsize / nfields), \
-                    'shortmsg': 'Product size could not be mitigated'}
+                    'shortmsg': 'Product size could not be mitigated'}, \
+                   known_synthesized_beams
 
         # Check for case with many targets which will cause long run times in spite
         # of any mitigation.
@@ -323,7 +345,8 @@ class CheckProductSizeHeuristics(object):
                    maxcubesize, total_productsize, \
                    False, \
                    {'longmsg': 'Size had to be mitigated (%s)' % (','.join(size_mitigation_parameters.iterkeys())), \
-                    'shortmsg': 'Size was mitigated'}
+                    'shortmsg': 'Size was mitigated'}, \
+                   known_synthesized_beams
         else:
             return size_mitigation_parameters, \
                    original_maxcubesize, original_productsize, \
@@ -331,4 +354,5 @@ class CheckProductSizeHeuristics(object):
                    maxcubesize, total_productsize, \
                    False, \
                    {'longmsg': 'No size mitigation needed', \
-                    'shortmsg': 'No size mitigation'}
+                    'shortmsg': 'No size mitigation'}, \
+                   known_synthesized_beams

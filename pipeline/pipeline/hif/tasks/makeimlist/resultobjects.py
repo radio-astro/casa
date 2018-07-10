@@ -4,6 +4,7 @@ import copy
 import os.path
 
 import pipeline.infrastructure.basetask as basetask
+import pipeline.infrastructure.utils as utils
 
 
 class MakeImListResult(basetask.Results):
@@ -14,6 +15,7 @@ class MakeImListResult(basetask.Results):
         self._max_num_targets = 0
         self.clearlist = True
         self.mitigation_error = False
+        self.synthesized_beams = None
 
     def add_target(self, target):
         self.targets.append(target)
@@ -32,12 +34,20 @@ class MakeImListResult(basetask.Results):
                     context.clean_list_info[key] = '%s %s' % (context.clean_list_info[key], value)
                 else:
                     context.clean_list_info[key] = value
-        context.contfile = self.contfile
-        context.linesfile = self.linesfile
-
         # Remove heuristics objects to avoid accumulating large amounts of unnecessary memory
         for target in self.targets:
             del target['heuristics']
+
+        context.contfile = self.contfile
+        context.linesfile = self.linesfile
+
+        # Calculated beams for later stages
+        if self.synthesized_beams is not None:
+            if 'recalc' in self.synthesized_beams:
+                context.synthesized_beams = copy.deepcopy(self.synthesized_beams)
+                del context.synthesized_beams['recalc']
+            else:
+                utils.update_beams_dict(context.synthesized_beams, self.synthesized_beams)
 
     @property
     def num_targets(self):

@@ -68,7 +68,8 @@ class CheckProductSize(basetask.StandardTaskTemplate):
                                             -1, \
                                             {}, \
                                             'ERROR', \
-                                            {'longmsg': 'Parameter error: maxcubelimit must be >= maxcubesize', 'shortmsg': 'Parameter error'})
+                                            {'longmsg': 'Parameter error: maxcubelimit must be >= maxcubesize', 'shortmsg': 'Parameter error'}, \
+                                            None)
             # Log summary information
             LOG.info(str(result))
             return result
@@ -86,7 +87,8 @@ class CheckProductSize(basetask.StandardTaskTemplate):
                                             -1, \
                                             {}, \
                                             'ERROR', \
-                                            {'longmsg': 'Parameter error: maxproductsize must be > maxcubesize', 'shortmsg': 'Parameter error'})
+                                            {'longmsg': 'Parameter error: maxproductsize must be > maxcubesize', 'shortmsg': 'Parameter error'}, \
+                                            None)
             # Log summary information
             LOG.info(str(result))
             return result
@@ -104,7 +106,8 @@ class CheckProductSize(basetask.StandardTaskTemplate):
                                             -1, \
                                             {}, \
                                             'ERROR', \
-                                            {'longmsg': 'Parameter error: maxproductsize must be > maxcubelimit', 'shortmsg': 'Parameter error'})
+                                            {'longmsg': 'Parameter error: maxproductsize must be > maxcubelimit', 'shortmsg': 'Parameter error'}, \
+                                            None)
             # Log summary information
             LOG.info(str(result))
             return result
@@ -117,7 +120,8 @@ class CheckProductSize(basetask.StandardTaskTemplate):
         size_mitigation_parameters, \
         original_maxcubesize, original_productsize, \
         cube_mitigated_productsize, \
-        maxcubesize, productsize, error, reason = \
+        maxcubesize, productsize, error, reason, \
+        known_synthesized_beams = \
             checkproductsize_heuristics.mitigate_sizes()
 
         if error:
@@ -139,7 +143,8 @@ class CheckProductSize(basetask.StandardTaskTemplate):
                                         productsize,
                                         size_mitigation_parameters,
                                         status,
-                                        reason)
+                                        reason,
+                                        known_synthesized_beams)
 
         # Log summary information
         LOG.info(str(result))

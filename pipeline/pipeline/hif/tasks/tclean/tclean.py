@@ -253,11 +253,11 @@ class Tclean(cleanbase.CleanBase):
 
             # The heuristics cell size  is always the same for x and y as
             # the value derives from a single value returned by imager.advise
-            synthesized_beam = self.image_heuristics.synthesized_beam(field_intent_list=[(inputs.field,
-                                                                                          inputs.intent)],
-                                                                      spwspec=inputs.spw,
-                                                                      robust=inputs.robust,
-                                                                      uvtaper=inputs.uvtaper)
+            synthesized_beam, known_synthesized_beams = \
+                self.image_heuristics.synthesized_beam(field_intent_list=[(inputs.field, inputs.intent)],
+                                                       spwspec=inputs.spw,
+                                                       robust=inputs.robust,
+                                                       uvtaper=inputs.uvtaper)
             cell = self.image_heuristics.cell(beam=synthesized_beam)
 
             if inputs.cell in (None, [], ''):

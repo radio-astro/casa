@@ -1,5 +1,7 @@
 from __future__ import absolute_import
 
+import copy
+
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.utils as utils
 import pipeline.infrastructure.basetask as basetask
@@ -19,7 +21,8 @@ class CheckProductSizeResult(basetask.Results):
                  mitigated_productsize, \
                  size_mitigation_parameters, \
                  status, \
-                 reason):
+                 reason, \
+                 synthesized_beams):
         super(CheckProductSizeResult, self).__init__()
         self.allowed_maxcubesize = allowed_maxcubesize
         self.allowed_maxcubelimit = allowed_maxcubelimit
@@ -32,10 +35,19 @@ class CheckProductSizeResult(basetask.Results):
         self.size_mitigation_parameters = size_mitigation_parameters
         self.status = status
         self.reason = reason
+        self.synthesized_beams = synthesized_beams
 
     def merge_with_context(self, context):
         # Store mitigation parameters for subsequent hif_makeimlist calls.
         context.size_mitigation_parameters = self.size_mitigation_parameters
+
+        # Calculated beams for later stages
+        if self.synthesized_beams is not None:
+            if 'recalc' in self.synthesized_beams:
+                context.synthesized_beams = copy.deepcopy(self.synthesized_beams)
+                del context.synthesized_beams['recalc']
+            else:
+                utils.update_beams_dict(context.synthesized_beams, self.synthesized_beams)
 
     def __repr__(self):
         repr = 'CheckProductSize:\n'

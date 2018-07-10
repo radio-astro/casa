@@ -33,6 +33,7 @@ class MakeImListInputs(vdp.StandardInputs):
     width = vdp.VisDependentProperty(default='')
     clearlist = vdp.VisDependentProperty(default=True)
     pbe_eb = vdp.VisDependentProperty(default=False)
+    calcsb = vdp.VisDependentProperty(default=False)
 
     # properties requiring some processing or MS-dependent logic -------------------------------------------------------
 
@@ -125,7 +126,7 @@ class MakeImListInputs(vdp.StandardInputs):
     def __init__(self, context, output_dir=None, vis=None, imagename=None, intent=None, field=None, spw=None,
                  contfile=None, linesfile=None, uvrange=None, specmode=None, outframe=None, hm_imsize=None,
                  hm_cell=None, calmaxpix=None, phasecenter=None, nchan=None, start=None, width=None, nbins=None,
-                 robust=None, uvtaper=None, clearlist=None, per_eb=None):
+                 robust=None, uvtaper=None, clearlist=None, per_eb=None, calcsb=None, known_synthesized_beams=None):
         self.context = context
         self.output_dir = output_dir
         self.vis = vis
@@ -151,6 +152,8 @@ class MakeImListInputs(vdp.StandardInputs):
         self.uvtaper = uvtaper
         self.clearlist = clearlist
         self.per_eb = per_eb
+        self.calcsb = calcsb
+        self.known_synthesized_beams = known_synthesized_beams
 
 
 # tell the infrastructure to give us mstransformed data when possible by
@@ -168,6 +171,12 @@ class MakeImList(basetask.StandardTaskTemplate):
     def prepare(self):
         # this python class will produce a list of images to be calculated.
         inputs = self.inputs
+
+        calcsb = inputs.calcsb
+        if inputs.known_synthesized_beams is not None:
+            known_synthesized_beams = inputs.known_synthesized_beams
+        else:
+            known_synthesized_beams = inputs.context.synthesized_beams
 
         qaTool = casatools.quanta
 
@@ -410,7 +419,9 @@ class MakeImList(basetask.StandardTaskTemplate):
                 synthesized_beams = {}
                 min_cell = ['3600arcsec']
                 for spwspec in max_freq_spwlist:
-                    synthesized_beams[spwspec] = self.heuristics.synthesized_beam(field_intent_list=field_intent_list, spwspec=spwspec, robust=robust, uvtaper=uvtaper, pixperbeam=pixperbeam)
+                    synthesized_beams[spwspec], known_synthesized_beams = self.heuristics.synthesized_beam(field_intent_list=field_intent_list, spwspec=spwspec, robust=robust, uvtaper=uvtaper, pixperbeam=pixperbeam, known_beams=known_synthesized_beams, force_calc=calcsb)
+                    # Avoid recalculating every time since the dictionary will be cleared with the first recalculation request.
+                    calcsb = False
                     # the heuristic cell is always the same for x and y as
                     # the value derives from the single value returned by
                     # imager.advise
@@ -665,6 +676,8 @@ class MakeImList(basetask.StandardTaskTemplate):
         # for hif_findcont and hif_makeimages
         result.contfile = inputs.contfile
         result.linesfile = inputs.linesfile
+
+        result.synthesized_beams = known_synthesized_beams
 
         return result
 
