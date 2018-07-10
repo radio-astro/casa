@@ -399,12 +399,14 @@ class DeviationMaskHeuristicsTask(HeuristicsTask):
         return result
 
 def deviation_mask_heuristic(vis, field_list, antenna_list, spw_list, consider_flag=False, parallel=None):
-    parallel_wanted = mpihelpers.parse_mpi_input_parameter(parallel)
+    #parallel_wanted = mpihelpers.parse_mpi_input_parameter(parallel)
     mytask = DeviationMaskHeuristicsTask(MaskDeviationHeuristic, vis=vis, field_list=field_list, 
                             antenna_list=antenna_list, spw_list=spw_list, consider_flag=consider_flag)
-    if parallel_wanted:
+    #if parallel_wanted:
+    if False:
         task = mpihelpers.AsyncTask(mytask)
     else:
+        LOG.trace('Deviation Mask Heuristic always runs in serial mode.')
         task = mpihelpers.SyncTask(mytask)
     return vis, task
 
