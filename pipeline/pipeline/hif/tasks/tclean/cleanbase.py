@@ -302,6 +302,9 @@ class CleanBase(basetask.StandardTaskTemplate):
             # 2018-04-19: 'REST' does not yet work (see CAS-8965, CAS-9997)
             #tclean_job_parameters['outframe'] = 'REST'
             tclean_job_parameters['outframe'] = ''
+            # 2018-07-10: Parallel imaging of ephemeris objects does not
+            # yet work (see CAS-11631)
+            tclean_job_parameters['parallel'] = False
         else:
             tclean_job_parameters['phasecenter'] = inputs.phasecenter
             tclean_job_parameters['outframe'] = inputs.outframe
