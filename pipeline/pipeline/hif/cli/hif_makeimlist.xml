@@ -360,6 +360,10 @@ per_eb -- Make an image target per EB.
     default False
     example: True
 
+calcsb -- Force (re-)calculation of sensitivities and beams
+            default=False
+            Options: False, True
+
 --- pipeline task execution modes
 dryrun -- Run the commands (True) or generate the commands to be run but
    do not execute (False).
