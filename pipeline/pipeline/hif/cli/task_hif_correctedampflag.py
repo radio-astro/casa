@@ -7,7 +7,7 @@ def hif_correctedampflag(
         vis=None, intent=None, field=None, spw=None, antnegsig=None,
         antpossig=None, tmantint=None,
         tmint=None, tmbl=None, antblnegsig=None,
-        antblpossig=None, relaxed_factor=None,
+        antblpossig=None, relaxed_factor=None, niter=None,
         pipelinemode=None, dryrun=None, acceptresults=None):
 
     ##########################################################################

@@ -81,6 +81,7 @@ class GfluxscaleflagInputs(vdp.StandardInputs):
         return intents_to_flag
 
     minsnr = vdp.VisDependentProperty(default=2.0)
+    niter = vdp.VisDependentProperty(default=2)
     phaseupsolint = vdp.VisDependentProperty(default='int')
     refant = vdp.VisDependentProperty(default='')
 
@@ -114,7 +115,7 @@ class GfluxscaleflagInputs(vdp.StandardInputs):
 
     def __init__(self, context, output_dir=None, vis=None, intent=None, field=None, spw=None, solint=None,
                  phaseupsolint=None, minsnr=None, refant=None, antnegsig=None, antpossig=None, tmantint=None,
-                 tmint=None, tmbl=None, antblnegsig=None, antblpossig=None, relaxed_factor=None):
+                 tmint=None, tmbl=None, antblnegsig=None, antblpossig=None, relaxed_factor=None, niter=None):
         super(GfluxscaleflagInputs, self).__init__()
 
         # pipeline inputs
@@ -143,6 +144,7 @@ class GfluxscaleflagInputs(vdp.StandardInputs):
         self.antblnegsig = antblnegsig
         self.antblpossig = antblpossig
         self.relaxed_factor = relaxed_factor
+        self.niter = niter
 
 
 @task_registry.set_equivalent_casa_task('hifa_gfluxscaleflag')
@@ -262,7 +264,7 @@ class Gfluxscaleflag(basetask.StandardTaskTemplate):
                 antnegsig=inputs.antnegsig, antpossig=inputs.antpossig,
                 tmantint=inputs.tmantint, tmint=inputs.tmint, tmbl=inputs.tmbl,
                 antblnegsig=inputs.antblnegsig, antblpossig=inputs.antblpossig,
-                relaxed_factor=inputs.relaxed_factor)
+                relaxed_factor=inputs.relaxed_factor, niter=inputs.niter)
             caftask = correctedampflag.Correctedampflag(cafinputs)
             cafresult = self._executor.execute(caftask)
 

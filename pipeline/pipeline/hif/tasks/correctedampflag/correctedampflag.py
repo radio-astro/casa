@@ -445,6 +445,8 @@ class CorrectedampflagInputs(vdp.StandardInputs):
 
     intent = vdp.VisDependentProperty(default='BANDPASS')
 
+    niter = vdp.VisDependentProperty(default=2)
+
     # Relaxed value to set the threshold scaling factor to under certain
     # conditions; equivalent to:
     # relaxationFactor
@@ -473,7 +475,7 @@ class CorrectedampflagInputs(vdp.StandardInputs):
 
     def __init__(self, context, output_dir=None, vis=None, intent=None, field=None, spw=None, antnegsig=None,
                  antpossig=None, tmantint=None, tmint=None, tmbl=None, antblnegsig=None, antblpossig=None,
-                 relaxed_factor=None):
+                 relaxed_factor=None, niter=None):
         super(CorrectedampflagInputs, self).__init__()
 
         # pipeline inputs
@@ -496,6 +498,7 @@ class CorrectedampflagInputs(vdp.StandardInputs):
         self.antblnegsig = antblnegsig
         self.antblpossig = antblpossig
         self.relaxed_factor = relaxed_factor
+        self.niter = niter
 
 
 @task_registry.set_equivalent_casa_task('hif_correctedampflag')
@@ -516,61 +519,70 @@ class Correctedampflag(basetask.StandardTaskTemplate):
         # Store the vis in the result
         result.vis = inputs.vis
 
-        # Get the spws to use.
-        spwids = map(int, inputs.spw.split(','))
-
         # Get the MS object.
         ms = inputs.context.observing_run.get_ms(name=inputs.vis)
 
         # Get translation dictionary for antenna id to name.
         antenna_id_to_name = self._get_ant_id_to_name_dict(ms)
 
-        # Initialize list of newly found flags.
-        newflags = []
+        # Initialize list of all newly found flags.
+        allflags = []
 
-        # Evaluate flagging heuristics separately for each intent.
-        for intent in inputs.intent.split(','):
+        # Start iterative flagging.
+        counter = 1
+        while counter <= inputs.niter:
+            LOG.info("Evaluating flagging heuristics for {}, iteration {}"
+                     "".format(os.path.basename(inputs.vis), counter))
 
-            # For current intent, identify which fields from inputs are valid.
-            valid_fields = [field.name
-                            for field in ms.get_fields(intent=intent)
-                            if field.name in list(utils.safe_split(inputs.field))]
+            # Identify new flags.
+            newflags = self._run_flagging_iteration(ms, antenna_id_to_name)
 
-            # If no valid fields were found, raise warning, and continue to
-            # next intent.
-            if not valid_fields:
-                LOG.warning("Invalid data selection for given intent(s) and "
-                            "field(s): fields {} do not include intent "
-                            "\'{}\'.".format(utils.commafy(utils.safe_split(inputs.field)),
-                                             intent))
-                continue
+            # Add flags to overall list.
+            allflags.extend(newflags)
 
-            # Evaluate heuristic for each valid field.
-            for field in valid_fields:
+            # Apply intermediate flags; on first iteration, always include "before" summary.
+            if counter == 1:
+                # If new flags are found, but there will be another iteration,
+                # then skip "after" summary; otherwise include the "after" summary.
+                if newflags and counter < inputs.niter:
+                    stats_before, _ = self._apply_flags(newflags, sum_before=True)
+                else:
+                    stats_before, stats_after = self._apply_flags(newflags, sum_before=True, sum_after=True)
 
-                # Evaluate flagging heuristics separately for each spw.
-                for spwid in spwids:
+            # On subsequent iterations, if new flags are found, but there are
+            # more iterations, then skip summaries.
+            elif newflags and counter < inputs.niter:
+                self._apply_flags(newflags)
 
-                    flags_for_intent_field_spw = self._evaluate_heuristic(
-                        ms, intent, field, spwid, antenna_id_to_name)
-                    newflags.extend(flags_for_intent_field_spw)
+            # On subsequent iterations, if no new flags are found, or this is
+            # the final iteration, then include the "after" summary.
+            else:
+                _, stats_after = self._apply_flags(newflags, sum_after=True)
 
-        if newflags:
-            # Consolidate flagging commands.
-            newflags = _consolidate_flags(newflags)
+            if not newflags:
+                LOG.info("Evaluation of flagging heuristics for {}, iteration {} resulted 0 new flagging commands."
+                         "".format(os.path.basename(inputs.vis), counter))
+                break
+            else:
+                LOG.info("Evaluation of flagging heuristics for {}, iteration {} resulted in {} new"
+                         " flagging commands.".format(os.path.basename(inputs.vis), counter, len(newflags)))
+
+            counter += 1
+
+        # After iterative evaluation of heuristics, if any flags were found:
+        if allflags:
+            # Consolidate final list of all flagging commands.
+            allflags = _consolidate_flags(allflags)
 
             # Propagate PHASE 'bad baseline' flags to TARGET.
-            newflags = _propagate_phase_flags(newflags, ms, antenna_id_to_name)
+            allflags = _propagate_phase_flags(allflags, ms, antenna_id_to_name)
 
             # Report final number of new flags.
-            LOG.warning("Evaluation of {} raised {} flagging command(s)"
-                        "".format(os.path.basename(inputs.vis), len(newflags)))
+            LOG.warning("Evaluation of flagging heuristics for {} raised total of {} flagging command(s)"
+                        "".format(os.path.basename(inputs.vis), len(allflags)))
 
-        # Apply flags and get before/after summary.
-        stats_before, stats_after = self._apply_flags(newflags)
-
-        # Store newly identified flags in result.
-        result.addflags(newflags)
+        # Store final list of flags in result.
+        result.addflags(allflags)
 
         # Attach flagging summaries to result
         result.summaries = [stats_before, stats_after]
@@ -605,6 +617,51 @@ class Correctedampflag(basetask.StandardTaskTemplate):
             antenna_id_to_name = {}
 
         return antenna_id_to_name
+
+    def _run_flagging_iteration(self, ms, antenna_id_to_name):
+        inputs = self.inputs
+
+        # Get the spws to use.
+        spwids = map(int, inputs.spw.split(','))
+
+        # Initialize list of newly found flags.
+        newflags = []
+
+        # Evaluate flagging heuristics separately for each intent.
+        for intent in inputs.intent.split(','):
+
+            # For current intent, identify which fields from inputs are valid.
+            valid_fields = [field.name
+                            for field in ms.get_fields(intent=intent)
+                            if field.name in list(utils.safe_split(inputs.field))]
+
+            # If no valid fields were found, raise warning, and continue to
+            # next intent.
+            if not valid_fields:
+                LOG.warning("Invalid data selection for given intent(s) and "
+                            "field(s): fields {} do not include intent "
+                            "\'{}\'.".format(utils.commafy(utils.safe_split(inputs.field)),
+                                             intent))
+                continue
+
+            # Evaluate heuristic for each valid field.
+            for field in valid_fields:
+
+                # Evaluate flagging heuristics separately for each spw.
+                for spwid in spwids:
+
+                    flags_for_intent_field_spw = self._evaluate_heuristic(
+                        ms, intent, field, spwid, antenna_id_to_name)
+                    newflags.extend(flags_for_intent_field_spw)
+
+        LOG.debug("Flagging commands from current iteration, before consolidation:\n{}"
+                  "".format('\n'.join([flag.flagcmd for flag in newflags])))
+
+        # Consolidate flagging commands from current iteration to minimize
+        # request for flagdata.
+        newflags = _consolidate_flags(newflags)
+
+        return newflags
 
     def _evaluate_heuristic(self, ms, intent, field, spwid, antenna_id_to_name):
 
@@ -1069,11 +1126,12 @@ class Correctedampflag(basetask.StandardTaskTemplate):
 
         # Add baseline set to data selection if provided; log selection.
         if baseline_set:
-            LOG.info('Reading data for intent {}, field {}, spw {}, and {} baselines ({})'.format(
-                intent, field, spwid, baseline_set[0], baseline_set[1]))
+            LOG.info('Reading data for {}, intent {}, field {}, spw {}, and {} baselines ({})'.format(
+                os.path.basename(ms.name), intent, field, spwid, baseline_set[0], baseline_set[1]))
             data_selection['baseline'] = baseline_set[1]
         else:
-            LOG.info('Reading data for intent {}, field {}, spw {}, and all baselines'.format(intent, field, spwid))
+            LOG.info('Reading data for {}, intent {}, field {}, spw {}, and all baselines'.format(
+                os.path.basename(ms.name), intent, field, spwid))
 
         # Get number of channels for this spw.
         nchans = ms.get_spectral_windows(str(spwid))[0].num_channels
@@ -1239,25 +1297,32 @@ class Correctedampflag(basetask.StandardTaskTemplate):
 
         return newflags
 
-    def _apply_flags(self, flags):
+    def _apply_flags(self, flags, sum_before=False, sum_after=False):
 
         inputs = self.inputs
 
         # Initialize flagging summaries.
         stats_before, stats_after = {}, {}
 
-        # Create a list of flagdata commands, always add the "before" summary.
-        allflagcmds = ["mode='summary' name='before'"]
+        # Initialize list of flagdata commands.
+        allflagcmds = []
+
+        # If requested, add the "before" summary.
+        if sum_before:
+            allflagcmds.append("mode='summary' name='before'")
 
         # If new flags were found, apply these as part of the flagdata call,
-        # and add an "after" summary.
+        # and add an "after" summary if requested.
         if flags:
             LOG.info('Applying newly found flags.')
             allflagcmds.extend(flags)
-            allflagcmds.append("mode='summary' name='after'")
+            if sum_after:
+                allflagcmds.append("mode='summary' name='after'")
         else:
-            LOG.info('Evaluation of {0} raised 0 flagging commands'.format(
-                os.path.basename(inputs.vis)))
+            # If an "after" summary is requested, but no "before" summary,
+            # then run "after" summary explicitly.
+            if sum_after and not sum_before:
+                allflagcmds.append("mode='summary' name='after'")
 
         # Run flagdata to create summaries and set flags.
         fsinputs = FlagdataSetter.Inputs(
@@ -1282,9 +1347,9 @@ class Correctedampflag(basetask.StandardTaskTemplate):
             if fsresult.results[0]['name'] == 'after':
                 stats_after = fsresult.results[0]
 
-        # If no new flags were found, then no "after" summary was created,
-        # so instead make a copy of the "before" summary.
-        if not flags:
+        # If no new flags were supplied, and both a "before" and "after"
+        # summary was requested, then create a copy of the "before" summary.
+        if not flags and sum_before and sum_after:
             stats_after = copy.deepcopy(stats_before)
 
         return stats_before, stats_after

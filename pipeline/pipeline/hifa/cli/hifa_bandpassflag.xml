@@ -196,6 +196,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         <value>2.0</value>
     </param>
 
+    <param type="int" name="niter" subparam="true">
+        <description>Maximum number of times to iterate on evaluation of flagging heuristics.</description>
+        <value>2</value>
+    </param>
+
     <param type="string" name="pipelinemode">
         <description>The pipeline operations mode</description>
         <value>automatic</value>
@@ -268,6 +273,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                 <default param="antblnegsig"><value type="double">3.4</value></default>
                 <default param="antblpossig"><value type="double">3.2</value></default>
                 <default param="relaxed_factor"><value type="double">2.0</value></default>
+                <default param="niter"><value type="int">2</value></default>
                 <default param="dryrun"><value type="bool">False</value></default>
                 <default param="acceptresults"><value type="bool">True</value></default>
             </equals>
@@ -440,6 +446,11 @@ antblpossig -- Upper sigma threshold for identifying outliers as a result of
 relaxed_factor -- Relaxed value to set the threshold scaling factor to under
     certain conditions (see task description).
     default: 2.0
+
+niter -- Maximum number of times to iterate on evaluation of flagging
+    heuristics. If an iteration results in no new flags, then subsequent
+    iterations are skipped.
+    default: 2
 
 --- pipeline task execution modes
 dryrun -- Run the commands (True) or generate the commands to be run but

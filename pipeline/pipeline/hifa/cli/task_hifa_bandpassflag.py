@@ -8,7 +8,7 @@ def hifa_bandpassflag(vis=None, caltable=None, intent=None, field=None, spw=None
                       solint=None, maxchannels=None, evenbpints=None, bpsnr=None, bpnsols=None, combine=None,
                       refant=None, minblperant=None, minsnr=None, solnorm=None, antnegsig=None, antpossig=None,
                       tmantint=None, tmint=None, tmbl=None, antblnegsig=None, antblpossig=None, relaxed_factor=None,
-                      pipelinemode=None, dryrun=None, acceptresults=None):
+                      niter=None, pipelinemode=None, dryrun=None, acceptresults=None):
 
     ##########################################################################
     #                                                                        #

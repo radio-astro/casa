@@ -55,6 +55,9 @@ class BandpassflagInputs(ALMAPhcorBandpassInputs):
     # positiveSigmaAntennaBased
     antpossig = vdp.VisDependentProperty(default=4.6)
 
+    # Maximum number of iterations to evaluate flagging heuristics.
+    niter = vdp.VisDependentProperty(default=2)
+
     # Relaxed value to set the threshold scaling factor to under certain
     # conditions; equivalent to:
     # relaxationFactor
@@ -80,7 +83,7 @@ class BandpassflagInputs(ALMAPhcorBandpassInputs):
                  hm_bandpass=None, solint=None, maxchannels=None, evenbpints=None, bpsnr=None, bpnsols=None,
                  combine=None, refant=None, minblperant=None, minsnr=None, solnorm=None, antnegsig=None, antpossig=None,
                  tmantint=None, tmint=None, tmbl=None, antblnegsig=None, antblpossig=None, relaxed_factor=None,
-                 mode='channel'):
+                 niter=None, mode='channel'):
         super(BandpassflagInputs, self).__init__(
             context, output_dir=output_dir, vis=vis, caltable=caltable, intent=intent, field=field, spw=spw,
             antenna=antenna, hm_phaseup=hm_phaseup, phaseupsolint=phaseupsolint, phaseupbw=phaseupbw,
@@ -98,6 +101,7 @@ class BandpassflagInputs(ALMAPhcorBandpassInputs):
         self.antblnegsig = antblnegsig
         self.antblpossig = antblpossig
         self.relaxed_factor = relaxed_factor
+        self.niter = niter
 
     def as_dict(self):
         # temporary workaround to hide uvrange from Input Parameters accordion
@@ -239,7 +243,7 @@ class Bandpassflag(basetask.StandardTaskTemplate):
                 tmint=inputs.tmint, tmbl=inputs.tmbl,
                 antblnegsig=inputs.antblnegsig,
                 antblpossig=inputs.antblpossig,
-                relaxed_factor=inputs.relaxed_factor)
+                relaxed_factor=inputs.relaxed_factor, niter=inputs.niter)
             caftask = correctedampflag.Correctedampflag(cafinputs)
             cafresult = self._executor.execute(caftask)
 
