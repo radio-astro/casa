@@ -40,9 +40,24 @@ class ImagePreCheckHeuristics(object):
             hm_robust_scoreA = (0.75, 'Predicted robust=0.5 beam is outside PI requested range', 'Beam outside range')
         elif cqa.gt(beams[0.5]['major'], maxAR) and \
              cqa.lt(beams[0.5]['minor'], minAR):
-            # both fall outside the range, one too large and one too small, no change from default robust=0.5
-            hm_robust = 0.5
-            hm_robust_scoreA = (0.25, 'Predicted robust=0.5 beam is outside PI requested range and cannot be mitigated by robust', 'Cannot mitigate by robust')
+            # both fall outside the range, one too large and one too small -> compare areas and choose closest robust value
+            beamArea_m0p5 = cqa.mul(beams[-0.5]['minor'], beams[-0.5]['major'])
+            beamArea_0p5 = cqa.mul(beams[0.5]['minor'], beams[0.5]['major'])
+            beamArea_2p0 = cqa.mul(beams[2.0]['minor'], beams[2.0]['major'])
+            meanARBeamArea = cqa.mul(maxAR, minAR)
+            delta_m0p5 = cqa.abs(cqa.sub(meanARBeamArea, beamArea_m0p5))
+            delta_0p5 = cqa.abs(cqa.sub(meanARBeamArea, beamArea_0p5))
+            delta_2p0 = cqa.abs(cqa.sub(meanARBeamArea, beamArea_2p0))
+            if cqa.lt(delta_m0p5, delta_0p5) or cqa.lt(delta_2p0, delta_0p5):
+                if cqa.lt(delta_m0p5, delta_2p0):
+                    hm_robust = -0.5
+                    hm_robust_scoreA = (0.75, 'Predicted robust=0.5 beam is outside PI requested range', 'Beam outside range')
+                else:
+                    hm_robust = 2.0
+                    hm_robust_scoreA = (0.75, 'Predicted robust=0.5 beam is outside PI requested range', 'Beam outside range')
+            else:
+                hm_robust = 0.5
+                hm_robust_scoreA = (0.25, 'Predicted robust=0.5 beam is outside PI requested range and cannot be mitigated by robust', 'Cannot mitigate by robust')
         elif cqa.gt(beams[0.5]['major'], maxAR) and \
              cqa.le(minAR, beams[0.5]['minor']) and \
              cqa.le(beams[0.5]['minor'], maxAR):

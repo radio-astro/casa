@@ -80,25 +80,36 @@ Single Continuum:
 
 <h4>Estimated Synthesized Beam and Sensitivities for the Representative
 Target/Frequency</h4>
+
 Estimates are given for three values of the tclean robust weighting
-parameter, note that robust=+0.5 is always used for subsequent imaging
-stages (values highlighted in green), estimates for robust=-0.5 and +2.0
-are informative only. The percent difference between Min/Max acceptable
-resolution and the geometric mean of the estimated beams are shown in the
-%%Diff minAR / maxAR column. In addition to an estimate for the repBW, an
-estimate for the aggregate continuum bandwidth (aggBW) is also given
-assuming NO line contamination and NO spectral overlap between spws.
-These estimates account for Tsys, the observed uv-coverage, and prior
-flagging.
+parameter: robust = -0.5, +0.5 (default), and +2.0. The robust value
+chosen for all science target imaging is
+highlighted in green and corresponds to the robust value that yields
+the lowest "%%Diff from mean AR" value for the repBW (Bandwidth for
+Sensitivity) row. The %%Diff from mean AR is defined as the percent
+difference between the predicted beam area and the beam area of the
+geometric mean of the PI requested range. In addition to an estimate
+for the repBW, an estimate for the aggregate continuum bandwidth
+(aggBW) is also given assuming NO line contamination but accounting
+for spw frequency overlap. If the Bandwidth for Sensitivity (repBW) is
+&gt; the bandwidth of the spw containing the representative frequency
+(repSPW), then the beam is predicted using all spws, otherwise the
+beam is predicted for the repSPW alone. A message appears on the
+"By Task" view if a non-default value of robust (i.e., not +0.5) is
+chosen. Additionally, if the predicted beam axes are not both within
+the PI requested range using one of the three robust values, Warning
+messages appear on this page.
 <p>
-<b>These estimates should always be considered as the BEST CASE SCENARIO.</b>
-The estimates DO NOT account for (1) subsequent science target flagging;
-(2) loss of continuum bandwidth due to the hif_findcont process (i.e. removal
-of lines and other spectral features from the data used to image the
-continuum); (3) Issues that affect the image quality like (a) poor match of
-uv-coverage to image complexity; (b) dynamic range effects; (c) calibration
-deficiencies (poor phase transfer, residual baseline based effects, residual
-antenna position errors etc.).
+These estimates should always be considered as the BEST CASE
+SCENARIO. These estimates account for Tsys, the observed uv-coverage,
+and prior flagging. The estimates DO NOT account for (1) subsequent
+science target flagging; (2) loss of continuum bandwidth due to the
+hif_findcont process (i.e. removal of lines and other spectral
+features from the data used to image the continuum); (3) Issues that
+affect the image quality like (a) poor match of uv-coverage to image
+complexity; (b) dynamic range effects; (c) calibration deficiencies
+(poor phase transfer, residual baseline based effects, residual
+antenna position errors, etc.).
 
 <table class="table">
     <thead>
@@ -106,7 +117,7 @@ antenna position errors etc.).
             <th>robust</th>
             <th>uvtaper</th>
             <th>Synthesized Beam</th>
-            <th>%Diff minAR / maxAR</th>
+            <th>%Diff from mean AR = 100 * (robustAR - meanAR) / meanAR</th>
             <th>cell</th>
             <th>bandwidth</th>
             <th>bwmode</th>

@@ -432,8 +432,16 @@ class ImageParamsHeuristics(object):
                         with casatools.ImageReader('%s.psf' % (tmp_psf_filename)) as image:
                             # Avoid bad PSFs
                             if all(qaTool.getvalue(qaTool.convert(image.restoringbeam()['minor'], 'arcsec')) > 1e-5):
-                                makepsf_beams.append(image.restoringbeam())
-                                utils.set_nested_dict(local_known_beams, (field, intent, ','.join(map(str,sorted(spwids))), 'beam'), image.restoringbeam())
+                                restoringbeam = image.restoringbeam()
+                                # CAS-11193: Round to 3 digits to avoid confusion when comparing
+                                # heuristics against the beam weblog display (also using 3 digits)
+                                restoringbeam_major_rounded = float('%.3g' % (qaTool.getvalue(qaTool.convert(restoringbeam['major'], 'arcsec'))))
+                                restoringbeam_minor_rounded = float('%.3g' % (qaTool.getvalue(qaTool.convert(restoringbeam['minor'], 'arcsec'))))
+                                restoringbeam_rounded = {'major': {'value': restoringbeam_major_rounded, 'unit': 'arcsec'},
+                                                         'minor': {'value': restoringbeam_minor_rounded, 'unit': 'arcsec'},
+                                                         'positionangle': restoringbeam['positionangle']}
+                                makepsf_beams.append(restoringbeam_rounded)
+                                utils.set_nested_dict(local_known_beams, (field, intent, ','.join(map(str,sorted(spwids))), 'beam'), restoringbeam_rounded)
                             else:
                                 utils.set_nested_dict(local_known_beams, (field, intent, ','.join(map(str,sorted(spwids))), 'beam'), 'invalid')
 

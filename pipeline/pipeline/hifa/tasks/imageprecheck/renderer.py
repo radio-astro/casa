@@ -58,9 +58,10 @@ class T2_4MDetailsCheckProductSizeRenderer(basetemplates.T2_4MDetailsDefaultRend
             except:
                 beam = 'N/A'
             try:
-                beamsize = sqrt(bmaj_v * bmin_v)
-                if (minAR_v != 0.0) and (maxAR_v != 0.0):
-                    beam_vs_minAR_maxAR = '%.1f%% / %.1f%%' % (100. * (beamsize / minAR_v - 1.0), 100. * (beamsize / maxAR_v - 1.0))
+                robustAR_v = bmin_v * bmaj_v
+                meanAR_v = minAR_v * maxAR_v
+                if (meanAR_v != 0.0):
+                    beam_vs_minAR_maxAR = '%.1f%%' % (100. * (robustAR_v - meanAR_v) / meanAR_v)
                 else:
                     beam_vs_minAR_maxAR = 'N/A'
             except:
