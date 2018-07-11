@@ -296,7 +296,10 @@ class ImagePreCheck(basetask.StandardTaskTemplate):
         if real_repr_target:
             # Determine heuristic UV taper value
             if hm_robust == 2.0:
-                hm_uvtaper = image_heuristics.uvtaper(beam_natural=beams[(2.0, str(default_uvtaper), 'repBW')], protect_long=None)
+                if reprBW_mode in ['nbin', 'repr_spw']:
+                    hm_uvtaper = image_heuristics.uvtaper(beam_natural=beams[(2.0, str(default_uvtaper), 'repBW')], protect_long=None)
+                else:
+                    hm_uvtaper = image_heuristics.uvtaper(beam_natural=beams[(2.0, str(default_uvtaper), 'aggBW')], protect_long=None)
                 # For ALMA Cycle 5 the additional beam, cell and sensitivity values for a different
                 # uvtaper are not to be calculated or shown.
                 if False and (hm_uvtaper != []):
