@@ -143,6 +143,7 @@ class CleanSummary(object):
                     collapse_function = 'max' if (('cube' in iteration['cleanmask']) or ('repBW' in iteration['cleanmask'])) else 'mean'
                     plot_wrappers.append(
                         sky.SkyDisplay().plot(self.context, iteration['cleanmask'], reportdir=stage_dir,
-                                                   intent=r.intent, collapseFunction=collapse_function))
+                                                   intent=r.intent, collapseFunction=collapse_function,
+                                                   **{'cmap': copy.deepcopy(matplotlib.cm.YlOrRd)}))
 
         return [p for p in plot_wrappers if p is not None]
