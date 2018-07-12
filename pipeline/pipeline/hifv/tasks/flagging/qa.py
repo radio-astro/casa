@@ -13,6 +13,7 @@ from . import targetflag
 
 LOG = logging.get_logger(__name__)
 
+
 class FlagBadDeformattersQAHandler(pqa.QAPlugin):
     result_cls = flagbaddeformatters.FlagBadDeformattersResults
     child_cls = None
@@ -27,10 +28,11 @@ class FlagBadDeformattersQAHandler(pqa.QAPlugin):
         result.qa.pool.extend(scores)
 
     def _ms_exists(self, output_dir, ms):
-        '''
+        """
         Check for the existence of the target MS
-        '''
+        """
         return qacalc.score_path_exists(output_dir, ms, 'Flag Bad Deformatters')
+
 
 class FlagBadDeformattersListQAHandler(pqa.QAPlugin):
     """
@@ -50,9 +52,6 @@ class FlagBadDeformattersListQAHandler(pqa.QAPlugin):
         result.qa.all_unity_longmsg = longmsg
 
 
-
-
-
 class CheckflagQAHandler(pqa.QAPlugin):
     result_cls = checkflag.CheckflagResults
     child_cls = None
@@ -60,17 +59,28 @@ class CheckflagQAHandler(pqa.QAPlugin):
 
     def handle(self, context, result):
 
-        # Check for existence of the the target MS.
-        score1 = self._ms_exists(os.path.dirname(result.inputs['vis']), os.path.basename(result.inputs['vis']))
-        scores = [score1]
+        # get a QA score for flagging
+        # < 5%   of data flagged  --> 1.0
+        # 5%-60% of data flagged  --> 0.99 to 0.33
+        # > 60%  of data flagged  --> 0.0
+
+        if result.summarydict:
+            score1 = qacalc.score_total_data_flagged_vla(os.path.basename(result.inputs['vis']),
+                                                         [result.summarydict])
+            scores = [score1]
+        else:
+            LOG.error('No checkflag summary statistics.')
+            scores = [pqa.QAScore(0.0, longmsg='No checkflag summary statistics',
+                                  shortmsg='Flag Summary off')]
 
         result.qa.pool.extend(scores)
 
     def _ms_exists(self, output_dir, ms):
-        '''
+        """
         Check for the existence of the target MS
-        '''
+        """
         return qacalc.score_path_exists(output_dir, ms, 'Checkflag')
+
 
 class CheckflagListQAHandler(pqa.QAPlugin):
     """
@@ -90,8 +100,6 @@ class CheckflagListQAHandler(pqa.QAPlugin):
         result.qa.all_unity_longmsg = longmsg
 
 
-
-
 class TargetflagQAHandler(pqa.QAPlugin):
     result_cls = targetflag.TargetflagResults
     child_cls = None
@@ -106,10 +114,11 @@ class TargetflagQAHandler(pqa.QAPlugin):
         result.qa.pool.extend(scores)
 
     def _ms_exists(self, output_dir, ms):
-        '''
+        """
         Check for the existence of the target MS
-        '''
+        """
         return qacalc.score_path_exists(output_dir, ms, 'Targetflag')
+
 
 class TargetflagListQAHandler(pqa.QAPlugin):
     """

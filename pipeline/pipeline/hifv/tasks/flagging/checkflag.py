@@ -213,14 +213,10 @@ class Checkflag(basetask.StandardTaskTemplate):
         checkflag_result = self._do_checkflag(**method_args)
 
         job = casa_tasks.flagdata(vis=self.inputs.vis, mode='summary')
-
-        if self.inputs.checkflagmode in ('semi', ''):
-            summarydict = self._executor.execute(job)
-        else:
-            summarydict = None
+        summarydict = self._executor.execute(job)
 
         return CheckflagResults([job], summarydict=summarydict)
-    
+
     def _do_checkflag(self, mode='rflag', field=None, correlation=None, scan=None,
                       ntime='scan', datacolumn='corrected', flagbackup=False, timedevscale=4.0,
                       freqdevscale=4.0):
@@ -273,7 +269,10 @@ class Checkflag(basetask.StandardTaskTemplate):
 
         self._executor.execute(job)
 
-        return CheckflagResults([job])
+        job = casa_tasks.flagdata(vis=self.inputs.vis, mode='summary')
+        summarydict = self._executor.execute(job)
+
+        return CheckflagResults([job], summarydict=summarydict)
 
     def _do_tfcropflag(self, mode='tfcrop', field=None, correlation=None, scan=None,
                       ntime=0.45, datacolumn='corrected', flagbackup=True):
