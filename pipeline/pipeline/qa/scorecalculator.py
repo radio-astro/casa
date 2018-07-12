@@ -1878,7 +1878,7 @@ def score_checksources(mses, fieldname, spwid, imagename, rms, gfluxscale, gflux
         score = 0.0
         longmsg = 'Check source fit failed for %s field %s spwid %d' % (msnames, fieldname, spwid)
         shortmsg = 'Check source fit failed'
-        metric_score = None
+        metric_score = 'N/A'
         metric_units = 'Check source fit failed'
 
     else:
@@ -1890,50 +1890,55 @@ def score_checksources(mses, fieldname, spwid, imagename, rms, gfluxscale, gflux
         fitflux_err = fitdict['fitflux_err']['value']
         fitpeak = fitdict['fitpeak']['value']
         shortmsg = 'Check source fit successful'
-        if not refflux:
-            score = max(0.0, 1.0 - min(1.0, beams))
-            if score <= 0.9:
-                shortmsg = 'Check source fit not optimal'
-            #longmsg = ('Check source fit for %s field %s spwid %d:  offset %0.3fmarcsec=%0.3fbeams  fit flux %0.3fJy  '
-            #           'decoherence None' % (msnames, fieldname, spwid, offset, beams, fitflux))
-            metric_score = beams
-            metric_units = 'beams'
-
-        else:
-            coherence = fitdict['fluxloss']['value'] * 100.0
-            offsetscore = max(0.0, 1.0 - min(1.0, beams))
-            fluxscore = max(0.0, 1.0 - fitdict['fluxloss']['value'])
-            score = math.sqrt(fluxscore * offsetscore)
-            if score <= 0.9:
-                shortmsg = 'Check source fit not optimal'
-            #longmsg = ('Check source fit for %s field %s spwid %d:  offset %0.3fmarcsec=%0.3fbeams  fit flux %0.3fJy  '
-            #           'decoherence %0.3f percent' % (msnames, fieldname, spwid, offset, beams, fitflux, coherence))
-
-            metric_score = (fluxscore, offsetscore)
-            metric_units = 'flux score, offset score'
 
         warnings = []
 
+        if refflux is not None:
+            coherence = fitdict['fluxloss']['value'] * 100.0
+            flux_score = max(0.0, 1.0 - fitdict['fluxloss']['value'])
+            flux_metric = fitdict['fluxloss']['value']
+            flux_unit = 'flux loss'
+        else:
+            flux_score = 0.0
+            flux_metric = 'N/A'
+            flux_unit = 'flux loss'
+
+        offset_score = 0.0
+        offset_metric = 'N/A'
+        offset_unit = 'beams'
         if beams is None:
             warnings.append('unfitted offset')
-        elif beams > 0.15:
-            warnings.append('large fitted offset of %.2f marcsec and %.2f synth beam' % (offset, beams))
+        else:
+            offset_score = max(0.0, 1.0 - min(1.0, beams))
+            offset_metric = beams
+            if beams > 0.15:
+                warnings.append('large fitted offset of %.2f marcsec and %.2f synth beam' % (offset, beams))
 
+        fitflux_score = 0.0
+        fitflux_metric = 'N/A'
+        fitflux_unit = 'fitflux/refflux'
         if gfluxscale is None:
             warnings.append('undefined gfluxscale result')
         elif gfluxscale == 0.0:
             warnings.append('gfluxscale value of 0.0 mJy')
         else:
             chk_fitflux_gfluxscale_ratio = fitflux * 1000. / gfluxscale
+            fitflux_score = max(0.0, 1.0 - abs(1.0 - chk_fitflux_gfluxscale_ratio))
+            fitflux_metric = chk_fitflux_gfluxscale_ratio
             if chk_fitflux_gfluxscale_ratio < 0.8:
                 warnings.append('a low [Fitted / gfluxscale] Flux Density Ratio of %.2f' % (chk_fitflux_gfluxscale_ratio))
 
+        fitpeak_score = 0.0
+        fitpeak_metric = 'N/A'
+        fitpeak_unit = 'fitpeak/fitflux'
         if fitflux is None:
             warnings.append('undefined check fit result')
         elif fitflux == 0.0:
             warnings.append('Fitted Flux Density value of 0.0 mJy')
         else:
             chk_fitpeak_fitflux_ratio = fitpeak / fitflux
+            fitpeak_score = max(0.0, 1.0 - abs(1.0 - (chk_fitpeak_fitflux_ratio)))
+            fitpeak_metric = chk_fitpeak_fitflux_ratio
             if chk_fitpeak_fitflux_ratio < 0.7:
                 warnings.append('low Fitted [Peak Intensity / Flux Density] Ratio of %.2f' % (chk_fitpeak_fitflux_ratio))
 
@@ -1944,11 +1949,23 @@ def score_checksources(mses, fieldname, spwid, imagename, rms, gfluxscale, gflux
                 if chk_gfluxscale_snr < 20.:
                    snr_msg = ', however, the S/N of the gfluxscale measurement is low'
 
+        if any(np.array([offset_score, fitflux_score, fitpeak_score]) < 1.0):
+            score = math.sqrt(offset_score * fitflux_score * fitpeak_score)
+        else:
+            score = offset_score * fitflux_score * fitpeak_score
+        metric_score = [offset_metric, fitflux_metric, fitpeak_metric]
+        metric_units = '%s, %s, %s' % (offset_unit, fitflux_unit, fitpeak_unit)
+
         if warnings != []:
             longmsg = '%s field %s spwid %d: has a %s%s' % (msnames, fieldname, spwid, ' and a '.join(warnings), snr_msg)
-            LOG.warn(longmsg)
+            # Log warnings only if they would not be logged by the QA system (score <= 0.66)
+            if score > 0.66:
+                LOG.warn(longmsg)
         else:
             longmsg = 'Check source fit successful'
+
+        if score <= 0.9:
+            shortmsg = 'Check source fit not optimal'
 
     origin = pqa.QAOrigin(metric_name='score_checksources',
                           metric_score=metric_score,
