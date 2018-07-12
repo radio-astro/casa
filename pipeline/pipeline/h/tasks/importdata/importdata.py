@@ -95,7 +95,8 @@ class ImportDataResults(basetask.Results):
 class ImportData(basetask.StandardTaskTemplate):
     Inputs = ImportDataInputs
 
-    def _ms_directories(self, names):
+    @staticmethod
+    def _ms_directories(names):
         """
         Inspect a list of file entries, finding the root directory of any
         measurement sets present via a set of characteristic files and
@@ -109,7 +110,8 @@ class ImportData(basetask.StandardTaskTemplate):
         return set([m for m in matching
                     if matching.count(m) == len(identifiers)])
 
-    def _asdm_directories(self, members):
+    @staticmethod
+    def _asdm_directories(members):
         """
         Inspect a list of file entries, finding the root directory of any
         ASDMs present via a set of characteristic files and directories.
@@ -292,15 +294,11 @@ class ImportData(basetask.StandardTaskTemplate):
 
         if inputs.save_flagonline:
             # Create the standard calibration flagging template file
-            template_flagsfile = os.path.join(inputs.output_dir,
-                                              os.path.basename(asdm) + '.flagtemplate.txt')
-            self._make_template_flagfile(asdm, template_flagsfile,
-                                         'User flagging commands file for the calibration pipeline')
+            template_flagsfile = os.path.join(inputs.output_dir, os.path.basename(asdm) + '.flagtemplate.txt')
+            self._make_template_flagfile(template_flagsfile, 'User flagging commands file for the calibration pipeline')
             # Create the imaging targets file
-            template_flagsfile = os.path.join(inputs.output_dir,
-                                              os.path.basename(asdm) + '.flagtargetstemplate.txt')
-            self._make_template_flagfile(asdm, template_flagsfile,
-                                         'User flagging commands file for the imaging pipeline')
+            template_flagsfile = os.path.join(inputs.output_dir, os.path.basename(asdm) + '.flagtargetstemplate.txt')
+            self._make_template_flagfile(template_flagsfile, 'User flagging commands file for the imaging pipeline')
 
         createmms = mpihelpers.parse_mpi_input_parameter(inputs.createmms)
 
@@ -329,7 +327,7 @@ class ImportData(basetask.StandardTaskTemplate):
                 LOG.trace('Copying %s: %s to %s', xml_filename, asdm_source, vis_source)
                 shutil.copyfile(asdm_source, vis_source)
 
-    def _make_template_flagfile(self, asdm, outfile, titlestr):
+    def _make_template_flagfile(self, outfile, titlestr):
         # Create a new file if overwrite is true and the file
         # does not already exist.
         inputs = self.inputs

@@ -30,10 +30,10 @@ class VLAImportDataInputs(importdata.ImportDataInputs):
                  overwrite=None, nocopy=None, bdfflags=None, lazy=None, save_flagonline=None, createmms=None,
                  ocorr_mode=None):
         super(VLAImportDataInputs, self).__init__(context, vis=vis, output_dir=output_dir, asis=asis,
-                                                   process_caldevice=process_caldevice, session=session,
-                                                   overwrite=overwrite, nocopy=nocopy, bdfflags=bdfflags, lazy=lazy,
-                                                   save_flagonline=save_flagonline, createmms=createmms,
-                                                   ocorr_mode=ocorr_mode, asimaging=False)
+                                                  process_caldevice=process_caldevice, session=session,
+                                                  overwrite=overwrite, nocopy=nocopy, bdfflags=bdfflags, lazy=lazy,
+                                                  save_flagonline=save_flagonline, createmms=createmms,
+                                                  ocorr_mode=ocorr_mode, asimaging=False)
 
 
 class VLAImportDataResults(basetask.Results):
@@ -67,9 +67,6 @@ class VLAImportDataResults(basetask.Results):
             for result in self.setjy_results:
                 result.merge_with_context(context)
 
-
-
-
     def _do_msinfo_heuristics(self, ms, context):
         """Gets heuristics for VLA via msinfo script
         """
@@ -94,7 +91,7 @@ class VLAImportDataResults(basetask.Results):
                 missingScans += 1
                 missingScanStr = missingScanStr + str(i + 1) + ', '
 
-        if (missingScans > 0):
+        if missingScans > 0:
             LOG.warn("WARNING: There were " + str(missingScans) + " missing scans in this MS")
         else:
             LOG.info("No missing scans found.")
@@ -142,15 +139,11 @@ class VLAImportData(importdata.ImportData):
 
         if inputs.save_flagonline:
             # Create the standard calibration flagging template file
-            template_flagsfile = os.path.join(inputs.output_dir,
-                                              os.path.basename(asdm) + '.flagtemplate.txt')
-            self._make_template_flagfile(asdm, template_flagsfile,
-                                         'User flagging commands file for the calibration pipeline')
+            template_flagsfile = os.path.join(inputs.output_dir, os.path.basename(asdm) + '.flagtemplate.txt')
+            self._make_template_flagfile(template_flagsfile, 'User flagging commands file for the calibration pipeline')
             # Create the imaging targets file
-            template_flagsfile = os.path.join(inputs.output_dir,
-                                              os.path.basename(asdm) + '.flagtargetstemplate.txt')
-            self._make_template_flagfile(asdm, template_flagsfile,
-                                         'User flagging commands file for the imaging pipeline')
+            template_flagsfile = os.path.join(inputs.output_dir, os.path.basename(asdm) + '.flagtargetstemplate.txt')
+            self._make_template_flagfile(template_flagsfile, 'User flagging commands file for the imaging pipeline')
 
         createmms = mpihelpers.parse_mpi_input_parameter(inputs.createmms)
 
