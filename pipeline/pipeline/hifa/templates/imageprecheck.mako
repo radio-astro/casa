@@ -83,41 +83,39 @@ Target/Frequency</h4>
 
 Estimates are given for three values of the tclean robust weighting
 parameter: robust = -0.5, +0.5 (default), and +2.0. The robust value
-chosen for all science target imaging is
-highlighted in green and corresponds to the robust value that yields
-the lowest "%%Diff from mean AR" value for the repBW (Bandwidth for
-Sensitivity) row. The %%Diff from mean AR is defined as the percent
-difference between the predicted beam area and the beam area of the
-geometric mean of the PI requested range. In addition to an estimate
-for the repBW, an estimate for the aggregate continuum bandwidth
-(aggBW) is also given assuming NO line contamination but accounting
-for spw frequency overlap. If the Bandwidth for Sensitivity (repBW) is
-&gt; the bandwidth of the spw containing the representative frequency
-(repSPW), then the beam is predicted using all spws, otherwise the
-beam is predicted for the repSPW alone. A message appears on the
-"By Task" view if a non-default value of robust (i.e., not +0.5) is
-chosen. Additionally, if the predicted beam axes are not both within
-the PI requested range using one of the three robust values, Warning
-messages appear on this page.
-<p>
-These estimates should always be considered as the BEST CASE
-SCENARIO. These estimates account for Tsys, the observed uv-coverage,
-and prior flagging. The estimates DO NOT account for (1) subsequent
-science target flagging; (2) loss of continuum bandwidth due to the
-hif_findcont process (i.e. removal of lines and other spectral
-features from the data used to image the continuum); (3) Issues that
-affect the image quality like (a) poor match of uv-coverage to image
-complexity; (b) dynamic range effects; (c) calibration deficiencies
-(poor phase transfer, residual baseline based effects, residual
-antenna position errors, etc.).
-
+chosen for all science target imaging is highlighted in green. If the
+"Min / Max Acceptable Resolution" is available (>=Cycle 5 12m-array data),
+the robust is chosen that yields the lowest "&#37;Diff from mean AR"
+value for the repBW (Bandwidth for Sensitivity) row. The &#37;Diff
+from mean AR is defined as the percent difference between the predicted
+beam area and the beam area of the geometric mean (mean AR) of the PI
+requested range. In addition to an estimate for the repBW, an estimate
+for the aggregate continuum bandwidth (aggBW) is also given assuming NO
+line contamination but accounting for spw frequency overlap. If the
+Bandwidth for Sensitivity (repBW) is &gt; the bandwidth of the spw
+containing the representative frequency (repSPW), then the beam is
+predicted using all spws, otherwise the beam is predicted for the
+repSPW alone. A message appears on the "By Task" view if a non-default
+value of robust (i.e., not +0.5) is chosen. Additionally, if the
+predicted beam axes are not both within the PI requested range using
+one of the three robust values, Warning messages appear on this page.
+<br></br>
+<b>These estimates should always be considered as the BEST CASE SCENARIO.</b>
+These estimates account for Tsys, the observed uv-coverage, and prior
+flagging. The estimates DO NOT account for (1) subsequent science target
+flagging; (2) loss of continuum bandwidth due to the hif_findcont process
+(i.e. removal of lines and other spectral features from the data used
+to image the continuum); (3) Issues that affect the image quality like
+(a) poor match of uv-coverage to image complexity; (b) dynamic range
+effects; (c) calibration deficiencies (poor phase transfer, residual
+baseline based effects, residual antenna position errors, etc.). 
 <table class="table">
     <thead>
         <tr>
             <th>robust</th>
             <th>uvtaper</th>
             <th>Synthesized Beam</th>
-            <th>%Diff from mean AR = 100 * (robustAR - meanAR) / meanAR</th>
+            <th>%Diff from mean AR</th>
             <th>cell</th>
             <th>bandwidth</th>
             <th>bwmode</th>
