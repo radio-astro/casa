@@ -60,9 +60,9 @@ class CheckflagQAHandler(pqa.QAPlugin):
     def handle(self, context, result):
 
         # get a QA score for flagging
-        # < 5%   of data flagged  --> 1.0
-        # 5%-60% of data flagged  --> 0.99 to 0.33
-        # > 60%  of data flagged  --> 0.0
+        # < 5%   of data flagged  --> 1
+        # 5%-60% of data flagged  --> 1 to 0
+        # > 60%  of data flagged  --> 0
 
         if result.summarydict:
             score1 = qacalc.score_total_data_flagged_vla(os.path.basename(result.inputs['vis']),

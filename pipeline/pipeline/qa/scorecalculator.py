@@ -623,7 +623,7 @@ def score_total_data_flagged_vla(filename, summaries):
     data flagged.
 
     0%-5% flagged   -> 1
-    5%-60% flagged  -> 0.99 to 0.33
+    5%-60% flagged  -> 1 to 0
     60-100% flagged -> 0
     """
     # Calculate fraction of flagged data.
@@ -633,7 +633,7 @@ def score_total_data_flagged_vla(filename, summaries):
     if frac_flagged > 0.6:
         score = 0
     else:
-        score = linear_score(frac_flagged, 0.05, 0.6, 1.0, 0.33)
+        score = linear_score(frac_flagged, 0.05, 0.6, 1.0, 0.0)
 
     # Set score messages and origin.
     percent = 100.0 * frac_flagged
