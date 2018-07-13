@@ -70,6 +70,10 @@ class FindContResult(basetask.Results):
 
         context.clean_list_pending = clean_list_pending
 
+        # Remove heuristics objects to avoid accumulating large amounts of unnecessary memory
+        for target in self.inputs['target_list']:
+            del target['heuristics']
+
     def __repr__(self):
         repr = 'FindCont:\n'
         for source_name in self.result_cont_ranges.iterkeys():
