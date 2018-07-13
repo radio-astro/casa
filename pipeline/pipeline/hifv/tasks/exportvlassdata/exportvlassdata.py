@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 
 import collections
+import errno
 import fnmatch
 import os
 import shutil
@@ -61,6 +62,15 @@ class Exportvlassdata(basetask.StandardTaskTemplate):
         # 'self.inputs' everywhere
         inputs = self.inputs
 
+        try:
+            LOG.trace('Creating products directory: {!s}'.format(inputs.products_dir))
+            os.makedirs(inputs.products_dir)
+        except OSError as exc:
+            if exc.errno == errno.EEXIST:
+                pass
+            else:
+                raise
+
         # Initialize the standard ous is string.
         oussid = self.get_oussid(inputs.context)
 
@@ -91,7 +101,7 @@ class Exportvlassdata(basetask.StandardTaskTemplate):
 
         imlist = self.inputs.context.subimlist.get_imlist()
 
-        dname = inputs.products_dir + '/'
+        images_list = []
         for imageitem in imlist:
 
             if imageitem['multiterm']:
@@ -100,21 +110,19 @@ class Exportvlassdata(basetask.StandardTaskTemplate):
             else:
                 pbcor_image_name = imageitem['imagename'].replace('subim', 'pbcor.subim')
                 rms_image_name = imageitem['imagename'].replace('subim', 'pbcor.rms.subim')
+            images_list.extend([pbcor_image_name, rms_image_name])
 
-            fits_pbcor_image = dname + pbcor_image_name + '.fits'
-            task = casa_tasks.exportfits(imagename=pbcor_image_name, fitsimage=fits_pbcor_image)
+        fits_list = []
+        for image in images_list:
+            fitsfile = os.path.join(inputs.products_dir, image + '.fits')
+            task = casa_tasks.exportfits(imagename=image, fitsimage=fitsfile)
             self._executor.execute(task)
-            LOG.info('Wrote {ff}'.format(ff=fits_pbcor_image))
-
-            fits_rms_image = dname + rms_image_name + '.fits'
-            task = casa_tasks.exportfits(imagename=rms_image_name, fitsimage=fits_rms_image)
-            self._executor.execute(task)
-            LOG.info('Wrote {ff}'.format(ff=fits_rms_image))
+            LOG.info('Wrote {ff}'.format(ff=fitsfile))
+            fits_list.append(fitsfile)
 
         # Export the pipeline manifest file
         #    TBD Remove support for auxiliary data products to the individual pipelines
-        pipemanifest = self._make_pipe_manifest(inputs.context, oussid, stdfproducts, {}, {}, [],
-                                                [os.path.basename(fits_pbcor_image), os.path.basename(fits_rms_image)])
+        pipemanifest = self._make_pipe_manifest(inputs.context, oussid, stdfproducts, {}, {}, [], fits_list)
         casa_pipe_manifest = self._export_pipe_manifest('pipeline_manifest.xml', inputs.products_dir, pipemanifest)
         result.manifest = os.path.basename(casa_pipe_manifest)
 
