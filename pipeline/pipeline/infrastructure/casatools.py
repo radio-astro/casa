@@ -169,7 +169,9 @@ def selectvis_context_manager(tool):
         if not os.path.exists(filename):
             raise IOError('No such file or directory: {!r}'.format(filename))
         LOG.trace('{!s} tool: opening {!r} using .selectvis(writeaccess=False)'.format(tool_name, filename))
-        tool.selectvis(filename, writeaccess=False, **kwargs)
+        rtn = tool.selectvis(filename, writeaccess=False, **kwargs)
+        if rtn is False:
+            raise Exception('selectvis did not return any data')
         try:
             yield tool
         finally:

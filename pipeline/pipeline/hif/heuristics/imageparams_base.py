@@ -368,15 +368,16 @@ class ImageParamsHeuristics(object):
                                 real_spwid = self.observing_run.virtual2real_spw_id(spwid, self.observing_run.get_ms(vis))
                                 antenna_ids = self.antenna_ids(intent, [os.path.basename(vis)])
                                 taql = '||'.join(['ANTENNA1==%d' % i for i in antenna_ids[os.path.basename(vis)]])
-                                casatools.imager.selectvis(vis=vis,
-                                                           field=field, spw=real_spwid, scan=scanids,
-                                                           taql=taql, usescratch=False, writeaccess=False)
-                                # flag to say that imager has some valid data to work
-                                # on
-                                valid_data[(field, intent)] = True
-                                valid_vis_list.append(vis)
-                                valid_real_spwid_list.append(real_spwid)
-                                valid_virtual_spwid_list.append(spwid)
+                                rtn = casatools.imager.selectvis(vis=vis,
+                                                                 field=field, spw=real_spwid, scan=scanids,
+                                                                 taql=taql, usescratch=False, writeaccess=False)
+                                if rtn is True:
+                                    # flag to say that imager has some valid data to work
+                                    # on
+                                    valid_data[(field, intent)] = True
+                                    valid_vis_list.append(vis)
+                                    valid_real_spwid_list.append(real_spwid)
+                                    valid_virtual_spwid_list.append(spwid)
                             except:
                                 pass
 
@@ -533,14 +534,16 @@ class ImageParamsHeuristics(object):
                         try:
                             antenna_ids = self.antenna_ids(field_intent[1], [os.path.basename(vis)])
                             taql = '||'.join(['ANTENNA1==%d' % i for i in antenna_ids[os.path.basename(vis)]])
-                            casatools.imager.selectvis(vis=vis, field=field_intent[0],
-                              taql=taql, spw=real_spwspec, scan=scanids, usescratch=False, writeaccess=False)
-                            aipsfieldofview = '%4.1farcsec' % (2.0 * self.largest_primary_beam_size(spwspec, field_intent[1]))
-                            # Need to run advise to check if the current selection is completely flagged
-                            rtn = casatools.imager.advise(takeadvice=False, amplitudeloss=0.5, fieldofview=aipsfieldofview)
-                            casatools.imager.done()
-                            if rtn[0]:
-                                valid_data[field_intent] = True
+                            rtn = casatools.imager.selectvis(vis=vis, field=field_intent[0],
+                                                             taql=taql, spw=real_spwspec,
+                                                             scan=scanids, usescratch=False, writeaccess=False)
+                            if rtn is True:
+                                aipsfieldofview = '%4.1farcsec' % (2.0 * self.largest_primary_beam_size(spwspec, field_intent[1]))
+                                # Need to run advise to check if the current selection is completely flagged
+                                rtn = casatools.imager.advise(takeadvice=False, amplitudeloss=0.5, fieldofview=aipsfieldofview)
+                                casatools.imager.done()
+                                if rtn[0]:
+                                    valid_data[field_intent] = True
                         except:
                             pass
 
