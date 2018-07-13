@@ -72,7 +72,10 @@ class FindContResult(basetask.Results):
 
         # Remove heuristics objects to avoid accumulating large amounts of unnecessary memory
         for target in self.inputs['target_list']:
-            del target['heuristics']
+            try:
+                del target['heuristics']
+            except:
+                pass
 
     def __repr__(self):
         repr = 'FindCont:\n'

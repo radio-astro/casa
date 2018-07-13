@@ -36,7 +36,10 @@ class MakeImListResult(basetask.Results):
                     context.clean_list_info[key] = value
         # Remove heuristics objects to avoid accumulating large amounts of unnecessary memory
         for target in self.targets:
-            del target['heuristics']
+            try:
+                del target['heuristics']
+            except:
+                pass
 
         context.contfile = self.contfile
         context.linesfile = self.linesfile
