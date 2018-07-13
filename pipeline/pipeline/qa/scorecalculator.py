@@ -48,6 +48,7 @@ __all__ = ['score_polintents',                                # ALMA specific
            'score_ephemeris_coordinates',
            'score_online_shadow_template_agents',
            'score_applycal_agents',
+           'score_vla_agents',
            'score_total_data_flagged',
            'score_total_data_flagged_vla',
            'score_ms_model_data_column_present',
@@ -562,6 +563,25 @@ def score_online_shadow_template_agents(ms, summaries):
     new_origin = pqa.QAOrigin(metric_name='score_online_shadow_template_agents',
                               metric_score=score.origin.metric_score,
                               metric_units='Fraction of data newly flagged by online, shadow, and template agents')
+    score.origin = new_origin
+
+    return score
+
+
+@log_qa
+def score_vla_agents(ms, summaries):
+    """
+    Get a score for the fraction of data flagged by all agents.
+
+    0 < score < 1 === 60% < frac_flagged < 5%
+    """
+    score = score_data_flagged_by_agents(ms, summaries, 0.05, 0.6, ['before', 'anos', 'intents', 'qa0', 'qa2',
+                                                                    'online',  'template', 'autocorr',
+                                                                    'shadow', 'edgespw', 'clip', 'quack', 'baseband'])
+
+    new_origin = pqa.QAOrigin(metric_name='score_vla_agents',
+                              metric_score=score.origin.metric_score,
+                              metric_units='Fraction of data newly flagged all agents')
     score.origin = new_origin
 
     return score

@@ -313,7 +313,39 @@ class FlagDeterVLAInputs(flagdeterbase.FlagDeterBaseInputs):
 
 
 class FlagDeterVLAResults(flagdeterbase.FlagDeterBaseResults):
-    pass
+    def __init__(self, summaries, flagcmds):
+        super(flagdeterbase.FlagDeterBaseResults, self).__init__()
+        self.summaries = summaries
+        self._flagcmds = flagcmds
+
+    def flagcmds(self):
+        return self._flagcmds
+
+    def merge_with_context(self, context):
+        # nothing to do
+        pass
+
+    def __repr__(self):
+        # Step through the summary list and print a few things.
+        # SUBTRACT flag counts from previous agents, because the counts are
+        # cumulative.
+        s = 'Deterministic flagging results:\n'
+
+        for idx in range(0, len(self.summaries)):
+            flagcount = int(self.summaries[idx]['flagged'])
+            totalcount = int(self.summaries[idx]['total'])
+
+            # From the second summary onwards, subtract counts from the previous
+            # one
+            if idx > 0:
+                flagcount = flagcount - int(self.summaries[idx - 1]['flagged'])
+
+            s += '\tSummary %s (%s) :  Flagged : %s out of %s (%0.2f%%)\n' % (
+                idx, self.summaries[idx]['name'], flagcount, totalcount,
+                100.0 * flagcount / totalcount)
+
+        return s
+
 
 # ------------------------------------------------------------------------------
 # class FlagDeterVLA
