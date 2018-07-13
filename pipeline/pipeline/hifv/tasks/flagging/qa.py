@@ -10,6 +10,7 @@ import pipeline.qa.scorecalculator as qacalc
 from . import checkflag
 from . import flagbaddeformatters
 from . import targetflag
+from . import flagdetervla
 
 LOG = logging.get_logger(__name__)
 
@@ -75,12 +76,6 @@ class CheckflagQAHandler(pqa.QAPlugin):
 
         result.qa.pool.extend(scores)
 
-    def _ms_exists(self, output_dir, ms):
-        """
-        Check for the existence of the target MS
-        """
-        return qacalc.score_path_exists(output_dir, ms, 'Checkflag')
-
 
 class CheckflagListQAHandler(pqa.QAPlugin):
     """
@@ -107,17 +102,21 @@ class TargetflagQAHandler(pqa.QAPlugin):
 
     def handle(self, context, result):
 
-        # Check for existence of the the target MS.
-        score1 = self._ms_exists(os.path.dirname(result.inputs['vis']), os.path.basename(result.inputs['vis']))
-        scores = [score1]
+        # get a QA score for flagging
+        # < 5%   of data flagged  --> 1
+        # 5%-60% of data flagged  --> 1 to 0
+        # > 60%  of data flagged  --> 0
+
+        if result.summarydict:
+            score1 = qacalc.score_total_data_flagged_vla(os.path.basename(result.inputs['vis']),
+                                                         [result.summarydict])
+            scores = [score1]
+        else:
+            LOG.error('No checkflag summary statistics.')
+            scores = [pqa.QAScore(0.0, longmsg='No checkflag summary statistics',
+                                  shortmsg='Flag Summary off')]
 
         result.qa.pool.extend(scores)
-
-    def _ms_exists(self, output_dir, ms):
-        """
-        Check for the existence of the target MS
-        """
-        return qacalc.score_path_exists(output_dir, ms, 'Targetflag')
 
 
 class TargetflagListQAHandler(pqa.QAPlugin):
@@ -136,3 +135,23 @@ class TargetflagListQAHandler(pqa.QAPlugin):
         mses = [r.inputs['vis'] for r in result]
         longmsg = 'No missing target MS(s) for %s' % utils.commafy(mses, quotes=False, conjunction='or')
         result.qa.all_unity_longmsg = longmsg
+
+
+class FlagdataQAHandler(pqa.QAPlugin):
+    result_cls = flagdetervla.FlagDeterVLAResults
+    child_cls = None
+    generating_task = flagdetervla.FlagDeterVLA
+
+    def handle(self, context, result):
+        vis = result.inputs['vis']
+        ms = context.observing_run.get_ms(vis)
+
+        # CAS-7059 base the metric (and warnings) on Shadowing+Online, instead
+        # of on the Total.
+        score = qacalc.score_online_shadow_template_agents(ms, result.summaries)
+        new_origin = pqa.QAOrigin(metric_name='%OnlineShadowTemplateFlags',
+                                  metric_score=score.origin.metric_score,
+                                  metric_units=score.origin.metric_units)
+        score.origin = new_origin
+
+        result.qa.pool[:] = [score]

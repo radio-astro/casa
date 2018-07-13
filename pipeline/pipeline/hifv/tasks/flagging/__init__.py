@@ -29,6 +29,9 @@ pipelineqa.qa_registry.add_handler(qa.TargetflagQAHandler())
 # pipelineqa.qa_registry.add_handler(qa.TargetflagListQAHandler())
 qaadapter.registry.register_to_dataset_topic(targetflag.TargetflagResults)
 
+pipelineqa.qa_registry.add_handler(qa.FlagdataQAHandler())
+# pipelineqa.qa_registry.add_handler(qa.FlagdataListQAHandler())
+qaadapter.registry.register_to_dataset_topic(flagdetervla.FlagDeterVLAResults)
 
 # Use locally defined renderer for VLA deterministic flagging.
 weblog.add_renderer(FlagDeterVLA, renderer.T2_4MDetailsFlagDeterVLARenderer(), group_by=weblog.UNGROUPED)
