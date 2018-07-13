@@ -9,7 +9,7 @@ from .importdata import VLAImportData
 from . import importdata
 from . import renderer
 
-from . import qa
+#from . import qa
 
 
 #pipelineqa.registry.add_handler(qa.VLAImportDataQAHandler())
