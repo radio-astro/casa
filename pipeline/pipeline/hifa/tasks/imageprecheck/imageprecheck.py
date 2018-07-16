@@ -190,7 +190,7 @@ class ImagePreCheck(basetask.StandardTaskTemplate):
         sensitivity_bandwidth = None
         # Get default heuristics uvtaper value
         default_uvtaper = image_heuristics.uvtaper()
-        for robust in [-0.5, 0.5, 2.0]:
+        for robust in [-0.5, 0.0, 0.5, 1.0, 2.0]:
             # Calculate nbin / reprBW sensitivity if necessary
             if reprBW_mode in ['nbin', 'repr_spw']:
                 beams[(robust, str(default_uvtaper), 'repBW')], known_synthesized_beams = image_heuristics.synthesized_beam([(repr_field, 'TARGET')], str(repr_spw), robust=robust, uvtaper=default_uvtaper, known_beams=known_synthesized_beams, force_calc=calcsb)
@@ -281,28 +281,33 @@ class ImagePreCheck(basetask.StandardTaskTemplate):
         if reprBW_mode in ['nbin', 'repr_spw']:
             hm_robust, hm_robust_score = imageprecheck_heuristics.compare_beams( \
                 beams[(-0.5, str(default_uvtaper), 'repBW')], \
+                beams[(0.0, str(default_uvtaper), 'repBW')], \
                 beams[(0.5, str(default_uvtaper), 'repBW')], \
+                beams[(1.0, str(default_uvtaper), 'repBW')], \
                 beams[(2.0, str(default_uvtaper), 'repBW')], \
                 minAcceptableAngResolution, \
                 maxAcceptableAngResolution)
         else:
             hm_robust, hm_robust_score = imageprecheck_heuristics.compare_beams( \
                 beams[(-0.5, str(default_uvtaper), 'aggBW')], \
+                beams[(0.0, str(default_uvtaper), 'aggBW')], \
                 beams[(0.5, str(default_uvtaper), 'aggBW')], \
+                beams[(1.0, str(default_uvtaper), 'aggBW')], \
                 beams[(2.0, str(default_uvtaper), 'aggBW')], \
                 minAcceptableAngResolution, \
                 maxAcceptableAngResolution)
 
         if real_repr_target:
             # Determine heuristic UV taper value
-            if hm_robust == 2.0:
+            #
+            # For ALMA Cycle 6 the additional beam, cell and sensitivity values for a different
+            # uvtaper are not to be calculated, shown or used.
+            if False and hm_robust == 2.0:
                 if reprBW_mode in ['nbin', 'repr_spw']:
                     hm_uvtaper = image_heuristics.uvtaper(beam_natural=beams[(2.0, str(default_uvtaper), 'repBW')], protect_long=None)
                 else:
                     hm_uvtaper = image_heuristics.uvtaper(beam_natural=beams[(2.0, str(default_uvtaper), 'aggBW')], protect_long=None)
-                # For ALMA Cycle 5 the additional beam, cell and sensitivity values for a different
-                # uvtaper are not to be calculated or shown.
-                if False and (hm_uvtaper != []):
+                if hm_uvtaper != []:
                     # Add sensitivity entries with actual tapering
                     beams[(hm_robust, str(hm_uvtaper), 'repBW')], known_synthesized_beams = image_heuristics.synthesized_beam([(repr_field, 'TARGET')], str(repr_spw), robust=hm_robust, uvtaper=hm_uvtaper, known_beams=known_synthesized_beams, force_calc=calcsb)
                     cells[(hm_robust, str(hm_uvtaper), 'repBW')] = image_heuristics.cell(beams[(hm_robust, str(hm_uvtaper), 'repBW')])
