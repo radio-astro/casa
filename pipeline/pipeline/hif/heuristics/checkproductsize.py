@@ -35,7 +35,7 @@ class CheckProductSizeHeuristics(object):
             productsize = 2.0 * (mfssize + cubesize)
             productsizes[target['spw']] = productsize
             total_productsize += productsize
-            LOG.info('Cube size for Field %s SPW %s nbin %d imsize %d x %d is %.3g GB' % (target['field'], target['spw'], nbin, nx, ny, cubesize))
+            LOG.info('Cube size for Field %s SPW %s nchan %d nbin %d imsize %d x %d is %.3g GB' % (target['field'], target['spw'], nchan, nbin, nx, ny, cubesize))
 
         return cubesizes, max(cubesizes), productsizes, total_productsize
 
