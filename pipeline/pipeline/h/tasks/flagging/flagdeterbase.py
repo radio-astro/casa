@@ -386,7 +386,7 @@ class FlagDeterBase(basetask.StandardTaskTemplate):
         '''
 
         # These must be separated due to the way agent flagging works
-        if inputs.intents != '':
+        if inputs.scan and inputs.intents != '':
             # for intent in inputs.intents.split(','):
             #    if '*' not in intent:
             #        intent = '*%s*' % intent
