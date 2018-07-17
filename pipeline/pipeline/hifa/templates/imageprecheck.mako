@@ -81,24 +81,29 @@ Single Continuum:
 <h4>Estimated Synthesized Beam and Sensitivities for the Representative
 Target/Frequency</h4>
 
-Estimates are given for three values of the tclean robust weighting
-parameter: robust = -0.5, +0.5 (default), and +2.0. The robust value
-chosen for all science target imaging is highlighted in green. If the
-"Min / Max Acceptable Resolution" is available (>=Cycle 5 12m-array data),
-the robust is chosen that yields the lowest "&#37;Diff from mean AR"
-value for the repBW (Bandwidth for Sensitivity) row. The &#37;Diff
-from mean AR is defined as the percent difference between the predicted
-beam area and the beam area of the geometric mean (mean AR) of the PI
-requested range. In addition to an estimate for the repBW, an estimate
-for the aggregate continuum bandwidth (aggBW) is also given assuming NO
-line contamination but accounting for spw frequency overlap. If the
-Bandwidth for Sensitivity (repBW) is &gt; the bandwidth of the spw
-containing the representative frequency (repSPW), then the beam is
-predicted using all spws, otherwise the beam is predicted for the
-repSPW alone. A message appears on the "By Task" view if a non-default
-value of robust (i.e., not +0.5) is chosen. Additionally, if the
-predicted beam axes are not both within the PI requested range using
-one of the three robust values, Warning messages appear on this page.
+Estimates are given for five possible values of the tclean robust
+weighting parameter: robust = -0.5, 0.0, +0.5 (default), +1.0, and +2.0.
+If the "Min / Max Acceptable Resolution" is available (>=Cycle 5 12m-array data),
+the robust value closest to the default (+0.5) that predicts a beam
+that is in range of the PI request (for both axes) according to the
+table row for repBW (Bandwidth for Sensitivity) is chosen. If no robust
+value predicts a beam that is in range, the robust is chosen that yields
+the lowest "&#37;Diff from mean AR" value for the repBW (Bandwidth for
+Sensitivity) rows. The &#37;Diff from mean AR is defined as the percent
+difference between the predicted beam area and the beam area of the
+geometric mean (mean AR) of the PI requested range. When the
+"Min / Max Acceptable Resolution" is not available (or = 0.0 / 0.0),
+robust=+0.5 is used. The chosen robust value is highlighted in green
+and used for all science target imaging. In addition to an estimate for
+the repBW, an estimate for the aggregate continuum bandwidth (aggBW)
+is also given assuming NO line contamination but accounting for spw
+frequency overlap. If the Bandwidth for Sensitivity (repBW) is &gt; the
+bandwidth of the spw containing the representative frequency (repSPW),
+then the beam is predicted using all spws, otherwise the beam is
+predicted for the repSPW alone. A message appears on the "By Task"
+view if a non-default value of robust (i.e., not +0.5) is chosen.
+Additionally, if the predicted beam is not within the PI requested
+range using one of the five robust values, Warning messages appear on this page.
 <br></br>
 <b>These estimates should always be considered as the BEST CASE SCENARIO.</b>
 These estimates account for Tsys, the observed uv-coverage, and prior
