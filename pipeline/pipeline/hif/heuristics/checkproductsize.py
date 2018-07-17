@@ -285,20 +285,25 @@ class CheckProductSizeHeuristics(object):
                 if cubesizes[i] > 0.5 * self.inputs.maxcubelimit:
                     spw_oversizes[target['spw']] += 1
 
-            if [n != 0 for n in spw_oversizes.itervalues()].count(True) > 1:
+            if [n != 0 for n in spw_oversizes.itervalues()].count(True) > 1 or total_productsize > self.inputs.maxproductsize:
                 oversize_spws = [spw for spw, n in spw_oversizes.iteritems() if n>0]
-                if str(repr_spw) in oversize_spws:
-                    large_cube_spw = str(repr_spw)
+                if oversize_spws != []:
+                    if str(repr_spw) in oversize_spws:
+                        large_cube_spw = str(repr_spw)
+                    else:
+                        large_cube_spw = oversize_spws[0]
+                    mitigated_spws = [large_cube_spw]
+                    mitigated_productsize = productsizes[large_cube_spw]
                 else:
-                    large_cube_spw = oversize_spws[0]
+                    mitigated_spws = []
+                    mitigated_productsize = 0.0
+                # Add small cubes
                 small_cube_spws = [spw for spw, n in spw_oversizes.iteritems() if n==0]
                 small_cube_frequencies = [frequencies[spw] for spw in small_cube_spws]
                 small_cube_productsizes = [productsizes[spw] for spw in small_cube_spws]
                 small_cube_info = zip(small_cube_spws, small_cube_frequencies, small_cube_productsizes)
                 # Sort spw list by size and frequency
                 small_cube_info = sorted(small_cube_info, key=operator.itemgetter(2,1))
-                mitigated_spws = [large_cube_spw]
-                mitigated_productsize = productsizes[large_cube_spw]
                 for small_cube_spw, small_cube_frequency, small_cube_productsize in small_cube_info:
                     if mitigated_productsize + small_cube_productsize <= self.inputs.maxproductsize:
                         mitigated_spws.append(small_cube_spw)
