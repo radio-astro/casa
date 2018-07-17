@@ -45,7 +45,7 @@
 	</param>
 
         <param type="bool" name="baseband">
-	    <description>Flag 10 edge channels of basebands</description>
+	    <description>Flag 20MHz of each edge of basebands</description>
 	    <value>True</value>
 	</param>
 
@@ -236,7 +236,7 @@ quack -- Quack scans
 clip -- Clip mode
     default: True
 
-baseband -- Flag edge 10 channels of basebands
+baseband -- Flag 20MHz of each edge of basebands
     default: True
 
 intents -- A string containing a comma delimited list of intents against

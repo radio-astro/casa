@@ -465,7 +465,7 @@ class FlagDeterVLA(flagdeterbase.FlagDeterBase):
             flag_cmds.append('mode=\'summary\' name=\'shadow\'')
 
         # These must be separated due to the way agent flagging works
-        if inputs.intents != '':
+        if inputs.scan and inputs.intents != '':
             for intent in inputs.intents.split(','):
                 if '*' not in intent:
                     intent = '*%s*' % intent
@@ -518,7 +518,7 @@ class FlagDeterVLA(flagdeterbase.FlagDeterBase):
             flag_cmds.append(self._get_quack_cmds())
             flag_cmds.append('mode=\'summary\' name=\'quack\'')
 
-        # Flag 10 end channels at edges of basebands
+        # Flag 20MHz of each edge of basebands
         if inputs.baseband:
             to_flag = self._get_baseband_cmds()
             if to_flag:
@@ -626,6 +626,11 @@ class FlagDeterVLA(flagdeterbase.FlagDeterBase):
     '''
     
     def _get_edgespw_cmds(self):
+        """
+        Returns flag command to flag edge channels of SPWs.
+        The fraction of channels flagged in each edge of SPWs is defined by fracspw.
+        At least one channel in each edge of SPW will be flagged when this method is called.
+        """
 
         inputs = self.inputs
         
@@ -640,17 +645,14 @@ class FlagDeterVLA(flagdeterbase.FlagDeterBase):
         SPWtoflag=''
         
         for ispw in range(numSpws):
-            fivepctch = int(0.05*channels[ispw])
+            spwedge_nchan = int( inputs.fracspw * channels[ispw] )
+            # Minimum number of channels flagged must be one on each end
+            if (spwedge_nchan < 1): spwedge_nchan = 1
             startch1 = 0
-            startch2 = fivepctch - 1
-            endch1 = channels[ispw] - fivepctch
+            startch2 = spwedge_nchan - 1
+            endch1 = channels[ispw] - spwedge_nchan
             endch2 = channels[ispw] - 1
-            
-            # Minimum number of channels flagged must be three on each end
-            if (fivepctch < 3):
-                startch2=2
-                endch1=channels[ispw]-3
-            
+                        
             if (ispw<max(range(numSpws))):
                 SPWtoflag=SPWtoflag+str(ispw)+':'+str(startch1)+'~'+str(startch2)+';'+str(endch1)+'~'+str(endch2)+','
             else:
@@ -686,7 +688,8 @@ class FlagDeterVLA(flagdeterbase.FlagDeterBase):
 
     def _get_baseband_cmds(self):
         """
-        Flag 10 end channels at edges of basebands
+        Returns a flag command which flags 20MHz of each edge of basebands.
+        At least one channel in each band edge is flagged when the function is called.
         """
 
         inputs = self.inputs
@@ -701,18 +704,13 @@ class FlagDeterVLA(flagdeterbase.FlagDeterBase):
         #Determination of baseband taken from original EVLA scripted pipeline
         #-----MS info script part
         with casatools.TableReader(inputs.vis+'/SPECTRAL_WINDOW') as table:
-            reference_frequencies = table.getcol('REF_FREQUENCY')
-            spw_bandwidths = table.getcol('TOTAL_BANDWIDTH')
-            originalBBClist = table.getcol('BBC_NO')
-            channels = table.getcol('NUM_CHAN')
+            reference_frequencies = table.getcol('REF_FREQUENCY') #spwobj.ref_frequency
+            spw_bandwidths = table.getcol('TOTAL_BANDWIDTH') #spwobj.bandwidth
+            originalBBClist = table.getcol('BBC_NO') #spwobj.baseband
+            channels = table.getcol('NUM_CHAN') #spwobj.num_channels
             
-        sorted_frequencies = sorted(reference_frequencies)
-        sorted_indices = []
-        
-        for ii in range (0,len(sorted_frequencies)):
-            for jj in range (0,len(reference_frequencies)):
-                if (sorted_frequencies[ii] == reference_frequencies[jj]):
-                    sorted_indices.append(jj)
+        sorted_indices = reference_frequencies.argsort()
+        sorted_frequencies = reference_frequencies[sorted_indices]
         
         spwList = []
         BBC_bandwidths = []
@@ -751,22 +749,27 @@ class FlagDeterVLA(flagdeterbase.FlagDeterBase):
         #low_spws = context.evla['msinfo'][m.name].low_spws 
         #high_spws = context.evla['msinfo'][m.name].high_spws
         #channels = context.evla['msinfo'][m.name].channels
-
+        quanta = casatools.quanta
+        bandedge_hz = quanta.getvalue(quanta.convert('20MHz', 'Hz'))
+        topSPW_list = []
+        bottomSPW_list = []
+        LOG.info('Generating flag commands for 20MHz Band Edge flagging')
         for ii in range(0,len(low_spws)):
-            if (ii == 0):
-                bspw=low_spws[ii]
-                tspw=high_spws[ii]
-                endch1=channels[tspw]-10
-                endch2=channels[tspw]-1
-                bottomSPW=str(bspw)+':0~9'
-                topSPW=str(tspw)+':'+str(endch1)+'~'+str(endch2)
-            else:
-                bspw=low_spws[ii]
-                tspw=high_spws[ii]
-                endch1=channels[tspw]-10
-                endch2=channels[tspw]-1
-                bottomSPW=bottomSPW+','+str(bspw)+':0~9'
-                topSPW=topSPW+','+str(tspw)+':'+str(endch1)+'~'+str(endch2)
+            # lower bandedge
+            bspw=low_spws[ii]
+            ave_chansep = (spw_bandwidths[bspw]/channels[bspw])
+            startch2 = max(int(bandedge_hz/ave_chansep), 1) - 1
+            bottomSPW_list.append('%d:0~%d' % (bspw, startch2))
+            LOG.debug('Lower band edge spw=%d, averge channel separation=%f Hz, edgeChannels = %d' % (bspw, ave_chansep, startch2+1))
+            # upper bandedge
+            tspw=high_spws[ii]
+            ave_chansep = (spw_bandwidths[tspw]/channels[tspw])
+            endch1=channels[tspw] - max(int(bandedge_hz/ave_chansep), 1)
+            endch2=channels[tspw]-1
+            topSPW_list.append('%d:%d~%d' % (tspw, endch1, endch2))
+            LOG.debug('Upper band edge spw=%d, averge channel separation=%f Hz, edgeChannels = %d' % (tspw, ave_chansep, endch2-endch1+1))
+        bottomSPW = str(',').join(bottomSPW_list)
+        topSPW = str(',').join(topSPW_list)
 
         baseband_cmd = ''
 
