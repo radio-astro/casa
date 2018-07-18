@@ -83,7 +83,8 @@ Target/Frequency</h4>
 
 Estimates are given for five possible values of the tclean robust
 weighting parameter: robust = -0.5, 0.0, +0.5 (default), +1.0, and +2.0.
-If the "Min / Max Acceptable Resolution" is available (>=Cycle 5 12m-array data),
+<b>If the "Min / Max Acceptable Resolution" is available
+(&gt;=Cycle 5 12m-array data)</b>,
 the robust value closest to the default (+0.5) that predicts a beam
 that is in range of the PI request (for both axes) according to the
 table row for repBW (Bandwidth for Sensitivity) is chosen. If no robust
