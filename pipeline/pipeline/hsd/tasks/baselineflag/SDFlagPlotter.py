@@ -135,9 +135,9 @@ def StatisticsPlot(PlotData, FigFileDir=False, FigFileRoot=False):
         x += 1
 
     # Plot
+    PL.plot(data[4], data[5], 's', markersize=3, markeredgecolor='0.5', markerfacecolor='0.5')
     PL.plot(data[0], data[1], 'bo', markersize=3, markeredgecolor='b', markerfacecolor='b')
     PL.plot(data[2], data[3], 'bo', markersize=3, markeredgecolor='r', markerfacecolor='r')
-    PL.plot(data[4], data[5], 's', markersize=3, markeredgecolor='0.5', markerfacecolor='0.5')
     PL.axhline(y=ScaleOut[0][0], linewidth=1, color='r')
     if PlotData['threType'] != "plot":
         PL.axhline(y=PlotData['thre'][0], linewidth=1, color='c')
