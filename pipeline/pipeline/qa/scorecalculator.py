@@ -1946,7 +1946,7 @@ def score_checksources(mses, fieldname, spwid, imagename, rms, gfluxscale, gflux
             fitflux_score = max(0.0, 1.0 - abs(1.0 - chk_fitflux_gfluxscale_ratio))
             fitflux_metric = chk_fitflux_gfluxscale_ratio
             if chk_fitflux_gfluxscale_ratio < 0.8:
-                warnings.append('a low [Fitted / gfluxscale] Flux Density Ratio of %.2f' % (chk_fitflux_gfluxscale_ratio))
+                warnings.append('low [Fitted / gfluxscale] Flux Density Ratio of %.2f' % (chk_fitflux_gfluxscale_ratio))
 
         fitpeak_score = 0.0
         fitpeak_metric = 'N/A'
