@@ -342,6 +342,12 @@ def enable_memstats():
         LOG.error('Cannot measure memory on OS X.')
         return
 
+    if enable_memstats.enabled:
+        LOG.error('enable_memstats() already enabled')
+        return
+
+    LOG.info('Enabling memory statistics logging')
+
     import pipeline.domain.measures as measures
     import pipeline.infrastructure.jobrequest as jobrequest
     def get_hook_fn(msg):
@@ -378,6 +384,13 @@ def enable_memstats():
 
     jobrequest.PREHOOKS.append(get_hook_fn('Memory usage before '))
     jobrequest.POSTHOOKS.append(get_hook_fn('Memory usage after '))
+    enable_memstats.enabled = True
+
+    if mpihelpers.is_mpi_ready():
+        mpi_server_list = mpihelpers.MPIEnvironment.mpi_server_rank_list()
+        mpihelpers.mpiclient.push_command_request('pipeline.infrastructure.utils.enable_memstats()', block=True, target_server=mpi_server_list)
+
+enable_memstats.enabled = False
 
 
 def enable_fd_logs(interval_secs=60):
@@ -391,6 +404,11 @@ def enable_fd_logs(interval_secs=60):
         LOG.error('Cannot list file descriptors on MacOS')
         return
 
+    if enable_fd_logs.enabled:
+        LOG.error('enable_memstats() already enabled')
+        return
+
+    LOG.info('Enabling file descriptor logging')
     import pipeline.infrastructure.jobrequest as jobrequest
 
     pid = os.getpid()
@@ -422,9 +440,16 @@ def enable_fd_logs(interval_secs=60):
 
     jobrequest.PREHOOKS.append(get_hook_fn('before', start=True))
     jobrequest.POSTHOOKS.append(get_hook_fn('after', cancel=True))
+    enable_fd_logs.enabled = True
+
+    if mpihelpers.is_mpi_ready():
+        cmd = 'pipeline.infrastructure.utils.enable_fd_logs({})'.format(interval_secs)
+        mpi_server_list = mpihelpers.MPIEnvironment.mpi_server_rank_list()
+        mpihelpers.mpiclient.push_command_request(cmd, block=True, target_server=mpi_server_list)
+
 
 enable_fd_logs.interval = None
-
+enable_fd_logs.enabled = False
 
 def get_calfroms(context, vis, caltypes=None):
     """
