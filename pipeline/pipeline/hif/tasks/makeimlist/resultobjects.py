@@ -24,16 +24,27 @@ class MakeImListResult(basetask.Results):
         self.clean_list_info = info
 
     def merge_with_context(self, context):
+        targets_copy = copy.deepcopy(self.targets)
+
+        # replace the foreign observing run in the heuristics with the one in
+        # the target context. This helps keep the pickle size down.
+        other_obsrun = context.observing_run
+        for target in targets_copy:
+            h = target['heuristics']
+            if hasattr(h, 'observing_run'):
+                h.observing_run = other_obsrun
+
         if self.clearlist:
-            context.clean_list_pending = copy.deepcopy(self.targets)
+            context.clean_list_pending = targets_copy
             context.clean_list_info = self.clean_list_info
         else:
-            context.clean_list_pending.extend(copy.deepcopy(self.targets))
+            context.clean_list_pending.extend(targets_copy)
             for key, value in self.clean_list_info.iteritems():
                 if context.clean_list_info.get(key, None) is not None:
                     context.clean_list_info[key] = '%s %s' % (context.clean_list_info[key], value)
                 else:
                     context.clean_list_info[key] = value
+
         # Remove heuristics objects to avoid accumulating large amounts of unnecessary memory
         for target in self.targets:
             try:

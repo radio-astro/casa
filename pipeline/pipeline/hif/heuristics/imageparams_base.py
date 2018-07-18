@@ -1,26 +1,25 @@
-import os.path
-import decimal
-import math
-import numpy as np
-import re
-import types
 import collections
-import operator
-import shutil
-import uuid
-import glob
 import copy
+import glob
+import math
+import operator
+import os.path
+import re
+import shutil
+import types
+import uuid
 
 import cleanhelper
-from imagerhelpers.input_parameters import ImagerParameters
+import numpy as np
 from imagerhelpers.imager_base import PySynthesisImager
+from imagerhelpers.input_parameters import ImagerParameters
 
-import pipeline.infrastructure.casatools as casatools
-import pipeline.infrastructure.filenamer as filenamer
-import pipeline.infrastructure as infrastructure
-import pipeline.infrastructure.utils as utils
-import pipeline.infrastructure.contfilehandler as contfilehandler
 import pipeline.domain.measures as measures
+import pipeline.infrastructure as infrastructure
+import pipeline.infrastructure.casatools as casatools
+import pipeline.infrastructure.contfilehandler as contfilehandler
+import pipeline.infrastructure.filenamer as filenamer
+import pipeline.infrastructure.utils as utils
 from pipeline.hif.heuristics import mosaicoverlap
 
 LOG = infrastructure.get_logger(__name__)
@@ -31,6 +30,19 @@ class ImageParamsHeuristics(object):
     '''Image parameters heuristics base class. One instance is made per make/editimlist
        call. There are subclasses for different imaging modes such as ALMA
        or VLASS.'''
+
+    def __deepcopy__(self, memodict=None):
+        # Save memory by using a shallow copy of the ObservingRun
+        return self.__class__(
+            copy.deepcopy(self.vislist),
+            copy.deepcopy(self.spw),
+            self.observing_run,
+            self.imagename_prefix,
+            copy.deepcopy(self.proj_params),
+            self.contfile,
+            self.linesfile,
+            copy.deepcopy(self.imaging_params)
+        )
 
     def __init__(self, vislist, spw, observing_run, imagename_prefix='', proj_params=None, contfile=None, linesfile=None, imaging_params={}):
         """
