@@ -815,7 +815,7 @@ class DataTableImpl(object):
                         cal_field_idxs = cal_idxs
                     else:
                         if gainfield.upper() == 'NEAREST':
-                            from_fields = field_sel.take(numpy.where(time_sel - tref == min(time_sel - tref)))[0]
+                            from_fields = field_sel.take([numpy.argmin(numpy.abs(time_sel - tref))])
                         # select caltable row id by SPW, ANT, and gain field
                         cal_field_idxs = cal_idxs.take(numpy.where([fid in from_fields for fid in field_sel])[0])
                     if len(cal_field_idxs) == 0:
