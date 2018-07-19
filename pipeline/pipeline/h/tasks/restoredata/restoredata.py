@@ -428,7 +428,10 @@ class RestoreData(basetask.StandardTaskTemplate):
                 task = casa_tasks.flagmanager(vis=ms.name,
                                               mode='restore',
                                               versionname=flag_version_name)
-                self._executor.execute(task)
+                try:
+                    self._executor.execute(task)
+                except Exception, e:
+                    LOG.error("Application of final flags failed for %s" % (ms.basename))
 
             flagversionlist.append(flagversionpath)
 
