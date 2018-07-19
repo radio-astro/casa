@@ -61,9 +61,10 @@ class T2_4MDetailsSingleDishBaselineRenderer(basetemplates.T2_4MDetailsDefaultRe
                     'cover_only': plot_cover})
                 
         # profile map before and after baseline subtracton
-        maptype_list = ['before', 'after']
-        for maptype in maptype_list:
-            plot_list = self._plots_per_field_with_type(sparsemap_plots, maptype)
+        maptype_list = ['before', 'after', 'before']
+        subtype_list = ['raw', 'raw', 'avg']
+        for maptype, subtype in zip(maptype_list, subtype_list):
+            plot_list = self._plots_per_field_with_type(sparsemap_plots, maptype, subtype)
             summary = self._summary_plots(plot_list)
             subpage = {}
             # flattened = [plot for inner in plot_list.values() for plot in inner]
@@ -71,7 +72,8 @@ class T2_4MDetailsSingleDishBaselineRenderer(basetemplates.T2_4MDetailsDefaultRe
             for inner in plot_list.values():
                 for plot in inner:
                     flattened.append(plot)
-            plot_title = 'Sparse Profile Map %s Baseline Subtraction' % (maptype.lower())
+            datatype = 'Raw' if subtype == 'raw' else 'Averaged'
+            plot_title = '{} Sparse Profile Map {} Baseline Subtraction'.format(datatype, maptype.lower())
             renderer = basetemplates.JsonPlotRenderer('generic_x_vs_y_ant_field_spw_pol_plots.mako',
                                                       context,
                                                       results,
@@ -83,8 +85,8 @@ class T2_4MDetailsSingleDishBaselineRenderer(basetemplates.T2_4MDetailsDefaultRe
             
             for name in plot_list:
                 subpage[name] = os.path.basename(renderer.path)
-            ctx.update({'sparsemap_subpage_%s' % (maptype.lower()): subpage,
-                        'sparsemap_%s' % (maptype.lower()): summary})
+            ctx.update({'sparsemap_subpage_{}_{}'.format(maptype.lower(), subtype.lower()): subpage,
+                        'sparsemap_{}_{}'.format(maptype.lower(), subtype.lower()): summary})
             
     @staticmethod
     def _group_by_axes(plots):
@@ -119,14 +121,14 @@ class T2_4MDetailsSingleDishBaselineRenderer(basetemplates.T2_4MDetailsDefaultRe
         return plot_group
     
     @staticmethod
-    def _plots_per_field_with_type(plots, type_string):
+    def _plots_per_field_with_type(plots, type_string, subtype_string):
         plot_group = {}
         for x in plots:
             if isinstance(x, compress.CompressedObj):
                 p = x.decompress()
             else:
                 p = x
-            if p.parameters['type'].find(type_string) != -1:
+            if p.parameters['type'].find(type_string) != -1 and p.parameters['type'].find(subtype_string) != -1:
                 key = p.field
                 if key in plot_group:
                     plot_group[key].append(x)

@@ -55,21 +55,22 @@ line detection stage.</p>
 
 <h2>Contents</h2>
 <ul>
-<li><a href="#beforebaseline">Spectral Data Before Baseline Subtraction</a></li>
-<li><a href="#afterbaseline">Spectral Data After Baseline Subtraction</a></li>
+<li><a href="#rawbeforebaseline">Raw Spectral Data Before Baseline Subtraction</a></li>
+<li><a href="#avgbeforebaseline">Averaged Spectral Data Before Baseline Subtraction</a></li>
+<li><a href="#rawafterbaseline">Raw Spectral Data After Baseline Subtraction</a></li>
 <li><a href="#clusteranalysis">Line Detection by Clustering Analysis</a></li>
 </ul>
 
-<h2 id="beforebaseline" class="jumptarget">Spectral Data Before Baseline Subtraction</h2>
+<h2 id="rawbeforebaseline" class="jumptarget">Spectral Data Before Baseline Subtraction</h2>
 
 <p>Red lines indicate the result of baseline fit that is subtracted from the calibrated spectra.</p>
 
-% for field in sparsemap_subpage_before.keys():
+% for field in sparsemap_subpage_before_raw.keys():
     <h3><a class="replace"
-           href="${os.path.join(dirname, sparsemap_subpage_before[field])}"
+           href="${os.path.join(dirname, sparsemap_subpage_before_raw[field])}"
            data-field="${field}">${field}</a>
     </h3>
-    % for plot in sparsemap_before[field]:
+    % for plot in sparsemap_before_raw[field]:
         % if os.path.exists(plot.thumbnail):
 	        <div class="col-md-3">
 	            <div class="thumbnail">
@@ -82,7 +83,51 @@ line detection stage.</p>
 	
 	                <div class="caption">
 	                    <h4>
-	                        <a href="${os.path.join(dirname, sparsemap_subpage_before[field])}"
+	                        <a href="${os.path.join(dirname, sparsemap_subpage_before_raw[field])}"
+	                           class="replace"
+	                           data-spw="${plot.parameters['spw']}"
+	                           data-field="${field}">
+	                           Spectral Window ${plot.parameters['spw']}
+	                        </a>
+	                    </h4>
+	                    <p>Antenna: ${plot.parameters['ant']}<br>
+	                        Field: ${plot.parameters['field']}<br>
+	                        Spectral Window: ${plot.parameters['spw']}<br>
+	                        Polarisation: ${plot.parameters['pol']}
+	                    </p>
+	                </div>
+	            </div>
+	        </div>
+        % endif
+    % endfor
+	<div class="clearfix"></div><!--  flush plots, break to next row -->
+%endfor
+
+<h2 id="avgbeforebaseline" class="jumptarget">Averaged Spectral Data Before Baseline Subtraction</h2>
+
+<p>Plotted data are obtained by averaging all the spectral associating with each grid. Averaging the data improves 
+S/N ratio so that spectral line feature becomes more prominent and it can be easily compared with the line mask 
+for baseline subtraction.</p>
+
+% for field in sparsemap_subpage_before_avg.keys():
+    <h3><a class="replace"
+           href="${os.path.join(dirname, sparsemap_subpage_before_avg[field])}"
+           data-field="${field}">${field}</a>
+    </h3>
+    % for plot in sparsemap_before_avg[field]:
+        % if os.path.exists(plot.thumbnail):
+	        <div class="col-md-3">
+	            <div class="thumbnail">
+	                <a href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
+	                   data-fancybox="thumbs">
+	                    <img class="lazyload"
+                             data-src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
+	                         title="Sparse Profile Map for Spectral Window ${plot.parameters['spw']} before Baseline Subtraction">
+	                </a>
+	
+	                <div class="caption">
+	                    <h4>
+	                        <a href="${os.path.join(dirname, sparsemap_subpage_before_avg[field])}"
 	                           class="replace"
 	                           data-spw="${plot.parameters['spw']}"
 	                           data-field="${field}">
@@ -103,16 +148,16 @@ line detection stage.</p>
 %endfor
 
 
-<h2 id="afterbaseline" class="jumptarget">Spectral Data After Baseline Subtraction</h2>
+<h2 id="rawafterbaseline" class="jumptarget">Spectral Data After Baseline Subtraction</h2>
 
 <p>Red lines show zero-level. Spectra that are properly subtracted should be located around red lines.</p>
 
-% for field in sparsemap_subpage_after.keys():
+% for field in sparsemap_subpage_after_raw.keys():
     <h3><a class="replace"
-           href="${os.path.join(dirname, sparsemap_subpage_after[field])}"
+           href="${os.path.join(dirname, sparsemap_subpage_after_raw[field])}"
            data-field="${field}">${field}</a>
     </h3>
-    % for plot in sparsemap_after[field]:
+    % for plot in sparsemap_after_raw[field]:
         % if os.path.exists(plot.thumbnail):
 	        <div class="col-md-3">
 	            <div class="thumbnail">
@@ -125,7 +170,7 @@ line detection stage.</p>
 	
 	                <div class="caption">
 	                    <h4>
-	                        <a href="${os.path.join(dirname, sparsemap_subpage_after[field])}"
+	                        <a href="${os.path.join(dirname, sparsemap_subpage_after_raw[field])}"
 	                           class="replace"
 	                           data-spw="${plot.parameters['spw']}"
 	                           data-field="${field}">
