@@ -134,13 +134,6 @@ class FlagDeterBaseInputs(vdp.StandardInputs):
         vis_root = os.path.splitext(self.vis)[0]
         return vis_root + '.flagtemplate.txt'
 
-    @filetemplate.convert
-    def filetemplate(self, value):
-        if isinstance(value, str):
-            return list(value.replace('[', '').replace(']', '').replace("'", "").split(','))
-        else:
-            return value
-
     flagbackup = vdp.VisDependentProperty(default=False)
     fracspw = vdp.VisDependentProperty(default=0.05)
 
