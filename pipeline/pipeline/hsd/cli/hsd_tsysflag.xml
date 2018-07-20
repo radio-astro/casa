@@ -110,6 +110,11 @@ sequence of flagging subtasks, each looking for a different type of possible err
         <value>False</value>
     </param>
     
+	<param type="stringArray" name="filetemplate">
+	    <description>File containing manual Tsys flags to apply.</description>
+	    <value></value>
+	</param>
+
     <param type="string" name="pipelinemode">
         <description>The pipeline operations mode</description>
         <value>automatic</value>
@@ -213,6 +218,10 @@ Flag all deviant system temperature measurements in the system temperature
 calibration table by running a sequence of flagging tests, each designed
 to look for a different type of error.
 
+If a file with manual Tsys flags is provided with the 'filetemplate'
+parameter, then these flags are applied prior to the evaluation of the
+flagging heuristics listed below.
+
 The tests are:
 
 1. Flag Tsys spectra with high median values
@@ -312,6 +321,11 @@ normalize_tsys -- True to create a normalized Tsys table that is used to
     to the original Tsys caltable that continues to be used for subsequent 
     calibration.
     default: False
+
+filetemplate -- The name of a text file that contains the manual Tsys flagging
+    template. If the template flags file is undefined, a name of the form
+    'msname.flagtsystemplate.txt' is assumed.
+    default: ''
 
 --- Pipeline context defined parameter arguments which can be set only in
 'interactive mode'

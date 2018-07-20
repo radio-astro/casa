@@ -296,6 +296,10 @@ class ImportData(basetask.StandardTaskTemplate):
             # Create the standard calibration flagging template file
             template_flagsfile = os.path.join(inputs.output_dir, os.path.basename(asdm) + '.flagtemplate.txt')
             self._make_template_flagfile(template_flagsfile, 'User flagging commands file for the calibration pipeline')
+            # Create the standard Tsys calibration flagging template file.
+            template_flagsfile = os.path.join(inputs.output_dir, os.path.basename(asdm) + '.flagtsystemplate.txt')
+            self._make_template_flagfile(template_flagsfile,
+                                         'User Tsys flagging commands file for the calibration pipeline')
             # Create the imaging targets file
             template_flagsfile = os.path.join(inputs.output_dir, os.path.basename(asdm) + '.flagtargetstemplate.txt')
             self._make_template_flagfile(template_flagsfile, 'User flagging commands file for the imaging pipeline')

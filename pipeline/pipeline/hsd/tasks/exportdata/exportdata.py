@@ -18,6 +18,7 @@ results = task.execute (dry_run = False)
 from __future__ import absolute_import
 
 import collections
+import glob
 import itertools
 import os
 import shutil
@@ -68,8 +69,8 @@ class SDExportData(exportdata.ExportData):
         oussid = self.get_oussid(self.inputs.context)
 
         # Make the imaging vislist and the sessions lists.
-        session_list, session_names, session_vislists, vislist = self._make_lists(self.inputs.context,
-            self.inputs.session, self.inputs.vis, imaging_only_mses=True)
+        session_list, session_names, session_vislists, vislist = self._make_lists(
+            self.inputs.context, self.inputs.session, self.inputs.vis, imaging_only_mses=True)
         
         LOG.info('vislist={}'.format(vislist))
 
@@ -77,7 +78,7 @@ class SDExportData(exportdata.ExportData):
             # Export the auxiliary caltables if any
             #    These are currently the uvcontinuum fit tables.
             auxcaltables = self._do_aux_session_products(self.inputs.context, oussid, session_names, session_vislists,
-                self.inputs.output_dir, self.inputs.products_dir)
+                                                         self.inputs.products_dir)
 
             # Export the auxiliary cal apply files if any
             #    These are currently the uvcontinuum fit tables.
@@ -97,7 +98,8 @@ class SDExportData(exportdata.ExportData):
             prefix = oussid
         else:
             prefix = oussid + '.' + recipe_name
-        auxfproducts =  self._do_auxiliary_products(self.inputs.context, oussid, self.inputs.output_dir, self.inputs.products_dir)
+        auxfproducts = self._do_auxiliary_products(self.inputs.context, oussid, self.inputs.output_dir,
+                                                   self.inputs.products_dir)
 
         # Export the AQUA report
         aquareport_name = 'pipeline_aquareport.xml'
@@ -105,14 +107,13 @@ class SDExportData(exportdata.ExportData):
                                                         self.inputs.products_dir)
 
         # Update the manifest
-        manifest = os.path.join(self.inputs.context.products_dir, results.manifest)
         if auxfproducts is not None or pipe_aqua_reportfile is not None:
-            manifest = os.path.join(self.inputs.context.products_dir, results.manifest)
-            self._add_to_manifest(manifest, auxfproducts, auxcaltables, auxcalapplys, pipe_aqua_reportfile)
+            manifest_file = os.path.join(self.inputs.context.products_dir, results.manifest)
+            self._add_to_manifest(manifest_file, auxfproducts, auxcaltables, auxcalapplys, pipe_aqua_reportfile)
 
         return results
 
-    def _make_lists (self, context, session, vis, imaging_only_mses=False):
+    def _make_lists(self, context, session, vis, imaging_only_mses=False):
         """
         Create the vis and sessions lists
         """
@@ -120,18 +121,17 @@ class SDExportData(exportdata.ExportData):
         # Force inputs.vis to be a list.
         vislist = vis
         if type(vislist) is types.StringType:
-            vislist = [vislist,]
+            vislist = [vislist, ]
         # in single dish pipeline, all mses are non-imaging ones but they need to be 
         # returned even when imaging is False so no filtering is done
 
         # Get the session list and the visibility files associated with
         # each session.
-        session_list, session_names, session_vislists= self._get_sessions ( \
-            context, session, vislist)
+        session_list, session_names, session_vislists = self._get_sessions(context, session, vislist)
 
         return session_list, session_names, session_vislists, vislist
 
-    def _do_aux_session_products (self, context, oussid, session_names, session_vislists, output_dir, products_dir):
+    def _do_aux_session_products(self, context, oussid, session_names, session_vislists, products_dir):
 
         # Make the standard sessions dictionary and export per session products
         #    Currently these are compressed tar files of per session calibration tables
@@ -139,18 +139,17 @@ class SDExportData(exportdata.ExportData):
         LOG.info('_do_aux_session_products')
         caltable_file_list = []
         for i in range(len(session_names)):
-            caltable_file = self._export_final_baseline_calfiles (context, oussid,
-                session_names[i], session_vislists[i], products_dir)
-            caltable_file_list.append (caltable_file)
+            caltable_file = self._export_final_baseline_calfiles(
+                context, oussid, session_names[i], session_vislists[i], products_dir)
+            caltable_file_list.append(caltable_file)
 
         # Create the ordered session dictionary
         #    The keys are the session names
         #    The values are a tuple containing the vislist and the caltables
         sessiondict = collections.OrderedDict()
         for i in range(len(session_names)):
-            sessiondict[session_names[i]] = \
-                ([os.path.basename(visfile) for visfile in session_vislists[i]], \
-                 os.path.basename(caltable_file_list[i]))
+            sessiondict[session_names[i]] = ([os.path.basename(visfile) for visfile in session_vislists[i]],
+                                             os.path.basename(caltable_file_list[i]))
 
         return sessiondict
 
@@ -199,7 +198,7 @@ class SDExportData(exportdata.ExportData):
                 namer.asdm(os.path.basename(visfile))
                 namer.bl_cal()
                 name = namer.get_filename()
-                LOG.debug('bl cal table for %s is %s'%(visfile, name))
+                LOG.debug('bl cal table for %s is %s' % (visfile, name))
                 if os.path.exists(name):
                     bl_caltables.add(name)
 
@@ -208,8 +207,8 @@ class SDExportData(exportdata.ExportData):
 
             with tarfile.open(os.path.join(products_dir, tarfilename), 'w:gz') as tar:
                 # Tar the session list.
-#                 for table in caltables:
-#                     tar.add(table, arcname=os.path.basename(table))
+                # for table in caltables:
+                #     tar.add(table, arcname=os.path.basename(table))
                     
                 for table in bl_caltables:
                     tar.add(table, arcname=os.path.basename(table))
@@ -220,7 +219,7 @@ class SDExportData(exportdata.ExportData):
             # Restore the original current working directory
             os.chdir(cwd)
 
-    def _do_aux_ms_products (self, context, vislist, products_dir):
+    def _do_aux_ms_products(self, context, vislist, products_dir):
    
         # Loop over the measurements sets in the working directory, and
         # create the calibration apply file(s) in the products directory.
@@ -239,7 +238,7 @@ class SDExportData(exportdata.ExportData):
 
         return visdict
 
-    def _export_final_baseline_applylist (self, context, vis, products_dir):
+    def _export_final_baseline_applylist(self, context, vis, products_dir):
         """
         Save the final calibration list to a file. For now this is
         a text file. Eventually it will be the CASA callibrary file.
@@ -254,7 +253,8 @@ class SDExportData(exportdata.ExportData):
 
         try:
             # Log the list in human readable form. Better way to do this ?
-            cmd = string.Template("sdbaseline(infile='${infile}', datacolumn='corrected', spw='${spw}', blmode='apply', bltable='${bltable}', blfunc='poly', outfile='${outfile}', overwrite=True)")
+            cmd = string.Template("sdbaseline(infile='${infile}', datacolumn='corrected', spw='${spw}', blmode='apply',"
+                                  " bltable='${bltable}', blfunc='poly', outfile='${outfile}', overwrite=True)")
 
             # Create the list of baseline caltable for that vis
             namer = filenamer.CalibrationTable()
@@ -295,51 +295,78 @@ class SDExportData(exportdata.ExportData):
         
         if not os.path.exists(jyperk):
             # if reffile doesn't exist, return None
-            LOG.debug('K2Jy file \'%s\' not found' % (jyperk))
+            LOG.debug('K2Jy file \'%s\' not found' % jyperk)
             return None
         
         LOG.info('Exporting {0} as a product'.format(jyperk))
         return os.path.abspath(jyperk)
     
-    def __get_reffile(self, results):
+    @staticmethod
+    def __get_reffile(results):
         for proxy in results:
             result = proxy.read()
             if not isinstance(result, basetask.ResultsList):
                 result = [result]
             for r in result:
-                if str(r).find('SDK2JyCalResults') != -1:
-                    if hasattr(r, 'reffile'):
-                        reffile = r.reffile
-                        if reffile is not None and os.path.exists(reffile):
-                            yield reffile
+                if str(r).find('SDK2JyCalResults') != -1 and hasattr(r, 'reffile'):
+                    reffile = r.reffile
+                    if reffile is not None and os.path.exists(reffile):
+                        yield reffile
                             
     def _do_auxiliary_products(self, context, oussid, output_dir, products_dir):
-        cwd = os.getcwd()
-        tarfilename = 'Undefined'
+        # Track whether any auxiliary products exist to be exported.
+        aux_prod_exists = False
+
+        # Get the jyperk file, check whether it exists.
         jyperk = self._detect_jyperk(context)
-        if jyperk is None:
+        if jyperk and os.path.exists(jyperk):
+            aux_prod_exists = True
+
+        # Export the general and target source template flagging files
+        #    The general template flagging files are not required for the restore but are
+        #    informative to the user.
+        #    Whether or not the target template files should be exported to the archive depends
+        #    on the final place of the target flagging step in the work flow and
+        #    how flags will or will not be stored back into the ASDM.
+        flags_file_list = [os.path.join(output_dir, fname) for fname in glob.glob('*.flag*template.txt')]
+        if flags_file_list:
+            aux_prod_exists = True
+
+        # If no auxiliary product was found, skip creation of tarfile and return early.
+        if not aux_prod_exists:
             return None
 
+        # Create the tarfile.
+        cwd = os.getcwd()
         try:
             os.chdir(output_dir)
 
-            # Define the name of the output tarfile
+            # Define the name of the output tarfile.
             tarfilename = '{}.auxproducts.tgz'.format(oussid)
-            LOG.info('Saving auxliary dat products in %s', tarfilename)
+            LOG.info('Saving auxiliary data products in %s', tarfilename)
 
-            # Open tarfile
+            # Open tarfile.
             with tarfile.open(os.path.join(products_dir, tarfilename), 'w:gz') as tar:
 
-                # Save flux file
+                # Save flux file.
                 if os.path.exists(jyperk):
                     tar.add(jyperk, arcname=os.path.basename(jyperk))
-                    LOG.info('Saving auxiliary data product %s in %s', os.path.basename(jyperk), tarfilename)
+                    LOG.info('Saving auxiliary data product {} in {}'.format(os.path.basename(jyperk), tarfilename))
                 else:
-                    LOG.info('Auxiliary data product %s does not exist', os.path.basename(jyperk))
+                    LOG.info('Auxiliary data product {} does not exist'.format(os.path.basename(jyperk)))
+
+                # Save flag files.
+                for flags_file in flags_file_list:
+                    if os.path.exists(flags_file):
+                        tar.add(flags_file, arcname=os.path.basename(flags_file))
+                        LOG.info('Saving auxiliary data product {} in {}'.format(os.path.basename(flags_file),
+                                                                                 tarfilename))
+                    else:
+                        LOG.info('Auxiliary data product {} does not exist'.format(os.path.basename(flags_file)))
 
                 tar.close()
         finally:
-            # Restore the original current working directory
+            # Restore the original current working directory.
             os.chdir(cwd)
 
         return tarfilename
@@ -353,17 +380,14 @@ class SDExportData(exportdata.ExportData):
 
         # Get the output file name
         ps = context.project_structure
-        if ps is None:
-            script_file = os.path.join(context.report_dir, script_name)
-            out_script_file = os.path.join(products_dir, script_name)
-        elif ps.ousstatus_entity_id == 'unknown':
+        if ps is None or ps.ousstatus_entity_id == 'unknown':
             script_file = os.path.join(context.report_dir, script_name)
             out_script_file = os.path.join(products_dir, script_name)
         else:
             script_file = os.path.join(context.report_dir, script_name)
             out_script_file = os.path.join(products_dir, oussid + '.' + script_name)
 
-        LOG.info('Creating casa restore script %s' % (script_file))
+        LOG.info('Creating casa restore script %s' % script_file)
 
         # This is hardcoded.
         tmpvislist = []
@@ -376,7 +400,8 @@ class SDExportData(exportdata.ExportData):
             if filename.endswith('.ms'):
                 filename, filext = os.path.splitext(filename)
             tmpvislist.append(filename)
-        task_string = "    hsd_restoredata(vis=%s, session=%s, ocorr_mode='%s')" % (tmpvislist, session_list, ocorr_mode)
+        task_string = "    hsd_restoredata(vis=%s, session=%s, ocorr_mode='%s')" % (tmpvislist, session_list,
+                                                                                    ocorr_mode)
 
         template = '''__rethrow_casa_exceptions = True
 h_init()
@@ -389,8 +414,7 @@ finally:
         with open(script_file, 'w') as casa_restore_file:
             casa_restore_file.write(template)
 
-        LOG.info('Copying casa restore script %s to %s' % \
-                 (script_file, out_script_file))
+        LOG.info('Copying casa restore script %s to %s' % (script_file, out_script_file))
         if not self._executor._dry_run:
             shutil.copy(script_file, out_script_file)
 
@@ -414,9 +438,7 @@ finally:
             return 'Undefined'
 
         ps = context.project_structure
-        if ps is None:
-            out_aqua_file = os.path.join(products_dir, aquareport_name)
-        elif ps.ousstatus_entity_id == 'unknown':
+        if ps is None or ps.ousstatus_entity_id == 'unknown':
             out_aqua_file = os.path.join(products_dir, aquareport_name)
         else:
             out_aqua_file = os.path.join(products_dir, oussid + '.' + aquareport_name)
@@ -433,7 +455,7 @@ finally:
 ###########################################################
     def _add_to_manifest(self, manifest_file, aux_fproducts, aux_caltablesdict, aux_calapplysdict, aqua_report):
 
-        #pipemanifest = manifest.ALMAIfPipelineManifest('')
+        # pipemanifest = manifest.ALMAIfPipelineManifest('')
         pipemanifest = manifest.PipelineManifest('')
         pipemanifest.import_xml(manifest_file)
         ouss = pipemanifest.get_ous()

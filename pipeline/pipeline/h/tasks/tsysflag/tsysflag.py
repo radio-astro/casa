@@ -3,7 +3,9 @@ from __future__ import absolute_import
 import collections
 import os
 import re
+import string
 
+import flaghelper
 import numpy as np
 
 import pipeline.infrastructure as infrastructure
@@ -28,6 +30,176 @@ __all__ = [
 LOG = infrastructure.get_logger(__name__)
 
 
+def _create_normalized_caltable(vis, caltable):
+    """Create normalized Tsys caltable and return filename."""
+    norm_caltable = caltable + '_normalized'
+
+    LOG.info("Creating normalized Tsys table {} to use for assessing new flags.\n"
+             "Newly found flags will also be applied to Tsys table {}.".format(norm_caltable, caltable))
+
+    # Run the tsys normalization script.
+    tsysNormalize(vis, tsysTable=caltable, newTsysTable=norm_caltable)
+
+    return norm_caltable
+
+
+def _identify_ants_to_demote(flagging_state, ms, antenna_id_to_name):
+
+    # Initialize summary
+    ants_fully_flagged = collections.defaultdict(set)
+
+    # Create translation of field ID to field name
+    field_name_for_id = dict((field.id, field.name) for field in ms.fields)
+
+    # Based on flagging state summarized from all flagging views, identify
+    # antennas that are fully flagged for all available timestamps for one
+    # or more fields belonging to one or more of the intents of interest
+    # in one or more of the spws.
+    intents_found = set([key[0] for key in flagging_state.keys()])
+    for intent in intents_found:
+        fields_found = set([key[1]
+                            for key in flagging_state.keys()
+                            if key[0] == intent])
+        for field in fields_found:
+            spws_found = set([key[2] for key in flagging_state.keys()
+                              if key[0:2] == (intent, field)])
+            for spwid in spws_found:
+                flags_per_ant = np.array(flagging_state[(intent, field, spwid)]).T
+                for iant, flag_for_ant in enumerate(flags_per_ant):
+                    if flag_for_ant.all():
+                        ants_fully_flagged[(intent, field, spwid)].update([iant])
+
+    # For each combination of intent, field, and spw that were found
+    # to have antennas fully flagged in all timestamps, raise a
+    # warning.
+    sorted_keys = sorted(
+        sorted(ants_fully_flagged.keys(), key=lambda keys: keys[2]),
+        key=lambda keys: keys[0])
+    for (intent, field, spwid) in sorted_keys:
+        ants_flagged = ants_fully_flagged[(intent, field, spwid)]
+
+        # Convert antenna IDs to names and create a string.
+        ants_str = ", ".join(map(str, [antenna_id_to_name[iant]
+                                       for iant in ants_flagged]))
+        LOG.warning(
+            "{msname} - for intent {intent} (field {fieldid}: "
+            "{fieldname}) and spw {spw}, the following antennas "
+            "are fully flagged: {ants}".format(
+                msname=ms.basename, intent=intent, fieldid=field,
+                fieldname=field_name_for_id[field], spw=spwid,
+                ants=ants_str))
+
+    # Store the set of antennas that were fully flagged in at least
+    # one Tsys spw, for any of the fields for any of the intents.
+    ants_to_demote_as_refant = {
+        antenna_id_to_name[iant]
+        for iants in ants_fully_flagged.values()
+        for iant in iants}
+
+    return ants_to_demote_as_refant, ants_fully_flagged
+
+
+def _identify_ants_to_remove(result, ms, metric_to_test, ants_fully_flagged, antenna_id_to_name):
+    # Initialize set of antennas that are fully flagged for all spws, for any intent
+    ants_fully_flagged_in_all_spws_any_intent = set()
+
+    # Get the science spw ids from the MS.
+    science_spw_ids = [spw.id for spw in ms.get_spectral_windows(science_windows_only=True)]
+
+    # Using the CalTo object in the TsysflagspectraResults from the
+    # last-ran testable metric, identify which are the Tsys spectral
+    # windows.
+    calto = result.components[metric_to_test].final[0]
+    tsys_spw_ids = [tsys for (spw, tsys) in enumerate(calto.spwmap)
+                    if spw in science_spw_ids and spw not in result.unmappedspws]
+
+    # Check if any antennas were found to be fully flagged in all
+    # scans (timestamps) and all spws, for any intent.
+    #
+    # NOTE: The following test checks for antennas fully flagged
+    # in all spws declared by CalTo (and assumes that flagging views were
+    # available for each of those spw to be able to test it).
+    # Conversely, this test does not check for antennas fully flagged in
+    # all spws within the subset of spws for which flagging views were available.
+    # If a flagging view was not available for some spw and a given intent,
+    # then no antenna will be found to be fully flagged in all spws for that intent.
+
+    # Identify the field and intent combinations for which fully flagged
+    # antennas were found.
+    intent_field_found = set([key[0:2] for key in ants_fully_flagged.keys()])
+    for (intent, field) in intent_field_found:
+
+        # Identify the spws for which fully flagged antennas were found (for current
+        # intent and field).
+        spws_found = set([key[2] for key in ants_fully_flagged.keys()
+                          if key[0:2] == (intent, field)])
+
+        # Only proceed if the set of spws for which flagged antennas were found is
+        # the same as the set of spws declared by CalTo, i.e. flagged antennas
+        # were found in all spws.
+        if spws_found == set(tsys_spw_ids):
+            # Select the fully flagged antennas for current intent and field.
+            ants_fully_flagged_for_intent_field = [
+                ants_fully_flagged[key]
+                for key in ants_fully_flagged.keys()
+                if key[0:2] == (intent, field)
+            ]
+
+            # Identify which antennas are fully flagged in all spws, for
+            # current intent and field, and store these for later warning
+            # and/or updating of refant.
+            ants_fully_flagged_in_all_spws_any_intent.update(
+                set.intersection(*ants_fully_flagged_for_intent_field))
+
+    # For the antennas that were found to be fully flagged in all
+    # spws for all timestamps for one or more fields belonging to
+    # one or more of the intents, raise a warning.
+    if ants_fully_flagged_in_all_spws_any_intent:
+        # Convert antenna IDs to names and create a string.
+        ants_str = ", ".join(
+            map(str, [antenna_id_to_name[iant]
+                      for iant in ants_fully_flagged_in_all_spws_any_intent]))
+        LOG.warning(
+            '{0} - the following antennas are fully flagged in all Tsys '
+            'spws for one or more fields with the intent "BANDPASS", '
+            '"PHASE", and/or "AMPLITUDE": {1}'.format(ms.basename, ants_str))
+
+    # Store the set of antennas that are fully flagged for all Tsys
+    # spws in any of the intents in the result as a list of antenna
+    # names.
+    ants_to_remove_as_refant = {
+        antenna_id_to_name[iant]
+        for iant in ants_fully_flagged_in_all_spws_any_intent}
+
+    return ants_to_remove_as_refant
+
+
+def _identify_testable_metrics(result, testable_metrics):
+    try:
+        testable_metrics_completed = [metric for metric in result.metric_order
+                                      if metric in testable_metrics and metric in result.components.keys()]
+    except AttributeError:
+        testable_metrics_completed = []
+
+    return testable_metrics_completed
+
+
+def _read_tsystemplate(filename, vis):
+    """Return flag commands read in from manual Tsys flag template file."""
+    if not os.path.exists(filename):
+        flagcmds = []
+        LOG.warning("{} - manual Tsys flagtemplate file '{}' not found; no manual flags applied for this MS."
+                    "".format(os.path.basename(vis), os.path.basename(filename)))
+    else:
+        flagcmds = [cmd for cmd in flaghelper.readFile(filename)
+                    if not cmd.strip().startswith('#') and
+                    not all(c in string.whitespace for c in cmd)]
+        LOG.info("{} - found manual Tsys flagtemplate file '{}', with {} flag(s) to apply."
+                 "".format(os.path.basename(vis), os.path.basename(filename), len(flagcmds)))
+
+    return flagcmds
+
+
 class TsysflagInputs(vdp.StandardInputs):
     """
     TsysflagInputs defines the inputs for the Tsysflag pipeline task.
@@ -49,23 +221,29 @@ class TsysflagInputs(vdp.StandardInputs):
 
         return result
 
-    flag_nmedian = vdp.VisDependentProperty(default=True)
-    fnm_limit = vdp.VisDependentProperty(default=2.0)
-    fnm_byfield = vdp.VisDependentProperty(default=False)
-    flag_derivative = vdp.VisDependentProperty(default=True)
-    fd_max_limit = vdp.VisDependentProperty(default=5)
-    flag_edgechans = vdp.VisDependentProperty(default=True)
-    fe_edge_limit = vdp.VisDependentProperty(default=3.0)
-    flag_fieldshape = vdp.VisDependentProperty(default=True)
-    ff_refintent = vdp.VisDependentProperty(default='BANDPASS')
-    ff_max_limit = vdp.VisDependentProperty(default=5)
-    flag_birdies = vdp.VisDependentProperty(default=True)
     fb_sharps_limit = vdp.VisDependentProperty(default=0.05)
+    fd_max_limit = vdp.VisDependentProperty(default=5)
+    fe_edge_limit = vdp.VisDependentProperty(default=3.0)
+    ff_max_limit = vdp.VisDependentProperty(default=5)
+    ff_refintent = vdp.VisDependentProperty(default='BANDPASS')
+
+    @vdp.VisDependentProperty
+    def filetemplate(self):
+        vis_root = os.path.splitext(self.vis)[0]
+        return vis_root + '.flagtsystemplate.txt'
+
+    flag_birdies = vdp.VisDependentProperty(default=True)
+    flag_derivative = vdp.VisDependentProperty(default=True)
+    flag_edgechans = vdp.VisDependentProperty(default=True)
+    flag_fieldshape = vdp.VisDependentProperty(default=True)
+    flag_nmedian = vdp.VisDependentProperty(default=True)
     flag_toomany = vdp.VisDependentProperty(default=True)
-    tmf1_limit = vdp.VisDependentProperty(default=0.666)
-    tmef1_limit = vdp.VisDependentProperty(default=0.666)
+    fnm_byfield = vdp.VisDependentProperty(default=False)
+    fnm_limit = vdp.VisDependentProperty(default=2.0)
     metric_order = vdp.VisDependentProperty(default='nmedian, derivative, edgechans, fieldshape, birdies, toomany')
     normalize_tsys = vdp.VisDependentProperty(default=False)
+    tmf1_limit = vdp.VisDependentProperty(default=0.666)
+    tmef1_limit = vdp.VisDependentProperty(default=0.666)
 
     def __init__(self, context, output_dir=None, vis=None, caltable=None,
                  flag_nmedian=None, fnm_limit=None, fnm_byfield=None,
@@ -74,7 +252,7 @@ class TsysflagInputs(vdp.StandardInputs):
                  flag_fieldshape=None, ff_refintent=None, ff_max_limit=None,
                  flag_birdies=None, fb_sharps_limit=None,
                  flag_toomany=None, tmf1_limit=None, tmef1_limit=None,
-                 metric_order=None, normalize_tsys=None):
+                 metric_order=None, normalize_tsys=None, filetemplate=None):
         super(TsysflagInputs, self).__init__()
 
         # pipeline inputs
@@ -90,6 +268,7 @@ class TsysflagInputs(vdp.StandardInputs):
         self.normalize_tsys = normalize_tsys
 
         # flagging parameters
+        self.filetemplate = filetemplate
         self.flag_nmedian = flag_nmedian
         self.fnm_limit = fnm_limit
         self.fnm_byfield = fnm_byfield
@@ -122,83 +301,39 @@ class Tsysflag(basetask.StandardTaskTemplate):
         # associated vis in result.
         result = TsysflagResults()
         result.caltable = inputs.caltable
-        result.vis = caltableaccess.CalibrationTableDataFiller._readvis(
-            inputs.caltable)
+        result.vis = caltableaccess.CalibrationTableDataFiller._readvis(inputs.caltable)
+        result.metric_order = []
 
-        # If requested, create a new Tsys table with normalized Tsys,
-        # and mark this as the table to use for determining flags.
+        # If requested, create a normalized Tsys caltable and mark this as the
+        # table to use for determining flags.
         if inputs.normalize_tsys:
-            norm_caltable = inputs.caltable + '_normalized'
-            LOG.info("Creating normalized Tsys table {0} to use for assessing"
-                     " new flags.".format(norm_caltable))
-            LOG.info("Newly found flags will also be applied to Tsys table"
-                     " {0}.".format(inputs.caltable))
-            tsysNormalize(inputs.vis, tsysTable=inputs.caltable,
-                          newTsysTable=norm_caltable)
-            caltable_to_assess = norm_caltable
+            caltable_to_assess = _create_normalized_caltable(inputs.vis, inputs.caltable)
         else:
             caltable_to_assess = inputs.caltable
-
-        # Store caltable used to determine flags in result.
         result.caltable_assessed = caltable_to_assess
-        
-        # Collect requested flag metrics from inputs into a dictionary.
-        # NOTE: each key in the dictionary below should have been added to 
-        # the default value for the "metric_order" property in TsysflagInputs,
-        # or otherwise the Tsysflag task will always end prematurely for 
-        # automatic pipeline runs.
-        metrics_from_inputs = {'nmedian': inputs.flag_nmedian,
-                               'derivative': inputs.flag_derivative,
-                               'edgechans': inputs.flag_edgechans,
-                               'fieldshape': inputs.flag_fieldshape,
-                               'birdies': inputs.flag_birdies,
-                               'toomany': inputs.flag_toomany}
 
-        # Convert metric order string to list of strings
-        metric_order_as_list = [metric.strip()
-                                for metric in inputs.metric_order.split(',')]
-        
-        # If the input metric order list contains illegal values, then log
-        # an error and stop further evaluation of Tsysflag.
-        for metric in metric_order_as_list:
-            if metric not in metrics_from_inputs.keys():
-                errmsg = (
-                    "Input parameter 'metric_order' contains illegal value:"
-                    " '{0}'. Accepted values are: {1}.".format(
-                        metric, ', '.join(metrics_from_inputs.keys())))
-                LOG.error(errmsg)
-                result.task_incomplete_reason = errmsg
-                return result
-        
-        # If any of the requested metrics are not defined in the metric order,
-        # then log an error and stop further evaluation of Tsysflag.
-        for metric_name, metric_enabled in metrics_from_inputs.items():
-            if metric_enabled and metric_name not in metric_order_as_list:
-                errmsg = (
-                    "Flagging metric '{0}' is enabled, but not specified in"
-                    " 'metric_order'.".format(metric_name))
-                LOG.error(errmsg)
-                result.task_incomplete_reason = errmsg
-                return result
+        # Run manual flagging.
+        if inputs.filetemplate:
+            mresults = self._run_manual_flagging(caltable_to_assess)
+            result.metric_order.append('manual')
+            result.add('manual', mresults)
 
-        # Initialize ordered list of metrics to evaluate
-        ordered_list_metrics_to_evaluate = []
-        
-        # Convert requested flagging metrics to ordered list.
-        for metric in metric_order_as_list:
-            if metrics_from_inputs[metric]:
-                ordered_list_metrics_to_evaluate.append(metric)
-                
-        # Store order of metrics in result
-        result.metric_order = ordered_list_metrics_to_evaluate
+        # Run flagging heuristics.
+        hresults, metric_order, errmsg = self._run_flagging_heuristics(caltable_to_assess)
+        # Return early if an error message was returned.
+        if errmsg:
+            result.task_incomplete_reason = errmsg
+            return result
+        else:
+            # Store each metric result in final result.
+            for metric, metric_result in hresults.items():
+                result.add(metric, metric_result)
+            # Store order of metrics in result.
+            result.metric_order.extend(metric_order)
 
-        # Run flagger for each metric.
-        for metric in ordered_list_metrics_to_evaluate:
-            result.add(metric, self._run_flagger(metric, caltable_to_assess))
-
-        # Extract before and after flagging summaries from individual results:
-        stats_before = result.components[ordered_list_metrics_to_evaluate[0]].summaries[0]
-        stats_after = result.components[ordered_list_metrics_to_evaluate[-1]].summaries[-1]
+        # Extract before and after flagging summaries from first and last metric:
+        stats_before = result.components[metric_order[0]].summaries[0]
+        stats_after = result.components[metric_order[-1]].summaries[-1]
 
         # Add the "before" and "after" flagging summaries to the final result
         result.summaries = [stats_before, stats_after]
@@ -207,20 +342,10 @@ class Tsysflag(basetask.StandardTaskTemplate):
         # to assess flagging, then apply the newly found flags to the caltable
         # to apply.
         if caltable_to_assess != inputs.caltable:
-            LOG.info("Applying flags found for {0} to the original caltable {1}".format(
-                caltable_to_assess, inputs.caltable))
-            allflagcmds = []
-            for metric in result.components.keys():
-                allflagcmds.extend(result.components[metric].flagging)
-            
-            # Create and execute flagsetter task.
-            flagsetterinputs = FlagdataSetter.Inputs(
-                context=inputs.context, vis=inputs.vis, table=inputs.caltable,
-                inpfile=[])
-            flagsettertask = FlagdataSetter(flagsetterinputs)                
-            flagsettertask.flags_to_set(allflagcmds)
-            self._executor.execute(flagsettertask)
-            
+            LOG.info("Applying flags found for {} to the original caltable {}"
+                     "".format(caltable_to_assess, inputs.caltable))
+            self._apply_flags_orig_caltable(result.components)
+
         return result
 
     def analyse(self, result):
@@ -238,6 +363,21 @@ class Tsysflag(basetask.StandardTaskTemplate):
 
         return result
 
+    def _apply_flags_orig_caltable(self, components):
+        inputs = self.inputs
+
+        # Create list of all flagging commands.
+        flagcmds = []
+        for component in components.values():
+            flagcmds.extend(component.flagging)
+
+        # Create and execute flagsetter task for original caltable.
+        flagsetterinputs = FlagdataSetter.Inputs(
+            context=inputs.context, vis=inputs.vis, table=inputs.caltable, inpfile=[])
+        flagsettertask = FlagdataSetter(flagsetterinputs)
+        flagsettertask.flags_to_set(flagcmds)
+        self._executor.execute(flagsettertask)
+
     def _identify_refants_to_update(self, result):
         """
         Updates the Tsysflag result with lists of antennas to remove from the
@@ -251,18 +391,15 @@ class Tsysflag(basetask.StandardTaskTemplate):
         testable_metrics = ['nmedian', 'derivative', 'fieldshape', 'toomany']
 
         # Identify whether any testable metrics were completed.
-        testable_metrics_completed = self._identify_testable_metrics(
-            result, testable_metrics)
+        testable_metrics_completed = _identify_testable_metrics(result, testable_metrics)
 
         # If any of the testable metrics were completed...
         if testable_metrics_completed:
             # Identify bad antennas to demote/remove from refant list.
-            ants_to_demote, ants_to_remove = self._identify_bad_refants(
-                result, testable_metrics_completed)
+            ants_to_demote, ants_to_remove = self._identify_bad_refants(result, testable_metrics_completed)
 
             # Update result to mark antennas for demotion/removal as refant.
-            result = self._mark_antennas_for_refant_update(
-                result, ants_to_demote, ants_to_remove)
+            result = self._mark_antennas_for_refant_update(result, ants_to_demote, ants_to_remove)
 
         # If no testable metrics were completed, then log a trace warning that
         # no evaluation of fully flagged antennas was performed.
@@ -272,18 +409,6 @@ class Tsysflag(basetask.StandardTaskTemplate):
                       " evaluated: {}".format(', '.join(testable_metrics)))
 
         return result
-
-    @staticmethod
-    def _identify_testable_metrics(result, testable_metrics):
-        try:
-            testable_metrics_completed = [
-                metric for metric in result.metric_order
-                if metric in testable_metrics
-                and metric in result.components.keys()]
-        except AttributeError:
-            testable_metrics_completed = []
-
-        return testable_metrics_completed
 
     def _identify_bad_refants(self, result, testable_metrics_completed):
         # Get the MS object
@@ -299,16 +424,13 @@ class Tsysflag(basetask.StandardTaskTemplate):
         antenna_id_to_name = {ant.id: ant.name for ant in ms.antennas if ant.name.strip()}
 
         # Summarize flagging state from all flagging views in result.
-        flagging_state = self._summarize_flagging_state(
-            result, ms, metric_to_test)
+        flagging_state = self._summarize_flagging_state(result, ms, metric_to_test)
 
         # Identify antennas to demote as refant.
-        ants_to_demote, ants_fully_flagged = self._identify_ants_to_demote(
-            flagging_state, ms, antenna_id_to_name)
+        ants_to_demote, ants_fully_flagged = _identify_ants_to_demote(flagging_state, ms, antenna_id_to_name)
 
         # Identify antennas to remove as refant.
-        ants_to_remove = self._identify_ants_to_remove(
-            result, ms, metric_to_test, ants_fully_flagged, antenna_id_to_name)
+        ants_to_remove = _identify_ants_to_remove(result, ms, metric_to_test, ants_fully_flagged, antenna_id_to_name)
 
         return ants_to_demote, ants_to_remove
 
@@ -321,8 +443,7 @@ class Tsysflag(basetask.StandardTaskTemplate):
 
         # Identify fields present in Tsys table:
         # Read in the Tsys table, and extract the field ids.
-        tsystable = caltableaccess.CalibrationTableDataFiller.getcal(
-            self.inputs.caltable)
+        tsystable = caltableaccess.CalibrationTableDataFiller.getcal(self.inputs.caltable)
         fields = {}
         for row in tsystable.rows:
             time = row.get('TIME')
@@ -357,146 +478,11 @@ class Tsysflag(basetask.StandardTaskTemplate):
                     # If this scan is for an intent of interest, then store scan
                     # accordingly.
                     if intent in intents_of_interest:
-                        flagging_state[(intent, field_scan, spwid)].append(
-                            list(flag_per_scan))
+                        flagging_state[(intent, field_scan, spwid)].append(list(flag_per_scan))
 
         return flagging_state
 
-    @staticmethod
-    def _identify_ants_to_demote(flagging_state, ms, antenna_id_to_name):
-
-        # Initialize summary
-        ants_fully_flagged = collections.defaultdict(set)
-
-        # Create translation of field ID to field name
-        field_name_for_id = dict((field.id, field.name) for field in ms.fields)
-
-        # Based on flagging state summarized from all flagging views, identify
-        # antennas that are fully flagged for all available timestamps for one
-        # or more fields belonging to one or more of the intents of interest
-        # in one or more of the spws.
-        intents_found = set([key[0] for key in flagging_state.keys()])
-        for intent in intents_found:
-            fields_found = set([key[1]
-                                for key in flagging_state.keys()
-                                if key[0] == intent])
-            for field in fields_found:
-                spws_found = set([key[2] for key in flagging_state.keys()
-                                  if key[0:2] == (intent, field)])
-                for spwid in spws_found:
-                    flags_per_ant = np.array(flagging_state[(intent, field, spwid)]).T
-                    for iant, flag_for_ant in enumerate(flags_per_ant):
-                        if flag_for_ant.all():
-                            ants_fully_flagged[(intent, field, spwid)].update([iant])
-
-        # For each combination of intent, field, and spw that were found
-        # to have antennas fully flagged in all timestamps, raise a
-        # warning.
-        sorted_keys = sorted(
-            sorted(ants_fully_flagged.keys(), key=lambda keys: keys[2]),
-            key=lambda keys: keys[0])
-        for (intent, field, spwid) in sorted_keys:
-            ants_flagged = ants_fully_flagged[(intent, field, spwid)]
-
-            # Convert antenna IDs to names and create a string.
-            ants_str = ", ".join(map(str, [antenna_id_to_name[iant]
-                                           for iant in ants_flagged]))
-            LOG.warning(
-                "{msname} - for intent {intent} (field {fieldid}: "
-                "{fieldname}) and spw {spw}, the following antennas "
-                "are fully flagged: {ants}".format(
-                    msname=ms.basename, intent=intent, fieldid=field,
-                    fieldname=field_name_for_id[field], spw=spwid,
-                    ants=ants_str))
-
-        # Store the set of antennas that were fully flagged in at least
-        # one Tsys spw, for any of the fields for any of the intents.
-        ants_to_demote_as_refant = {
-            antenna_id_to_name[iant]
-            for iants in ants_fully_flagged.values()
-            for iant in iants}
-
-        return ants_to_demote_as_refant, ants_fully_flagged
-
-    @staticmethod
-    def _identify_ants_to_remove(result, ms, metric_to_test,
-                                 ants_fully_flagged, antenna_id_to_name):
-        # Initialize set of antennas that are fully flagged for all spws, for any intent
-        ants_fully_flagged_in_all_spws_any_intent = set()
-
-        # Get the science spw ids from the MS.
-        science_spw_ids = [spw.id for spw in ms.get_spectral_windows(science_windows_only=True)]
-
-        # Using the CalTo object in the TsysflagspectraResults from the
-        # last-ran testable metric, identify which are the Tsys spectral
-        # windows.
-        calto = result.components[metric_to_test].final[0]
-        tsys_spw_ids = [tsys for (spw, tsys) in enumerate(calto.spwmap)
-                        if spw in science_spw_ids
-                        and spw not in result.unmappedspws]
-
-        # Check if any antennas were found to be fully flagged in all
-        # scans (timestamps) and all spws, for any intent.
-        #
-        # NOTE: The following test checks for antennas fully flagged
-        # in all spws declared by CalTo (and assumes that flagging views were
-        # available for each of those spw to be able to test it).
-        # Conversely, this test does not check for antennas fully flagged in
-        # all spws within the subset of spws for which flagging views were available.
-        # If a flagging view was not available for some spw and a given intent,
-        # then no antenna will be found to be fully flagged in all spws for that intent.
-
-        # Identify the field and intent combinations for which fully flagged
-        # antennas were found.
-        intent_field_found = set([key[0:2] for key in ants_fully_flagged.keys()])
-        for (intent, field) in intent_field_found:
-
-            # Identify the spws for which fully flagged antennas were found (for current
-            # intent and field).
-            spws_found = set([key[2] for key in ants_fully_flagged.keys()
-                              if key[0:2] == (intent, field)])
-
-            # Only proceed if the set of spws for which flagged antennas were found is
-            # the same as the set of spws declared by CalTo, i.e. flagged antennas
-            # were found in all spws.
-            if spws_found == set(tsys_spw_ids):
-                # Select the fully flagged antennas for current intent and field.
-                ants_fully_flagged_for_intent_field = [
-                    ants_fully_flagged[key]
-                    for key in ants_fully_flagged.keys()
-                    if key[0:2] == (intent, field)
-                ]
-
-                # Identify which antennas are fully flagged in all spws, for
-                # current intent and field, and store these for later warning
-                # and/or updating of refant.
-                ants_fully_flagged_in_all_spws_any_intent.update(
-                    set.intersection(*ants_fully_flagged_for_intent_field))
-
-        # For the antennas that were found to be fully flagged in all
-        # spws for all timestamps for one or more fields belonging to
-        # one or more of the intents, raise a warning.
-        if ants_fully_flagged_in_all_spws_any_intent:
-            # Convert antenna IDs to names and create a string.
-            ants_str = ", ".join(
-                map(str, [antenna_id_to_name[iant]
-                          for iant in ants_fully_flagged_in_all_spws_any_intent]))
-            LOG.warning(
-                '{0} - the following antennas are fully flagged in all Tsys '
-                'spws for one or more fields with the intent "BANDPASS", '
-                '"PHASE", and/or "AMPLITUDE": {1}'.format(ms.basename, ants_str))
-
-        # Store the set of antennas that are fully flagged for all Tsys
-        # spws in any of the intents in the result as a list of antenna
-        # names.
-        ants_to_remove_as_refant = {
-            antenna_id_to_name[iant]
-            for iant in ants_fully_flagged_in_all_spws_any_intent}
-
-        return ants_to_remove_as_refant
-
-    def _mark_antennas_for_refant_update(self, result, ants_to_demote,
-                                         ants_to_remove):
+    def _mark_antennas_for_refant_update(self, result, ants_to_demote, ants_to_remove):
         """
         Modify result to set antennas to be demoted/removed if/when result
         gets accepted into the pipeline context. If list of antennas to demote
@@ -614,6 +600,125 @@ class Tsysflag(basetask.StandardTaskTemplate):
 
         return result
 
+    def _run_manual_flagging(self, caltable_to_assess):
+        inputs = self.inputs
+
+        # Initialize results object, and add caltable from inputs.
+        result = TsysflagspectraResults()
+        result.caltable = inputs.caltable
+        result.table = caltable_to_assess
+
+        # Load the tsys caltable to assess.
+        tsystable = caltableaccess.CalibrationTableDataFiller.getcal(caltable_to_assess)
+
+        # Store the vis from the tsystable in the result
+        result.vis = tsystable.vis
+
+        # Get the Tsys spw map by retrieving it from the first tsys CalFrom
+        # that is present in the callibrary.
+        spwmap = utils.get_calfroms(inputs.context, inputs.vis, 'tsys')[0].spwmap
+
+        # Construct a callibrary entry, and store in result. This entry was
+        # already created and merged into the context by tsyscal, but we
+        # recreate it here since it is needed by the weblog renderer to create
+        # a Tsys summary chart.
+        calto = callibrary.CalTo(vis=tsystable.vis)
+        calfrom = callibrary.CalFrom(caltable_to_assess, caltype='tsys', spwmap=spwmap)
+        calapp = callibrary.CalApplication(calto, calfrom)
+        result.final = [calapp]
+
+        # Read in manual Tsys flags and add to result.
+        flagcmds = _read_tsystemplate(inputs.filetemplate, tsystable.vis)
+        result.addflags(flagcmds)
+
+        # Apply manual Tsys flags, and add flagging summaries to result.
+        summaries = self._apply_manual_tsysflags(caltable_to_assess, flagcmds)
+        result.summaries = summaries
+
+        return result
+
+    def _apply_manual_tsysflags(self, tsystable, flagcmds):
+        inputs = self.inputs
+
+        # Initialize flagging summaries.
+        stats_before, stats_after = {}, {}
+
+        # Add before and after summary to flag commands.
+        flagcmds.insert(0, "mode='summary' name='before'")
+        flagcmds.append("mode='summary' name='after'")
+
+        # Create and execute flagdata command.
+        flagsetterinputs = FlagdataSetter.Inputs(context=inputs.context, vis=inputs.vis, table=tsystable, inpfile=[])
+        flagsettertask = FlagdataSetter(flagsetterinputs)
+        flagsettertask.flags_to_set(flagcmds)
+        fsresult = self._executor.execute(flagsettertask)
+
+        # Extract "before" and/or "after" summary
+        # Go through dictionary of reports...
+        for report in fsresult.results[0].values():
+            if report['name'] == 'before':
+                stats_before = report
+            if report['name'] == 'after':
+                stats_after = report
+
+        return stats_before, stats_after
+
+    def _run_flagging_heuristics(self, tsystable):
+        inputs = self.inputs
+
+        # Initialize output.
+        errmsg = ''
+        ordered_list_metrics_to_evaluate = []
+        results = {}
+
+        # Collect requested flag metrics from inputs into a dictionary.
+        # NOTE: each key in the dictionary below should have been added to
+        # the default value for the "metric_order" property in TsysflagInputs,
+        # or otherwise the Tsysflag task will always end prematurely for
+        # automatic pipeline runs.
+        metrics_from_inputs = {'nmedian': inputs.flag_nmedian,
+                               'derivative': inputs.flag_derivative,
+                               'edgechans': inputs.flag_edgechans,
+                               'fieldshape': inputs.flag_fieldshape,
+                               'birdies': inputs.flag_birdies,
+                               'toomany': inputs.flag_toomany}
+
+        # Convert metric order string to list of strings
+        metric_order_as_list = [metric.strip()
+                                for metric in inputs.metric_order.split(',')]
+
+        # If the input metric order list contains illegal values, then log
+        # an error and stop further evaluation of Tsysflag.
+        for metric in metric_order_as_list:
+            if metric not in metrics_from_inputs.keys():
+                errmsg = (
+                    "Input parameter 'metric_order' contains illegal value:"
+                    " '{0}'. Accepted values are: {1}.".format(
+                        metric, ', '.join(metrics_from_inputs.keys())))
+                LOG.error(errmsg)
+                return results, ordered_list_metrics_to_evaluate, errmsg
+
+        # If any of the requested metrics are not defined in the metric order,
+        # then log an error and stop further evaluation of Tsysflag.
+        for metric_name, metric_enabled in metrics_from_inputs.items():
+            if metric_enabled and metric_name not in metric_order_as_list:
+                errmsg = (
+                    "Flagging metric '{0}' is enabled, but not specified in"
+                    " 'metric_order'.".format(metric_name))
+                LOG.error(errmsg)
+                return results, ordered_list_metrics_to_evaluate, errmsg
+
+        # Convert requested flagging metrics to ordered list.
+        for metric in metric_order_as_list:
+            if metrics_from_inputs[metric]:
+                ordered_list_metrics_to_evaluate.append(metric)
+
+        # Run flagger for each metric.
+        for metric in ordered_list_metrics_to_evaluate:
+            results[metric] = self._run_flagger(metric, tsystable)
+
+        return results, ordered_list_metrics_to_evaluate, errmsg
+
     def _run_flagger(self, metric, caltable_to_assess):
         """
         Evaluates the Tsys spectra for a specified flagging metric.
@@ -638,8 +743,7 @@ class Tsysflag(basetask.StandardTaskTemplate):
         result.view_by_field = False
         
         # Load the tsys caltable to assess.
-        tsystable = caltableaccess.CalibrationTableDataFiller.getcal(
-            caltable_to_assess)
+        tsystable = caltableaccess.CalibrationTableDataFiller.getcal(caltable_to_assess)
 
         # Store the vis from the tsystable in the result
         result.vis = tsystable.vis

@@ -6,6 +6,7 @@ Created on 9 Sep 2014
 import collections
 import functools
 import os
+import shutil
 
 import pipeline.infrastructure.filenamer as filenamer
 import pipeline.infrastructure.logging as logging
@@ -46,6 +47,7 @@ class T2_4MDetailsTsysflagRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
         eb_plots = []
         last_results = []
         updated_refants = {}
+        flagcmd_files = {}
 
         standard_plots = create_plot_detail_page(std_renderer_mapping, context, results)
         extra_plots = create_plot_detail_page(extra_renderer_mapping, context, results)
@@ -69,10 +71,23 @@ class T2_4MDetailsTsysflagRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
 
             # summarise flagging by each step
             for component, r in result.components.items():
-                flag_totals[table][component] = self._flags_for_result(r, context)
+                if r is not None:
+                    flag_totals[table][component] = self._flags_for_result(r, context)
+                else:
+                    flag_totals[table][component] = None
 
             # summarise flag state on exit
             flag_totals[table]['after'] = self._flags_for_result(result, context, summary='last')
+
+            # If a manual flagging template file was applied, copy the file to
+            # the weblog directory, and store information.
+            if 'manual' in result.components and os.path.exists(result.inputs['filetemplate']):
+                shutil.copy(result.inputs['filetemplate'], weblog_dir)
+                flagcmd_file = os.path.basename(result.inputs['filetemplate'])
+                flagcmd_path = os.path.join('stage{}'.format(result.stage_number), flagcmd_file)
+                flagcmd_files[os.path.basename(result.components['manual'].table)] = flagcmd_path
+            else:
+                flagcmd_files[table] = None
 
             # Generate the summary plots at end of flagging sequence,
             # beware empty sequence
@@ -131,6 +146,7 @@ class T2_4MDetailsTsysflagRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
             'components': components,
             'dirname': weblog_dir,
             'extraplots': extra_plots,
+            'flagcmd_files': flagcmd_files,
             'flags': flag_totals,
             'htmlreports': htmlreports,
             'stdplots': standard_plots,
@@ -148,24 +164,22 @@ class T2_4MDetailsTsysflagRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
         htmlreports = {}
 
         for component in components:
+            # Skip report for manual flagging.
+            if component == 'manual':
+                continue
+
             htmlreports[component] = {}
 
             for msresult in results:
                 if not msresult.task_incomplete_reason:
-                    flagcmd_abspath = self._write_flagcmd_to_disk(
-                        weblog_dir, msresult.components[component], component)
-                    report_abspath = self._write_report_to_disk(
-                        weblog_dir, msresult.components[component], component)
-    
-                    flagcmd_relpath = os.path.relpath(flagcmd_abspath,
-                                                      report_dir)
-                    report_relpath = os.path.relpath(report_abspath,
-                                                     report_dir)
-    
-                    table_basename = os.path.basename(
-                        msresult.components[component].table)
-                    htmlreports[component][table_basename] = \
-                        (flagcmd_relpath, report_relpath)
+                    flagcmd_abspath = self._write_flagcmd_to_disk(weblog_dir, msresult.components[component], component)
+                    report_abspath = self._write_report_to_disk(weblog_dir, msresult.components[component], component)
+
+                    flagcmd_relpath = os.path.relpath(flagcmd_abspath, report_dir)
+                    report_relpath = os.path.relpath(report_abspath, report_dir)
+
+                    table_basename = os.path.basename(msresult.components[component].table)
+                    htmlreports[component][table_basename] = (flagcmd_relpath, report_relpath)
 
         return htmlreports
 

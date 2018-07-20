@@ -42,6 +42,23 @@ extra_plot_desc = {'nmedian'    : ' shows the spectra flagged in',
 %>
 
 <%inherit file="t2-4m_details-base.mako"/>
+
+<%
+# these functions are defined in template scope so we have access to the weblog
+# context objects.
+
+def flagcmd_file_data(caltable, flagcmd_file):
+    if flagcmd_file is not None:
+        row = ('<td>{}</td>'
+               '<td><a class="replace-pre" href="{}" data-title="Flagging Commands">{}</a></td>'
+               '<td>{}</td>'
+               ''.format(caltable, flagcmd_file, os.path.basename(flagcmd_file),
+                         num_lines(pcontext.report_dir, flagcmd_file)))
+    else:
+        row = '<td>{}</td><td>N/A</td><td>N/A</td>'.format(caltable)
+    return row
+%>
+
 <%block name="title">Flag T<sub>sys</sub> calibration</%block>
 
 % if any([msg for msg in task_incomplete_msg.values()]):
@@ -65,6 +82,9 @@ extra_plot_desc = {'nmedian'    : ' shows the spectra flagged in',
 <li><a href="#summarytable">Flagged data summary</a></li>
 <li>Flag step details</li>
     <ul>
+    % if flagcmd_files:
+        <li><a href="#manual">manual</a></li>
+    % endif
     % for component in components:
       % if htmlreports.get(component) is not None:
         <li><a href="#${component}">${component}</a></li>
@@ -199,7 +219,7 @@ extra_plot_desc = {'nmedian'    : ' shows the spectra flagged in',
 				##<td>${step} ${k} ${flags[ms][step]['Summary'][k]}</td>
 				<td>${percent_flagged(flags[ms][step]['Summary'][k])}</td>
 			% else:
-				<td>0.0%</td>
+				<td>N/A</td>
 			% endif
 			% endfor
 		</tr>
@@ -219,6 +239,29 @@ extra_plot_desc = {'nmedian'    : ' shows the spectra flagged in',
     found to be deviant in one polarisation, the pipeline will flag the antenna
     for both polarisations.
 </p>
+
+% if flagcmd_files:
+	<h3 id="manual" class="jumptarget">manual</h3>
+	Flag T<sub>sys</sub> spectra with manual flag commands from template file.
+
+    <h4>Template files</h4>
+    <table class="table table-bordered table-striped">
+	<thead>
+	    <tr>
+	    	<th>Table</th>
+	        <th>File</th>
+	        <th>Number of Statements</th>
+	    </tr>
+	</thead>
+	<tbody>
+    % for caltable, flagcmd_file in flagcmd_files.items():
+        <tr>
+            ${flagcmd_file_data(caltable, flagcmd_file)}
+        </tr>
+    % endfor
+	</tbody>
+    </table>
+% endif
 
 % for component in components: 
   % if htmlreports.get(component) is not None:

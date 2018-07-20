@@ -23,7 +23,7 @@ class TsysflagInputs(tsysflag.TsysflagInputs):
                  flag_fieldshape=None, ff_refintent=None, ff_max_limit=None,
                  flag_birdies=None, fb_sharps_limit=None,
                  flag_toomany=None, tmf1_limit=None, tmef1_limit=None,
-                 metric_order=None, normalize_tsys=None):
+                 metric_order=None, normalize_tsys=None, filetemplate=None):
         super(TsysflagInputs, self).__init__(
             context=context, output_dir=output_dir, vis=vis, caltable=caltable,
             flag_nmedian=flag_nmedian, fnm_limit=fnm_limit, fnm_byfield=fnm_byfield,
@@ -32,7 +32,7 @@ class TsysflagInputs(tsysflag.TsysflagInputs):
             flag_fieldshape=flag_fieldshape, ff_refintent=ff_refintent, ff_max_limit=ff_max_limit,
             flag_birdies=flag_birdies, fb_sharps_limit=fb_sharps_limit,
             flag_toomany=flag_toomany, tmf1_limit=tmf1_limit, tmef1_limit=tmef1_limit,
-            metric_order=metric_order, normalize_tsys=normalize_tsys)
+            metric_order=metric_order, normalize_tsys=normalize_tsys, filetemplate=filetemplate)
 
 
 @task_registry.set_equivalent_casa_task('hifa_tsysflag')
