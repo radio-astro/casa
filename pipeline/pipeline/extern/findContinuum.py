@@ -70,7 +70,7 @@ def version(showfile=True):
     """
     Returns the CVS revision number.
     """
-    myversion = "$Id: findContinuumCycle6.py,v 2.37 2018/06/17 15:05:46 we Exp $" 
+    myversion = "$Id: findContinuumCycle6.py,v 2.39 2018/07/19 09:25:31 we Exp $" 
     if (showfile):
         print("Loaded from %s" % (__file__))
     return myversion
@@ -2579,8 +2579,13 @@ def findContinuumChannels(spectrum, nBaselineChannels=16, sigmaFindContinuum=3,
     if useMiddleChannels:
         medianTrue = median
     else:
+        # Do not use signalRatio here as the 5th parameter anymore, because we may have set it to zero just above, 
+        # but 1/lineStrengthFactor is the same value as before it was set to zero.  Setting it to zero causes
+        # problems on non-hot core FDM, like spw29 of 2015.1.00581.S, uid://A001/X2f6/X16b (CAS-11671).  Not
+        # setting it to zero changes the selection on hot cores, some giving more channels, some giving fewer,
+        # but not drastically either direction.  Largest change is on spw22 of uid://A001/X2f6/X265 (page 245).
         medianTrue = medianCorrected(baselineMode, percentile, median, mad, 
-                                     signalRatio, useLowBaseline)
+                                     1.0/lineStrengthFactor, useLowBaseline)
 
     peakFeatureSigma = (np.max(spectrum)-medianTrue)/mad 
     # De-sensitize the threshold in order to avoid small differences in noise levels 
@@ -2668,7 +2673,7 @@ def findContinuumChannels(spectrum, nBaselineChannels=16, sigmaFindContinuum=3,
             print("channels = ", channels)
         selection = convertChannelListIntoSelection(channels,separator=separator)
         groups = len(selection.split(separator))
-        casalogPost("Found %d channels after rejecting zero std: %s" % (len(channels), str(selection)))
+        casalogPost("Found %d channels in %d groups after rejecting zero std: %s" % (len(channels), groups, str(selection)))
         if (len(channels) == 0):
             selection = ''
         else:
@@ -2688,12 +2693,16 @@ def findContinuumChannels(spectrum, nBaselineChannels=16, sigmaFindContinuum=3,
                 casalogPost("Restoring maxTrim=%d because groups now > %d" % (maxTrim,maxGroupsForMaxTrimAdjustment))
                 if verbose:
                     casalogPost("Calling splitListIntoContiguousListsAndTrim(channels=%s, trimChannels=%s, maxTrim=%d, maxTrimFraction=%f)" % (str(channels), str(trimChannels), maxTrim, maxTrimFraction))
-                channels = splitListIntoContiguousListsAndTrim(channels, 
+                trialChannels = splitListIntoContiguousListsAndTrim(channels, 
                              trimChannels, maxTrim, maxTrimFraction, verbose)
-                if verbose:
-                    print("channels = ", channels)
-                selection = convertChannelListIntoSelection(channels)
-                groups = len(selection.split(separator))
+                if len(trialChannels) == 0:
+                    casalogPost("Zero channels left after trimming. Reverting to prior selection.")
+                else:
+                    channels = trialChannels
+                    if verbose:
+                        print("channels = ", channels)
+                    selection = convertChannelListIntoSelection(channels)
+                    groups = len(selection.split(separator))
 
             if verbose:
                 print("Found %d groups of channels = " % (groups), channels)
