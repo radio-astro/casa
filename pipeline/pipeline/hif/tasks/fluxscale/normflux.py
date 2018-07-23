@@ -1,18 +1,17 @@
 from __future__ import absolute_import
+
 import collections
 import itertools
 import string
 
 import pipeline.domain as domain
 import pipeline.domain.measures as measures
-
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.utils as utils
 import pipeline.infrastructure.vdp as vdp
-
-from pipeline.h.tasks.common import commonfluxresults
 from pipeline.h.heuristics import fieldnames as fieldnames
+from pipeline.h.tasks.common import commonfluxresults
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -142,8 +141,7 @@ class NormaliseFlux(basetask.StandardTaskTemplate):
                     continue
 
                 # ugly hack: get spw from first flux density measurement 
-                fd_sum = domain.FluxMeasurement(fds_in_spw[0].spw_id,
-                  I=measures.FluxDensity(0))
+                fd_sum = domain.FluxMeasurement(fds_in_spw[0].spw_id, measures.FluxDensity(0))
                 for fd in fds_in_spw:
                     fd_sum = fd_sum + fd
                 fd_avg = fd_sum / (len(fds_in_spw))

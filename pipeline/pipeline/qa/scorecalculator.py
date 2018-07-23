@@ -12,13 +12,13 @@ import os
 import numpy as np
 
 import pipeline.domain.measures as measures
+import pipeline.infrastructure.basetask
 import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.pipelineqa as pqa
 import pipeline.infrastructure.renderer.rendererutils as rutils
 import pipeline.infrastructure.utils as utils
 import pipeline.qa.checksource as checksource
-import pipeline.infrastructure.basetask
 
 __all__ = ['score_polintents',                                # ALMA specific
            'score_bands',                                     # ALMA specific
@@ -37,6 +37,7 @@ __all__ = ['score_polintents',                                # ALMA specific
            'score_poor_phase_snrs',                           # ALMA specific
            'score_flagging_view_exists',                      # ALMA specific
            'score_checksources',                              # ALMA specific
+           'score_gfluxscale_k_spw',                          # ALMA specific
            'score_file_exists',
            'score_path_exists',
            'score_flags_exist',
@@ -1996,7 +1997,6 @@ def score_checksources(mses, fieldname, spwid, imagename, rms, gfluxscale, gflux
 
 @log_qa
 def score_multiply(scores_list):
-
     score = reduce(operator.mul, scores_list, 1.0)
     longmsg = 'Multiplication of scores.'
     shortmsg = 'Multiplication of scores.'
@@ -2005,3 +2005,44 @@ def score_multiply(scores_list):
                           metric_units='Number of multiplied scores.')
 
     return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg, origin=origin)
+
+
+@log_qa
+def score_gfluxscale_k_spw(vis, field, spw_id, k_spw):
+    """ Convert internal spw_id-spw_id consistency ratio to a QA score.
+
+    k_spw is equal to the ratio of the derived flux:catalogue flux divided by
+    the ratio of derived flux:catalogue flux for the highest SNR window.
+
+    See CAS-10792 for full specification.
+
+    :param k_spw: numeric k_spw ratio, as per spec
+    :param vis: name of measurement set to which k_spw applies
+    :param field: field domain object to which k_spw applies
+    :param spw_id: name of spectral window to which k_spw applies
+    :return: QA score
+    """
+
+    #     if Q_total < 0.1, QA score 1 = 1.0
+    #     if 0.1 <= Q_total < 0.2, QA score 1 = 0.75 (Blue/below standard)
+    #     if 0.2 <= Q_total < 0.3, QA score 1 = 0.5 (Yellow/warning)
+    #     if Q_total >= 0.3, QA score 1 = 0.2 (Red/Error)
+    q_spw = abs(1-k_spw)
+    if q_spw < 0.1:
+        score = 1.0
+    elif q_spw < 0.2:
+        score = 0.75
+    elif q_spw < 0.3:
+        score = 0.5
+    else:
+        score = 0.2
+
+    longmsg = ('Flux density for {} ({}) in {} spw {} deviates by {:.0%} from the expected value'
+               ''.format(utils.dequote(field.name), ','.join(field.intents), vis, spw_id, q_spw))
+    shortmsg = 'Internal spw-spw consistency'
+
+    origin = pqa.QAOrigin(metric_name='score_gfluxscale_k_spw',
+                          metric_score=float(k_spw),
+                          metric_units='Number of spws with missing SNR measurements')
+
+    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg, vis=vis, origin=origin)

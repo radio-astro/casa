@@ -2,22 +2,26 @@ from __future__ import absolute_import
 
 import collections
 import csv
+import decimal
 import itertools
 import operator
 import os
+import re
 import string
 import types
-import decimal
 import xml.etree.ElementTree as ElementTree
+from datetime import datetime
 
 import pipeline.domain as domain
 import pipeline.domain.measures as measures
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.utils as utils
-
 from ..common import commonfluxresults
 
 LOG = infrastructure.get_logger(__name__)
+
+ORIGIN_XML = 'Source.xml'
+
 
 def get_setjy_results(mses):
     """
@@ -42,6 +46,7 @@ def get_setjy_results(mses):
 
     return results
 
+
 def read_fluxes_nodb(ms):
     """
     Read fluxes from the Source XML table translating from the ASDM
@@ -51,14 +56,12 @@ def read_fluxes_nodb(ms):
 
     source_table = os.path.join(ms.name, 'Source.xml')
     if not os.path.exists(source_table):
-        LOG.info('No Source XML found at %s. No flux import performed. '
-                 'Attempting database query.', source_table)
+        LOG.info('No Source XML found at {}. No flux import performed. '.format(source_table))
         return result
 
     source_element = ElementTree.parse(source_table)
     if not source_element:
-        LOG.info('Could not parse Source XML at %s. No flux import performed. '
-                 'Attempting database query.', source_table)
+        LOG.info('Could not parse Source XML at {}. No flux import performed.'.format(source_table))
         return result
 
     # Empty spws that follow non-empty spws can be pruned from MMS data. This
@@ -87,14 +90,12 @@ def read_fluxes_nodb(ms):
         # SCIREQ-852: MS spw IDs != ASDM spw ids
         spw_id = asdm_to_ms_spw_map.get(int(asdm_spw_id), None)
         if spw_id not in all_ms_spw_ids:
-            LOG.warning('Could not map ASDM spectral window {!s} to MS '
-                        'for {!s}'.format(asdm_spw_id, ms.basename))
+            LOG.warning('Could not map ASDM spectral window {} to MS for {}'.format(asdm_spw_id, ms.basename))
             continue
 
         source_id = int(source_element)
         if source_id >= len(ms.sources):
-            LOG.warning('Source.xml refers to source #{!s}, which was not '
-                        'found in {!s}'.format(source_id, ms.basename))
+            LOG.warning('Source.xml refers to source #{}, which was not found in {}'.format(source_id, ms.basename))
             continue
         source = ms.sources[int(source_id)]
 
@@ -117,11 +118,11 @@ def read_fluxes_nodb(ms):
 
     return result
 
-def get_measurement (ms, spw_id, frequency_text, flux_text):
 
-    '''
+def get_measurement(ms, spw, frequency_text, flux_text):
+    """
     Construct the measurement
-    '''
+    """
 
     # more than one measurement can be registered against the spectral
     # window. These functions give a lists of frequencies and IQUV
@@ -131,7 +132,7 @@ def get_measurement (ms, spw_id, frequency_text, flux_text):
     # zip to give a list of (frequency, [I,Q,U,V]) tuples
     zipped = zip(row_frequencies, row_iquvs)
 
-    spw = ms.get_spectral_window(spw_id)
+    spw = ms.get_spectral_window(spw)
 
     # Task: select flux measurement closest to spectral window centre
     # frequency, taking the mean when measurements are equally distant
@@ -146,34 +147,34 @@ def get_measurement (ms, spw_id, frequency_text, flux_text):
     joint_closest = [iquv for delta_f, _, iquv in by_delta if delta_f == min_delta]
 
     if len(joint_closest) > 1:
-        LOG.trace('Averaging {!s} equally close measurements: {!s}'.format(len(joint_closest), joint_closest))
+        LOG.trace('Averaging {} equally close measurements: {}'.format(len(joint_closest), joint_closest))
 
     # calculate the mean of these equally distant  measurements.
     # joint_closest has at least one item, so we don't need to prime
     # the reduce function with an empty accumulator
     mean_iquv = [reduce(lambda x, y: x + y, stokes) / len(joint_closest) for stokes in zip(*joint_closest)]
 
-    LOG.info('Closest flux measurement for {!s} spw {!s} found {!s} '
-             'distant from centre of spw)'.format(ms.basename, spw_id, min_delta))
+    LOG.info('Closest flux measurement for {} spw {} found {} distant from centre of spw)'
+             ''.format(ms.basename, spw, min_delta))
 
     # Even if a mean was calculated, any alternative selection should
     # be equally distant and therefore outside the sow range too
     if not spw.min_frequency < closest_frequency < spw.max_frequency:
         # This might become a warning once the PRTSPR-20823 fix is active
-        LOG.info('Closest flux measurement for {!s} spw {!s} falls outside'
-                 'spw, {!s} distant from spectral window centre'.format(ms.basename, spw_id, min_delta))
+        LOG.info('Closest flux measurement for {} spw {} falls outside spw, {} distant from spectral window centre'
+                 ''.format(ms.basename, spw, min_delta))
 
-    m = domain.FluxMeasurement(spw_id, *mean_iquv, origin=('Source.xml','','N/A'))
+    m = domain.FluxMeasurement(spw.id, *mean_iquv, origin=ORIGIN_XML)
 
     return m
+
 
 def to_jansky(flux_text):
     """
     Convert a string extracted from an ASDM XML element to FluxDensity domain
     objects.
     """
-    flux_fn = lambda f: measures.FluxDensity(float(f),
-                                             measures.FluxDensityUnits.JANSKY)
+    flux_fn = lambda f: measures.FluxDensity(float(f), measures.FluxDensityUnits.JANSKY)
     return get_atoms(flux_text, flux_fn)
 
 
@@ -182,8 +183,7 @@ def to_hertz(freq_text):
     Convert a string extracted from an ASDM XML element to Frequency domain
     objects.
     """
-    freq_fn = lambda f: measures.Frequency(float(f),
-                                           measures.FrequencyUnits.HERTZ)
+    freq_fn = lambda f: measures.Frequency(float(f), measures.FrequencyUnits.HERTZ)
     return get_atoms(freq_text, freq_fn)
 
 
@@ -233,30 +233,62 @@ def grouper(n, iterable, fillvalue=None):
     return itertools.izip_longest(fillvalue=fillvalue, *args)
 
 
-def export_flux_from_context(context, filename=None):
+def CYCLE7_export_flux_from_result(results, context, filename='flux.csv'):
     """
-    Export flux densities stored in the given context to a CSV file.
-    """
-    if not filename:
-        filename = os.path.join(context.output_dir, 'flux.csv')
+    Export flux densities from a set of results to a CSV file.
 
-    with open(filename, 'wt') as f:
+    This function was reverted because it came too late to the C6 deadline
+    for analysisUtils to match the new format. It should be committed during
+    C7 development.
+    """
+    if type(results) is not types.ListType:
+        results = [results, ]
+    abspath = os.path.join(context.output_dir, filename)
+
+    columns = ['ms', 'field', 'spw', 'I', 'Q', 'U', 'V', 'spix', 'origin', 'query_date', 'age', 'comment']
+    existing = []
+
+    # if the file exists, read it in
+    if os.path.exists(abspath):
+        with open(abspath, 'r') as f:
+            # slurp in all but the header rows
+            existing.extend([l for l in f.readlines() if not l.startswith(','.join(columns))])
+
+    # so we can write it back out again, with our measurements appended
+    with open(abspath, 'wt') as f:
         writer = csv.writer(f)
-        writer.writerow(('ms', 'field', 'spw', 'I', 'Q', 'U', 'V', 'spix', 'comment'))
+        writer.writerow(columns)
+        f.writelines(existing)
 
         counter = 0
-        for ms in context.observing_run.measurement_sets:
-            for field in ms.fields:
-                for flux in field.flux_densities:
-                    (I, Q, U, V) = flux.casa_flux_density
-                    comment = 'intent=' + ','.join(sorted(field.intents))
-                    writer.writerow((ms.basename, field.id, flux.spw_id,
-                                     I, Q, U, V, float(flux.spix),
-                                     comment + ' #' + flux.origin[0]
-                                     + flux.origin[1] + '  ageOfNearestMonitorPoint: ' + flux.origin[2]))
-                    counter += 1
+        for setjy_result in results:
+            ms_name = setjy_result.vis
+            ms_basename = os.path.basename(ms_name)
+            for field_id, measurements in setjy_result.measurements.items():
+                for m in measurements:
 
-        LOG.info('Exported %s flux measurements to %s' % (counter, filename))
+                    prefix = '%s,%s,%s' % (ms_basename, field_id, m.spw_id)
+                    for row in existing:
+                        if row.startswith(prefix):
+                            LOG.info('Not overwriting flux data for %s field %s '
+                                     'spw %s in %s' % (ms_basename, field_id,
+                                                       m.spw_id,
+                                                       os.path.basename(abspath)))
+                            break
+
+                    else:
+                        (I, Q, U, V) = m.casa_flux_density
+
+                        ms = context.observing_run.get_ms(ms_basename)
+                        field = ms.get_fields(field_id)[0]
+                        comment = "\'" + utils.dequote(field.name) + "\'" + ' ' + 'intent=' + ','.join(
+                            sorted(field.intents))
+
+                        writer.writerow((ms_basename, field_id, m.spw_id, I, Q, U, V, float(m.spix), m.origin,
+                                         m.queried_at, m.age, comment))
+                        counter += 1
+
+        LOG.info('Exported %s flux measurements to %s' % (counter, abspath))
 
 
 def export_flux_from_result(results, context, filename='flux.csv'):
@@ -274,10 +306,10 @@ def export_flux_from_result(results, context, filename='flux.csv'):
     if os.path.exists(abspath):
         with open(abspath, 'r') as f:
             # slurp in all but the header rows
-            existing.extend([l for l in f.readlines()
-                             if not l.startswith(','.join(columns))])
+            existing.extend([l for l in f.readlines() if not l.startswith(','.join(columns))])
 
-            # so we can write it back out again, with our measurements appended
+    # so we can write it back out again, with our measurements appended
+    comment_template = '# field={field} intents={intents} origin={origin} age={age} queried_at={queried_at}'
     with open(abspath, 'wt') as f:
         writer = csv.writer(f)
         writer.writerow(columns)
@@ -291,25 +323,27 @@ def export_flux_from_result(results, context, filename='flux.csv'):
                 for m in measurements:
 
                     prefix = '%s,%s,%s' % (ms_basename, field_id, m.spw_id)
-                    exists = False
                     for row in existing:
                         if row.startswith(prefix):
-                            LOG.info('Not overwriting flux data for %s field %s '
-                                     'spw %s in %s' % (ms_basename, field_id,
-                                                       m.spw_id,
-                                                       os.path.basename(abspath)))
-                            exists = True
+                            LOG.info('Not overwriting flux data for {} field {} spw {}'
+                                     ''.format(ms_basename, field_id, m.spw_id))
+                            break
 
-                    if not exists:
+                    else:
                         (I, Q, U, V) = m.casa_flux_density
 
                         ms = context.observing_run.get_ms(ms_basename)
                         field = ms.get_fields(field_id)[0]
-                        comment = "\'"+utils.dequote(field.name)+"\'" + ' ' + 'intent=' + ','.join(sorted(field.intents))
 
-                        writer.writerow((ms_basename, field_id, m.spw_id,
-                                         I, Q, U, V, float(m.spix), comment+' #'+m.origin[0]
-                                         + m.origin[1] + '  ageOfNearestMonitorPoint: ' + m.origin[2]))
+                        origin = m.origin if m.origin else 'N/A'
+                        age = m.age if m.age else 'N/A'
+                        queried_at = m.queried_at if m.queried_at else 'N/A'
+
+                        comment = comment_template.format(field=field.clean_name,
+                                                          intents=','.join(sorted(field.intents)), origin=origin,
+                                                          age=age, queried_at=queried_at)
+
+                        writer.writerow([ms_basename, field_id, m.spw_id, I, Q, U, V, float(m.spix), comment])
                         counter += 1
 
         LOG.info('Exported %s flux measurements to %s' % (counter, abspath))
@@ -319,42 +353,67 @@ def import_flux(output_dir, observing_run, filename=None):
     """
     Read flux densities from a CSV file and import them into the context.
     """
+    # regular expressions to match values from comment template
+    origin_re = re.compile('(?:origin=)(?P<origin>\S+)')
+    age_re = re.compile('(?:age=)(?P<age>\S+)')
+    query_re = re.compile('(?:queried_at=)(?P<timestamp>\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2} \w{3})')
+
     if not filename:
         filename = os.path.join(output_dir, 'flux.csv')
 
     with open(filename, 'rt') as f:
-        reader = csv.reader(f)
-
-        # first row is header row
-        reader.next()
+        reader = csv.DictReader(f, restkey='others', restval=None)
 
         counter = 0
-        ageString = 'ageOfNearestMonitorPoint: '
         for row in reader:
+            ms_name = row['ms']
             try:
-                try:
-                    (ms_name, field_id, spw_id, I, Q, U, V, spix, extra) = row
-                    spix = decimal.Decimal(spix)
-                except:
-                    (ms_name, field_id, spw_id, I, Q, U, V, extra) = row
-                    spix = decimal.Decimal('0.0')
-                spw_id = int(spw_id)
-                try:
-                    ageNMP = extra[extra.index(ageString) + len(ageString):]
-                except:
-                    ageNMP = ''
-                try:
-                    ms = observing_run.get_ms(ms_name)
-                except KeyError:
-                    # No MS registered by that name. This could be caused by a
-                    # flux.csv from a previous run
-                    LOG.info('%s refers to unregistered measurement set \'%s\'. '
-                             'If this is a multi-ASDM run this to be expected.'
-                             '' % (filename, ms_name))
-                    continue
+                ms = observing_run.get_ms(ms_name)
+            except KeyError:
+                # No MS registered by that name. This could be caused by a
+                # flux.csv from a previous run
+                LOG.info('{} refers to unregistered ASDM \'{}\'. If this is a multi-ASDM run this to be expected.'
+                         ''.format(filename, ms_name))
+                continue
 
+            field_id = int(row['field'])
+            spw_id = int(row['spw'])
+            I = row['I']
+            Q = row['Q']
+            U = row['U']
+            V = row['V']
+
+            try:
+                spix = decimal.Decimal(row['spix'])
+            except decimal.InvalidOperation:
+                spix = decimal.Decimal('0.0')
+
+            comment = row['comment']
+
+            match = origin_re.search(comment)
+            origin = match.group('origin') if match else None
+            if origin == 'N/A':
+                origin = None
+
+            match = age_re.search(comment)
+            age = match.group('age') if match else None
+            if age:
+                try:
+                    age = int(age)
+                except ValueError:
+                    age = None
+
+            match = query_re.search(comment)
+            query_date = match.group('timestamp') if match else None
+            if query_date:
+                try:
+                    query_date = datetime.strptime(query_date, '%Y-%m-%d %H:%M:%S %Z')
+                except TypeError:
+                    query_date = None
+
+            try:
                 fields = ms.get_fields(field_id)
-                measurement = domain.FluxMeasurement(spw_id, I, Q, U, V, spix, origin=('', '', ageNMP))
+                measurement = domain.FluxMeasurement(spw_id, I, Q, U, V, spix, origin=origin, age=age, queried_at=query_date)
 
                 # A single field identifier could map to multiple field objects,
                 # but the flux should be the same for all, so we iterate..
@@ -365,13 +424,14 @@ def import_flux(output_dir, observing_run, filename=None):
                         [m for m in field.flux_densities if m.spw_id is spw_id])
 
                     # .. and then updating with our new values
-                    LOG.trace('Adding %s to spw %s' % (measurement, spw_id))
+                    LOG.trace('Adding {} to spw {}'.format(measurement, spw_id))
                     field.flux_densities.add(measurement)
                     counter += 1
-            except:
-                LOG.warning('Problem importing \'%s\' as a flux statement' % row)
+            except Exception as e:
+                LOG.debug(e)
+                LOG.warning('Problem importing \'{}\' as a flux statement'.format(row))
 
-        LOG.info('Imported %s flux measurements from %s' % (counter, filename))
+        LOG.info('Imported {} flux measurements from {}'.format(counter, filename))
 
         # Convert into a set of results for the web log
         results = []

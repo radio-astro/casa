@@ -1,6 +1,7 @@
 from __future__ import absolute_import
-import copy_reg
+
 import contextlib
+import copy_reg
 import inspect
 import os
 import platform
@@ -127,7 +128,7 @@ def set_log_origin(fromwhere=''):
     log.origin(fromwhere)
 
 
-def context_manager_factory(tool):
+def context_manager_factory(tool, close_fn=lambda tool: tool.close()):
     """
     Create a context manager function that wraps the given CASA tool.
 
@@ -148,7 +149,7 @@ def context_manager_factory(tool):
             yield tool
         finally:
             LOG.trace('%s tool: closing %r', tool_name, filename)
-            tool.close()
+            close_fn(tool)
     return f
 
 
@@ -188,6 +189,7 @@ MSReader = context_manager_factory(ms)
 TableReader = context_manager_factory(table)
 MSMDReader = context_manager_factory(msmd)
 SelectvisReader = selectvis_context_manager(imager)
+AgentFlagger = context_manager_factory(agentflagger, close_fn=lambda tool: tool.done())
 
 # C extensions cannot be pickled, so ignore the CASA logger on pickle and
 # replace with it with the current CASA logger on unpickle

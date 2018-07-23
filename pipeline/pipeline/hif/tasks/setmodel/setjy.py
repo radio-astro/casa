@@ -18,6 +18,8 @@ from pipeline.infrastructure import task_registry
 
 LOG = infrastructure.get_logger(__name__)
 
+ORIGIN = 'setjy'
+
 
 class SetjyInputs(vdp.StandardInputs):
 
@@ -54,8 +56,8 @@ class SetjyInputs(vdp.StandardInputs):
         if not self.ms:
             return
 
-        # The fluxdensity parameter  is set ot  -1 which indicates that we must do a
-        # flux lookup. The # lookup order is: 
+        # The fluxdensity parameter is set to -1 which indicates that we must
+        # do a flux lookup. The lookup order is:
         #     1) from file, unless it's a solar system object
         #     2) from CASA
         
@@ -65,34 +67,28 @@ class SetjyInputs(vdp.StandardInputs):
         ref_flux = []
         if os.path.exists(self.reffile):
             with open(self.reffile, 'rt') as f:
+                reader = csv.DictReader(f, restkey='others', restval=None)
 
-                # First row is header row
-                reader = csv.reader(f)
-                reader.next()
-        
-                # Loop over rows trying the new CSV format first
                 for row in reader:
+                    ms_name = row['ms']
+                    field_id = int(row['field'])
+                    spw_id = int(row['spw'])
+                    I = row['I']
+                    Q = row['Q']
+                    U = row['U']
+                    V = row['V']
+
                     try:
-                        try:
-                            (ms_name, field_id, spw_id, I, Q, U, V, spix, comment) = row
-                        except:
-                            (ms_name, field_id, spw_id, I, Q, U, V, comment) = row
-                            spix = str(self.spix)
-                    except ValueError:
-                        LOG.warning('Invalid flux statement in %s: \'%s'
-                                    '\'' % (self.reffile, row))
-                        continue
+                        spix = decimal.Decimal(row['spix'])
+                    except decimal.InvalidOperation:
+                        spix = decimal.Decimal('0.0')
 
                     # Check that the entry is for the correct MS
                     if os.path.basename(ms_name) != self.ms.basename:
                         continue
 
                     # Add the value
-                    spw_id = int(spw_id)
-                    ref_flux.append((field_id, spw_id, float(I), float(Q), 
-                                     float(U), float(V), float(spix)))
-        
-                    # TODO sort the flux values in spw order?
+                    ref_flux.append((field_id, spw_id, float(I), float(Q), float(U), float(V), float(spix)))
 
         # Issue warning if the reference file was specified but not found.
         if not os.path.exists(self.reffile) and self.reffile not in ('', None):
@@ -109,7 +105,7 @@ class SetjyInputs(vdp.StandardInputs):
 
             # Field names may resolve to multiple field IDs
             fields = self.ms.get_fields(task_arg=field_arg, intent=self.intent)
-            field_ids = set([str(field.id) for field in fields])
+            field_ids = set([field.id for field in fields])
             field_names = set([field.name for field in fields])
 
             # Find fluxes
@@ -136,8 +132,7 @@ class SetjyInputs(vdp.StandardInputs):
                 # If this is a solar system calibrator, ignore any catalogue
                 # flux and request a CASA model lookup
                 if not field_names.isdisjoint(standard.Standard.ephemeris_fields):
-                    LOG.debug('Ignoring records from file for solar system '
-                              'calibrator')
+                    LOG.debug('Ignoring records from file for solar system calibrator')
                     flux = (reffreq, -1, 0.0)
 
                 flux_by_spw.append(flux[0] if len(flux) is 1 else flux)
@@ -316,11 +311,11 @@ class Setjy(basetask.StandardTaskTemplate):
                         try:
                             (I, Q, U, V) = inputs.refspectra[1]
                             spix = decimal.Decimal(str(inputs.refspectra[2]))
-                            flux = domain.FluxMeasurement(spw_id=spw.id, I=I, Q=Q, U=U, V=V, spix=spix)
+                            flux = domain.FluxMeasurement(spw.id, I, Q=Q, U=U, V=V, spix=spix, origin=ORIGIN)
                         except:
                             I = inputs.refspectra[1][0]
                             spix = decimal.Decimal(str(inputs.refspectra[2]))
-                            flux = domain.FluxMeasurement(spw_id=spw.id, I=I, spix=spix)
+                            flux = domain.FluxMeasurement(spw.id, I, spix=spix, origin=ORIGIN)
                         result.measurements[field_identifier].append(flux)
 
             # Merge identical jobs into one job with a multi-spw argument
@@ -344,7 +339,7 @@ class Setjy(basetask.StandardTaskTemplate):
                         Q = setjy_dict[field_id][spw_id]['fluxd'][1]
                         U = setjy_dict[field_id][spw_id]['fluxd'][2]
                         V = setjy_dict[field_id][spw_id]['fluxd'][3]
-                        flux = domain.FluxMeasurement(spw_id=spw_id, I=I, Q=Q, U=U, V=V)
+                        flux = domain.FluxMeasurement(spw_id, I, Q=Q, U=U, V=V, origin=ORIGIN)
 
                         if spw_id not in spw_seen:
                             result.measurements[str(field_id)].append(flux)

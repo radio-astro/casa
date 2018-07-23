@@ -16,6 +16,10 @@ LOG = infrastructure.get_logger(__name__)
 
 
 class SetModelsInputs(vdp.StandardInputs):
+    normfluxes = vdp.VisDependentProperty(default=True)
+    refintent = vdp.VisDependentProperty(default = 'AMPLITUDE')
+    scalebycan = vdp.VisDependentProperty(default=True)
+    transintent = vdp.VisDependentProperty(default = 'BANDPASS')
 
     @vdp.VisDependentProperty
     def reference(self):
@@ -26,7 +30,10 @@ class SetModelsInputs(vdp.StandardInputs):
         fields = {s for s in utils.safe_split(reference_fields)}
         return ','.join(fields)
 
-    refintent = vdp.VisDependentProperty(default = 'AMPLITUDE')
+    @vdp.VisDependentProperty
+    def reffile(self):
+        value = os.path.join(self.context.output_dir, 'flux.csv')
+        return value
 
     @vdp.VisDependentProperty
     def transfer(self):
@@ -46,16 +53,6 @@ class SetModelsInputs(vdp.StandardInputs):
             return ','.join([str(f.id) for f in diff])
         else:
             return ','.join(transfer_names)
-
-    transintent = vdp.VisDependentProperty(default = 'BANDPASS')
-
-    @vdp.VisDependentProperty
-    def reffile(self):
-        value = os.path.join(self.context.output_dir, 'flux.csv')
-        return value
-
-    normfluxes = vdp.VisDependentProperty(default = True)
-    scalebycan = vdp.VisDependentProperty(default = True)
 
     def __init__(self, context, output_dir=None, vis=None, reference=None,
                  refintent=None, transfer=None, transintent=None,
@@ -119,17 +116,19 @@ class SetModels(basetask.StandardTaskTemplate):
 
     # Call the Setjy task
     def _do_setjy(self, field, intent, reffile=None, normfluxes=None, scalebychan=None):
-
         task_args = {
-            'output_dir'    : self.inputs.output_dir,
-            'vis'           : self.inputs.vis,
-            'field'         : field,
-            'intent'        : intent,
-            'fluxdensity'   : -1,
-            'reffile'       : reffile,
-            'normfluxes'    : normfluxes,
-            'scalebychan'   : scalebychan }
+            'output_dir': self.inputs.output_dir,
+            'vis': self.inputs.vis,
+            'field': field,
+            'intent': intent,
+            'fluxdensity': -1,
+            'reffile': reffile,
+            'normfluxes': normfluxes,
+            'scalebychan': scalebychan
+        }
 
-        task_inputs = setjy.Setjy.Inputs(self.inputs.context, **task_args)
+        task_inputs = vdp.InputsContainer(setjy.Setjy, self.inputs.context, **task_args)
         task = setjy.Setjy(task_inputs)
-        return self._executor.execute(task, merge=False)
+        results_list = self._executor.execute(task, merge=False)
+        return results_list[0]
+

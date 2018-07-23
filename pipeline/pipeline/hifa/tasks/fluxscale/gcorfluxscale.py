@@ -34,6 +34,8 @@ __all__ = [
 
 LOG = infrastructure.get_logger(__name__)
 
+ORIGIN = 'gcorfluxscale'
+
 
 class GcorFluxscaleResults(commonfluxresults.FluxCalibrationResults):
     def __init__(self, vis, resantenna=None, uvrange=None, measurements=None, applies_adopted=False):
@@ -607,7 +609,7 @@ def calc_averages_per_field(results):
 
             # floats are interpreted as Jy, so we don't need to convert
             # SEM values
-            mean.uncertainty = FluxMeasurement(spw_name, unc_I, unc_Q, unc_U, unc_V)
+            mean.uncertainty = FluxMeasurement(spw_name, unc_I, Q=unc_Q, U=unc_U, V=unc_V, origin=ORIGIN)
 
             averages[field_name].append((spw_name, mean))
 
@@ -660,7 +662,7 @@ def copy_flux_measurement(source, spw_id=None, I=None, Q=None, U=None, V=None, s
     if spix is None:
         spix = source.spix
 
-    new_fm = FluxMeasurement(spw_id, I, Q=Q, U=U, V=V, spix=spix)
+    new_fm = FluxMeasurement(spw_id, I, Q=Q, U=U, V=V, spix=spix, origin=ORIGIN)
 
     if uI is None:
         uI = source.uncertainty.I
@@ -670,6 +672,6 @@ def copy_flux_measurement(source, spw_id=None, I=None, Q=None, U=None, V=None, s
         uU = source.uncertainty.U
     if uV is None:
         uV = source.uncertainty.V
-    new_fm.uncertainty = FluxMeasurement(spw_id, uI, Q=uQ, U=uU, V=uV)
+    new_fm.uncertainty = FluxMeasurement(spw_id, uI, Q=uQ, U=uU, V=uV, origin=ORIGIN)
 
     return new_fm

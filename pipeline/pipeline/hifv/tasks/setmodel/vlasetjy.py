@@ -23,6 +23,8 @@ from pipeline.infrastructure import task_registry
 
 LOG = infrastructure.get_logger(__name__)
 
+ORIGIN = 'hifa_vlasetjy'
+
 
 def find_standards(positions):
     """Function for finding standards from the original scripted EVLA pipeline
@@ -398,10 +400,10 @@ class VLASetjy(basetask.StandardTaskTemplate):
                         if inputs.refspectra[1] is not -1:
                             try:
                                 (I,Q,U,V) = inputs.refspectra[1]
-                                flux = domain.FluxMeasurement(spw_id=spw.id, I=I, Q=Q, U=U, V=V)
+                                flux = domain.FluxMeasurement(spw_id=spw.id, I=I, Q=Q, U=U, V=V, origin=ORIGIN)
                             except:
                                 I = inputs.refspectra[1][0]
-                                flux = domain.FluxMeasurement(spw_id=spw.id, I=I)
+                                flux = domain.FluxMeasurement(spw_id=spw.id, I=I, origin=ORIGIN)
                             result.measurements[str(myfield)].append(flux)
 
                     # merge identical jobs into one job with a multi-spw argument
@@ -428,7 +430,7 @@ class VLASetjy(basetask.StandardTaskTemplate):
                             Q = setjy_dict[field_id][spw_id]['fluxd'][1]
                             U = setjy_dict[field_id][spw_id]['fluxd'][2]
                             V = setjy_dict[field_id][spw_id]['fluxd'][3]
-                            flux = domain.FluxMeasurement(spw_id=spw_id, I=I, Q=Q, U=U, V=V)
+                            flux = domain.FluxMeasurement(spw_id, I, Q=Q, U=U, V=V, origin=ORIGIN)
                     
                             if spw_id not in spw_seen:
                                 result.measurements[field.identifier].append(flux)

@@ -19,6 +19,8 @@ from .. import gaincal
 
 LOG = infrastructure.get_logger(__name__)
 
+ORIGIN = 'fluxscale'
+
 
 class FluxscaleInputs(vdp.StandardInputs):
     @vdp.VisDependentProperty
@@ -156,10 +158,10 @@ class Fluxscale(basetask.StandardTaskTemplate):
             spw_flux = filter(no_result_fn, flux_for_spws)
 
             for (spw_id, [i, q, u, v]) in spw_flux:
-                flux = domain.FluxMeasurement(spw_id=spw_id, I=i, Q=q, U=u, V=v)
+                flux = domain.FluxMeasurement(spw_id, i, Q=q, U=u, V=v, origin=ORIGIN)
 
                 uI, uQ, uU, uV = flux_for_field[spw_id]['fluxdErr']
-                unc = domain.FluxMeasurement(spw_id=spw_id, I=uI, Q=uQ, U=uU, V=uV)
+                unc = domain.FluxMeasurement(spw_id, uI, Q=uQ, U=uU, V=uV, origin=ORIGIN)
                 flux.uncertainty = unc
                 
                 result.measurements[field_id].append(flux)

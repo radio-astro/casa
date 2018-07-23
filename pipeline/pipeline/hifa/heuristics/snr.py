@@ -1,12 +1,15 @@
+import collections
 import os
 import sys
-import collections
-import numpy as np
 from copy import deepcopy
+
+import numpy as np
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.casatools as casatools
 from pipeline.infrastructure import casa_tasks
+from ..tasks.importdata.dbfluxes import ORIGIN_DB
+from ...h.tasks.importdata.fluxes import ORIGIN_XML
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -222,7 +225,7 @@ def get_fluxinfo(ms, fieldnamelist, intent, spwidlist):
             # Find the flux for the spw
             #   Take the last selection in the list.
             for flux in field.flux_densities:
-                if flux.spw_id != spw.id:
+                if flux.spw_id != spw.id or flux.origin not in (ORIGIN_DB, ORIGIN_XML):
                     continue
                 fluxdict[spw.id] = collections.OrderedDict()
                 (I, Q, U, V) = flux.casa_flux_density

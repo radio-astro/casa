@@ -137,7 +137,21 @@ class QAHandler(object):
         # first
         if isinstance(result, collections.Iterable):
             for r in result:
-                self.do_qa(context, r)
+                handler = logging.CapturingHandler(logging.WARNING)
+                # register the capturing log handler, buffering all messages so that
+                # we can add them to the result - and subsequently, the weblog
+                logging.add_handler(handler)
+
+                try:
+                    self.do_qa(context, r)
+                finally:
+                    if hasattr(r, 'logrecords'):
+                        r.logrecords.extend(handler.buffer)
+
+                    # now that the messages from the QA stage have been attached to
+                    # the result, remove the capturing logging handler from all loggers
+                    if handler:
+                        logging.remove_handler(handler)
 
         # so that the upper-level handler can collate the lower-level scores
         # or process as a group

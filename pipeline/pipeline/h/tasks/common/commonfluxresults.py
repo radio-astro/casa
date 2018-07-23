@@ -1,4 +1,5 @@
 from __future__ import absolute_import
+
 import collections
 import os
 
@@ -57,18 +58,15 @@ class FluxCalibrationResults(basetask.Results):
                 vis=ms.basename,
                 measurements='\n\t'.join([str(m) for m in measurements])))
 
-            # Start the measurement addition process by first collecting the
-            # spw IDs to which these measurements apply..
-            spw_ids = sorted([m.spw_id for m in measurements])
-
             # A single field identifier could map to multiple field objects,
             # but the flux should be the same for all, hence we iterate..
             for field in fields:
-                # .. removing any existing measurements in these spws from
-                # these native fields..
-                map(field.flux_densities.remove,
-                    [m for m in field.flux_densities if m.spw_id in spw_ids])    
-                
+                # .. removing any existing measurements of this origin
+                for new_m in measurements:
+                    to_replace = [m for m in field.flux_densities
+                                  if m.origin == new_m.origin and m.spw_id == new_m.spw_id]
+                    map(field.flux_densities.remove, to_replace)
+
                 # .. and then updating with our new values
                 field.flux_densities.update(measurements)
 
@@ -82,8 +80,8 @@ class FluxCalibrationResults(basetask.Results):
             # the measurements may refer to spectral windows in other
             # measurement sets, so we replace them with spectral windows from 
             # this measurement set, identified by the same ID
-            spw_id = ms.get_spectral_window(fm.spw_id)
-            m = domain.FluxMeasurement(spw_id, I=fm.I, Q=fm.Q, U=fm.U, V=fm.V, spix=fm.spix)                
+            m = domain.FluxMeasurement(fm.spw_id, fm.I, Q=fm.Q, U=fm.U, V=fm.V, spix=fm.spix, origin=fm.origin,
+                                       age=fm.age, queried_at=fm.queried_at)
             native_measurements.append(m)
                 
         return native_measurements
@@ -101,51 +99,3 @@ class FluxCalibrationResults(basetask.Results):
             s += ''.join(lines)
 
         return s
-
-
-# Is this needed anymore? It used to be used with the code that
-# decoded the CASA LOGS
-class File(file):
-    def __init__(self, *args, **kwargs):
-        super(File, self).__init__(*args, **kwargs)
-        self.BLOCKSIZE = 4096
-
-    def head(self, lines_2find=1):
-        self.seek(0)                            #Rewind file
-        return [super(File, self).next() for _ in xrange(lines_2find)]
-
-    def tail(self, lines_2find=1):  
-        self.seek(0, 2)                         #Go to end of file
-        bytes_in_file = self.tell()
-        lines_found, total_bytes_scanned = 0, 0
-        while (lines_2find + 1 > lines_found and
-               bytes_in_file > total_bytes_scanned): 
-            byte_block = min(
-                self.BLOCKSIZE,
-                bytes_in_file - total_bytes_scanned)
-            self.seek( -(byte_block + total_bytes_scanned), 2)
-            total_bytes_scanned += byte_block
-            lines_found += self.read(self.BLOCKSIZE).count('\n')
-        self.seek(-total_bytes_scanned, 2)
-        line_list = list(self.readlines())
-        return line_list[-lines_2find:]
-
-    def backward(self):
-        self.seek(0, 2)                         #Go to end of file
-        blocksize = self.BLOCKSIZE
-        last_row = ''
-        while self.tell() != 0:
-            try:
-                self.seek(-blocksize, 1)
-            except IOError:
-                blocksize = self.tell()
-                self.seek(-blocksize, 1)
-            block = self.read(blocksize)
-            self.seek(-blocksize, 1)
-            rows = block.split('\n')
-            rows[-1] = rows[-1] + last_row
-            while rows:
-                last_row = rows.pop(-1)
-                if rows and last_row:
-                    yield last_row
-        yield last_row

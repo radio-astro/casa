@@ -1,18 +1,18 @@
-'''
+"""
 Created on 5 Sep 2014
 
 @author: sjw
-'''
+"""
 import collections
 import operator
 import os
 import shutil
 
-import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.casatools as casatools
+import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.renderer.basetemplates as basetemplates
 import pipeline.infrastructure.utils as utils
-import pipeline.domain.measures as measures
+from pipeline.domain.measures import FrequencyUnits
 
 LOG = logging.get_logger(__name__)
 
@@ -48,20 +48,21 @@ class T2_4MDetailsImportDataRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
             # copy flux.csv file across to weblog directory
             fluxcsv_filename = 'flux.csv'
             ms = pipeline_context.observing_run.get_ms(os.path.basename(r.inputs['vis'].rstrip('/')))
-            fluxcsv_path = os.path.join(weblog_dir, fluxcsv_filename)
             if os.path.exists(fluxcsv_filename):
                 LOG.trace('Copying %s to %s' % (fluxcsv_filename, weblog_dir))
                 shutil.copy(fluxcsv_filename, weblog_dir)
 
             fluxcsv_files[ms.basename] = os.path.join('stage%s' % result.stage_number, fluxcsv_filename)
 
-        mako_context.update({'flux_imported'        : True if measurements else False,
-                             'flux_table_rows'      : flux_table_rows,
-                             'repsource_defined'    : True if repsource_table_rows else False,
-                             'repsource_table_rows' : repsource_table_rows,
-                             'num_mses'             : num_mses,
-                             'fluxcsv_files'        : fluxcsv_files,
-                             'weblog_dir'           : weblog_dir})
+        mako_context.update({
+            'flux_imported': True if measurements else False,
+            'flux_table_rows': flux_table_rows,
+            'repsource_defined': True if repsource_table_rows else False,
+            'repsource_table_rows': repsource_table_rows,
+            'num_mses': num_mses,
+            'fluxcsv_files': fluxcsv_files,
+            'weblog_dir': weblog_dir
+        })
 
 
 FluxTR = collections.namedtuple('FluxTR', 'vis field spw i q u v spix ageNMP')
@@ -91,20 +92,23 @@ def make_flux_table(context, results):
                         fluxes[stokes] = '%s' % flux
                     except:
                         pass
-                                    
-                tr = FluxTR(vis_cell, field_cell, measurement.spw_id, 
+
+                if measurement.age:
+                    age = measurement.age
+                else:
+                    age = 'N/A'
+
+                tr = FluxTR(vis_cell, field_cell, measurement.spw_id,
                             fluxes['I'], fluxes['Q'], fluxes['U'], fluxes['V'],
-                            measurement.spix, measurement.origin[2])
+                            measurement.spix, age)
                 rows.append(tr)
 
     return utils.merge_td_columns(rows)
 
-# Leave old defintion which includes the spw frequency in place 
-#RepsourceTR = collections.namedtuple('RepsourceTR', 'vis source rfreq rbwidth spwid freq bwidth')
 RepsourceTR = collections.namedtuple('RepsourceTR', 'vis source rfreq rbwidth spwid bwidth')
 
 
-def make_repsource_table (context, results):
+def make_repsource_table(context, results):
     # will hold all the representative source table rows for the results
 
     qa = casatools.quanta
@@ -140,48 +144,34 @@ def make_repsource_table (context, results):
                 source_spwid = context.project_performance_parameters.representative_spwid
 
             # Determine the representive source name and spwid for the ms 
-            repsource_name, repsource_spwid = ms.get_representative_source_spw(source_name = source_name,
-               source_spwid = source_spwid)
+            repsource_name, repsource_spwid = ms.get_representative_source_spw(source_name=source_name,
+                                                                               source_spwid=source_spwid)
 
             # Populate the table rows
             # No source
             if not repsource_name: 
-                #tr = RepsourceTR(vis, 'Unknown', 'Unknown', 'Unknown', 'Unknown',
-                    #'Unknown', 'Unknown')
                 if not ms.representative_target[0]:
-                    tr = RepsourceTR(vis, 'Unknown', 'Unknown', 'Unknown', 'Unknown',
-                        'Unknown')
+                    tr = RepsourceTR(vis, 'Unknown', 'Unknown', 'Unknown', 'Unknown', 'Unknown')
                 else:
-                    tr = RepsourceTR(vis, ms.representative_target[0], 'Unknown', 'Unknown', 'Unknown',
-                        'Unknown')
+                    tr = RepsourceTR(vis, ms.representative_target[0], 'Unknown', 'Unknown', 'Unknown', 'Unknown')
                 rows.append(tr)
                 continue
 
             # No spwid
             if not repsource_spwid:
-                #tr = RepsourceTR(vis, repsource_name, qa.tos(ms.representative_target[1],5),
-                    #qa.tos(ms.representative_target[2],5), 'Unknown', 'Unknown', 'Unknown')
-                tr = RepsourceTR(vis, repsource_name, qa.tos(ms.representative_target[1],5),
-                    qa.tos(ms.representative_target[2],5), 'Unknown', 'Unknown')
+                tr = RepsourceTR(vis, repsource_name, qa.tos(ms.representative_target[1], 5),
+                                 qa.tos(ms.representative_target[2], 5), 'Unknown', 'Unknown')
                 rows.append(tr)
                 continue
 
             # Get center frequency and channel width for representative spw id
             repsource_spw = ms.get_spectral_window(repsource_spwid)
-            repsource_chanwidth = qa.quantity ( \
-                float(repsource_spw.channels[0].getWidth().to_units(measures.FrequencyUnits.MEGAHERTZ)), \
-                'MHz')
-            repsource_frequency = qa.quantity ( \
-                float(repsource_spw.centre_frequency.to_units(measures.FrequencyUnits.GIGAHERTZ)), \
-                'GHz')
+            repsource_chanwidth = qa.quantity(
+                float(repsource_spw.channels[0].getWidth().to_units(FrequencyUnits.MEGAHERTZ)), 'MHz')
 
-            #tr = RepsourceTR(vis, repsource_name, qa.tos(ms.representative_target[1], 5),
-                #qa.tos(ms.representative_target[2], 5), str(repsource_spwid),
-                #qa.tos(repsource_frequency, 5),
-                #qa.tos(repsource_chanwidth, 5))
             tr = RepsourceTR(vis, repsource_name, qa.tos(ms.representative_target[1], 5),
-                qa.tos(ms.representative_target[2], 5), str(repsource_spwid),
-                qa.tos(repsource_chanwidth, 5))
+                             qa.tos(ms.representative_target[2], 5), str(repsource_spwid),
+                             qa.tos(repsource_chanwidth, 5))
             rows.append(tr)
 
     return utils.merge_td_columns(rows)

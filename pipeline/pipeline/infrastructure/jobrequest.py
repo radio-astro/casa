@@ -525,7 +525,8 @@ class CASATaskJobGenerator(object):
 
     def _get_job(self, task, *v, **k):
         job = JobRequest(task, *v, **k)
-        self._jobs.append(job)
+        if LOG.isEnabledFor(logging.DEBUG):
+            self._jobs.append(job)
         return job
 
 

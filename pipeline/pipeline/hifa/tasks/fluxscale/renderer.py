@@ -5,15 +5,23 @@ Created on 23 Oct 2014
 """
 import collections
 import decimal
+import itertools
+import math
+import operator
 import os
+
+import matplotlib.pyplot as plt
 
 import pipeline.domain.measures as measures
 import pipeline.infrastructure.callibrary as callibrary
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.renderer.basetemplates as basetemplates
 import pipeline.infrastructure.utils as utils
-
+from pipeline.domain.measures import FluxDensityUnits, FrequencyUnits
+from pipeline.h.tasks.importdata.fluxes import ORIGIN_XML
+from pipeline.infrastructure.renderer import logger
 from . import display as gfluxscale
+from ..importdata.dbfluxes import ORIGIN_DB
 
 LOG = logging.get_logger(__name__)
 
@@ -55,6 +63,8 @@ class T2_4MDetailsGFluxscaleRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                 if len(vis_plots) > 0:
                     ampuv_ant_plots[vis][key] = vis_plots
 
+        flux_comparison_plots = self.create_flux_comparison_plots(pipeline_context, results)
+
         table_rows = make_flux_table(pipeline_context, results)
 
         adopted_rows = make_adopted_table(pipeline_context, results)
@@ -63,6 +73,7 @@ class T2_4MDetailsGFluxscaleRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
             'adopted_table': adopted_rows,
             'ampuv_allant_plots': ampuv_allant_plots,
             'ampuv_ant_plots': ampuv_ant_plots,
+            'flux_plots': flux_comparison_plots,
             'table_rows': table_rows
         })
 
@@ -72,6 +83,16 @@ class T2_4MDetailsGFluxscaleRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                            key=lambda plot: plot.parameters['baseband'])
             d[vis] = plots
 
+    def create_flux_comparison_plots(self, context, results):
+        output_dir = os.path.join(context.report_dir, 'stage%s' % results.stage_number)
+        d = {}
+
+        for result in results:
+            vis = os.path.basename(result.inputs['vis'])
+            d[vis] = create_flux_comparison_plots(context, output_dir, result)
+
+        return d
+
     def create_plots(self, context, results, plotter_cls, intents, renderer_cls=None):
         """
         Create plots and return a dictionary of vis:[Plots].  No antenna or UVrange selection.
@@ -80,10 +101,10 @@ class T2_4MDetailsGFluxscaleRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
         for result in results:
             plots = self.plots_for_result(context, result, plotter_cls, intents, renderer_cls)
             d = utils.dict_merge(d, plots)
+
         return d
         
-    def create_plots_ants(self, context, results, plotter_cls, intents,
-                          renderer_cls=None):
+    def create_plots_ants(self, context, results, plotter_cls, intents, renderer_cls=None):
         """
         Create plots and return a dictionary of vis:[Plots].  Antenna and UVrange selection
                                                               determined by heuristics.
@@ -95,8 +116,7 @@ class T2_4MDetailsGFluxscaleRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
             d = utils.dict_merge(d, plots)
         return d
 
-    def plots_for_result(self, context, result, plotter_cls, intents,
-                         renderer_cls=None, ant='', uvrange=''):
+    def plots_for_result(self, context, result, plotter_cls, intents, renderer_cls=None, ant='', uvrange=''):
         vis = os.path.basename(result.inputs['vis'])
 
         output_dir = os.path.join(context.report_dir, 'stage%s' % result.stage_number)
@@ -170,7 +190,9 @@ def make_flux_table(context, results):
                 # Get the corresponding catalog flux
                 catfluxes = collections.defaultdict(lambda: 'N/A')
                 flux_ratio = 'N/A'
-                for catmeasurement in field.flux_densities:
+
+                cat_measurements = [o for o in field.flux_densities if o.origin in (ORIGIN_DB, ORIGIN_XML)]
+                for catmeasurement in cat_measurements:
                     if catmeasurement.spw_id != int(measurement.spw_id):
                         continue
                     for stokes in ['I', 'Q', 'U', 'V']:
@@ -219,7 +241,6 @@ def make_adopted_table(context, results):
     rows = []
 
     for adopted_result in [r for r in results if r.applies_adopted]:
-        ms_for_result = context.observing_run.get_ms(adopted_result.vis)
         vis_cell = os.path.basename(adopted_result.vis)
 
         adopted_fields = adopted_result.measurements.keys()
@@ -229,3 +250,95 @@ def make_adopted_table(context, results):
         rows.append(tr)
 
     return utils.merge_td_columns(rows)
+
+
+def create_flux_comparison_plots(context, output_dir, result):
+    ms = context.observing_run.get_ms(result.vis)
+
+    plots = []
+
+    for field_id, measurements in result.measurements.iteritems():
+        fig = plt.figure()
+        ax = fig.add_subplot(1, 1, 1)
+
+        fields = ms.get_fields(task_arg=field_id)
+        assert len(fields) == 1
+        field = fields[0]
+
+        ax.set_title('Flux calibration: {}'.format(field.name))
+        ax.set_xlabel('Frequency (GHz)')
+        ax.set_ylabel('Flux Density (Jy)')
+
+        colours = itertools.cycle('bgrcmyk')
+
+        x_min = 1e99
+        x_max = 0
+        for m in sorted(measurements, key=operator.attrgetter('spw_id')):
+            # cycle colours so that windows centred on the same frequency are distinguishable
+            colour = colours.next()
+
+            spw = ms.get_spectral_window(m.spw_id)
+            x = spw.centre_frequency.to_units(FrequencyUnits.GIGAHERTZ)
+            x_unc = decimal.Decimal('0.5') * spw.bandwidth.to_units(FrequencyUnits.GIGAHERTZ)
+
+            y = m.I.to_units(FluxDensityUnits.JANSKY)
+            y_unc = m.uncertainty.I.to_units(FluxDensityUnits.JANSKY)
+
+            label = 'Derived Flux (spw {})'.format(spw.id)
+            ax.errorbar(x, y, xerr=x_unc, yerr=y_unc, fmt='{!s}-o'.format(colour), label=label)
+
+            x_min = min(x_min, x - x_unc)
+            x_max = max(x_max, x + x_unc)
+
+        catalogue_fluxes = {
+            ORIGIN_XML: 'ASDM',
+            ORIGIN_DB: 'Online Catalogue'
+        }
+
+        for origin, label in catalogue_fluxes.iteritems():
+            fluxes = [f for f in field.flux_densities if f.origin == origin]
+            if not fluxes:
+                continue
+
+            spws = [ms.get_spectral_window(f.spw_id) for f in fluxes]
+            x = [spw.centre_frequency.to_units(FrequencyUnits.GIGAHERTZ) for spw in spws]
+            y = [f.I.to_units(FluxDensityUnits.JANSKY) for f in fluxes]
+            spix = [float(f.spix) for f in fluxes]
+            # sort by frequency
+            x, y, spix = zip(*sorted(zip(x, y, spix)))
+            colour = colours.next()
+            ax.plot(x, y, marker='o', color=colour, label=label)
+
+            s_xmin = scale_flux(x[0], y[0], x_min, spix[0])
+            s_xmax = scale_flux(x[-1], y[-1], x_max, spix[-1])
+            ax.plot([x[0], x_min], [y[0], s_xmin], color=colour, label='Spectral Index', linestyle='dotted')
+            ax.plot([x[-1], x_max], [y[-1], s_xmax], color=colour, label='_nolegend_', linestyle='dotted')
+
+        leg = ax.legend(loc='best', prop={'size': 8})
+        leg.get_frame().set_alpha(0.5)
+        figfile = '{}-field{}-flux_calibration.png'.format(ms.basename, field_id)
+
+        full_path = os.path.join(output_dir, figfile)
+        fig.savefig(full_path)
+
+        parameters = {
+            'vis': ms.basename,
+            'field': field.name,
+            'intent': sorted(set(field.intents))
+        }
+        wrapper = logger.Plot(full_path, x_axis='frequency', y_axis='Flux Density', parameters=parameters)
+        plots.append(wrapper)
+
+    return plots
+
+
+def scale_flux(f1, s1, f2, spix):
+    """Returns flux at a frequency by extrapolating via the spectral index.
+
+    :param f1: frequency 1
+    :param s1: flux density at frequency 1
+    :param f2: frequency 2
+    :param spix: spectral index
+    :return: flux density at frequency 2
+    """
+    return math.pow(10, spix * math.log10(f2/f1) + math.log10(s1))

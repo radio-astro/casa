@@ -162,6 +162,39 @@ def rx_for_plot(plot):
 </table>
 
 
+<%self:plot_group plot_dict="${flux_plots}"
+				  url_fn="${lambda x: 'junk'}"
+				  title_id="flux_vs_freq_comparison">
+
+	<%def name="title()">
+		Derived flux density vs catalogue flux density
+	</%def>
+
+	<%def name="preamble()">
+    <p>These plots show amplitude vs frequency for the non-amplitude calibrators in each measurement set, comparing the
+        pipeline-derived flux to that reported by the online source catalogues and/or recorded in the ASDM. Flux
+        densities for the online catalogues and ASDM are extrapolated using the spectral index to cover the full
+        plot range.
+	</%def>
+
+	<%def name="mouseover(plot)">Click to show amplitude vs frequency for ${plot.parameters['vis']} ${utils.dequote(plot.parameters['field'])}</%def>
+
+	<%def name="fancybox_caption(plot)">
+		${plot.parameters['vis']}<br>
+		Field: ${utils.dequote(plot.parameters['field'])}<br>
+        Intents: ${utils.commafy(plot.parameters['intent'], False)}
+	</%def>
+
+    <%def name="caption_title(plot)">
+		${plot.parameters['field']}<br>
+	</%def>
+
+    <%def name="caption_text(plot, ptype)">
+        Intents: ${utils.commafy(plot.parameters['intent'], False)}
+	</%def>
+</%self:plot_group>
+
+
 %if ampuv_allant_plots:
     <h3>Flux Calibrator Model Comparison</h3>
     Antenna selection used for flux transfer to the secondary calibrators.
