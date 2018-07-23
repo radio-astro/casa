@@ -15,7 +15,6 @@ def percent_flagged(flagsummary):
         return '%0.1f%%' % (100.0 * flagged / total)
 
 _types = {
-    'apriorical': 'Apriori calibrations applied',
     'before': 'Calibrated data before flagging',
     'after': 'Calibrated data after flagging'
 }
@@ -57,13 +56,13 @@ def num_lines(relpath):
     preliminary bandpass solution and amplitude gaincal solution is solved and
     applied, the flagging heuristics are run and any outliers are flagged, a
     final bandpass solution is solved (if necessary) and the name "final" is
-    appended to this caltable. Plots are generated at three points in this
-    workflow: after a priori calibration, after bandpass calibration but before
-    flagging heuristics are run, and after flagging heuristics have been run
-    and applied. If no points were flagged, the "after" plots are not
-    generated or displayed. The score for this stage is a simple combination
-    (multiplication) of the standard data flagging score (depending on the
-    fraction of data flagged) and the score for the bandpass solution.
+    appended to this caltable. Plots are generated at two points in this
+    workflow: after bandpass calibration but before flagging heuristics are
+    run, and after flagging heuristics have been run and applied. If no points
+    were flagged, the "after" plots are not generated or displayed. The score
+    for this stage is a simple combination (multiplication) of the standard
+    data flagging score (depending on the fraction of data flagged) and the
+    score for the bandpass solution.
 </p>
 
 % if updated_refants:
@@ -462,9 +461,8 @@ def num_lines(relpath):
 	</%def>
 
 	<%def name="preamble()">
-		<p>These plots show amplitude vs time for three cases: 1, the data with apriori calibrations applied;
-            2, the calibrated data before application of any flags; and 3, where flagging was applied,
-            the calibrated data after application of flags.</p>
+		<p>These plots show amplitude vs time for two cases: 1, the calibrated data before application of any flags;
+        and 2, where flagging was applied, the calibrated data after application of flags.</p>
 
 		<p>Data are plotted for all antennas and correlations, with different
 		correlations shown in different colours.</p>
@@ -506,9 +504,8 @@ def num_lines(relpath):
 	</%def>
 
 	<%def name="preamble()">
-		<p>These plots show amplitude vs UV distance for three cases: 1, the data with apriori calibrations applied;
-            2, the calibrated data before application of any flags; and 3, where flagging was applied,
-            the calibrated data after application of flags.</p>
+		<p>These plots show amplitude vs UV distance for two cases: 1, the calibrated data before application of any
+        flags; and 2, where flagging was applied, the calibrated data after application of flags.</p>
 
 		<p>Data are plotted for all antennas and correlations, with different
 		correlations shown in different colours.</p>

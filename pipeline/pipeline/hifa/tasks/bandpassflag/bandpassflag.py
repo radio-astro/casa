@@ -166,10 +166,6 @@ class Bandpassflag(basetask.StandardTaskTemplate):
                 vis=inputs.vis, mode='save', versionname=flag_backup_name_after_precal)
             self._executor.execute(task)
 
-            # Make "apriori calibrations applied" plots for the weblog
-            LOG.info('Creating "apriori calibrations applied" plots')
-            result.plots['apriorical'] = plot_fn(suffix='apriorical')
-
             # Restore the calibration state to ensure the "apriori" cal tables
             # are included in pre-apply during creation of new caltables.
             LOG.info('Restoring back-up of calibration state.')

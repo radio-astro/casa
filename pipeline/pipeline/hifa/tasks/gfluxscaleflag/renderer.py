@@ -56,7 +56,7 @@ class T2_4MDetailsGfluxscaleflagRenderer(basetemplates.T2_4MDetailsDefaultRender
 
 def get_plot_dicts(pipeline_context, results, plot_type):
     """
-    Create the bandpass flagging diagnostic plots for the given x axis.
+    Create the flagging diagnostic plots for the given x axis.
 
     :param pipeline_context: pipeline context
     :param results: results to create plots for
@@ -72,7 +72,7 @@ def get_plot_dicts(pipeline_context, results, plot_type):
         vis = os.path.basename(result.inputs['vis'])
         d[vis] = []
 
-        for idx, key in enumerate(['apriorical', 'before', 'after']):
+        for idx, key in enumerate(['before', 'after']):
             if key in result.plots:
                 plots = result.plots[key][plot_type]
                 relocated = relocate_plots(plots, plot_dest_dir)

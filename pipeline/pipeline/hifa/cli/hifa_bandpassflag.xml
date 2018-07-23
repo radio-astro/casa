@@ -24,13 +24,13 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     preliminary bandpass solution and amplitude gaincal solution is solved and
     applied, the flagging heuristics are run and any outliers are flagged, a
     final bandpass solution is solved (if necessary) and the name "final" is
-    appended to this caltable. Plots are generated at three points in this
-    workflow: after a priori calibration, after bandpass calibration but before
-    flagging heuristics are run, and after flagging heuristics have been run
-    and applied. If no points were flagged, the "after" plots are not
-    generated or displayed. The score for this stage is a simple combination
-    (multiplication) of the standard data flagging score (depending on the
-    fraction of data flagged) and the score for the bandpass solution.
+    appended to this caltable. Plots are generated at two points in this
+    workflow: after bandpass calibration but before flagging heuristics are
+    run, and after flagging heuristics have been run and applied. If no points
+    were flagged, the "after" plots are not generated or displayed. The score
+    for this stage is a simple combination (multiplication) of the standard
+    data flagging score (depending on the fraction of data flagged) and the
+    score for the bandpass solution.
 </description>
 
 <input>
