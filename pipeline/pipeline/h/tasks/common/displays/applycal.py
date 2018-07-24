@@ -798,29 +798,6 @@ class AmpVsUVDetailChart(FieldSpwAntDetailChart):
                                                  **plot_args)
 
 
-class CAS9216AmpVsUVDetailChart(FieldSpwAntDetailChart):
-    """
-    Create an amplitude vs UV distance plot per spw and antenna.
-    """
-
-    def __init__(self, context, output_dir, calto, intent='', ydatacolumn='corrected', **overrides):
-        plot_args = {
-            'ydatacolumn': ydatacolumn,
-            'avgtime': '',
-            'avgscan': False,
-            'avgbaseline': False,
-            'avgchannel': '9000',
-            'coloraxis': 'corr',
-            'overwrite': True,
-            'xselfscale': True,
-            'yselfscale': True,
-        }
-        plot_args.update(**overrides)
-
-        super(CAS9216AmpVsUVDetailChart, self).__init__(context, output_dir, calto, xaxis='uvdist', yaxis='amp', intent=intent,
-                                                        **plot_args)
-
-
 class PhaseVsUVDetailChart(SpwAntDetailChart):
     """
     Create an amplitude vs UV distance plot for each spw and antenna

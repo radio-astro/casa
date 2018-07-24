@@ -184,16 +184,6 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
             avgchannel='9000'
         )
 
-        # CAS-9216: Add per-antenna amplitude vs UV distance plots for
-        # applycal stage
-        amp_vs_uv_detail_plots, amp_vs_uv_subpages = self.create_plots(
-            context,
-            result,
-            applycal.CAS9216AmpVsUVDetailChart,
-            ['AMPLITUDE', 'PHASE', 'BANDPASS', 'CHECK'],
-            ApplycalAmpVsUVPlotRenderer,
-        )
-
         if pipeline.infrastructure.generate_detail_plots(result):
             # detail plots. Don't need the return dictionary, but make sure a
             # renderer is passed so the detail page is written to disk
@@ -225,7 +215,6 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
         for d, plotter_cls, subpages in (
                 (amp_vs_freq_detail_plots, ApplycalAmpVsFreqPlotRenderer, amp_vs_freq_subpages),
                 (phase_vs_freq_detail_plots, ApplycalPhaseVsFreqPlotRenderer, phase_vs_freq_subpages),
-                (amp_vs_uv_detail_plots, ApplycalAmpVsUVPlotRenderer, amp_vs_uv_subpages),
                 (amp_vs_time_detail_plots, ApplycalAmpVsTimePlotRenderer, amp_vs_time_subpages),
                 (phase_vs_time_detail_plots, ApplycalPhaseVsTimePlotRenderer, phase_vs_time_subpages)):
             if d:
