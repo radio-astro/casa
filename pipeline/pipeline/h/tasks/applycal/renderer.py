@@ -126,7 +126,6 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
 
         # CAS-5970: add science target plots to the applycal page
         (science_amp_vs_freq_summary_plots,
-         science_phase_vs_freq_summary_plots,
          science_amp_vs_uv_summary_plots,
          uv_max) = self.create_science_plots(context, result)
 
@@ -247,7 +246,6 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
             'corrected_to_antenna1_plots': corrected_ratio_to_antenna1_plots,
             'corrected_to_model_vs_uvdist_plots': corrected_ratio_to_uv_dist_plots,
             'science_amp_vs_freq_plots': science_amp_vs_freq_summary_plots,
-            'science_phase_vs_freq_plots': science_phase_vs_freq_summary_plots,
             'science_amp_vs_uv_plots': science_amp_vs_uv_summary_plots,
             'uv_max': uv_max,
             'amp_vs_freq_subpages': amp_vs_freq_subpages,
@@ -263,12 +261,10 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
         vis:[Plots].
         """
         amp_vs_freq_summary_plots = collections.defaultdict(dict)
-        phase_vs_freq_summary_plots = collections.defaultdict(dict)
         amp_vs_uv_summary_plots = collections.defaultdict(dict)
         max_uvs = collections.defaultdict(dict)
 
         amp_vs_freq_detail_plots = {}
-        phase_vs_freq_detail_plots = {}
         amp_vs_uv_detail_plots = {}
 
         for result in results:
@@ -276,7 +272,6 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
             ms = context.observing_run.get_ms(vis)
 
             amp_vs_freq_summary_plots[vis] = []
-            phase_vs_freq_summary_plots[vis] = []
             amp_vs_uv_summary_plots[vis] = []
 
             # Plot for 1 science field (either 1 science target or for a mosaic 1
@@ -308,13 +303,6 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                 amp_vs_freq_summary_plots[vis].extend(plots)
 
                 plots = self.science_plots_for_result(context,
-                                                      result,
-                                                      applycal.PhaseVsFrequencyPerSpwSummaryChart,
-                                                      [brightest_field.id],
-                                                      uv_range)
-                phase_vs_freq_summary_plots[vis].extend(plots)
-    
-                plots = self.science_plots_for_result(context, 
                                                       result, 
                                                       applycal.AmpVsUVSummaryChart,
                                                       [brightest_field.id])
@@ -329,31 +317,22 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                 # Science target detail plots. Note that summary plots go onto the
                 # detail pages; we don't create plots per spw or antenna
                 plots = self.science_plots_for_result(context,
-                                                  result,
-                                                  applycal.AmpVsFrequencySummaryChart,
-                                                  fields,
-                                                  uv_range,
-                                                  ApplycalAmpVsFreqSciencePlotRenderer)
+                                                      result,
+                                                      applycal.AmpVsFrequencySummaryChart,
+                                                      fields,
+                                                      uv_range,
+                                                      ApplycalAmpVsFreqSciencePlotRenderer)
                 amp_vs_freq_detail_plots[vis] = plots
 
                 plots = self.science_plots_for_result(context,
-                                              result, 
-                                              applycal.PhaseVsFrequencyPerBasebandSummaryChart,
-                                              fields,
-                                              uv_range,
-                                              ApplycalPhaseVsFreqSciencePlotRenderer)
-                phase_vs_freq_detail_plots[vis] = plots
-
-                plots = self.science_plots_for_result(context,
-                                              result, 
-                                              applycal.AmpVsUVSummaryChart,
-                                              fields,
-                                              renderer_cls=ApplycalAmpVsUVSciencePlotRenderer)
+                                                      result,
+                                                      applycal.AmpVsUVSummaryChart,
+                                                      fields,
+                                                      renderer_cls=ApplycalAmpVsUVSciencePlotRenderer)
                 amp_vs_uv_detail_plots[vis] = plots
 
         for d, plotter_cls in (
                 (amp_vs_freq_detail_plots, ApplycalAmpVsFreqSciencePlotRenderer),
-                (phase_vs_freq_detail_plots, ApplycalPhaseVsFreqSciencePlotRenderer),
                 (amp_vs_uv_detail_plots, ApplycalAmpVsUVSciencePlotRenderer)):
             if d:
                 all_plots = list(utils.flatten([v for v in d.values()]))
@@ -361,10 +340,10 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                 with renderer.get_file() as fileobj:
                     fileobj.write(renderer.render())
 
-        return (amp_vs_freq_summary_plots, phase_vs_freq_summary_plots,
-                amp_vs_uv_summary_plots, max_uvs)
+        return amp_vs_freq_summary_plots, amp_vs_uv_summary_plots, max_uvs
 
-    def science_plots_for_result(self, context, result, plotter_cls, fields, uvrange=None, renderer_cls=None):
+    @staticmethod
+    def science_plots_for_result(context, result, plotter_cls, fields, uvrange=None, renderer_cls=None):
         overrides = {'coloraxis': 'spw'}
 
         if uvrange is not None:
@@ -431,7 +410,7 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
             field_ids = set([(f.id, f.name) for f in fields])
     
             # Switch to second field
-            #field = fields[0]
+            # field = fields[0]
             field = fields[1]
             LOG.warning('Bypassing brightest field selection due to problem '
                         'with visstat. Using Field #%s (%s) for Source #%s'
@@ -704,18 +683,6 @@ class ApplycalAmpVsFreqSciencePlotRenderer(basetemplates.JsonPlotRenderer):
         
         super(ApplycalAmpVsFreqSciencePlotRenderer, self).__init__(
                 'generic_x_vs_y_spw_field_detail_plots.mako', context,
-                result, plots, title, outfile)
-
-
-class ApplycalPhaseVsFreqSciencePlotRenderer(basetemplates.JsonPlotRenderer):
-    def __init__(self, context, result, plots):
-        vis = utils.get_vis_from_plots(plots)
-
-        title = 'Calibrated phase vs frequency for %s' % vis
-        outfile = filenamer.sanitize('science_phase_vs_freq-%s.html' % vis)
-        
-        super(ApplycalPhaseVsFreqSciencePlotRenderer, self).__init__(
-                'generic_x_vs_y_field_baseband_detail_plots.mako', context,
                 result, plots, title, outfile)
 
 

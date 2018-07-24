@@ -161,9 +161,6 @@ def format_spwmap(spwmap, scispws):
 %if science_amp_vs_freq_plots:
   <li><a href="#scicalampvsfreq">Science target: calibrated amplitude vs frequency</a></li>
 %endif
-%if science_phase_vs_freq_plots:
-  <li><a href="#scicalphasevsfreq">Science target: calibrated phase vs frequency</a></li>
-%endif
 %if science_amp_vs_uv_plots:
   <li><a href="#scicalampvsuvdist">Science target: calibrated amplitude vs UV distance</a></li>
 %endif
@@ -631,56 +628,6 @@ def format_spwmap(spwmap, scispws):
 	<%def name="caption_text(plot, source_id)">
 		Source #${source_id}
 		(${utils.commafy(utils.safe_split(plot.parameters['field']), quotes=False)})
-	</%def>
-
-</%self:plot_group>
-
-<%self:plot_group plot_dict="${science_phase_vs_freq_plots}"
-				  url_fn="${lambda x: 'science_phase_vs_freq-all_data.html'}"
-				  data_baseband="${True}"
-				  data_field="${True}"
-                  data_vis="${True}"
-				  title_id="scicalphasevsfreq"
-                  break_rows_by="intent,field"
-                  sort_row_by="baseband,spw">
-
-	<%def name="title()">
-		Science target: calibrated phase vs frequency
-	</%def>
-
-	<%def name="preamble()">
-		<p>Calibrated phase vs frequency plots for a representative science
-		field in each measurement set. The science field displayed here is the
-		one with the brightest average amplitude over all spectral windows.</p>
-
-		<p>Note: due to a technical problem with visstat, the science field
-		displayed here not the brightest field for the source but the first 
-		field for the source.</p>
-		
-		<p>Data are plotted for all antennas and correlations, with different
-		spectral windows shown in different colours.</p>
-	</%def>
-
-	<%def name="mouseover(plot)">Click to show phase vs frequency for spw ${plot.parameters['spw']}</%def>
-
-	<%def name="fancybox_caption(plot)">
-		Receiver: ${utils.commafy(plot.parameters['receiver'], quotes=False)}<br>
-		Spw ${plot.parameters['spw']}<br>
-		Intents: ${utils.commafy(plot.parameters['intent'], False)}<br>
-		Fields: ${cgi.escape(plot.parameters['field'], True)}
-	</%def>
-
-	<%def name="caption_title(plot)">
-		Spw ${plot.parameters['spw']}
-	</%def>
-
-	<%def name="caption_subtitle(plot)">
-		${rx_for_plot(plot)}
-	</%def>
-
-	<%def name="caption_text(plot, source_id)">
-		Source #${source_id}
-		(${utils.commafy(utils.safe_split(plot.parameters['field']), quotes=False)}).
 	</%def>
 
 </%self:plot_group>
