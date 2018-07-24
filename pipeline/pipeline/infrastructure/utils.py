@@ -1052,7 +1052,10 @@ def plotms_iterate(jobs_and_wrappers, iteraxis=None):
 
         # execute merged job if any of the output files are missing
         if not all([os.path.exists(dest) for dest in dest_filenames]):
-            if mpihelpers.is_mpi_ready():
+            # Cycle 6 fallback: revert to serial plotting until CAS-11660,
+            # CAS-11578, etc. are fixed.
+            tier0_plots_enabled = os.environ.has_key('ENABLE_TIER0_PLOTMS') or mpihelpers.ENABLE_TIER0_PLOTMS
+            if tier0_plots_enabled and mpihelpers.is_mpi_ready():
                 executable = mpihelpers.Tier0JobRequest(casa_tasks.plotms, job_to_execute.kw)
                 queued_job = mpihelpers.AsyncTask(executable)
             else:

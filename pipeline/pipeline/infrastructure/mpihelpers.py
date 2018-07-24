@@ -15,6 +15,7 @@ from pipeline.infrastructure import logging
 
 # global variable for toggling MPI usage
 USE_MPI = True
+ENABLE_TIER0_PLOTMS = False
 
 LOG = logging.get_logger(__name__)
 
