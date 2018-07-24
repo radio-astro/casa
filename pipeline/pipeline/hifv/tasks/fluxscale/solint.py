@@ -90,10 +90,8 @@ class Solint(basetask.StandardTaskTemplate):
         table_suffix = ['.tbl','3.tbl','10.tbl', 'scan.tbl', 'limit.tbl']
         soltimes = [1.0,3.0,10.0] 
         m = self.inputs.context.observing_run.get_ms(self.inputs.vis)
-        # soltimes = [self.inputs.context.evla['msinfo'][m.name].int_time * x for x in soltimes]
         soltimes = [m.get_vla_max_integration_time() * x for x in soltimes]
-        # print(soltimes)
-        
+
         solints = ['int', str(soltimes[1])+'s', str(soltimes[2])+'s']
         soltime = soltimes[0]
         solint = solints[0]
@@ -101,11 +99,11 @@ class Solint(basetask.StandardTaskTemplate):
         combtime = 'scan'
 
         refantfield = context.evla['msinfo'][m.name].calibrator_field_select_string
-        refantobj = findrefant.RefAntHeuristics(vis=calMs,field=refantfield,
+        refantobj = findrefant.RefAntHeuristics(vis=calMs, field=refantfield,
                                                 geometry=True,flagging=True, intent='',
                                                 spw='', refantignore=self.inputs.refantignore)
         
-        RefAntOutput=refantobj.calculate()
+        RefAntOutput = refantobj.calculate()
 
         refAnt = ','.join(RefAntOutput)
 
@@ -119,14 +117,14 @@ class Solint(basetask.StandardTaskTemplate):
         LOG.info("Median fraction of flagged solutions per antenna = " +
                  str(flaggedSolnResult1['antmedian']['fraction']))
 
-        if (flaggedSolnResult1['all']['total'] > 0):
+        if flaggedSolnResult1['all']['total'] > 0:
             fracFlaggedSolns1=flaggedSolnResult1['antmedian']['fraction']
         else:
             fracFlaggedSolns1=1.0
 
         shortsol2=soltime
 
-        if (fracFlaggedSolns1 > 0.05):
+        if fracFlaggedSolns1 > 0.05:
             soltime = soltimes[1]
             solint = solints[1]
 
@@ -139,16 +137,16 @@ class Solint(basetask.StandardTaskTemplate):
             LOG.info("Median fraction of flagged solutions per antenna = " +
                      str(flaggedSolnResult3['antmedian']['fraction']))
 
-            if (flaggedSolnResult3['all']['total'] > 0):
+            if flaggedSolnResult3['all']['total'] > 0:
                 fracFlaggedSolns3=flaggedSolnResult3['antmedian']['fraction']
             else:
                 fracFlaggedSolns3=1.0
 
-            if (fracFlaggedSolns3 < fracFlaggedSolns1):
+            if fracFlaggedSolns3 < fracFlaggedSolns1:
                 shortsol2 = soltime
                 bpdgain_touse = tablebase + table_suffix[1]
             
-                if (fracFlaggedSolns3 > 0.05):
+                if fracFlaggedSolns3 > 0.05:
                     soltime = soltimes[2]
                     solint = solints[2]
 
@@ -160,12 +158,12 @@ class Solint(basetask.StandardTaskTemplate):
                     LOG.info("Median fraction of flagged solutions per antenna = " +
                              str(flaggedSolnResult3['antmedian']['fraction']))
 
-                    if (flaggedSolnResult10['all']['total'] > 0):
+                    if flaggedSolnResult10['all']['total'] > 0:
                         fracFlaggedSolns10 = flaggedSolnResult10['antmedian']['fraction']
                     else:
                         fracFlaggedSolns10 = 1.0
 
-                    if (fracFlaggedSolns10 < fracFlaggedSolns3):
+                    if fracFlaggedSolns10 < fracFlaggedSolns3:
                         shortsol2=soltime
                         bpdgain_touse = tablebase + table_suffix[2]
 
@@ -181,16 +179,16 @@ class Solint(basetask.StandardTaskTemplate):
                             LOG.info("Median fraction of flagged solutions per antenna = " +
                                      str(flaggedSolnResult3['antmedian']['fraction']))
                             
-                            if (flaggedSolnResultScan['all']['total'] > 0):
-                                fracFlaggedSolnsScan=flaggedSolnResultScan['antmedian']['fraction']
+                            if flaggedSolnResultScan['all']['total'] > 0:
+                                fracFlaggedSolnsScan = flaggedSolnResultScan['antmedian']['fraction']
                             else:
-                                fracFlaggedSolnsScan=1.0
+                                fracFlaggedSolnsScan = 1.0
                                 
-                            if (fracFlaggedSolnsScan < fracFlaggedSolns10):
+                            if fracFlaggedSolnsScan < fracFlaggedSolns10:
                                 shortsol2=context.evla['msinfo'][m.name].longsolint
                                 bpdgain_touse = tablebase + table_suffix[3]
                                 
-                                if (fracFlaggedSolnsScan > 0.05):
+                                if fracFlaggedSolnsScan > 0.05:
                                     LOG.warn("Warning, large fraction of flagged solutions.  " +
                                              "There might be something wrong with your data")
 
@@ -215,7 +213,7 @@ class Solint(basetask.StandardTaskTemplate):
                                                             context=context, combtime=combtime, refAnt=refAnt)
                 bpdgain_touse = tablebase + table_suffix[4]
 
-                LOG.info("Using short solint = " + new_gain_solint1)
+                LOG.info("Using short solint = " + str(new_gain_solint1))
 
                 return SolintResults(longsolint=longsolint, gain_solint2=gain_solint2, shortsol2=shortsol2,
                                      short_solint=short_solint, new_gain_solint1=new_gain_solint1, vis=self.inputs.vis,
@@ -245,7 +243,7 @@ class Solint(basetask.StandardTaskTemplate):
                 combtime = 'scan'
 
                 testgains_result = self._do_gtype_testgains(calMs, tablebase + table_suffix[4], solint=new_gain_solint1,
-                                                        context=context, combtime=combtime, refAnt=refAnt)
+                                                            context=context, combtime=combtime, refAnt=refAnt)
                 bpdgain_touse = tablebase + table_suffix[4]
 
                 LOG.info("Using short solint = " + str(new_gain_solint1))
@@ -266,29 +264,28 @@ class Solint(basetask.StandardTaskTemplate):
     def _do_split(self, calMs):
         
         m = self.inputs.context.observing_run.get_ms(self.inputs.vis)
-        channels = m.get_vla_numchan()
         calibrator_scan_select_string = self.inputs.context.evla['msinfo'][m.name].calibrator_scan_select_string
     
         LOG.info("Splitting out calibrators into " + calMs)
     
-        task_args = {'vis'          : m.name,
-                     'outputvis'    : calMs,
-                     'datacolumn'   : 'corrected',
-                     'keepmms'      : True,
-                     'field'        : '',
-                     'spw'          : '',
+        task_args = {'vis': m.name,
+                     'outputvis': calMs,
+                     'datacolumn': 'corrected',
+                     'keepmms': True,
+                     'field': '',
+                     'spw': '',
                      # 'width'        : int(max(channels)),
-                     'width'        : 1,
-                     'antenna'      : '',
-                     'timebin'      : '0s',
-                     'timerange'    : '',
-                     'scan'         : calibrator_scan_select_string,
-                     'intent'       : '',
-                     'array'        : '',
-                     'uvrange'      : '',
-                     'correlation'  : '',
-                     'observation'  : '',
-                     'keepflags'    : False}
+                     'width': 1,
+                     'antenna': '',
+                     'timebin': '0s',
+                     'timerange': '',
+                     'scan': calibrator_scan_select_string,
+                     'intent': '',
+                     'array': '',
+                     'uvrange': '',
+                     'correlation': '',
+                     'observation': '',
+                     'keepflags': False}
         
         job = casa_tasks.split(**task_args)
             
@@ -347,10 +344,10 @@ class Solint(basetask.StandardTaskTemplate):
                 except KeyError:
                     LOG.warn("WARNING: scan "+str(ii)+" is completely flagged and missing from " + calMs)
 
-        longsolint = (np.max(durations))*1.01
-        gain_solint2 = str(longsolint)+'s'
+        longsolint = (np.max(durations)) * 1.01
+        gain_solint2 = str(longsolint) + 's'
                    
-        return (longsolint, gain_solint2)
+        return longsolint, gain_solint2
 
     def _do_gtype_testgains(self, calMs, caltable, solint='int', context=None, combtime='scan', refAnt=None):
 
@@ -362,29 +359,29 @@ class Solint(basetask.StandardTaskTemplate):
         # Do this to get the reference antenna string
         # temp_inputs = gaincal.GTypeGaincal.Inputs(context)
 
-        task_args = {'vis'          : calMs,
-                     'caltable'     : caltable,
-                     'field'        : '',
-                     'spw'          : '',
-                     'intent'       : '',
-                     'selectdata'   : True,
-                     'scan'         : calibrator_scan_select_string,
-                     'solint'       : solint,
-                     'combine'      : combtime,
-                     'preavg'       : -1.0,
-                     'refant'       : refAnt.lower(),
-                     'minblperant'  : minBL_for_cal,
-                     'minsnr'       : 5.0,
-                     'solnorm'      : False,
-                     'gaintype'     : 'G',
-                     'smodel'       : [],
-                     'calmode'      : 'ap',
-                     'append'       : False,
-                     'gaintable'    : [''],
-                     'gainfield'    : [''],
-                     'interp'       : [''],
-                     'spwmap'       : [],
-                     'parang'       : True}
+        task_args = {'vis': calMs,
+                     'caltable': caltable,
+                     'field': '',
+                     'spw': '',
+                     'intent': '',
+                     'selectdata': True,
+                     'scan': calibrator_scan_select_string,
+                     'solint': solint,
+                     'combine': combtime,
+                     'preavg': -1.0,
+                     'refant': refAnt.lower(),
+                     'minblperant': minBL_for_cal,
+                     'minsnr': 5.0,
+                     'solnorm': False,
+                     'gaintype': 'G',
+                     'smodel': [],
+                     'calmode': 'ap',
+                     'append': False,
+                     'gaintable': [''],
+                     'gainfield': [''],
+                     'interp': [''],
+                     'spwmap': [],
+                     'parang': True}
 
         job = casa_tasks.gaincal(**task_args)
             
