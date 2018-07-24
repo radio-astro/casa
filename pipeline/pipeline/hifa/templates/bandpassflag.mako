@@ -65,6 +65,23 @@ def num_lines(relpath):
     score for the bandpass solution.
 </p>
 
+<h2>Contents</h2>
+<ul>
+% if updated_refants:
+    <li><a href="#flagging_table">Reference Antenna update table</a></li>
+%endif
+% if htmlreports:
+    <li><a href="#flagging_commands">Flagging commands</a></li>
+%endif
+    <li><a href="#flagged_data_summary">Flagged data summary table</a></li>
+    <li><a href="#bandpass_results">Bandpass results tables</a></li>
+% if amp_refant or amp_mode:
+    <li><a href="#per_ms_plots">Amplitude vs frequency/Phase plots (per EB)</a></li>
+%endif
+    <li><a href="#amp_vs_time">Amplitude vs time plots</a></li>
+    <li><a href="#amp_vs_uvdist">Amplitude vs UV distance plots</a></li>    
+</ul>
+
 % if updated_refants:
 <h2 id="refants" class="jumptarget">Reference Antenna update</h2>
 
@@ -98,7 +115,7 @@ def num_lines(relpath):
 % endif
 
 % if htmlreports:
-    <h2>Flagging</h2>
+    <h2 id="flagging_commands" class="jumptarget">Flagging</h2>
     <table class="table table-bordered table-striped">
         <caption>Report Files</caption>
         <thead>
@@ -121,7 +138,7 @@ def num_lines(relpath):
 % endif
 
 
-<h2>Flagged data summary</h2>
+<h2 id="flagged_data_summary" class="jumptarget">Flagged data summary</h2>
 
 % for ms in flags.keys():
 <h4>Measurement Set: ${os.path.basename(ms)}</h4>
@@ -156,7 +173,7 @@ def num_lines(relpath):
 % endfor
 
 
-<h2>Bandpass results</h2>
+<h2 id="bandpass_results" class="jumptarget">Bandpass results</h2>
 
 % if phaseup_applications:
     <h4>Phase-up on bandpass calibrator</h4>
@@ -220,7 +237,7 @@ def num_lines(relpath):
 </table>
 
 % if amp_refant or amp_mode:
-    <h2>Plots</h2>
+    <h2 id="per_ms_plots" class="jumptarget">Plots</h2>
 
     <p>Plots show the bandpass correction applied to the target source.
     The first two plots show amplitude vs frequency; one for the reference antenna
@@ -448,7 +465,7 @@ def num_lines(relpath):
     % endfor
 % endif
 
-
+<p>
 <%self:plot_group plot_dict="${time_plots}"
 				  url_fn="${lambda x: 'junk'}"
                   rel_fn="${lambda plot: 'amp_vs_time_%s_%s' % (plot.parameters['vis'], plot.parameters['spw'])}"
