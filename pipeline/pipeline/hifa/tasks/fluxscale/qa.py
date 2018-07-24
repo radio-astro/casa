@@ -15,8 +15,14 @@ from pipeline.extern.analysis_scripts.analysisUtils import gaincalSNR
 from pipeline.h.tasks.common import commonfluxresults
 from . import gcorfluxscale
 from ..importdata.dbfluxes import ORIGIN_DB
+from ....h.tasks.importdata.fluxes import ORIGIN_ANALYSIS_UTILS
+
 
 LOG = logging.get_logger(__name__)
+
+
+# Flux providers we trust enough to calculate QA scores on
+TRUSTED_SOURCES = (ORIGIN_ANALYSIS_UTILS, ORIGIN_DB)
 
 
 class GcorFluxscaleQAHandler(pqa.QAPlugin):
@@ -115,12 +121,14 @@ def score_kspw(context, result):
     # take catalogue fluxes, adding fluxes for solar system amplitude
     # calibrators found in the setjy stage
     phase_fluxes = []
-    for fd in [fd for fd in phase_field.flux_densities if fd.origin == ORIGIN_DB]:
-        spw = ms.get_spectral_window(fd.spw_id)
-        phase_fluxes[spw] = (spw.id, spw.frequency.to_units(FrequencyUnits.HERTZ), fd.to_units(FluxDensityUnits.JANSKY))
+    for fm in [fm for fm in phase_field.flux_densities if fm.origin in TRUSTED_SOURCES]:
+        spw = ms.get_spectral_window(fm.spw_id)
+        phase_fluxes.append((spw.id,
+                             float(spw.mean_frequency.to_units(FrequencyUnits.HERTZ)),
+                             float(fm.I.to_units(FluxDensityUnits.JANSKY))))
     if not phase_fluxes:
-        LOG.warning('Error calculating internal spw-spw consistency: no catalogue fluxes for phase calibrator ({})'
-                    ''.format(utils.dequote(phase_field.name)))
+        LOG.warning('Error calculating internal spw-spw consistency: no trusted flux densities for phase calibrator '
+                    '({})'.format(utils.dequote(phase_field.name)))
         return []
 
     # gather spw ID for all measurements in the result
@@ -185,7 +193,7 @@ def score_kspw(context, result):
 
         # find the catalogue flux for the highest SNR spw
         catalogue_fluxes = [f for f in field.flux_densities
-                            if f.origin == ORIGIN_DB
+                            if f.origin in TRUSTED_SOURCES
                             and f.spw_id == highest_SNR_measurement.spw_id]
         if not catalogue_fluxes:
             LOG.warning('Cannot calculate internal spw-spw consistency for {} ({}): no catalogue measurement for '
@@ -204,7 +212,7 @@ def score_kspw(context, result):
         k_spws = []
         for m in other_measurements:
             catalogue_fluxes = [f for f in field.flux_densities
-                                if f.origin == ORIGIN_DB
+                                if f.origin in TRUSTED_SOURCES
                                 and f.spw_id == highest_SNR_measurement.spw_id]
             if not catalogue_fluxes:
                 LOG.info('No catalogue measurement for {} ({}) spw {}'.format(msg_fieldname, msg_intents, m.spw_id))
@@ -220,21 +228,5 @@ def score_kspw(context, result):
         field_qa_scores = [qacalc.score_gfluxscale_k_spw(ms.basename, field, spw_id, k_spw)
                            for spw_id, k_spw in k_spws]
         all_scores.extend(field_qa_scores)
-
-        # Messages should appear for each SPW that does not correspond to
-        # perfect score.
-        for spw_id, k_spw in k_spws:
-            q = abs(1 - k_spw)
-            msg = ('The flux density of field {} ({}) in spw {} deviates by {:.0%} from the expected value'
-                   ''.format(msg_fieldname, msg_intents, spw_id, k_spw))
-
-            if q < 0.1:
-                continue
-            elif q < 0.2:
-                LOG.info(msg)
-            elif q < 0.3:
-                LOG.warning(msg)
-            else:
-                LOG.error(msg)
 
     return all_scores

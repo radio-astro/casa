@@ -21,6 +21,7 @@ from ..common import commonfluxresults
 LOG = infrastructure.get_logger(__name__)
 
 ORIGIN_XML = 'Source.xml'
+ORIGIN_ANALYSIS_UTILS = 'analysisUtils'
 
 
 def get_setjy_results(mses):
@@ -394,6 +395,8 @@ def import_flux(output_dir, observing_run, filename=None):
             origin = match.group('origin') if match else None
             if origin == 'N/A':
                 origin = None
+            if 'Jy, freq=' in comment:
+                origin = ORIGIN_ANALYSIS_UTILS
 
             match = age_re.search(comment)
             age = match.group('age') if match else None

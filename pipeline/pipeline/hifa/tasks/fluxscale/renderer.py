@@ -18,12 +18,15 @@ import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.renderer.basetemplates as basetemplates
 import pipeline.infrastructure.utils as utils
 from pipeline.domain.measures import FluxDensityUnits, FrequencyUnits
-from pipeline.h.tasks.importdata.fluxes import ORIGIN_XML
+from pipeline.h.tasks.importdata.fluxes import ORIGIN_XML, ORIGIN_ANALYSIS_UTILS
 from pipeline.infrastructure.renderer import logger
 from . import display as gfluxscale
 from ..importdata.dbfluxes import ORIGIN_DB
 
 LOG = logging.get_logger(__name__)
+
+
+CATALOGUE_SOURCES = (ORIGIN_ANALYSIS_UTILS, ORIGIN_DB, ORIGIN_XML)
 
 
 class T2_4MDetailsGFluxscaleRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
@@ -191,7 +194,7 @@ def make_flux_table(context, results):
                 catfluxes = collections.defaultdict(lambda: 'N/A')
                 flux_ratio = 'N/A'
 
-                cat_measurements = [o for o in field.flux_densities if o.origin in (ORIGIN_DB, ORIGIN_XML)]
+                cat_measurements = [o for o in field.flux_densities if o.origin in CATALOGUE_SOURCES]
                 for catmeasurement in cat_measurements:
                     if catmeasurement.spw_id != int(measurement.spw_id):
                         continue
@@ -292,7 +295,8 @@ def create_flux_comparison_plots(context, output_dir, result):
 
         catalogue_fluxes = {
             ORIGIN_XML: 'ASDM',
-            ORIGIN_DB: 'Online Catalogue'
+            ORIGIN_DB: 'Online Catalogue',
+            ORIGIN_ANALYSIS_UTILS: 'analysisUtils'
         }
 
         for origin, label in catalogue_fluxes.iteritems():
