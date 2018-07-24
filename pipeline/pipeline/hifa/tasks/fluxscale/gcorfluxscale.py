@@ -130,9 +130,6 @@ class GcorFluxscale(basetask.StandardTaskTemplate):
                 LOG.error(msg)
                 raise Exception(msg)
 
-            # Choose the first antenna.
-            refant = refant.split(',')[0]
-
         LOG.trace('refant: %s' % refant)
 
         # Get the reference spwmap for flux scaling
@@ -170,8 +167,11 @@ class GcorFluxscale(basetask.StandardTaskTemplate):
         if inputs.hm_resolvedcals == 'automatic':
             # Get the antennas to be used in the gaincals, limiting
             # the range if the reference calibrator is resolved.
-            resantenna, uvrange = heuristics.fluxscale.antenna(ms=inputs.ms, refsource=inputs.reference, refant=refant,
+            refant0 = refant.split(',')[0] #use the first refant
+            resantenna, uvrange = heuristics.fluxscale.antenna(ms=inputs.ms, refsource=inputs.reference, refant=refant0,
                                                                peak_frac=inputs.peak_fraction)
+#             LOG.debug('Resolved calibrator heuristics: resantenna=%s, uvrange=%s (refant0=%s)' % (resantenna, uvrange, refant0))
+#             LOG.debug('Full list of refants = %s' % refant)
 
             # Do nothing if the source is unresolved.
             # If the source is resolved but the number of
@@ -194,9 +194,16 @@ class GcorFluxscale(basetask.StandardTaskTemplate):
 
         # Do a phase-only gaincal on the flux calibrator using a
         # restricted set of antennas
+        if resantenna == '':
+            filtered_refant=refant
+        else: # filter refant if resolved calibrator or antenna selection
+            resant_list = resantenna.split(',')
+            filtered_refant = str(',').join([ ant for ant in refant.split(',') if ant in resant_list ])
+#             LOG.debug('Filtering refant for resolved calibrator, refant=%s' % filtered_refant)
+
         r = self._do_gaincal(field=inputs.reference, intent=inputs.refintent, gaintype=phase_gaintype, calmode='p',
                              combine=phase_combine, solint=inputs.phaseupsolint, antenna=resantenna, uvrange=uvrange,
-                             refant=refant, minblperant=minblperant, phaseup_spwmap=None, phase_interp=None,
+                             refant=filtered_refant, minblperant=minblperant, phaseup_spwmap=None, phase_interp=None,
                              append=False, merge=False)
 
         # Test for the existence of the caltable
