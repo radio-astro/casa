@@ -317,10 +317,6 @@ def space_comma(s):
 		here is the one with the brightest average amplitude over all spectral
 		windows.</p>
 
-		<p>Note: due to a technical problem with visstat, the science field
-		displayed here not the brightest field for the source but the first
-		field for the source.</p>
-
 		<p>Data are plotted for all antennas and correlations, with different
 		spectral windows shown in different colours.</p>
 	</%def>
@@ -368,10 +364,6 @@ def space_comma(s):
 		<p>Calibrated phase vs frequency plots for a representative science
 		field in each measurement set. The science field displayed here is the
 		one with the brightest average amplitude over all spectral windows.</p>
-
-		<p>Note: due to a technical problem with visstat, the science field
-		displayed here not the brightest field for the source but the first
-		field for the source.</p>
 
 		<p>Data are plotted for all antennas and correlations, with different
 		spectral windows shown in different colours.</p>
@@ -421,10 +413,6 @@ def space_comma(s):
 		science field in each measurement set. The science field displayed
 		here is the one with the brightest average amplitude over all spectral
 		windows.</p>
-
-		<p>Note: due to a technical problem with visstat, the science field
-		displayed here not the brightest field for the source but the first
-		field for the source.</p>
 
 		<p>Data are plotted for all antennas and correlations, with different
 		spectral windows shown in different colours.</p>

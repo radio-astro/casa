@@ -594,11 +594,7 @@ def format_spwmap(spwmap, scispws):
 		here is the one with the brightest average amplitude over all spectral
 		windows. The atmospheric transmission for each spectral window is
         overlayed on each plot in pink.</p>
-
-		<p>Note: due to a technical problem with visstat, the science field
-		displayed here not the brightest field for the source but the first 
-		field for the source.</p>
-	% else: #Single dish (source = field, so far)
+    % else: #Single dish (source = field, so far)
 		<p>Calibrated amplitude vs frequency plots of each source in each 
 		measurement set. The atmospheric transmission for each spectral window is
         overlayed on each plot in pink.</p>
@@ -650,11 +646,7 @@ def format_spwmap(spwmap, scispws):
 		science field in each measurement set. The science field displayed 
 		here is the one with the brightest average amplitude over all spectral 
 		windows.</p>
-		
-		<p>Note: due to a technical problem with visstat, the science field
-		displayed here not the brightest field for the source but the first 
-		field for the source.</p>
-		
+
 		<p>Data are plotted for all antennas and correlations, with different
 		spectral windows shown in different colours.</p>
 	</%def>
