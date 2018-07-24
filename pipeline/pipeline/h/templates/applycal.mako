@@ -463,8 +463,8 @@ def format_spwmap(spwmap, scispws):
 	</%def>
 
 	<%def name="preamble()">
-		Plots of calibrated phase vs time for all fields, antennas and
-		correlations. Data are coloured by field.
+		Plots of calibrated phase vs time for all antennas and correlations.
+        Data are coloured by field.
 	</%def>
 
 	<%def name="mouseover(plot)">Click to show phase vs time for spectral window ${plot.parameters['spw']}</%def>
@@ -603,7 +603,7 @@ def format_spwmap(spwmap, scispws):
 		field for the source.</p>
 	% else: #Single dish (source = field, so far)
 		<p>Calibrated amplitude vs frequency plots of each source in each 
-		measurement set.The atmospheric transmission for each spectral window is
+		measurement set. The atmospheric transmission for each spectral window is
         overlayed on each plot in pink.</p>
 	% endif
 		

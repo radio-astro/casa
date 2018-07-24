@@ -27,28 +27,24 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
     def __init__(self, uri='applycal.mako', 
                  description='Apply calibrations from context',
                  always_rerender=False):
-        super(T2_4MDetailsApplycalRenderer, self).__init__(uri=uri,
-                description=description, always_rerender=always_rerender)
+        super(T2_4MDetailsApplycalRenderer, self).__init__(
+            uri=uri, description=description, always_rerender=always_rerender)
 
     def update_mako_context(self, ctx, context, result):
-        weblog_dir = os.path.join(context.report_dir,
-                                  'stage%s' % result.stage_number)
+        weblog_dir = os.path.join(context.report_dir, 'stage%s' % result.stage_number)
 
         flag_totals = {}
         for r in result:
             if r.inputs['flagsum'] is True:
-                flag_totals = utils.dict_merge(flag_totals,
-                                           self.flags_for_result(r, context))
+                flag_totals = utils.dict_merge(flag_totals, self.flags_for_result(r, context))
 
         calapps = {}
         for r in result:
-            calapps = utils.dict_merge(calapps,
-                                       self.calapps_for_result(r))
+            calapps = utils.dict_merge(calapps, self.calapps_for_result(r))
 
         caltypes = {}
         for r in result:
-            caltypes = utils.dict_merge(caltypes,
-                                        self.caltypes_for_result(r))
+            caltypes = utils.dict_merge(caltypes, self.caltypes_for_result(r))
 
         filesizes = {}
         for r in result:
@@ -84,7 +80,7 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
             context,
             result,
             applycal.PhaseVsTimeSummaryChart,
-            ['PHASE', 'BANDPASS', 'AMPLITUDE', 'CHECK', 'TARGET']
+            ['PHASE', 'BANDPASS', 'AMPLITUDE', 'CHECK']
         )
 
         amp_vs_freq_summary_plots = utils.OrderedDefaultdict(list)
@@ -127,14 +123,6 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
 
             for vis, vis_plots in plots.items():
                 amp_vs_uv_summary_plots[vis].extend(vis_plots)
-
-        # Phase vs UV distance plots are not required
-        # phase_vs_uv_summary_plots, _ = self.create_plots(
-        #     context,
-        #     result,
-        #     applycal.PhaseVsUVSummaryChart,
-        #     ['AMPLITUDE']
-        # )
 
         # CAS-5970: add science target plots to the applycal page
         (science_amp_vs_freq_summary_plots,
@@ -226,19 +214,11 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                 ApplycalPhaseVsFreqPlotRenderer
             )
 
-            # phase_vs_uv_detail_plots, phase_vs_uv_subpages = self.create_plots(
-            #     context,
-            #     result,
-            #     applycal.PhaseVsUVDetailChart,
-            #     ['AMPLITUDE'],
-            #     ApplycalPhaseVsUVPlotRenderer
-            # )
-
             phase_vs_time_detail_plots, phase_vs_time_subpages = self.create_plots(
                 context,
                 result,
                 applycal.PhaseVsTimeDetailChart,
-                ['AMPLITUDE', 'PHASE', 'BANDPASS', 'CHECK', 'TARGET'],
+                ['AMPLITUDE', 'PHASE', 'BANDPASS', 'CHECK'],
                 ApplycalPhaseVsTimePlotRenderer
             )
 
@@ -247,7 +227,6 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                 (amp_vs_freq_detail_plots, ApplycalAmpVsFreqPlotRenderer, amp_vs_freq_subpages),
                 (phase_vs_freq_detail_plots, ApplycalPhaseVsFreqPlotRenderer, phase_vs_freq_subpages),
                 (amp_vs_uv_detail_plots, ApplycalAmpVsUVPlotRenderer, amp_vs_uv_subpages),
-                # (phase_vs_uv_detail_plots, ApplycalPhaseVsUVPlotRenderer, phase_vs_uv_subpages),
                 (amp_vs_time_detail_plots, ApplycalAmpVsTimePlotRenderer, amp_vs_time_subpages),
                 (phase_vs_time_detail_plots, ApplycalPhaseVsTimePlotRenderer, phase_vs_time_subpages)):
             if d:
@@ -266,7 +245,7 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
             'amp_vs_uv_plots': amp_vs_uv_summary_plots,
             'phase_vs_time_plots': phase_vs_time_summary_plots,
             'corrected_to_antenna1_plots': corrected_ratio_to_antenna1_plots,
-            'corrected_to_model_vs_uvdist_plots' : corrected_ratio_to_uv_dist_plots,
+            'corrected_to_model_vs_uvdist_plots': corrected_ratio_to_uv_dist_plots,
             'science_amp_vs_freq_plots': science_amp_vs_freq_summary_plots,
             'science_phase_vs_freq_plots': science_phase_vs_freq_summary_plots,
             'science_amp_vs_uv_plots': science_amp_vs_uv_summary_plots,
@@ -327,8 +306,8 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                                                       [brightest_field.id],
                                                       uv_range)
                 amp_vs_freq_summary_plots[vis].extend(plots)
-    
-                plots = self.science_plots_for_result(context, 
+
+                plots = self.science_plots_for_result(context,
                                                       result,
                                                       applycal.PhaseVsFrequencyPerSpwSummaryChart,
                                                       [brightest_field.id],
