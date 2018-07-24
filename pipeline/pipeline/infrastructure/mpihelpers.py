@@ -1,5 +1,4 @@
 import abc
-import copy_reg
 import os
 
 try:
@@ -7,7 +6,6 @@ try:
 except:
     import pickle
 import tempfile
-import types
 
 from mpi4casa.MPICommandClient import MPICommandClient
 from mpi4casa.MPIEnvironment import MPIEnvironment
@@ -100,7 +98,7 @@ class SyncTask(object):
             raise exceptions.PipelineException(err_msg)
 
 
-class Tier1Executable(object):
+class Executable(object):
     @abc.abstractmethod
     def get_executable(self):
         """
@@ -110,7 +108,7 @@ class Tier1Executable(object):
         raise NotImplementedError
 
 
-class Tier0PipelineTask(Tier1Executable):
+class Tier0PipelineTask(Executable):
     def __init__(self, task_cls, task_args, context_path):
         """
         Create a new Tier0PipelineTask representing a pipeline task to be
@@ -161,24 +159,24 @@ class Tier0PipelineTask(Tier1Executable):
                                                   self.__context_path)
 
 
-class Tier0CASATask(Tier1Executable):
-    def __init__(self, task_cls, task_args):
+class Tier0JobRequest(Executable):
+    def __init__(self, creator_fn, job_args):
         """
-        Create a new Tier0CASATask representing a JobRequest CASA task to be
-        executed on an MPI server.
+        Create a new Tier0JobRequest representing a JobRequest to be executed
+        on an MPI server.
 
-        :param task_cls: the class of the CASA task to execute
-        :param task_args: any arguments to passed to the task Inputs
+        :param creator_fn: the class of the CASA task to execute
+        :param job_args: any arguments to passed to the task Inputs
         """
-        self.__task_cls = task_cls
-        self.__task_args = task_args
+        self.__creator_fn = creator_fn
+        self.__job_args = job_args
 
     def get_executable(self):
-        job_request = self.__task_cls(**self.__task_args)
+        job_request = self.__creator_fn(**self.__job_args)
         return lambda: job_request.execute(dry_run=False)
 
     def __str__(self):
-        return 'Tier0CASATask(%s, %s)' % (self.__task_cls, self.__task_args)
+        return 'Tier0JobRequest({}, {})'.format(self.__creator_fn, self.__job_args)
 
 
 class Tier0FunctionCall(object):

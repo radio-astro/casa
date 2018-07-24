@@ -1053,7 +1053,7 @@ def plotms_iterate(jobs_and_wrappers, iteraxis=None):
         # execute merged job if any of the output files are missing
         if not all([os.path.exists(dest) for dest in dest_filenames]):
             if mpihelpers.is_mpi_ready():
-                executable = mpihelpers.Tier0CASATask(casa_tasks.plotms, job_to_execute.kw)
+                executable = mpihelpers.Tier0JobRequest(casa_tasks.plotms, job_to_execute.kw)
                 queued_job = mpihelpers.AsyncTask(executable)
             else:
                 queued_job = mpihelpers.SyncTask(job_to_execute)
