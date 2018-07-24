@@ -1,7 +1,6 @@
 import commands
 import glob
 import os
-import shutil
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.api as api
@@ -177,11 +176,12 @@ class Tclean(cleanbase.CleanBase):
                 self.copy_products(os.path.join(image_name, old_pname), os.path.join(newname, new_pname))
             else:
                 if 'summaryplot.png' in image_name:
-                    LOG.info('Copying %s to %s' % (image_name, newname))
-                    shutil.copyfile(image_name, newname)
+                    LOG.info('Copying {} to {}'.format(image_name, newname))
+                    job = casa_tasks.copyfile(image_name, newname)
                 else:
-                    LOG.info('Copying %s to %s' % (image_name, newname))
-                    shutil.copytree(image_name, newname)
+                    LOG.info('Copying {} to {}'.format(image_name, newname))
+                    job = casa_tasks.copytree(image_name, newname)
+                self._executor.execute(job)
 
     def prepare(self):
         inputs = self.inputs
@@ -199,7 +199,8 @@ class Tclean(cleanbase.CleanBase):
         # delete any old files with this naming root. One of more
         # of these (don't know which) will interfere with this run.
         LOG.info('deleting %s*.iter*', inputs.imagename)
-        shutil.rmtree('%s*.iter*' % inputs.imagename, ignore_errors=True)
+        rmtree_job = casa_tasks.rmtree('%s*.iter*' % inputs.imagename, ignore_errors=True)
+        self._executor.execute(rmtree_job)
 
         # Set initial masking limits
         self.pblimit_image = 0.2
@@ -570,7 +571,8 @@ class Tclean(cleanbase.CleanBase):
             filenames = glob.glob('%s.iter%s*' % (rootname, iteration))
             for filename in filenames:
                 try:
-                    shutil.rmtree(filename)
+                    rmtree_job = casa_tasks.rmtree(filename)
+                    self._executor.execute(rmtree_job)
                 except Exception as e:
                     LOG.warning('Exception while deleting %s: %s' % (filename, e))
 
@@ -614,7 +616,8 @@ class Tclean(cleanbase.CleanBase):
             if keep_iterating:
                 # Delete existing (iter2) mask from autoboxing since we
                 # now switch to a user supplied mask.
-                shutil.rmtree('%s.iter%s.mask' % (rootname, iteration))
+                rmtree_job = casa_tasks.rmtree('%s.iter%s.mask' % (rootname, iteration))
+                self._executor.execute(rmtree_job)
 
             # Determine the cleaning threshold
             threshold = seq_result.threshold
@@ -699,7 +702,8 @@ class Tclean(cleanbase.CleanBase):
 
             # Keep tclean summary plot
             try:
-                shutil.move('summaryplot_1.png', '%s.iter%s.summaryplot.png' % (rootname, iteration))
+                move_job = casa_tasks.move('summaryplot_1.png', '%s.iter%s.summaryplot.png' % (rootname, iteration))
+                self._executor.execute(move_job)
             except (IOError, OSError):
                 LOG.info('Could not save tclean summary plot.')
 
