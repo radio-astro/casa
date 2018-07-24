@@ -5,6 +5,7 @@ import os
 
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.pipelineqa as pqa
+import pipeline.infrastructure.utils as utils
 import pipeline.qa.scorecalculator as qacalc
 from . import checkflag
 from . import targetflag
@@ -26,14 +27,29 @@ class TargetflagQAHandler(pqa.QAPlugin):
 
         if result.summarydict:
             score1 = qacalc.score_total_data_flagged_vla(os.path.basename(result.inputs['vis']),
-                                                         [result.summarydict])
+                                                         result.summarydict)
             scores = [score1]
         else:
             LOG.error('No flag summary statistics.')
             scores = [pqa.QAScore(0.0, longmsg='No flag summary statistics',
                                   shortmsg='Flag Summary off')]
 
-        result.qa.pool.extend(scores)
+        result.qa.pool[:] = scores
+
+
+class TargetflagListQAHandler(pqa.QAPlugin):
+    """
+    QA handler for a list containing TargetflagResults.
+    """
+    result_cls = collections.Iterable
+    child_cls = targetflag.TargetflagResults
+    generating_task = targetflag.Targetflag
+
+    def handle(self, context, result):
+        # collate the QAScores from each child result, pulling them into our
+        # own QAscore list
+        collated = utils.flatten([r.qa.pool[:] for r in result])
+        result.qa.pool[:] = collated
 
 
 class FlagdataQAHandler(pqa.QAPlugin):
@@ -49,6 +65,21 @@ class FlagdataQAHandler(pqa.QAPlugin):
         result.qa.pool[:] = [score]
 
 
+class FlagdataListQAHandler(pqa.QAPlugin):
+    """
+    QA handler for a list containing TargetflagResults.
+    """
+    result_cls = collections.Iterable
+    child_cls = targetflag.TargetflagResults
+    generating_task = targetflag.Targetflag
+
+    def handle(self, context, result):
+        # collate the QAScores from each child result, pulling them into our
+        # own QAscore list
+        collated = utils.flatten([r.qa.pool[:] for r in result])
+        result.qa.pool[:] = collated
+
+
 class CheckflagQAHandler(pqa.QAPlugin):
     result_cls = checkflag.CheckflagResults
     child_cls = None
@@ -62,11 +93,26 @@ class CheckflagQAHandler(pqa.QAPlugin):
 
         if result.summarydict:
             score1 = qacalc.score_total_data_flagged_vla(os.path.basename(result.inputs['vis']),
-                                                         [result.summarydict])
+                                                         result.summarydict)
             scores = [score1]
         else:
             LOG.error('No flag summary statistics.')
             scores = [pqa.QAScore(0.0, longmsg='No flag summary statistics',
                                   shortmsg='Flag Summary off')]
 
-        result.qa.pool.extend(scores)
+        result.qa.pool[:] = scores
+
+
+class CheckflagListQAHandler(pqa.QAPlugin):
+    """
+    QA handler for a list containing CheckflagResults.
+    """
+    result_cls = collections.Iterable
+    child_cls = checkflag.CheckflagResults
+    generating_task = checkflag.Checkflag
+
+    def handle(self, context, result):
+        # collate the QAScores from each child result, pulling them into our
+        # own QAscore list
+        collated = utils.flatten([r.qa.pool[:] for r in result])
+        result.qa.pool[:] = collated

@@ -59,6 +59,14 @@ class Checkflag(basetask.StandardTaskTemplate):
         timedevscale = 4.0
         freqdevscale = 4.0
 
+
+        summaries = []  # QA statistics summaries for before and after targetflag
+
+        # get the before flag total statistics
+        job = casa_tasks.flagdata(vis=self.inputs.vis, mode='summary')
+        summarydict = self._executor.execute(job)
+        summaries.append(summarydict)
+
         # Set up threshold multiplier values for calibrators and targets separately.
         # Xpol are used for cross-hands, Ppol are used for parallel hands. As
         # noted above, I'm still refining these values; I suppose they could be
@@ -235,10 +243,12 @@ class Checkflag(basetask.StandardTaskTemplate):
         
         self._do_checkflag(**method_args)
 
+        # get the after flag total statistics
         job = casa_tasks.flagdata(vis=self.inputs.vis, mode='summary')
         summarydict = self._executor.execute(job)
+        summaries.append(summarydict)
 
-        return CheckflagResults([job], summarydict=summarydict)
+        return CheckflagResults([job], summarydict=summaries)
 
     def _do_checkflag(self, mode='rflag', field=None, correlation=None, scan=None, intent='',
                       ntime='scan', datacolumn='corrected', flagbackup=False, timedevscale=4.0,

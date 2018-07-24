@@ -572,17 +572,16 @@ def score_online_shadow_template_agents(ms, summaries):
 @log_qa
 def score_vla_agents(ms, summaries):
     """
-    Get a score for the fraction of data flagged by all agents.
+    Get a score for the fraction of data flagged by online, shadow, and template agents.
 
     0 < score < 1 === 60% < frac_flagged < 5%
     """
-    score = score_data_flagged_by_agents(ms, summaries, 0.05, 0.6, ['before', 'anos', 'intents', 'qa0', 'qa2',
-                                                                    'online',  'template', 'autocorr',
-                                                                    'shadow', 'edgespw', 'clip', 'quack', 'baseband'])
+    score = score_data_flagged_by_agents(ms, summaries, 0.05, 0.6,
+                                         ['online', 'shadow', 'qa0', 'qa2', 'before', 'template'])
 
     new_origin = pqa.QAOrigin(metric_name='score_vla_agents',
                               metric_score=score.origin.metric_score,
-                              metric_units='Fraction of data newly flagged all agents')
+                              metric_units='Fraction of data newly flagged by online, shadow, and template agents')
     score.origin = new_origin
 
     return score
@@ -648,7 +647,7 @@ def score_total_data_flagged_vla(filename, summaries):
     60-100% flagged -> 0
     """
     # Calculate fraction of flagged data.
-    frac_flagged = calc_frac_total_flagged(summaries)
+    frac_flagged = calc_frac_newly_flagged(summaries)
 
     # Convert fraction of flagged data into a score.
     if frac_flagged > 0.6:

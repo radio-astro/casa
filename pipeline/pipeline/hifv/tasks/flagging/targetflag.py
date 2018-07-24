@@ -67,6 +67,14 @@ class Targetflag(basetask.StandardTaskTemplate):
 
         # LOG.info(self.inputs.intents)
 
+        summaries = []  # QA statistics summaries for before and after targetflag
+
+        # get the before flag total statistics
+        job = casa_tasks.flagdata(vis=self.inputs.vis, mode='summary')
+        summarydict = self._executor.execute(job)
+        summaries.append(summarydict)
+
+
         if ('CALIBRATE' in self.inputs.intents):
             LOG.info("TARGETFLAG INFO: Running RFLAG ON intent=*CALIBRATE*")
             method_args = {'field'       : '',
@@ -97,10 +105,12 @@ class Targetflag(basetask.StandardTaskTemplate):
 
             rflag_result = self._do_rflag(**method_args)
 
+            # get the after flag total statistics
             job = casa_tasks.flagdata(vis=self.inputs.vis, mode='summary')
             summarydict = self._executor.execute(job)
+            summaries.append(summarydict)
 
-            return TargetflagResults([rflag_result], summarydict=summarydict)
+            return TargetflagResults([rflag_result], summarydict=summaries)
 
         if ('TARGET' in self.inputs.intents and fielddict != {}):
             LOG.info("TARGETFLAG INFO:  Spectral line heuristics for intent=*TARGET*")
@@ -114,10 +124,12 @@ class Targetflag(basetask.StandardTaskTemplate):
 
                 rflag_result = self._do_rflag(**method_args)
 
+        # get the after flag total statistics
         job = casa_tasks.flagdata(vis=self.inputs.vis, mode='summary')
         summarydict = self._executor.execute(job)
+        summaries.append(summarydict)
 
-        return TargetflagResults([rflag_result], summarydict=summarydict)
+        return TargetflagResults([rflag_result], summarydict=summaries)
     
     def analyse(self, results):
         return results

@@ -21,15 +21,15 @@ from .flagcal import Flagcal
 # pipelineqa.registry.add_handler(qa.FlagBadDeformattersListQAHandler())
 # qaadapter.registry.register_to_dataset_topic(flagbaddeformatters.FlagBadDeformattersResults)
 
-pipelineqa.qa_registry.add_handler(qa.CheckflagQAHandler())
-# pipelineqa.registry_qa.add_handler(qa.CheckflagListQAHandler())
+# pipelineqa.qa_registry.add_handler(qa.CheckflagQAHandler())
+# pipelineqa.qa_registry.add_handler(qa.CheckflagListQAHandler())
 qaadapter.registry.register_to_dataset_topic(checkflag.CheckflagResults)
 
-pipelineqa.qa_registry.add_handler(qa.TargetflagQAHandler())
+# pipelineqa.qa_registry.add_handler(qa.TargetflagQAHandler())
 # pipelineqa.qa_registry.add_handler(qa.TargetflagListQAHandler())
 qaadapter.registry.register_to_dataset_topic(targetflag.TargetflagResults)
 
-pipelineqa.qa_registry.add_handler(qa.FlagdataQAHandler())
+# pipelineqa.qa_registry.add_handler(qa.FlagdataQAHandler())
 # pipelineqa.qa_registry.add_handler(qa.FlagdataListQAHandler())
 qaadapter.registry.register_to_dataset_topic(flagdetervla.FlagDeterVLAResults)
 
