@@ -8,7 +8,7 @@ import shutil
 
 import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.logging as logging
-from pipeline.infrastructure.jobrequest import casa_tasks
+from pipeline.infrastructure import casa_tasks
 
 LOG = logging.get_logger(__name__)
 

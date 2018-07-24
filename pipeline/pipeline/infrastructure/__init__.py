@@ -9,6 +9,7 @@ from .taskregistry import task_registry
 from . import api
 from . import callibrary
 from . import casatools
+from . import casa_tasks
 from . import contfilehandler
 from . import filenamer
 from . import imagelibrary
@@ -17,7 +18,7 @@ from . import logging
 from . import mpihelpers
 from . import utils
 from .callibrary import CalLibrary, CalTo, CalFrom, CalApplication, CalState
-from .jobrequest import JobRequest, casa_tasks
+from .jobrequest import JobRequest
 from .launcher import Context, Pipeline
 from .logging import get_logger
 

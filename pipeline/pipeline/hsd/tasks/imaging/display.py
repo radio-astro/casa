@@ -9,7 +9,7 @@ import math
 from matplotlib.ticker import MultipleLocator
 
 import pipeline.infrastructure as infrastructure
-from pipeline.infrastructure.jobrequest import casa_tasks
+from pipeline.infrastructure import casa_tasks
 import pipeline.infrastructure.renderer.logger as logger
 import pipeline.infrastructure.displays.pointing as pointing
 #from ..common.display import RADEClabel, RArotation, DECrotation
