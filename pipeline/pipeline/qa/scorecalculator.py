@@ -2007,6 +2007,52 @@ def score_multiply(scores_list):
 
 
 @log_qa
+def score_sd_skycal_elevation_difference(ms, resultdict):
+    """
+    """
+    field_ids = resultdict.keys()
+    assert len(field_ids) == 1
+    field_id = field_ids[0]
+    field = ms.fields[field_id]
+    eldiff = resultdict[field_id]
+    el_threshold = 3.0
+    warned_antennas = []
+    metric_score = []
+    for antenna_id, eld in eldiff.items():
+        preceding = eld.eldiff0
+        subsequent = eld.eldiff1
+        max_pred = np.abs(preceding).max()
+        max_subq = np.abs(subsequent).max()
+        metric_score.extend([max_pred, max_subq])
+        if max_pred >= el_threshold or max_subq >= el_threshold:
+            warned_antennas.append(antenna_id)
+    
+    if len(warned_antennas) > 0:
+        antenna_names = ', '.join([ms.antennas[a].name for a in warned_antennas])
+        longmsg = '{} field {} antennas {}: elevation difference between ON and OFF exceed {}deg'.format(ms.basename,
+                                                                                                         field.name,
+                                                                                                         antenna_names,
+                                                                                                         el_threshold)
+    else:
+        longmsg = 'Elevation difference between ON and OFF is below threshold ({}deg)'.format(el_threshold)
+        
+    if np.max(metric_score) >= el_threshold:
+        score = 0.0
+    else:
+        score = 1.0
+    origin = pqa.QAOrigin(metric_name='OnOffElevationDifference',
+                          metric_score=np.max(metric_score),
+                          metric_units='deg')
+    
+    if score < 1.0:
+        shortmsg = 'Elevation difference between ON and OFF exceeds the limit'
+    else:
+        shortmsg = 'Elevation difference between ON and OFF is below the limit'
+    
+    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg, origin=origin, vis=ms.basename)||||||| .r41742
+
+
+@log_qa
 def score_gfluxscale_k_spw(vis, field, spw_id, k_spw):
     """ Convert internal spw_id-spw_id consistency ratio to a QA score.
 

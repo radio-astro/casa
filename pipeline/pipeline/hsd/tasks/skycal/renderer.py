@@ -89,7 +89,15 @@ class T2_4MDetailsSingleDishSkyCalRenderer(basetemplates.T2_4MDetailsDefaultRend
                     
                 # Compute elevation difference
                 eldiff = skycal_task.compute_elevation_difference(context, result)
-                                
+                
+#                 ###
+#                 ms_index = context.observing_run.measurement_sets.index(ms)
+#                 if ms_index == 0:
+#                     eldiff[1][0].eldiff0[-16] = 3.78
+#                 if ms_index == 1:
+#                     eldiff[1][1].eldiff1[2] = -4.0
+#                 ###
+                
                 # Elevation difference: summary plots
                 summaries_elev.extend(skycal_display.plot_elevation_difference(context, result, eldiff, perantenna=False))
                 
