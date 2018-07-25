@@ -2049,7 +2049,7 @@ def score_sd_skycal_elevation_difference(ms, resultdict):
     else:
         shortmsg = 'Elevation difference between ON and OFF is below the limit'
     
-    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg, origin=origin, vis=ms.basename)||||||| .r41742
+    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg, origin=origin, vis=ms.basename)
 
 
 @log_qa
