@@ -50899,9 +50899,9 @@ def gaincalSNR(vis, tsysTable='', flux=None, field=None,
 
     # 6) compute the expected channel-averaged SNR
     # Use the same approach as in es.sensitivity_calculator
-    band_name = ['3','4','6','7','8','9','10']
-    tsys_nominal = [75.0, 86.0, 90.0, 150.0, 387.0, 1200.0, 1515.0]
-    sensitivities = [0.20, 0.24, 0.27, 0.50, 1.29, 5.32, 8.85]  # mJy (for 16*12m antennas, 1 minute, 8 GHz, 2pol)
+    band_name = ['3', '4', '5', '6', '7', '8', '9', '10']
+    tsys_nominal = [75.0, 86.0, 120.0, 90.0, 150.0, 387.0, 1200.0, 1515.0]
+    sensitivities = [0.20, 0.24, 0.37, 0.27, 0.50, 1.29, 5.32, 8.85]  # mJy (for 16*12m antennas, 1 minute, 8 GHz, 2pol)
     preaverageDictionary = {}
     preaverageDictionary[spw] = {}
     preaverageDictionary['vis'] = vis
