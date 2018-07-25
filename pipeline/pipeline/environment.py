@@ -9,8 +9,11 @@ import re
 import string
 import subprocess
 
+from mpi4casa.MPIEnvironment import MPIEnvironment
+from .infrastructure import mpihelpers
 
-__all__ = ['cpu_type', 'hostname', 'host_distribution', 'logical_cpu_cores', 'memory_size', 'pipeline_revision']
+__all__ = ['cpu_type', 'hostname', 'host_distribution', 'logical_cpu_cores', 'memory_size', 'pipeline_revision', 'role',
+           'cluster_details']
 
 
 def _cpu_type():
@@ -142,9 +145,40 @@ def _pipeline_revision():
         return 'Unknown'
 
 
+def _role():
+    if not MPIEnvironment.is_mpi_enabled:
+        return 'Non-MPI Host'
+
+    if MPIEnvironment.is_mpi_client:
+        return 'MPI Client'
+    else:
+        return 'MPI Server'
+
+
+def _cluster_details():
+    this_node = node_details
+    d = {node_details['role']: this_node}
+    if mpihelpers.is_mpi_ready():
+        details = mpihelpers.mpiclient.push_command_request('pipeline.environment.node_details',
+                                                         block=True,
+                                                         target_server=mpihelpers.mpi_server_list)
+        d.update({'MPI Server {}'.format(r['server']): r['ret'] for r in details})
+    return d
+
 cpu_type = _cpu_type()
 hostname = _hostname()
 host_distribution = _host_distribution()
 logical_cpu_cores = _logical_cpu_cores()
 memory_size = _memory_size()
+role = _role()
 pipeline_revision = _pipeline_revision()
+
+node_details = {
+    'cpu': cpu_type,
+    'hostname': hostname,
+    'os': host_distribution,
+    'num_cores': logical_cpu_cores,
+    'ram': memory_size,
+    'role': role
+}
+cluster_details = _cluster_details()

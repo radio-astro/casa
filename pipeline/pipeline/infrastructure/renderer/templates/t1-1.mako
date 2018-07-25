@@ -117,7 +117,9 @@ $(document).ready(function() {
                 </tr>
                 <tr>
                     <th>CASA Version</th>
-                    <td>${casa_version}</td>
+                    <td>${casa_version} (<a href="javascript:"
+                                            data-fancybox
+                                            data-src="#hidden-environment">environment</a>)</td>
                     <td></td>
                     <td></td>
                 </tr>
@@ -248,3 +250,29 @@ $(document).ready(function() {
                 % endfor
             </tbody>
         </table>
+
+<div style="display: none;" id="hidden-environment">
+
+    <table class="table table-bordered"
+           summary="Processing environment for this pipeline reduction">
+        <caption>Processing environment for this pipeline reduction</caption>
+        <thead>
+            <th>Role</th>
+            <th>Hostname</th>
+            <th>CPU</th>
+            <th># CPU cores</th>
+            <th>RAM</th>
+            <th>OS</th>
+        </thead>
+        <tbody>
+            % for tr in environment:
+            <tr>
+                % for td in tr:
+                    ${td}
+                % endfor
+            </tr>
+            % endfor
+        </tbody>
+    </table>
+
+</div>

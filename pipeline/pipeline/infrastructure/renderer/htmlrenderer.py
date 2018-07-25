@@ -307,6 +307,7 @@ class T1_1Renderer(RendererBase):
                 'time_start time_end time_on_source '
                 'baseline_min baseline_max baseline_rms')
 
+    EnvironmentTableRow = collections.namedtuple('EnvironmentTableRow', 'role hostname cpu num_cores ram os')
 
     @staticmethod
     def get_display_context(context):
@@ -345,7 +346,7 @@ class T1_1Renderer(RendererBase):
             pipeline_doclink = pipeline.__pipeline_documentation_weblink_alma__
         else:
             pipeline_doclink = None
-        
+
         #Observation Summary (formerly the T1-2 page)
         ms_summary_rows = []
         for ms in get_mses_by_time(context):
@@ -371,10 +372,10 @@ class T1_1Renderer(RendererBase):
             else:
                 time_on_source = utils.total_time_on_source(target_scans)
             time_on_source = utils.format_timedelta(time_on_source)
-           
+
             baseline_min = ms.antenna_array.min_baseline.length
             baseline_max = ms.antenna_array.max_baseline.length
-            
+
             # compile a list of primitive numbers representing the baseline 
             # lengths in metres..
             bls = [bl.length.to_units(measures.DistanceUnits.METRE)
@@ -384,7 +385,7 @@ class T1_1Renderer(RendererBase):
             baseline_rms = math.sqrt(sum(bl**2 for bl in bls)/len(bls))
             baseline_rms = measures.Distance(baseline_rms,
                                              units=measures.DistanceUnits.METRE)
- 
+
             science_spws = ms.get_spectral_windows(science_windows_only=True)
             receivers = sorted(set(spw.band for spw in science_spws))
 
@@ -395,7 +396,7 @@ class T1_1Renderer(RendererBase):
                                         ms=ms.basename,
                                         href=href,
                                         filesize=ms.filesize,
-                                        receivers=receivers,                           
+                                        receivers=receivers,
                                         num_antennas=num_antennas,
                                         beamsize_min='TODO',
                                         beamsize_max='TODO',
@@ -405,8 +406,21 @@ class T1_1Renderer(RendererBase):
                                         baseline_min=baseline_min,
                                         baseline_max=baseline_max,
                                         baseline_rms=baseline_rms)
-        
+
             ms_summary_rows.append(row)
+
+        environment_rows = []
+        for role, node_details in pipeline.environment.cluster_details.iteritems():
+            row = T1_1Renderer.EnvironmentTableRow(
+                role=role,
+                hostname=node_details['hostname'],
+                cpu=node_details['cpu'],
+                num_cores=node_details['num_cores'],
+                ram=str(measures.FileSize(node_details['ram'], measures.FileSizeUnits.BYTES)),
+                os=node_details['os']
+            )
+            environment_rows.append(row)
+        environment_rows = utils.merge_td_columns(environment_rows)
 
         return {
             'pcontext': context,
@@ -426,7 +440,8 @@ class T1_1Renderer(RendererBase):
             'ousstatus_entity_id': context.project_structure.ousstatus_entity_id,
             'ppr_uid': None,
             'observers': observers,
-            'ms_summary_rows': ms_summary_rows
+            'ms_summary_rows': ms_summary_rows,
+            'environment': environment_rows,
         }
 
 
