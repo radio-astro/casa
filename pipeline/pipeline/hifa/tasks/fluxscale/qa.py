@@ -187,7 +187,7 @@ def score_kspw(context, result):
             spw_snr_candidates = [spw for spw in measurement_spws if spw.bandwidth >= median_bandwidth]
 
         # find the spw with the highest SNR
-        highest_SNR_spw = max(spw_snr_candidates, key=lambda spw: gaincalSNR_output[spw.id])
+        highest_SNR_spw = max(spw_snr_candidates, key=lambda spw: gaincalSNR_output[spw.id]['snr'])
 
         # now find the measurement for that spw
         highest_SNR_measurement = [m for m in measurements if m.spw_id == highest_SNR_spw.id]
