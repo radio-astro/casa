@@ -125,6 +125,11 @@ class MaskLine(basetask.StandardTaskTemplate):
         beam_size = casatools.quanta.convert(reference_data.beam_sizes[reference_antenna][reference_spw], 'deg')['value']
         observing_pattern = reference_data.observing_pattern[reference_antenna][reference_spw][reference_field]
          
+        # parse window
+        parser = detection.LineWindowParser(reference_data, window)
+        parser.parse(reference_field)
+        parsed_window = parser.get_result(reference_spw)
+         
         LOG.debug('Members to be processed:')
         for (m, f, a, s) in utils.iterate_group_member(group_desc, member_list):#itertools.izip(vis_list, field_list, antenna_list, spwid_list):
             v = m.name
@@ -142,7 +147,7 @@ class MaskLine(basetask.StandardTaskTemplate):
  
         # simple gridding
         t0 = time.time()
-        gridding_inputs = simplegrid.SDSimpleGridding.Inputs(context, group_id, member_list, window)
+        gridding_inputs = simplegrid.SDSimpleGridding.Inputs(context, group_id, member_list, parsed_window)
         gridding_task = simplegrid.SDSimpleGridding(gridding_inputs)
         job = common.ParameterContainerJob(gridding_task, datatable_dict=dt_dict, index_list=index_list)
         gridding_result = self._executor.execute(job, merge=False)
@@ -169,7 +174,7 @@ class MaskLine(basetask.StandardTaskTemplate):
  
         # line finding
         t0 = time.time()
-        detection_inputs = detection.DetectLine.Inputs(context, group_id, window, edge, broadline)
+        detection_inputs = detection.DetectLine.Inputs(context, group_id, parsed_window, edge, broadline)
         line_finder = detection.DetectLine(detection_inputs)
         job = common.ParameterContainerJob(line_finder, datatable_dict=dt_dict, grid_table=grid_table, 
                                            spectral_data=spectra)
@@ -185,7 +190,7 @@ class MaskLine(basetask.StandardTaskTemplate):
         validator_cls = validation.ValidationFactory(observing_pattern)
         validation_inputs = validator_cls.Inputs(context, group_id, member_list, 
                                                  iteration, grid_size, 
-                                                 grid_size, window, edge, 
+                                                 grid_size, parsed_window, edge, 
                                                  clusteringalgorithm=clusteringalgorithm)
         line_validator = validator_cls(validation_inputs)
         LOG.trace('len(index_list)={}', len(index_list))

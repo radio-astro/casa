@@ -90,17 +90,19 @@ class DetectLine(basetask.StandardTaskTemplate):
             LOG.info('Skip line detection since line window is set.')
             nrow = len(grid_table)
             assert nrow > 0
-            spw = grid_table[0][0] if len(grid_table) > 0 else -1
-            predefined_window = self._get_predefined_window(spw, window)
-            LOG.trace('predefined_window={0}'.format(predefined_window))
+            # predefined_window should be derived at the upper task (MaskLine)
+            # and should be passed to inputs.window
+            #spw = grid_table[0][0] if len(grid_table) > 0 else -1
+            #predefined_window = self._get_predefined_window(spw, window)
+            LOG.trace('predefined_window={0}'.format(window))
             for row in xrange(nrow):
                 grid_info = grid_table[row]
                 ra = grid_info[4]
                 dec = grid_info[5]
-                detect_signal[row] = [ra, dec, predefined_window]
+                detect_signal[row] = [ra, dec, window]
             for datatable in datatable_dict.itervalues():
                 for dt_row in xrange(datatable.nrow):
-                    datatable.putcell('MASKLIST', dt_row, predefined_window)
+                    datatable.putcell('MASKLIST', dt_row, window)
                 
             result = DetectLineResults(task=self.__class__,
                                        success=True,
