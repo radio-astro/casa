@@ -420,6 +420,7 @@ class T1_1Renderer(RendererBase):
                 os=node_details['os']
             )
             environment_rows.append(row)
+        environment_rows.sort(key=operator.itemgetter(0))
         environment_rows = utils.merge_td_columns(environment_rows)
 
         return {
