@@ -197,7 +197,7 @@ class GcorFluxscale(basetask.StandardTaskTemplate):
         if resantenna == '':
             filtered_refant=refant
         else: # filter refant if resolved calibrator or antenna selection
-            resant_list = resantenna.split(',')
+            resant_list = resantenna.rstrip('&').split(',')
             filtered_refant = str(',').join([ ant for ant in refant.split(',') if ant in resant_list ])
 #             LOG.debug('Filtering refant for resolved calibrator, refant=%s' % filtered_refant)
 
