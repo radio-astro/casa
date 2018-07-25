@@ -18,6 +18,7 @@ import os
 % endif
 <li><a href="#ampfreqplots">Amp vs. Frequency Plots</a></li>
 <li><a href="#amptimeplots">Amp vs. Time Plots</a></li>
+<li><a href="#eldiffplots">Elevation Difference vs. Time Plots</a></li>
 </ul>
 
 <h2 id="resulttable" class="jumptarget">Results</h2>
@@ -158,4 +159,42 @@ import os
         % endif
     % endfor
 	<div class="clearfix"></div><!--  flush plots, break to next row -->
+% endfor
+
+<h2 id="eldiffplots" class="jumptarget">Elevation Difference vs. Time Plots</h2>
+% for ms in pcontext.observing_run.measurement_sets:
+    <%
+        vis = ms.basename
+        subpage = os.path.join(dirname, elev_diff_subpages[vis])
+    %>
+    <h4><a class="replace" href="${subpage}" data-vis="${vis}">${vis}</h4>
+    % for plot in summary_elev_diff[vis]:
+        % if os.path.exists(plot.thumbnail):
+            <%
+                img_path = os.path.relpath(plot.abspath, pcontext.report_dir)
+                thumbnail_path = os.path.relpath(plot.thumbnail, pcontext.report_dir)
+                field = plot.parameters['field']
+            %>
+            <div class="col-md-3">
+                <div class="thumbnail">
+                    <a href="${img_path}" data-fancybox="thumbs">
+                        <img class="lazyload"
+                             data-src="${thumbnail_path}"
+                             title="Elevation difference for Field ${field}">
+                    </a>
+                    <div class="caption">
+                        <h4>
+                            <a href="${subpage}" class="replace"
+                               data-vis="${vis}" data-field="${field}">
+                               Field ${field}
+                            </a>
+                        </h4>
+                        
+                        <p>Plot of elevation difference vs time for field ${field}.</p>
+                    </div>
+                </div>
+            </div>
+        % endif
+    % endfor
+    <div class="clearfix"></div><!--  flush plots, break to next row -->
 % endfor

@@ -7,6 +7,7 @@ import pipeline.infrastructure.renderer.basetemplates as basetemplates
 import pipeline.infrastructure.utils as utils
 from pipeline.domain.datatable import DataTableImpl as DataTable
 
+from . import skycal as skycal_task
 from . import display as skycal_display
 
 LOG = logging.get_logger(__name__)
@@ -30,8 +31,11 @@ class T2_4MDetailsSingleDishSkyCalRenderer(basetemplates.T2_4MDetailsDefaultRend
         details_amp_vs_freq = collections.defaultdict(list)
         summary_amp_vs_time = collections.defaultdict(list)
         details_amp_vs_time = collections.defaultdict(list)
+        summary_elev_diff = collections.defaultdict(list)
+        details_elev_diff = collections.defaultdict(list)
         amp_vs_freq_subpages = {}
         amp_vs_time_subpages = {}
+        elev_diff_subpages = {}
         reference_coords = collections.defaultdict(dict)
         for result in results:
             if not result.final:
@@ -52,6 +56,8 @@ class T2_4MDetailsSingleDishSkyCalRenderer(basetemplates.T2_4MDetailsDefaultRend
             details_freq = []
             summaries_time = []
             details_time = []
+            summaries_elev = []
+            details_elev = []
             for calapp in final_original:
                 result.final = [calapp]
                 gainfield = calapp.calfrom[0].gainfield
@@ -80,11 +86,23 @@ class T2_4MDetailsSingleDishSkyCalRenderer(basetemplates.T2_4MDetailsDefaultRend
                 if calmode == 'ps':
                     reference_coord = self._get_reference_coord(context, ms, field_domain)
                     reference_coords[vis][field_domain.name] = reference_coord
+                    
+                # Compute elevation difference
+                eldiff = skycal_task.compute_elevation_difference(context, result)
+                                
+                # Elevation difference: summary plots
+                summaries_elev.extend(skycal_display.plot_elevation_difference(context, result, eldiff, perantenna=False))
+                
+                # Elevation difference: detail plots
+                details_elev.extend(skycal_display.plot_elevation_difference(context, result, eldiff, perantenna=True))
+                
             
             summary_amp_vs_freq[vis].extend(summaries_freq)
             details_amp_vs_freq[vis].extend(details_freq)
             summary_amp_vs_time[vis].extend(summaries_time)
             details_amp_vs_time[vis].extend(details_time)
+            summary_elev_diff[vis].extend(summaries_elev)
+            details_elev_diff[vis].extend(details_elev)
 
             result.final = final_original    
             
@@ -114,6 +132,19 @@ class T2_4MDetailsSingleDishSkyCalRenderer(basetemplates.T2_4MDetailsDefaultRend
             fileobj.write(renderer.render())
         for vis in details_amp_vs_time.keys():
             amp_vs_time_subpages[vis] = os.path.basename(renderer.path)
+            
+        # Elevation difference
+        flattened = [plot for inner in details_elev_diff.values() for plot in inner]
+        renderer = basetemplates.JsonPlotRenderer(uri='hsd_generic_x_vs_y_ant_field_spw_plots.mako',
+                                                context=context,
+                                                result=result,
+                                                plots=flattened,
+                                                title='Elevation Difference vs. Time',
+                                                outfile='elevation_difference_vs_time.html')
+        with renderer.get_file() as fileobj:
+            fileobj.write(renderer.render())
+        for vis in details_elev_diff.keys():
+            elev_diff_subpages[vis] = os.path.basename(renderer.path)
            
         LOG.debug('reference_coords=%s'%(reference_coords))    
         
@@ -123,6 +154,8 @@ class T2_4MDetailsSingleDishSkyCalRenderer(basetemplates.T2_4MDetailsDefaultRend
                     'amp_vs_freq_subpages': amp_vs_freq_subpages,
                     'summary_amp_vs_time': summary_amp_vs_time,
                     'amp_vs_time_subpages': amp_vs_time_subpages,
+                    'summary_elev_diff': summary_elev_diff,
+                    'elev_diff_subpages': elev_diff_subpages,
                     'reference_coords': reference_coords})
     
     def get_skycal_applications(self, context, result, ms):

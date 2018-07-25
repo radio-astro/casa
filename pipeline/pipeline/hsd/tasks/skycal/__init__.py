@@ -6,6 +6,7 @@ import pipeline.infrastructure.renderer.weblog as weblog
 from .skycal import SerialSDSkyCal
 from .skycal import HpcSDSkyCal
 from . import skycal
+from . import qa
 from . import renderer
 
 SDSkyCal = HpcSDSkyCal
