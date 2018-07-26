@@ -201,6 +201,7 @@ class FindCont(basetask.StandardTaskTemplate):
                     # used in heuristics methods upstream.
                     if image_heuristics.is_eph_obj(target['field']):
                         phasecenter = 'TRACKFIELD'
+                        parallel = False
                     else:
                         phasecenter = target['phasecenter']
 
