@@ -124,10 +124,9 @@ def _execute_task(casa_task, task_inputs, dry_run):
 def _merge_results(context, results):
     try:
         results.accept(context)
-    except Exception, e:
-        LOG.critical('Warning: Check merge to context for %s'
-                     '' % results.__class__.__name__)
-        raise e    
+    except Exception:
+        LOG.critical('Warning: Check merge to context for {}'.format(results.__class__.__name__))
+        raise
 
 
 def _print_inputs(casa_task, casa_args, task_inputs):
