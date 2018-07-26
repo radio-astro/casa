@@ -70,8 +70,8 @@ def num_lines(relpath):
     <li><a href="#flagging_commands">Flagging commands</a></li>
 %endif
     <li><a href="#flagged_data_summary">Flagged data summary table</a></li>
-    <li><a href="#amp_vs_time">Amplitude vs time plots</a></li>
-    <li><a href="#amp_vs_uvdist">Amplitude vs UV distance plots</a></li>    
+    <li><a href="#amp_vs_time">Amplitude vs time plots for flagging</a></li>
+    <li><a href="#amp_vs_uvdist">Amplitude vs UV distance plots for flagging</a></li>    
 </ul>
 
 
