@@ -30,15 +30,26 @@ class SDSimpleGriddingInputs(vdp.StandardInputs):
     @property
     def reference_member(self):
         return self.group_desc[self.member_list[0]]
-
+    
+    @property
+    def windowmode(self):
+        return getattr(self, '_windowmode', 'replace')
+        
+    @windowmode.setter
+    def windowmode(self, value):
+        if value not in ['replace', 'merge']:
+            raise ValueError("linewindowmode must be either 'replace' or 'merge'.")
+        self._windowmode = value
+    
     def __init__(self, context, group_id, member_list, window, 
-                 nplane=None):
+                 windowmode, nplane=None):
         super(SDSimpleGriddingInputs, self).__init__()
         
         self.context = context
         self.group_id = group_id
         self.member_list = member_list
         self.window = window
+        self.windowmode = windowmode
         self.nplane = nplane
 
 class SDSimpleGriddingResults(common.SingleDishResults):
@@ -60,9 +71,12 @@ class SDSimpleGridding(basetask.StandardTaskTemplate):
         assert datatable_dict is not None
         assert index_list is not None
 
+        window = self.inputs.window
+        windowmode = self.inputs.windowmode
+        LOG.debug('{}: window={}, windowmode={}'.format(self.__class__.__name__, window, windowmode))
         grid_table = self.make_grid_table(datatable_dict, index_list)
         # LOG.debug('work_dir=%s'%(work_dir))
-        if len(self.inputs.window) != 0:
+        if len(window) != 0 and windowmode == 'replace':
             # gridding should not be necessary
             retval = [None, None]
         else:

@@ -36,7 +36,16 @@
     <param type="any" name="linewindow">
         <description>Pre-defined line window</description>
         <any type="variant"/>
-	    <value type="intArray"></value>
+	    <value type="string"></value>
+    </param>
+    
+    <param type="string" name="linewindowmode" subparam="true">
+        <description>Merge or replace given manual line window with line detection/validation result</description>
+        <value>replace</value>
+        <allowed kind="enum">
+            <value>replace</value>
+            <value>merge</value>
+        </allowed>
     </param>
 
     <param type="intArray" name="edge">
@@ -121,6 +130,11 @@
     </param>
 
     <constraints>
+    <when param="linewindow">
+        <notequals type="string" value="">
+            <default param="linewindowmode"><value type="string">replace</value></default>
+        </notequals>
+    </when>
 	<when param="pipelinemode">
 	    <equals type="string" value="automatic">
 	    </equals>
@@ -239,6 +253,17 @@ linewindow -- Pre-defined line window. If this is set, specified line
    default: [] (do line detection and validation)
    example: [100,200] (channel), [115e9, 115.1e9] (frequency in Hz)
             ['115GHz', '115.1GHz'], see above for more examples
+
+linewindowmode -- Merge or replace given manual line window with line 
+   detection/validation result. If 'replace' is given, line detection 
+   and validation will not be performed. On the other hand, when 
+   'merge' is specified, line detection/validation will be performed 
+   and manually specified line windows are added to the result. 
+   Note that this has no effect when linewindow for target spw is 
+   empty. In that case, line detection/validation will be performed 
+   regardless of the value of linewindowmode.
+   default: 'replace'
+   options: 'replace', 'merge'
 
 edge -- number of edge channels to be dropped from baseline subtraction.
    the value must be a list with length of 2, whose values specifies

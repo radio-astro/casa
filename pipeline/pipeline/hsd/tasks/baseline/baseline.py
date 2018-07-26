@@ -34,6 +34,7 @@ class SDBaselineInputs(vdp.StandardInputs):
     pol = vdp.VisDependentProperty(default='')
     field = vdp.VisDependentProperty(default='')
     linewindow = vdp.VisDependentProperty(default=[])
+    linewindowmode = vdp.VisDependentProperty(default='replace')
     edge = vdp.VisDependentProperty(default=(0, 0))
     broadline = vdp.VisDependentProperty(default=True)
     fitorder = vdp.VisDependentProperty(default='automatic')
@@ -50,7 +51,7 @@ class SDBaselineInputs(vdp.StandardInputs):
     parallel = sessionutils.parallel_inputs_impl()
 
     def __init__(self, context, infiles=None, antenna=None, spw=None, pol=None, field=None,
-                 linewindow=None, edge=None, broadline=None, fitorder=None,
+                 linewindow=None, linewindowmode=None, edge=None, broadline=None, fitorder=None,
                  fitfunc=None, clusteringalgorithm=None, deviationmask=None, parallel=None):
         super(SDBaselineInputs, self).__init__()
         
@@ -61,6 +62,7 @@ class SDBaselineInputs(vdp.StandardInputs):
         self.pol = pol
         self.field = field
         self.linewindow = linewindow
+        self.linewindowmode = linewindowmode
         self.edge = edge
         self.broadline = broadline
         self.fitorder = fitorder
@@ -151,6 +153,8 @@ class SDBaseline(basetask.StandardTaskTemplate):
         args = inputs.to_casa_args()
 
         window = inputs.linewindow
+        windowmode = inputs.linewindowmode
+        LOG.info('{}: window={}, windowmode={}'.format(self.__class__.__name__, window, windowmode))
         edge = inputs.edge
         broadline = inputs.broadline
         fitorder = 'automatic' if inputs.fitorder is None or inputs.fitorder < 0 else inputs.fitorder
@@ -258,7 +262,7 @@ class SDBaseline(basetask.StandardTaskTemplate):
             # Spectral Line Detection and Validation
             # MaskLine will update DataTable.MASKLIST column
             maskline_inputs = maskline.MaskLine.Inputs(context, iteration, group_id, member_list, 
-                                                       window, edge, broadline, clusteringalgorithm)
+                                                       window, windowmode, edge, broadline, clusteringalgorithm)
             maskline_task = maskline.MaskLine(maskline_inputs)
             maskline_result = self._executor.execute(maskline_task, merge=False)
             grid_table = maskline_result.outcome['grid_table']

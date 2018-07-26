@@ -28,12 +28,24 @@ class DetectLineInputs(vdp.StandardInputs):
     edge = vdp.VisDependentProperty(default=(0,0))
     broadline = vdp.VisDependentProperty(default=True)
     
-    def __init__(self, context, group_id=None, window=None, edge=None, broadline=None):
+    @property
+    def windowmode(self):
+        return getattr(self, '_windowmode', 'replace')
+        
+    @windowmode.setter
+    def windowmode(self, value):
+        if value not in ['replace', 'merge']:
+            raise ValueError("linewindowmode must be either 'replace' or 'merge'.")
+        self._windowmode = value
+
+    def __init__(self, context, group_id=None, window=None, 
+                 windowmode=None, edge=None, broadline=None):
         super(DetectLineInputs, self).__init__()
         
         self.context = context
         self.group_id = group_id
         self.window = window
+        self.windowmode = windowmode
         self.edge = edge
         self.broadline = broadline
 
@@ -80,13 +92,15 @@ class DetectLine(basetask.StandardTaskTemplate):
         spectra = spectral_data
         masks = (spectra != NoData)
         window = self.inputs.window
+        windowmode = self.inputs.windowmode
         edge = self.inputs.edge
         broadline = self.inputs.broadline
         
         detect_signal = {}
 
         # Pre-Defined Spectrum Window
-        if len(window) != 0:
+        LOG.debug('{}: window={}, windowmode={}'.format(self.__class__.__name__, window, windowmode))
+        if len(window) != 0 and windowmode == 'replace':
             LOG.info('Skip line detection since line window is set.')
             nrow = len(grid_table)
             assert nrow > 0

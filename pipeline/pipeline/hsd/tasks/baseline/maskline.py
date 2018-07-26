@@ -23,6 +23,7 @@ NoData = common.NoData
 
 class MaskLineInputs(vdp.StandardInputs):
     window = vdp.VisDependentProperty(default=[])
+    windowmode = vdp.VisDependentProperty(default='replace')
     edge = vdp.VisDependentProperty(default=(0,0))
     broadline = vdp.VisDependentProperty(default=True)
     clusteringalgorithm = vdp.VisDependentProperty(default='kmean')
@@ -36,7 +37,7 @@ class MaskLineInputs(vdp.StandardInputs):
         return self.group_desc[self.member_list[0]]
 
     def __init__(self, context, iteration, group_id, member_list, #vis_list, field_list, antenna_list, spwid_list,
-                 window=None, edge=None, broadline=None, clusteringalgorithm=None):
+                 window=None, windowmode=None, edge=None, broadline=None, clusteringalgorithm=None):
         super(MaskLineInputs, self).__init__()
         
         self.context = context
@@ -44,6 +45,7 @@ class MaskLineInputs(vdp.StandardInputs):
         self.group_id = group_id
         self.member_list = member_list
         self.window = window
+        self.windowmode = windowmode
         self.edge = edge
         self.broadline = broadline
         self.clusteringalgorithm = clusteringalgorithm
@@ -119,6 +121,8 @@ class MaskLine(basetask.StandardTaskTemplate):
             return result
 
         window = self.inputs.window
+        windowmode = self.inputs.windowmode
+        LOG.debug('{}: window={}, windowmode={}'.format(self.__class__.__name__, window, windowmode))
         edge = self.inputs.edge
         broadline = self.inputs.broadline
         clusteringalgorithm = self.inputs.clusteringalgorithm
@@ -147,7 +151,8 @@ class MaskLine(basetask.StandardTaskTemplate):
  
         # simple gridding
         t0 = time.time()
-        gridding_inputs = simplegrid.SDSimpleGridding.Inputs(context, group_id, member_list, parsed_window)
+        gridding_inputs = simplegrid.SDSimpleGridding.Inputs(context, group_id, member_list, parsed_window,
+                                                             windowmode)
         gridding_task = simplegrid.SDSimpleGridding(gridding_inputs)
         job = common.ParameterContainerJob(gridding_task, datatable_dict=dt_dict, index_list=index_list)
         gridding_result = self._executor.execute(job, merge=False)
@@ -174,7 +179,8 @@ class MaskLine(basetask.StandardTaskTemplate):
  
         # line finding
         t0 = time.time()
-        detection_inputs = detection.DetectLine.Inputs(context, group_id, parsed_window, edge, broadline)
+        detection_inputs = detection.DetectLine.Inputs(context, group_id, parsed_window, windowmode,
+                                                       edge, broadline)
         line_finder = detection.DetectLine(detection_inputs)
         job = common.ParameterContainerJob(line_finder, datatable_dict=dt_dict, grid_table=grid_table, 
                                            spectral_data=spectra)
@@ -190,7 +196,8 @@ class MaskLine(basetask.StandardTaskTemplate):
         validator_cls = validation.ValidationFactory(observing_pattern)
         validation_inputs = validator_cls.Inputs(context, group_id, member_list, 
                                                  iteration, grid_size, 
-                                                 grid_size, parsed_window, edge, 
+                                                 grid_size, parsed_window, windowmode,
+                                                 edge, 
                                                  clusteringalgorithm=clusteringalgorithm)
         line_validator = validator_cls(validation_inputs)
         LOG.trace('len(index_list)={}', len(index_list))

@@ -48,8 +48,18 @@ class ValidateLineInputs(vdp.StandardInputs):
     def reference_member(self):
         return self.group_desc[self.member_list[0]]
 
+    @property
+    def windowmode(self):
+        return getattr(self, '_windowmode', 'replace')
+        
+    @windowmode.setter
+    def windowmode(self, value):
+        if value not in ['replace', 'merge']:
+            raise ValueError("linewindowmode must be either 'replace' or 'merge'.")
+        self._windowmode = value
+    
     def __init__(self, context, group_id, member_list, iteration, grid_ra, grid_dec,
-                 window=None, edge=None, nsigma=None, xorder=None, yorder=None, 
+                 window=None, windowmode=None, edge=None, nsigma=None, xorder=None, yorder=None, 
                  broad_component=None, clusteringalgorithm=None):
         super(ValidateLineInputs, self).__init__()
         
@@ -60,6 +70,7 @@ class ValidateLineInputs(vdp.StandardInputs):
         self.grid_ra = grid_ra
         self.grid_dec = grid_dec
         self.window = window
+        self.windowmode = windowmode
         self.edge = edge
         self.nsigma = nsigma
         self.xorder = xorder
@@ -101,7 +112,7 @@ class ValidateLineSinglePointing(basetask.StandardTaskTemplate):
            [LineCenter, LineWidth, Validity]  OK: Validity = True; NG: Validity = False
         """
         window = self.inputs.window
-        LOG.debug('window={}', window)
+        windowmode = self.inputs.windowmode
         
         assert datatable_dict is not None 
         assert index_list is not None
@@ -111,7 +122,7 @@ class ValidateLineSinglePointing(basetask.StandardTaskTemplate):
         indexer = DataTableIndexer(self.inputs.context)
         
         # for Pre-Defined Spectrum Window
-        if len(window) != 0:
+        if len(window) != 0 and windowmode == 'replace':
             LOG.info('Skip clustering analysis since predefined line window is set.')
             lines = _to_validated_lines(detect_signal)
             signal = detect_signal.values()[0]
@@ -133,6 +144,13 @@ class ValidateLineSinglePointing(basetask.StandardTaskTemplate):
 
         # Dictionary for final output
         lines = []
+        
+        # register manually specified line windows to lines
+        for w in window:
+            center = float(sum(w)) / 2
+            width = max(w) - min(w)
+            lines.append([center, width, True])
+            
 
         LOG.info('Accept all detected lines without clustering analysis.')
 
@@ -225,6 +243,8 @@ class ValidateLineRaster(basetask.StandardTaskTemplate):
            [LineCenter, LineWidth, Validity]  OK: Validity = True; NG: Validity = False
         """
         window = self.inputs.window
+        windowmode = self.inputs.windowmode
+        LOG.debug('{}: window={}, windowmode={}'.format(self.__class__.__name__, window, windowmode))
 
         assert datatable_dict is not None
         assert grid_table is not None
@@ -235,7 +255,7 @@ class ValidateLineRaster(basetask.StandardTaskTemplate):
         indexer = DataTableIndexer(self.inputs.context)
 
         # for Pre-Defined Spectrum Window
-        if len(window) != 0:
+        if len(window) != 0 and windowmode == 'replace':
             LOG.info('Skip clustering analysis since predefined line window is set.')
             lines = _to_validated_lines(detect_signal)
             signal = detect_signal.values()[0]
@@ -252,6 +272,13 @@ class ValidateLineRaster(basetask.StandardTaskTemplate):
                                          outcome=outcome)
                 
             return result
+        
+        manual_window = []
+        # register manually specified line windows to lines
+        for w in window:
+            center = float(sum(w)) / 2
+            width = max(w) - min(w)
+            manual_window.append([center, width, True, 0.0])            
 
         iteration = self.inputs.iteration
         
@@ -315,8 +342,8 @@ class ValidateLineRaster(basetask.StandardTaskTemplate):
         LOG.debug('Npos = {}', Npos)
         # 2010/6/9 for non-detection
         if Npos == 0 or len(Region2) == 0: 
-            outcome = {'lines': [],
-                       'channelmap_range': [],
+            outcome = {'lines': manual_window,
+                       'channelmap_range': manual_window,
                        'cluster_info': {}}
             result = ValidateLineResults(task=self.__class__,
                                          success=True,
@@ -386,8 +413,8 @@ class ValidateLineRaster(basetask.StandardTaskTemplate):
         LOG.info('Clustering Analysis End: Elapsed time = {} sec', (ProcEndTime - ProcStartTime))
         # 2017/8/15 for non-detection after cleaninig
         if Ncluster == 0: 
-            outcome = {'lines': [],
-                       'channelmap_range': [],
+            outcome = {'lines': manual_window,
+                       'channelmap_range': manual_window,
                        'cluster_info': {}}
             result = ValidateLineResults(task=self.__class__,
                                          success=True,
@@ -468,8 +495,11 @@ class ValidateLineRaster(basetask.StandardTaskTemplate):
         for vrow in index_list:
             if vrow in RealSignal:
                 signal = self.__merge_lines(RealSignal[vrow][2], self.nchan)
+                signal.extend(window)
             else:
-                signal = [[-1, -1]]
+                signal = window
+                if len(signal) == 0:
+                    signal = [[-1, -1]]
                 #RealSignal[row] = [PosList[0][tmp_index], PosList[1][tmp_index], signal]
             tmp_index += 1
 
@@ -513,6 +543,9 @@ class ValidateLineRaster(basetask.StandardTaskTemplate):
         del GridCluster, RealSignal
         ProcEndTime = time.time()
         LOG.info('Clustering: Merging End: Elapsed time = {} sec', (ProcEndTime - ProcStartTime))
+        
+        lines.extend(manual_window)
+        channelmap_range.extend(manual_window)
         
         outcome = {'lines': lines,
                    'channelmap_range': channelmap_range,

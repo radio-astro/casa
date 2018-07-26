@@ -290,7 +290,7 @@ class ClusterValidationDisplay(ClusterDisplayWorker):
         
         marks = ['gs', 'bs', 'cs', 'ys']
 
-        num_cluster = len(self.lines)
+        num_cluster = len(self.cluster['cluster_property'])
         num_panel_h = int(math.sqrt(num_cluster - 0.1)) + 1
         num_panel_v = num_panel_h
         ra0 = self.cluster['grid']['ra_min']
