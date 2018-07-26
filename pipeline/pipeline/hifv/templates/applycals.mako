@@ -422,8 +422,7 @@ def space_comma(s):
 	<%def name="preamble()">
 		<p>Calibrated amplitude vs frequency plots for a representative
 		science field in each measurement set. The science field displayed
-		here is the one with the brightest average amplitude over all spectral
-		windows.</p>
+		here is the first field for the source.</p>
 
 		<p>Data are plotted for all antennas and correlations, with different
 		spectral windows shown in different colours.</p>
@@ -470,7 +469,7 @@ def space_comma(s):
 	<%def name="preamble()">
 		<p>Calibrated phase vs frequency plots for a representative science
 		field in each measurement set. The science field displayed here is the
-		one with the brightest average amplitude over all spectral windows.</p>
+		first field for the source.</p>
 
 		<p>Data are plotted for all antennas and correlations, with different
 		spectral windows shown in different colours.</p>
@@ -517,8 +516,7 @@ def space_comma(s):
 	<%def name="preamble()">
 		<p>Calibrated amplitude vs UV distance plots for a representative
 		science field in each measurement set. The science field displayed 
-		here is the one with the brightest average amplitude over all spectral 
-		windows.</p>
+		here is the first field for the source.</p>
 		
 		<p>Data are plotted for all antennas and correlations, with different
 		spectral windows shown in different colours.</p>
