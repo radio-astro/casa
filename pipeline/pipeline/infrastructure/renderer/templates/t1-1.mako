@@ -119,6 +119,8 @@ $(document).ready(function() {
                     <th>CASA Version</th>
                     <td>${casa_version} (<a href="javascript:"
                                             data-fancybox
+                                            data-selectable="true"
+                                            data-options='{"touch" : false}'
                                             data-src="#hidden-environment">environment</a>)</td>
                     <td></td>
                     <td></td>
