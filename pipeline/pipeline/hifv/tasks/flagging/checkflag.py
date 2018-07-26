@@ -15,7 +15,6 @@ LOG = infrastructure.get_logger(__name__)
 # use rflag mode of flagdata
 
 
-
 class CheckflagInputs(vdp.StandardInputs):
     checkflagmode = vdp.VisDependentProperty(default='')
 
@@ -27,17 +26,17 @@ class CheckflagInputs(vdp.StandardInputs):
     
 
 class CheckflagResults(basetask.Results):
-    def __init__(self, jobs=None, summarydict=None):
+    def __init__(self, jobs=None, summary_stats=None):
 
         if jobs is None:
             jobs = []
-        if summarydict is None:
-            summarydict = {}
+        if summary_stats is None:
+            summary_stats = {}
 
         super(CheckflagResults, self).__init__()
 
         self.jobs = jobs
-        self.summarydict = summarydict
+        self.summary_stats = summary_stats
         
     def __repr__(self):
         s = 'Checkflag (rflag mode) results:\n'
@@ -58,7 +57,6 @@ class Checkflag(basetask.StandardTaskTemplate):
         pols = m.polarizations[0]
         timedevscale = 4.0
         freqdevscale = 4.0
-
 
         summaries = []  # QA statistics summaries for before and after targetflag
 
@@ -143,11 +141,11 @@ class Checkflag(basetask.StandardTaskTemplate):
                                    'datacolumn': 'corrected',
                                    'flagbackup': flagbackup}
 
-                    checkflag_result, jobresult = self._do_checkflag(**method_args)
+                    self._do_checkflag(**method_args)
 
                     flagbackup = False
 
-                extendflag_result = self._do_extendflag(field=fieldselect, scan=scanselect)
+                self._do_extendflag(field=fieldselect, scan=scanselect)
 
             datacolumn = 'residual'
             corrlist = ['REAL_RR', 'REAL_LL']
@@ -167,9 +165,9 @@ class Checkflag(basetask.StandardTaskTemplate):
                                'timedevscale': timedevscale,
                                'freqdevscale': freqdevscale}
 
-                checkflag_result, jobresult = self._do_checkflag(**method_args)
+                self._do_checkflag(**method_args)
 
-            extendflag_result = self._do_extendflag(field=fieldselect, scan=scanselect)
+            self._do_extendflag(field=fieldselect, scan=scanselect)
 
             if ('RL' in pols.corr_type_string) and ('LR' in pols.corr_type_string):
                 for correlation in ['ABS_LR', 'ABS_RL']:
@@ -181,9 +179,9 @@ class Checkflag(basetask.StandardTaskTemplate):
                                    'datacolumn': 'corrected',
                                    'flagbackup': False}
 
-                    tfcrop_result = self._do_tfcropflag(**method_args)
+                    self._do_tfcropflag(**method_args)
 
-                extendflag_result = self._do_extendflag(field=fieldselect, scan=scanselect)
+                self._do_extendflag(field=fieldselect, scan=scanselect)
 
             for correlation in ['ABS_LL', 'ABS_RR']:
                 method_args = {'mode': 'tfcrop',
@@ -194,7 +192,7 @@ class Checkflag(basetask.StandardTaskTemplate):
                                'datacolumn': 'corrected',
                                'flagbackup': False}
 
-                tfcrop_result = self._do_tfcropflag(**method_args)
+                self._do_tfcropflag(**method_args)
 
             extendflag_result = self._do_extendflag(field=fieldselect, scan=scanselect)
 
@@ -209,10 +207,14 @@ class Checkflag(basetask.StandardTaskTemplate):
                                    'datacolumn': 'corrected',
                                    'flagbackup': False}
 
-                    tfcrop_result = self._do_tfcropflag(**method_args)
+                    self._do_tfcropflag(**method_args)
 
                 extendflag_result = self._do_extendflag(field=fieldselect, scan=scanselect)
 
+            job = casa_tasks.flagdata(vis=self.inputs.vis, mode='summary')
+            summarydict = self._executor.execute(job)
+            summaries.append(summarydict)
+            extendflag_result.summary_stats = summaries
             return extendflag_result
 
         # Values from pipeline context
@@ -248,7 +250,7 @@ class Checkflag(basetask.StandardTaskTemplate):
         summarydict = self._executor.execute(job)
         summaries.append(summarydict)
 
-        return CheckflagResults([job], summarydict=summaries)
+        return CheckflagResults([job], summary_stats=summaries)
 
     def _do_checkflag(self, mode='rflag', field=None, correlation=None, scan=None, intent='',
                       ntime='scan', datacolumn='corrected', flagbackup=False, timedevscale=4.0,
@@ -278,7 +280,7 @@ class Checkflag(basetask.StandardTaskTemplate):
             
         jobresult = self._executor.execute(job)
                 
-        return CheckflagResults([job]), jobresult
+        return jobresult
 
     def analyse(self, results):
         return results
@@ -311,10 +313,7 @@ class Checkflag(basetask.StandardTaskTemplate):
 
         self._executor.execute(job)
 
-        job = casa_tasks.flagdata(vis=self.inputs.vis, mode='summary')
-        summarydict = self._executor.execute(job)
-
-        return CheckflagResults([job], summarydict=summarydict)
+        return CheckflagResults([job])
 
     def _do_tfcropflag(self, mode='tfcrop', field=None, correlation=None, scan=None, intent='',
                        ntime=0.45, datacolumn='corrected', flagbackup=True,
@@ -343,7 +342,7 @@ class Checkflag(basetask.StandardTaskTemplate):
 
         self._executor.execute(job)
 
-        return CheckflagResults([job])
+        return
 
     def vla_basebands(self, science_windows_only=True):
 
@@ -430,7 +429,7 @@ class Checkflag(basetask.StandardTaskTemplate):
                            'flagbackup': False,
                            'action': 'calculate'}
 
-            checkflagresult, rflagthresholds = self._do_checkflag(**method_args)
+            rflagthresholds = self._do_checkflag(**method_args)
 
             rflagthresholdsnew = self.thresholds(rflagthresholds)
 
@@ -438,10 +437,9 @@ class Checkflag(basetask.StandardTaskTemplate):
             method_args['freqdev'] = rflagthresholdsnew
             method_args['action'] = 'apply'
 
-            checkflag_result, rflagthresholds = self._do_checkflag(**method_args)
+            self._do_checkflag(**method_args)
 
-            extendflag_result = self._do_extendflag(field=fieldselect, scan=scanselect,
-                                                    growtime=100.0, growfreq=100.0)
+            self._do_extendflag(field=fieldselect, scan=scanselect, growtime=100.0, growfreq=100.0)
 
         for correlation in ['ABS_LR', 'ABS_RL', 'ABS_LL', 'ABS_RR']:
             method_args = {'mode': 'tfcrop',
@@ -454,10 +452,9 @@ class Checkflag(basetask.StandardTaskTemplate):
                            'datacolumn': 'corrected',
                            'flagbackup': False}
 
-            tfcrop_result = self._do_tfcropflag(**method_args)
+            self._do_tfcropflag(**method_args)
 
-            extendflag_result = self._do_extendflag(field=fieldselect, scan=scanselect,
-                                                    growtime=100.0, growfreq=100.0)
+            self._do_extendflag(field=fieldselect, scan=scanselect, growtime=100.0, growfreq=100.0)
 
         # Grow flags
         extendflag_result = self._do_extendflag(field=fieldselect, scan=scanselect,
@@ -495,7 +492,7 @@ class Checkflag(basetask.StandardTaskTemplate):
                            'flagbackup': False,
                            'action': 'calculate'}
 
-            checkflagresult, rflagthresholds = self._do_checkflag(**method_args)
+            rflagthresholds = self._do_checkflag(**method_args)
 
             rflagthresholdsnew = self.thresholds(rflagthresholds)
 
@@ -503,10 +500,9 @@ class Checkflag(basetask.StandardTaskTemplate):
             method_args['freqdev'] = rflagthresholdsnew
             method_args['action'] = 'apply'
 
-            checkflagresult, rflagthresholds = self._do_checkflag(**method_args)
+            self._do_checkflag(**method_args)
 
-            extendflag_result = self._do_extendflag(field=fieldselect, scan=scanselect,
-                                                    growtime=100.0, growfreq=100.0)
+            self._do_extendflag(field=fieldselect, scan=scanselect, growtime=100.0, growfreq=100.0)
 
         for correlation in ['ABS_LR', 'ABS_RL', 'ABS_LL', 'ABS_RR']:
             method_args = {'mode': 'tfcrop',
@@ -519,10 +515,9 @@ class Checkflag(basetask.StandardTaskTemplate):
                            'datacolumn': 'corrected',
                            'flagbackup': False}
 
-            tfcrop_result = self._do_tfcropflag(**method_args)
+            self._do_tfcropflag(**method_args)
 
-            extendflag_result = self._do_extendflag(field=fieldselect, scan=scanselect,
-                                                    growtime=100.0, growfreq=100.0)
+            self._do_extendflag(field=fieldselect, scan=scanselect, growtime=100.0, growfreq=100.0)
 
         # Grow flags
         extendflag_result = self._do_extendflag(field=fieldselect, scan=scanselect,
@@ -550,7 +545,7 @@ class Checkflag(basetask.StandardTaskTemplate):
                            'flagbackup': False,
                            'action': 'calculate'}
 
-            checkflagresult, rflagthresholds = self._do_checkflag(**method_args)
+            rflagthresholds = self._do_checkflag(**method_args)
 
             rflagthresholdsnew = self.thresholds(rflagthresholds)
 
@@ -558,10 +553,9 @@ class Checkflag(basetask.StandardTaskTemplate):
             method_args['freqdev'] = rflagthresholdsnew
             method_args['action'] = 'apply'
 
-            checkflagresult, rflagthresholds = self._do_checkflag(**method_args)
+            self._do_checkflag(**method_args)
 
-            extendflag_result = self._do_extendflag(field='', scan='', intent='*TARGET*',
-                                                    growtime=100.0, growfreq=100.0)
+            self._do_extendflag(field='', scan='', intent='*TARGET*', growtime=100.0, growfreq=100.0)
 
         for correlation in ['ABS_LR', 'ABS_RL', 'ABS_LL', 'ABS_RR']:
             method_args = {'mode': 'tfcrop',
@@ -575,10 +569,9 @@ class Checkflag(basetask.StandardTaskTemplate):
                            'datacolumn': 'corrected',
                            'flagbackup': False}
 
-            tfcrop_result = self._do_tfcropflag(**method_args)
+            self._do_tfcropflag(**method_args)
 
-            extendflag_result = self._do_extendflag(field='', scan='', intent='*TARGET*',
-                                                    growtime=100.0, growfreq=100.0)
+            self._do_extendflag(field='', scan='', intent='*TARGET*', growtime=100.0, growfreq=100.0)
 
         # Grow flags
         extendflag_result = self._do_extendflag(field='', scan='', intent='*TARGET*',
@@ -586,5 +579,3 @@ class Checkflag(basetask.StandardTaskTemplate):
                                                 growaround=True, flagneartime=True, flagnearfreq=True)
 
         return extendflag_result
-
-

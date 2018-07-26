@@ -91,9 +91,9 @@ class CheckflagQAHandler(pqa.QAPlugin):
         # 5%-60% of data flagged  --> 1 to 0
         # > 60%  of data flagged  --> 0
 
-        if result.summarydict:
+        if result.summary_stats:
             score1 = qacalc.score_total_data_flagged_vla(os.path.basename(result.inputs['vis']),
-                                                         result.summarydict)
+                                                         result.summary_stats)
             scores = [score1]
         else:
             LOG.error('No flag summary statistics.')
