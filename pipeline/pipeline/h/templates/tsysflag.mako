@@ -191,9 +191,9 @@ def flagcmd_file_data(caltable, flagcmd_file):
 % for ms in flags.keys():
 <h4>Table: ${ms}</h4>
 <table class="table table-bordered table-striped ">
-	<caption>Summary of flagged solutions. Each cell states the amount of data
-		flagged as a fraction of the specified data selection, with the 
-		<em>Flagging Step</em> columns giving this information per flagging
+	<caption>Summary of flagged solutions. Each cell states the amount of
+        solutions flagged as a fraction of the specified data selection, with
+        the <em>Flagging Step</em> columns giving this information per flagging
 		step. Note: for each data selection intent, the flagging statistics
         are calculated for the T<sub>sys</sub> scans (with intent=ATMOSPHERE)
         that cover those fields that also match the data selection intent. A
