@@ -225,7 +225,10 @@ class Solint(basetask.StandardTaskTemplate):
             bpdgain_touse = tablebase + table_suffix[4]
 
         LOG.info("Using short solint = " + str(new_gain_solint1))
-        
+
+        if abs(longsolint - short_solint) <= soltime:
+            LOG.warn('Short solint = long solint +/- integration time of {}s'.format(soltime))
+
         return SolintResults(longsolint=longsolint, gain_solint2=gain_solint2, shortsol2=shortsol2,
                              short_solint=short_solint, new_gain_solint1=new_gain_solint1, vis=self.inputs.vis,
                              bpdgain_touse=bpdgain_touse)
