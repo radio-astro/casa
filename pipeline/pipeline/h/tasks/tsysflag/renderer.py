@@ -232,7 +232,7 @@ class T2_4MDetailsTsysflagRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
     def _flags_by_intent(ms, summaries):
         # create a dictionary of fields per observing intent, eg. 'PHASE':['3C273']
         intent_fields = {}
-        for intent in ('BANDPASS', 'PHASE', 'AMPLITUDE', 'TARGET', 'ATMOSPHERE'):
+        for intent in ('BANDPASS', 'PHASE', 'AMPLITUDE', 'TARGET'):
             # use _name from field as we do want the raw name here as used
             # in the summaries dict (not sometimes enclosed in "..."). Better
             # perhaps to fix the summaries dict.

@@ -3,15 +3,19 @@ rsc_path = ""
 import os
 import pipeline.infrastructure.utils as utils
 
-# method to output flagging percentages neatly
-def percent_flagged(flagsummary):
+# method to output a cell for percentage flagged in flagging summary table
+def get_td_for_percent_flagged(flagsummary, step):
     flagged = flagsummary.flagged
     total = flagsummary.total
 
     if total is 0:
-        return 'N/A'
-    else:
-        return '%0.1f%%' % (100.0 * flagged / total)
+        return '<td>N/A</td>'
+
+    pflagged = (100.0 * flagged / total)
+    if step == 'before' and pflagged > 1.0:
+        return '<td class="warning">{:.1f}%</td>'.format(pflagged)
+
+    return '<td>{:.1f}%</td>'.format(pflagged)
 
 # method to report number of lines in a file.
 def num_lines(report_dir, relpath):
@@ -187,7 +191,7 @@ def flagcmd_file_data(caltable, flagcmd_file):
 % for ms in flags.keys():
 <h4>Table: ${ms}</h4>
 <table class="table table-bordered table-striped ">
-	<caption>Summary of flagged data. Each cell states the amount of data 
+	<caption>Summary of flagged solutions. Each cell states the amount of data
 		flagged as a fraction of the specified data selection, with the 
 		<em>Flagging Step</em> columns giving this information per flagging
 		step. Note: for each data selection intent, the flagging statistics
@@ -211,13 +215,12 @@ def flagcmd_file_data(caltable, flagcmd_file):
 		</tr>
 	</thead>
 	<tbody>
-		% for k in ['TOTAL', 'BANDPASS', 'AMPLITUDE', 'PHASE', 'TARGET','ATMOSPHERE']: 
+		% for k in ['TOTAL', 'BANDPASS', 'AMPLITUDE', 'PHASE', 'TARGET']:
 		<tr>
 			<th>${k}</th>               
 			% for step in ['before'] + components + ['after']:
 			% if flags[ms].get(step) is not None:
-				##<td>${step} ${k} ${flags[ms][step]['Summary'][k]}</td>
-				<td>${percent_flagged(flags[ms][step]['Summary'][k])}</td>
+				${get_td_for_percent_flagged(flags[ms][step]['Summary'][k], step)}
 			% else:
 				<td>N/A</td>
 			% endif

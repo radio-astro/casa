@@ -304,6 +304,10 @@ class Tsysflag(basetask.StandardTaskTemplate):
         result.vis = caltableaccess.CalibrationTableDataFiller._readvis(inputs.caltable)
         result.metric_order = []
 
+        # Assess Tsys caltable to warn in case any scans were fully flagged
+        # prior to evaluation of Tsysflag heuristics.
+        self._warn_about_prior_flags(inputs.caltable)
+
         # If requested, create a normalized Tsys caltable and mark this as the
         # table to use for determining flags.
         if inputs.normalize_tsys:
@@ -849,6 +853,29 @@ class Tsysflag(basetask.StandardTaskTemplate):
         result.summaries = flaggerresult.summaries
 
         return result
+
+    @staticmethod
+    def _warn_about_prior_flags(caltable):
+        """Evaluates Tsys caltable for existence of fully flagged scans and
+        raises a warning if any exist.
+
+        :param caltable: path to Tsys table to read data from.
+        :return:
+        """
+        allflags = []
+
+        # Open table, step through each row, store whether the spectrum for
+        # any polarisation (axis=1) was fully flagged.
+        table = caltableaccess.CalibrationTableDataFiller.getcal(caltable)
+        for row in table.rows:
+            allflags.append(np.any(np.all(row.get('FLAG'), axis=1)))
+
+        # Count fully flagged spectra, raise warning if there were any.
+        nflagged = allflags.count(True)
+        if nflagged > 0:
+            LOG.warning("{}: {} out of {} spectra were fully flagged in all channels (for any polarisation) prior to"
+                        " evaluation of flagging heuristics.".format(os.path.basename(caltable), nflagged,
+                                                                     len(allflags)))
 
 
 class TsysflagDataInputs(vdp.StandardInputs):
