@@ -94,7 +94,8 @@ def savitzky_golay(y, window_size, order, deriv=0, rate=1):
 
 
 class SyspowerResults(basetask.Results):
-    def __init__(self, gaintable=None, spowerdict=None, dat_common=None, clip_sp_template=None):
+    def __init__(self, gaintable=None, spowerdict=None, dat_common=None,
+                 clip_sp_template=None, template_table=None):
 
         if gaintable is None:
             gaintable = ''
@@ -104,6 +105,8 @@ class SyspowerResults(basetask.Results):
             dat_common = np.array([])
         if clip_sp_template is None:
             clip_sp_template = []
+        if template_table is None:
+            template_table = ''
 
         super(SyspowerResults, self).__init__()
 
@@ -112,6 +115,7 @@ class SyspowerResults(basetask.Results):
         self.spowerdict = spowerdict
         self.dat_common = dat_common
         self.clip_sp_template = clip_sp_template
+        self.template_table = template_table
 
     def merge_with_context(self, context):
         """
@@ -153,6 +157,8 @@ class Syspower(basetask.StandardTaskTemplate):
         except Exception as ex:
             rq_table = self.inputs.context.results[4].read()[0].rq_result.final[0].gaintable
             LOG.debug(ex)
+
+        template_table = 'pdiff.tbl'
 
         fields = m.get_fields(intent='AMPLITUDE')
         field = fields[0]
@@ -346,8 +352,30 @@ class Syspower(basetask.StandardTaskTemplate):
             except Exception as ex:
                 LOG.warn('Error writing final RQ table - switched power will not be applied' + str(ex))
 
+        # create new table to plot pdiff template_table
+        if os.path.isdir(template_table):
+            shutil.rmtree(template_table)
+        shutil.copytree(rq_table, template_table)
+
+        with casatools.TableReader(template_table, nomodify=False) as tb:
+            for i, this_ant in enumerate(antenna_ids):
+                for j, this_spw in enumerate(range(len(spws))):
+                    hits = np.where((rq_ant == i) & (rq_spw == j + spw_offset))[0]
+                    bband = 0 if (j < 8) else 1
+                    hits2 = np.where(np.in1d(sorted_time, rq_time[hits]))[0]
+
+                    for pol in [0, 1]:
+                        try:
+                            rq_par[2 * pol, 0, hits] = final_template[i, bband, pol, hits2].data
+                            rq_flag[2 * pol, 0, hits] = final_template[i, bband, pol, hits2].mask
+                        except Exception as ex:
+                            LOG.error('Shape mismatch writing final template table')
+
+            tb.putcol('FPARAM', rq_par)
+            tb.putcol('FLAG', rq_flag)
+
         return SyspowerResults(gaintable=rq_table, spowerdict=spowerdict, dat_common=dat_common,
-                               clip_sp_template=clip_sp_template)
+                               clip_sp_template=clip_sp_template, template_table=template_table)
 
     def analyse(self, results):
         return results

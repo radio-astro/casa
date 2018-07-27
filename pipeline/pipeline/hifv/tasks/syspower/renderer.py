@@ -17,7 +17,6 @@ LOG = logging.get_logger(__name__)
 
 
 class VLASubPlotRenderer(object):
-    # template = 'testdelays_plots.html'
 
     def __init__(self, context, result, plots, json_path, template, filename_prefix):
         self.context = context
@@ -29,8 +28,10 @@ class VLASubPlotRenderer(object):
 
         self.summary_plots = {}
         self.syspowerspgain_subpages = {}
+        self.pdiffspgain_subpages = {}
 
-        self.syspowerspgain_subpages[self.ms] = filenamer.sanitize('spgain' + '-%s.html' % self.ms)
+        self.syspowerspgain_subpages[self.ms] = filenamer.sanitize('spgainrq' + '-%s.html' % self.ms)
+        self.pdiffspgain_subpages[self.ms] = filenamer.sanitize('spgainpdiff' + '-%s.html' % self.ms)
 
         if os.path.exists(json_path):
             with open(json_path, 'r') as json_file:
@@ -44,7 +45,8 @@ class VLASubPlotRenderer(object):
                 'plots': self.plots,
                 'dirname': self.dirname,
                 'json': self.json,
-                'syspowerspgain_subpages': self.syspowerspgain_subpages}
+                'syspowerspgain_subpages': self.syspowerspgain_subpages,
+                'pdiffspgain_subpages': self.pdiffspgain_subpages}
 
     @property
     def dirname(self):
@@ -92,6 +94,7 @@ class T2_4MDetailssyspowerRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
         center_frequencies = {}
         opacities = {}
         swpowspgain_subpages = {}
+        pdiffspgain_subpages = {}
         box_plots = {}
         bar_plots = {}
 
@@ -108,15 +111,28 @@ class T2_4MDetailssyspowerRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
             bar_plots[ms] = plots
 
             # generate switched power plots and JSON file
-            plotter = syspowerdisplay.syspowerPerAntennaChart(context, result, 'spgain')
+            plotter = syspowerdisplay.syspowerPerAntennaChart(context, result, 'spgain',
+                                                              result.gaintable, 'syspower', 'rq')
             plots = plotter.plot()
             json_path = plotter.json_filename
 
             # write the html for each MS to disk
-            renderer = VLASubPlotRenderer(context, result, plots, json_path, 'syspower_plots.mako', 'spgain')
+            renderer = VLASubPlotRenderer(context, result, plots, json_path, 'syspower_plots.mako', 'spgainrq')
             with renderer.get_file() as fileobj:
                 fileobj.write(renderer.render())
                 swpowspgain_subpages[ms] = renderer.filename
+
+            # plot template pdiff table
+            plotter = syspowerdisplay.syspowerPerAntennaChart(context, result, 'spgain',
+                                                              result.template_table, 'syspower', 'pdiff')
+            plots = plotter.plot()
+            json_path = plotter.json_filename
+
+            # write the html for each MS to disk
+            renderer = VLASubPlotRenderer(context, result, plots, json_path, 'syspower_plots.mako', 'spgainpdiff')
+            with renderer.get_file() as fileobj:
+                fileobj.write(renderer.render())
+                pdiffspgain_subpages[ms] = renderer.filename
 
         ctx.update({'opacity_plots': opacity_plots,
                     'spw': spw,
@@ -126,6 +142,7 @@ class T2_4MDetailssyspowerRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                     'box_plots': box_plots,
                     'bar_plots': bar_plots,
                     'syspowerspgain_subpages': swpowspgain_subpages,
+                    'pdiffspgain_subpages': pdiffspgain_subpages,
                     'tec_plotfile': ''})
 
         return ctx

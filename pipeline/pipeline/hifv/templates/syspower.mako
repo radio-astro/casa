@@ -45,7 +45,7 @@ $(document).ready(function() {
 });
 </script>
 
-<p>Syspower</p>
+<p>Syspower task for compression fix.</p>
 
 %if syspowerspgain_subpages:
 
@@ -59,7 +59,8 @@ $(document).ready(function() {
         %for ms in bar_plots.keys():
 
             <h4>Syspower Plots:
-                <a class="replace" href="${os.path.relpath(os.path.join(dirname, syspowerspgain_subpages[ms]), pcontext.report_dir)}">Syspower SPgain plots</a>
+                <a class="replace" href="${os.path.relpath(os.path.join(dirname, syspowerspgain_subpages[ms]), pcontext.report_dir)}">Syspower RQ SPgain plots</a> |
+                <a class="replace" href="${os.path.relpath(os.path.join(dirname, pdiffspgain_subpages[ms]), pcontext.report_dir)}">Syspower Pdiff Template SPgain plots</a>
             </h4>
 
         %endfor

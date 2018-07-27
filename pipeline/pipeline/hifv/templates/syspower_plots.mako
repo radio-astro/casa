@@ -10,8 +10,8 @@ import pipeline.infrastructure.renderer.htmlrenderer as hr
 
 % for ms in syspowerspgain_subpages.keys():
 
-    <h4>Plots:  <a class="replace"
-           href="${os.path.relpath(os.path.join(dirname, syspowerspgain_subpages[ms]), pcontext.report_dir)}">SysPower SPgain plots </a>
+    <h4>Plots:  <a class="replace" href="${os.path.relpath(os.path.join(dirname, syspowerspgain_subpages[ms]), pcontext.report_dir)}">SysPower Rq SPgain plots </a> |
+                <a class="replace" href="${os.path.relpath(os.path.join(dirname, pdiffspgain_subpages[ms]), pcontext.report_dir)}">Syspower Pdiff SPgain plots</a>
     </h4>
 
 

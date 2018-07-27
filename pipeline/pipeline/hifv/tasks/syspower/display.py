@@ -20,7 +20,6 @@ class syspowerBoxChart(object):
         # results[4].read()[0].rq_result[0].final[0].gaintable
 
     def plot(self):
-        # science_spws = self.ms.get_spectral_windows(science_windows_only=True)
         plots = [self.get_plot_wrapper('syspower_box')]
         return [p for p in plots if p is not None]
 
@@ -49,17 +48,15 @@ class syspowerBoxChart(object):
         pb.savefig(figfile)
 
     def get_figfile(self, prefix):
-        return os.path.join(self.context.report_dir,
-                            'stage%s' % self.result.stage_number,
+        return os.path.join(self.context.report_dir, 'stage%s' % self.result.stage_number,
                             'syspower' + prefix + '-%s-box.png' % self.ms.basename)
 
     def get_plot_wrapper(self, prefix):
         figfile = self.get_figfile(prefix)
 
-        wrapper = logger.Plot(figfile, x_axis='freq', y_axis='amp',
-                              parameters={'vis': self.ms.basename,
-                                          'type': prefix,
-                                          'spw': ''})
+        wrapper = logger.Plot(figfile, x_axis='freq', y_axis='amp', parameters={'vis': self.ms.basename,
+                                                                                'type': prefix,
+                                                                                'spw': ''})
 
         if not os.path.exists(figfile):
             LOG.trace('syspower summary plot not found. Creating new plot.')
@@ -82,7 +79,6 @@ class syspowerBarChart(object):
         # results[4].read()[0].rq_result[0].final[0].gaintable
 
     def plot(self):
-        # science_spws = self.ms.get_spectral_windows(science_windows_only=True)
         plots = [self.get_plot_wrapper('syspower_bar')]
         return [p for p in plots if p is not None]
 
@@ -113,17 +109,15 @@ class syspowerBarChart(object):
         pb.savefig(figfile)
 
     def get_figfile(self, prefix):
-        return os.path.join(self.context.report_dir,
-                            'stage%s' % self.result.stage_number,
+        return os.path.join(self.context.report_dir, 'stage%s' % self.result.stage_number,
                             'syspower' + prefix + '-%s-bar.png' % self.ms.basename)
 
     def get_plot_wrapper(self, prefix):
         figfile = self.get_figfile(prefix)
 
-        wrapper = logger.Plot(figfile, x_axis='freq', y_axis='amp',
-                              parameters={'vis': self.ms.basename,
-                                          'type': prefix,
-                                          'spw': ''})
+        wrapper = logger.Plot(figfile, x_axis='freq', y_axis='amp', parameters={'vis': self.ms.basename,
+                                                                                'type': prefix,
+                                                                                'spw': ''})
 
         if not os.path.exists(figfile):
             LOG.trace('syspower summary plot not found. Creating new plot.')
@@ -138,17 +132,18 @@ class syspowerBarChart(object):
 
 
 class syspowerPerAntennaChart(object):
-    def __init__(self, context, result, yaxis):
+    def __init__(self, context, result, yaxis, caltable, fileprefix, tabletype):
         self.context = context
         self.result = result
         self.ms = context.observing_run.get_ms(result.inputs['vis'])
         self.yaxis = yaxis
-        self.caltable = result.gaintable
+        self.caltable = caltable
+        self.fileprefix = fileprefix
+        self.tabletype = tabletype
 
         self.json = {}
-        self.json_filename = os.path.join(context.report_dir,
-                                          'stage%s' % result.stage_number,
-                                          yaxis + 'syspower-%s.json' % self.ms)
+        self.json_filename = os.path.join(context.report_dir, 'stage%s' % result.stage_number,
+                                          yaxis + fileprefix + tabletype + '-%s.json' % self.ms)
 
     def plot(self):
         context = self.context
@@ -157,17 +152,16 @@ class syspowerPerAntennaChart(object):
         numAntenna = len(m.antennas)
         plots = []
 
-        LOG.info("Plotting syspower charts for " + self.yaxis)
+        LOG.info("Plotting syspower " + self.tabletype + " charts for " + self.yaxis)
         nplots = numAntenna
 
         for ii in range(nplots):
 
-            filename = 'syspower_' + self.yaxis + str(ii) + '.png'
+            filename = self.fileprefix + '_' + self.tabletype + '_' + self.yaxis + str(ii) + '.png'
             antPlot = str(ii)
 
             stage = 'stage%s' % result.stage_number
             stage_dir = os.path.join(context.report_dir, stage)
-            # construct the relative filename, eg. 'stageX/testdelay0.png'
 
             figfile = os.path.join(stage_dir, filename)
 
@@ -181,6 +175,9 @@ class syspowerPerAntennaChart(object):
                 freqs = sorted(set([spw.max_frequency.value for spw in spws]))
                 if float(max(freqs)) >= 18000000000.0:
                     plotrange = [0, 0, 0, 200]
+            if self.tabletype == 'pdiff':
+                clip_sp_template = self.result.clip_sp_template
+                plotrange = [-1, -1, clip_sp_template[0], clip_sp_template[1]]
 
             if not os.path.exists(figfile):
                 try:
@@ -196,7 +193,7 @@ class syspowerPerAntennaChart(object):
                     casa.plotms(vis=self.caltable, xaxis='time', yaxis=self.yaxis, field='',
                                 antenna=antPlot, spw='6,14', timerange='',
                                 plotrange=plotrange, coloraxis='spw',
-                                title='Sys Power  rq.tbl   Antenna: {!s}'.format(antName),
+                                title='Sys Power  ' + self.tabletype + '.tbl   Antenna: {!s}'.format(antName),
                                 titlefont=8, xaxisfont=7, yaxisfont=7, showgui=False, plotfile=figfile)
 
                 except Exception as ex:
@@ -209,7 +206,7 @@ class syspowerPerAntennaChart(object):
                                    parameters={'spw': '',
                                                'pol': '',
                                                'ant': antName,
-                                               'type': self.yaxis,
+                                               'type': self.tabletype,
                                                'file': os.path.basename(figfile)})
                 plots.append(plot)
             except Exception as ex:
