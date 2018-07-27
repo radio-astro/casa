@@ -2,14 +2,13 @@ import collections
 import os
 import sys
 from copy import deepcopy
-
 import numpy as np
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.casatools as casatools
 from pipeline.infrastructure import casa_tasks
 from ..tasks.importdata.dbfluxes import ORIGIN_DB
-from ...h.tasks.importdata.fluxes import ORIGIN_XML
+from ...h.tasks.importdata.fluxes import ORIGIN_XML, ORIGIN_ANALYSIS_UTILS
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -24,6 +23,17 @@ ALMA_BANDS = ['ALMA Band 3', 'ALMA Band 4', 'ALMA Band 5', 'ALMA Band 6',
 ALMA_TSYS = [75.0, 86.0, 120.0, 90.0, 150.0, 387.0, 1200.0, 1515.0]
 # Sensitivities in mJy (for 16*12 m antennas, 1 minute, 8 GHz, 2pol)
 ALMA_SENSITIVITIES = [0.20, 0.24, 0.37, 0.27, 0.50, 1.29, 5.32, 8.85]
+
+# origins with smaller numbers are preferred over those with larger numbers
+# this is a dict rather than a list so that a default preference order can be
+# provided for origins not listed here (setjy, etc.)
+# Note the str() - this is so we get the value of the constant, not the name
+# of the constant!
+PREFERRED_ORIGIN_ORDER = {
+    str(ORIGIN_ANALYSIS_UTILS): 1,
+    str(ORIGIN_DB): 2,
+    str(ORIGIN_XML): 3
+}
 
 
 def estimate_gaincalsnr(ms, fieldlist, intent, spwidlist, compute_nantennas,
@@ -204,7 +214,7 @@ def get_fluxinfo(ms, fieldnamelist, intent, spwidlist):
         # Get the spectral window object.
         try:
             spw = ms.get_spectral_window(spwid)
-        except:
+        except KeyError:
             continue
 
         # Loop over field names. There is normally only one.
@@ -222,18 +232,19 @@ def get_fluxinfo(ms, fieldnamelist, intent, spwidlist):
             if len(field.flux_densities) <= 0:
                 continue
 
-            # Find the flux for the spw
-            #   Take the last selection in the list.
-            for flux in field.flux_densities:
-                if flux.spw_id != spw.id or flux.origin not in (ORIGIN_DB, ORIGIN_XML):
-                    continue
-                fluxdict[spw.id] = collections.OrderedDict()
-                (I, Q, U, V) = flux.casa_flux_density
-                fluxdict[spw.id]['field_name'] = fieldname
-                fluxdict[spw.id]['flux'] = I
-                LOG.info( \
-                    '    Setting flux for field %s spw %s to %0.2f Jy' \
-                    % (fieldname, spw.id, I))
+            # Find the flux for the spw, sorted by origin
+            try:
+                flux = min([fd for fd in field.flux_densities if fd.spw_id == spw.id],
+                           key=lambda f: PREFERRED_ORIGIN_ORDER.get(f.origin, 1e9))
+            except ValueError:
+                # no flux for this spectral window
+                continue
+
+            I, _, _, _ = flux.casa_flux_density
+            fluxdict[spw.id] = collections.OrderedDict()
+            fluxdict[spw.id]['field_name'] = fieldname
+            fluxdict[spw.id]['flux'] = I
+            LOG.info('Setting flux for field {} spw {} to {:0.4f} Jy'.format(fieldname, spw.id, I))
 
     return fluxdict
 
