@@ -126,7 +126,7 @@ class SpwPhaseup(gtypegaincal.GTypeGaincal):
                     LOG.warn('    Still unable to match all spws - Forcing combined spw mapping for %s' % (inputs.ms.basename))
                     phaseupspemap = []
                     combinespwmap = combine_spwmap (allspws, scispws, scispws[0].id)
-                    LOG.info('    Using spw map %s for %s' % (sombinespwmap, inputs.ms.basename))
+                    LOG.info('    Using spw map %s for %s' % (combinespwmap, inputs.ms.basename))
                 else:
                     combinespwmap = []
                     LOG.info('    Using spw map %s for %s' % (phaseupspwmap, inputs.ms.basename))
