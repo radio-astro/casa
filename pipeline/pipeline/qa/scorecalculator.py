@@ -8,6 +8,7 @@ import datetime
 import math
 import operator
 import os
+import functools
 
 import numpy as np
 
@@ -147,6 +148,37 @@ def calc_frac_total_flagged(summaries, agents=None, scanids=None):
     return frac_flagged
 
 
+def calc_vla_science_frac_total_flagged(summaries, agents=None, scanids=None):
+    """
+    Calculate total fraction of vla science data that is flagged. If agents are provided,
+    then restrict to statistics for those agents. If scanids are provided,
+    then restrict to statistics for those scans.
+    """
+
+    agent_stats = calc_flags_per_agent(summaries, scanids=scanids)
+
+    # remove the non-sciece vis flagged from the science total
+    if agent_stats:
+        science_total = functools.reduce(operator.sub, [s.flagged for s in agent_stats
+                                                        if s.name in ('before', 'anos', 'intents',
+                                                                      'shadow')], agent_stats[0].total)
+
+    # once we have the new science total, replace it for those agents
+    # and create a new list that only includes 'science' agents
+    science_agents = []
+    for stat in agent_stats:
+        if stat.name not in ('before', 'anos', 'intents', 'shadow'):
+            science_agents.append(AgentStats(name=stat.name,
+                                             flagged=stat.flagged,
+                                             total=science_total))
+
+    # sum the number of flagged rows for the selected agents
+    frac_flagged = functools.reduce(operator.add, [float(s.flagged)/s.total for s in science_agents
+                                                   if not agents or s.name in agents], 0)
+
+    return frac_flagged
+
+
 def calc_frac_newly_flagged(summaries, agents=None, scanids=None):
     """
     Calculate fraction of data that is newly flagged, i.e. exclude pre-existing
@@ -219,6 +251,44 @@ def score_data_flagged_by_agents(ms, summaries, min_frac, max_frac, agents, inte
 
     return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg, vis=ms.basename, origin=origin)
 
+
+def score_vla_science_data_flagged_by_agents(ms, summaries, min_frac, max_frac, agents, intents=None):
+    """
+    Calculate a score for the agentflagger summaries based on the fraction of
+    VLA science data flagged by certain flagging agents. If intents are provided, then
+    restrict scoring to the scans that match one or more of these intents.
+
+    min_frac < flagged < max_frac maps to score of 1-0
+    """
+    # If intents are provided, identify which scans to calculate flagging
+    # fraction for.
+    if intents:
+        scanids = {str(scan.id) for intent in intents for scan in ms.get_scans(scan_intent=intent)}
+        if not scanids:
+            LOG.warning("Cannot restrict QA score to intent(s) {}, since no matching scans were found."
+                        " Score will be based on scans for all intents.".format(utils.commafy(intents, quotes=False)))
+    else:
+        scanids = None
+
+    # Calculate fraction of flagged data.
+    frac_flagged = calc_vla_science_frac_total_flagged(summaries, agents=agents, scanids=scanids)
+
+    # Convert fraction of flagged data into a score.
+    score = linear_score(frac_flagged, min_frac, max_frac, 1.0, 0.0)
+
+    # Set score messages and origin.
+    percent = 100.0 * frac_flagged
+    longmsg = ('%0.2f%% data in %s flagged by %s flagging agents'
+               '' % (percent, ms.basename, utils.commafy(agents, quotes=False)))
+    if intents:
+        longmsg += ' for intent(s): {}'.format(utils.commafy(intents, quotes=False))
+    shortmsg = '%0.2f%% data flagged' % percent
+
+    origin = pqa.QAOrigin(metric_name='score_vla_science_data_flagged_by_agents',
+                          metric_score=frac_flagged,
+                          metric_units='Fraction of data newly flagged')
+
+    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg, vis=ms.basename, origin=origin)
 
 # - exported scoring functions -----------------------------------------------------------------------------------------
 
@@ -576,8 +646,9 @@ def score_vla_agents(ms, summaries):
 
     0 < score < 1 === 60% < frac_flagged < 5%
     """
-    score = score_data_flagged_by_agents(ms, summaries, 0.05, 0.6,
-                                         ['online', 'shadow', 'qa0', 'qa2', 'before', 'template'])
+    score = score_vla_science_data_flagged_by_agents(ms, summaries, 0.05, 0.6,
+                                                     ['online', 'template', 'autocorr', 'edgespw',
+                                                      'clip', 'quack', 'baseband'])
 
     new_origin = pqa.QAOrigin(metric_name='score_vla_agents',
                               metric_score=score.origin.metric_score,
