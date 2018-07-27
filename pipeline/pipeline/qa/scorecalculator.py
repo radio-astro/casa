@@ -2082,8 +2082,9 @@ def score_gfluxscale_k_spw(vis, field, spw_id, k_spw):
     else:
         score = 0.2
 
-    longmsg = ('Flux density for {} ({}) in {} spw {} deviates by {:.0%} from the expected value'
-               ''.format(utils.dequote(field.name), ','.join(field.intents), vis, spw_id, q_spw))
+    longmsg = ('Ratio of <i>S</i><sub>derived</sub>/<i>S</i><sub>catalogue</sub> for {} ({}) spw {} in {} differs by '
+               '{:.0%} from expectations'
+               ''.format(utils.dequote(field.name), ','.join(field.intents), spw_id, vis, q_spw))
     shortmsg = 'Internal spw-spw consistency'
 
     origin = pqa.QAOrigin(metric_name='score_gfluxscale_k_spw',

@@ -287,7 +287,7 @@ def create_flux_comparison_plots(context, output_dir, result):
             y = m.I.to_units(FluxDensityUnits.JANSKY)
             y_unc = m.uncertainty.I.to_units(FluxDensityUnits.JANSKY)
 
-            label = 'Derived Flux (spw {})'.format(spw.id)
+            label = 'Derived flux for spw {}'.format(spw.id)
             ax.errorbar(x, y, xerr=x_unc, yerr=y_unc, fmt='{!s}-o'.format(colour), label=label)
 
             x_min = min(x_min, x - x_unc)
@@ -295,7 +295,7 @@ def create_flux_comparison_plots(context, output_dir, result):
 
         catalogue_fluxes = {
             ORIGIN_XML: 'ASDM',
-            ORIGIN_DB: 'Online Catalogue',
+            ORIGIN_DB: 'online catalogue',
             ORIGIN_ANALYSIS_UTILS: 'analysisUtils'
         }
 
@@ -311,11 +311,12 @@ def create_flux_comparison_plots(context, output_dir, result):
             # sort by frequency
             x, y, spix = zip(*sorted(zip(x, y, spix)))
             colour = colours.next()
-            ax.plot(x, y, marker='o', color=colour, label=label)
+            ax.plot(x, y, marker='o', color=colour, label='Data source: {}'.format(label))
 
             s_xmin = scale_flux(x[0], y[0], x_min, spix[0])
             s_xmax = scale_flux(x[-1], y[-1], x_max, spix[-1])
-            ax.plot([x[0], x_min], [y[0], s_xmin], color=colour, label='Spectral Index', linestyle='dotted')
+            ax.plot([x[0], x_min], [y[0], s_xmin], color=colour, label='Spectral index extrapolation',
+                    linestyle='dotted')
             ax.plot([x[-1], x_max], [y[-1], s_xmax], color=colour, label='_nolegend_', linestyle='dotted')
 
         leg = ax.legend(loc='best', prop={'size': 8})

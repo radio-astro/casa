@@ -171,11 +171,19 @@ def rx_for_plot(plot):
 	</%def>
 
 	<%def name="preamble()">
-    <p>These plots show amplitude vs frequency for the non-amplitude calibrators in each measurement set, comparing the
-        pipeline-derived flux to that reported by the online source catalogues and/or recorded in the ASDM. Flux
-        densities for the online catalogues and ASDM are extrapolated using the spectral index to cover the full
-        plot range.
-	</%def>
+    <p>These plots show amplitude vs frequency for the non-AMPLITUDE calibrators in each measurement set, comparing the
+        pipeline-derived flux density <i>S</i><sub>derived</sub> to the catalogue flux
+        density<i>S</i><sub>catalogue</sub> reported by analysisUtils, online source catalogues, and/or recorded in the
+        ASDM. In these plots, <i>S</i><sub>catalogue</sub> is extrapolated using the spectral index to cover the
+        frequency range of the spectral windows.</p>
+
+    <p>QA metrics are calculated by comparing the flux density ratio
+        <i>K</i><sub>spw</sub>=<i>S</i><sub>derived</sub>/<i>S</i><sub>catalogue</sub> for each spectral window to the
+        ratio for the highest SNR spectral window. This metric evaluates how consistent the relative flux calibration is
+        from spectral window to spectral window for each calibrator; it does not evaluate whether the absolute flux
+        calibration is reasonable as compared to the catalogue measurements. All QA scores based on this metric are
+        included in the Pipeline QA section at the bottom of this page.</p>
+    </%def>
 
 	<%def name="mouseover(plot)">Click to show amplitude vs frequency for ${plot.parameters['vis']} ${utils.dequote(plot.parameters['field'])}</%def>
 
