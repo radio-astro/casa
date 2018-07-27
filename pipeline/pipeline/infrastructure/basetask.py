@@ -12,6 +12,8 @@ import traceback
 import types
 import uuid
 
+from mpi4casa.MPIEnvironment import MPIEnvironment
+
 from . import api
 from . import casatools
 from . import filenamer
@@ -1197,7 +1199,12 @@ class Executor(object):
 
         # if the job was a JobRequest, log it to our command log
         if isinstance(job, jobrequest.JobRequest):
-            self._log_jobrequest(job)    
+            # don't print shutil commands from MPI servers as the interleaved
+            # commands become confusing.
+            is_MPI_server = MPIEnvironment.is_mpi_enabled and not MPIEnvironment.is_mpi_client
+            omit_log = True if is_MPI_server and job.fn.__module__ == 'shutil' else False
+            if not omit_log:
+                self._log_jobrequest(job)
 
         # if requested, merge the result with the context. No type checking
         # here.
