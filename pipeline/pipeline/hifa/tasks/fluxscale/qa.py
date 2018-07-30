@@ -131,9 +131,6 @@ def score_kspw(context, result):
         LOG.error('Error calculating internal spw-spw consistency: no flux densities for phase calibrator ({})'
                   ''.format(utils.dequote(phase_field.name)))
         return []
-    if not all([fm.origin in TRUSTED_SOURCES for fm in phase_field.flux_densities]):
-        LOG.warning('Flux densities for phase calibrator {} are not sourced from the online catalogue'
-                    .format(utils.dequote(phase_field.name)))
 
     # gather spw ID for all measurements in the result
     measurement_spw_ids = {fd.spw_id for measurements in result.measurements.values() for fd in measurements}
