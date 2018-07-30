@@ -40,11 +40,31 @@ class PipelineManifest(object):
         eltree.SubElement(ous, "casaversion", name=casa_version)
 
     @staticmethod
+    def get_casa_version(ous):
+        """
+        Get the CASA version
+        """
+        version = ous.find('casaversion')
+        if version is not None:
+            return version.attrib['name']
+        return None
+
+    @staticmethod
     def add_pipeline_version(ous, pipeline_version):
         """
         Set the pipeline version
         """
         eltree.SubElement(ous, "pipeline_version", name=pipeline_version)
+
+    @staticmethod
+    def get_pipeline_version(ous):
+        """
+        Get the pipeline version
+        """
+        version = ous.find('pipeline_version')
+        if version is not None:
+            return version.attrib['name']
+        return None
 
     @staticmethod
     def add_procedure_name(ous, procedure_name):

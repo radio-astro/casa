@@ -98,8 +98,8 @@ ${'is' if num_mses == 1 else 'are'} summarised below.</p>
 <p>No flux densities were imported.</p>
 % endif
 
-% if repsource_defined:
 <h3>Representative Target Information</h3>
+% if repsource_defined:
 <p>The following representative target sources and spws are defined</p>
 <table class="table table-bordered table-striped table-condensed"
 	   summary="Representative target information">

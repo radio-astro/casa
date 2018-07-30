@@ -21,8 +21,8 @@ class T2_4MDetailsImportDataRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
     def __init__(self, uri='importdata.mako', 
                  description='Register measurement sets with the pipeline', 
                  always_rerender=False):
-        super(T2_4MDetailsImportDataRenderer, self).__init__(uri=uri,
-                description=description, always_rerender=always_rerender)
+        super(T2_4MDetailsImportDataRenderer, self).__init__(
+            uri=uri, description=description, always_rerender=always_rerender)
 
     def update_mako_context(self, mako_context, pipeline_context, result):
         weblog_dir = os.path.join(pipeline_context.report_dir,
@@ -105,6 +105,7 @@ def make_flux_table(context, results):
 
     return utils.merge_td_columns(rows)
 
+
 RepsourceTR = collections.namedtuple('RepsourceTR', 'vis source rfreq rbwidth spwid bwidth')
 
 
@@ -131,19 +132,19 @@ def make_repsource_table(context, results):
             if not ms.representative_target[1] or not ms.representative_target[2]: 
                 continue
 
-            # Is the presentative source in the context or not
+            # Is the representative source in the context or not
             if not context.project_performance_parameters.representative_source:
                 source_name = None
             else:
                 source_name = context.project_performance_parameters.representative_source
 
-            # Is the presentative spw in the context or not
+            # Is the representative spw in the context or not
             if not context.project_performance_parameters.representative_spwid:
                 source_spwid = None
             else:
                 source_spwid = context.project_performance_parameters.representative_spwid
 
-            # Determine the representive source name and spwid for the ms 
+            # Determine the representative source name and spwid for the ms
             repsource_name, repsource_spwid = ms.get_representative_source_spw(source_name=source_name,
                                                                                source_spwid=source_spwid)
 

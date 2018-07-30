@@ -40,15 +40,11 @@ import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.vdp as vdp
 from pipeline.infrastructure import casa_tasks
 from pipeline.infrastructure import task_registry
+from pipeline.infrastructure import utils
 from .. import applycal
 from .. import importdata
-# Note:
-#    manifest.py should probably be moved to the common
-#    subdirectory once the workflow is proofed
-# from pipeline.h.tasks.exportdata import manifest
 from ..common import manifest
 
-# the logger for this module
 LOG = infrastructure.get_logger(__name__)
 
 
@@ -149,23 +145,10 @@ class RestoreDataInputs(vdp.StandardInputs):
         self.asis = asis
         self.ocorr_mode = ocorr_mode
 
-    # # MandatoryPipelineInputs raises an exception if vis has not been
-    # # registered with the context. For an import task, the vis is never
-    # # registered; to avoid the exception, we override the vis getter and
-    # # setter.
-    # @property
-    # def vis(self):
-    #     return self._vis
-    #
-    # @vis.setter
-    # def vis(self, value):
-    #     if type(value) is types.ListType:
-    #         self._my_vislist = value
-    #     self._vis = value
-
 
 class RestoreDataResults(basetask.Results):
-    def __init__(self, importdata_results=None, applycal_results=None):
+    def __init__(self, importdata_results=None, applycal_results=None, flagging_summaries=None,
+                 casa_version_orig=None, pipeline_version_orig=None):
         """
         Initialise the results objects.
         """
@@ -173,6 +156,9 @@ class RestoreDataResults(basetask.Results):
         self.importdata_results = importdata_results
         self.applycal_results = applycal_results
         self.mses = []
+        self.flagging_summaries = flagging_summaries
+        self.casa_version_orig = casa_version_orig
+        self.pipeline_version_orig = pipeline_version_orig
 
     def merge_with_context(self, context):
         if self.importdata_results:
@@ -215,10 +201,6 @@ class RestoreData(basetask.StandardTaskTemplate):
     is_multi_vis_task = True
 
     def prepare(self):
-        """
-        Prepare and execute an export data job appropriate to the
-        task inputs.
-        """
         # Create a local alias for inputs, so we're not saying
         # 'self.inputs' everywhere
         inputs = self.inputs
@@ -279,27 +261,23 @@ class RestoreData(basetask.StandardTaskTemplate):
         # Apply the calibrations.
         apply_results = self._do_applycal()
 
+        # Get a summary of the flagging state.
+        flagging_summaries = self._get_flagging_summaries(session_names, session_vislists)
+
+        # Extract CASA version and pipeline version for previous run from
+        # pipeline manifest.
+        casa_version, pipeline_version = self._extract_casa_pipeline_version(pipemanifest)
+
         # Return the results object, which will be used for the weblog
-        return RestoreDataResults(import_results, apply_results)
+        return RestoreDataResults(import_results, apply_results, flagging_summaries, casa_version, pipeline_version)
 
     def analyse(self, results):
-        """
-        Analyse the results of the export data operation.
-
-        This method does not perform any analysis, so the results object is
-        returned exactly as-is, with no data massaging or results items
-        added.
-
-        :rtype: :class:~`ExportDataResults`
-        """
         return results
 
     def _do_copy_manifest_toraw(self, template):
-
         """
         Get the pipeline manifest
         """
-
         inputs = self.inputs
 
         # Download the pipeline manifest file from the archive or
@@ -311,11 +289,9 @@ class RestoreData(basetask.StandardTaskTemplate):
                                                    os.path.basename(manifestfile)))
 
     def _do_get_manifest(self, template1, template2):
-
         """
         Get the pipeline manifest object
         """
-
         inputs = self.inputs
 
         # Get the list of files in the rawdata directory
@@ -430,8 +406,8 @@ class RestoreData(basetask.StandardTaskTemplate):
                                               versionname=flag_version_name)
                 try:
                     self._executor.execute(task)
-                except Exception, e:
-                    LOG.error("Application of final flags failed for %s" % (ms.basename))
+                except Exception:
+                    LOG.error("Application of final flags failed for %s" % ms.basename)
 
             flagversionlist.append(flagversionpath)
 
@@ -517,7 +493,7 @@ class RestoreData(basetask.StandardTaskTemplate):
                 try:
                     tarfilename = os.path.join(inputs.rawdata_dir,
                                                pipemanifest.get_caltables(ouss)[session])
-                except Exception as e:
+                except Exception:
                     tarfilename = os.path.join(inputs.rawdata_dir,
                                                pipemanifest.get_caltables(ouss)['default'])
             elif ousid == '':
@@ -611,3 +587,44 @@ class RestoreData(basetask.StandardTaskTemplate):
             LOG.info('Visibility list for session %s is %s' % (session_names[i], session_vis_list[i]))
 
         return session_names, session_vis_list
+
+    def _get_flagging_summaries(self, session_names, session_vislists):
+
+        # Initialize summaries dictionary.
+        summaries = {}
+
+        # Extract summaries for each session.
+        for ind, session_name in enumerate(session_names):
+            summaries[session_name] = {}
+
+            # Extract summary for each vis.
+            for vis in session_vislists[ind]:
+                vis_name = os.path.basename(vis)
+                LOG.info("Creating flagging summary for session: {}, vis: {}".format(session_name, vis_name))
+
+                # Get CASA intent corresponding to 'TARGET'.
+                ms = self.inputs.context.observing_run.get_ms(name=vis)
+                casa_intent = utils.to_CASA_intent(ms, 'TARGET')
+
+                # Create and execute flagdata summary job, store result in dictionary.
+                job = casa_tasks.flagdata(vis=vis_name, mode='summary', fieldcnt=True, intent=casa_intent)
+                summarydict = self._executor.execute(job)
+                summaries[session_name][vis_name] = summarydict
+
+        return summaries
+
+    @staticmethod
+    def _extract_casa_pipeline_version(pipemanifest):
+        if pipemanifest is not None:
+            ouss = pipemanifest.get_ous()
+        else:
+            ouss = None
+
+        if ouss is not None:
+            casa_version = pipemanifest.get_casa_version(ouss)
+            pipeline_version = pipemanifest.get_pipeline_version(ouss)
+        else:
+            casa_version = None
+            pipeline_version = None
+
+        return casa_version, pipeline_version
