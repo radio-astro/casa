@@ -58,8 +58,8 @@ class CircfeedpolcalResults(polarization.PolarizationResults):
             context.callibrary.add(calapp.calto, calapp.calfrom)
 
     def __repr__(self):
-        #return 'CircfeedpolcalResults:\n\t{0}'.format(
-        #    '\n\t'.join([ms.name for ms in self.mses]))
+        # return 'CircfeedpolcalResults:\n\t{0}'.format(
+        #     '\n\t'.join([ms.name for ms in self.mses]))
         return 'CircfeedpolcalResults:'
 
 
@@ -150,7 +150,8 @@ class Circfeedpolcal(polarization.Polarization):
                 addcallib = True
             for spws in baseband_spws:
                 LOG.info("Executing gaincal on baseband with spws={!s}".format(spws))
-                self.do_gaincal(tablesToAdd[0][0], field=fluxcalfieldname, spw=spws, combine='scan,spw', addcallib=addcallib)
+                self.do_gaincal(tablesToAdd[0][0], field=fluxcalfieldname, spw=spws,
+                                combine='scan,spw', addcallib=addcallib)
                 tablesToAdd[0][2] = self.do_spwmap()
         else:
             spwsobj = m.get_spectral_windows(science_windows_only=True)
@@ -213,7 +214,8 @@ class Circfeedpolcal(polarization.Polarization):
 
         self.do_polcal(tablesToAdd[1][0], kcrosstable=tablesToAdd[0][0], poltype=poltype, field=polleakagefield,
                        intent='CALIBRATE_POL_LEAKAGE#UNSPECIFIED',
-                       gainfield=[''], kcrossspwmap=tablesToAdd[0][2], solint='inf,{!s}'.format(self.inputs.Dterm_solint),
+                       gainfield=[''], kcrossspwmap=tablesToAdd[0][2],
+                       solint='inf,{!s}'.format(self.inputs.Dterm_solint),
                        minsnr=5.0)
 
         # Clip flagging
@@ -232,11 +234,11 @@ class Circfeedpolcal(polarization.Polarization):
             calapp = callibrary.CalApplication(calto, calfrom)
             self.callist.append(calapp)
 
-        self.caldictionary = {'fluxcalfieldname' : fluxcalfieldname,
-                              'fluxcalfieldid'   : fluxcalfieldid,
-                              'fluxcal'          : fluxcal,
-                              'polanglefield'    : polanglefield,
-                              'polleakagefield'  : polleakagefield}
+        self.caldictionary = {'fluxcalfieldname': fluxcalfieldname,
+                              'fluxcalfieldid': fluxcalfieldid,
+                              'fluxcal': fluxcal,
+                              'polanglefield': polanglefield,
+                              'polleakagefield': polleakagefield}
 
     def _modifyGainTables(self, GainTables):
         '''
@@ -309,21 +311,21 @@ class Circfeedpolcal(polarization.Polarization):
         # gaincal_task = gaincal.GTypeGaincal(task_inputs)
         # result = self._executor.execute(gaincal_task, merge=True)
 
-        casa_task_args = {'vis'         : self.inputs.vis,
-                          'caltable'    : caltable,
-                          'field'       : field,
-                          'intent'      : 'CALIBRATE_FLUX#UNSPECIFIED,CALIBRATE_AMPLI#UNSPECIFIED,CALIBRATE_PHASE#UNSPECIFIED,CALIBRATE_BANDPASS#UNSPECIFIED',
-                          'scan'        : '',
-                          'spw'         : spw,
-                          'solint'      : 'inf',
-                          'gaintype'    : 'KCROSS',
-                          'combine'     : combine,
-                          'refant'      : ','.join(self.RefAntOutput),
-                          'gaintable'   : GainTables,
-                          'interp'      : interp,
-                          'minblperant' : minBL_for_cal,
-                          'parang'      : True,
-                          'append'      : append}
+        casa_task_args = {'vis': self.inputs.vis,
+                          'caltable': caltable,
+                          'field': field,
+                          'intent': 'CALIBRATE_FLUX#UNSPECIFIED,CALIBRATE_AMPLI#UNSPECIFIED,CALIBRATE_PHASE#UNSPECIFIED,CALIBRATE_BANDPASS#UNSPECIFIED',
+                          'scan': '',
+                          'spw': spw,
+                          'solint': 'inf',
+                          'gaintype': 'KCROSS',
+                          'combine': combine,
+                          'refant': ','.join(self.RefAntOutput),
+                          'gaintable': GainTables,
+                          'interp': interp,
+                          'minblperant': minBL_for_cal,
+                          'parang': True,
+                          'append': append}
 
         job = casa_tasks.gaincal(**casa_task_args)
 
@@ -355,7 +357,7 @@ class Circfeedpolcal(polarization.Polarization):
         m = self.inputs.context.observing_run.get_ms(self.inputs.vis)
         minBL_for_cal = m.vla_minbaselineforcal()
 
-        spwmap=[]
+        spwmap = []
         for gaintable in GainTables:
             if gaintable in kcrosstable:
                 spwmap.append(kcrossspwmap)
@@ -365,18 +367,18 @@ class Circfeedpolcal(polarization.Polarization):
         GainTables = self._modifyGainTables(GainTables)
 
         task_args = {'vis': self.inputs.vis,
-                     'caltable'   : caltable,
-                     'field'      : field,
-                     'intent'     : intent,
-                     'refant'     : ','.join(self.RefAntOutput),
-                     'gaintable'  : GainTables,
-                     'poltype'    : poltype,
-                     'gainfield'  : gainfield,
-                     'minsnr'     : minsnr,
+                     'caltable': caltable,
+                     'field': field,
+                     'intent': intent,
+                     'refant': ','.join(self.RefAntOutput),
+                     'gaintable': GainTables,
+                     'poltype': poltype,
+                     'gainfield': gainfield,
+                     'minsnr': minsnr,
                      'minblperant': minBL_for_cal,
-                     'combine'    : 'scan',
-                     'spwmap'     : spwmap,
-                     'solint'     : solint}
+                     'combine': 'scan',
+                     'spwmap': spwmap,
+                     'solint': solint}
 
         task = casa_tasks.polcal(**task_args)
 
@@ -420,73 +422,47 @@ class Circfeedpolcal(polarization.Polarization):
                     fluxcal = standard_source_names[i]
 
 
-
-        """
-        for field in fluxfieldnames:
-            if fluxcal == '' and ('3C286' in field):
-                fluxcal = field
-            elif fluxcal == '' and ('1331+3030' in field):
-                fluxcal = field
-            elif fluxcal == '' and ('3C48' in field):
-                fluxcal = field
-            elif fluxcal == '' and ('J0137+3309' in field):
-                fluxcal = field
-            elif fluxcal != '' and ('3C48' in field or '3C286' in field):
-                LOG.info("Two flux calibrators found, selecting 3C286!")
-                if '"1331+305=3C286"' in fluxfieldnames:
-                    fluxcal='"1331+305=3C286"'
-                if '3C286' in fluxfieldnames:
-                    fluxcal = '3C286'
-                if '1331+3030' in fluxfieldnames:
-                    fluxcal = '1331+3030'
-                if '"0137+331=3C48"' in fluxfieldnames:
-                    fluxcal = '"0137+331=3C48"'
-        """
-
-        # delmodjob = casa_tasks.delmod(vis=self.inputs.vis, field='')
-        # self._executor.execute(delmodjob)
-
         try:
             task_args = {}
             if fluxcal in ('3C286', '1331+3030', '"1331+305=3C286"', 'J1331+3030'):
                 d0 = 33.0 * math.pi / 180.0
-                task_args = {'vis'           : self.inputs.vis,
-                             'field'         : fluxcalfieldname,
-                             'standard'      : 'manual',
-                             'spw'           : '',
-                             'fluxdensity'   : [9.97326,0,0,0],
-                             'spix'          : [-0.582142,-0.154655],
-                             'reffreq'       : '3000.0MHz',
-                             'polindex'      : [0.107943,0.01184,-0.0055,0.0224,-0.0312],
-                             'polangle'      : [d0,0],
-                             'rotmeas'       : 0,
-                             'scalebychan'   : True,
-                             'usescratch'    : True}
+                task_args = {'vis': self.inputs.vis,
+                             'field': fluxcalfieldname,
+                             'standard': 'manual',
+                             'spw': '',
+                             'fluxdensity': [9.97326,0,0,0],
+                             'spix': [-0.582142,-0.154655],
+                             'reffreq': '3000.0MHz',
+                             'polindex': [0.107943,0.01184,-0.0055,0.0224,-0.0312],
+                             'polangle': [d0,0],
+                             'rotmeas': 0,
+                             'scalebychan': True,
+                             'usescratch': True}
 
             elif fluxcal in ('3C48', 'J0137+3309', '0137+3309', '"0137+331=3C48"'):
-                task_args = {'vis'           : self.inputs.vis,
-                             'field'         : fluxcalfieldname,
-                             'spw'           : '',
-                             'selectdata'    : False,
-                             'timerange'     : '',
-                             'scan'          : '',
-                             'intent'        : '',
-                             'observation'   : '',
-                             'scalebychan'   : True,
-                             'standard'      : 'manual',
-                             'model'         : '',
-                             'modimage'      : '',
-                             'listmodels'    : False,
-                             'fluxdensity'   : [6.4861, -0.132, 0.0417, 0],
-                             'spix'          : [-0.934677, -0.125579],
-                             'reffreq'       : '3000.0MHz',
-                             'polindex'      : [0.02143, 0.0392, 0.002349, -0.0230],
-                             'polangle'      : [-1.7233, 1.569, -2.282, 1.49],
-                             'rotmeas'       : 0,  # inside polangle
-                             'fluxdict'      : {},
-                             'useephemdir'   : False,
-                             'interpolation' : 'nearest',
-                             'usescratch'    : True}
+                task_args = {'vis': self.inputs.vis,
+                             'field': fluxcalfieldname,
+                             'spw': '',
+                             'selectdata': False,
+                             'timerange': '',
+                             'scan': '',
+                             'intent': '',
+                             'observation': '',
+                             'scalebychan': True,
+                             'standard': 'manual',
+                             'model': '',
+                             'modimage': '',
+                             'listmodels': False,
+                             'fluxdensity': [6.4861, -0.132, 0.0417, 0],
+                             'spix': [-0.934677, -0.125579],
+                             'reffreq': '3000.0MHz',
+                             'polindex': [0.02143, 0.0392, 0.002349, -0.0230],
+                             'polangle': [-1.7233, 1.569, -2.282, 1.49],
+                             'rotmeas': 0,  # inside polangle
+                             'fluxdict': {},
+                             'useephemdir': False,
+                             'interpolation': 'nearest',
+                             'usescratch': True}
             else:
                 LOG.error("No known flux calibrator found - please check the data.")
 
