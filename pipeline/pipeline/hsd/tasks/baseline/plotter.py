@@ -351,7 +351,7 @@ class BaselineSubtractionPlotManager(object):
         
 
         if line_range is not None:
-            lines_map_avg = get_lines2(prefit_data, self.datatable, rowlist, grid_table, spwid, polids)
+            lines_map_avg = get_lines2(prefit_data, self.datatable, num_ra, rowlist, polids)
         else:
             lines_map_avg = None
         # plot pre-fit averaged spectra
@@ -379,9 +379,69 @@ class BaselineSubtractionPlotManager(object):
         return plot_list
 
 
+def generate_grid_panel_map(ngrid, npanel, num_plane=1):
+    ng = ngrid // npanel
+    mg = ngrid % npanel
+    ng_per_panel = [ng * num_plane for i in range(npanel)]
+    for i in range(mg):
+        ng_per_panel[i] += num_plane
+
+    s = 0
+    e = 0
+    for i in range(npanel):
+        s = e
+        e = s + ng_per_panel[i]
+        yield range(s, e)
+
+def configure_1d_panel(nx, ny, num_plane=1):
+    max_panels = 50
+    num_panels = nx * ny
+
+    nnx = nx
+    nny = ny
+    if num_panels > max_panels:
+        div = lambda x: x // 2 + x % 2
+        LOG.debug('original: {} x {} = {}'.format(nx, ny, num_panels))
+        ndiv = 0
+        nnp = num_panels
+        while nnp > max_panels:
+            nnx = div(nnx)
+            nny = div(nny)
+            nnp = nnx * nny
+            ndiv += 1
+            LOG.trace('div {}: {} x {} = {}'.format(ndiv, nnx, nny, nnp))
+        LOG.debug('processed: {} x {} = {}'.format(nnx, nny, nnp))
+
+    xpanel = list(generate_grid_panel_map(nx, nnx, num_plane))
+    ypanel = list(generate_grid_panel_map(ny, nny, num_plane))
+
+    return xpanel, ypanel
+
+def configure_2d_panel(xpanel, ypanel, ngridx, ngridy, num_plane=3):
+    xypanel = []
+    for ygrid in ypanel:
+        for xgrid in xpanel:
+            p = []
+            for y in ygrid:
+                for x in xgrid:
+                    a = ngridx * num_plane * y + num_plane * x
+                    p.extend(range(a, a + num_plane))
+            xypanel.append(p)
+    return xypanel
+
 #@utils.profiler
 def analyze_plot_table(ms, ms_id, antid, spwid, polids, grid_table):
     # plot table is separated into two parts: meta data part and row list part
+    # plot_table layout: [RA_ID, DEC_ID, RA_DIR, DEC_DIR]
+    # [[0, 0, RA0, DEC0], <- plane 0
+    #  [0, 0, RA0, DEC0], <- plane 1
+    #  [0, 0, RA0, DEC0], <- plane 2
+    #  [1, 0, RA1, DEC0], <- plane 0
+    #   ...
+    #  [M, 0, RAM, DEC0], <- plane 2
+    #  [0, 1, RA0, DEC1], <- plane 0
+    #  ...
+    #  [M, N, RAM, DECN]] <- plane 2
     plot_table = BaselineSubtractionPlotManager.generate_plot_meta_table(spwid, 
                                                                          polids, 
                                                                          grid_table)
@@ -390,13 +450,18 @@ def analyze_plot_table(ms, ms_id, antid, spwid, polids, grid_table):
                                                                          spwid, 
                                                                          polids, 
                                                                          grid_table)
-    num_rows = len(plot_table)  # num_plane * num_ra * num_dec
-    num_dec = plot_table[-1][1] + 1
-    num_ra = plot_table[-1][0] + 1
-    num_plane = num_rows / (num_dec * num_ra)
-    LOG.debug('num_ra={}, num_dec={}, num_plane={}, num_rows={}',
-              num_ra, num_dec, num_plane, num_rows)
-    each_grid = (range(i*num_plane, (i+1)*num_plane) for i in xrange(num_dec * num_ra))
+    num_grid_rows = len(plot_table)  # num_plane * num_grid_ra * num_grid_dec
+    num_grid_dec = plot_table[-1][1] + 1
+    num_grid_ra = plot_table[-1][0] + 1
+    num_plane = num_grid_rows / (num_grid_dec * num_grid_ra)
+    LOG.debug('num_grid_ra={}, num_grid_dec={}, num_plane={}, num_grid_rows={}',
+              num_grid_ra, num_grid_dec, num_plane, num_grid_rows)
+    #each_grid = (range(i*num_plane, (i+1)*num_plane) for i in xrange(num_grid_dec * num_grid_ra))
+    #rowlist = [{} for i in xrange(num_grid_dec * num_grid_ra)]
+    xpanel, ypanel = configure_1d_panel(num_grid_ra, num_grid_dec)
+    num_ra = len(xpanel)
+    num_dec = len(ypanel)
+    each_grid = configure_2d_panel(xpanel, ypanel, num_grid_ra, num_grid_dec, num_plane)
     rowlist = [{} for i in xrange(num_dec * num_ra)]
     for row_index, each_plane in enumerate(each_grid):
         def g():
@@ -411,10 +476,16 @@ def analyze_plot_table(ms, ms_id, antid, spwid, polids, grid_table):
                     LOG.trace('Adding {} to dataids', i)
                     yield i
         dataids = numpy.fromiter(g(), dtype=numpy.int64)
-        raid = plot_table[each_plane[0]][0]
-        decid = plot_table[each_plane[0]][1]
-        ra = plot_table[each_plane[0]][2]
-        dec = plot_table[each_plane[0]][3]
+        #raid = plot_table[each_plane[0]][0]
+        #decid = plot_table[each_plane[0]][1]
+        raid = row_index % num_ra
+        decid = row_index // num_ra
+        ralist = [plot_table[i][2] for i in each_plane]
+        declist = [plot_table[i][3] for i in each_plane]
+        #ra = plot_table[each_plane[0]][2]
+        #dec = plot_table[each_plane[0]][3]
+        ra = numpy.mean(ralist)
+        dec = numpy.mean(declist)
         rowlist[row_index].update(
                 {"RAID": raid, "DECID": decid, "RA": ra, "DEC": dec,
                  "IDS": dataids})
@@ -422,27 +493,33 @@ def analyze_plot_table(ms, ms_id, antid, spwid, polids, grid_table):
                   raid, decid, dataids)
         
     refpix_list = [0, 0]
-    refval_list = plot_table[num_ra * num_plane -1][2:4]
+    refval_list = [rowlist[num_ra - 1]['RA'], rowlist[0]['DEC']]#plot_table[num_ra * num_plane -1][2:4]
+    # each panel contains several grid pixels
+    # note that number of grid pixels per panel may not be identical
+    xgrid_per_panel = len(xpanel[0])
+    ygrid_per_panel = len(ypanel[0])
     if num_ra > 1:
-        increment_ra = plot_table[num_plane][2] - plot_table[0][2]
+        increment_ra = (plot_table[num_plane][2] - plot_table[0][2]) * xgrid_per_panel
     else:
+        # assuming square grid, increment for ra is estimated from the one for dec
         dec = plot_table[0][5]
         dec_corr = numpy.cos(dec * casatools.quanta.constants('pi')['value'] / 180.0)
         if num_dec > 1:
-            increment_ra = plot_table[num_plane * num_ra][3] - plot_table[0][3] / dec_corr
+            increment_ra = (plot_table[num_plane * num_ra][3] - plot_table[0][3] / dec_corr) * xgrid_per_panel
         else:
             reference_data = ms
             beam_size = casatools.quanta.convert(reference_data.beam_sizes[antid][spwid], outunit='deg')['value']
-            increment_ra = beam_size / dec_corr
+            increment_ra = (beam_size / dec_corr) * xgrid_per_panel
     if num_dec > 1:
         LOG.trace('num_dec > 1 ({})', num_dec)
-        increment_dec = plot_table[num_plane * num_ra][3] - plot_table[0][3]
+        increment_dec = (plot_table[num_plane * num_ra][3] - plot_table[0][3]) * ygrid_per_panel
     else:
+        # assuming square grid, increment for dec is estimated from the one for ra
         LOG.trace('num_dec is 1')
         dec = plot_table[0][3]
         dec_corr = numpy.cos(dec * casatools.quanta.constants('pi')['value'] / 180.0)
         LOG.trace('declination correction factor is {}', dec_corr)
-        increment_dec = increment_ra * dec_corr
+        increment_dec = increment_ra * dec_corr * ygrid_per_panel
     increment_list = [-increment_ra, increment_dec]
     LOG.debug('refpix_list={}', refpix_list)
     LOG.debug('refval_list={}', refval_list)
@@ -647,21 +724,21 @@ def get_lines(datatable, num_ra, num_pol, rowlist):
                 lines_map[ipol][ix][iy] = None
     return lines_map
 
-def get_lines2(infile, datatable, rowlist, grid_table, spwid, polids, rowmap=None):
+def get_lines2(infile, datatable, num_ra, rowlist, polids, rowmap=None):
     if rowmap is None:
         rowmap = utils.EchoDictionary()
         
     num_pol = len(polids)
     lines_map = [collections.defaultdict(dict)] * num_pol
-    plot_table = BaselineSubtractionPlotManager.generate_plot_meta_table(spwid, 
-                                                                         polids, 
-                                                                         grid_table)
-    num_rows = len(plot_table)  # num_plane * num_ra * num_dec
-    num_dec = plot_table[-1][1] + 1
-    num_ra = plot_table[-1][0] + 1
-    num_plane = num_rows / (num_dec * num_ra)
-    LOG.debug('num_ra={}, num_dec={}, num_plane={}, num_rows={}',
-              num_ra, num_dec, num_plane, num_rows)
+#     plot_table = BaselineSubtractionPlotManager.generate_plot_meta_table(spwid, 
+#                                                                          polids, 
+#                                                                          grid_table)
+#     num_rows = len(plot_table)  # num_plane * num_ra * num_dec
+#     num_dec = plot_table[-1][1] + 1
+#     num_ra = plot_table[-1][0] + 1
+#     num_plane = num_rows / (num_dec * num_ra)
+#     LOG.debug('num_ra={}, num_dec={}, num_plane={}, num_rows={}',
+#               num_ra, num_dec, num_plane, num_rows)
     with casatools.TableReader(infile) as tb:
         for d in rowlist:
             ix = num_ra - 1 - d['RAID']
