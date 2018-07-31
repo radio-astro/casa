@@ -40,11 +40,10 @@ class SwpowcalResults(basetask.Results):
             context.callibrary.add(calapp.calto, calapp.calfrom)
 
     def __repr__(self):
-
-	# Format the Swpowcal results.
+        # Format the Swpowcal results.
         s = 'SwpowResults:\n'
         for calapplication in self.final:
             s += '\tBest switched power (swpow) priorcals caltable for spw #{spw} in {vis} is {name}\n'.format(
                 spw=calapplication.spw, vis=os.path.basename(calapplication.vis),
                 name=calapplication.gaintable)
-	return s
+        return s
