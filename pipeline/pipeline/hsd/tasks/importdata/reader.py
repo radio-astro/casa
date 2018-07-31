@@ -126,7 +126,61 @@ class MetaDataReader(object):
 #                 state_ids.update(indices['stateid'])
 #         state_ids = numpy.fromiter(state_ids, dtype=numpy.int32)
         state_ids = numpy.concatenate([target_states, reference_states])
-        
+        target_state_ids = numpy.concatenate([target_states])
+
+        # get antenna position list
+        mpositions = [ a.position for a in ms.antennas ]
+
+        # get names of ephemeris sources (excludes 'COMET')
+        me = casatools.measures
+        direction_codes = me.listcodes( me.direction() )
+        ephemeris = direction_codes['extra']
+        ephemeris_nocomet = numpy.delete( ephemeris, numpy.where(ephemeris=='COMET') )
+        # set org_directions
+        with TableSelector(name, 'ANTENNA1 == ANTENNA2 && FEED1 == FEED2 && DATA_DESC_ID IN %s && STATE_ID IN %s'%(list(ddids), list(target_state_ids))) as tb:
+            # generate ephemsrc_name dictionary (field_id:EphemName)
+            ephemsrc_list = [] # list of ephemsrc names (unique appearance)
+            ephemsrc_name = {} # ephemsrc name for each field_id
+
+            field_ids = tb.getcol('FIELD_ID')
+            for field_id in list(set(field_ids)):
+                fields = ms.get_fields( field_id = field_id )
+                source_name = (fields[0].source.name).upper()
+                if source_name in ephemeris_nocomet:
+                    # ephemeris source
+                    ephemsrc_name.update( { field_id:source_name } )
+                    if source_name not in ephemsrc_list:
+                        # found a new ephemeris source
+                        ephemsrc_list.append( source_name )
+                else:
+                    # non-ephemeris source
+                    ephemsrc_name.update( { field_id:'' } )
+                    
+            # find the first onsrc for each ephemeris source and pack org_directions
+            org_directions = {}
+            nrow = tb.nrows()
+            for irow in range(nrow):
+                field_id = tb.getcell( 'FIELD_ID', irow )
+                if field_id not in ephemsrc_name:
+                    raise RuntimeError( "ephemsrc_name for field_id={0} does not exist".format(field_id) )
+                if ephemsrc_name[field_id] != "":
+                    source_name = ephemsrc_name[field_id]
+                    if source_name not in org_directions:
+                        mjd_in_sec = tb.getcell( 'TIME', irow )
+                        antenna_id = tb.getcell( 'ANTENNA1', irow )
+                        time_meas = tb.getcolkeyword( 'TIME', 'MEASINFO' )
+                        time_frame = time_meas['Ref']
+                        me = casatools.measures
+                        qa = casatools.quanta
+                        mepoch = me.epoch(rf=time_frame, v0=qa.quantity(mjd_in_sec, 's'))
+                        antennas = self.ms.get_antenna(antenna_id)
+                        assert len(antennas) == 1
+                        antenna_domain = antennas[0]
+                        mposition = antenna_domain.position
+                        org_direction = get_reference_direction( source_name, mepoch, mposition, outref )
+                        org_directions.update( {source_name:org_direction} );
+
+
         with TableSelector(name, 'ANTENNA1 == ANTENNA2 && FEED1 == FEED2 && DATA_DESC_ID IN %s && STATE_ID IN %s'%(list(ddids), list(state_ids))) as tb:
             nrow = tb.nrows()
             rows = tb.rownumbers()
@@ -169,8 +223,8 @@ class MetaDataReader(object):
         self.datatable.putcol('FIELD_ID', field_ids, startrow=ID)
         Tra = numpy.zeros(nrow, dtype=numpy.float64)
         Tdec = numpy.zeros(nrow, dtype=numpy.float64)
-        Tofs_ra = numpy.zeros(nrow, dtype=numpy.float64)
-        Tofs_dec = numpy.zeros(nrow, dtype=numpy.float64)
+        Tshift_ra = numpy.zeros(nrow, dtype=numpy.float64)
+        Tshift_dec = numpy.zeros(nrow, dtype=numpy.float64)
         Taz = numpy.zeros(nrow, dtype=numpy.float64)
         Tel = numpy.zeros(nrow, dtype=numpy.float64)
         index = numpy.lexsort((Tant, Tmjd))
@@ -181,7 +235,6 @@ class MetaDataReader(object):
             last_mjd = None
             last_antenna = None
             last_result = None
-            org_direction = None
             ref_direction = None
             
             for irow in index:
@@ -196,17 +249,19 @@ class MetaDataReader(object):
                     Tel[irow] = last_result[1]
                     Tra[irow] = last_result[2]
                     Tdec[irow] = last_result[3]
-                    Tofs_ra[irow] = last_result[4]
-                    Tofs_dec[irow] = last_result[5]
+                    Tshift_ra[irow] = last_result[4]
+                    Tshift_dec[irow] = last_result[5]
                     continue
 
                 me = casatools.measures
                 qa = casatools.quanta
                 mepoch = me.epoch(rf=time_frame, v0=qa.quantity(mjd_in_sec, 's'))
-                antennas = self.ms.get_antenna(antenna_id)
-                assert len(antennas) == 1
-                antenna_domain = antennas[0]
-                mposition = antenna_domain.position
+                # now mposition is prepared in mpositions
+                # antennas = self.ms.get_antenna(antenna_id)
+                # assert len(antennas) == 1
+                # antenna_domain = antennas[0]
+                # mposition = antenna_domain.position
+                mposition = mpositions[antenna_id]   
                 pointing_directions = msmd.pointingdirection(row, interpolate=True)
                 pointing_direction = pointing_directions['antenna1']['pointingdirection']  # antenna2 should be the same
                 lon = pointing_direction['m0']
@@ -252,29 +307,34 @@ class MetaDataReader(object):
                     Taz[irow] = get_value_in_deg(az)
                     Tel[irow] = get_value_in_deg(el)
 
-                # Calculate ofs_ra/dec and pack them into Tofs_ra/dec
-                ref_direction = get_reference_direction( pointing_direction, ms, field_ids[irow], mepoch, mposition, outref )
-
-                # set org_direction as the 'first' ref_direction
-                if irow == 0:
-                    org_direction = ref_direction
-
-                # shift pointing_direction 
-                direction2 = me.measure( pointing_direction, outref )
-                ofs_direction = shift_direction( direction2, mepoch, mposition, ref_direction, org_direction )
-                ofs_ra, ofs_dec = direction_convert( ofs_direction, mepoch, mposition, outframe=outref )
-                Tofs_ra[irow]  = get_value_in_deg(ofs_ra)
-                Tofs_dec[irow] = get_value_in_deg(ofs_dec)
+                # Calculate ofs_ra/dec and pack them into Tshift_ra/dec
+                field_id = field_ids[irow]
+                if field_id not in ephemsrc_name:
+                    raise RuntimeError("ephemsrc_name for field_id={0} does not exist".format(field_id) )
+                if ephemsrc_name[field_id] == "": 
+                    Tshift_ra[irow] = Tra[irow]
+                    Tshift_dec[irow] = Tdec[irow]
+                else:
+                    source_name = ephemsrc_name[field_id]
+                    if source_name not in org_directions:
+                        raise RuntimeError( "Ephemeris source {0} does not exist in org_directions".format(source_name) )
+                    org_direction = org_directions[source_name]
+                    ref_direction = get_reference_direction( source_name, mepoch, mposition, outref )
+                    direction2 = me.measure( pointing_direction, outref )
+                    ofs_direction = shift_direction( direction2, mepoch, mposition, ref_direction, org_direction )
+                    ofs_ra, ofs_dec = direction_convert( ofs_direction, mepoch, mposition, outframe=outref )
+                    Tshift_ra[irow]  = get_value_in_deg(ofs_ra)
+                    Tshift_dec[irow] = get_value_in_deg(ofs_dec)
 
                 last_mjd = mjd_in_sec
                 last_antenna = antenna_id
-                last_result = (Taz[irow], Tel[irow], Tra[irow], Tdec[irow], Tofs_ra[irow], Tofs_dec[irow])
+                last_result = (Taz[irow], Tel[irow], Tra[irow], Tdec[irow], Tshift_ra[irow], Tshift_dec[irow])
 
         LOG.info('Done reading direction (convert if necessary).')
         self.datatable.putcol('RA', Tra, startrow=ID)
         self.datatable.putcol('DEC', Tdec, startrow=ID)
-        self.datatable.putcol('OFS_RA', Tofs_ra, startrow=ID)
-        self.datatable.putcol('OFS_DEC', Tofs_dec, startrow=ID)
+        self.datatable.putcol('SHIFT_RA', Tshift_ra, startrow=ID)
+        self.datatable.putcol('SHIFT_DEC', Tshift_dec, startrow=ID)
         self.datatable.putcol('AZ', Taz, startrow=ID)
         self.datatable.putcol('EL', Tel, startrow=ID)
         self.datatable.putcol('NCHAN', NchanArray, startrow=ID)
@@ -378,36 +438,28 @@ def direction_convert(direction, mepoch, mposition, outframe):
     return out_direction['m0'], out_direction['m1']
 
 
-def get_reference_direction( pointing, ms, field_id, mepoch, mposition, outframe):
-    if pointing['type'] != 'direction':
-        raise RuntimeError('invalid type for pointing {0}' % format(pointing['type']) )
-
-    # get source name
+def get_reference_direction( source_name, mepoch, mposition, outframe):
     me = casatools.measures
-    fields = ms.get_fields( field_id=field_id )
-    source_name = fields[0].source.name
-
-    # get names of ephemeris sources (excludes 'COMET')
     direction_codes = me.listcodes( me.direction() )
     ephemeris = direction_codes['extra']
     ephemeris_nocomet = numpy.delete( ephemeris, numpy.where(ephemeris=='COMET') )
-
-    # get reference direction
-    me.doframe(mepoch)
-    me.doframe(mposition)
-    if source_name.upper() in ephemeris_nocomet:
+    if source_name in ephemeris_nocomet:
+        me.doframe(mepoch)
+        me.doframe(mposition)
         obj_azel = me.measure( me.direction(source_name), 'AZELGEO' )
         ref = me.measure( obj_azel, outframe )
     else:
-        ref = me.measure( fields[0].mdirection, outframe )
+        raise RuntimeError( "{0} is not registered in ephemeris_nocomet".format(source_name) )
+
     return ref
 
 
 def shift_direction( direction, mepoch, mposition, reference, origin ):
-    if origin['type'] != reference['type']:
-        raise RuntimeError( "type of reference and origin should be identical" )
-    if direction['type'] != reference['type']:
-        raise RuntimeError( "type of reference and direction should be identical" )
+    # check if 'refer's are all identical for each directions
+    if origin['refer'] != reference['refer']:
+        raise RuntimeError( "'refer' of reference and origin should be identical" )
+    if direction['refer'] != reference['refer']:
+        raise RuntimeError( "'refer' of reference and direction should be identical" )
 
     me = casatools.measures
     me.doframe(mepoch)
@@ -417,4 +469,3 @@ def shift_direction( direction, mepoch, mposition, reference, origin ):
     ofs_direction = me.shift( direction, offset=offset, pa=posang )
 
     return ofs_direction
-
