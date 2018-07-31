@@ -59,6 +59,8 @@ def __coldesc(vtype, option, maxlen, ndim, comment, unit=None):
 #    (valueType,option,maxlen,ndim,comment[,unit])
 #
 # dataManagerGroup and dataManagerType is always 'StandardStMan'.
+#
+# 2018/07/31 HE : added OFS_RA, OFS_DEC for CAS-11674
 def __tabledescro():
     TD_DESC_RO = [
         #    __coldesc('integer', 0, 0, -1, 'Primary key'),
@@ -73,6 +75,8 @@ def __tabledescro():
         __coldesc('double', 0, 0, -1, 'Exposure time', 's'),
         __coldesc('double', 0, 0, -1, 'Right Ascension', 'deg'),
         __coldesc('double', 0, 0, -1, 'Declination', 'deg'),
+        __coldesc('double', 0, 0, -1, 'Offsetted Right Ascension', 'deg'),
+        __coldesc('double', 0, 0, -1, 'Offsetted Declination', 'deg'),
         __coldesc('double', 0, 0, -1, 'Azimuth', 'deg'),
         __coldesc('double', 0, 0, -1, 'Elevation', 'deg'),
         __coldesc('integer', 0, 0, -1, 'Number of channels'),
@@ -86,7 +90,7 @@ def __tabledescro():
     name = [
         'ROW', 'SCAN', 'IF', 'NPOL', 'BEAM', 'DATE',
         'TIME', 'ELAPSED', 'EXPOSURE', 'RA', 'DEC',
-        'AZ', 'EL', 'NCHAN', 'TSYS', 'TARGET', 'ANTENNA',
+        'OFS_RA', 'OFS_DEC', 'AZ', 'EL', 'NCHAN', 'TSYS', 'TARGET', 'ANTENNA',
         'SRCTYPE', 'FIELD_ID'
     ]
     return dict(itertools.izip(name, TD_DESC_RO))

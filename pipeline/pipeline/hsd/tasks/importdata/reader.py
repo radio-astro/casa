@@ -169,6 +169,8 @@ class MetaDataReader(object):
         self.datatable.putcol('FIELD_ID', field_ids, startrow=ID)
         Tra = numpy.zeros(nrow, dtype=numpy.float64)
         Tdec = numpy.zeros(nrow, dtype=numpy.float64)
+        Tofs_ra = numpy.zeros(nrow, dtype=numpy.float64)
+        Tofs_dec = numpy.zeros(nrow, dtype=numpy.float64)
         Taz = numpy.zeros(nrow, dtype=numpy.float64)
         Tel = numpy.zeros(nrow, dtype=numpy.float64)
         index = numpy.lexsort((Tant, Tmjd))
@@ -179,6 +181,9 @@ class MetaDataReader(object):
             last_mjd = None
             last_antenna = None
             last_result = None
+            org_direction = None
+            ref_direction = None
+            
             for irow in index:
                 iprogress += 1
                 if iprogress >= nprogress and iprogress % nprogress == 0:
@@ -191,7 +196,10 @@ class MetaDataReader(object):
                     Tel[irow] = last_result[1]
                     Tra[irow] = last_result[2]
                     Tdec[irow] = last_result[3]
+                    Tofs_ra[irow] = last_result[4]
+                    Tofs_dec[irow] = last_result[5]
                     continue
+
                 me = casatools.measures
                 qa = casatools.quanta
                 mepoch = me.epoch(rf=time_frame, v0=qa.quantity(mjd_in_sec, 's'))
@@ -204,6 +212,7 @@ class MetaDataReader(object):
                 lon = pointing_direction['m0']
                 lat = pointing_direction['m1']
                 ref = pointing_direction['refer']
+                
                 # 2018/04/18 TN
                 # CAS-10874 single dish pipeline should use ICRS instead of J2000
                 if ref in [azelref]:
@@ -242,12 +251,30 @@ class MetaDataReader(object):
                     az, el = direction_convert(pointing_direction, mepoch, mposition, outframe=azelref)
                     Taz[irow] = get_value_in_deg(az)
                     Tel[irow] = get_value_in_deg(el)
+
+                # Calculate ofs_ra/dec and pack them into Tofs_ra/dec
+                ref_direction = get_reference_direction( pointing_direction, ms, field_ids[irow], mepoch, mposition, outref )
+
+                # set org_direction as the 'first' ref_direction
+                if irow == 0:
+                    org_direction = ref_direction
+
+                # shift pointing_direction 
+                direction2 = me.measure( pointing_direction, outref )
+                ofs_direction = shift_direction( direction2, mepoch, mposition, ref_direction, org_direction )
+                ofs_ra, ofs_dec = direction_convert( ofs_direction, mepoch, mposition, outframe=outref )
+                Tofs_ra[irow]  = get_value_in_deg(ofs_ra)
+                Tofs_dec[irow] = get_value_in_deg(ofs_dec)
+
                 last_mjd = mjd_in_sec
                 last_antenna = antenna_id
-                last_result = (Taz[irow], Tel[irow], Tra[irow], Tdec[irow],)
+                last_result = (Taz[irow], Tel[irow], Tra[irow], Tdec[irow], Tofs_ra[irow], Tofs_dec[irow])
+
         LOG.info('Done reading direction (convert if necessary).')
         self.datatable.putcol('RA', Tra, startrow=ID)
         self.datatable.putcol('DEC', Tdec, startrow=ID)
+        self.datatable.putcol('OFS_RA', Tofs_ra, startrow=ID)
+        self.datatable.putcol('OFS_DEC', Tofs_dec, startrow=ID)
         self.datatable.putcol('AZ', Taz, startrow=ID)
         self.datatable.putcol('EL', Tel, startrow=ID)
         self.datatable.putcol('NCHAN', NchanArray, startrow=ID)
@@ -340,11 +367,54 @@ def direction_convert(direction, mepoch, mposition, outframe):
     # if outframe is same as input direction reference, just return 
     # direction as it is
     if outframe == inframe:
-        return direction
-    
+        # return direction
+        return direction['m0'], direction['m1']
+   
     # conversion using measures tool
     me = casatools.measures
     me.doframe(mepoch)
     me.doframe(mposition)
     out_direction = me.measure(direction, outframe)
     return out_direction['m0'], out_direction['m1']
+
+
+def get_reference_direction( pointing, ms, field_id, mepoch, mposition, outframe):
+    if pointing['type'] != 'direction':
+        raise RuntimeError('invalid type for pointing {0}' % format(pointing['type']) )
+
+    # get source name
+    me = casatools.measures
+    fields = ms.get_fields( field_id=field_id )
+    source_name = fields[0].source.name
+
+    # get names of ephemeris sources (excludes 'COMET')
+    direction_codes = me.listcodes( me.direction() )
+    ephemeris = direction_codes['extra']
+    ephemeris_nocomet = numpy.delete( ephemeris, numpy.where(ephemeris=='COMET') )
+
+    # get reference direction
+    me.doframe(mepoch)
+    me.doframe(mposition)
+    if source_name.upper() in ephemeris_nocomet:
+        obj_azel = me.measure( me.direction(source_name), 'AZELGEO' )
+        ref = me.measure( obj_azel, outframe )
+    else:
+        ref = me.measure( fields[0].mdirection, outframe )
+    return ref
+
+
+def shift_direction( direction, mepoch, mposition, reference, origin ):
+    if origin['type'] != reference['type']:
+        raise RuntimeError( "type of reference and origin should be identical" )
+    if direction['type'] != reference['type']:
+        raise RuntimeError( "type of reference and direction should be identical" )
+
+    me = casatools.measures
+    me.doframe(mepoch)
+    me.doframe(mposition)
+    offset = me.separation( reference, origin )
+    posang = me.posangle( reference, origin )
+    ofs_direction = me.shift( direction, offset=offset, pa=posang )
+
+    return ofs_direction
+
