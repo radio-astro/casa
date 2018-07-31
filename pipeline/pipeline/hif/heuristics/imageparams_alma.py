@@ -229,7 +229,7 @@ class ImageParamsHeuristicsALMA(ImageParamsHeuristics):
                     lownoisethreshold = 1.5
                     minbeamfrac = 0.3
                     dogrowprune = True
-                    minpercentchange = -1.0
+                    minpercentchange = 1.0
                     if specmode == 'cube':
                         negativethreshold = 15.0
                         growiterations = 50
@@ -242,7 +242,7 @@ class ImageParamsHeuristicsALMA(ImageParamsHeuristics):
                     lownoisethreshold = 1.5
                     minbeamfrac = 0.3
                     dogrowprune = True
-                    minpercentchange = -1.0
+                    minpercentchange = 1.0
                     if specmode == 'cube':
                         negativethreshold = 7.0
                         growiterations = 50
@@ -257,7 +257,7 @@ class ImageParamsHeuristicsALMA(ImageParamsHeuristics):
                 growiterations = 75
                 negativethreshold = 0.0
                 dogrowprune = True
-                minpercentchange = -1.0
+                minpercentchange = 1.0
         else:
             if min_diameter == 12.0:
                 sidelobethreshold = 2.0
@@ -267,7 +267,7 @@ class ImageParamsHeuristicsALMA(ImageParamsHeuristics):
                 growiterations = 75
                 negativethreshold = 0.0
                 dogrowprune = True
-                minpercentchange = -1.0
+                minpercentchange = 1.0
             elif min_diameter == 7.0:
                 sidelobethreshold = 1.5
                 noisethreshold = 6.0
@@ -276,7 +276,7 @@ class ImageParamsHeuristicsALMA(ImageParamsHeuristics):
                 growiterations = 75
                 negativethreshold = 0.0
                 dogrowprune = True
-                minpercentchange = -1.0
+                minpercentchange = 1.0
 
         return sidelobethreshold, noisethreshold, lownoisethreshold, negativethreshold, minbeamfrac, growiterations, dogrowprune, minpercentchange
 
