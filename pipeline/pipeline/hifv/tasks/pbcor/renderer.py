@@ -46,8 +46,8 @@ class T2_4MDetailsMakepbcorimagesRenderer(basetemplates.T2_4MDetailsDefaultRende
                     info = image.miscinfo()
                     spw = info.get('spw', None)
                     field = ''
-                    #if 'field' in info:
-                    #    field = '%s (%s)' % (info['field'], r.intent)
+                    # if 'field' in info:
+                    #     field = '%s (%s)' % (info['field'], r.intent)
 
                     coordsys = image.coordsys()
                     coord_names = numpy.array(coordsys.names())
@@ -64,7 +64,7 @@ class T2_4MDetailsMakepbcorimagesRenderer(basetemplates.T2_4MDetailsDefaultRende
             ms = os.path.basename(r.inputs['vis'])
             pbcorplots[ms] = plots
 
-        ctx.update({'pbcorplots'     : pbcorplots,
-                    'info_dict' : info_dict,
-                    'dirname'   : weblog_dir,
-                    'plotter'   : plotter})
+        ctx.update({'pbcorplots': pbcorplots,
+                    'info_dict': info_dict,
+                    'dirname': weblog_dir,
+                    'plotter': plotter})

@@ -27,27 +27,24 @@ class testgainsSummaryChart(object):
 
         antplot = '0~2'
         
-        plotmax=100
+        plotmax = 100
 
         # Dummy plot
         casa.plotms(vis=self.result.bpdgain_touse, xaxis='time', yaxis='amp', field='',
-                    antenna=antplot, spw='', timerange='',
-                    plotrange=[0, 0, 0, plotmax], coloraxis='spw',
-                    title='testgains Temp table',
-                    titlefont=8, xaxisfont=7, yaxisfont=7, showgui=False, plotfile=figfile)
+                    antenna=antplot, spw='', timerange='', plotrange=[0, 0, 0, plotmax], coloraxis='spw',
+                    title='testgains Temp table', titlefont=8, xaxisfont=7, yaxisfont=7,
+                    showgui=False, plotfile=figfile)
 
     def get_figfile(self, prefix):
-        return os.path.join(self.context.report_dir,
-                            'stage%s' % self.result.stage_number,
+        return os.path.join(self.context.report_dir, 'stage%s' % self.result.stage_number,
                             'testgains'+prefix+'-%s-summary.png' % self.ms.basename)
 
     def get_plot_wrapper(self, prefix):
         figfile = self.get_figfile(prefix)
 
-        wrapper = logger.Plot(figfile, x_axis='freq', y_axis='amp',
-                              parameters={'vis'      : self.ms.basename,
-                                          'type'     : prefix,
-                                          'spw'      : ''})
+        wrapper = logger.Plot(figfile, x_axis='freq', y_axis='amp', parameters={'vis': self.ms.basename,
+                                                                                'type': prefix,
+                                                                                'spw': ''})
 
         if not os.path.exists(figfile):
             LOG.trace('testgains summary plot not found. Creating new plot.')
@@ -69,9 +66,8 @@ class testgainsPerAntennaChart(object):
         self.yaxis = yaxis
         
         self.json = {}
-        self.json_filename = os.path.join(context.report_dir, 
-                                          'stage%s' % result.stage_number, 
-                                          yaxis+'testgains-%s.json' % self.ms)
+        self.json_filename = os.path.join(context.report_dir, 'stage%s' % result.stage_number,
+                                          yaxis + 'testgains-%s.json' % self.ms)
 
     def plot(self):
         m = self.context.observing_run.measurement_sets[0]
@@ -120,8 +116,7 @@ class testgainsPerAntennaChart(object):
                         antname = ','.join(idents)
 
                     casa.plotms(vis=self.result.bpdgain_touse, xaxis='time', yaxis=self.yaxis, field='',
-                                antenna=antPlot, spw='', timerange='',
-                                plotrange=plotrange, coloraxis='spw',
+                                antenna=antPlot, spw='', timerange='', plotrange=plotrange, coloraxis='spw',
                                 title='G table: {!s}   Antenna: {!s}'.format(self.result.bpdgain_touse, antname),
                                 titlefont=8, xaxisfont=7, yaxisfont=7, showgui=False, plotfile=figfile)
 

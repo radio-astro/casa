@@ -30,13 +30,6 @@ class swpowSummaryChart(object):
         antPlot = '0~2'
 
         plotmax = 100
-
-        # Dummy plot
-        # casa.plotcal(caltable=self.caltable, xaxis='time', yaxis='amp', poln='', field='', antenna=antPlot,
-        #              spw='',
-        #              timerange='', subplot=311, overplot=False, clearpanel='Auto', iteration='antenna',
-        #              plotrange=[0, 0, 0, plotmax], showflags=False, plotsymbol='o', plotcolor='blue', markersize=5.0,
-        #              fontsize=10.0, showgui=False, figfile=figfile)
         casa.plotms(vis=self.caltable, xaxis='time', yaxis='amp', field='',
                     antenna=antPlot, spw='', timerange='',
                     plotrange=[0,0,0,plotmax], coloraxis='spw',
@@ -130,12 +123,7 @@ class swpowPerAntennaChart(object):
                         antName = ','.join(idents)
 
                     LOG.debug("Switched Power Plot, using antenna={!s} and spw={!s}".format(antName,
-                                                                                           self.result.sw_result.spw))
-                    #casa.plotcal(caltable=self.caltable, xaxis='time', yaxis=self.yaxis, poln='', field='',
-                    #             antenna=antPlot, spw=self.result.sw_result.spw, timerange='', subplot=111,
-                    #             overplot=False, clearpanel='Auto',
-                    #             iteration='antenna', plotrange=plotrange, showflags=False, plotsymbol='o',
-                    #             plotcolor='blue', markersize=5.0, fontsize=10.0, showgui=False, figfile=figfile)
+                                                                                            self.result.sw_result.spw))
 
                     casa.plotms(vis=self.caltable, xaxis='time', yaxis=self.yaxis, field='',
                                 antenna=antPlot, spw=self.result.sw_result.spw, timerange='',
@@ -156,7 +144,7 @@ class swpowPerAntennaChart(object):
                                                'type': self.yaxis,
                                                'file': os.path.basename(figfile)})
                 plots.append(plot)
-            except:
+            except Exception as ex:
                 LOG.warn("Unable to add plot to stack")
                 plots.append(None)
 

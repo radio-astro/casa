@@ -13,7 +13,6 @@ LOG = logging.get_logger(__name__)
 
 
 class VLASubPlotRenderer(object):
-    #template = 'testdelays_plots.html'
     
     def __init__(self, context, result, plots, json_path, template, filename_prefix):
         self.context = context
@@ -26,11 +25,9 @@ class VLASubPlotRenderer(object):
         self.summary_plots = {}
         self.testgainsamp_subpages = {}
         self.testgainsphase_subpages = {}
-        
 
         self.testgainsamp_subpages[self.ms] = filenamer.sanitize('amp' + '-%s.html' % self.ms)
         self.testgainsphase_subpages[self.ms] = filenamer.sanitize('phase' + '-%s.html' % self.ms)
-
 
         if os.path.exists(json_path):
             with open(json_path, 'r') as json_file:
@@ -39,13 +36,13 @@ class VLASubPlotRenderer(object):
             self.json = '{}'
             
     def _get_display_context(self):
-        return {'pcontext'   : self.context,
-                'result'     : self.result,
-                'plots'      : self.plots,
-                'dirname'    : self.dirname,
-                'json'       : self.json,
-                'testgainsamp_subpages' : self.testgainsamp_subpages,
-                'testgainsphase_subpages'   : self.testgainsphase_subpages}
+        return {'pcontext': self.context,
+                'result': self.result,
+                'plots': self.plots,
+                'dirname': self.dirname,
+                'json': self.json,
+                'testgainsamp_subpages': self.testgainsamp_subpages,
+                'testgainsphase_subpages': self.testgainsphase_subpages}
 
     @property
     def dirname(self):
@@ -74,22 +71,17 @@ class VLASubPlotRenderer(object):
         return t.render(**display_context)
 
 
-
-
-
-
 class T2_4MDetailsSolintRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
-    def __init__(self,uri='solint.mako', description='Determine solint and Test gain calibrations', 
+    def __init__(self, uri='solint.mako', description='Determine solint and Test gain calibrations',
                  always_rerender=False):
         super(T2_4MDetailsSolintRenderer, self).__init__(uri=uri,
-                description=description, always_rerender=always_rerender)
+                                                         description=description, always_rerender=always_rerender)
     
     def get_display_context(self, context, results):
         super_cls = super(T2_4MDetailsSolintRenderer, self)
         ctx = super_cls.get_display_context(context, results)
         
-        weblog_dir = os.path.join(context.report_dir,
-                                  'stage%s' % results.stage_number)
+        weblog_dir = os.path.join(context.report_dir, 'stage%s' % results.stage_number)
         
         summary_plots = {}
         testgainsamp_subpages = {}
@@ -101,8 +93,7 @@ class T2_4MDetailsSolintRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
         shortsol2 = {}
         short_solint = {}
         new_gain_solint1 = {}
-        
-        
+
         for result in results:
             
             plotter = testgainsdisplay.testgainsSummaryChart(context, result)
@@ -116,7 +107,7 @@ class T2_4MDetailsSolintRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
             plots = plotter.plot() 
             json_path = plotter.json_filename
             
-             # write the html for each MS to disk
+            # write the html for each MS to disk
             renderer = VLASubPlotRenderer(context, result, plots, json_path, 'testgains_plots.mako', 'amp')
             with renderer.get_file() as fileobj:
                 fileobj.write(renderer.render())
@@ -127,32 +118,31 @@ class T2_4MDetailsSolintRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
             plots = plotter.plot() 
             json_path = plotter.json_filename
             
-             # write the html for each MS to disk
+            # write the html for each MS to disk
             renderer = VLASubPlotRenderer(context, result, plots, json_path, 'testgains_plots.mako', 'phase')
             with renderer.get_file() as fileobj:
                 fileobj.write(renderer.render())
                 testgainsphase_subpages[ms] = renderer.filename
            
-            #String type
+            # String type
             new_gain_solint1[ms] = result.new_gain_solint1
-            longsolint[ms]       = result.longsolint
-            
+            longsolint[ms] = result.longsolint
 
-        ctx.update({'summary_plots'   : summary_plots,
-                    'testgainsamp_subpages' : testgainsamp_subpages,
-                    'testgainsphase_subpages'   : testgainsphase_subpages,
-                    'new_gain_solint1'           : new_gain_solint1,
-                    'longsolint'                : longsolint,
-                    'dirname'         : weblog_dir})
+        ctx.update({'summary_plots': summary_plots,
+                    'testgainsamp_subpages': testgainsamp_subpages,
+                    'testgainsphase_subpages': testgainsphase_subpages,
+                    'new_gain_solint1': new_gain_solint1,
+                    'longsolint': longsolint,
+                    'dirname': weblog_dir})
                 
         return ctx
         
 
 class T2_4MDetailsfluxbootRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
-    def __init__(self,uri='fluxboot.mako', description='Gain table for flux density bootstrapping',
+    def __init__(self, uri='fluxboot.mako', description='Gain table for flux density bootstrapping',
                  always_rerender=False):
         super(T2_4MDetailsfluxbootRenderer, self).__init__(uri=uri,
-                description=description, always_rerender=always_rerender)
+                                                           description=description, always_rerender=always_rerender)
     
     def get_display_context(self, context, results):
         super_cls = super(T2_4MDetailsfluxbootRenderer, self)
@@ -180,16 +170,17 @@ class T2_4MDetailsfluxbootRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
             weblog_results[ms] = result.weblog_results
             spindex_results[ms] = result.spindex_results
 
-            #Sort into dictionary collections to prep for weblog table
+            # Sort into dictionary collections to prep for weblog table
             webdicts[ms] = collections.defaultdict(list)
             for row in sorted(weblog_results[ms], key=lambda p: (p['source'], float(p['freq']))):
-                webdicts[ms][row['source']].append({'freq':row['freq'],'data':row['data'],'error':row['error'],'fitteddata':row['fitteddata']})
+                webdicts[ms][row['source']].append({'freq': row['freq'], 'data': row['data'], 'error': row['error'],
+                                                    'fitteddata': row['fitteddata']})
 
-            weblog_results[ms]=webdicts[ms]
+            weblog_results[ms] = webdicts[ms]
 
-        ctx.update({'summary_plots'   : summary_plots,
-                    'weblog_results'  : weblog_results,
-                    'spindex_results' : spindex_results,
-                    'dirname'         : weblog_dir})
+        ctx.update({'summary_plots': summary_plots,
+                    'weblog_results': weblog_results,
+                    'spindex_results': spindex_results,
+                    'dirname': weblog_dir})
                 
         return ctx

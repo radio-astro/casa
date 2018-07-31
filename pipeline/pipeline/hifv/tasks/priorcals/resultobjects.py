@@ -33,62 +33,60 @@ class PriorcalsResults(basetask.Results):
         self.antpos_result = antpos_result
         self.antcorrect = antcorrect
         self.tecmaps_result = tecmaps_result
-        #print self.antcorrect
+        # print self.antcorrect
         
     def merge_with_context(self, context):
         if self.gc_result:
             try:
                 self.gc_result.merge_with_context(context)
                 LOG.info("Priorcals:  Merged gain curves cal")
-            except:
+            except Exception as ex:
                 LOG.warn("No gain curves table written.")
 
         if self.oc_result:
             try:
                 self.oc_result.merge_with_context(context)
                 LOG.info("Priorcals:  Merged Opac cal")
-            except:
+            except Exception as ex:
                 LOG.warn("No opacities table written.")
 
         if self.rq_result:
             try:
                 self.rq_result.merge_with_context(context)
                 LOG.info("Priorcals:  Requantizer gains")
-            except:
+            except Exception as ex:
                 LOG.warn("No rq gains table written.")
 
         if self.antpos_result:
             try:
                 self.antpos_result.merge_with_context(context)
                 LOG.info("Priorcals: Antenna positions corrections.")
-            except:
+            except Exception as ex:
                 LOG.warn('No antenna position corrections.')
 
         if self.tecmaps_result:
             try:
                 self.tecmaps_result.merge_with_context(context)
                 LOG.info("Priorcals: TEC Maps.")
-            except:
+            except Exception as ex:
                 LOG.warn('No TEC Maps table written.')
 
         if self.sw_result:
             try:
-                #self.sw_result.merge_with_context(context)
+                # self.sw_result.merge_with_context(context)
                 LOG.info("Priorcals: Switched Power caltable written to disk but not merged with context callibrary")
-            except:
+            except Exception as ex:
                 LOG.warn('No Switched Power table written.')
-                
-        
-                
-        return        
-        #if not self.final:
-        #    LOG.error('No results to merge')
-        #    return
 
-        #for calapp in self.final:
-        #    LOG.debug('Adding calibration to callibrary:\n'
-        #              '%s\n%s' % (calapp.calto, calapp.calfrom))
-        #    context.callibrary.add(calapp.calto, calapp.calfrom)
+        return        
+        # if not self.final:
+        #     LOG.error('No results to merge')
+        #     return
+
+        # for calapp in self.final:
+        #     LOG.debug('Adding calibration to callibrary:\n'
+        #               '%s\n%s' % (calapp.calto, calapp.calfrom))
+        #     context.callibrary.add(calapp.calto, calapp.calfrom)
 
     def __repr__(self):
 

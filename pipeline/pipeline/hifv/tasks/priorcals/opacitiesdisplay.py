@@ -21,10 +21,9 @@ class opacitiesSummaryChart(object):
         # create phase time plot for all calibrators
         figfile = self.get_figfile()
                             
-        plot = logger.Plot(figfile, x_axis='freq', y_axis='opacity',
-                          parameters={'vis'      : self.ms.basename,
-                                      'type'     : 'opacities',
-                                      'spw'      : ''})
+        plot = logger.Plot(figfile, x_axis='freq', y_axis='opacity', parameters={'vis': self.ms.basename,
+                                                                                 'type': 'opacities',
+                                                                                 'spw': ''})
 
         if not os.path.exists(figfile):
             LOG.trace('Plotting opacities vs. frequency. Copying plot.')
