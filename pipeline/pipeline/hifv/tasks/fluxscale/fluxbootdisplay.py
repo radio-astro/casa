@@ -43,13 +43,10 @@ class fluxbootSummaryChart(object):
     def get_plot_wrapper(self):
         figfile = self.get_figfile()
        
-        wrapper = logger.Plot(figfile,
-                              x_axis='freq',
-                              y_axis='amp',
-                              parameters={'vis'          : self.ms.basename,
-                                          'type'         : 'fluxboot',
-                                          'spw'          : '',
-                                          'figurecaption':'Model calibrator'})
+        wrapper = logger.Plot(figfile, x_axis='freq', y_axis='amp', parameters={'vis': self.ms.basename,
+                                                                                'type': 'fluxboot',
+                                                                                'spw': '',
+                                                                                'figurecaption':'Model calibrator'})
 
         if not os.path.exists(figfile):
             LOG.trace('Plotting model calibrator flux densities. Creating new plot.')
@@ -92,12 +89,10 @@ class fluxgaincalSummaryChart(object):
     def get_plot_wrapper(self):
         figfile = self.get_figfile()
 
-        wrapper = logger.Plot(figfile,
-                              x_axis='freq',
-                              y_axis='amp',
-                              parameters={'vis'          : self.ms.basename,
-                                          'type'         : 'fluxgaincal',
-                                          'spw'          : '',
+        wrapper = logger.Plot(figfile, x_axis='freq', y_axis='amp',
+                              parameters={'vis': self.ms.basename,
+                                          'type': 'fluxgaincal',
+                                          'spw': '',
                                           'figurecaption': 'Caltable: {!s}'.format(self.caltable)})
 
         if not os.path.exists(figfile):
