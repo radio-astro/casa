@@ -162,7 +162,7 @@ for baseline subtraction.</p>
 	        <div class="col-md-3">
 	            <div class="thumbnail">
 	                <a href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
-	                   data-fancybox=="thumbs">
+	                   data-fancybox="thumbs">
 	                    <img class="lazyload"
                              data-src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
 	                         title="Sparse Profile Map for Spectral Window ${plot.parameters['spw']} after Baseline Subtraction">
