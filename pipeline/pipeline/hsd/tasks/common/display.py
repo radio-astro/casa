@@ -858,7 +858,11 @@ class SDSparseMapPlotter(object):
 def ch_to_freq(ch, frequency):
     ich = int(ch)
     offset_min = ch - float(ich)
-    if offset_min == 0 or ich == len(frequency) -1:
+    if ich < 0:
+        freq = frequency[0]
+    elif ich >= len(frequency):
+        freq = frequency[-1]
+    elif offset_min == 0 or ich == len(frequency) -1:
         freq = frequency[ich]
     else:
         jch = ich + 1
