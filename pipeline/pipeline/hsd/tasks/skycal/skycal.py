@@ -241,7 +241,7 @@ def compute_elevation_difference(context, results):
     Compute elevation difference 
     
     Returns:
-        dictionary[antenna_id][field_id]
+        dictionary[field_id][antenna_id][spw_id]
         
         Value of the dictionary should be ElevationDifference and the value should 
         contain the result from one MS (given that SDSkyCal is per-MS task)
@@ -269,15 +269,15 @@ def compute_elevation_difference(context, results):
         
         # representative spw
         science_spw = ms.get_spectral_windows(science_windows_only=True)
-        # choose representative spw based on representative frequency if it is available
-        if hasattr(ms, 'representative_target') and ms.representative_target[1] is not None:
-            qa = casatools.quanta
-            rep_freq = ms.representative_target[1]
-            centre_freqs = [qa.quantity(spw.centre_frequency.str_to_precision(16)) for spw in science_spw]
-            freq_diffs = [abs(qa.sub(cf, rep_freq).convert('Hz')['value']) for cf in centre_freqs]
-            spw_id = science_spw[numpy.argmin(freq_diffs)].id
-        else:
-            spw_id = science_spw[0].id
+#         # choose representative spw based on representative frequency if it is available
+#         if hasattr(ms, 'representative_target') and ms.representative_target[1] is not None:
+#             qa = casatools.quanta
+#             rep_freq = ms.representative_target[1]
+#             centre_freqs = [qa.quantity(spw.centre_frequency.str_to_precision(16)) for spw in science_spw]
+#             freq_diffs = [abs(qa.sub(cf, rep_freq).convert('Hz')['value']) for cf in centre_freqs]
+#             spw_id = science_spw[numpy.argmin(freq_diffs)].id
+#         else:
+#             spw_id = science_spw[0].id
             
         calfroms = calapp.calfrom
         
@@ -297,57 +297,64 @@ def compute_elevation_difference(context, results):
             resultfield = {}
                     
             for antenna_id in antenna_ids:
-            
-                # get timestamp from caltable
-                with casatools.TableReader(caltable) as tb:
-                    selected = tb.query('SPECTRAL_WINDOW_ID=={}&&ANTENNA1=={}'.format(spw_id, antenna_id))
-                    timecal = selected.getcol('TIME') / 86400.0 #sec -> day
-                    selected.close()
                 
+                resultant = {}
+                
+                for spw in science_spw:
+                    spw_id = spw.id
             
-                # access DataTable to get elevation 
-                ro_datatable_name = os.path.join(context.observing_run.ms_datatable_name, ms.basename, 'RO')
-                with casatools.TableReader(ro_datatable_name) as tb:
-                    selected = tb.query('IF=={}&&ANTENNA=={}&&FIELD_ID=={}&&SRCTYPE==0'.format(spw_id, antenna_id, field_id))
-                    timeon = selected.getcol('TIME')
-                    elon = selected.getcol('EL')
-                    selected.close()
-                    selected = tb.query('IF=={}&&ANTENNA=={}&&FIELD_ID=={}&&SRCTYPE!=0'.format(spw_id, antenna_id, field_id))
-                    timeoff = selected.getcol('TIME')
-                    eloff = selected.getcol('EL')
-                    selected.close()
+                    # get timestamp from caltable
+                    with casatools.TableReader(caltable) as tb:
+                        selected = tb.query('SPECTRAL_WINDOW_ID=={}&&ANTENNA1=={}'.format(spw_id, antenna_id))
+                        timecal = selected.getcol('TIME') / 86400.0 #sec -> day
+                        selected.close()
                     
-                elcal = eloff[[numpy.argmin(numpy.abs(timeoff - t)) for t in timecal]]
                 
-                del timeoff, eloff
+                    # access DataTable to get elevation 
+                    ro_datatable_name = os.path.join(context.observing_run.ms_datatable_name, ms.basename, 'RO')
+                    with casatools.TableReader(ro_datatable_name) as tb:
+                        selected = tb.query('IF=={}&&ANTENNA=={}&&FIELD_ID=={}&&SRCTYPE==0'.format(spw_id, antenna_id, field_id))
+                        timeon = selected.getcol('TIME')
+                        elon = selected.getcol('EL')
+                        selected.close()
+                        selected = tb.query('IF=={}&&ANTENNA=={}&&FIELD_ID=={}&&SRCTYPE!=0'.format(spw_id, antenna_id, field_id))
+                        timeoff = selected.getcol('TIME')
+                        eloff = selected.getcol('EL')
+                        selected.close()
+                        
+                    elcal = eloff[[numpy.argmin(numpy.abs(timeoff - t)) for t in timecal]]
+                    
+                    del timeoff, eloff
+                    
+                    eldiff0 = []
+                    eldiff1 = []
+                    time0 = []
+                    time1 = []
+                    for t, el in zip(timeon, elon):
+                        dt = timecal - t
+                        idx0 = numpy.where(dt < 0)[0]
+                        if len(idx0) > 0:
+                            i = numpy.argmax(timecal[idx0])
+                            time0.append(t)
+                            eldiff0.append(el - elcal[idx0[i]])
+                        idx1 = numpy.where(dt >= 0)[0]
+                        if len(idx1) > 0:
+                            i = numpy.argmin(timecal[idx1])
+                            time1.append(t)
+                            eldiff1.append(el - elcal[idx1[i]])
+                    eldiff0 = numpy.asarray(eldiff0)
+                    eldiff1 = numpy.asarray(eldiff1)
+                    time0 = numpy.asarray(time0)
+                    time1 = numpy.asarray(time1)
+                    
+                    result = ElevationDifference(timeon=timeon, elon=elon, 
+                                                 timecal=timecal, elcal=elcal,
+                                                 time0=time0, eldiff0=eldiff0,
+                                                 time1=time1, eldiff1=eldiff1)
+                    
+                    resultant[spw_id] = result
                 
-                eldiff0 = []
-                eldiff1 = []
-                time0 = []
-                time1 = []
-                for t, el in zip(timeon, elon):
-                    dt = timecal - t
-                    idx0 = numpy.where(dt < 0)[0]
-                    if len(idx0) > 0:
-                        i = numpy.argmax(timecal[idx0])
-                        time0.append(t)
-                        eldiff0.append(el - elcal[idx0[i]])
-                    idx1 = numpy.where(dt >= 0)[0]
-                    if len(idx1) > 0:
-                        i = numpy.argmin(timecal[idx1])
-                        time1.append(t)
-                        eldiff1.append(el - elcal[idx1[i]])
-                eldiff0 = numpy.asarray(eldiff0)
-                eldiff1 = numpy.asarray(eldiff1)
-                time0 = numpy.asarray(time0)
-                time1 = numpy.asarray(time1)
-                
-                result = ElevationDifference(timeon=timeon, elon=elon, 
-                                             timecal=timecal, elcal=elcal,
-                                             time0=time0, eldiff0=eldiff0,
-                                             time1=time1, eldiff1=eldiff1)
-                
-                resultfield[antenna_id] = result
+                resultfield[antenna_id] = resultant
                 
             resultdict[field_id] = resultfield
             
