@@ -34,7 +34,7 @@ class SpwPhaseupInputs(gtypegaincal.GTypeGaincalInputs):
             raise ValueError('Value not in allowed value set ({!s}): {!r}'.format(m, value))
         return value
 
-    phasesnr = vdp.VisDependentProperty(default=25.0)
+    phasesnr = vdp.VisDependentProperty(default=32.0)
     bwedgefrac = vdp.VisDependentProperty(default=0.03125)
 
     # Antenna flagging heuristics parameter

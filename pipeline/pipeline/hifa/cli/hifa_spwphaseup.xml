@@ -69,7 +69,7 @@ Previous calibrations are applied on the fly.
 
    <param type="double" name="phasesnr" subparam="true">
 	<description>The minimum snr for triggering spw combination in auto spw mapping mode</description>
-	<value>25.0</value>
+	<value>32.0</value>
    </param>
 
    <param type="double" name="bwedgefrac" subparam="true">
@@ -135,7 +135,7 @@ Previous calibrations are applied on the fly.
 
         <when param="hm_spwmapmode">
 	    <equals type="string" value="auto">
-	        <default param="phasesnr"><value type="double">25.0</value></default>
+	        <default param="phasesnr"><value type="double">32.0</value></default>
 	        <default param="bwedgefrac"><value type="double">0.03125</value></default>
 	        <default param="hm_nantennas"><value type="string">all</value></default>
                 <default param="maxfracflagged"><value type="double">0.90</value></default>
@@ -227,7 +227,7 @@ samebb -- Match within the same baseband if possible ?
     example: samebb=False
 
 phasesnr -- The required gaincal solution signal to noise
-    default: 25.0
+    default: 32.0
     example: phaseupsnr = 20.0
 
 bwedgefrac -- The fraction of the bandwidth edges that is flagged
