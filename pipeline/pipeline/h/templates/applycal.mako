@@ -164,6 +164,9 @@ def format_spwmap(spwmap, scispws):
 %if science_amp_vs_uv_plots:
   <li><a href="#scicalampvsuvdist">Science target: calibrated amplitude vs UV distance</a></li>
 %endif
+%if uv_plots:
+  <li><a href="#uvcoverage">UV coverage</a></li>
+%endif
   </ul>
 </ul>
 
@@ -275,7 +278,7 @@ def format_spwmap(spwmap, scispws):
 	</tbody>
 </table>
 
-% if amp_vs_freq_plots or phase_vs_freq_plots or amp_vs_time_plots or amp_vs_uv_plots or phase_vs_time_plots or science_amp_vs_freq_plots:
+% if amp_vs_freq_plots or phase_vs_freq_plots or amp_vs_time_plots or amp_vs_uv_plots or phase_vs_time_plots or science_amp_vs_freq_plots or uv_plots:
 <h2 id="plots" class="jumptarget">Plots</h2>
 
 <%self:plot_group plot_dict="${amp_vs_freq_plots}"
@@ -673,4 +676,38 @@ def format_spwmap(spwmap, scispws):
 
 </%self:plot_group>
 
+<%self:plot_group plot_dict="${uv_plots}"
+				  url_fn="${lambda ms: 'noop'}"
+				  title_id="uvcoverage"
+				  break_rows_by=""
+                  sort_row_by="">
+	<%def name="title()">
+		UV coverage
+	</%def>
+
+	<%def name="preamble()">
+		<p>Plots of UV coverage for each Measurement Set.</p>
+	</%def>
+
+	<%def name="mouseover(plot)">Click to show UV coverage for ${plot.parameters['vis']}, TARGET field ${cgi.escape(plot.parameters['field_name'], True)} (#${plot.parameters['field']}), spw ${plot.parameters['spw']}</%def>
+
+	<%def name="fancybox_caption(plot)">
+        Vis: ${plot.parameters['vis']}<br>
+        Field: ${cgi.escape(plot.parameters['field_name'], True)} (#${plot.parameters['field']})<br>
+        Spw: ${cgi.escape(plot.parameters['spw'])}
+	</%def>
+
+	<%def name="caption_title(plot)">
+	</%def>
+
+	<%def name="caption_subtitle(plot)">
+ 	</%def>
+
+	<%def name="caption_text(plot, _)">
+		UV coverage plot for TARGET field ${cgi.escape(plot.parameters['field_name'], True)}
+        (#${plot.parameters['field']}), spw ${plot.parameters['spw']}
+	</%def>
+</%self:plot_group>
+
 %endif
+

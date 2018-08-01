@@ -17,6 +17,7 @@ import pipeline.infrastructure.renderer.basetemplates as basetemplates
 import pipeline.infrastructure.utils as utils
 
 from pipeline.h.tasks.common.displays import applycal as applycal
+from pipeline.infrastructure.displays.summary import UVChart
 
 LOG = logging.get_logger(__name__)
 
@@ -226,6 +227,9 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                     for vis in subpages:
                         subpages[vis] = renderer.path
 
+        # CAS-11511: add plots of UV coverage.
+        uv_plots = self.create_uv_plots(context, result, weblog_dir)
+
         ctx.update({
             'amp_vs_freq_plots': amp_vs_freq_summary_plots,
             'phase_vs_freq_plots': phase_vs_freq_summary_plots,
@@ -236,6 +240,7 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
             'corrected_to_model_vs_uvdist_plots': corrected_ratio_to_uv_dist_plots,
             'science_amp_vs_freq_plots': science_amp_vs_freq_summary_plots,
             'science_amp_vs_uv_plots': science_amp_vs_uv_summary_plots,
+            'uv_plots': uv_plots,
             'uv_max': uv_max,
             'amp_vs_freq_subpages': amp_vs_freq_subpages,
             'phase_vs_freq_subpages': phase_vs_freq_subpages,
@@ -243,6 +248,18 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
             'amp_vs_uv_subpages': amp_vs_uv_subpages,
             'phase_vs_time_subpages': phase_vs_time_subpages,
         })
+
+    def create_uv_plots(self, context, results, weblog_dir):
+        uv_plots = collections.defaultdict(list)
+
+        for result in results:
+            vis = os.path.basename(result.inputs['vis'])
+            ms = context.observing_run.get_ms(vis)
+
+            plotter = UVChart(context, ms, customflagged=True, output_dir=weblog_dir, title_prefix="Post applycal: ")
+            uv_plots[vis] = [plotter.plot()]
+
+        return uv_plots
 
     def create_science_plots(self, context, results):
         """
