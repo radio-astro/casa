@@ -292,6 +292,7 @@ def compute_elevation_difference(context, results):
                 fields = ms.get_fields(name=gainfield)
                 assert len(fields) > 0
                 field_id = fields[0]
+            LOG.info('Computing elevation difference for "{}" Field ID {}'.format(ms.basename, field_id))
                 
             resultfield = {}
                     
