@@ -1,5 +1,6 @@
 <%!
 rsc_path = "../../"
+import cgi
 import os.path
 import pipeline.infrastructure.renderer.htmlrenderer as hr
 %>
@@ -22,45 +23,69 @@ import pipeline.infrastructure.renderer.htmlrenderer as hr
 	</ul>
 	<div class="tab-content">
 		<div class="tab-pane active" id="tabs-offsets">
-		%if plot_ants is not None or plot_ants_plog is not None:
-			<div class="row">
-				<h3>Antenna Positions</h3>	
-				%if plot_ants is not None:
-					<div class="col-md-3">
-					  	<div class="thumbnail">
-							<a href="${os.path.relpath(plot_ants.abspath, pcontext.report_dir)}"
-							   data-fancybox>
-								<img class="lazyload"
-                                     data-src="${os.path.relpath(plot_ants.thumbnail, pcontext.report_dir)}"
-									 title="Antenna Latitude vs. Antenna Longitude for ${ms.basename}"
-	 							     alt="Antenna Latitude vs. Antenna Longitude for ${ms.basename}"/>
-						    </a>
-						    <div class="caption">
-								<h4>Antenna Position</h4>
-								<p>Plot antenna latitude vs antenna longitude</p>
-							</div>
-						</div>
-					</div>
-				%endif
-				%if plot_ants_plog is not None:
-					<div class="col-md-3">
-					  	<div class="thumbnail">
-							<a href="${os.path.relpath(plot_ants_plog.abspath, pcontext.report_dir)}"
-							   data-fancybox>
-								<img class="lazyload"
-                                     data-src="${os.path.relpath(plot_ants_plog.thumbnail, pcontext.report_dir)}"
-									 title="Antenna Positions (polar-logarithmic) for ${ms.basename}"
-	 								 alt="Antenna Positions (polar-logarithmic) for ${ms.basename}"/>
-						    </a>
-						    <div class="caption">
-								<h4>Antenna Position</h4>
-								<p>Polar-logarithmic plot of antenna positions.</p>
-							</div>
-						</div>
-					</div>
-				%endif
+            <div class="row">
+        		%if plot_ants is not None or plot_ants_plog is not None:
+                <div class="col-md-8">
+                    <h3>Antenna Positions</h3>
+                    %if plot_ants is not None:
+                        <div class="col-md-6">
+                            <div class="thumbnail">
+                                <a href="${os.path.relpath(plot_ants.abspath, pcontext.report_dir)}"
+                                   data-fancybox>
+                                    <img class="lazyload"
+                                         data-src="${os.path.relpath(plot_ants.thumbnail, pcontext.report_dir)}"
+                                         title="Antenna Latitude vs. Antenna Longitude for ${ms.basename}"
+                                         alt="Antenna Latitude vs. Antenna Longitude for ${ms.basename}"/>
+                                </a>
+                                <div class="caption">
+                                    <h4>Antenna Position</h4>
+                                    <p>Plot antenna latitude vs antenna longitude</p>
+                                </div>
+                            </div>
+                        </div>
+                    %endif
+                    %if plot_ants_plog is not None:
+                        <div class="col-md-6">
+                            <div class="thumbnail">
+                                <a href="${os.path.relpath(plot_ants_plog.abspath, pcontext.report_dir)}"
+                                   data-fancybox>
+                                    <img class="lazyload"
+                                         data-src="${os.path.relpath(plot_ants_plog.thumbnail, pcontext.report_dir)}"
+                                         title="Antenna Positions (polar-logarithmic) for ${ms.basename}"
+                                         alt="Antenna Positions (polar-logarithmic) for ${ms.basename}"/>
+                                </a>
+                                <div class="caption">
+                                    <h4>Antenna Position</h4>
+                                    <p>Polar-logarithmic plot of antenna positions.</p>
+                                </div>
+                            </div>
+                        </div>
+                    %endif
+                </div>
+                %endif
+                %if plot_uv is not None:
+                <div class="col-md-4">
+                    <h3>UV coverage</h3>
+                    <div class="col-md-12">
+                        <div class="thumbnail">
+                            <a href="${os.path.relpath(plot_uv.abspath, pcontext.report_dir)}"
+                               data-fancybox>
+                                <img class="lazyload"
+                                     data-src="${os.path.relpath(plot_uv.thumbnail, pcontext.report_dir)}"
+                                     title="UV coverage for ${ms.basename}, ${cgi.escape(plot_uv.parameters['field_name'], True)} (#${plot_uv.parameters['field']}), spw ${plot_uv.parameters['spw']}"
+                                     alt="UV coverage for ${ms.basename}, ${cgi.escape(plot_uv.parameters['field_name'], True)} (#${plot_uv.parameters['field']}), spw ${plot_uv.parameters['spw']}"/>
+                            </a>
+                            <div class="caption">
+                                <h4>UV Coverage</h4>
+                                <p>UV coverage plot for TARGET field
+                                    ${cgi.escape(plot_uv.parameters['field_name'], True)}
+                                    (#${plot_uv.parameters['field']}), spw ${plot_uv.parameters['spw']}.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                %endif
 			</div>
-		%endif
 			<div class="row">
 				<h3>Antenna Details</h3>
 				<div>

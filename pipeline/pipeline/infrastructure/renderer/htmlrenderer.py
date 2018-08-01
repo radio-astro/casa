@@ -955,6 +955,7 @@ class T2_2_3Renderer(T2_2_XRendererBase):
             # antenna plots are useless for Nobeyama
             plot_ants = None
             plot_ants_plog = None
+            plot_uv = None
         else:
             # Create regular antenna positions plot.
             task = summary.PlotAntsChart(context, ms)
@@ -964,14 +965,19 @@ class T2_2_3Renderer(T2_2_XRendererBase):
             task = summary.PlotAntsChart(context, ms, polarlog=True)
             plot_ants_plog = task.plot()
 
+            # Create U-V plot.
+            task = summary.UVChart(context, ms, title_prefix="Initial ")
+            plot_uv = task.plot()
+
         dirname = os.path.join('session%s' % ms.session,
                                ms.basename)
         
-        return {'pcontext'       : context,
-                'plot_ants'      : plot_ants,
-                'plot_ants_plog' : plot_ants_plog,
-                'ms'             : ms,
-                'dirname'        : dirname}
+        return {'pcontext': context,
+                'plot_ants': plot_ants,
+                'plot_ants_plog': plot_ants_plog,
+                'plot_uv': plot_uv,
+                'ms': ms,
+                'dirname': dirname}
 
 
 class T2_2_4Renderer(T2_2_XRendererBase):
@@ -989,14 +995,19 @@ class T2_2_4Renderer(T2_2_XRendererBase):
         task = summary.ElVsTimeChart(context, ms)
         el_vs_time_plot = task.plot()
 
+        # Create U-V plot, if necessary.
+        task = summary.UVChart(context, ms, title_prefix="Initial ")
+        plot_uv = task.plot()
+
         dirname = os.path.join('session%s' % ms.session,
                                ms.basename)
 
-        return {'pcontext'        : context,
-                'ms'              : ms,
-                'azel_plot'       : azel_plot,
-                'el_vs_time_plot' : el_vs_time_plot,
-                'dirname'         : dirname}
+        return {'pcontext': context,
+                'ms': ms,
+                'azel_plot': azel_plot,
+                'el_vs_time_plot': el_vs_time_plot,
+                'plot_uv': plot_uv,
+                'dirname': dirname}
 
 
 class T2_2_5Renderer(T2_2_XRendererBase):

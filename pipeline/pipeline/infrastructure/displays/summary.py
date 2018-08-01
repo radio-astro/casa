@@ -794,3 +794,175 @@ class PlotAntsChart(object):
         # Set minimum and maximum radius.
         subpl.set_rmax(rmax)
         subpl.set_rmin(rmin)
+
+
+class UVChart(object):
+    def __init__(self, context, ms, customflagged=False, output_dir=None, title_prefix=None):
+        self.context = context
+        self.ms = ms
+        self.customflagged = customflagged
+        self.figfile = self._get_figfile(output_dir=output_dir)
+
+        # Select which source to plot.
+        src, spw = self._get_source_and_spwid()
+        self.spw = spw
+
+        # Determine which field to plot.
+        self.field, self.field_name = self._get_field_for_source(src)
+
+        # Determine number of channels in spw.
+        self.nchan = self._get_nchan_for_spw(spw)
+
+        # Set title of plot, modified by prefix if provided.
+        self.title = 'UV coverage for {}'.format(self.ms.basename)
+        if title_prefix:
+            self.title = title_prefix + self.title
+
+    def plot(self):
+        if DISABLE_PLOTMS:
+            LOG.debug('Disabling UV coverage plot due to problems with plotms')
+            return None
+
+        # inputs based on analysisUtils.plotElevationSummary
+        task_args = {
+            'vis': self.ms.name,
+            'xaxis': 'uwave',
+            'yaxis': 'vwave',
+            'title': self.title,
+            'avgchannel': self.nchan,
+            'spw': self.spw,
+            'field': self.field,
+            'intent': utils.to_CASA_intent(self.ms, 'TARGET'),
+            'plotfile': self.figfile,
+            'clearplots': True,
+            'showgui': False,
+            'customflaggedsymbol': self.customflagged}
+
+        task = casa_tasks.plotms(**task_args)
+
+        if not os.path.exists(self.figfile):
+            task.execute()
+
+        return self._get_plot_object(task)
+
+    def _get_figfile(self, output_dir=None):
+        # If output dir is specified, then store as <msname>-uv_coverage.png in output dir.
+        if output_dir:
+            figfile = os.path.join(output_dir, "{}-uv_coverage.png".format(self.ms.basename))
+        # Otherwise, store under <sessionname>/<msname>/ directory as uv_coverage.png.
+        else:
+            session_part = self.ms.session
+            ms_part = self.ms.basename
+            figfile = os.path.join(self.context.report_dir, 'session%s' % session_part, ms_part, 'uv_coverage.png')
+        return figfile
+
+    def _get_plot_object(self, task):
+        return logger.Plot(self.figfile,
+                           parameters={'vis': self.ms.basename,
+                                       'field': self.field,
+                                       'field_name': self.field_name,
+                                       'spw': self.spw},
+                           command=str(task))
+
+    def _get_source_and_spwid(self):
+        # Attempt to get representative source and spwid.
+        repr_src, repr_spw = self._get_representative_source_and_spwid()
+
+        # Check that representative source was covered with TARGET intent,
+        # otherwise reject.
+        target_sources = [source for source in self.ms.sources
+                          if source.name == repr_src
+                          and 'TARGET' in source.intents]
+        if not target_sources:
+            repr_src = None
+
+        # If both are defined, returned representative src and spw.
+        if repr_src and repr_spw:
+            return repr_src, str(repr_spw)
+        elif repr_src and not repr_spw:
+            spw = self._get_first_science_spw()
+            return repr_src, spw
+
+        # If no representative source was identified, then return first source
+        # and first science spw.
+        src, spw = self._get_first_target_source_and_science_spw()
+
+        return src, spw
+
+    def _get_representative_source_and_spwid(self):
+        # Is the representative source in the context or not
+        if not self.context.project_performance_parameters.representative_source:
+            source_name = None
+        else:
+            source_name = self.context.project_performance_parameters.representative_source
+
+        # Is the representative spw in the context or not
+        if not self.context.project_performance_parameters.representative_spwid:
+            source_spwid = None
+        else:
+            source_spwid = self.context.project_performance_parameters.representative_spwid
+
+        # Determine the representative source name and spwid for the ms
+        repsource_name, repsource_spwid = self.ms.get_representative_source_spw(source_name=source_name,
+                                                                                source_spwid=source_spwid)
+
+        return repsource_name, repsource_spwid
+
+    def _get_first_science_spw(self):
+        sci_spws = self.ms.get_spectral_windows(science_windows_only=True)
+        try:
+            spw = str(sci_spws[0].id)
+        except IndexError:
+            spw = None
+        return spw
+
+    def _get_first_target_source_and_science_spw(self):
+        src = None
+        for ms_src in self.ms.sources:
+            if 'TARGET' in ms_src.intents:
+                src = ms_src.name
+                break
+
+        spw = self._get_first_science_spw()
+
+        return src, spw
+
+    def _get_field_for_source(self, source_name):
+        source = None
+        for ms_source in self.ms.sources:
+            if ms_source.name == source_name:
+                source = ms_source
+                break
+
+        if not source:
+            LOG.error("Source {} not found in MS.".format(source_name))
+            return ''
+
+        # Identify fields covered by TARGET intent.
+        target_fields = [field for field in source.fields if 'TARGET' in field.intents]
+
+        nfields = len(target_fields)
+        if nfields == 0:
+            LOG.error("Source {} has no fields with TARGET intent.".format(source.name))
+            return '', ''
+        elif nfields == 1:
+            field = target_fields[0]
+        else:
+            field = self._get_center_field(target_fields)
+
+        return str(field.id), field.name
+
+    @staticmethod
+    def _get_center_field(fields):
+        # TODO: need algorithm to determine centermost field among
+        # series of pointings for a mosaic.
+        # For now, assume the first field is the centermost pointing.
+        return fields[0]
+
+    def _get_nchan_for_spw(self, spwid):
+        if spwid is None:
+            return None
+
+        spw = self.ms.get_spectral_window(int(spwid))
+        nchan = str(len(spw.channels))
+        return nchan
