@@ -79,7 +79,7 @@ class T2_4MDetailsSingleDishSkyCalRenderer(basetemplates.T2_4MDetailsDefaultRend
                 details_time.extend(detail_plotter.plot())
                 
                 # reference coordinates
-                LOG.debug('calapp=%s'%(calapp))
+                #LOG.debug('calapp=%s'%(calapp))
                 calmode = utils.get_origin_input_arg(calapp, 'calmode')
                 LOG.debug('calmode=\'%s\''%(calmode))
                 field_domain = ms.get_fields(gainfield)[0]
