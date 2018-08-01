@@ -349,7 +349,7 @@ class SDExportData(exportdata.ExportData):
             with tarfile.open(os.path.join(products_dir, tarfilename), 'w:gz') as tar:
 
                 # Save flux file.
-                if os.path.exists(jyperk):
+                if jyperk and os.path.exists(jyperk):
                     tar.add(jyperk, arcname=os.path.basename(jyperk))
                     LOG.info('Saving auxiliary data product {} in {}'.format(os.path.basename(jyperk), tarfilename))
                 else:
