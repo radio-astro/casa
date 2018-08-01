@@ -2082,30 +2082,44 @@ def score_sd_skycal_elevation_difference(ms, resultdict):
     """
     """
     field_ids = resultdict.keys()
-    assert len(field_ids) == 1
-    field_id = field_ids[0]
-    field = ms.fields[field_id]
-    eldiff = resultdict[field_id]
-    el_threshold = 3.0
-    warned_antennas = []
+    #assert len(field_ids) == 1
     metric_score = []
-    for antenna_id, eld in eldiff.items():
-        preceding = eld.eldiff0
-        subsequent = eld.eldiff1
-        max_pred = np.abs(preceding).max()
-        max_subq = np.abs(subsequent).max()
-        metric_score.extend([max_pred, max_subq])
-        if max_pred >= el_threshold or max_subq >= el_threshold:
-            warned_antennas.append(antenna_id)
-    
-    if len(warned_antennas) > 0:
-        antenna_names = ', '.join([ms.antennas[a].name for a in warned_antennas])
-        longmsg = '{} field {} antennas {}: elevation difference between ON and OFF exceed {}deg'.format(ms.basename,
-                                                                                                         field.name,
-                                                                                                         antenna_names,
-                                                                                                         el_threshold)
-    else:
-        longmsg = 'Elevation difference between ON and OFF is below threshold ({}deg)'.format(el_threshold)
+    el_threshold = 3.0
+    for field_id in field_ids:
+        #field_id = field_ids[0]
+        field = ms.fields[field_id]
+        eldiff = resultdict[field_id]
+        warned_antennas = set()
+        for antenna_id, eld in eldiff.items():
+            preceding = eld.eldiff0
+            subsequent = eld.eldiff1
+            LOG.info('field {} antenna {} preceding={}'.format(field_id, antenna_id, preceding))
+            LOG.info('field {} antenna {} subsequent={}'.format(field_id, antenna_id, subsequent))
+            max_pred = None
+            max_subq = None
+            if len(preceding) > 0:
+                max_pred = np.abs(preceding).max()
+                metric_score.append(max_pred)
+                if max_pred >= el_threshold:
+                    warned_antennas.add(antenna_id)
+            if len(subsequent) > 0:
+                max_subq = np.abs(subsequent).max()
+                metric_score.append(max_subq)
+                if max_subq >= el_threshold:
+                    warned_antennas.add(antenna_id)
+            #metric_score.extend([max_pred, max_subq])
+            LOG.info('field {} antenna {} metric_score {}'.format(field_id, antenna_id, metric_score))
+            #if (max_pred is not None and max_pred >= el_threshold) or (max_subq is not Nonemax_subq >= el_threshold:
+            #    warned_antennas.append(antenna_id)
+        
+        if len(warned_antennas) > 0:
+            antenna_names = ', '.join([ms.antennas[a].name for a in warned_antennas])
+            longmsg = '{} field {} antennas {}: elevation difference between ON and OFF exceed {}deg'.format(ms.basename,
+                                                                                                             field.name,
+                                                                                                             antenna_names,
+                                                                                                             el_threshold)
+        else:
+            longmsg = 'Elevation difference between ON and OFF is below threshold ({}deg)'.format(el_threshold)
         
     if np.max(metric_score) >= el_threshold:
         score = 0.0
