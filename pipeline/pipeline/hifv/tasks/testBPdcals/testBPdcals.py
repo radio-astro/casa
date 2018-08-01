@@ -80,17 +80,17 @@ class testBPdcals(basetask.StandardTaskTemplate):
         bpcaltable    = tableprefix + str(stage_number) + '_4.' + 'testBPcal.tbl'
         tablebase     = tableprefix + str(stage_number) + '_3.' + 'testBPdinitialgain'
         table_suffix = ['.tbl', '3.tbl', '10.tbl']
-        soltimes = [1.0,3.0,10.0] 
+        soltimes = [1.0, 3.0, 10.0]
         m = self.inputs.context.observing_run.get_ms(self.inputs.vis)
         soltimes = [m.get_vla_max_integration_time() * x for x in soltimes]
         # soltimes = [self.inputs.context.evla['msinfo'][m.name].int_time * x for x in soltimes]
-        solints = ['int', str(soltimes[1])+'s', str(soltimes[2])+'s']
+        solints = ['int', str(soltimes[1]) + 's', str(soltimes[2]) + 's']
         soltime = soltimes[0]
         solint = solints[0]
 
         context = self.inputs.context
         refantfield = context.evla['msinfo'][m.name].calibrator_field_select_string
-        refantobj = findrefant.RefAntHeuristics(vis=self.inputs.vis,field=refantfield,
+        refantobj = findrefant.RefAntHeuristics(vis=self.inputs.vis, field=refantfield,
                                                 geometry=True, flagging=True, intent='',
                                                 spw='', refantignore=self.inputs.refantignore)
         
@@ -109,14 +109,15 @@ class testBPdcals(basetask.StandardTaskTemplate):
 
         # Iterate and check the fraction of Flagged solutions, each time running gaincal in 'K' mode
         flagcount=0
-        while (fracFlaggedSolns > critfrac and flagcount < 4):
+        while fracFlaggedSolns > critfrac and flagcount < 4:
 
             ktype_delaycal_result = self._do_ktype_delaycal(caltable=ktypecaltable, addcaltable=gtypecaltable,
                                                             context=context, RefAntOutput=RefAntOutput)
             flaggedSolnResult = getCalFlaggedSoln(ktypecaltable)
             (fracFlaggedSolns,RefAntOutput)  = self._check_flagSolns(flaggedSolnResult, RefAntOutput)
-            LOG.info("Fraction of flagged solutions = "+str(flaggedSolnResult['all']['fraction']))
-            LOG.info("Median fraction of flagged solutions per antenna = "+str(flaggedSolnResult['antmedian']['fraction']))
+            LOG.info("Fraction of flagged solutions = " + str(flaggedSolnResult['all']['fraction']))
+            LOG.info("Median fraction of flagged solutions per antenna = " +
+                     str(flaggedSolnResult['antmedian']['fraction']))
             flagcount += 1
 
         # Do initial amplitude and phase gain solutions on the BPcalibrator and delay
@@ -138,8 +139,10 @@ class testBPdcals(basetask.StandardTaskTemplate):
                                                        solint=solint, context=context, RefAntOutput=RefAntOutput)
 
         flaggedSolnResult1 = getCalFlaggedSoln(tablebase + table_suffix[0])
-        LOG.info("For solint = "+solint+" fraction of flagged solutions = "+str(flaggedSolnResult1['all']['fraction']))
-        LOG.info("Median fraction of flagged solutions per antenna = "+str(flaggedSolnResult1['antmedian']['fraction']))
+        LOG.info("For solint = " + solint + " fraction of flagged solutions = " +
+                 str(flaggedSolnResult1['all']['fraction']))
+        LOG.info("Median fraction of flagged solutions per antenna = " +
+                 str(flaggedSolnResult1['antmedian']['fraction']))
 
         if flaggedSolnResult1['all']['total'] > 0:
             fracFlaggedSolns1 = flaggedSolnResult1['antmedian']['fraction']
@@ -159,13 +162,15 @@ class testBPdcals(basetask.StandardTaskTemplate):
                                                            solint=solint, context=context, RefAntOutput=RefAntOutput)
 
             flaggedSolnResult3 = getCalFlaggedSoln(tablebase + table_suffix[1])
-            LOG.info("For solint = "+solint+" fraction of flagged solutions = "+str(flaggedSolnResult3['all']['fraction']))
-            LOG.info("Median fraction of flagged solutions per antenna = "+str(flaggedSolnResult3['antmedian']['fraction']))
+            LOG.info("For solint = "+solint+" fraction of flagged solutions = " +
+                     str(flaggedSolnResult3['all']['fraction']))
+            LOG.info("Median fraction of flagged solutions per antenna = " +
+                     str(flaggedSolnResult3['antmedian']['fraction']))
 
             if flaggedSolnResult3['all']['total'] > 0:
-                fracFlaggedSolns3=flaggedSolnResult3['antmedian']['fraction']
+                fracFlaggedSolns3 = flaggedSolnResult3['antmedian']['fraction']
             else:
-                fracFlaggedSolns3=1.0
+                fracFlaggedSolns3 = 1.0
 
             if fracFlaggedSolns3 < fracFlaggedSolns1:
                 gain_solint1 = solint
@@ -183,8 +188,10 @@ class testBPdcals(basetask.StandardTaskTemplate):
                                                                    addcaltable=ktypecaltable, solint=solint,
                                                                    context=context, RefAntOutput=RefAntOutput)
                     flaggedSolnResult10 = getCalFlaggedSoln(tablebase + table_suffix[2])
-                    LOG.info("For solint = "+solint+" fraction of flagged solutions = "+str(flaggedSolnResult10['all']['fraction']))
-                    LOG.info("Median fraction of flagged solutions per antenna = "+str(flaggedSolnResult10['antmedian']['fraction']))
+                    LOG.info("For solint = "+solint+" fraction of flagged solutions = " +
+                             str(flaggedSolnResult10['all']['fraction']))
+                    LOG.info("Median fraction of flagged solutions per antenna = " +
+                             str(flaggedSolnResult10['antmedian']['fraction']))
 
                     if flaggedSolnResult10['all']['total'] > 0:
                         fracFlaggedSolns10 = flaggedSolnResult10['antmedian']['fraction']
@@ -192,12 +199,14 @@ class testBPdcals(basetask.StandardTaskTemplate):
                         fracFlaggedSolns10 = 1.0
 
                     if fracFlaggedSolns10 < fracFlaggedSolns3:
-                        gain_solint1=solint
-                        shortsol1=soltime
+                        gain_solint1 = solint
+                        shortsol1 = soltime
                         bpdgain_touse = tablebase + table_suffix[2]
 
                         if fracFlaggedSolns10 > 0.05:
-                            LOG.warn("There is a large fraction of flagged solutions, there might be something wrong with your data.  The fraction of flagged solutions is " + str(fracFlaggedSolns10))
+                            LOG.warn("There is a large fraction of flagged solutions, " +
+                                     "there might be something wrong with your data.  " +
+                                     "The fraction of flagged solutions is " + str(fracFlaggedSolns10))
 
         LOG.info("Test amp and phase calibration on delay and bandpass calibrators complete")
         LOG.info("Using short solint = {!s}".format(str(gain_solint1)))
@@ -252,31 +261,31 @@ class testBPdcals(basetask.StandardTaskTemplate):
         delay_scan_select_string = context.evla['msinfo'][m.name].delay_scan_select_string
         minBL_for_cal = m.vla_minbaselineforcal()
 
-        delaycal_task_args = {'vis'         : self.inputs.vis,
-                                'caltable'    : caltable,
-                                'field'       : delay_field_select_string,
-                                'spw'         : tst_delay_spw,
-                                'intent'      : '',
-                                'selectdata'  : True,
-                                'uvrange'     : '',
-                                'scan'        : delay_scan_select_string,
-                                'solint'      : 'int',
-                                'combine'     : 'scan',
-                                'preavg'      : -1.0,
-                                'refant'      : ','.join(RefAntOutput),
-                                'minblperant' : minBL_for_cal,
-                                'minsnr'      : 3.0,
-                                'solnorm'     : False,
-                                'gaintype'    : 'G',
-                                'smodel'      : [],
-                                'calmode'     : 'p',
-                                'append'      : False,
-                                'docallib'    : False,
-                                'gaintable'   : sorted(self.inputs.context.callibrary.active.get_caltable()),
-                                'gainfield'   : [''],
-                                'interp'      : [''],
-                                'spwmap'      : [],
-                                'parang'      : self.parang}
+        delaycal_task_args = {'vis': self.inputs.vis,
+                              'caltable': caltable,
+                              'field': delay_field_select_string,
+                              'spw': tst_delay_spw,
+                              'intent': '',
+                              'selectdata': True,
+                              'uvrange': '',
+                              'scan': delay_scan_select_string,
+                              'solint': 'int',
+                              'combine': 'scan',
+                              'preavg': -1.0,
+                              'refant': ','.join(RefAntOutput),
+                              'minblperant': minBL_for_cal,
+                              'minsnr': 3.0,
+                              'solnorm': False,
+                              'gaintype': 'G',
+                              'smodel': [],
+                              'calmode': 'p',
+                              'append': False,
+                              'docallib': False,
+                              'gaintable': sorted(self.inputs.context.callibrary.active.get_caltable()),
+                              'gainfield': [''],
+                              'interp': [''],
+                              'spwmap': [],
+                              'parang': self.parang}
 
         job = casa_tasks.gaincal(**delaycal_task_args)
 
@@ -292,31 +301,31 @@ class testBPdcals(basetask.StandardTaskTemplate):
         GainTables = sorted(self.inputs.context.callibrary.active.get_caltable())
         GainTables.append(addcaltable)
 
-        delaycal_task_args = {'vis'         :self.inputs.vis,
-                              'caltable'    :caltable,
-                              'field'       : delay_field_select_string,
-                              'spw'         :'',
-                              'intent'      :'',
-                              'selectdata'  :True,
-                              'uvrange'     :'',
-                              'scan'        :delay_scan_select_string,
-                              'solint'      :'inf',
-                              'combine'     :'scan',
-                              'preavg'      :-1.0,
-                              'refant'      :','.join(RefAntOutput),
-                              'minblperant' :minBL_for_cal,
-                              'minsnr'      :3.0,
-                              'solnorm'     :False,
-                              'gaintype'    :'K',
-                              'smodel'      :[],
-                              'calmode'     :'p',
-                              'append'      :False,
-                              'docallib'    :False,
-                              'gaintable'   :GainTables,
-                              'gainfield'   :[''],
-                              'interp'      :[''],
-                              'spwmap'      :[],
-                              'parang'      :self.parang}
+        delaycal_task_args = {'vis': self.inputs.vis,
+                              'caltable': caltable,
+                              'field': delay_field_select_string,
+                              'spw': '',
+                              'intent': '',
+                              'selectdata': True,
+                              'uvrange': '',
+                              'scan': delay_scan_select_string,
+                              'solint': 'inf',
+                              'combine': 'scan',
+                              'preavg': -1.0,
+                              'refant': ','.join(RefAntOutput),
+                              'minblperant': minBL_for_cal,
+                              'minsnr': 3.0,
+                              'solnorm': False,
+                              'gaintype': 'K',
+                              'smodel': [],
+                              'calmode': 'p',
+                              'append': False,
+                              'docallib': False,
+                              'gaintable': GainTables,
+                              'gainfield': [''],
+                              'interp': [''],
+                              'spwmap': [],
+                              'parang': self.parang}
 
         job = casa_tasks.gaincal(**delaycal_task_args)
 
@@ -325,9 +334,9 @@ class testBPdcals(basetask.StandardTaskTemplate):
     def _check_flagSolns(self, flaggedSolnResult, RefAntOutput):
         
         if flaggedSolnResult['all']['total'] > 0:
-            fracFlaggedSolns=flaggedSolnResult['antmedian']['fraction']
+            fracFlaggedSolns = flaggedSolnResult['antmedian']['fraction']
         else:
-            fracFlaggedSolns=1.0
+            fracFlaggedSolns = 1.0
 
         m = self.inputs.context.observing_run.get_ms(self.inputs.vis)
         critfrac = m.get_vla_critfrac()
@@ -338,7 +347,7 @@ class testBPdcals(basetask.StandardTaskTemplate):
             LOG.info("Not enough good solutions, trying a different reference antenna.")
             LOG.info("The pipeline will start with antenna "+RefAntOutput[0].lower()+" as the reference.")
 
-        return (fracFlaggedSolns, RefAntOutput)
+        return fracFlaggedSolns, RefAntOutput
 
     def _do_gtype_bpdgains(self, caltable, addcaltable=None, solint='int', context=None, RefAntOutput=None):
 
@@ -349,38 +358,38 @@ class testBPdcals(basetask.StandardTaskTemplate):
         minBL_for_cal = m.vla_minbaselineforcal()
 
         if delay_scan_select_string == bandpass_scan_select_string:
-            testgainscans=bandpass_scan_select_string
+            testgainscans = bandpass_scan_select_string
         else:
-            testgainscans=bandpass_scan_select_string+','+delay_scan_select_string
+            testgainscans = bandpass_scan_select_string + ',' + delay_scan_select_string
 
         GainTables = sorted(self.inputs.context.callibrary.active.get_caltable())
         GainTables.append(addcaltable)
 
-        bpdgains_task_args = {'vis'         :self.inputs.vis,
-                              'caltable'    :caltable,
-                              'field'       :'',
-                              'spw'         :tst_bpass_spw,
-                              'intent'      :'',
-                              'selectdata'  :True,
-                              'uvrange'     :'',
-                              'scan'        :testgainscans,
-                              'solint'      :solint,
-                              'combine'     :'scan',
-                              'preavg'      :-1.0,
-                              'refant'      :','.join(RefAntOutput),
-                              'minblperant' :minBL_for_cal,
-                              'minsnr'      :5.0,
-                              'solnorm'     :False,
-                              'gaintype'    :'G',
-                              'smodel'      :[],
-                              'calmode'     :'ap',
-                              'append'      :False,
-                              'docallib'    :False,
-                              'gaintable'   :GainTables,
-                              'gainfield'   :[''],
-                              'interp'      :[''],
-                              'spwmap'      :[],
-                              'parang'      :self.parang}
+        bpdgains_task_args = {'vis': self.inputs.vis,
+                              'caltable': caltable,
+                              'field': '',
+                              'spw': tst_bpass_spw,
+                              'intent': '',
+                              'selectdata': True,
+                              'uvrange': '',
+                              'scan': testgainscans,
+                              'solint': solint,
+                              'combine': 'scan',
+                              'preavg': -1.0,
+                              'refant': ','.join(RefAntOutput),
+                              'minblperant': minBL_for_cal,
+                              'minsnr': 5.0,
+                              'solnorm': False,
+                              'gaintype': 'G',
+                              'smodel': [],
+                              'calmode': 'ap',
+                              'append': False,
+                              'docallib': False,
+                              'gaintable': GainTables,
+                              'gainfield': [''],
+                              'interp': [''],
+                              'spwmap': [],
+                              'parang': self.parang}
 
         job = casa_tasks.gaincal(**bpdgains_task_args)
 
@@ -388,15 +397,15 @@ class testBPdcals(basetask.StandardTaskTemplate):
 
     def _do_clipflag(self, bpcaltable):
 
-        task_args = {'vis'         : bpcaltable,
-                     'mode'        : 'clip',
-                     'datacolumn'  : 'CPARAM',
-                     'clipminmax'  : [0.0, 2.0],
-                     'correlation' : 'ABS_ALL',
-                     'clipoutside' : True,
-                     'flagbackup'  : False,
-                     'savepars'    : False,
-                     'action'      : 'apply'}
+        task_args = {'vis': bpcaltable,
+                     'mode': 'clip',
+                     'datacolumn': 'CPARAM',
+                     'clipminmax': [0.0, 2.0],
+                     'correlation': 'ABS_ALL',
+                     'clipoutside': True,
+                     'flagbackup': False,
+                     'savepars': False,
+                     'action': 'apply'}
 
         job = casa_tasks.flagdata(**task_args)
 
@@ -415,21 +424,21 @@ class testBPdcals(basetask.StandardTaskTemplate):
 
         ntables = len(AllCalTables)
 
-        applycal_task_args = {'vis'        :self.inputs.vis,
-                              'field'      :'',
-                              'spw'        :'',
-                              'intent'     :'',
-                              'selectdata' :True,
-                              'scan'       :testgainscans,
-                              'docallib'   :False,
-                              'gaintable'  :AllCalTables,
-                              'gainfield'  :[''],
-                              'interp'     :interp,
-                              'spwmap'     :[],
-                              'calwt'      :[False]*ntables,
-                              'parang'     :self.parang,
-                              'applymode'  :'calflagstrict',
-                              'flagbackup' :True}
+        applycal_task_args = {'vis': self.inputs.vis,
+                              'field': '',
+                              'spw': '',
+                              'intent': '',
+                              'selectdata': True,
+                              'scan': testgainscans,
+                              'docallib': False,
+                              'gaintable': AllCalTables,
+                              'gainfield': [''],
+                              'interp': interp,
+                              'spwmap': [],
+                              'calwt': [False]*ntables,
+                              'parang': self.parang,
+                              'applymode': 'calflagstrict',
+                              'flagbackup': True}
 
         job = casa_tasks.applycal(**applycal_task_args)
 
