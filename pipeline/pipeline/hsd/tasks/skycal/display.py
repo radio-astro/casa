@@ -299,6 +299,9 @@ def plot_elevation_difference(context, result, eldiff, threshold=3.0, perantenna
     for antenna_id, eld in eldiff_field.items():
         antenna_name = ms.antennas[antenna_id].name
         
+        if len(eld.timeon) == 0:
+            continue
+        
         # Elevation vs. Time
         pl.gcf().sca(a0)
         lon = pl.plot(sd_display.mjd_to_plotval(eld.timeon), eld.elon, '.', color='black', 
