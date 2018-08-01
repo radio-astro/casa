@@ -272,13 +272,15 @@ def draw_pointing(axes_manager, RA, DEC, FLAG=None, plotfile=None, connect=True,
         obj.remove()
     
 class SingleDishPointingChart(object):    
-    def __init__(self, context, ms, antenna, target_field_id=None, reference_field_id=None, target_only=True):
+    def __init__(self, context, ms, antenna, target_field_id=None, reference_field_id=None, target_only=True,
+                 shift_coord=False):
         self.context = context
         self.ms = ms
         self.antenna = antenna
         self.target_field = self.__get_field(target_field_id)
         self.reference_field = self.__get_field(reference_field_id) 
         self.target_only = target_only
+        self.shift_coord = shift_coord
         self.figfile = self._get_figfile()
         self.axes_manager = PointingAxesManager()
         
@@ -348,12 +350,22 @@ class SingleDishPointingChart(object):
                 vfunc = numpy.vectorize(func)
                 dt_rows = vfunc(field_ids, antenna_ids, spw_ids)
         
-        RA = datatable.getcol('RA')[dt_rows]
+        if self.shift_coord == True:
+            racol = 'SHIFT_RA'
+            deccol = 'SHIFT_DEC'
+        else:
+            racol = 'RA'
+            deccol = 'DEC'
+        LOG.debug('column names: {}, {}'.format(racol, deccol))
+        if racol not in datatable.colnames() or deccol not in datatable.colnames():
+            return None
+        
+        RA = datatable.getcol(racol)[dt_rows]
         if len(RA) == 0: # no row found
             LOG.warn('No data found with antenna=%d, spw=%d, and field=%s in %s.' % (antenna_id, spw_id, str(field_id), ms.basename))
             LOG.warn('Skipping pointing plots.')
             return None
-        DEC = datatable.getcol('DEC')[dt_rows]
+        DEC = datatable.getcol(deccol)[dt_rows]
         FLAG = numpy.zeros(len(RA), dtype=int)
         rows = numpy.where(dt_rows == True)[0]
         assert len(RA) == len(rows)
@@ -380,7 +392,10 @@ class SingleDishPointingChart(object):
             clean_name = self.target_field.clean_name
             identifier = antenna_part + '.%s'%(clean_name)
         if self.target_only == True:
-            basename = 'target_pointing.%s'%(identifier)
+            if self.shift_coord == True:
+                basename = 'shifted_target_pointing.%s'%(identifier)
+            else:
+                basename = 'target_pointing.%s'%(identifier)
         else:
             basename = 'whole_pointing.%s'%(identifier)
         figfile = os.path.join(self.context.report_dir, 
@@ -398,9 +413,15 @@ class SingleDishPointingChart(object):
                 field_name = self.target_field.name
             else:
                 field_name = self.target_field.name + ',' + self.reference_field.name
+        if self.shift_coord == True:
+            xaxis = 'Shifted R.A.'
+            yaxis = 'Shifted Declination'
+        else:
+            xaxis = 'R.A.'
+            yaxis = 'Declination'
         return logger.Plot(self.figfile,
-                           x_axis='R.A.',
-                           y_axis='Declination',
+                           x_axis=xaxis,
+                           y_axis=yaxis,
                            parameters={'vis' : self.ms.basename,
                                        'antenna': self.antenna.name,
                                        'field': field_name,

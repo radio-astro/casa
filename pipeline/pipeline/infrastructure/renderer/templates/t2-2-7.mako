@@ -70,6 +70,36 @@ def get_field_name(plot):
 		% endfor
 	% endfor
 % endif
+% if shift_pointing is not None and len(shift_pointing) > 0:
+    % for plot in shift_pointing:
+			<div class="col-md-6">
+				<a href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
+                   data-fancybox
+                   title='Antenna: ${plot.parameters["antenna"]}<br>
+						  Field: ${plot.parameters["field"]}<br>
+						  Intent: ${plot.parameters["intent"]}'>
+					<h3>Antenna ${antenna_name(plot)} Field ${get_field_name(plot)}</h3>
+				</a>
+				<div class="col-md-6">
+				  	<div class="thumbnail">
+						<a href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
+						   data-fancybox
+						   title='Antenna: ${plot.parameters["antenna"]}<br>
+						          Field: ${plot.parameters["field"]}<br>
+						          Intent: ${plot.parameters["intent"]}'>
+							<img class="lazyload"
+                                 data-src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
+								 title="Shifted telescope pointing for antenna ${antenna_name(plot)}"
+								 alt="Shifted telescope pointing for antenna ${antenna_name(plot)}" />
+					    </a>
+				    	<div class="caption">
+							<h4>${caption_string(plot)} after ephemeris correction</h4>
+						</div>
+					</div>
+				</div>
+			</div>
+    % endfor
+% endif
 </div>
 
 </body>

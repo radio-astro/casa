@@ -90,6 +90,22 @@ class FlagDeterALMASingleDishResults(flagdeterbase.FlagDeterBaseResults):
                                                             reference_field_id=reference,
                                                             target_only=False)
                     task.plot(revise_plot=True)
+                    
+                    # if the target is ephemeris, shifted pointing pattern should also be plotted
+                    target_field = msobj.fields[target]
+                    source_name = target_field.source.name
+                    ephem_names = casatools.measures.listcodes(casatools.measures.direction())['extra']
+                    valid_ephem_names = [x for x in ephem_names if x != 'COMET']
+                    shift_pointings = []
+                    if source_name in valid_ephem_names:
+                        task = pointing.SingleDishPointingChart(context, msobj, antenna, 
+                                                                target_field_id=target,
+                                                                reference_field_id=reference, 
+                                                                target_only=True,
+                                                                shift_coord=True)
+                        plotres = task.plot()
+                        if plotres is not None:
+                            shift_pointings.append(plotres)
             
 
 #@task_registry.set_equivalent_casa_task('hsd_flagdata')

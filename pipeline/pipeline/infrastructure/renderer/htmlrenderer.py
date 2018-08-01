@@ -1080,10 +1080,15 @@ class T2_2_7Renderer(T2_2_XRendererBase):
     def get_display_context(context, ms):
         target_pointings = []
         whole_pointings = []
+        shift_pointings = []
         if is_singledish_ms(context):
+            ephem_names = casatools.measures.listcodes(casatools.measures.direction())['extra']
+            valid_ephem_names = [x for x in ephem_names if x != 'COMET']
+            #LOG.info('valid_ephem_names={}'.format(valid_ephem_names))
             for antenna in ms.antennas:
                 for (target, reference) in ms.calibration_strategy['field_strategy'].items():
                     LOG.debug('target field id %s / reference field id %s'%(target,reference))
+                    # pointing pattern without OFF-SOURCE intents
                     task = pointing.SingleDishPointingChart(context, ms, antenna, 
                                                                 target_field_id=target,
                                                                 reference_field_id=reference,
@@ -1092,6 +1097,8 @@ class T2_2_7Renderer(T2_2_XRendererBase):
                     # for missing antenna, spw, field combinations
                     if plotres is None: continue
                     target_pointings.append(plotres)
+                    
+                    # pointing pattern with OFF-SOURCE intents
                     task = pointing.SingleDishPointingChart(context, ms, antenna, 
                                                                 target_field_id=target,
                                                                 reference_field_id=reference,
@@ -1099,6 +1106,22 @@ class T2_2_7Renderer(T2_2_XRendererBase):
                     plotres = task.plot()
                     if plotres is not None:
                         whole_pointings.append(plotres)
+                    
+                    # if the target is ephemeris, shifted pointing pattern should also be plotted
+                    target_field = ms.fields[target]
+                    source_name = target_field.source.name
+                    LOG.info('source_name = {}'.format(source_name))
+                    if source_name.upper() in valid_ephem_names:
+                        LOG.info('generating shifted pointing plot for {}'.format(source_name))
+                        task = pointing.SingleDishPointingChart(context, ms, antenna, 
+                                                                target_field_id=target,
+                                                                reference_field_id=reference, 
+                                                                target_only=True,
+                                                                shift_coord=True)
+                        plotres = task.plot()
+                        if plotres is not None:
+                            LOG.info('Adding shifted pointing plot for {} (antenna {})'.format(source_name, antenna.name))
+                            shift_pointings.append(plotres)
 
         dirname = os.path.join('session%s' % ms.session,
                                ms.basename)
@@ -1107,6 +1130,7 @@ class T2_2_7Renderer(T2_2_XRendererBase):
                 'ms'              : ms,
                 'target_pointing' : target_pointings,
                 'whole_pointing'  : whole_pointings,
+                'shift_pointing'  : shift_pointings,
                 'dirname'         : dirname}
 
 
