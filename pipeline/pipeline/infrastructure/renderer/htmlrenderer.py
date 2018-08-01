@@ -1110,7 +1110,7 @@ class T2_2_7Renderer(T2_2_XRendererBase):
                     # if the target is ephemeris, shifted pointing pattern should also be plotted
                     target_field = ms.fields[target]
                     source_name = target_field.source.name
-                    LOG.info('source_name = {}'.format(source_name))
+                    LOG.debug('source_name = {}'.format(source_name))
                     if source_name.upper() in valid_ephem_names:
                         LOG.info('generating shifted pointing plot for {}'.format(source_name))
                         task = pointing.SingleDishPointingChart(context, ms, antenna, 
