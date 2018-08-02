@@ -431,8 +431,7 @@ def score_bands(mses):
     # ALMA receiver bands. Warnings will be raised for any 
     # measurement sets containing the following bands.
     score = 1.0
-    score_map = {'8': -1.0,
-                 '9': -1.0,
+    score_map = {'9': -1.0,
                  '10': -1.0}
 
     unsupported = set(score_map.keys())
