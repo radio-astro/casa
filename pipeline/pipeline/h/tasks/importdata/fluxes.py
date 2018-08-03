@@ -447,7 +447,15 @@ def import_flux(output_dir, observing_run, filename=None):
                 for flux in field.flux_densities:
                     if flux.spw_id not in science_spw_ids:
                         continue
-                    result.measurements[field.name].append(flux)
+                    # Important! The field ID is used rather than the field
+                    # name as some data describe independent fields using the
+                    # by the same name, e.g., J1733-1304 is both a science
+                    # target and phase calibrator in
+                    # uid://A002/Xc2ae09/X27f.ms.
+                    #
+                    # More info:
+                    # https://open-jira.nrao.edu/browse/CAS-10792?focusedCommentId=123387&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-123387
+                    result.measurements[field.id].append(flux)
             results.append(result)
         return results
 
