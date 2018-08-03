@@ -2077,15 +2077,13 @@ def score_multiply(scores_list):
 
 
 @log_qa
-def score_sd_skycal_elevation_difference(ms, resultdict):
+def score_sd_skycal_elevation_difference(ms, resultdict, threshold=3.0):
     """
     """
     field_ids = resultdict.keys()
-    #assert len(field_ids) == 1
     metric_score = []
-    el_threshold = 3.0
+    el_threshold = threshold
     for field_id in field_ids:
-        #field_id = field_ids[0]
         field = ms.fields[field_id]
         if field_id not in resultdict:
             continue
@@ -2096,8 +2094,8 @@ def score_sd_skycal_elevation_difference(ms, resultdict):
             for spw_id, eld in eldiff.items():
                 preceding = eld.eldiff0
                 subsequent = eld.eldiff1
-                LOG.info('field {} antenna {} preceding={}'.format(field_id, antenna_id, preceding))
-                LOG.info('field {} antenna {} subsequent={}'.format(field_id, antenna_id, subsequent))
+                #LOG.info('field {} antenna {} spw {} preceding={}'.format(field_id, antenna_id, spw_id, preceding))
+                #LOG.info('field {} antenna {} spw {} subsequent={}'.format(field_id, antenna_id, spw_id, subsequent))
                 max_pred = None
                 max_subq = None
                 if len(preceding) > 0:
@@ -2110,10 +2108,7 @@ def score_sd_skycal_elevation_difference(ms, resultdict):
                     metric_score.append(max_subq)
                     if max_subq >= el_threshold:
                         warned_antennas.add(antenna_id)
-                #metric_score.extend([max_pred, max_subq])
-                LOG.info('field {} antenna {} metric_score {}'.format(field_id, antenna_id, metric_score))
-                #if (max_pred is not None and max_pred >= el_threshold) or (max_subq is not Nonemax_subq >= el_threshold:
-                #    warned_antennas.append(antenna_id)
+                LOG.debug('field {} antenna {} spw {} metric_score {}'.format(field_id, antenna_id, spw_id, metric_score))
         
         if len(warned_antennas) > 0:
             antenna_names = ', '.join([ms.antennas[a].name for a in warned_antennas])
@@ -2124,10 +2119,12 @@ def score_sd_skycal_elevation_difference(ms, resultdict):
         else:
             longmsg = 'Elevation difference between ON and OFF is below threshold ({}deg)'.format(el_threshold)
         
-    if np.max(metric_score) >= el_threshold:
-        score = 0.0
-    else:
-        score = 1.0
+    # CAS-11054 it is decided that we do not calculate QA score based on elevation difference for Cycle 6
+    #if np.max(metric_score) >= el_threshold:
+    #    score = 0.0
+    #else:
+    #    score = 1.0
+    score = 1.0
     origin = pqa.QAOrigin(metric_name='OnOffElevationDifference',
                           metric_score=np.max(metric_score),
                           metric_units='deg')

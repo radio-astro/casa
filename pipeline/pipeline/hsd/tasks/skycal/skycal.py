@@ -17,7 +17,6 @@ from .. import common
 
 LOG = infrastructure.get_logger(__name__)
 
-
 class SDSkyCalInputs(vdp.StandardInputs):
     calmode = vdp.VisDependentProperty(default='auto')
     elongated = vdp.VisDependentProperty(default=False)
@@ -98,6 +97,7 @@ class SDSkyCalResults(common.SingleDishResults):
 #@task_registry.set_casa_commands_comment('Generates sky calibration table according to calibration strategy.')
 class SerialSDSkyCal(basetask.StandardTaskTemplate):
     Inputs = SDSkyCalInputs
+    ElevationDifferenceThreshold = 3.0 #deg
 
     def prepare(self):
         args = self.inputs.to_casa_args()
@@ -190,6 +190,33 @@ class SerialSDSkyCal(basetask.StandardTaskTemplate):
         return results
     
     def analyse(self, result):
+        
+        # compute elevation difference between ON and OFF and 
+        # warn if it exceeds elevation limit
+        threshold = self.ElevationDifferenceThreshold
+        context = self.inputs.context
+        resultdict = compute_elevation_difference(context, result)
+        ms = self.inputs.ms
+        ###
+        #ms_index = context.observing_run.measurement_sets.index(ms)
+        #if ms_index == 0:
+        #    resultdict[1][0][19].eldiff0[-16] = 3.78
+        #if ms_index == 1:
+        #    resultdict[1][1][19].eldiff1[2] = -4.0
+        ###
+        for field_id, eldfield in resultdict.items():
+            for antenna_id, eldant in eldfield.items():
+                for spw_id, eld in eldant.items():
+                    eldiff0 = eld.eldiff0
+                    eldiff1 = eld.eldiff1
+                    eldmax = max(numpy.max(numpy.abs(eldiff0)), 
+                                 numpy.max(numpy.abs(eldiff1)))
+                    if eldmax >= threshold:
+                        field_name = ms.fields[field_id].name
+                        antenna_name = ms.antennas[antenna_id].name
+                        LOG.warn('Elevation difference bewteen ON and OFF for {} field {} antenna {} spw {} was {}deg exceeding the threhold {}deg'.format(
+                            ms.basename, field_name, antenna_name, spw_id, eldmax, threshold))                    
+            
         return result
     
     

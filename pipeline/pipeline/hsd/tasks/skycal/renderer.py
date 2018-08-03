@@ -25,7 +25,10 @@ class T2_4MDetailsSingleDishSkyCalRenderer(basetemplates.T2_4MDetailsDefaultRend
                                  'stage%d' % results.stage_number)
         if not os.path.exists(stage_dir):
             os.mkdir(stage_dir)
-
+            
+        # threshold for elevation difference between ON and OFF
+        threshold = skycal_task.SerialSDSkyCal.ElevationDifferenceThreshold
+            
         applications = []
         summary_amp_vs_freq = collections.defaultdict(list)
         details_amp_vs_freq = collections.defaultdict(list)
@@ -87,23 +90,26 @@ class T2_4MDetailsSingleDishSkyCalRenderer(basetemplates.T2_4MDetailsDefaultRend
                     reference_coord = self._get_reference_coord(context, ms, field_domain)
                     reference_coords[vis][field_domain.name] = reference_coord
                     
-                # Compute elevation difference
-                eldiff = skycal_task.compute_elevation_difference(context, result)
-                
-#                 ###
-#                 ms_index = context.observing_run.measurement_sets.index(ms)
-#                 if ms_index == 0:
-#                     eldiff[1][0].eldiff0[-16] = 3.78
-#                 if ms_index == 1:
-#                     eldiff[1][1].eldiff1[2] = -4.0
-#                 ###
-                
-                # Elevation difference: summary plots
-                summaries_elev.extend(skycal_display.plot_elevation_difference(context, result, eldiff, perantenna=False))
-                
-                # Elevation difference: detail plots
-                details_elev.extend(skycal_display.plot_elevation_difference(context, result, eldiff, perantenna=True))
-                
+            result.final = final_original  
+              
+            # Compute elevation difference
+            eldiff = skycal_task.compute_elevation_difference(context, result)
+            
+            ###
+            #ms_index = context.observing_run.measurement_sets.index(ms)
+            #if ms_index == 0:
+            #    eldiff[1][0][19].eldiff0[-16] = 3.78
+            #if ms_index == 1:
+            #    eldiff[1][1][19].eldiff1[2] = -4.0
+            ###
+            
+            # Elevation difference: summary plots
+            summaries_elev.extend(skycal_display.plot_elevation_difference(context, result, eldiff, 
+                                                                           threshold=threshold, perantenna=False))
+            
+            # Elevation difference: detail plots
+            details_elev.extend(skycal_display.plot_elevation_difference(context, result, eldiff, 
+                                                                         threshold=threshold, perantenna=True))
             
             summary_amp_vs_freq[vis].extend(summaries_freq)
             details_amp_vs_freq[vis].extend(details_freq)
@@ -111,8 +117,6 @@ class T2_4MDetailsSingleDishSkyCalRenderer(basetemplates.T2_4MDetailsDefaultRend
             details_amp_vs_time[vis].extend(details_time)
             summary_elev_diff[vis].extend(summaries_elev)
             details_elev_diff[vis].extend(details_elev)
-
-            result.final = final_original    
             
             
         # Sky Level vs Frequency

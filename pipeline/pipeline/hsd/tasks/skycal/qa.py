@@ -21,14 +21,16 @@ class SDSkyCalQAHandler(pqa.QAPlugin):
         resultdict = skycal.compute_elevation_difference(context, result)
         vis = calapps[0].calto.vis
         ms = context.observing_run.get_ms(vis)
-#         ###
-#         ms_index = context.observing_run.measurement_sets.index(ms)
-#         if ms_index == 0:
-#             resultdict[1][0].eldiff0[-16] = 3.78
-#         if ms_index == 1:
-#             resultdict[1][1].eldiff1[2] = -4.0
-#         ###
-        scores = qacalc.score_sd_skycal_elevation_difference(ms, resultdict)
+        ###
+        #ms_index = context.observing_run.measurement_sets.index(ms)
+        #if ms_index == 0:
+        #    resultdict[1][0][19].eldiff0[-16] = 3.78
+        #if ms_index == 1:
+        #    resultdict[1][1][19].eldiff1[2] = -4.0
+        ###
+        threshold = skycal.SerialSDSkyCal.ElevationDifferenceThreshold
+        scores = qacalc.score_sd_skycal_elevation_difference(ms, resultdict,
+                                                             threshold=threshold)
         result.qa.pool.append(scores)
 
 
