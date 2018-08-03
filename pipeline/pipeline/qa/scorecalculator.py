@@ -213,7 +213,7 @@ def linear_score(x, x1, x2, y1=0.0, y2=1.0):
     return m*clipped_x + c
 
 
-def score_data_flagged_by_agents(ms, summaries, min_frac, max_frac, agents, intents=None):
+def score_data_flagged_by_agents(ms, summaries, min_frac, max_frac, agents=None, intents=None):
     """
     Calculate a score for the agentflagger summaries based on the fraction of
     data flagged by certain flagging agents. If intents are provided, then
@@ -239,10 +239,11 @@ def score_data_flagged_by_agents(ms, summaries, min_frac, max_frac, agents, inte
 
     # Set score messages and origin.
     percent = 100.0 * frac_flagged
-    longmsg = ('%0.2f%% data in %s flagged by %s flagging agents'
-               '' % (percent, ms.basename, utils.commafy(agents, quotes=False)))
+    longmsg = ("{:.2f}% data in {} flagged".format(percent, ms.basename))
+    if agents:
+        longmsg += " by {} flagging agents".format(utils.commafy(agents, quotes=False))
     if intents:
-        longmsg += ' for intent(s): {}'.format(utils.commafy(intents, quotes=False))
+        longmsg += ' for intent(s): {}.'.format(utils.commafy(intents, quotes=False))
     shortmsg = '%0.2f%% data flagged' % percent
 
     origin = pqa.QAOrigin(metric_name='score_data_flagged_by_agents',
@@ -628,7 +629,7 @@ def score_online_shadow_template_agents(ms, summaries):
     0 < score < 1 === 60% < frac_flagged < 5%
     """
     score = score_data_flagged_by_agents(ms, summaries, 0.05, 0.6,
-                                         ['online', 'shadow', 'qa0', 'qa2', 'before', 'template'])
+                                         agents=['online', 'shadow', 'qa0', 'qa2', 'before', 'template'])
 
     new_origin = pqa.QAOrigin(metric_name='score_online_shadow_template_agents',
                               metric_score=score.origin.metric_score,
@@ -664,9 +665,25 @@ def score_applycal_agents(ms, summaries):
 
     0 < score < 1 === 60% < frac_flagged < 5%
     """
-    # Get score for 'applycal' agent and 'TARGET' intent.
-    score = score_data_flagged_by_agents(ms, summaries, 0.05, 0.6, ['applycal'], intents=['TARGET'])
+    agents = ['applycal']
+    intents = ['TARGET']
 
+    # Get score for 'applycal' agent and 'TARGET' intent.
+    score = score_data_flagged_by_agents(ms, summaries, 0.05, 0.6, agents=agents, intents=intents)
+    perc_flagged = 100. * score.origin.metric_score
+
+    # Get score for all agents (total) for 'TARGET' intent.
+    dummy_score = score_data_flagged_by_agents(ms, summaries, 0, 1, intents=['TARGET'])
+    total_perc_flagged = 100. * (1. - dummy_score.score)
+
+    # Recreate the long message from the applycal score to also mention the total
+    # percentage flagged.
+    longmsg = ("For {}, intent(s): {}, {:.2f}% of the data was newly flagged by {} flagging agents, for a total of"
+               " {:.2f}% flagged.".format(ms.basename, utils.commafy(intents, quotes=False), perc_flagged,
+                                          utils.commafy(agents, quotes=False), total_perc_flagged))
+    score.longmsg = longmsg
+
+    # Update origin.
     new_origin = pqa.QAOrigin(metric_name='score_applycal_agents',
                               metric_score=score.origin.metric_score,
                               metric_units=score.origin.metric_units)
