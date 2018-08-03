@@ -7,7 +7,6 @@ Created on 9 Sep 2014
 import os
 import shutil
 
-#import pipeline.infrastructure.displays.flagging as flagging
 import pipeline.h.tasks.common.displays.flagging as flagging
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.renderer.basetemplates as basetemplates
@@ -29,14 +28,13 @@ class T2_4MDetailsFlagDeterBaseRenderer(basetemplates.T2_4MDetailsDefaultRendere
                                   'stage%s' % result.stage_number)
 
         flag_totals = {}
-        # non_science_agents = ['qa0']
         for r in result:
             flag_totals = utils.dict_merge(flag_totals, 
                                            flagutils.flags_for_result(r, pipeline_context))
 
             # copy template files across to weblog directory
-            toggle_to_filenames = {'online'   : 'fileonline',
-                                   'template' : 'filetemplate'}
+            toggle_to_filenames = {'online': 'fileonline',
+                                   'template': 'filetemplate'}
             inputs = r.inputs
             for toggle, filenames in toggle_to_filenames.items():
                 src = inputs[filenames]
@@ -67,8 +65,7 @@ class T2_4MDetailsFlagDeterBaseRenderer(basetemplates.T2_4MDetailsDefaultRendere
 #         agents = [s for s in order if s in agent_names]
 
         # return all agents so we get ticks and crosses against each one
-        agents = ['before', 'intents', 'qa0', 'qa2', 'online', 'template', 'autocorr', 'shadow',
-                   'edgespw']
+        agents = ['before', 'intents', 'qa0', 'qa2', 'online', 'template', 'autocorr', 'shadow', 'edgespw']
 
         flagplots = {os.path.basename(r.inputs['vis']): self.flagplot(r, pipeline_context)
                      for r in result}
@@ -80,6 +77,7 @@ class T2_4MDetailsFlagDeterBaseRenderer(basetemplates.T2_4MDetailsDefaultRendere
             'flagcmds': flagcmd_files,
             'flagplots': flagplots})
 
-    def flagplot(self, result, context):
+    @staticmethod
+    def flagplot(result, context):
         plotter = flagging.PlotAntsChart(context, result)
         return plotter.plot()

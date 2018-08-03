@@ -1,23 +1,11 @@
-'''
+"""
 Created on 24 Oct 2014
 
 @author: sjw
-'''
-import collections
-import itertools
-import operator
-import os
-
-import pipeline.domain.measures as measures
+"""
 import pipeline.infrastructure
 import pipeline.infrastructure.casatools as casatools
-import pipeline.infrastructure.filenamer as filenamer
-import pipeline.infrastructure.logging as logging
-import pipeline.infrastructure.renderer.basetemplates as basetemplates
-import pipeline.infrastructure.utils as utils
-#from pipeline.hif.tasks.applycal.renderer import *
 from pipeline.h.tasks.applycal.renderer import *
-
 from pipeline.h.tasks.common.displays import applycal as applycal
 
 LOG = logging.get_logger(__name__)
@@ -30,8 +18,8 @@ class T2_4MDetailsSDApplycalRenderer(T2_4MDetailsApplycalRenderer,
     def __init__(self, uri='applycal.mako', 
                  description='Apply calibrations from context',
                  always_rerender=False):
-        super(T2_4MDetailsSDApplycalRenderer, self).__init__(uri=uri,
-                description=description, always_rerender=always_rerender)
+        super(T2_4MDetailsSDApplycalRenderer, self).__init__(
+            uri=uri, description=description, always_rerender=always_rerender)
 
     def update_mako_context(self, ctx, context, result):
         weblog_dir = os.path.join(context.report_dir,
@@ -40,8 +28,7 @@ class T2_4MDetailsSDApplycalRenderer(T2_4MDetailsApplycalRenderer,
         flag_totals = {}
         for r in result:
             if r.inputs['flagsum'] == True:
-                flag_totals = utils.dict_merge(flag_totals,
-                                           self.flags_for_result(r, context))
+                flag_totals = utils.dict_merge(flag_totals, self.flags_for_result(r, context))
 
         calapps = {}
         for r in result:
@@ -134,4 +121,4 @@ class T2_4MDetailsSDApplycalRenderer(T2_4MDetailsApplycalRenderer,
                 with renderer.get_file() as fileobj:
                     fileobj.write(renderer.render())
 
-        return (amp_vs_freq_summary_plots, max_uvs)
+        return amp_vs_freq_summary_plots, max_uvs

@@ -249,7 +249,8 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
             'phase_vs_time_subpages': phase_vs_time_subpages,
         })
 
-    def create_uv_plots(self, context, results, weblog_dir):
+    @staticmethod
+    def create_uv_plots(context, results, weblog_dir):
         uv_plots = collections.defaultdict(list)
 
         for result in results:
@@ -588,7 +589,7 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
         by_intent = self.flags_by_intent(ms, summaries)
         by_spw = self.flags_by_science_spws(ms, summaries)
 
-        return {ms.basename : utils.dict_merge(by_intent, by_spw)}
+        return {ms.basename: utils.dict_merge(by_intent, by_spw)}
 
     def flags_by_intent(self, ms, summaries):
         # create a dictionary of scans per observing intent, eg. 'PHASE':[1,2,7]
