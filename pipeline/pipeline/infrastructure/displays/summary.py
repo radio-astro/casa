@@ -830,6 +830,7 @@ class UVChart(object):
             'yaxis': 'vwave',
             'title': self.title,
             'avgchannel': self.nchan,
+            'antenna': '*&*',
             'spw': self.spw,
             'field': self.field,
             'intent': utils.to_CASA_intent(self.ms, 'TARGET'),
