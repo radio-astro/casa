@@ -352,7 +352,7 @@ class SDExportData(exportdata.ExportData):
                 if jyperk and os.path.exists(jyperk):
                     tar.add(jyperk, arcname=os.path.basename(jyperk))
                     LOG.info('Saving auxiliary data product {} in {}'.format(os.path.basename(jyperk), tarfilename))
-                else:
+                elif isinstance(jyperk, str):
                     LOG.info('Auxiliary data product {} does not exist'.format(os.path.basename(jyperk)))
 
                 # Save flag files.
