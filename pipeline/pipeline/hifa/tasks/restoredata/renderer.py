@@ -9,6 +9,7 @@ import os
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.renderer.basetemplates as basetemplates
 from pipeline.h.tasks.importdata.renderer import make_repsource_table
+from pipeline.infrastructure.utils import merge_td_columns
 
 LOG = logging.get_logger(__name__)
 
@@ -25,6 +26,9 @@ class T2_4MDetailsRestoreDataRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
 
         # Extract information for representative sources table.
         repsource_table_rows = make_repsource_table(pipeline_context, results)
+        # True if representative source is defined for any MS
+        repsource_defined = any('N/A' not in td for tr in repsource_table_rows for td in tr[1:])
+        repsource_table_rows = merge_td_columns(repsource_table_rows)
 
         # Extract information for flagging summary table.
         flags = _get_flags(pipeline_context, results)
@@ -34,7 +38,7 @@ class T2_4MDetailsRestoreDataRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
         mako_context.update({
             'casa_version': results[0].casa_version_orig,
             'pipeline_version': results[0].pipeline_version_orig,
-            'repsource_defined': True if repsource_table_rows else False,
+            'repsource_defined': repsource_defined,
             'repsource_table_rows': repsource_table_rows,
             'flags': flags,
             'flags_maxspw': flags_maxspw,
@@ -57,15 +61,14 @@ def _get_flags(pipeline_context, results):
                 sci_sources = [source.name for source in ms.sources if 'TARGET' in source.intents]
 
                 # Get science spectral windows.
-                sci_spws = ms.get_spectral_windows(science_windows_only=True)
-                sci_spwids = [str(spw.id) for spw in sci_spws]
+                sci_spw_ids = [spw.id for spw in ms.get_spectral_windows(science_windows_only=True)]
 
                 # Extract information for each source in current vis.
                 for source, src_summary in session_summaries.items():
                     if source in sci_sources:
                         flags[source][vis] = {}
 
-                        for spw in sci_spwids:
-                            flags[source][vis][spw] = src_summary['spw'][spw]
+                        for spw in sci_spw_ids:
+                            flags[source][vis][spw] = src_summary['spw'][str(spw)]
 
     return flags

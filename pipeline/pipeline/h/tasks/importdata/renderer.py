@@ -41,6 +41,7 @@ class T2_4MDetailsImportDataRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
         flux_table_rows = make_flux_table(pipeline_context, setjy_results)
 
         repsource_table_rows = make_repsource_table(pipeline_context, result)
+        repsource_defined = any('N/A' not in td for tr in repsource_table_rows for td in tr[1:])
 
         fluxcsv_files = {}
         for r in result:
@@ -57,7 +58,7 @@ class T2_4MDetailsImportDataRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
         mako_context.update({
             'flux_imported': True if measurements else False,
             'flux_table_rows': flux_table_rows,
-            'repsource_defined': True if repsource_table_rows else False,
+            'repsource_defined': repsource_defined,
             'repsource_table_rows': repsource_table_rows,
             'num_mses': num_mses,
             'fluxcsv_files': fluxcsv_files,
@@ -129,7 +130,8 @@ def make_repsource_table(context, results):
 
             # If either the representative frequency or bandwidth is undefined then
             # the representatve target is undefined
-            if not ms.representative_target[1] or not ms.representative_target[2]: 
+            if not ms.representative_target[1] or not ms.representative_target[2]:
+                rows.append(RepsourceTR(vis, 'N/A', 'N/A', 'N/A', 'N/A', 'N/A'))
                 continue
 
             # Is the representative source in the context or not

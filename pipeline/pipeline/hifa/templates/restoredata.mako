@@ -7,7 +7,7 @@ def sanitise_value(value):
     return value
 
 def percentage_flagged(flag):
-    return "{:.1f}%".format(100. * flag['flagged'] / flag['total'])
+    return "{:.1%}".format(flag['flagged'] / flag['total'])
 %>
 
 <%inherit file="t2-4m_details-base.mako"/>
@@ -87,14 +87,14 @@ def percentage_flagged(flag):
             <td rowspan="${src_rowspan * 2}">${src}</td>
         % for vis in flags[src]:
             <td rowspan="2">${vis}</td>
-            % for spw in flags[src][vis]:
+            % for spw in sorted(flags[src][vis]):
                 <td><strong>${spw}</strong></td>
             % endfor
             % for ind in range(flags_maxspw-len(flags[src][vis])):
                 <td></td>
             % endfor
             </tr>
-            % for spw in flags[src][vis]:
+            % for spw in sorted(flags[src][vis]):
                 <td>${percentage_flagged(flags[src][vis][spw])}</td>
             % endfor
             % for ind in range(flags_maxspw-len(flags[src][vis])):
