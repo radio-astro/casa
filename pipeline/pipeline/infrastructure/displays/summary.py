@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 
 import datetime
+import math
 import operator
 import os
 
@@ -15,10 +16,11 @@ import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.renderer.logger as logger
 import pipeline.infrastructure.utils as utils
 import pipeline.infrastructure.vdp as vdp
+from pipeline.domain.measures import FrequencyUnits, DistanceUnits
 from pipeline.infrastructure import casa_tasks
+from . import plotmosaic
 from . import plotpwv
 from . import plotweather
-from . import plotmosaic
 
 LOG = infrastructure.get_logger(__name__)
 DISABLE_PLOTMS = False
@@ -804,19 +806,25 @@ class UVChart(object):
         self.figfile = self._get_figfile(output_dir=output_dir)
 
         # Select which source to plot.
-        src, spw = self._get_source_and_spwid()
-        self.spw = spw
+        src, spw_id = self._get_source_and_spwid()
+        self.spw_id = spw_id
 
         # Determine which field to plot.
         self.field, self.field_name = self._get_field_for_source(src)
 
         # Determine number of channels in spw.
-        self.nchan = self._get_nchan_for_spw(spw)
+        self.nchan = self._get_nchan_for_spw(spw_id)
 
         # Set title of plot, modified by prefix if provided.
         self.title = 'UV coverage for {}'.format(self.ms.basename)
         if title_prefix:
             self.title = title_prefix + self.title
+
+        # get max UV via unprojected baseline
+        spw = ms.get_spectral_window(spw_id)
+        wavelength_m = 299792458 / float(spw.min_frequency.to_units(FrequencyUnits.HERTZ))
+        bl_max = float(ms.antenna_array.max_baseline.length.to_units(DistanceUnits.METRE))
+        self.uv_max = math.ceil(1.05 * bl_max / wavelength_m)
 
     def plot(self):
         if DISABLE_PLOTMS:
@@ -831,13 +839,15 @@ class UVChart(object):
             'title': self.title,
             'avgchannel': self.nchan,
             'antenna': '*&*',
-            'spw': self.spw,
+            'spw': self.spw_id,
             'field': self.field,
             'intent': utils.to_CASA_intent(self.ms, 'TARGET'),
             'plotfile': self.figfile,
             'clearplots': True,
             'showgui': False,
-            'customflaggedsymbol': self.customflagged}
+            'customflaggedsymbol': self.customflagged,
+            'plotrange': [-self.uv_max, self.uv_max, -self.uv_max, self.uv_max]
+        }
 
         task = casa_tasks.plotms(**task_args)
 
@@ -862,7 +872,7 @@ class UVChart(object):
                            parameters={'vis': self.ms.basename,
                                        'field': self.field,
                                        'field_name': self.field_name,
-                                       'spw': self.spw},
+                                       'spw': self.spw_id},
                            command=str(task))
 
     def _get_source_and_spwid(self):
