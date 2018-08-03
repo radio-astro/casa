@@ -319,7 +319,7 @@ def create_flux_comparison_plots(context, output_dir, result):
                     linestyle='dotted')
             ax.plot([x[-1], x_max], [y[-1], s_xmax], color=colour, label='_nolegend_', linestyle='dotted')
 
-        leg = ax.legend(loc='best', prop={'size': 8})
+        leg = ax.legend(loc='best', numpoints=1, prop={'size': 8})
         leg.get_frame().set_alpha(0.5)
         figfile = '{}-field{}-flux_calibration.png'.format(ms.basename, field_id)
 
