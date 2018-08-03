@@ -65,10 +65,31 @@ def rx_for_plot(plot):
 
 <%block name="title">Phased-up fluxscale</%block>
 
+<h2>Contents</h2>
+<ul>
+    <li>Tables:</li>
+    <ul>
+        %if adopted_table:
+            <li><a href="#adopted">Measurement sets using adopted flux calibrations</a></li>
+        %endif
+        <li><a href="#antennas">Antennas used for flux scaling</a></li>
+        <li><a href="#computed">Computed flux densities</a></li>
+    </ul>
+    <li>Plots:</li>
+    <ul>
+        %if flux_plots:
+            <li><a href="#flux_vs_freq_comparison">Derived flux density vs catalogue flux density</a></li>
+        %endif
+        %if ampuv_allant_plots:
+            <li><a href="#model">Flux calibrator model comparison</a></li>
+        %endif
+    </ul>
+</ul>
+
 <h2>Results</h2>
 
 % if adopted_table:
-<h4>Measurement sets using adopted flux calibrations</h4>
+<h3 id="adopted">Measurement sets using adopted flux calibrations</h3>
     <p>Measurement sets without flux calibrator scans adopt the appropriate flux calibrations from other measurement
         sets within the session. This is possible when the measurement sets with- and without-flux calibrator scans
         independently observe a common set of fields, such as a common phase calibrator. In these instances, the adopted
@@ -99,7 +120,7 @@ def rx_for_plot(plot):
     </table>
 % endif
 
-<h4>Antennas Used for Flux Scaling</h4>
+<h3 id="antennas">Antennas Used for Flux Scaling</h3>
 
 <p>The following antennas were used for flux scaling, entries for unresolved flux calibrators are blank</p>
 
@@ -124,7 +145,7 @@ def rx_for_plot(plot):
 </table>
 
 
-<h4>Computed Flux Densities</h4>
+<h3 id="computed">Computed Flux Densities</h3>
 
 <p>The following flux densities were set in the measurement set model column and recorded in the pipeline context:</p>
 
@@ -163,7 +184,7 @@ def rx_for_plot(plot):
 
 
 <%self:plot_group plot_dict="${flux_plots}"
-				  url_fn="${lambda x: 'junk'}"
+                  url_fn="${lambda ms: None}"
 				  title_id="flux_vs_freq_comparison">
 
 	<%def name="title()">
@@ -204,7 +225,7 @@ def rx_for_plot(plot):
 
 
 %if ampuv_allant_plots:
-    <h3>Flux Calibrator Model Comparison</h3>
+    <h3 id="model">Flux Calibrator Model Comparison</h3>
     Antenna selection used for flux transfer to the secondary calibrators.
 
 	%for ms in ampuv_allant_plots:
