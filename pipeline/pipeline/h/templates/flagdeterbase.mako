@@ -22,7 +22,7 @@ total_keys = {
 	'BANDPASS'     : 'Bandpass',
 	'AMPLITUDE'    : 'Flux',
 	'PHASE'        : 'Phase',
-	'TARGET'       : 'Target'
+	'TARGET'       : 'Target (science spws)'
 }
 
 def template_agent_header1(agent):
