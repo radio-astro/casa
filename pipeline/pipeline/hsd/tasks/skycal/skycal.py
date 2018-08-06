@@ -209,8 +209,15 @@ class SerialSDSkyCal(basetask.StandardTaskTemplate):
                 for spw_id, eld in eldant.items():
                     eldiff0 = eld.eldiff0
                     eldiff1 = eld.eldiff1
-                    eldmax = max(numpy.max(numpy.abs(eldiff0)), 
-                                 numpy.max(numpy.abs(eldiff1)))
+                    if len(eldiff0) > 0:
+                        eldmax0 = numpy.max(numpy.abs(eldiff0))
+                    else:
+                        eldmax0 = -1.0
+                    if len(eldiff1) > 0:
+                        eldmax1 = numpy.max(numpy.abs(eldiff1))
+                    else:
+                        eldmax1 = -1.0
+                    eldmax = max(eldmax0, eldmax1)
                     if eldmax >= threshold:
                         field_name = ms.fields[field_id].name
                         antenna_name = ms.antennas[antenna_id].name
