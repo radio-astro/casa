@@ -5,9 +5,11 @@ import pipeline.infrastructure.renderer.basetemplates as basetemplates
 import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.utils as utils
+import pipeline.domain.measures as measures
 import pipeline.infrastructure.filenamer as filenamer
 
 from ..common import renderer as sdsharedrenderer
+from ..common import utils as sdutils
 from ..common import compress
 
 from . import imaging
@@ -75,7 +77,11 @@ class T2_4MDetailsSingleDishImagingRenderer(basetemplates.T2_4MDetailsDefaultRen
                 for plot in inner:
                     flattened.append(plot)
             LOG.debug('flattened=%s'%((flattened)));
-            summary = self._summary_plots(plot_list)
+            #summary = self._summary_plots(plot_list)
+            if key == 'channelmap':
+                summary = self._summary_plots_channelmap(context, plot_list)
+            else:
+                summary = self._summary_plots(plot_list)
             subpage = {}
             plot_title = value['plot_title']
             LOG.debug('plot_title=%s'%(plot_title));
@@ -133,3 +139,77 @@ class T2_4MDetailsSingleDishImagingRenderer(basetemplates.T2_4MDetailsDefaultRen
                     idx = spw_list.index(spw)
                     summary_plots[field_name][idx] = plot
         return summary_plots
+    
+    @staticmethod
+    def _summary_plots_channelmap(context, plot_group):
+        # take first ms as representative one
+        ms = context.observing_run.measurement_sets[0]
+        source_names = [s.name for s in ms.sources]
+        
+        summary_plots = {}
+        for (field_name, plots) in plot_group.items():
+            spw_list = []
+            summary_plots[field_name] = []
+            best_plot = {}
+            min_separation = {}
+            
+            for plot in plots:
+                if plot.parameters['ant'] != 'COMBINED':
+                    continue
+                
+                spw_id = plot.parameters['spw']
+                if spw_id not in spw_list:
+                    spw_list.append(spw_id)
+                source_name = plot.field
+                source_index = source_names.index(source_name)
+                source_id = ms.sources[source_index].id
+                # center frequency
+                spw = ms.get_spectral_window(spw_id)
+                cf = spw.centre_frequency
+                center_freq = float(cf.convert_to(measures.FrequencyUnits.HERTZ).value)
+                # first item of rest frequencies
+                rest_frequency = sdutils.get_restfrequency(ms.name, spw_id, source_id)
+                if rest_frequency is None:
+                    # center frequency of the spw (TOPO)
+                    # the result may be wrong due to the difference of frequency reference
+                    LOG.debug('rest frequency is not available for {} spw {}. Using center frequency instead.'.format(source_name, spw_id))
+                    rest_frequency = center_freq
+                
+                # line window in LSRK frequency
+                line_window = plot.parameters['line']
+                if line_window[0] > line_window[1]:
+                    tmp = line_window[0]
+                    line_window[1] = line_window[0]
+                    line_window[0] = tmp
+                line_center = sum(line_window) / 2
+                LOG.debug('line_center = {}'.format(line_center))
+                    
+                penalty = center_freq
+                if line_window[0] <= rest_frequency and rest_frequency <= line_window[1]:
+                    separation = abs(line_center - rest_frequency)
+                    LOG.debug('line window brackets rest frequency')
+                    LOG.debug('FIELD {} SPW {} rest frequency {} separation {}'.format(field_name, spw_id, rest_frequency, separation))
+                else:
+                    # add penalty term to the separation
+                    separation = penalty + abs(line_center - rest_frequency)
+                    LOG.debug('FIELD {} SPW {} rest frequency {} separation {} (w/o penalty {})'.format(field_name, 
+                                                                                                        spw_id, 
+                                                                                                        rest_frequency, 
+                                                                                                        separation,
+                                                                                                        separation - penalty))
+
+                if spw_id not in best_plot or separation < min_separation[spw_id]:
+                    LOG.debug('updating best_plot for SPW {} (min_separation {} separation {})'.format(spw_id,
+                                                                                                       min_separation.get(spw_id, None),
+                                                                                                       separation))
+                    best_plot[spw_id] = plot
+                    min_separation[spw_id] = separation
+
+            LOG.debug('FIELD {}'.format(field_name))
+            LOG.debug('spw_list {}'.format(spw_list))
+            for spw_id in spw_list:
+                summary_plots[field_name].append(best_plot[spw_id])
+                
+        return summary_plots
+                
+                

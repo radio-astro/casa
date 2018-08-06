@@ -213,6 +213,9 @@ It generates an image combined spectral data from whole antenna as well as image
         <% continue %>
     % endif
     <h3 id="${plots['title'].replace(" ", "")}" class="jumptarget">${plots['title']}</h3>
+    % if plots['title'] == 'Channel Map':
+    Click in the Field Name or Spectral Window ID to get different spectral selections.
+    % endif
     % for field in plots['subpage'].keys():
         <h4><a class="replace"
                href="${os.path.join(dirname, plots['subpage'][field])}"

@@ -952,6 +952,7 @@ class SDChannelMapDisplay(SDImageDisplay):
                 parameters['file'] = self.inputs.imagename
                 parameters['field'] = self.inputs.source
                 parameters['vis'] = 'ALL'
+                parameters['line'] = [self.frequency[chan0] * 1e9, self.frequency[chan1] * 1e9] # GHz -> Hz
 
                 plot = logger.Plot(plotfile,
                                    x_axis='R.A.',
