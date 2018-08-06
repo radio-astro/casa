@@ -168,8 +168,10 @@ class SDChannelAveragedImageDisplay(SDImageDisplay):
             #parameters['type'] = 'sd_channel-averaged'
             parameters['type'] = 'sd_integrated_map'
             parameters['file'] = self.inputs.imagename
-            if self.inputs.vis is not None:
-                parameters['vis'] = self.inputs.vis
+            parameters['field'] = self.inputs.source
+            #if self.inputs.vis is not None:
+            #    parameters['vis'] = self.inputs.vis
+            parameters['vis'] = 'ALL'
 
             plot = logger.Plot(plotfile,
                                x_axis='R.A.',
@@ -301,6 +303,8 @@ class SDMomentMapDisplay(SDImageDisplay):
             parameters['ant'] = self.inputs.antenna
             parameters['type'] = 'sd_moment_map'
             parameters['file'] = self.inputs.imagename
+            parameters['field'] = self.inputs.source
+            parameters['vis'] = 'ALL'
 
             plot = logger.Plot(plotfile,
                                x_axis='R.A.',
@@ -550,6 +554,8 @@ class SDSparseMapDisplay(SDImageDisplay):
                 parameters['ant'] = self.inputs.antenna
                 parameters['type'] = 'sd_sparse_map'
                 parameters['file'] = self.inputs.imagename
+                parameters['field'] = self.inputs.source
+                parameters['vis'] = 'ALL'
 
                 plot = logger.Plot(plotfile,
                                    x_axis='Frequency',
@@ -944,6 +950,8 @@ class SDChannelMapDisplay(SDImageDisplay):
                 parameters['ant'] = self.antenna
                 parameters['type'] = 'channel_map'
                 parameters['file'] = self.inputs.imagename
+                parameters['field'] = self.inputs.source
+                parameters['vis'] = 'ALL'
 
                 plot = logger.Plot(plotfile,
                                    x_axis='R.A.',
@@ -1074,6 +1082,8 @@ class SDRmsMapDisplay(SDImageDisplay):
             parameters['ant'] = self.antenna
             parameters['file'] = self.inputs.imagename
             parameters['type'] = 'rms_map'
+            parameters['field'] = self.inputs.source
+            parameters['vis'] = 'ALL'
 
             plot2 = logger.Plot(plotfile,
                                 x_axis='R.A.',
@@ -1311,6 +1321,8 @@ class SDSpectralMapDisplay(SDImageDisplay):
                     parameters['ant'] = self.inputs.antenna
                     parameters['type'] = 'sd_spectral_map'
                     parameters['file'] = self.inputs.imagename
+                    parameters['field'] = self.inputs.source
+                    parameters['vis'] = 'ALL'
 
                     plot = logger.Plot(plotfile,
                                        x_axis='Frequency',

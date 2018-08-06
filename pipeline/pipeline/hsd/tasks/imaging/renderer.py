@@ -5,8 +5,10 @@ import pipeline.infrastructure.renderer.basetemplates as basetemplates
 import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.utils as utils
+import pipeline.infrastructure.filenamer as filenamer
 
 from ..common import renderer as sdsharedrenderer
+from ..common import compress
 
 from . import imaging
 from . import display
@@ -64,16 +66,28 @@ class T2_4MDetailsSingleDishImagingRenderer(basetemplates.T2_4MDetailsDefaultRen
                                    'plot_title': 'Maximum Intensity Map'},
                      'integratedmap': {'type': 'sd_integrated_map',
                                        'plot_title': 'Integrated Intensity Map'}}
+
         for (key, value) in map_types.iteritems():
             plot_list = self._plots_per_field_with_type(plots, value['type'])
+            LOG.debug('plot_list=%s'%((plot_list)));
+            flattened = []
+            for inner in plot_list.values():
+                for plot in inner:
+                    flattened.append(plot)
+            LOG.debug('flattened=%s'%((flattened)));
             summary = self._summary_plots(plot_list)
             subpage = {}
+            plot_title = value['plot_title']
+            LOG.debug('plot_title=%s'%(plot_title));
+            renderer = basetemplates.JsonPlotRenderer('generic_x_vs_y_ant_field_spw_pol_plots.mako',
+                                                      context,
+                                                      results,
+                                                      flattened,
+                                                      plot_title,
+                                                      filenamer.sanitize('%s.html' % (plot_title.lower())))
+            with renderer.get_file() as fileobj:
+                fileobj.write(renderer.render())
             for (name, _plots) in plot_list.iteritems():
-                # renderer = value['renderer'](context, results, name, _plots)
-                renderer = sdsharedrenderer.SingleDishGenericPlotsRenderer(context, results, name, _plots, 
-                                                                           value['plot_title'])
-                with renderer.get_file() as fileobj:
-                    fileobj.write(renderer.render())
                 subpage[name] = os.path.basename(renderer.path)
             ctx.update({'%s_subpage' % key: subpage,
                         '%s_plots' % key: summary})
@@ -84,6 +98,7 @@ class T2_4MDetailsSingleDishImagingRenderer(basetemplates.T2_4MDetailsDefaultRen
                     for p in _plots:
                         ant = p.parameters['ant']
                         pol = p.parameters['pol']
+                        field = p.parameters['field']
                         if ant not in _ap:
                             _ap[ant] = [pol]
                         elif pol not in _ap[ant]:

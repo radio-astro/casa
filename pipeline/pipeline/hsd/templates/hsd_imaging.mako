@@ -31,6 +31,16 @@ $(document).ready(function() {
         };
     };
 
+    // return a function that sets the Field text field to the given spw
+    var createAntennaSetter = function(field) {
+        return function() {
+        	if (typeof field !== "undefined") {
+	            // trigger a change event, otherwise the filters are not changed
+	            $("#select-field").select2("val", [field]).trigger("change");
+        	}
+        };
+    };
+
     // return a function that sets the Polarization text field to the given spw
     var createPolarizationSetter = function(pol) {
         return function() {
@@ -42,7 +52,7 @@ $(document).ready(function() {
     };
 
     // 
-    var createMixedSetter = function(spw, ant, pol) {
+    var createMixedSetter = function(spw, ant, field, pol) {
         return function() {
             // trigger a change event, otherwise the filters are not changed
         	if (typeof spw !== "undefined") {
@@ -50,6 +60,9 @@ $(document).ready(function() {
         	}
         	if (typeof ant !== "undefined") {
             	$("#select-ant").select2("val", [ant]).trigger("change");
+        	}
+        	if (typeof field !== "undefined") {
+            	$("#select-field").select2("val", [field]).trigger("change");
         	}
         	if (typeof pol !== "undefined") {
 	            $("#select-pol").select2("val", [pol]).trigger("change");
@@ -63,8 +76,9 @@ $(document).ready(function() {
         var o = $(v);
         var spw = o.data("spw");
         var ant = o.data("ant");
+        var field = o.data("field");
         var pol = o.data("pol");
-        o.data("callback", createMixedSetter(spw, ant, pol));
+        o.data("callback", createMixedSetter(spw, ant, field, pol));
     });
 });
 </script>
@@ -133,7 +147,10 @@ It generates an image combined spectral data from whole antenna as well as image
 <h3 id="profilemap" class="jumptarget">Profile Map</h3>
   % for field in sparsemap_subpage.keys():
     <h4><a class="replace"
-           href="${os.path.join(dirname, sparsemap_subpage[field])}">${field}</a>
+           href="${os.path.join(dirname, sparsemap_subpage[field])}"
+	   data-field="${field}">
+           ${field}
+        </a>
     </h4>
     % for plot in sparsemap_plots[field]:
         % if os.path.exists(plot.thumbnail):
@@ -152,7 +169,8 @@ It generates an image combined spectral data from whole antenna as well as image
 	                        <a href="${os.path.join(dirname, sparsemap_subpage[field])}"
 	                           class="replace"
 	                           data-spw="${plot.parameters['spw']}"
-	                           data-ant="${plot.parameters['ant']}">
+	                           data-ant="${plot.parameters['ant']}"
+	                           data-field="${field}">
 	                           Spectral Window ${plot.parameters['spw']}
 	                        </a>
 	                    </h4>
@@ -172,6 +190,7 @@ It generates an image combined spectral data from whole antenna as well as image
 		                               class="btn replace"
 		                               data-spw="${plot.parameters['spw']}"
 		                               data-ant="${ant}"
+	                                       data-field="${field}"
 		                               data-pol="${pol}">
 		                            ${pol}
 		                            </a>
@@ -196,7 +215,10 @@ It generates an image combined spectral data from whole antenna as well as image
     <h3 id="${plots['title'].replace(" ", "")}" class="jumptarget">${plots['title']}</h3>
     % for field in plots['subpage'].keys():
         <h4><a class="replace"
-               href="${os.path.join(dirname, plots['subpage'][field])}">${field}</a>
+               href="${os.path.join(dirname, plots['subpage'][field])}"
+               data-field="${field}">
+               ${field}
+            </a>
         </h4>
         % for plot in plots['plot'][field]:
             % if os.path.exists(plot.thumbnail):
@@ -215,7 +237,8 @@ It generates an image combined spectral data from whole antenna as well as image
 	                            <a href="${os.path.join(dirname, plots['subpage'][field])}"
 	                               class="replace"
 	                               data-spw="${plot.parameters['spw']}"
-	                               data-ant="${plot.parameters['ant']}">
+	                               data-ant="${plot.parameters['ant']}"
+	                               data-field="${field}">
 	                               Spectral Window ${plot.parameters['spw']}
 	                            </a>
 	                        </h4>
