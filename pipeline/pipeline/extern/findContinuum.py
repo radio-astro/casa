@@ -70,7 +70,7 @@ def version(showfile=True):
     """
     Returns the CVS revision number.
     """
-    myversion = "$Id: findContinuumCycle6.py,v 2.39 2018/07/19 09:25:31 we Exp $" 
+    myversion = "$Id: findContinuumCycle6.py,v 2.43 2018/08/06 00:07:58 we Exp $" 
     if (showfile):
         print("Loaded from %s" % (__file__))
     return myversion
@@ -131,7 +131,7 @@ def findContinuum(img='', pbcube=None, psfcube=None, minbeamfrac=0.3, spw='', tr
                   projectCode='', useIAGetProfile=True, useThresholdWithMask=False, 
                   dpi=dpiDefault, normalizeByMAD='auto', returnSnrs=False,
                   overwriteMoments=False,minPeakOverMadForSFCAdjustment=[19,19],
-                  minPixelsInJointMask=3, userJointMask=''): 
+                  minPixelsInJointMask=3, userJointMask='', signalRatioTier1=0.967): 
     """
     This function calls functions to:
     1) compute a representative 'mean' spectrum of a dirty cube
@@ -314,6 +314,10 @@ def findContinuum(img='', pbcube=None, psfcube=None, minbeamfrac=0.3, spw='', tr
         For testing purpose. This option is overridden by the contents of vis (if specified).
     negativeThresholdFactor: scale the nominal negative threshold by this factor (to 
         adjust the sensitivity to absorption features: smaller values=more sensitive)
+    signalRatioTier1: threshold for signalRatio, above which we desensitize the level to
+        consider line emission in order to avoid small differences in noise levels from 
+        affecting the result (e.g. that occur between serial and parallel tclean cubes)
+        signalRatio=1 means: no lines seen, while closer to zero: more lines seen
 
     General parameters:
     -------------------
@@ -598,7 +602,9 @@ def findContinuum(img='', pbcube=None, psfcube=None, minbeamfrac=0.3, spw='', tr
                               dpi=dpi, normalizeByMAD=normalizeByMAD,
                               overwriteMoments=overwriteMoments,
                               minPeakOverMadForSFCAdjustment=minPeakOverMadForSFCAdjustment,
-                              minPixelsInJointMask=minPixelsInJointMask, userJointMask=userJointMask)
+                              minPixelsInJointMask=minPixelsInJointMask, userJointMask=userJointMask,
+                              signalRatioTier1=signalRatioTier1)
+
 
     if result is None:
         return
@@ -661,7 +667,8 @@ def findContinuum(img='', pbcube=None, psfcube=None, minbeamfrac=0.3, spw='', tr
                                               useIAGetProfile=useIAGetProfile,useThresholdWithMask=useThresholdWithMask,
                                               dpi=dpi, overwriteMoments=overwriteMoments,
                                               minPeakOverMadForSFCAdjustment=minPeakOverMadForSFCAdjustment,
-                                              minPixelsInJointMask=minPixelsInJointMask, userJointMask=userJointMask)
+                                              minPixelsInJointMask=minPixelsInJointMask, userJointMask=userJointMask,
+                                              signalRatioTier1=signalRatioTier1)
                     if result is None:
                         return
                     selection, mypng, slope, channelWidth, nchan, useLowBaseline, mom0snrs, mom8snrs, useMiddleChannels = result
@@ -759,7 +766,8 @@ def findContinuum(img='', pbcube=None, psfcube=None, minbeamfrac=0.3, spw='', tr
                                       useIAGetProfile=useIAGetProfile,useThresholdWithMask=useThresholdWithMask,
                                       dpi=dpi, overwriteMoments=overwriteMoments,
                                       minPeakOverMadForSFCAdjustment=minPeakOverMadForSFCAdjustment, 
-                                      minPixelsInJointMask=minPixelsInJointMask, userJointMask=userJointMask)
+                                      minPixelsInJointMask=minPixelsInJointMask, userJointMask=userJointMask, 
+                                      signalRatioTier1=signalRatioTier1)
 
 
             selection, mypng, slope, channelWidth, nchan, useLowBaseline, mom0snrs, mom8snrs, useMiddleChannels = result
@@ -1291,7 +1299,6 @@ def runFindContinuum(img='', pbcube=None, psfcube=None, minbeamfrac=0.3, spw='',
     spw: the spw name or number to put in the x-axis label
     transition: the name of the spectral transition (for the plot title)
     baselineModeA: 'min' or 'edge', method to define the baseline in meanSpectrum()
-    baselineModeB: 'min' or 'edge', method to define the baseline in findContinuumChannels()
     sigmaCube: multiply this value by the MAD to get the threshold above which a pixel
                is included in the mean spectrum
     nBaselineChannels: if integer, then the number of channels to use in:
@@ -1318,14 +1325,11 @@ def runFindContinuum(img='', pbcube=None, psfcube=None, minbeamfrac=0.3, spw='',
          and not more than maxTrimFraction
     percentile: control parameter used with baselineMode='min'
     continuumThreshold: if specified, only use pixels above this intensity level
-    separator: the character to use to separate groups of channels in the string returned
     narrow: the minimum number of channels that a group of channels must have to survive
             if 0<narrow<1, then it is interpreted as the fraction of all
                            channels within identified blocks
             if 'auto', then use int(ceil(log10(nchan)))
     titleText: default is img name and transition and the control parameter values
-    maxTrim: in trimChannels='auto', this is the max channels to trim per group for TDM spws; it is automatically scaled upward for FDM spws.
-    maxTrimFraction: in trimChannels='auto', the max fraction of channels to trim per group
     meanSpectrumFile: an alternative ASCII text file to use for the mean spectrum.
                       Must also set img=''.
     meanSpectrumMethod: 'peakOverMad', 'peakOverRms', 'meanAboveThreshold', 
@@ -1353,8 +1357,6 @@ def runFindContinuum(img='', pbcube=None, psfcube=None, minbeamfrac=0.3, spw='',
     megapixels: simply used to label the plot
     triangularPatternSeen: if True, then slightly boost sigmaFindContinuum if it is in 'auto' mode
     maxMemory: only used to name the png if it is set
-    negativeThresholdFactor: scale the nominal negative threshold by this factor (to adjust 
-        sensitivity to absorption features: smaller values=more sensitive)
     applyMaskToMask: if True, apply the mask inside the user mask image to set its masked pixels to 0
     plotBaselinePoints: if True, then plot the baseline-defining points as black dots
     dropBaselineChannels: percentage of extreme values to drop in baseline mode 'min'
@@ -1366,6 +1368,22 @@ def runFindContinuum(img='', pbcube=None, psfcube=None, minbeamfrac=0.3, spw='',
         the MAD by this factor or more, then proceed with removing this quadratic (new Cycle 6 heuristic)
     minPixelsInJointMask: if fewer than these pixels are found, then use all pixels above pb=0.3
           (when meanSpectrumMethod = 'mom0mom8jointMask')
+
+    Parameters passed to findContinuumChannels (and only used in there):
+    baselineModeB: 'min' or 'edge', method to define the baseline in findContinuumChannels()
+    separator: the character to use to separate groups of channels in the string returned
+    maxTrim: in trimChannels='auto', this is the max channels to trim per group for TDM spws; it is automatically scaled upward for FDM spws.
+    maxTrimFraction: in trimChannels='auto', the max fraction of channels to trim per group
+    negativeThresholdFactor: scale the nominal negative threshold by this factor (to adjust 
+        sensitivity to absorption features: smaller values=more sensitive)
+    signalRatioTier1: threshold for signalRatio, above which we desensitize the level to
+        consider line emission in order to avoid small differences in noise levels from 
+        affecting the result (e.g. that occur between serial and parallel tclean cubes)
+        signalRatio=1 means: no lines seen, while closer to zero: more lines seen
+    signalRatioTier2: second threshold for signalRatio, used for FDM spws (nchan>192) and
+        for cases of peakOverMad < 5.  Should be < signalRatioTier1.
+    dropBaselineChannels: percentage of extreme values to drop in baseline mode 'min'
+    madRatioUpperLimit, madRatioLowerLimit: determines when dropBaselineChannels is used
     """
     normalized = False  # This will be set True only by return value from meanSpectrumFromMom0Mom8JointMask()
     startTime = timeUtilities.time()
@@ -1980,10 +1998,18 @@ def runFindContinuum(img='', pbcube=None, psfcube=None, minbeamfrac=0.3, spw='',
         pl.plot([nchan-nEdgeChannels, nchan-nEdgeChannels], pl.ylim(), 'k:')
     if (len(continuumChannels) > 0):
         channelSelections = selection.split(separator)
+#        ylevel = np.mean(avgspectrumAboveThreshold) # Cycle 0-5 heuristic
+        peak = np.max(avgspectrumAboveThreshold[skipchan:-skipchan])
+        if (peak-medianTrue) > 1.5*(threshold-medianTrue):
+            print("Setting cyan level to just above the positive threshold dotted line")
+            ylevel = threshold + (threshold-medianTrue)*np.log10((peak-medianTrue)/(threshold-medianTrue))
+        else:
+            print("Setting cyan level to half the positive threshold dotted line")
+            ylevel = threshold - 0.5*(threshold-medianTrue)
+        yoffset = ylevel + 0.04*(pl.ylim()[1]-pl.ylim()[0])
         for i,ccstring in enumerate(channelSelections): 
             cc = [int(j) for j in ccstring.split('~')]
-            pl.plot(cc, np.ones(len(cc))*np.mean(avgspectrumAboveThreshold), 'c-', lw=2)
-            yoffset = np.mean(avgspectrumAboveThreshold)+0.04*(pl.ylim()[1]-pl.ylim()[0])
+            pl.plot(cc, np.ones(len(cc))*ylevel, 'c-', lw=2)
             pl.text(np.mean(cc), yoffset, ccstring, va='bottom', ha='center',size=8,rotation=90)
 
     if (fitsTable or img==''):
@@ -2064,14 +2090,15 @@ def runFindContinuum(img='', pbcube=None, psfcube=None, minbeamfrac=0.3, spw='',
     i += 1
     peak = np.max(avgSpectrumNansReplaced)
     peakFeatureSigma = (peak-medianTrue)/mad
-#    casalogPost("initial peakFeatureSigma = (%f-%f)/%f = %f" % (peak,medianTrue,mad,peakFeatureSigma))
     maxPeakFeatureSigma = (peak - np.min(avgSpectrumNansReplaced))/MAD(avgSpectrumNansReplaced)
+#    casalogPost("initial peakFeatureSigma = (%f-%f)/%f = %f, maxPeakFeatureSigma=%f" % (peak,medianTrue,mad,peakFeatureSigma,maxPeakFeatureSigma))
     if (signalRatio > signalRatioTier1 or (signalRatio > signalRatioTier2 and peakOverMad<5)) and peakFeatureSigma > maxPeakFeatureSigma:
         mad *= peakFeatureSigma/maxPeakFeatureSigma
         casalogPost('Limiting peakFeatureSigma from %f to %f, reset MAD to %f' % (peakFeatureSigma,maxPeakFeatureSigma,mad))
         peakFeatureSigma = maxPeakFeatureSigma
         areaString = 'limited max: %.1f*mad=%g; maxTrimFrac=%g; %d ranges; ' % (peakFeatureSigma, peak, maxTrimFraction, len(channelSelections))
     else:
+        casalogPost("maxPeakFeatureSigma=%f" % (maxPeakFeatureSigma))
         areaString = 'max: %.1f*mad=%g; maxTrimFrac=%g; %d ranges; ' % (peakFeatureSigma, peak, maxTrimFraction, len(channelSelections))
     if (fullLegend):
         pl.text(0.5,0.99-i*inc,'rms=MAD*1.4826: of baseline chans = %f, scaled by %.1f for all chans = %f'%(mad,correctionFactor,mad*correctionFactor), 
@@ -2340,6 +2367,12 @@ def findContinuumChannels(spectrum, nBaselineChannels=16, sigmaFindContinuum=3,
         apply dropBaselineChannels when defining the MAD of the baseline range
     fitResult: coefficients from linear or quadratic fit, only relevant when meanSpectrumMethod is
              not 'mom0mom8jointMask'
+    signalRatioTier1: threshold for signalRatio, above which we desensitize the level to
+        consider line emission in order to avoid small differences in noise levels from 
+        affecting the result (e.g. that occur between serial and parallel tclean cubes)
+        signalRatio=1 means: no lines seen, while closer to zero: more lines seen
+    signalRatioTier2: second threshold for signalRatio, used for FDM spws (nchan>192) and
+        for cases of peakOverMad < 5.  Should be < signalRatioTier1.
 
     Returns:
     1  list of channels to use (separated by the specified separator)
@@ -2575,7 +2608,7 @@ def findContinuumChannels(spectrum, nBaselineChannels=16, sigmaFindContinuum=3,
                 trimChannels = 6
                 casalogPost('Setting trimChannels to %d.' % (trimChannels))
     else:
-        casalogPost('Not reducing mad by 1/3: npts=%d, signalRatio=%.2f, spectralDiff2=%.2f' % (npts,signalRatio,spectralDiff2),debug=True)
+        casalogPost('Not reducing mad by 1/3: npts=%d, signalRatio=%.3f, spectralDiff2=%.2f' % (npts,signalRatio,spectralDiff2),debug=True)
     if useMiddleChannels:
         medianTrue = median
     else:
@@ -2592,11 +2625,15 @@ def findContinuumChannels(spectrum, nBaselineChannels=16, sigmaFindContinuum=3,
     # (e.g. that occur between serial and parallel tclean cubes)
     # from producing drastically different continuum selections.
     if (signalRatio > signalRatioTier1) or (signalRatio > signalRatioTier2 and peakOverMad < 5):
+        casalogPost('findContinuumChannels: desensitizing because %f>%f or (%f>%f and %f<5)' % (signalRatio,signalRatioTier1,signalRatio,signalRatioTier2,peakOverMad))
         maxPeakFeatureSigma = (np.max(spectrum) - np.min(spectrum))/MAD(spectrum)
         if peakFeatureSigma > maxPeakFeatureSigma:
+            oldmad = 1*mad
             mad *= peakFeatureSigma/maxPeakFeatureSigma
-            casalogPost('Limiting peakFeatureSigma from %f to %f, reset MAD to %f' % (peakFeatureSigma,maxPeakFeatureSigma,mad))
+            casalogPost('findContinuumChannels: Limiting peakFeatureSigma from %f to %f, reset MAD from %f to %f' % (peakFeatureSigma,maxPeakFeatureSigma,oldmad,mad))
             peakFeatureSigma = maxPeakFeatureSigma
+        else:
+            casalogPost('findContinuumChannels: not limiting peakFeatureSigma because %f > %f' % (peakFeatureSigma,maxPeakFeatureSigma))
     threshold = sigmaEffective*mad + medianTrue
     # Use a (default=15%) lower negative threshold to help prevent false identification of absorption features.
     negativeThreshold = -negativeThresholdFactor*sigmaEffective*mad + medianTrue
@@ -3345,7 +3382,7 @@ def meanSpectrumFromMom0Mom8JointMask(cube, imageInfo, nchan, pbcube=None, psfcu
     jointMask2 = cube+'.joint.mask2'
     lowerAnnulusLevel = None
     higherAnnulusLevel = None
-    snrThreshold = 23 # was 25
+    snrThreshold = 23 #  was 25 a few months ago
 #    sevenMeter = False
 #    if sevenMeter:
 #        snrThreshold = 20
@@ -3365,7 +3402,7 @@ def meanSpectrumFromMom0Mom8JointMask(cube, imageInfo, nchan, pbcube=None, psfcu
         mom0snr = classicResult['max'][0]/result['medabsdevmed'][0]
         scaledMAD = result['medabsdevmed'][0]*1.4826
         mom0sigma = np.max([5,oneEvent(nptsInCube,1)])
-        print("++++cube points=%d, choosing mom0sigma=%f" % (nptsInCube, mom0sigma))
+        casalogPost("+++ nptsInCube=%d, initial mom0sigma=%f, scaledMAD=%f,  mom0median=%f" % (nptsInCube, mom0sigma, scaledMAD, result['median'][0]))
         mom0threshold = mom0sigma*scaledMAD + result['median'][0]
         mom0min = classicResult['min'][0]
         mom0max = classicResult['max'][0]
@@ -3398,7 +3435,7 @@ def meanSpectrumFromMom0Mom8JointMask(cube, imageInfo, nchan, pbcube=None, psfcu
         mom8max = classicResult['max'][0]
         mom8threshold = mom8sigma*scaledMAD + result['median'][0]
         # the test against mom8max is to prevent infinite loop
-        casalogPost('++++++ Initial mom8sigma = %f' % mom8sigma)
+        casalogPost('++++++ Initial mom8sigma = %f, scaledMAD=%f,  mom8median=%f' % (mom8sigma, scaledMAD, result['median'][0]))
         while (mom8min >= mom8threshold and mom8threshold < mom8max):
             # Then there will be no points that satisfy subsequent mask, so raise the threshold so that at least some points are considered to be signal-free
             mom8sigma += 1
@@ -3434,7 +3471,7 @@ def meanSpectrumFromMom0Mom8JointMask(cube, imageInfo, nchan, pbcube=None, psfcu
             # remove any old version to avoid confusion if phase2 is not run
             os.system('rm -rf %s*' % (jointMask2))
         if phase2 and snr > snrThreshold:
-            casalogPost("Doing phase 2 mask calculation because one or both SNR > %.0f (%f,%f)" % (snrThreshold,mom0snr,mom8snr))
+            casalogPost("Doing phase 2 mask calculation because one or both SNR > %.0f (mom0=%f,mom8=%f)" % (snrThreshold,mom0snr,mom8snr))
             if (overwritePhase2 or not os.path.exists(mom0mask2) 
                 or not os.path.exists(mom8mask2)) and pixelsInMask:
                 ####################################################################
