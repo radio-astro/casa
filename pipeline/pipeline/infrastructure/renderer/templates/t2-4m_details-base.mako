@@ -347,6 +347,7 @@ ${next.body()}
                         <dd>${str(measures.FileSize(asizeof.asizeof(pcontext), measures.FileSizeUnits.BYTES))}</dd>
                     % endif
                 </dl>
+            Note, WebLog generation is not included in the time.
             </div>
         </div>
     </div>

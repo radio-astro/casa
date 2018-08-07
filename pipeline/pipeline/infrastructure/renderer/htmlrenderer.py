@@ -646,8 +646,21 @@ class T1_4MRenderer(RendererBase):
     @staticmethod
     def get_display_context(context):
         scores = {}
+
         for result in context.results:
             scores[result.stage_number] = result.qa.representative
+
+        ## Obtain time duration of tasks by the difference of start times successive tasks.
+        ## The end time of the last task is tentatively defined as the time of current time.
+        timestamps = [ r.timestamps.start for r in context.results ]
+        # tentative task end time stamp for the last stage
+        timestamps.append(datetime.datetime.utcnow())
+        task_duration = []
+        for i in range(len(context.results)):
+            # task execution duration
+            dt = timestamps[i+1] - timestamps[i]
+            # remove unnecessary precision for execution duration
+            task_duration.append(datetime.timedelta(days=dt.days, seconds=dt.seconds))
 
         # take first MS of first session
 #        s = sorted(context.observing_run.measurement_sets,
@@ -657,7 +670,8 @@ class T1_4MRenderer(RendererBase):
         return {'pcontext' : context,
                 'results'  : context.results,
 #                'root'     : root,
-                'scores'   : scores}
+                'scores'   : scores,
+                'task_duration': task_duration}
         
 
 class T2_1Renderer(RendererBase):

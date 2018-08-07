@@ -25,14 +25,18 @@ $(document).ready(function() {
 <table class="table">
 	<thead>
 		<tr>
-			<th class="col-md-9"><span class="glyphicon glyphicon-none"></span> Task</th>
+			<th class="col-md-8"><span class="glyphicon glyphicon-none"></span> Task</th>
 			<th class="col-md-2">QA Score</th>
 			<th class="col-md-1"></th>
+			<th class="col-md-1">Duration</th>
 		</tr>
 	</thead>
 	<tbody>
-		% for result in results:
-        <% qascore = scores[result.stage_number] %>
+		% for i in range(len(results)):
+        <%
+            result = results[i]
+            qascore = scores[result.stage_number]
+        %>
 		<tr>
             <td>${rendererutils.get_symbol_badge(result)} <a href="t2-4m.html?sidebar=sidebar_stage${result.stage_number}">${hr.get_task_description(result, pcontext)}</a><span
                     class="pull-right">${rendererutils.format_shortmsg(qascore)}</span></td>
@@ -49,6 +53,7 @@ $(document).ready(function() {
                 </div>
             </td>
 			<td><span class="badge${rendererutils.get_badge_class(qascore)}">${rendererutils.format_score(qascore)}</span></td>
+			<td>${task_duration[i]}</td>
 		</tr>
 		% endfor
 	</tbody>
