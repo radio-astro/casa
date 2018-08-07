@@ -77,8 +77,8 @@ class Hanning(basetask.StandardTaskTemplate):
     def _checkpreaveraged(self):
 
         with casatools.TableReader(self.inputs.vis + '/SPECTRAL_WINDOW') as table:
-            effective_bw = table.getcol('EFFECTIVE_BW')
-            resolution = table.getcol('RESOLUTION')
+            effective_bw = table.getvarcol('EFFECTIVE_BW')
+            resolution = table.getvarcol('RESOLUTION')
 
-        return not(resolution[0][0] < effective_bw[0][0])
+        return not(resolution['r1'][0][0] < effective_bw['r1'][0][0])
 
