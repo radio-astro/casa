@@ -304,7 +304,7 @@ def plot_elevation_difference(context, result, eldiff, threshold=3.0, perantenna
             
             for spw_id, eld in eldant.items():
             
-                if len(eld.timeon) == 0:
+                if len(eld.timeon) == 0 or len(eld.timecal) == 0:
                     continue
                 
                 # Elevation vs. Time
