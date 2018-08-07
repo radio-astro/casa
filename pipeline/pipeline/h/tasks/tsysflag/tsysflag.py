@@ -660,9 +660,9 @@ class Tsysflag(basetask.StandardTaskTemplate):
         # If no reports are found, then the flagdata call went wrong somehow, e.g. due
         # to a typo in the flagtsystemplate file.
         if not fsresult.results[0].values():
-            LOG.warning("{} - Unexpected empty result from 'flagdata' while applying manual flags, please check"
-                        " template file {} for typos.".format(os.path.basename(inputs.vis),
-                                                              os.path.basename(inputs.filetemplate)))
+            LOG.error("{} - Unexpected empty result from 'flagdata' while applying manual flags. Manual flags may not"
+                      " (all) have been applied. Please check template file {} for typos."
+                      "".format(os.path.basename(inputs.vis), os.path.basename(inputs.filetemplate)))
 
             # Run separate flagdata call to create the before/after summary required by weblog rendering.
             flagsetterinputs = FlagdataSetter.Inputs(context=inputs.context, vis=inputs.vis, table=tsystable,
