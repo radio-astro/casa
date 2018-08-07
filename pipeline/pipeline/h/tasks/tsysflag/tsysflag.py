@@ -657,6 +657,20 @@ class Tsysflag(basetask.StandardTaskTemplate):
         flagsettertask.flags_to_set(flagcmds)
         fsresult = self._executor.execute(flagsettertask)
 
+        # If no reports are found, then the flagdata call went wrong somehow, e.g. due
+        # to a typo in the flagtsystemplate file.
+        if not fsresult.results[0].values():
+            LOG.warning("{} - Unexpected empty result from 'flagdata' while applying manual flags, please check"
+                        " template file {} for typos.".format(os.path.basename(inputs.vis),
+                                                              os.path.basename(inputs.filetemplate)))
+
+            # Run separate flagdata call to create the before/after summary required by weblog rendering.
+            flagsetterinputs = FlagdataSetter.Inputs(context=inputs.context, vis=inputs.vis, table=tsystable,
+                                                     inpfile=["mode='summary' name='before'",
+                                                              "mode='summary' name='after'"])
+            flagsettertask = FlagdataSetter(flagsetterinputs)
+            fsresult = self._executor.execute(flagsettertask)
+
         # Extract "before" and/or "after" summary
         # Go through dictionary of reports...
         for report in fsresult.results[0].values():
