@@ -228,7 +228,10 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                         subpages[vis] = renderer.path
 
         # CAS-11511: add plots of UV coverage.
-        uv_plots = self.create_uv_plots(context, result, weblog_dir)
+        if utils.contains_single_dish(context):
+            uv_plots = None
+        else:
+            uv_plots = self.create_uv_plots(context, result, weblog_dir)
 
         ctx.update({
             'amp_vs_freq_plots': amp_vs_freq_summary_plots,

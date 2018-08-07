@@ -966,8 +966,11 @@ class T2_2_3Renderer(T2_2_XRendererBase):
             plot_ants_plog = task.plot()
 
             # Create U-V plot.
-            task = summary.UVChart(context, ms, title_prefix="Initial ")
-            plot_uv = task.plot()
+            if utils.contains_single_dish(context):
+                plot_uv = None
+            else:
+                task = summary.UVChart(context, ms, title_prefix="Initial ")
+                plot_uv = task.plot()
 
         dirname = os.path.join('session%s' % ms.session,
                                ms.basename)
@@ -996,8 +999,11 @@ class T2_2_4Renderer(T2_2_XRendererBase):
         el_vs_time_plot = task.plot()
 
         # Create U-V plot, if necessary.
-        task = summary.UVChart(context, ms, title_prefix="Initial ")
-        plot_uv = task.plot()
+        if utils.contains_single_dish(context):
+            plot_uv = None
+        else:
+            task = summary.UVChart(context, ms, title_prefix="Initial ")
+            plot_uv = task.plot()
 
         dirname = os.path.join('session%s' % ms.session,
                                ms.basename)

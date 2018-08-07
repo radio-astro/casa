@@ -1385,18 +1385,18 @@ def update_sens_dict(dct, udct):
     for msname in udct.keys():
         # Exclude special primary keys that are not MS names
         if msname not in ['recalc', 'robust', 'uvtaper']:
-            if msname not in dct:
-                dct[msname] = {}
+        if msname not in dct:
+            dct[msname] = {}
             for field in udct[msname].keys():
-                if field not in dct[msname]:
-                    dct[msname][field] = {}
+            if field not in dct[msname]:
+                dct[msname][field] = {}
                 for intent in udct[msname][field].keys():
-                    if intent not in dct[msname][field]:
-                        dct[msname][field][intent] = {}
+                if intent not in dct[msname][field]:
+                    dct[msname][field][intent] = {}
                     for spw in udct[msname][field][intent].keys():
-                        if spw not in dct[msname][field][intent]:
-                            dct[msname][field][intent][spw] = {}
-                        dct[msname][field][intent][spw] = udct[msname][field][intent][spw]
+                    if spw not in dct[msname][field][intent]:
+                        dct[msname][field][intent][spw] = {}
+                    dct[msname][field][intent][spw] = udct[msname][field][intent][spw]
 
 
 def update_beams_dict(dct, udct):
@@ -1410,15 +1410,15 @@ def update_beams_dict(dct, udct):
     for field in udct.keys():
         # Exclude special primary keys that are not MS names
         if field not in ['recalc', 'robust', 'uvtaper']:
-            if field not in dct:
-                dct[field] = {}
+        if field not in dct:
+            dct[field] = {}
             for intent in udct[field].keys():
-                if intent not in dct[field]:
-                    dct[field][intent] = {}
+            if intent not in dct[field]:
+                dct[field][intent] = {}
                 for spwids in udct[field][intent].keys():
-                    if spwids not in dct[field][intent]:
-                        dct[field][intent][spwids] = {}
-                    dct[field][intent][spwids] = udct[field][intent][spwids]
+                if spwids not in dct[field][intent]:
+                    dct[field][intent][spwids] = {}
+                dct[field][intent][spwids] = udct[field][intent][spwids]
 
 
 def flagged_intervals(vec):
@@ -1576,3 +1576,8 @@ class Interval(object):
             self._timer.cancel()
         self.running = False
         self._timer = None
+
+
+def contains_single_dish(context):
+    return any([hasattr(context.observing_run, 'ms_reduction_group'),
+                hasattr(context.observing_run, 'ms_datatable_name')])
