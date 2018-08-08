@@ -846,7 +846,9 @@ class UVChart(object):
             'clearplots': True,
             'showgui': False,
             'customflaggedsymbol': self.customflagged,
-            'plotrange': [-self.uv_max, self.uv_max, -self.uv_max, self.uv_max]
+            'plotrange': [-self.uv_max, self.uv_max, -self.uv_max, self.uv_max],
+            'height': 1000,
+            'width': 1000
         }
 
         task = casa_tasks.plotms(**task_args)
