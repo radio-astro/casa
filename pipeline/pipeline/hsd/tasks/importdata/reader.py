@@ -1,5 +1,6 @@
 from __future__ import absolute_import
 
+import os
 import numpy
 
 import pipeline.infrastructure as infrastructure
@@ -137,16 +138,16 @@ class MetaDataReader(object):
         ephemeris = direction_codes['extra']
         ephemeris_nocomet = numpy.delete( ephemeris, numpy.where(ephemeris=='COMET') )
         # set org_directions
-        with TableSelector(name, 'ANTENNA1 == ANTENNA2 && FEED1 == FEED2 && DATA_DESC_ID IN %s && STATE_ID IN %s'%(list(ddids), list(target_state_ids))) as tb:
+        with casatools.TableReader(os.path.join(name, 'FIELD')) as tb:
             # generate ephemsrc_name dictionary (field_id:EphemName)
             ephemsrc_list = [] # list of ephemsrc names (unique appearance)
             ephemsrc_name = {} # ephemsrc name for each field_id
 
-            field_ids = tb.getcol('FIELD_ID')
+            field_ids = range(tb.nrows())
             for field_id in list(set(field_ids)):
                 fields = ms.get_fields( field_id = field_id )
                 source_name = (fields[0].source.name).upper()
-                if source_name in ephemeris_nocomet:
+                if source_name in ephemeris_nocomet and 'TARGET' in fields[0].intents:
                     # ephemeris source
                     ephemsrc_name.update( { field_id:source_name } )
                     if source_name not in ephemsrc_list:
@@ -155,6 +156,26 @@ class MetaDataReader(object):
                 else:
                     # non-ephemeris source
                     ephemsrc_name.update( { field_id:'' } )
+            
+        with TableSelector(name, 'ANTENNA1 == ANTENNA2 && FEED1 == FEED2 && DATA_DESC_ID IN %s && STATE_ID IN %s'%(list(ddids), list(target_state_ids))) as tb:
+#             # generate ephemsrc_name dictionary (field_id:EphemName)
+#             ephemsrc_list = [] # list of ephemsrc names (unique appearance)
+#             ephemsrc_name = {} # ephemsrc name for each field_id
+# 
+#             field_ids = tb.getcol('FIELD_ID')
+#             LOG.info('field IDs: {}'.format(set(field_ids)))
+#             for field_id in list(set(field_ids)):
+#                 fields = ms.get_fields( field_id = field_id )
+#                 source_name = (fields[0].source.name).upper()
+#                 if source_name in ephemeris_nocomet:
+#                     # ephemeris source
+#                     ephemsrc_name.update( { field_id:source_name } )
+#                     if source_name not in ephemsrc_list:
+#                         # found a new ephemeris source
+#                         ephemsrc_list.append( source_name )
+#                 else:
+#                     # non-ephemeris source
+#                     ephemsrc_name.update( { field_id:'' } )
                     
             # find the first onsrc for each ephemeris source and pack org_directions
             org_directions = {}
