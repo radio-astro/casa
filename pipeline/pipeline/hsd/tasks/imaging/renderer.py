@@ -144,7 +144,7 @@ class T2_4MDetailsSingleDishImagingRenderer(basetemplates.T2_4MDetailsDefaultRen
     def _summary_plots_channelmap(context, plot_group):
         # take first ms as representative one
         ms = context.observing_run.measurement_sets[0]
-        source_names = [s.name for s in ms.sources]
+        source_names = [filenamer.sanitize(s.name) for s in ms.sources]
         
         summary_plots = {}
         for (field_name, plots) in plot_group.items():
