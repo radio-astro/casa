@@ -254,7 +254,7 @@ def plot_elevation_difference(context, result, eldiff, threshold=3.0, perantenna
                   'eldiff0': elevation difference between ON-SOURCE and preceding OFF-SOURCE
                   'time1': timestamp for subsequent OFF-SOURCE pointings
                   'eldiff1': elevation difference between ON-SOURCE and subsequent OFF-SOURCE
-              eldiff is a nested dictionary whose first key is FIELD_ID, the second one 
+              eldiff is a nested dictionary whose first key is FIELD_ID for target, the second one 
               is ANTENNA_ID, and the third one is SPW_ID. 
     threhshold -- Elevation threshold for QA (default 3deg)
     perantenna -- Generate plots per antenna or not. If False, overlay all the data into one plot

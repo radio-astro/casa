@@ -295,6 +295,13 @@ def compute_elevation_difference(context, results):
         calto = calapp.calto
         vis = calto.vis
         ms = context.observing_run.get_ms(vis)
+        target_field = calto.field
+        if target_field.isdigit():
+            field_id_on = int(target_field)
+        else:
+            fields = ms.get_fields(name=target_field)
+            assert len(fields) > 0
+            field_id_on = fields[0].id
         
         #if ms.basename not in resultdict:
         #    resultdict[ms.basename] = {}
@@ -321,12 +328,12 @@ def compute_elevation_difference(context, results):
             # FIELD_ID
             gainfield = calfrom.gainfield
             if gainfield.isdigit():
-                field_id = int(gainfield)
+                field_id_off = int(gainfield)
             else:
                 fields = ms.get_fields(name=gainfield)
                 assert len(fields) > 0
-                field_id = fields[0]
-            LOG.info('Computing elevation difference for "{}" Field ID {}'.format(ms.basename, field_id))
+                field_id_off = fields[0].id
+            LOG.info('Computing elevation difference for "{}" Field ID {} (ON) and {} (OFF)'.format(ms.basename, field_id_on,field_id_off))
                 
             resultfield = {}
                     
@@ -347,11 +354,11 @@ def compute_elevation_difference(context, results):
                     # access DataTable to get elevation 
                     ro_datatable_name = os.path.join(context.observing_run.ms_datatable_name, ms.basename, 'RO')
                     with casatools.TableReader(ro_datatable_name) as tb:
-                        selected = tb.query('IF=={}&&ANTENNA=={}&&FIELD_ID=={}&&SRCTYPE==0'.format(spw_id, antenna_id, field_id))
+                        selected = tb.query('IF=={}&&ANTENNA=={}&&FIELD_ID=={}&&SRCTYPE==0'.format(spw_id, antenna_id, field_id_on))
                         timeon = selected.getcol('TIME')
                         elon = selected.getcol('EL')
                         selected.close()
-                        selected = tb.query('IF=={}&&ANTENNA=={}&&FIELD_ID=={}&&SRCTYPE!=0'.format(spw_id, antenna_id, field_id))
+                        selected = tb.query('IF=={}&&ANTENNA=={}&&FIELD_ID=={}&&SRCTYPE!=0'.format(spw_id, antenna_id, field_id_off))
                         timeoff = selected.getcol('TIME')
                         eloff = selected.getcol('EL')
                         selected.close()
@@ -390,7 +397,7 @@ def compute_elevation_difference(context, results):
                 
                 resultfield[antenna_id] = resultant
                 
-            resultdict[field_id] = resultfield
+            resultdict[field_id_on] = resultfield
             
     return resultdict
     
