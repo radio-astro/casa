@@ -254,15 +254,16 @@ $(document).ready(function() {
         </table>
 
 <div style="display: none;" id="hidden-environment">
+    <p><strong>Execution Mode:</strong> ${execution_mode}</p>
 
     <table class="table table-bordered"
            summary="Processing environment for this pipeline reduction">
         <caption>Processing environment for this pipeline reduction</caption>
         <thead>
-            <th>Role</th>
             <th>Hostname</th>
-            <th>CPU</th>
+            <th># MPI Servers</th>
             <th># CPU cores</th>
+            <th>CPU</th>
             <th>RAM</th>
             <th>OS</th>
         </thead>

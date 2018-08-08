@@ -11,6 +11,8 @@ import subprocess
 
 from mpi4casa.MPIEnvironment import MPIEnvironment
 from .infrastructure import mpihelpers
+import operator
+import itertools
 
 __all__ = ['cpu_type', 'hostname', 'host_distribution', 'logical_cpu_cores', 'memory_size', 'pipeline_revision', 'role',
            'cluster_details']
@@ -156,14 +158,15 @@ def _role():
 
 
 def _cluster_details():
-    this_node = node_details
-    d = {node_details['role']: this_node}
+    env_details = [node_details]
     if mpihelpers.is_mpi_ready():
-        details = mpihelpers.mpiclient.push_command_request('pipeline.environment.node_details',
-                                                         block=True,
-                                                         target_server=mpihelpers.mpi_server_list)
-        d.update({'MPI Server {}'.format(r['server']): r['ret'] for r in details})
-    return d
+        mpi_results = mpihelpers.mpiclient.push_command_request('pipeline.environment.node_details', block=True,
+                                                                target_server=mpihelpers.mpi_server_list)
+        for r in mpi_results:
+            env_details.append(r['ret'])
+
+    return env_details
+
 
 cpu_type = _cpu_type()
 hostname = _hostname()

@@ -14,7 +14,7 @@ def percentage_flagged(flag):
 
 <%block name="title">Restore Calibrated Data</%block>
 
-<h3>Processing environment</h3>
+<h3>Previous processing environment</h3>
 
 <table class="table table-bordered table-striped" summary="CASA and Pipeline version used during previous processing run">
     <caption>Information on processing environment during previous processing run.</caption>
@@ -33,10 +33,14 @@ def percentage_flagged(flag):
             <td>Pipeline Version</td>
             <td>${sanitise_value(pipeline_version)}</td>
         </tr>
+        <tr>
+            <td>Execution mode</td>
+            <td>${execution_mode}</td>
+        </tr>
     </tbody>
 </table>
 
-<h3>Representative Target Information</h3>
+<h3>Representative Target</h3>
 
 % if repsource_defined:
 <p>The following representative target sources and spws are defined</p>

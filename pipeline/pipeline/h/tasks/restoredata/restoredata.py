@@ -148,7 +148,7 @@ class RestoreDataInputs(vdp.StandardInputs):
 
 class RestoreDataResults(basetask.Results):
     def __init__(self, importdata_results=None, applycal_results=None, flagging_summaries=None,
-                 casa_version_orig=None, pipeline_version_orig=None):
+                 casa_version_orig=None, pipeline_version_orig=None, orig_mpi_servers=0):
         """
         Initialise the results objects.
         """
@@ -159,6 +159,7 @@ class RestoreDataResults(basetask.Results):
         self.flagging_summaries = flagging_summaries
         self.casa_version_orig = casa_version_orig
         self.pipeline_version_orig = pipeline_version_orig
+        self.orig_mpi_servers = orig_mpi_servers
 
     def merge_with_context(self, context):
         if self.importdata_results:
@@ -266,10 +267,11 @@ class RestoreData(basetask.StandardTaskTemplate):
 
         # Extract CASA version and pipeline version for previous run from
         # pipeline manifest.
-        casa_version, pipeline_version = self._extract_casa_pipeline_version(pipemanifest)
+        casa_version, pipeline_version, num_mpi = self._extract_casa_pipeline_version(pipemanifest)
 
         # Return the results object, which will be used for the weblog
-        return RestoreDataResults(import_results, apply_results, flagging_summaries, casa_version, pipeline_version)
+        return RestoreDataResults(import_results, apply_results, flagging_summaries, casa_version, pipeline_version,
+                                  num_mpi)
 
     def analyse(self, results):
         return results
@@ -623,8 +625,10 @@ class RestoreData(basetask.StandardTaskTemplate):
         if ouss is not None:
             casa_version = pipemanifest.get_casa_version(ouss)
             pipeline_version = pipemanifest.get_pipeline_version(ouss)
+            total_mpi_servers = sum([int(node.get('numMpiServers')) for node in pipemanifest.get_execution_nodes(ouss)])
         else:
             casa_version = None
             pipeline_version = None
+            total_mpi_servers = None
 
-        return casa_version, pipeline_version
+        return casa_version, pipeline_version, total_mpi_servers

@@ -307,7 +307,7 @@ class T1_1Renderer(RendererBase):
                 'time_start time_end time_on_source '
                 'baseline_min baseline_max baseline_rms')
 
-    EnvironmentTableRow = collections.namedtuple('EnvironmentTableRow', 'role hostname cpu num_cores ram os')
+    EnvironmentTableRow = collections.namedtuple('EnvironmentTableRow', 'hostname num_mpi_servers num_cores cpu ram os')
 
     @staticmethod
     def get_display_context(context):
@@ -409,19 +409,7 @@ class T1_1Renderer(RendererBase):
 
             ms_summary_rows.append(row)
 
-        environment_rows = []
-        for role, node_details in pipeline.environment.cluster_details.iteritems():
-            row = T1_1Renderer.EnvironmentTableRow(
-                role=role,
-                hostname=node_details['hostname'],
-                cpu=node_details['cpu'],
-                num_cores=node_details['num_cores'],
-                ram=str(measures.FileSize(node_details['ram'], measures.FileSizeUnits.BYTES)),
-                os=node_details['os']
-            )
-            environment_rows.append(row)
-        environment_rows.sort(key=operator.itemgetter(0))
-        environment_rows = utils.merge_td_columns(environment_rows)
+        execution_mode, environment_rows = T1_1Renderer.get_cluster_tablerows()
 
         return {
             'pcontext': context,
@@ -443,7 +431,41 @@ class T1_1Renderer(RendererBase):
             'observers': observers,
             'ms_summary_rows': ms_summary_rows,
             'environment': environment_rows,
+            'execution_mode': execution_mode
         }
+
+    @staticmethod
+    def get_cluster_tablerows():
+        environment_rows = []
+        node_environments = {}
+        data = sorted(pipeline.environment.cluster_details, key=operator.itemgetter('hostname'))
+        for k, g in itertools.groupby(data, operator.itemgetter('hostname')):
+            node_environments[k] = list(g)
+
+        for node, node_envs in node_environments.iteritems():
+            if not node_envs:
+                continue
+            mpi_server_envs = [n for n in node_envs if 'MPI Server' in n['role']]
+            num_mpi_servers = len(mpi_server_envs) if mpi_server_envs else 'N/A'
+            # all hardware on a node has the same value so just take first
+            # environment dict
+            n = node_envs[0]
+            row = T1_1Renderer.EnvironmentTableRow(
+                # take just the hostname, ignoring domain
+                hostname=node.split('.')[0],
+                cpu=n['cpu'],
+                num_cores=n['num_cores'],
+                num_mpi_servers=num_mpi_servers,
+                ram=str(measures.FileSize(n['ram'], measures.FileSizeUnits.BYTES)),
+                os=n['os']
+            )
+            environment_rows.append(row)
+        environment_rows.sort(key=operator.itemgetter(0))
+        environment_rows = utils.merge_td_columns(environment_rows)
+
+        mode = 'Parallel' if any(['MPI Server' in d['role'] for d in pipeline.environment.cluster_details]) else 'Serial'
+
+        return mode, environment_rows
 
 
 class T1_2Renderer(RendererBase):

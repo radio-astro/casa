@@ -34,10 +34,13 @@ class T2_4MDetailsRestoreDataRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
         flags = _get_flags(pipeline_context, results)
         flags_maxspw = max([len(flags[src][vis]) for src in flags for vis in flags[src]])
 
+        execution_mode = 'Parallel' if results[0].orig_mpi_servers > 0 else 'Serial'
+
         # Update weblog mako context.
         mako_context.update({
             'casa_version': results[0].casa_version_orig,
             'pipeline_version': results[0].pipeline_version_orig,
+            'execution_mode': execution_mode,
             'repsource_defined': repsource_defined,
             'repsource_table_rows': repsource_table_rows,
             'flags': flags,

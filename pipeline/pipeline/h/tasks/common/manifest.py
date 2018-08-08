@@ -1,6 +1,10 @@
+import collections
+import itertools
+import operator
 import xml.etree.cElementTree as eltree
 from xml.dom import minidom
-import collections
+
+import pipeline.environment
 
 
 class PipelineManifest(object):
@@ -48,6 +52,28 @@ class PipelineManifest(object):
         if version is not None:
             return version.attrib['name']
         return None
+
+    @staticmethod
+    def add_environment_info(ous):
+        # group node information by host
+        root = eltree.SubElement(ous, 'executionEnvironment')
+        groups = []
+        data = sorted(pipeline.environment.cluster_details, key=operator.itemgetter('hostname'))
+        for _, g in itertools.groupby(data, operator.itemgetter('hostname')):
+            groups.append(list(g))
+
+        for host_details in groups:
+            PipelineManifest.add_execution_node(root, host_details)
+
+    @staticmethod
+    def add_execution_node(root, host_details):
+        mpi_server_details = [d for d in host_details if 'MPI Server' in d['role']]
+        num_mpi_servers = str(len(mpi_server_details))
+        eltree.SubElement(root, 'node', numMpiServers=num_mpi_servers)
+
+    @staticmethod
+    def get_execution_nodes(ous):
+        return ous.findall('./executionEnvironment/node')
 
     @staticmethod
     def add_pipeline_version(ous, pipeline_version):
