@@ -625,7 +625,7 @@ class RestoreData(basetask.StandardTaskTemplate):
         if ouss is not None:
             casa_version = pipemanifest.get_casa_version(ouss)
             pipeline_version = pipemanifest.get_pipeline_version(ouss)
-            total_mpi_servers = sum([int(node.get('numMpiServers')) for node in pipemanifest.get_execution_nodes(ouss)])
+            total_mpi_servers = sum([int(node.get('num_mpi_servers')) for node in pipemanifest.get_execution_nodes(ouss)])
         else:
             casa_version = None
             pipeline_version = None
