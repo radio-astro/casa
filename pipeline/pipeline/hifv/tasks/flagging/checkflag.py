@@ -254,7 +254,7 @@ class Checkflag(basetask.StandardTaskTemplate):
 
     def _do_checkflag(self, mode='rflag', field=None, correlation=None, scan=None, intent='',
                       ntime='scan', datacolumn='corrected', flagbackup=False, timedevscale=4.0,
-                      freqdevscale=4.0, action='apply', timedev='', freqdev=''):
+                      freqdevscale=4.0, action='apply', timedev='', freqdev='', savepars=True):
         
         task_args = {'vis': self.inputs.vis,
                      'mode': mode,
@@ -274,7 +274,7 @@ class Checkflag(basetask.StandardTaskTemplate):
                      'display': '',
                      'extendflags': False,
                      'flagbackup': flagbackup,
-                     'savepars': True}
+                     'savepars': savepars}
                      
         job = casa_tasks.flagdata(**task_args)
             
@@ -317,7 +317,7 @@ class Checkflag(basetask.StandardTaskTemplate):
 
     def _do_tfcropflag(self, mode='tfcrop', field=None, correlation=None, scan=None, intent='',
                        ntime=0.45, datacolumn='corrected', flagbackup=True,
-                       freqcutoff=3.0, timecutoff=4.0):
+                       freqcutoff=3.0, timecutoff=4.0, savepars=True):
 
         task_args = {'vis': self.inputs.vis,
                      'mode': mode,
@@ -336,7 +336,7 @@ class Checkflag(basetask.StandardTaskTemplate):
                      'display': '',
                      'extendflags': False,
                      'flagbackup': flagbackup,
-                     'savepars': True}
+                     'savepars': savepars}
 
         job = casa_tasks.flagdata(**task_args)
 
@@ -427,7 +427,8 @@ class Checkflag(basetask.StandardTaskTemplate):
                            'freqdevscale': scale,
                            'datacolumn': datacolumn,
                            'flagbackup': False,
-                           'action': 'calculate'}
+                           'action': 'calculate',
+                           'savepars': False}
 
             rflagthresholds = self._do_checkflag(**method_args)
 
@@ -450,7 +451,8 @@ class Checkflag(basetask.StandardTaskTemplate):
                            'freqcutoff': self.tfcropThreshMultiplierCals,
                            'ntime': self.tint,
                            'datacolumn': 'corrected',
-                           'flagbackup': False}
+                           'flagbackup': False,
+                           'savepars': False}
 
             self._do_tfcropflag(**method_args)
 
@@ -490,7 +492,8 @@ class Checkflag(basetask.StandardTaskTemplate):
                            'freqdevscale': scale,
                            'datacolumn': datacolumn,
                            'flagbackup': False,
-                           'action': 'calculate'}
+                           'action': 'calculate',
+                           'savepars': False}
 
             rflagthresholds = self._do_checkflag(**method_args)
 
@@ -513,7 +516,8 @@ class Checkflag(basetask.StandardTaskTemplate):
                            'freqcutoff': self.tfcropThreshMultiplierCals,
                            'ntime': self.tint,
                            'datacolumn': 'corrected',
-                           'flagbackup': False}
+                           'flagbackup': False,
+                           'savepars': False}
 
             self._do_tfcropflag(**method_args)
 
@@ -543,7 +547,8 @@ class Checkflag(basetask.StandardTaskTemplate):
                            'freqdevscale': scale,
                            'datacolumn': datacolumn,
                            'flagbackup': False,
-                           'action': 'calculate'}
+                           'action': 'calculate',
+                           'savepars': False}
 
             rflagthresholds = self._do_checkflag(**method_args)
 
@@ -567,7 +572,8 @@ class Checkflag(basetask.StandardTaskTemplate):
                            'freqcutoff': self.tfcropThreshMultiplierTarget,
                            'ntime': self.tint,
                            'datacolumn': 'corrected',
-                           'flagbackup': False}
+                           'flagbackup': False,
+                           'savepars': False}
 
             self._do_tfcropflag(**method_args)
 
