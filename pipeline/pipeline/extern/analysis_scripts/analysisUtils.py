@@ -35914,7 +35914,7 @@ def plotmosaic(vis,sourceid='',figfile='', coord='relative', skipsource=-1,
                     for ffs in fieldsforscan[1:]:
                         commonSpws = np.intersect1d(commonSpws,mymsmd.spwsforfield(ffs))
                     extraspws += len(list(set(scanFieldSpws) - set(commonSpws)))
-                    if ('CALIBRATE_ATMOSPHERE#ON_SOURCE' not in scanIntents):
+                    if ('CALIBRATE_ATMOSPHERE#ON_SOURCE' not in scanIntents and 'CALIBREATE_ATMOSPHERE#HOT' not in scanIntents):
                         tsysOnly = False
                 if (extraspws > 0): # Needed for ICT-6896
                     tsysOnly = True
