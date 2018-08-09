@@ -15,6 +15,7 @@ class MakeImagesResult(basetask.Results):
         self.results = []
         self.plot_path = None
         self.mitigation_error = False
+        self.sensitivities_for_aqua = []
 
     def add_result(self, result, target, outcome):
         target['outcome'] = outcome

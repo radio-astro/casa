@@ -6,11 +6,13 @@ import types
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.api as api
+import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.mpihelpers as mpihelpers
 import pipeline.infrastructure.vdp as vdp
 from pipeline.infrastructure import exceptions
 from pipeline.infrastructure import task_registry
+from pipeline.h.tasks.common.sensitivity import Sensitivity
 from .resultobjects import MakeImagesResult
 from ..tclean import Tclean
 from ..tclean.resultobjects import TcleanResult
@@ -114,7 +116,16 @@ class MakeImages(basetask.StandardTaskTemplate):
                 except exceptions.PipelineException:
                     result.add_result(TcleanResult(), target, outcome='failure')
                 else:
+                    # Note add_result() removes 'heuristics' from worker_result
+                    heuristics = target['heuristics']
                     result.add_result(worker_result, target, outcome='success')
+                    # Export RMS (reprSrc, reprSpw only)
+                    repr_target, repr_source, repr_spw, repr_freq, reprBW_mode, real_repr_target, minAcceptableAngResolution, maxAcceptableAngResolution, sensitivityGoal = heuristics.representative_target()
+                    if real_repr_target and str(repr_spw) == worker_result.spw and \
+                    repr_source==worker_result.sourcename:
+                        s = self._get_image_rms_as_sensitivity(worker_result, target, heuristics)
+                        if s is not None:
+                            result.sensitivities_for_aqua.append(s)
 
         # set of descriptions
         if inputs.context.clean_list_info.get('msg', '') != '':
@@ -133,7 +144,37 @@ class MakeImages(basetask.StandardTaskTemplate):
 
     def analyse(self, result):
         return result
+    
+    def _get_image_rms_as_sensitivity(self, result, target, heuristics):
+        imname = result.image
+        if not os.path.exists(imname):
+            return None
+        cqa = casatools.quanta
+        cell = target['cell'][0:2] if len(target['cell']) >= 2 else (target['cell'][0], target['cell'][0])
+        with casatools.ImageReader(imname) as image:
+            restoringbeam = image.restoringbeam()
+            csys = image.coordsys()
+            chan_width = csys.increment(type='spectral', format='q')['quantity']['*1']
+            csys.done()
+        # effectiveBW
+        if result.specmode == 'cube': # use nbin for cube and repBW
+            msobj = self.inputs.context.observing_run.get_ms(name=result.vis[0])
+            nbin = target['nbin'] if target['nbin'] > 0 else 1
+            SCF, physicalBW_of_1chan, effectiveBW_of_1chan = heuristics.get_bw_corr_factor(msobj, result.spw, nbin)
+            effectiveBW_of_image = cqa.quantity(nbin / SCF**2 * effectiveBW_of_1chan, 'Hz')
+        else: #continuum mode
+            effectiveBW_of_image = result.aggregate_bw
 
+        return Sensitivity(array='undefined',
+                           field=target['field'],
+                           spw=result.spw,
+                           bandwidth=effectiveBW_of_image,
+                           bwmode=result.orig_specmode,
+                           beam=restoringbeam,
+                           cell=cell,
+                           robust=target['robust'],
+                           uvtaper=target['uvtaper'],
+                           sensitivity=cqa.quantity(result.image_rms, 'Jy/beam'))
 
 class CleanTaskFactory(object):
     def __init__(self, inputs, executor):

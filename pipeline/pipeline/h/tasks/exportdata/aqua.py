@@ -574,12 +574,13 @@ def _get_pipeline_stage_and_score(result):
     return stage_name, score
 
 
-def sensitivity_xml_for_stages(context, results):
+def sensitivity_xml_for_stages(context, results, name=''):
     """
     Get the XML for all sensitivities reported by all tasks.
 
     :param context: pipeline context
     :param results: all results for the imaging topic
+    :param name: the name of per stage tag (optional)
     :return: XML for sensitivities
     :rtype: xml.etree.cElementTree.Element
     """
@@ -592,25 +593,28 @@ def sensitivity_xml_for_stages(context, results):
 
         for task_name, exporter in TASK_NAME_TO_SENSITIVITY_EXPORTER.iteritems():
             if stage_name == task_name:
-                stage_xml = xml_for_sensitivity_stage(context, stage_result, exporter)
+                stage_xml = xml_for_sensitivity_stage(context, stage_result, exporter, name)
                 xml_root.append(stage_xml)
 
     return xml_root
 
 
-def xml_for_sensitivity_stage(context, stage_results, exporter):
+def xml_for_sensitivity_stage(context, stage_results, exporter, name):
     """
     Translate the sensitivity dictionaries contained in a task result to XML.
 
     :param context: pipeline context
     :param stage_results: hifa_preimagecheck result
     :param exporter: function that returns a list of sensitivity dicts from the result
+    :param name: the name of per stage tag (optional)
     :return: XML for all sensitivities reported by the result stage
     :rtype: xml.etree.cElementTree.Element
     """
     stage_name, stage_score = _get_pipeline_stage_and_score(stage_results)
+    
+    tagname = name if name != '' else 'SensitivityEstimates'
 
-    xml_root = ElementTree.Element('SensitivityEstimates',
+    xml_root = ElementTree.Element(tagname,
                                    Origin=stage_name,
                                    Number=str(stage_results.stage_number),
                                    Score=str(stage_score))

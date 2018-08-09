@@ -102,6 +102,23 @@ class AlmaAquaXmlGenerator(aqua.AquaXmlGenerator):
 
         return xml_root
 
+    def get_imaging_topic(self, context, topic_results):
+        """
+        Get the XML for the imaging topic.
+
+        :param context: pipeline context
+        :param topic_results: list of Results for this topic
+        :return: XML for imaging topic
+        :rtype: xml.etree.cElementTree.Element
+        """
+        # get base XML from base class
+        xml_root = super(AlmaAquaXmlGenerator, self).get_imaging_topic(context, topic_results)
+
+        sensitivity_xml = aqua.sensitivity_xml_for_stages(context, topic_results, name='ImageSensitivities')
+        # omit containing element if no measurements were found
+        if len(list(sensitivity_xml)) > 0:
+            xml_root.extend(sensitivity_xml)
+        return xml_root
 
 def flux_xml_for_stages(context, results, accessor_dict):
     """
@@ -226,3 +243,4 @@ def _hifa_preimagecheck_sensitivity_exporter(stage_results):
     return l
 
 aqua.TASK_NAME_TO_SENSITIVITY_EXPORTER['hifa_imageprecheck'] = _hifa_preimagecheck_sensitivity_exporter
+aqua.TASK_NAME_TO_SENSITIVITY_EXPORTER['hif_makeimages'] = _hifa_preimagecheck_sensitivity_exporter
