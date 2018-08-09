@@ -347,8 +347,12 @@ FLAGGING_TEMPLATE_HEADER = '''#
 # Examples
 # Note: Do not put spaces inside the reason string !
 #
-# mode='manual' correlation='YY' antenna='DV01;DV08;DA43;DA48&DV23' spw='21:1920~2880' autocorr=False reason='bad_channels'
-# mode='manual' spw='25:0~3;122~127' reason='stage8_2'
-# mode='manual' antenna='DV07' timerange='2013/01/31/08:09:55.248~2013/01/31/08:10:01.296' reason='quack'
+# mode='manual' antenna='DV02;DV03&DA51' spw='22,24:150~175' reason='QA2:applycal_amplitude_frequency'
+#
+# mode='manual' spw='22' field='1' timerange='2018/02/10/00:01:01.0959~2018/02/10/00:01:01.0961' reason='QA2:timegaincal_phase_time'
+#
+#TP flagging: The 'other' option is intended for bad TP pointing
+#
+# mode='manual' antenna='PM01&&PM01' reason='QA2:other_bad_pointing' 
 #
 '''
