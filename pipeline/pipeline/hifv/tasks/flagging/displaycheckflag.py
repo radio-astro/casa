@@ -17,11 +17,12 @@ class checkflagSummaryChart(object):
         # self.caltable = result.final[0].gaintable
 
     def plot(self):
-        plots = [None]# Default
+        # Default
+        plots = [None]
 
-        if self.result.inputs['checkflagmode'] == 'bpd':
+        if self.result.inputs['checkflagmode'] == 'bpd' or self.result.inputs['checkflagmode'] == 'bpd-vlass':
             plots = [self.get_plot_wrapper('BPcal'), self.get_plot_wrapper('delaycal')]
-        if self.result.inputs['checkflagmode'] == 'allcals':
+        if self.result.inputs['checkflagmode'] == 'allcals' or self.result.inputs['checkflagmode'] == 'allcals-vlass':
             plots = [self.get_plot_wrapper('allcals')]
         return [p for p in plots if p is not None]
 
@@ -33,7 +34,7 @@ class checkflagSummaryChart(object):
         corrstring = self.ms.get_vla_corrstring()
         delay_scan_select_string = self.context.evla['msinfo'][self.ms.name].delay_scan_select_string
 
-        if self.result.inputs['checkflagmode'] == 'bpd':
+        if self.result.inputs['checkflagmode'] == 'bpd' or self.result.inputs['checkflagmode'] == 'bpd-vlass':
             if prefix == 'BPcal':
                 casa.plotms(vis=self.ms.name, xaxis='freq', yaxis='amp', ydatacolumn='corrected', selectdata=True,
                             field=bandpass_field_select_string, scan=bandpass_scan_select_string,
@@ -42,14 +43,14 @@ class checkflagSummaryChart(object):
                             xlabel='', ylabel='', showmajorgrid=False, showminorgrid=False, plotfile=figfile,
                             overwrite=True, clearplots=True, showgui=False)
 
-            if ((delay_scan_select_string != bandpass_scan_select_string) and prefix == 'delaycal'):
+            if (delay_scan_select_string != bandpass_scan_select_string) and prefix == 'delaycal':
                 casa.plotms(vis=self.ms.name, xaxis='freq', yaxis='amp', ydatacolumn='corrected', selectdata=True,
                             scan=delay_scan_select_string, correlation=corrstring, averagedata=True,
                             avgtime='1e8', avgscan=True, transform=False, extendflag=False, iteraxis='',
                             coloraxis='antenna2', plotrange=[], title='', xlabel='', ylabel='', showmajorgrid=False,
                             showminorgrid=False, plotfile=figfile, overwrite=True, clearplots=True, showgui=False)
 
-        if self.result.inputs['checkflagmode'] == 'allcals':
+        if self.result.inputs['checkflagmode'] == 'allcals' or self.result.inputs['checkflagmode'] == 'allcals-vlass':
             calibrator_scan_select_string = self.context.evla['msinfo'][self.ms.name].calibrator_scan_select_string
 
             casa.plotms(vis=self.ms.name, xaxis='freq', yaxis='amp', ydatacolumn='corrected', selectdata=True,
@@ -70,7 +71,7 @@ class checkflagSummaryChart(object):
         delay_scan_select_string = self.context.evla['msinfo'][self.ms.name].delay_scan_select_string
 
         if (prefix == 'BPcal' or ((delay_scan_select_string != bandpass_scan_select_string) and prefix == 'delaycal')
-            or prefix == 'allcals'):
+or prefix == 'allcals' or prefix == 'allcals-vlass'):
             wrapper = logger.Plot(figfile, x_axis='freq', y_axis='amp',
                                   parameters={'vis': self.ms.basename,
                                               'type': prefix,

@@ -10,7 +10,7 @@ import pipeline.infrastructure.renderer.htmlrenderer as hr
 <p>Flag possible RFI using rflag and tfcrop; checkflagmode=${result[0].inputs['checkflagmode']}</p>
 
 
-% if result[0].inputs['checkflagmode'] in ('bpd','allcals'):
+% if result[0].inputs['checkflagmode'] in ('bpd','allcals', 'bpd-vlass', 'allcals-vlass'):
 
 <%self:plot_group plot_dict="${summary_plots}"
                                   url_fn="${lambda ms:  'noop'}">
@@ -25,7 +25,7 @@ import pipeline.infrastructure.renderer.htmlrenderer as hr
         </%def>
 
 
-        <%def name="mouseover(plot)">Summary window </%def>
+        <%def name="mouseover(plot)">Summary window</%def>
 
 
 
