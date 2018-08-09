@@ -258,14 +258,17 @@ class MeasurementSet(object):
 
         # Now find all the target_spws that have a channel width less than
         # or equal to the representative bandwidth
+        # Note that the representative bandwidth can be slightly smaller than the actual channel width.
+        # This is due to the details of online Hanning smoothing and is technically correct. We thus
+        # apply a 1% margin (see CAS-11710).
         target_spws_bw = [spw for spw in target_spws
-                          if spw.channels[0].getWidth().to_units(measures.FrequencyUnits.HERTZ) <= target_bw['m0']['value']]
+                          if spw.channels[0].getWidth().to_units(measures.FrequencyUnits.HERTZ) <= 1.01 * target_bw['m0']['value']]
 
         if len(target_spws_bw) <= 0:
             LOG.warning('No target spws have channel width <= representative bandwidth in data set %s' % \
                 (self.basename))
 
-            # Now find all the taret spws that contain the representative frequency.
+            # Now find all the target spws that contain the representative frequency.
             target_spws_freq = [spw for spw in target_spws
                                 if target_frequency_topo['m0']['value'] >= spw.min_frequency.value and
                                 target_frequency_topo['m0']['value'] <= spw.max_frequency.value]
