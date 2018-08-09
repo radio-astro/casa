@@ -120,13 +120,27 @@ class ImageParamsHeuristicsALMA(ImageParamsHeuristics):
                     LOG.info('DR heuristic: N_DR=%s' % (n_dr))
                     new_threshold = old_threshold * n_dr
             else:
-                if (dirty_dynamic_range > 30.):
-                    maxSciEDR = 30.0
+                numberEBs = len(self.vislist)
+                if numberEBs == 1:
+                    # single-EB 7m array datasets have limited dynamic range
+                    maxSciEDR = 30
+                    dirtyDRthreshold = 30
+                    n_dr_max = 2.5
+                else:
+                    # multi-EB 7m array datasets will have better dynamic range and can be cleaned somewhat deeper
+                    maxSciEDR = 55
+                    dirtyDRthreshold = 75
+                    n_dr_max = 3.5
+
+                if (dirty_dynamic_range > dirtyDRthreshold):
                     new_threshold = max(n_dr_max * old_threshold, residual_max / maxSciEDR * tlimit)
-                    LOG.info('DR heuristic: Applying maxSciEDR(ACA)=%s' % (maxSciEDR))
+                    n_dr_effective = new_threshold / old_threshold
+                    LOG.info('DR heuristic: Applying maxSciEDR(ACA)=%s (for %d EB) effective_N_DR=%.2f' % (maxSciEDR,numberEBs,n_dr_effective))
                     maxEDR_used = True
                 else:
-                    if (dirty_dynamic_range > 20.):
+                    if (dirty_dynamic_range > 40.):
+                        n_dr = 3.0
+                    elif (dirty_dynamic_range > 20.):
                         n_dr = 2.5
                     elif (10. < dirty_dynamic_range <= 20.):
                         n_dr = 2.0
