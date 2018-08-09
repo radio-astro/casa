@@ -126,9 +126,7 @@ class CheckProductSizeHeuristics(object):
 
             # Calculate PB level at which the largest cube size of all targets
             # is equal to the maximum allowed cube size.
-            PB_mitigation = math.exp(math.log(0.2) * self.inputs.maxcubesize / maxcubesize)
-            # Account for imsize padding
-            PB_mitigation = 1.02 * PB_mitigation
+            PB_mitigation = math.exp(-math.log(2.0) * 2.2064 * self.inputs.maxcubesize / maxcubesize / 1.05)
             # Cap at PB=0.7
             PB_mitigation = min(PB_mitigation, 0.7)
             # Cap at PB=0.2
@@ -238,9 +236,7 @@ class CheckProductSizeHeuristics(object):
 
                 # Calculate PB level at which the largest cube size of all targets
                 # is equal to the maximum allowed cube size.
-                PB_mitigation = math.exp(math.log(0.2) * self.inputs.maxproductsize / maxcubesize)
-                # Account for imsize padding
-                PB_mitigation = 1.02 * PB_mitigation
+                PB_mitigation = math.exp(-math.log(2.0) * 2.2064 * self.inputs.maxcubesize / maxcubesize / 1.05)
                 # Cap at PB=0.7
                 PB_mitigation = min(PB_mitigation, 0.7)
                 # Cap at PB=0.2
