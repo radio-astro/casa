@@ -44,7 +44,11 @@ class T2_4MDetailsCheckProductSizeRenderer(basetemplates.T2_4MDetailsDefaultRend
             hm_cell = 'default'
 
         if 'field' in result.size_mitigation_parameters:
-            field = str(result.size_mitigation_parameters['field'])
+            fieldnames = str(result.size_mitigation_parameters['field']).split(',')
+            if len(fieldnames) > 5:
+                for i in range(5, len(fieldnames), 5):
+                    fieldnames[i] = '\n%s' % (fieldnames[i])
+            field = ','.join(fieldnames)
         else:
             field = 'default'
 
