@@ -82,13 +82,25 @@ class ImagePreCheckHeuristics(object):
             delta_2p0 = cqa.convert(cqa.sub(beamArea_2p0, meanARBeamArea), 'arcsec.arcsec')
             deltas = [delta_m0p5, delta_0p0, delta_0p5, delta_1p0, delta_2p0]
             absdeltas = [cqa.getvalue(cqa.abs(delta)) for delta in deltas]
+            predictBeamAreas = [beamArea_m0p5, beamArea_0p0, beamArea_0p5, beamArea_1p0, beamArea_2p0]
             index = np.argmin(absdeltas)
             hm_robust = robusts[index]
-            # Make the score in the case of "outside of range" depend on how far the minDelta is from the meanAR beam area
             DiffmeanAR = 100 * (cqa.getvalue(deltas[index]) / cqa.getvalue(cqa.convert(meanARBeamArea, 'arcsec.arcsec')))
-            if abs(DiffmeanAR) < 20.0:
-                hm_robust_score = (0.5, 'Robust cannot achieve the PI requested range, the best match robust %+.1f has a %%Diff from mean AR = %.1f%% [< +/- 20%%]' % (hm_robust, DiffmeanAR), 'Beam outside range')
+            maxARBeamArea = cqa.mul(maxAR, maxAR)
+            minARBeamArea = cqa.mul(minAR, minAR)
+            # Now give scores and messages when not in range
+            # Even if not in range on one or more axes, might be in beam area range 
+            if cqa.getvalue(cqa.convert(minARBeamArea, 'arcsec.arcsec')) <= cqa.getvalue(cqa.convert(predictBeamAreas[index],'arcsec.arcsec')) <= cqa.getvalue(cqa.convert(maxARBeamArea, 'arcsec.arcsec')): 
+                hm_robust_score = (0.5, 'Robust cannot achieve the PI requested range for one or both axes, due to an elliptical beam, but the best match robust %+.1f (%%Diff from mean AR = %.1f%%), does produce a predicted beam area that is within the range of requested beam areas.' % (hm_robust, DiffmeanAR), 'Beam not in range, too elliptical') 
+            # Robust = -0.5
+            elif index in [0]:
+                DiffmaxAR  =  abs(100 * (cqa.getvalue(cqa.convert(cqa.sub(predictBeamAreas[index], maxARBeamArea), 'arcsec.arcsec'))) / cqa.getvalue(cqa.convert(maxARBeamArea, 'arcsec.arcsec')))
+                hm_robust_score = (0.25, 'Robust cannot achieve the PI requested range, the best match robust %+.1f (%%Diff from mean AR = %.1f%%), has a %%Diff from max AR = %.1f%%' % (hm_robust, DiffmeanAR, DiffmaxAR), 'Beam too large')
+            # Robust = 2.0                         
+            elif index in [4]:
+                DiffminAR  =  abs(100 * (cqa.getvalue(cqa.convert(cqa.sub(minARBeamArea, predictBeamAreas[index]), 'arcsec.arcsec'))) / cqa.getvalue(cqa.convert(minARBeamArea, 'arcsec.arcsec')))
+                hm_robust_score = (0.25, 'Robust cannot achieve the PI requested range, the best match robust %+.1f (%%Diff from mean AR = %.1f%%) has a %%Diff from min AR = %.1f%%' % (hm_robust, DiffmeanAR, DiffminAR), 'Beam too small')
             else:
-                hm_robust_score = (0.25, 'Robust cannot achieve the PI requested range, the best match robust %+.1f has a %%Diff from mean AR = %.1f%% [> +/- 20%%], significantly outside the PI requested range' % (hm_robust, DiffmeanAR), 'Beam significantly outside range')
-
+                hm_robust_score = (0.25, 'Robust cannot achieve the PI requested range, due to an elliptical beam, but the best match robust %+.1f (%%Diff from mean AR = %.1f%%), produces a predicted beam area that is outside the range of requested beam areas.' % (hm_robust, DiffmeanAR), 'Beam not in range') 
+                
         return hm_robust, hm_robust_score
