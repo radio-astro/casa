@@ -29,7 +29,7 @@
             </Parameter>
             <Parameter>
                 <Keyword xmlns="">baseband</Keyword>
-                <Value xmlns="">True</Value>
+                <Value xmlns="">False</Value>
             </Parameter>
             <Parameter>
                 <Keyword xmlns="">clip</Keyword>
@@ -69,7 +69,7 @@
             </Parameter>
             <Parameter>
                 <Keyword xmlns="">edgespw</Keyword>
-                <Value xmlns="">True</Value>
+                <Value xmlns="">False</Value>
             </Parameter>
         </ParameterSet>
     </ProcessingCommand>
@@ -116,7 +116,7 @@
         <ParameterSet>
             <Parameter>
                 <Keyword xmlns="">checkflagmode</Keyword>
-                <Value xmlns="">bpd</Value>
+                <Value xmlns="">bpd-vlass</Value>
             </Parameter>
         </ParameterSet>
     </ProcessingCommand>
@@ -132,7 +132,7 @@
         <ParameterSet>
             <Parameter>
                 <Keyword xmlns="">checkflagmode</Keyword>
-                <Value xmlns="">allcals</Value>
+                <Value xmlns="">allcals-vlass</Value>
             </Parameter>
         </ParameterSet>
     </ProcessingCommand>
@@ -194,7 +194,7 @@
         <ParameterSet>
             <Parameter>
                 <Keyword xmlns="">checkflagmode</Keyword>
-                <Value xmlns="">target</Value>
+                <Value xmlns="">target-vlass</Value>
             </Parameter>
         </ParameterSet>
     </ProcessingCommand>

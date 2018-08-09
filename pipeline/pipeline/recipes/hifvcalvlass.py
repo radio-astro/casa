@@ -73,8 +73,10 @@ def hifvcalvlass(vislist, importonly=False, pipelinemode='automatic', interactiv
         hifv_hanning(pipelinemode=pipelinemode)
 
         # Flag known bad data
-        hifv_flagdata(pipelinemode=pipelinemode, scan=True, quack=False, hm_tbuff='manual', tbuff=0.225,
-                      intents='*POINTING*,*FOCUS*,*ATMOSPHERE*,*SIDEBAND_RATIO*, *UNKNOWN*, *SYSTEM_CONFIGURATION*, *UNSPECIFIED#UNSPECIFIED*')
+        hifv_flagdata(intents='*POINTING*,*FOCUS*,*ATMOSPHERE*,*SIDEBAND_RATIO*, *UNKNOWN*, *SYSTEM_CONFIGURATION*, *UNSPECIFIED#UNSPECIFIED*',
+                      flagbackup=False, scan=True, baseband=False, clip=True, autocorr=True,
+                      hm_tbuff='manual', template=True, online=True, tbuff=0.225,
+                      shadow=True, quack=False, edgespw=False)
 
         # Fill model columns for primary calibrators
         hifv_vlasetjy(pipelinemode=pipelinemode)
@@ -92,14 +94,14 @@ def hifvcalvlass(vislist, importonly=False, pipelinemode='automatic', interactiv
         hifv_flagbaddef(doflagundernspwlimit=False)
 
         # Flag possible RFI on BP calibrator using rflag with mode=bpd
-        hifv_checkflag(checkflagmode='bpd')
+        hifv_checkflag(checkflagmode='bpd-vlass')
 
         # DO SEMI-FINAL DELAY AND BANDPASS CALIBRATIONS
         # (semi-final because we have not yet determined the spectral index of the bandpass calibrator)
         hifv_semiFinalBPdcals(pipelinemode=pipelinemode)
 
         # Use mode=allcals again on calibrators
-        hifv_checkflag(checkflagmode='allcals')
+        hifv_checkflag(checkflagmode='allcals-vlass')
 
         # Determine solint for scan-average equivalent
         hifv_solint(limit_short_solint='0.45')
@@ -121,7 +123,7 @@ def hifvcalvlass(vislist, importonly=False, pipelinemode='automatic', interactiv
         hifv_applycals(flagsum=False, flagdetailedsum=False, gainmap=True)
 
         # Flag possible RFI on BP calibrator using rflag with mode=bpd
-        hifv_checkflag(checkflagmode='target')
+        hifv_checkflag(checkflagmode='target-vlass')
 
         # Calculate data weights based on standard deviation within each spw
         hifv_statwt(pipelinemode=pipelinemode)
