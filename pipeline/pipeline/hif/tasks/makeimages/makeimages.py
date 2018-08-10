@@ -126,6 +126,7 @@ class MakeImages(basetask.StandardTaskTemplate):
                         s = self._get_image_rms_as_sensitivity(worker_result, target, heuristics)
                         if s is not None:
                             result.sensitivities_for_aqua.append(s)
+                    del heuristics
 
         # set of descriptions
         if inputs.context.clean_list_info.get('msg', '') != '':
@@ -151,11 +152,9 @@ class MakeImages(basetask.StandardTaskTemplate):
             return None
         cqa = casatools.quanta
         cell = target['cell'][0:2] if len(target['cell']) >= 2 else (target['cell'][0], target['cell'][0])
+        # Image beam
         with casatools.ImageReader(imname) as image:
             restoringbeam = image.restoringbeam()
-            csys = image.coordsys()
-            chan_width = csys.increment(type='spectral', format='q')['quantity']['*1']
-            csys.done()
         # effectiveBW
         if result.specmode == 'cube': # use nbin for cube and repBW
             msobj = self.inputs.context.observing_run.get_ms(name=result.vis[0])
@@ -164,8 +163,11 @@ class MakeImages(basetask.StandardTaskTemplate):
             effectiveBW_of_image = cqa.quantity(nbin / SCF**2 * effectiveBW_of_1chan, 'Hz')
         else: #continuum mode
             effectiveBW_of_image = result.aggregate_bw
+        # antenna array (aligned definition with imageprecheck)
+        diameters = heuristics.antenna_diameters().keys()
+        array = ('%dm' % min(diameters))
 
-        return Sensitivity(array='undefined',
+        return Sensitivity(array=array,
                            field=target['field'],
                            spw=result.spw,
                            bandwidth=effectiveBW_of_image,
