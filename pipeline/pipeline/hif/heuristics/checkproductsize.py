@@ -313,8 +313,16 @@ class CheckProductSizeHeuristics(object):
                 # Recalculate sizes
                 makeimlist_inputs.spw = size_mitigation_parameters['spw']
                 makeimlist_inputs.known_synthesized_beams = known_synthesized_beams
+                # Keep previous imsize and cell which would change if the spw list is different
+                hm_imsize_orig = makeimlist_inputs.hm_imsize
+                makeimlist_inputs.hm_imsize = makeimlist_result.targets[0]['imsize']
+                hm_cell_orig = makeimlist_inputs.hm_cell
+                makeimlist_inputs.hm_cell = makeimlist_result.targets[0]['cell']
                 makeimlist_result = makeimlist_task.prepare()
                 known_synthesized_beams = makeimlist_result.synthesized_beams
+                # Restore previous settings
+                makeimlist_inputs.hm_imsize = hm_imsize_orig
+                makeimlist_inputs.hm_cell = hm_cell_orig
                 imlist = makeimlist_result.targets
                 cubesizes, maxcubesize, productsizes, total_productsize = self.calculate_sizes(imlist)
                 LOG.info('spw mitigation leads to product size of %s GB' % (total_productsize))
