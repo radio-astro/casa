@@ -151,15 +151,15 @@
         <ParameterSet>
             <Parameter>
                 <Keyword xmlns="">maxcubesize</Keyword>
-                <Value xmlns="">30.0</Value>
-            </Parameter>
-            <Parameter>
-                <Keyword xmlns="">maxcubelimit</Keyword>
                 <Value xmlns="">40.0</Value>
             </Parameter>
             <Parameter>
+                <Keyword xmlns="">maxcubelimit</Keyword>
+                <Value xmlns="">60.0</Value>
+            </Parameter>
+            <Parameter>
                 <Keyword xmlns="">maxproductsize</Keyword>
-                <Value xmlns="">400.0</Value>
+                <Value xmlns="">350.0</Value>
             </Parameter>
         </ParameterSet>
     </ProcessingCommand>

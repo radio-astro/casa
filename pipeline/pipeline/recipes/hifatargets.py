@@ -62,7 +62,7 @@ def hifatargets (vislist, importonly=False, pipelinemode='automatic', interactiv
         hifa_imageprecheck(pipelinemode=pipelinemode)
 
         # Check product size limits and mitigate imaging parameters
-        hif_checkproductsize(maxcubesize=30.0, maxcubelimit=40.0, maxproductsize=400.0)
+        hif_checkproductsize(maxcubesize=40.0, maxcubelimit=60.0, maxproductsize=350.0)
 
         # Make a list of expected targets to be cleaned in mfs mode (used for continuum subtraction)
         hif_makeimlist (specmode='mfs', pipelinemode=pipelinemode)
