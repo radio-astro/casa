@@ -342,6 +342,15 @@ class ValidateLineRaster(basetask.StandardTaskTemplate):
         LOG.debug('Npos = {}', Npos)
         # 2010/6/9 for non-detection
         if Npos == 0 or len(Region2) == 0: 
+            if len(manual_window) == 0:
+                signal = [[-1, -1]]
+            else:
+                signal = manual_window
+            for i in index_list:
+                vis, row = indexer.serial2perms(i)
+                datatable = datatable_dict[vis]
+                datatable.putcell('MASKLIST',row,signal)
+                datatable.putcell('NOCHANGE',row,False)
             outcome = {'lines': manual_window,
                        'channelmap_range': manual_window,
                        'cluster_info': {}}
@@ -413,6 +422,15 @@ class ValidateLineRaster(basetask.StandardTaskTemplate):
         LOG.info('Clustering Analysis End: Elapsed time = {} sec', (ProcEndTime - ProcStartTime))
         # 2017/8/15 for non-detection after cleaninig
         if Ncluster == 0: 
+            if len(manual_window) == 0:
+                signal = [[-1, -1]]
+            else:
+                signal = manual_window
+            for i in index_list:
+                vis, row = indexer.serial2perms(i)
+                datatable = datatable_dict[vis]
+                datatable.putcell('MASKLIST',row,signal)
+                datatable.putcell('NOCHANGE',row,False)
             outcome = {'lines': manual_window,
                        'channelmap_range': manual_window,
                        'cluster_info': {}}

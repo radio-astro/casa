@@ -106,6 +106,8 @@ class DetectLine(basetask.StandardTaskTemplate):
             assert nrow > 0
             # predefined_window should be derived at the upper task (MaskLine)
             # and should be passed to inputs.window
+            group_id = self.inputs.group_id
+            group_desc = self.inputs.context.observing_run.ms_reduction_group[group_id]
             #spw = grid_table[0][0] if len(grid_table) > 0 else -1
             #predefined_window = self._get_predefined_window(spw, window)
             LOG.trace('predefined_window={0}'.format(window))
@@ -114,8 +116,17 @@ class DetectLine(basetask.StandardTaskTemplate):
                 ra = grid_info[4]
                 dec = grid_info[5]
                 detect_signal[row] = [ra, dec, window]
-            for datatable in datatable_dict.itervalues():
-                for dt_row in xrange(datatable.nrow):
+            for m in group_desc:
+                ms = m.ms
+                spw_id = m.spw_id
+                field_id = m.field_id
+                antenna_id = m.antenna_id
+                if ms.basename not in datatable_dict:
+                    continue
+                
+                datatable = datatable_dict[ms.basename]
+                for dt_row in utils.get_index_list_for_ms(datatable, [ms.basename], [antenna_id], 
+                                                     [field_id], [spw_id]):
                     datatable.putcell('MASKLIST', dt_row, window)
                 
             result = DetectLineResults(task=self.__class__,
