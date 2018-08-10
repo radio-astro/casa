@@ -593,6 +593,7 @@ class ImageParamsHeuristics(object):
             vislist = self.vislist
 
         mdirections = []
+        field_names = []
         for ivis, vis in enumerate(vislist):
 
             # Get the visibilities
@@ -613,6 +614,7 @@ class ImageParamsHeuristics(object):
                 else:
                     phase_dir = fieldobj.mdirection
                 mdirections.append(phase_dir)
+                field_names.append(fieldobj.name)
 
         # sanity check - for single field images the field centres from
         # different measurement sets should be coincident and can
@@ -621,14 +623,11 @@ class ImageParamsHeuristics(object):
         # a tolerance rather than an equality.
         max_separation = cqa.quantity('200uarcsec')
         if not self._mosaic:
+            max_separation_uarcsec =  cqa.getvalue(cqa.convert(max_separation, 'uarcsec'))[0] # in micro arcsec
             for mdirection in mdirections:
                 separation = cme.separation(mdirection, mdirections[0])
-                # if mdirection != mdirections[0]:
                 if cqa.gt(separation, max_separation):
-                    LOG.warning('Separation between single field centres: %s is greater than %s' % (separation, max_separation))
-            #                      casatools.measures.separation(mdirection, mdirections[0])))
-            #                    raise Exception, \
-            #                      'non-identical field centers in single field image'
+                    LOG.warning('The separation between %s field centers across EBs is %f %s (larger than the limit of %.1f microarcseconds). This is only normal for an ephemris source or a source with a large propermotion or parallax.' % (field_names[0], cqa.getvalue(separation)[0], cqa.getunit(separation), max_separation_uarcsec))
             mdirections = [mdirections[0]]
 
         # it should be easy to calculate some 'average' direction
