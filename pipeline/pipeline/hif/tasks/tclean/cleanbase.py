@@ -2,6 +2,7 @@ from __future__ import absolute_import
 
 import os
 import types
+import numpy as np
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
@@ -227,6 +228,8 @@ class CleanBase(basetask.StandardTaskTemplate):
 
         context = self.inputs.context
         inputs = self.inputs
+
+        qaTool = casatools.quanta
 
         # Derive names of clean products for this iteration
         old_model_name = result.model
@@ -521,6 +524,10 @@ class CleanBase(basetask.StandardTaskTemplate):
                 result.set_image(iter=iter, image=pbcor_image_name)
             else:
                 result.set_image(iter=iter, image=image_name)
+
+        # Check for bad PSF fit
+        if iter==0:
+            inputs.heuristics.check_psf(psf_name, inputs.field, inputs.spw)
 
         # Store the residual.
         set_miscinfo(name=residual_name, spw=inputs.spw, field=inputs.field,
