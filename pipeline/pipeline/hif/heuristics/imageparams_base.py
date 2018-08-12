@@ -1659,15 +1659,18 @@ class ImageParamsHeuristics(object):
         cqa = casatools.quanta
 
         with casatools.ImageReader(psf_name) as image:
-            beams = image.restoringbeam()['beams']
-            bmaj = np.array([cqa.getvalue(cqa.convert(b['*0']['major'], 'arcsec')) for b in beams.values()])
+            try:
+                beams = image.restoringbeam()['beams']
+                bmaj = np.array([cqa.getvalue(cqa.convert(b['*0']['major'], 'arcsec')) for b in beams.values()])
 
-            # Filter empty psf planes
-            bmaj = bmaj[np.where(bmaj > 1e-6)]
+                # Filter empty psf planes
+                bmaj = bmaj[np.where(bmaj > 1e-6)]
 
-            bmaj_median = np.median(bmaj)
-            cond1 = np.logical_and(0.0 < bmaj, bmaj < 0.5 * bmaj_median)
-            cond2 = bmaj > 2.0 * bmaj_median
-            if np.logical_or(cond1, cond2).any():
-                LOG.warn('The PSF fit for one or more channels for field %s SPW %s failed, please check the results for this cube carefully, there are likely data issues.' % (field, spw))
+                bmaj_median = np.median(bmaj)
+                cond1 = np.logical_and(0.0 < bmaj, bmaj < 0.5 * bmaj_median)
+                cond2 = bmaj > 2.0 * bmaj_median
+                if np.logical_or(cond1, cond2).any():
+                    LOG.warn('The PSF fit for one or more channels for field %s SPW %s failed, please check the results for this cube carefully, there are likely data issues.' % (field, spw))
+            except:
+                pass
 

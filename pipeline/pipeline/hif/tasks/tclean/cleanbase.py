@@ -526,7 +526,7 @@ class CleanBase(basetask.StandardTaskTemplate):
                 result.set_image(iter=iter, image=image_name)
 
         # Check for bad PSF fit
-        if iter==0:
+        if iter==0 and inputs.specmode == 'cube':
             inputs.heuristics.check_psf(psf_name, inputs.field, inputs.spw)
 
         # Store the residual.
