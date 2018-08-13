@@ -21644,16 +21644,17 @@ def getEphemerisFields(vis, keyByFieldName=True, verbose=False):
     return getEphemeris(vis, keyByFieldName=keyByFieldName, verbose=verbose).keys()
 
 def getEphemeris(vis, ephemerisId=-1, useASDM_Ephemeris=False, verbose=True,
-                 keyByFieldName=False, radec=False):
+                 keyByFieldName=False, radec=False, sourceid=''):
     """
     Reads the ephemeris information from a measurement set.
     Inputs:
     use_ASDM_EPHEMERIS: if True then use the ASDM_EPHEMERIS table
-          if False, then search the FIELD subdirectory 
+          if False, then search the FIELD subdirectory
           for files of the name format: EPHEMx_fieldname_MJDsec.tab.
     ephemerisId: if specified, then limit the return value to that ephemeris ID.
     radec: if True, then return sexagesimal strings for the RA and Dec
            and YYYY-MMM-DD HH:MM for the time
+    sourceid: name of the source (e.g. 'Venus')
     Returns a dictionary keyed by ephemerisID with a value of a list of 3 lists:
     * {'0': [MJD seconds, RA_radian, Dec_radian]}
     """
@@ -21661,29 +21662,34 @@ def getEphemeris(vis, ephemerisId=-1, useASDM_Ephemeris=False, verbose=True,
     if (not os.path.exists(vis)):
         print "Could not find measurement set"
         return result
-    if (not os.path.exists(vis+'/FIELD')):
+    if (not os.path.exists(vis + '/FIELD')):
         print "Could not find FIELD directory.  This does not appear to be an ms."
         return result
-    if (not os.path.exists(vis+'/ASDM_EPHEMERIS') or not useASDM_Ephemeris):
-        if (not os.path.exists(vis+'/ASDM_EPHEMERIS') and useASDM_Ephemeris):
+    if (not os.path.exists(vis + '/ASDM_EPHEMERIS') or not useASDM_Ephemeris):
+        if (not os.path.exists(vis + '/ASDM_EPHEMERIS') and useASDM_Ephemeris):
             print "Could not find ASDM_EPHEMERIS table in this ms."
-        ephemerisTables = glob.glob(vis+'/FIELD/EPHEM*.tab')
+        ephemerisTables = sorted(glob.glob(vis + '/FIELD/EPHEM*.tab'))
         if (len(ephemerisTables) < 1):
             if verbose: print "Could not find any EPHEMx*.tab files in the FIELD directory"
             return result
         mytb = createCasaTool(tbtool)
         nEphem = len(ephemerisTables)
-        print "There are %d ephemeris tables in the FIELD directory: " % (nEphem), [os.path.basename(i) for i in ephemerisTables]
-        if (ephemerisId < 0):
+        print "There are %d ephemeris tables in the FIELD directory: " % (nEphem), [os.path.basename(i) for i in
+                                                                                    ephemerisTables]
+        if (ephemerisId < 0 and sourceid == ''):
             if (nEphem == 1):
                 ephemerisId = 0
             else:
-                print "You must select an ephemeris using the ephemerisId parameter."
+                print "You must select an ephemeris using the ephemerisId or sourceid parameter."
                 return result
         for i in range(nEphem):
             mytb.open(ephemerisTables[i])
             keywords = mytb.getkeywords()
             fieldname = keywords['NAME']
+            if ephemerisId < 0 and sourceid != '':
+                if sourceid == fieldname:
+                    print "Selected ephemerisId: %d for %s" % (i, sourceid)
+                    ephemerisId = i
             mjdsec = getFieldTime(vis, fieldname)
             print "The time in the FIELD table = %f = %s" % (mjdsec, mjdsecToDatestring(mjdsec))
             if verbose:
@@ -21696,52 +21702,56 @@ def getEphemeris(vis, ephemerisId=-1, useASDM_Ephemeris=False, verbose=True,
             mjd = mytb.getcol('MJD')
             raDeg = mytb.getcol('RA')
             decDeg = mytb.getcol('DEC')
-            difference = (mjd[0]*86400-getObservationStart(vis))/60.
+            difference = (mjd[0] * 86400 - getObservationStart(vis)) / 60.
             if (obsloc != ''):
-                obsloc  = '(obsloc=%s)' % (obsloc)
+                obsloc = '(obsloc=%s)' % (obsloc)
             else:
                 obsloc = ''
-            totalMinutes = 1440*(mjd[-1]-mjd[0])
+            totalMinutes = 1440 * (mjd[-1] - mjd[0])
             if verbose:
                 if (difference < 0):
-                    print "Ephemeris %d %s begins %.1f minutes before observation begins and has %d rows. Total length=%.1f minutes." % (i, obsloc, abs(difference), len(mjd), totalMinutes)
+                    print "Ephemeris %d %s begins %.1f minutes before observation begins and has %d rows. Total length=%.1f minutes." % (
+                    i, obsloc, abs(difference), len(mjd), totalMinutes)
                 else:
-                    print "Ephemeris %d %s begins %.1f minutes after observation begins and has %d rows. Total length=%.1f minutes." % (i, obsloc, difference, len(mjd), totalMinutes)
-            difference = (mjd[-1]*86400-getObservationStop(vis))/60.
-            minutes = np.mean(1440*np.diff(mjd))
-#            for i,mydiff in enumerate(np.diff(mjd)): print '%.12f %.12f' % (mjd[i],mydiff)
-            mindiff = np.min(1440*np.diff(mjd))
-            maxdiff = np.max(1440*np.diff(mjd))
+                    print "Ephemeris %d %s begins %.1f minutes after observation begins and has %d rows. Total length=%.1f minutes." % (
+                    i, obsloc, difference, len(mjd), totalMinutes)
+            difference = (mjd[-1] * 86400 - getObservationStop(vis)) / 60.
+            minutes = np.mean(1440 * np.diff(mjd))
+            #            for i,mydiff in enumerate(np.diff(mjd)): print '%.12f %.12f' % (mjd[i],mydiff)
+            mindiff = np.min(1440 * np.diff(mjd))
+            maxdiff = np.max(1440 * np.diff(mjd))
             if verbose:
                 if (difference < 0):
-                    print "Ephemeris %d ends %f minutes before observation ends and mean row spacing is %.10f minutes (min=%.10f,max=%.10f)." % (i, abs(difference), minutes,mindiff,maxdiff)
+                    print "Ephemeris %d ends %f minutes before observation ends and mean row spacing is %.10f minutes (min=%.10f,max=%.10f)." % (
+                    i, abs(difference), minutes, mindiff, maxdiff)
                 else:
-                    print "Ephemeris %d ends %f minutes after observation ends and mean row spacing is %.10f minutes (min=%.10f,max=%.10f)." % (i, difference, minutes, mindiff,maxdiff)
+                    print "Ephemeris %d ends %f minutes after observation ends and mean row spacing is %.10f minutes (min=%.10f,max=%.10f)." % (
+                    i, difference, minutes, mindiff, maxdiff)
             if (ephemerisId == i or ephemerisId < 0):
-                mjdsec = mjd[:]*86400
+                mjdsec = mjd[:] * 86400
                 ra = np.radians(raDeg[:])
                 dec = np.radians(decDeg[:])
                 if (keyByFieldName):
                     if radec:
-                        radecString = rads2radec(ra,dec)
+                        radecString = rads2radec(ra, dec)
                         result[fieldname] = [mjdsecToDatestring(mjdsec), radecString]
                     else:
                         result[fieldname] = [mjdsec, ra, dec]
                 else:
                     if radec:
-                        radecString = rads2radec(ra,dec)
+                        radecString = rads2radec(ra, dec)
                         result[i] = [mjdsecToDatestring(mjdsec), radecString]
                     else:
                         result[i] = [mjdsec, ra, dec]
-                
-        mytb.close()
-        return(result)
 
-    if (not os.path.exists(vis+'/ASDM_EPHEMERIS')):
+        mytb.close()
+        return (result)
+
+    if (not os.path.exists(vis + '/ASDM_EPHEMERIS')):
         print "Could not find ASDM_EPHEMERIS table in this ms."
         return
     mytb = createCasaTool(tbtool)
-    mytb.open(vis+'/ASDM_EPHEMERIS')
+    mytb.open(vis + '/ASDM_EPHEMERIS')
     print "Reading timeInterval column from ASDM_EPHEMERIS table"
     direction = mytb.getcol('dir')
     ephemerisIds = mytb.getcol('ephemerisId')
@@ -21756,25 +21766,25 @@ def getEphemeris(vis, ephemerisId=-1, useASDM_Ephemeris=False, verbose=True,
     raRadian = direction[0][0]
     decRadian = direction[0][1]
     if (ephemerisId >= 0):
-        idx = np.where(ephemerisId==ephemerisIds)
+        idx = np.where(ephemerisId == ephemerisIds)
         mjdsec = mjdsec[idx]
         raRadian = raRadian[idx]
         decRadian = decRadian[idx]
     mytb.close()
-    difference = (mjdsec[0]-getObservationStart(vis))/60.
+    difference = (mjdsec[0] - getObservationStart(vis)) / 60.
     if (difference < 0):
-        if (ephemerisId < 0): 
+        if (ephemerisId < 0):
             ephemerisId = ephemerisIds[0]
         print "Ephemeris %d begins %f minutes before observation begins." % (ephemerisId, abs(difference))
     else:
         print "Ephemeris begins %f minutes after observation begins." % (difference)
-    print "and it is %f minutes long" % ((mjdsec[-1]-mjdsec[0])/60.)
+    print "and it is %f minutes long" % ((mjdsec[-1] - mjdsec[0]) / 60.)
     if radec:
         result = {ephemerisId: [mjdsec, rads2radec(raRadian, decRadian)]}
     else:
         result = {ephemerisId: [mjdsec, raRadian, decRadian]}
-    return(result)
-    
+    return (result)
+
 class FixPosition:
   def __init__(self,inputMs=''):
     """
@@ -35690,13 +35700,13 @@ def plotmosaics(vislist):
         val.append(plotmosaic(vis, figfile=True))
     return val
 
-def plotmosaic(vis,sourceid='',figfile='', coord='relative', skipsource=-1,
+def plotmosaic(vis, sourceid='', figfile='', coord='relative', skipsource=-1,
                doplot=True, help=False, sciencespws=False, vm='', debug=False,
                intent='OBSERVE_TARGET#ON_SOURCE', plotrange=[], bw=False,
-               pblevel=0.05, showImageBorder=False, 
+               pblevel=0.05, showImageBorder=False,
                centerOnSourceDirection=False, firstAppearance=True,
-               writeDS9regionFile=False, color='green', 
-               writeCRTF=False, markerType='symbol', symbolType='+', 
+               writeDS9regionFile=False, color='green',
+               writeCRTF=False, markerType='symbol', symbolType='+',
                linewidth=1, symsize=2):
     """
     Produce a plot of the pointings with the primary beam FWHM and field names.
@@ -35709,8 +35719,8 @@ def plotmosaic(vis,sourceid='',figfile='', coord='relative', skipsource=-1,
     figfile: name of the png to produce, or True for default name
     coord: 'relative' (arcsec) or 'absolute' (deg)
     skipsource: source ID to avoid
-    doplot: if False, then the central field ID is returned as an integer. 
-            if True, the a list of values is returned: 
+    doplot: if False, then the central field ID is returned as an integer.
+            if True, the a list of values is returned:
                [central field,  maxRA, minRA, minDec, maxDec]
        where the latter 4 values are in units of arcsec relative to the center.
     sciencespws: if True, then only use the science spws
@@ -35720,7 +35730,7 @@ def plotmosaic(vis,sourceid='',figfile='', coord='relative', skipsource=-1,
     plotrange: for the 'relative' option only: [x0,x1,y0,y1]
     bw: produce a black/white version with bold field labels no grid lines
     pblevel: controls the size of the image mosaic that is returned
-    centerOnSourceDirection: if False, center the plot on the mean RA/Dec of 
+    centerOnSourceDirection: if False, center the plot on the mean RA/Dec of
          all the fields.  If True, center on the SOURCE table position.
     writeDS9regionFile: if True, then write an ASCII DS9 region file
            of all the pointings; name = <vis> + '_ds9.reg'
@@ -35741,30 +35751,30 @@ def plotmosaic(vis,sourceid='',figfile='', coord='relative', skipsource=-1,
     """
     vis = vis.rstrip('/')
     # open the ms table
-    if (coord.find('abs')<0 and coord.find('rel')<0):
+    if (coord.find('abs') < 0 and coord.find('rel') < 0):
         print "Invalid option for coord, must be either 'rel'ative or 'abs'olute."
         return
     mytb = createCasaTool(tbtool)
     try:
-        fieldTable = vis+'/FIELD'
+        fieldTable = vis + '/FIELD'
         mytb.open(fieldTable)
     except:
-        print "Could not open table = %s" % fieldTable 
+        print "Could not open table = %s" % fieldTable
         return
-    delayDir = mytb.getcol('DELAY_DIR') 
-    ra = delayDir[0,:][0]*12/math.pi
-    dec = np.degrees(delayDir[1,:][0])
+    delayDir = mytb.getcol('DELAY_DIR')
+    ra = delayDir[0, :][0] * 12 / math.pi
+    dec = np.degrees(delayDir[1, :][0])
     # will be 0,0 for planets in datasets with ephemeris tables and loaded in casa>=4.5
     # (except for mosaics where it holds the offset)
 
     # Use ms.getfielddirmeas if it's an ephemeris object
-    ephemDict = getEphemeris(vis, verbose=False)
+    ephemDict = getEphemeris(vis, verbose=False, sourceid=sourceid)
     if (len(ephemDict.keys()) > 0):
-        absoluteDir = getRADecForFields(vis,usemstool=True) 
+        absoluteDir = getRADecForFields(vis, usemstool=True)
         ephemIDs = ephemDict.keys()
         print "Ephemeris IDs found = ", ephemIDs
         for ephemID in ephemIDs:
-            fieldIDs = getFieldIDsForEphemerisID(vis,ephemID)
+            fieldIDs = getFieldIDsForEphemerisID(vis, ephemID)
             for fieldID in fieldIDs:
                 delayDir[0][0][fieldID] = absoluteDir[0][0][fieldID]
                 delayDir[1][0][fieldID] = absoluteDir[1][0][fieldID]
@@ -35777,17 +35787,17 @@ def plotmosaic(vis,sourceid='',figfile='', coord='relative', skipsource=-1,
         except:
             # Source was specified by name, so we
             # need to convert the name to an id.
-            matches=np.where(name==sourceid)[0]
-            srcs=np.unique(sourceID[matches])
-            nsrcs=len(srcs)
-            if (nsrcs>1):
-                print "More than one source ID matches this name: ",sourceID
+            matches = np.where(name == sourceid)[0]
+            srcs = np.unique(sourceID[matches])
+            nsrcs = len(srcs)
+            if (nsrcs > 1):
+                print "More than one source ID matches this name: ", sourceID
                 print "Try again using one of these."
                 return
-            elif (nsrcs==0):
+            elif (nsrcs == 0):
                 if (sourceid != ''):
                     print "No sources match this name = %s" % sourceid
-                    print "Available sources = ",np.unique(name)
+                    print "Available sources = ", np.unique(name)
                     return
                 else:
                     if (casadef.casa_version >= casaVersionWithMSMD):
@@ -35820,16 +35830,16 @@ def plotmosaic(vis,sourceid='',figfile='', coord='relative', skipsource=-1,
             print "intent %s not found in dataset. Adding wildcards..." % (intent)
         if (len(fields) == 0):
             try:
-                intentsToSearch = '*'+intent+'*'
+                intentsToSearch = '*' + intent + '*'
                 fields = mymsmd.fieldsforintent(intentsToSearch)
             except:
                 fields = []
             if (len(fields) == 0):
                 print "intent %s not found in dataset. Replacing '#' with '.' ..." % (intent)
-                intent = intent.replace('#','.').replace('*','')
+                intent = intent.replace('#', '.').replace('*', '')
                 if (intent in mymsmd.intents()):
                     fields = mymsmd.fieldsforintent(intent)
-                    print "Found %d fields with intent = %s" % (len(fields),intent)
+                    print "Found %d fields with intent = %s" % (len(fields), intent)
                 if (len(fields) == 0):
                     print "No fields have intent = %s. Using first field instead." % (intent)
                     fields = [0]
@@ -35843,17 +35853,17 @@ def plotmosaic(vis,sourceid='',figfile='', coord='relative', skipsource=-1,
     antennasWithData = np.sort(np.unique(mytb.getcol('ANTENNA1')))
     mytb.close()
     try:
-        antennaTable = vis+'/ANTENNA'
+        antennaTable = vis + '/ANTENNA'
         if debug: print "Trying to open ", antennaTable
         mytb.open(antennaTable)
     except:
-        print "Could not open table = %s" % antennaTable 
+        print "Could not open table = %s" % antennaTable
         return
     dishDiameter = np.unique(mytb.getcol('DISH_DIAMETER')[antennasWithData])
     mytb.close()
     if (debug): print "dishDiameter = ", dishDiameter
     try:
-        spwTable = vis+'/SPECTRAL_WINDOW'
+        spwTable = vis + '/SPECTRAL_WINDOW'
         if debug: print "Trying to open ", spwTable
         mytb.open(spwTable)
         num_chan = mytb.getcol('NUM_CHAN')
@@ -35863,34 +35873,34 @@ def plotmosaic(vis,sourceid='',figfile='', coord='relative', skipsource=-1,
         spwNames = mytb.getcol('NAME')
         if debug: print "spwNames = ", spwNames
         bandNames = []
-        for i,spwName in enumerate(spwNames):
+        for i, spwName in enumerate(spwNames):
             if debug: print "spwName", spwName
             tokens = spwName.split('#')
-            if (tokens[0].find('ALMA_RB')==0 or tokens[0].find('WVR')==0):
+            if (tokens[0].find('ALMA_RB') == 0 or tokens[0].find('WVR') == 0):
                 bandNames.append(tokens[0])
             elif (len(tokens) > 1):
                 # ICT-5291
                 bandNames.append(tokens[1])
             else:
-                bandNames.append('ALMA_RB_%02d'%(freqToBand(refFreqs[i])[0]))
+                bandNames.append('ALMA_RB_%02d' % (freqToBand(refFreqs[i])[0]))
         bandNames = np.unique(bandNames)
         if (debug):
             print "bandNames = ", bandNames
         mytb.close()
     except:
-        print "Could not open table = %s" % spwTable 
+        print "Could not open table = %s" % spwTable
         print "Will not print primary beam circles"
         titleString = vis.split('/')[-1]
-        dishDiameter =  [0]
-#    [latitude,longitude,obs] = getObservatoryLatLong(getObservatoryName(vis)) # ('ALMA') 
-#    if (debug): print "Got observatory longitude = %.3f deg" % (longitude)
+        dishDiameter = [0]
+    #    [latitude,longitude,obs] = getObservatoryLatLong(getObservatoryName(vis)) # ('ALMA')
+    #    if (debug): print "Got observatory longitude = %.3f deg" % (longitude)
     tsysOnlyFields = []
     if (sciencespws):
         if (casadef.casa_version >= casaVersionWithMSMD):
             mymsmd = createCasaTool(msmdtool)
             mymsmd.open(vis)
             spws = mymsmd.spwsforintent('OBSERVE_TARGET#ON_SOURCE')
-            wvrspws = mymsmd.almaspws(wvr=True,sqld=True)
+            wvrspws = mymsmd.almaspws(wvr=True, sqld=True)
             print "spws with observe_target = ", spws
             spws = [x for x in spws if x not in wvrspws]
             print "non-WVR, non-SQLD = ", spws
@@ -35899,7 +35909,7 @@ def plotmosaic(vis,sourceid='',figfile='', coord='relative', skipsource=-1,
                 meanRefFreq.append(mymsmd.meanfreq(spw))
             meanRefFreq = np.median(meanRefFreq)
             myband = freqToBand(meanRefFreq)[0]
-            print "Median frequency = %f GHz (band = %d)" % (meanRefFreq*1e-9, myband)
+            print "Median frequency = %f GHz (band = %d)" % (meanRefFreq * 1e-9, myband)
             for f in fields:
                 tsysOnly = True
                 scans = mymsmd.scansforfield(f)
@@ -35908,17 +35918,17 @@ def plotmosaic(vis,sourceid='',figfile='', coord='relative', skipsource=-1,
                 for sc in scans:
                     scanIntents = mymsmd.intentsforscan(sc)
                     scanSpws = mymsmd.spwsforscan(sc)
-                    scanFieldSpws = np.intersect1d(scanSpws,spwsforfield)
+                    scanFieldSpws = np.intersect1d(scanSpws, spwsforfield)
                     fieldsforscan = mymsmd.fieldsforscan(sc)
                     commonSpws = mymsmd.spwsforfield(fieldsforscan[0])
                     for ffs in fieldsforscan[1:]:
-                        commonSpws = np.intersect1d(commonSpws,mymsmd.spwsforfield(ffs))
+                        commonSpws = np.intersect1d(commonSpws, mymsmd.spwsforfield(ffs))
                     extraspws += len(list(set(scanFieldSpws) - set(commonSpws)))
                     if ('CALIBRATE_ATMOSPHERE#ON_SOURCE' not in scanIntents and 'CALIBRATE_ATMOSPHERE#HOT' not in scanIntents):
                         tsysOnly = False
-                if (extraspws > 0): # Needed for ICT-6896
+                if (extraspws > 0):  # Needed for ICT-6896
                     tsysOnly = True
-                if (tsysOnly): 
+                if (tsysOnly):
                     tsysOnlyFields.append(f)
             print "fields with Tsys only = ", tsysOnlyFields
             mymsmd.close()
@@ -35942,7 +35952,7 @@ def plotmosaic(vis,sourceid='',figfile='', coord='relative', skipsource=-1,
             print "non-WVR = ", matchedNames[matches]
             meanRefFreq = np.median(matchedRefFreqs[matches])
             myband = freqToBand(meanRefFreq)[0]
-            print "Median frequency = %f GHz (band = %d)" % (meanRefFreq*1e-9, myband)
+            print "Median frequency = %f GHz (band = %d)" % (meanRefFreq * 1e-9, myband)
     else:
         # sciencespws == False
         if (3840 in num_chan):
@@ -35953,47 +35963,47 @@ def plotmosaic(vis,sourceid='',figfile='', coord='relative', skipsource=-1,
                 if debug: print "Using single-channel spws"
                 matches = np.where(num_chan == 1)[0]  # this allows it to work with simdata
         if (debug):
-            print "num_chan=%s (type=%s), matches = " % (str(num_chan),type(num_chan)), matches
+            print "num_chan=%s (type=%s), matches = " % (str(num_chan), type(num_chan)), matches
             print "refFreqs = ", refFreqs[matches]
         meanRefFreq = np.median(refFreqs[matches])
         if (debug):
             print "medianRefFreq = ", meanRefFreq
         myband = freqToBand(meanRefFreq)[0]
-        print "Median frequency = %f GHz (band = %d)" % (meanRefFreq*1e-9, myband)
+        print "Median frequency = %f GHz (band = %d)" % (meanRefFreq * 1e-9, myband)
         # If median freq is not within one of the observed bands, then recalculate
         if ('ALMA_RB_%02d'%(myband) not in bandNames and len(bandNames) > 1): # old data do not have band names in spw names
             print "Median frequency is not in any observed band. Recalculating over higher frequencies."
             newFreqs = refFreqs[matches]
             newmatches = np.where(newFreqs > meanRefFreq)[0]
             meanRefFreq = np.median(newFreqs[newmatches])
-            print "Median frequency = %f GHz" % (meanRefFreq*1e-9)
+            print "Median frequency = %f GHz" % (meanRefFreq * 1e-9)
     lambdaMeters = c_mks / meanRefFreq
-    ra = delayDir[0,:][0]*12/math.pi
+    ra = delayDir[0, :][0] * 12 / math.pi
     for i in range(len(ra)):
         if (ra[i] < 0): ra[i] += 24
-    dec = delayDir[1,:][0]*180/math.pi
+    dec = delayDir[1, :][0] * 180 / math.pi
     ra *= 15
     if (centerOnSourceDirection):
 #        print "Running au.getRADecForSource('%s', '%s', firstAppearance=%s)" % (vis, sourcename, firstAppearance)
-        mydeg = getRADecForSource(vis, sourcename,firstAppearance=firstAppearance)
+        mydeg = getRADecForSource(vis, sourcename, firstAppearance=firstAppearance)
         raAverageDegrees, decAverageDegrees = radec2deg(mydeg)
     else:
         raAverageDegrees = np.mean(ra[fields])
         decAverageDegrees = np.mean(dec[fields])
-    cosdec = 1.0/cos(decAverageDegrees*np.pi/180)
-  
+    cosdec = 1.0 / cos(decAverageDegrees * np.pi / 180)
+
     # Here we scale by cos(dec) to make then pointing pattern in angle on sky
-    raRelativeArcsec = 3600*(ra - raAverageDegrees)*cos(decAverageDegrees*math.pi/180.)
-    decRelativeArcsec = 3600*(dec - decAverageDegrees)
-  
+    raRelativeArcsec = 3600 * (ra - raAverageDegrees) * cos(decAverageDegrees * math.pi / 180.)
+    decRelativeArcsec = 3600 * (dec - decAverageDegrees)
+
     markersize = 4
     print "Found %d pointings in this ms" % (shape(ra)[0])
-    [centralField,smallestSeparation] = findNearestField(ra[fields],dec[fields],
-                                            raAverageDegrees, decAverageDegrees)
-    # This next step is crucial, as it converts from the field number 
+    [centralField, smallestSeparation] = findNearestField(ra[fields], dec[fields],
+                                                          raAverageDegrees, decAverageDegrees)
+    # This next step is crucial, as it converts from the field number
     # determined from a subset list back to the full list.
     centralField = fields[centralField]
-    
+
     print "Field %d is closest to the center of the area covered (%.1f arcsec away)." % (centralField,smallestSeparation*3600)
     maxradius = 0
     arcsec = 0
@@ -36003,15 +36013,15 @@ def plotmosaic(vis,sourceid='',figfile='', coord='relative', skipsource=-1,
     if (coord.find('abs') >= 0):
         if not doplot: return centralField
         raunit = 'deg'  # nothing else is supported (yet)
-        desc = pb.subplot(111,aspect=cosdec)
+        desc = pb.subplot(111, aspect=cosdec)
         # SHOW ABSOLUTE COORDINATES
-        pb.plot(ra[fields],dec[fields],"k+",markersize=markersize)
+        pb.plot(ra[fields], dec[fields], "k+", markersize=markersize)
         for j in dishDiameter:
             for i in range(len(ra)):
                 if (i in fields):
                     if (j > 0):
-                        arcsec = 0.5*primaryBeamArcsec(wavelength=lambdaMeters*1000,diameter=j, showEquation=False)
-                        radius = arcsec/3600.0
+                        arcsec = 0.5 * primaryBeamArcsec(wavelength=lambdaMeters * 1000, diameter=j, showEquation=False)
+                        radius = arcsec / 3600.0
                         if (radius > maxradius):
                             maxradius = radius
                         if (i in tsysOnlyFields):
@@ -36021,12 +36031,12 @@ def plotmosaic(vis,sourceid='',figfile='', coord='relative', skipsource=-1,
                             if (len(dishDiameter) > 1 and j < 12):
                                 # Draw ACA in black
                                 myedgecolor = 'k'
-#                        print "Plotting ellipse with radius = ", radius
-                        cir = matplotlib.patches.Ellipse((ra[i], dec[i]), width=2*radius*cosdec,
-                                                       height=2*radius, facecolor='none', edgecolor=myedgecolor,
-                                                       linestyle='dotted')
+                        #                        print "Plotting ellipse with radius = ", radius
+                        cir = matplotlib.patches.Ellipse((ra[i], dec[i]), width=2 * radius * cosdec,
+                                                         height=2 * radius, facecolor='none', edgecolor=myedgecolor,
+                                                         linestyle='dotted')
                         pb.gca().add_patch(cir)
-    #                    cir = pb.Circle((ra[i], dec[i]), radius=radius, facecolor='none', edgecolor='b', linestyle='dotted')
+        #                    cir = pb.Circle((ra[i], dec[i]), radius=radius, facecolor='none', edgecolor='b', linestyle='dotted')
         titleString = vis.split('/')[-1]+', %s, average freq. = %.1f GHz, beam = %.1f"'%(sourcename,meanRefFreq*1e-9,2*arcsec)
         resizeFonts(desc, 10)
         if (raunit.find('deg') >= 0):
@@ -36034,19 +36044,19 @@ def plotmosaic(vis,sourceid='',figfile='', coord='relative', skipsource=-1,
         else:
             pb.xlabel('Right Ascension (hour)')
         pb.ylabel('Declination (deg)')
-        raRange = np.max(ra[fields])-np.min(ra[fields])
-        decRange = np.max(dec[fields])-np.min(dec[fields])
-        x0 = np.max(ra[fields]) + 1.2*maxradius*cosdec
-        x1 = np.min(ra[fields]) - 1.2*maxradius*cosdec
-        y1 = np.max(dec[fields]) + 1.2*maxradius
-        y0 = np.min(dec[fields]) - 1.2*maxradius
-        pb.xlim([x0,x1])
-        pb.ylim([y0,y1])
-        pb.title(titleString,size=10)
+        raRange = np.max(ra[fields]) - np.min(ra[fields])
+        decRange = np.max(dec[fields]) - np.min(dec[fields])
+        x0 = np.max(ra[fields]) + 1.2 * maxradius * cosdec
+        x1 = np.min(ra[fields]) - 1.2 * maxradius * cosdec
+        y1 = np.max(dec[fields]) + 1.2 * maxradius
+        y0 = np.min(dec[fields]) - 1.2 * maxradius
+        pb.xlim([x0, x1])
+        pb.ylim([y0, y1])
+        pb.title(titleString, size=10)
         for i in range(len(ra)):
             if (i in fields):
-                pb.text(ra[i]-0.02*raRange, dec[i]+0.02*decRange, str(i),fontsize=12, color='k')
-    elif (coord.find('rel')>=0):
+                pb.text(ra[i] - 0.02 * raRange, dec[i] + 0.02 * decRange, str(i), fontsize=12, color='k')
+    elif (coord.find('rel') >= 0):
         if doplot:
             # SHOW RELATIVE COORDINATES in arcsec
             pb.plot(raRelativeArcsec[fields], decRelativeArcsec[fields], 'k+', markersize=markersize)
@@ -36054,7 +36064,7 @@ def plotmosaic(vis,sourceid='',figfile='', coord='relative', skipsource=-1,
             for i in range(len(ra)):
                 if (i in fields):
                     if (j > 0):
-                        arcsec = 0.5*primaryBeamArcsec(wavelength=lambdaMeters*1000, diameter=j, showEquation=False)
+                        arcsec = 0.5 * primaryBeamArcsec(wavelength=lambdaMeters * 1000, diameter=j, showEquation=False)
                         radius = arcsec
                         if (radius > maxradius):
                             maxradius = radius
@@ -36070,22 +36080,22 @@ def plotmosaic(vis,sourceid='',figfile='', coord='relative', skipsource=-1,
                                     myedgecolor = 'k'
                         if doplot:
                             cir = pb.Circle((raRelativeArcsec[i], decRelativeArcsec[i]),
-                                        radius=radius, facecolor='none', edgecolor=myedgecolor,
-                                        linestyle='dotted')
+                                            radius=radius, facecolor='none', edgecolor=myedgecolor,
+                                            linestyle='dotted')
                             pb.gca().add_patch(cir)
         if doplot:
             titleString = vis.split('/')[-1]+', %s, average freq. = %.1f GHz, beam = %.1f"'%(sourcename,meanRefFreq*1e-9,2*arcsec)
             resizeFonts(desc, 10)
-            raString = qa.formxxx('%fdeg'%(raAverageDegrees), format='hms', prec=3)
-            decString = qa.formxxx('%fdeg'%(decAverageDegrees), format='dms', prec=0).replace('.',':',2)
+            raString = qa.formxxx('%fdeg' % (raAverageDegrees), format='hms', prec=3)
+            decString = qa.formxxx('%fdeg' % (decAverageDegrees), format='dms', prec=0).replace('.', ':', 2)
             if (centerOnSourceDirection):
                 raString += ' (SOURCE table)'
                 decString += ' (SOURCE table)'
             pb.xlabel('Right ascension offset (arcsec) from %s' % (raString))
             pb.ylabel('Declination offset (arcsec) from %s' % (decString))
-            pb.title(titleString,size=11)
-            raRange = np.max(raRelativeArcsec[fields])-np.min(raRelativeArcsec[fields])
-            decRange = np.max(decRelativeArcsec[fields])-np.min(decRelativeArcsec[fields])
+            pb.title(titleString, size=11)
+            raRange = np.max(raRelativeArcsec[fields]) - np.min(raRelativeArcsec[fields])
+            decRange = np.max(decRelativeArcsec[fields]) - np.min(decRelativeArcsec[fields])
             if (bw):
                 mystyle = 'bold'
             else:
@@ -36097,72 +36107,72 @@ def plotmosaic(vis,sourceid='',figfile='', coord='relative', skipsource=-1,
                         mycolor = 'r'
                     else:
                         mycolor = 'k'
-                    pb.text(raRelativeArcsec[i]-0.02*raRange, decRelativeArcsec[i]+0.02*decRange, 
-                            str(i),fontsize=12, color=mycolor, weight=mystyle)
+                    pb.text(raRelativeArcsec[i] - 0.02 * raRange, decRelativeArcsec[i] + 0.02 * decRange,
+                            str(i), fontsize=12, color=mycolor, weight=mystyle)
             setPlotRange = False
             if (type(plotrange) == list):
                 if (len(plotrange) == 4):
-                    x0,x1,y0,y1 = plotrange
-                    if (plotrange != [0,0,0,0]):
+                    x0, x1, y0, y1 = plotrange
+                    if (plotrange != [0, 0, 0, 0]):
                         setPlotRange = True
             if (not setPlotRange):
-                x0 = np.max(raRelativeArcsec[fields]) + 1.2*maxradius # 0.25*raRange
-                x1 = np.min(raRelativeArcsec[fields]) - 1.2*maxradius # - 0.25*raRange
-                y1 = np.max(decRelativeArcsec[fields]) + 1.2*maxradius # 0.25*decRange
-                y0 = np.min(decRelativeArcsec[fields]) - 1.2*maxradius # 0.25*decRange
-            pb.xlim(x0,x1)
-            pb.ylim(y0,y1)
+                x0 = np.max(raRelativeArcsec[fields]) + 1.2 * maxradius  # 0.25*raRange
+                x1 = np.min(raRelativeArcsec[fields]) - 1.2 * maxradius  # - 0.25*raRange
+                y1 = np.max(decRelativeArcsec[fields]) + 1.2 * maxradius  # 0.25*decRange
+                y0 = np.min(decRelativeArcsec[fields]) - 1.2 * maxradius  # 0.25*decRange
+            pb.xlim(x0, x1)
+            pb.ylim(y0, y1)
             pb.axis('equal')
             if (setPlotRange):
                 pb.gca().set_aspect('equal', adjustable='box')
                 pb.axis(plotrange)
         mosaicInfo = []
         mosaicInfo.append(centralField)
-        border = 2*maxradius*gaussianBeamOffset(pblevel)
+        border = 2 * maxradius * gaussianBeamOffset(pblevel)
         mosaicInfo.append(np.max(raRelativeArcsec[fields]) + border)
         mosaicInfo.append(np.min(raRelativeArcsec[fields]) - border)
         mosaicInfo.append(np.max(decRelativeArcsec[fields]) + border)
         mosaicInfo.append(np.min(decRelativeArcsec[fields]) - border)
-        if not doplot: 
+        if not doplot:
             return mosaicInfo
         if showImageBorder:
-            x,y = blcTrcToLineSegments([mosaicInfo[1],mosaicInfo[4]], 
-                                       [mosaicInfo[2],mosaicInfo[3]])
-            pb.plot(x,y,'k--')
+            x, y = blcTrcToLineSegments([mosaicInfo[1], mosaicInfo[4]],
+                                        [mosaicInfo[2], mosaicInfo[3]])
+            pb.plot(x, y, 'k--')
     else:
         print "Invalid option for coord, must be either 'rel'ative or 'abs'olute."
         return
-  
+
     yFormatter = ScalarFormatter(useOffset=False)
     desc.yaxis.set_major_formatter(yFormatter)
     desc.xaxis.set_major_formatter(yFormatter)
     if (not bw):
-        desc.xaxis.grid(True,which='major')
-        desc.yaxis.grid(True,which='major')
+        desc.xaxis.grid(True, which='major')
+        desc.yaxis.grid(True, which='major')
     if (len(dishDiameter) > 1):
         pb.text(0.04, 0.03, '12m', color='b', transform=desc.transAxes)
         pb.text(0.04, 0.08, '7m', color='k', transform=desc.transAxes)
     pb.draw()
     if sourceid == '':
-        autoFigureName = "%s.pointings.%s.png" % (vis,coord)
+        autoFigureName = "%s.pointings.%s.png" % (vis, coord)
     else:
-        autoFigureName = "%s.pointings.%s.src%s.png" % (vis,coord,str(sourceid))
-    if (figfile==True):
+        autoFigureName = "%s.pointings.%s.src%s.png" % (vis, coord, str(sourceid))
+    if (figfile == True):
         try:
-          pb.savefig(autoFigureName)
-          print "Wrote file = %s" % (autoFigureName)
+            pb.savefig(autoFigureName)
+            print "Wrote file = %s" % (autoFigureName)
         except:
-          print "WARNING:  Could not save plot file.  Do you have write permission here?"
+            print "WARNING:  Could not save plot file.  Do you have write permission here?"
     elif (len(figfile) > 0):
         try:
-          pb.savefig(figfile)
-          print "Wrote file = %s" % (figfile)
+            pb.savefig(figfile)
+            print "Wrote file = %s" % (figfile)
         except:
-          print "WARNING:  Could not save plot file.  Do you have write permission here?"
+            print "WARNING:  Could not save plot file.  Do you have write permission here?"
     else:
-          print "To save a plot, re-run with either:"
-          print "  plotmosaic('%s',figfile=True) to produce the automatic name=%s" % (vis,autoFigureName)
-          print "  plotmosaic('%s',figfile='myname.png')" % (vis)
+        print "To save a plot, re-run with either:"
+        print "  plotmosaic('%s',figfile=True) to produce the automatic name=%s" % (vis, autoFigureName)
+        print "  plotmosaic('%s',figfile='myname.png')" % (vis)
     if writeDS9regionFile:
         ds9file = '%s_ds9.reg' % vis
         f = open(ds9file, 'w')
@@ -36171,41 +36181,41 @@ def plotmosaic(vis,sourceid='',figfile='', coord='relative', skipsource=-1,
         f.write('fk5\n')
         for i in range(len(ra)):
             if (i in fields):
-#                radec = deg2radec(ra[i],dec[i],delimiter=',',verbose=False)
-#                f.write('ellipse(%s,%f",%f",0) # color=%s\n' % (radec,arcsec,arcsec,color))
-#                f.write('ellipse(%f,%f,%f",%f",0) # color=%s\n' % (ra[i],dec[i],arcsec,arcsec,color))
-                f.write('ellipse %f %f %f" %f" 0\n' % (ra[i],dec[i],arcsec,arcsec))
-#                f.write('point(%f,%f) # color=%s\n' % (ra[i],dec[i],color))
+                #                radec = deg2radec(ra[i],dec[i],delimiter=',',verbose=False)
+                #                f.write('ellipse(%s,%f",%f",0) # color=%s\n' % (radec,arcsec,arcsec,color))
+                #                f.write('ellipse(%f,%f,%f",%f",0) # color=%s\n' % (ra[i],dec[i],arcsec,arcsec,color))
+                f.write('ellipse %f %f %f" %f" 0\n' % (ra[i], dec[i], arcsec, arcsec))
+        #                f.write('point(%f,%f) # color=%s\n' % (ra[i],dec[i],color))
         f.close()
         print "Wrote ", ds9file
     if writeCRTF:
-        ds9file = '%s_%s.crtf' % (vis,markerType)
+        ds9file = '%s_%s.crtf' % (vis, markerType)
         f = open(ds9file, 'w')
         f.write('#CRTF0\n')
         f.write('global coord=J2000\n')
-        shapes = ['symbol','ellipse']
+        shapes = ['symbol', 'ellipse']
         if markerType not in shapes:
             print "Shape must be one of: %s" % shapes
             return
         for i in range(len(ra)):
             if (i in fields):
-                radec = deg2radec(ra[i],dec[i],delimiter=',',hmsdms=True,verbose=False)
+                radec = deg2radec(ra[i], dec[i], delimiter=',', hmsdms=True, verbose=False)
                 if markerType == 'symbol':
                     f.write('symbol[[%s], %s], linewidth=%d, symsize=%d, color=%s\n' % (radec, symbolType, linewidth, symsize, color))
-#                elif markerType == 'circle':  # not yet supported in CASA viewer
-#                    f.write('circle[[%s], %farcsec], color=%s\n' % (radec,arcsec,color))
+                #                elif markerType == 'circle':  # not yet supported in CASA viewer
+                #                    f.write('circle[[%s], %farcsec], color=%s\n' % (radec,arcsec,color))
                 elif markerType == 'ellipse':
                     f.write('ellipse[[%s], [%farcsec,%farcsec], 0deg], color=%s\n' % (radec, arcsec, arcsec/np.cos(np.radians(dec[i])), color))
-#                elif markerType == 'text':  # not yet supported in CASA viewer
-#                    f.write("text[[%s], '%s']\n" % (radec,str(i)))
+        #                elif markerType == 'text':  # not yet supported in CASA viewer
+        #                    f.write("text[[%s], '%s']\n" % (radec,str(i)))
         f.close()
         print "Wrote ", ds9file
-    if (coord.find('rel')>=0):
+    if (coord.find('rel') >= 0):
         return mosaicInfo
     else:
         return
 
-def runPredictcomp(objname, minfreq, maxfreq='', standard='Butler-JPL-Horizons 2012', 
+def runPredictcomp(objname, minfreq, maxfreq='', standard='Butler-JPL-Horizons 2012',
                 epoch='', nfreqs=1, antennalist='alma.cycle2.7.cfg', mjd=None,
                 savefig=''):
     """
