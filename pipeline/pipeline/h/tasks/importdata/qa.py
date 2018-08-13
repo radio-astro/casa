@@ -35,12 +35,14 @@ class ImportDataQAHandler(pqa.QAPlugin):
         score5 = self._check_contiguous(result.mses)
 
         score6 = self._check_coordinates(result.mses)
-    
+
+        score7 = self._check_science_spw_names(result.mses, context.observing_run.virtual_science_spw_names)
+        
         LOG.todo('ImportData QA: missing source.xml and calibrator unknown to ' 
                  'CASA')
         LOG.todo('ImportData QA: missing BDFs')
 
-        scores = [score1, score3, score4, score5, score6]
+        scores = [score1, score3, score4, score5, score6, score7]
         result.qa.pool.extend(scores)
     
     @staticmethod
@@ -168,6 +170,11 @@ class ImportDataQAHandler(pqa.QAPlugin):
         """
         return qacalc.score_ephemeris_coordinates(mses)
 
+    def _check_science_spw_names(self, mses, virtual_science_spw_names):
+        '''
+        Check science spw names
+        '''
+        return qacalc.score_science_spw_names(mses, virtual_science_spw_names)
 
 class ImportDataListQAHandler(pqa.QAPlugin):
     result_cls = collections.Iterable
