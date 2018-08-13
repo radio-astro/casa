@@ -1,0 +1,295 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+		 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		 xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+<task type="function" name="hif_makeimages" category="pipeline">
+<shortdescription>Compute clean map</shortdescription>
+<description>
+Compute clean results from a list of specified targets.  
+</description>
+<input>
+
+  <param type="stringArray" name="vis" subparam="true">
+    <description>List of input MeasurementSets</description>
+    <value></value>
+  </param>
+
+  <param type="any" name="target_list" subparam="true">
+    <any type="variant"/>
+    <description>Dictionary specifying targets to be imaged; blank will read list from context</description>
+    <value>{}</value>
+  </param>
+
+  <param type="string" name="hm_masking">
+     <description>Pipeline heuristics masking option</description>
+       <value>auto</value>
+       <allowed kind="enum">
+         <value>auto</value>
+         <value>centralregion</value>
+         <value>psf</value>
+         <value>psfiter</value>
+         <value>none</value>
+         <value>manual</value>
+         <value></value>
+       </allowed>
+  </param>
+
+  <param type="double" name="hm_sidelobethreshold" subparam="true">
+     <description>sidelobethreshold * the max sidelobe level</description>
+       <value>-999.0</value>
+  </param>
+
+  <param type="double" name="hm_noisethreshold" subparam="true">
+     <description>noisethreshold * rms in residual image</description>
+       <value>-999.0</value>
+  </param>
+
+  <param type="double" name="hm_lownoisethreshold" subparam="true">
+     <description>lownoisethreshold * rms in residual image</description>
+       <value>-999.0</value>
+  </param>
+
+  <param type="double" name="hm_negativethreshold" subparam="true">
+     <description>negativethreshold * rms in residual image</description>
+       <value>-999.0</value>
+  </param>
+
+  <param type="double" name="hm_minbeamfrac" subparam="true">
+     <description>Minimum beam fraction for pruning</description>
+       <value>-999.0</value>
+  </param>
+
+  <param type="int" name="hm_growiterations" subparam="true">
+     <description>Number of binary dilation iterations for growing the mask</description>
+       <value>-999</value>
+  </param>
+
+  <param type="bool" name="hm_dogrowprune" subparam="true">
+    <description>Do pruning on the grow mask</description>
+    <value>True</value>
+  </param>
+
+  <param type="double" name="hm_minpercentchange" subparam="true">
+     <description>Mask size change threshold</description>
+       <value>-999.0</value>
+  </param>
+
+  <param type="string" name="hm_cleaning">
+     <description>Pipeline cleaning mode </description>
+       <value></value>
+       <allowed kind="enum">
+         <value></value>
+         <value>rms</value>
+         <value>sensitivity</value>
+         <value>timesmask</value>
+         <value>manual</value>
+       </allowed>
+  </param>
+
+  <param type="double" name="tlimit" subparam="true">
+       <description>Times the sensitivity limit for cleaning</description>
+       <value>2.0</value>
+  </param>
+
+  <param type="int" name="masklimit" subparam="true">
+       <description>Times good mask pixels for cleaning</description>
+       <value>4</value>
+  </param>
+
+  <param type="int" name="maxncleans" subparam="true">
+    <description>Maximum number of clean task calls</description>
+    <value>1</value>
+  </param>
+
+  <param type="bool" name="cleancontranges">
+    <description>Clean continuum frequency ranges in cubes</description>
+    <value>False</value>
+  </param>
+
+  <param type="bool" name="calcsb">
+    <description>Force (re-)calculation of sensitivities and beams</description>
+    <value>False</value>
+  </param>
+
+  <param type="string" name="parallel">
+    <description>Clean images using MPI cluster</description>
+    <value>automatic</value>
+    <allowed kind="enum">
+      <value>automatic</value>
+      <value>true</value>
+      <value>false</value>
+    </allowed>
+  </param>
+
+  <param type="string" name="pipelinemode">
+    <description>The pipeline operating mode</description>
+    <value>automatic</value>
+    <allowed kind="enum">
+      <value>automatic</value>
+      <value>interactive</value>
+      <value>getinputs</value>
+    </allowed>
+  </param>
+
+  <param type="bool" name="dryrun" subparam="true">
+    <description>Run the task (False) or display the command(True)</description>
+    <value>False</value>
+  </param>
+
+  <param type="bool" name="acceptresults" subparam="true">
+    <description>Add the results to the pipeline context</description>
+   <value>True</value>
+  </param>
+
+
+  <constraints>
+
+    <when param="pipelinemode">
+      <equals type="string" value="automatic"/>
+      <equals type="string" value="interactive">
+        <default param="vis"><value type="stringArray"></value></default>
+        <default param="target_list"><value>{}</value></default>
+        <default param="dryrun"><value type="bool">False</value></default>
+        <default param="acceptresults"><value type="bool">True</value></default>
+      </equals>
+      <equals type="string" value="getinputs">
+        <default param="vis"><value type="stringArray"></value></default>
+        <default param="target_list"><value>{}</value></default>
+      </equals>
+    </when>
+
+    <when param="hm_masking">
+      <equals value="auto">
+        <default param="hm_sidelobethreshold"><value type="double">-999.0</value></default>
+        <default param="hm_noisethreshold"><value type="double">-999.0</value></default>
+        <default param="hm_lownoisethreshold"><value type="double">-999.0</value></default>
+        <default param="hm_negativethreshold"><value type="double">-999.0</value></default>
+        <default param="hm_minbeamfrac"><value type="double">-999.0</value></default>
+        <default param="hm_growiterations"><value type="int">-999</value></default>
+        <default param="hm_dogrowprune"><value type="bool">True</value></default>
+        <default param="hm_minpercentchange"><value type="double">-999.0</value></default>
+      </equals>
+      <equals value="centralregion">
+      </equals>
+      <equals value="psf">
+      </equals>
+      <equals value="psfiter">
+        <default param="maxncleans"><value type="int">10</value></default>
+      </equals>
+      <equals value="none">
+      </equals>
+      <equals value="">
+      </equals>
+    </when>
+
+    <when param="hm_cleaning">
+      <equals value="">
+      </equals>
+      <equals value="rms">
+        <default param="tlimit"><value type="double">2.0</value></default>
+      </equals>
+      <equals value="sensitivity">
+        <default param="tlimit"><value type="double">2.0</value></default>
+      </equals>
+      <equals value="timesmask">
+        <default param="masklimit"><value type="int">4</value></default>
+      </equals>
+    </when>
+
+  </constraints>
+
+</input>
+
+<output>
+    <param type="any" name="results">
+        <description>The output results object</description>
+        <any type="variant"/>
+        <value></value>
+    </param>
+</output>
+<returns type="void"/>
+
+
+<example>
+
+Compute a cleaned image for a particular target source/intent and spectral
+window.
+
+Keyword arguments:
+
+--- pipeline parameter arguments which can be set in any pipeline mode
+
+pipelinemode -- The pipeline operating mode. In 'automatic' mode the pipeline
+       determines the values of all context defined pipeline inputs
+       automatically.  In interactive mode the user can set the pipeline
+       context defined parameters manually.  In 'getinputs' mode the user
+       can check the settings of all pipeline parameters without running
+       the task.
+       default: 'automatic'.
+
+
+---- pipeline context defined parameter arguments which can be set only in
+'interactive mode'
+
+vis -- The list of input MeasurementSets. Defaults to the list of 
+    MeasurementSets specified in the h_init or hif_importdata sets.
+    example: vis='ngc5921.ms'
+             vis=['ngc5921a.ms', ngc5921b.ms', 'ngc5921c.ms']
+    default: use all MeasurementSets in the context 
+
+hm_masking -- Clean masking mode. Options are 'centralregion',
+    'psf', 'psfiter', 'auto', 'manual' and 'none'
+    default: 'auto'
+    example: 'manual'
+
+hm_sidelobethreshold -- sidelobethreshold * the max sidelobe level
+
+hm_noisethreshold -- noisethreshold * rms in residual image
+
+hm_lownoisethreshold -- lownoisethreshold * rms in residual image
+
+hm_negativethreshold -- negativethreshold * rms in residual image
+
+hm_minbeamfrac -- negativethreshold * rms in residual image
+
+hm_growiterations -- Number of binary dilation iterations for growing the mask
+
+hm_dogrowprune -- Do pruning on the grow mask
+
+hm_minpercentchange -- Mask size change threshold
+
+cleancontranges -- Clean continuum frequency ranges in cubes
+                   default=False
+                   Options: False, True
+
+calcsb -- Force (re-)calculation of sensitivities and beams
+            default=False
+            Options: False, True
+
+parallel -- use multiple CPU nodes to clean images
+    default: \'automatic\'
+
+--- pipeline task execution modes
+dryrun -- Run the commands (True) or generate the commands to be run but
+   do not execute (False).
+   default: False
+
+acceptresults -- Add the results of the task to the pipeline context (True) or
+   reject them (False).
+   default: True
+
+Output:
+
+results -- If pipeline mode is 'getinputs' then None is returned. Otherwise
+    the results object for the pipeline task is returned.
+
+
+Examples:
+
+</example>
+
+</task>
+</casaxml>
+
