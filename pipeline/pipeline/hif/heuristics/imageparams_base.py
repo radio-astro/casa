@@ -628,7 +628,7 @@ class ImageParamsHeuristics(object):
                 separation = cme.separation(mdirection, mdirections[0])
                 if cqa.gt(separation, max_separation):
                     separation_arcsec = cqa.getvalue(cqa.convert(separation, 'arcsec'))[0]
-                    LOG.warning('The separation between %s field centers across EBs is %f arcseconds (larger than the limit of %.1f microarcseconds). This is only normal for an ephemris source or a source with a large propermotion or parallax.' % (field_names[0], separation_arcsec, max_separation_uarcsec))
+                    LOG.warning('The separation between %s field centers across EBs is %f arcseconds (larger than the limit of %.1f microarcseconds). This is only normal for an ephemeris source or a source with a large proper motion or parallax.' % (field_names[0], separation_arcsec, max_separation_uarcsec))
             mdirections = [mdirections[0]]
 
         # it should be easy to calculate some 'average' direction
