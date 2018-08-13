@@ -29,7 +29,10 @@ class ALMAImportDataQAHandler(pqa.QAPlugin):
         # Check for the presence of bandwidth switching
         score3 = self._check_bwswitching(result.mses)
 
-        scores = [score1, score2, score3]
+        # Check for science spw names matching the virtual spw ID lookup table
+        score4 = self._check_science_spw_names(result.mses, context.observing_run.virtual_science_spw_names)
+
+        scores = [score1, score2, score3, score4]
 
         result.qa.pool.extend(scores)
 
@@ -50,3 +53,9 @@ class ALMAImportDataQAHandler(pqa.QAPlugin):
         Check each measurement set for bandwidth switching calibration issues
         '''
         return qacalc.score_bwswitching(mses)
+
+    def _check_science_spw_names(self, mses, virtual_science_spw_names):
+        '''
+        Check science spw names
+        '''
+        return qacalc.score_science_spw_names(mses, virtual_science_spw_names)

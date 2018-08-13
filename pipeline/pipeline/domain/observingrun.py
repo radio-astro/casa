@@ -2,6 +2,7 @@ from __future__ import absolute_import
 import datetime
 import itertools
 import types
+import os
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.casatools as casatools
@@ -39,6 +40,11 @@ class ObservingRun(object):
                         self.virtual_science_spw_shortnames[name] = name
                 else:
                     self.virtual_science_spw_shortnames[name] = name
+        else:
+            for s in ms.get_spectral_windows(science_windows_only=True):
+                if s.name not in self.virtual_science_spw_names:
+                    msg = 'Science spw name {0} (ID {1}) of EB {2} does not match spw names of first EB. Virtual spw ID mapping will not work.'.format(s.name, s.id, os.path.basename(ms.name).replace('.ms',''))
+                    LOG.error(msg)
 
         self.measurement_sets.append(ms)
 

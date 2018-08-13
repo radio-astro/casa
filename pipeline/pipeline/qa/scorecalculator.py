@@ -24,6 +24,7 @@ import pipeline.qa.checksource as checksource
 __all__ = ['score_polintents',                                # ALMA specific
            'score_bands',                                     # ALMA specific
            'score_bwswitching',                               # ALMA specific
+           'score_spwnames',                                  # ALMA specific
            'score_tsysspwmap',                                # ALMA specific
            'score_number_antenna_offsets',                    # ALMA specific
            'score_missing_derived_fluxes',                    # ALMA specific
@@ -2194,3 +2195,34 @@ def score_gfluxscale_k_spw(vis, field, spw_id, k_spw):
                           metric_units='Number of spws with missing SNR measurements')
 
     return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg, vis=vis, origin=origin)
+
+
+def score_science_spw_names(mses, virtual_science_spw_names):
+    """
+    Check that all MSs have the same set of spw names. If this is
+    not the case, the virtual spw mapping will not work.
+    """
+
+    score = 1.0
+    msgs = []
+    for ms in mses:
+        spw_msgs = []
+        for s in ms.get_spectral_windows(science_windows_only=True):
+            if s.name not in virtual_science_spw_names:
+                score = 0.0
+                spw_msgs.append('{0} (ID {1})'.format(s.name, s.id))
+        if spw_msgs != []:
+            msgs.append('Science spw names {0} of EB {1} do not match spw names of first EB.'.format(','.join(spw_msgs), os.path.basename(ms.name).replace('.ms','')))
+
+    if msgs == []:
+        longmsg = 'Science spw names match virtual spw lookup table'
+        shortmsg = 'Science spw names match'
+    else:
+        longmsg = '{0} Virtual spw ID mapping will not work.'.format(' '.join(msgs))
+        shortmsg = 'Science spw names do not match'
+
+    origin = pqa.QAOrigin(metric_name='score_spwnames',
+                          metric_score=score,
+                          metric_units='spw names match virtual spw name lookup table')
+
+    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg, origin=origin)
