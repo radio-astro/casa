@@ -244,8 +244,8 @@
         <Command xmlns="">hif_makeimlist</Command>
         <ParameterSet>
             <Parameter>
-                <Keyword xmlns="">width</Keyword>
-                <Value xmlns=""></Value>
+                <Keyword xmlns="">specmode</Keyword>
+                <Value xmlns="">cube</Value>
             </Parameter>
         </ParameterSet>
     </ProcessingCommand>
