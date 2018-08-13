@@ -302,6 +302,10 @@ class CleanBase(basetask.StandardTaskTemplate):
         # used in heuristics methods upstream.
         if inputs.heuristics.is_eph_obj(inputs.field):
             tclean_job_parameters['phasecenter'] = 'TRACKFIELD'
+            # 2018-08-13: Spectral tracking has been implemented via a new
+            # specmode option (CAS-11766).
+            if inputs.specmode == 'cube':
+                tclean_job_parameters['specmode'] = 'cubesource'
             # 2018-04-19: 'REST' does not yet work (see CAS-8965, CAS-9997)
             #tclean_job_parameters['outframe'] = 'REST'
             tclean_job_parameters['outframe'] = ''
