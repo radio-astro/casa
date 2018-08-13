@@ -121,7 +121,7 @@ class MakeImages(basetask.StandardTaskTemplate):
                     result.add_result(worker_result, target, outcome='success')
                     # Export RMS (reprSrc, reprSpw only)
                     repr_target, repr_source, repr_spw, repr_freq, reprBW_mode, real_repr_target, minAcceptableAngResolution, maxAcceptableAngResolution, sensitivityGoal = heuristics.representative_target()
-                    if str(repr_spw) == worker_result.spw and \
+                    if str(repr_spw) in worker_result.spw.split(',') and \
                     repr_source==worker_result.sourcename:
                         s = self._get_image_rms_as_sensitivity(worker_result, target, heuristics)
                         if s is not None:
