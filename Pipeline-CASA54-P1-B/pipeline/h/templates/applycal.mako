@@ -686,7 +686,8 @@ def format_spwmap(spwmap, scispws):
 	</%def>
 
 	<%def name="preamble()">
-		<p>Plots of UV coverage for each Measurement Set.</p>
+        <p>Plots of UV coverage for each Measurement Set. Unflagged data are plotted in blue, while flagged data are
+            plotted in red.</p>
 	</%def>
 
 	<%def name="mouseover(plot)">Click to show UV coverage for ${plot.parameters['vis']}, TARGET field ${cgi.escape(plot.parameters['field_name'], True)} (#${plot.parameters['field']}), spw ${plot.parameters['spw']}</%def>
