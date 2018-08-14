@@ -140,12 +140,14 @@ class BpSolint(basetask.StandardTaskTemplate):
         nphsolutions = []
         phsensitivities = []
         phintsnrs = []
+        exptimes = []
 
         bpsolints = []
         bpchansolints = []
         nbpsolutions = []
         bpsensitivities = []
         bpchansnrs = []
+        bandwidths = []
 
         # Loop over the spws. Values for spws with
         # not dictionary entries are set to None
@@ -158,12 +160,14 @@ class BpSolint(basetask.StandardTaskTemplate):
                 nphsolutions.append(None)
                 phsensitivities.append(None)
                 phintsnrs.append(None)
+                exptimes.append(None)
 
                 bpsolints.append(None)
                 bpchansolints.append(None)
                 nbpsolutions.append(None)
                 bpsensitivities.append(None)
                 bpchansnrs.append(None)
+                bandwidths.append(None)
 
             else:
 
@@ -172,12 +176,14 @@ class BpSolint(basetask.StandardTaskTemplate):
                 nphsolutions.append(solint_dict[spwid]['nphaseup_solutions'])
                 phsensitivities.append('%fmJy' % solint_dict[spwid]['sensitivity_per_integration_mJy'])
                 phintsnrs.append(solint_dict[spwid]['snr_per_integration'])
+                exptimes.append('%fs' % (60*solint_dict[spwid]['exptime_minutes']))
 
                 bpsolints.append(solint_dict[spwid]['bpsolint'])
                 bpchansolints.append(solint_dict[spwid]['nchan_bpsolint'])
                 nbpsolutions.append(solint_dict[spwid]['nbandpass_solutions'])
                 bpsensitivities.append('%fmJy' % solint_dict[spwid]['sensitivity_per_channel_mJy'])
                 bpchansnrs.append(solint_dict[spwid]['snr_per_channel'])
+                bandwidths.append('%fHz' % solint_dict[spwid]['bandwidth'])
 
         # Populate the result.
         result.phsolints = phsolints
@@ -185,12 +191,14 @@ class BpSolint(basetask.StandardTaskTemplate):
         result.nphsolutions = nphsolutions
         result.phsensitivities = phsensitivities
         result.phintsnrs = phintsnrs
+        result.exptimes = exptimes
 
         result.bpsolints = bpsolints
         result.bpchansolints = bpchansolints
         result.nbpsolutions = nbpsolutions
         result.bpchansensitivities = bpsensitivities
         result.bpchansnrs = bpchansnrs
+        result.bandwidths = bandwidths
 
         return result
 
@@ -199,9 +207,9 @@ class BpSolint(basetask.StandardTaskTemplate):
 class BpSolintResults(basetask.Results):
     def __init__(self, vis=None, spwids=[],
                  phsolints=[], phintsolints=[], nphsolutions=[],
-                 phsensitivities=[], phintsnrs=[],
+                 phsensitivities=[], phintsnrs=[], exptimes = [],
                  bpsolints=[], bpchansolints=[], nbpsolutions=[],
-                 bpsensitivities=[], bpchansnrs=[]):
+                 bpsensitivities=[], bpchansnrs=[], bandwidths = []):
         """
         Initialise the results object.
         """
@@ -218,6 +226,7 @@ class BpSolintResults(basetask.Results):
         self.nphsolutions = nphsolutions
         self.phsensitivities = phsensitivities
         self.phintsnrs = phintsnrs
+        self.exptimes = exptimes
 
         # Bandpass solutions
         self.bpsolints = bpsolints
@@ -225,6 +234,7 @@ class BpSolintResults(basetask.Results):
         self.nbpsolutions = nbpsolutions
         self.bpchansensitivities = bpsensitivities
         self.bpchansnrs = bpchansnrs
+        self.bandwidths = bandwidths
 
     def __repr__(self):
         if self.vis is None or not self.spwids:

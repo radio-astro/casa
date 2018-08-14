@@ -201,7 +201,7 @@ class ALMAPhcorBandpass(bandpassworker.BandpassWorker):
             if snr_result.nphsolutions[i] < inputs.phaseupnsols:
                 LOG.warning('Phaseup solution for spw %s has only %d points in MS %s' %
                             (snr_result.spwids[i], snr_result.nphsolutions[i], inputs.ms.basename))
-                factor = float(max(1, snr_result.nphsolutions[i])) / inputs.phaseupnsols
+                factor = 1.0 / inputs.phaseupnsols
 
                 if old_solint == 'int':
                     # We expect an MS to have the same integration interval
@@ -225,7 +225,7 @@ class ALMAPhcorBandpass(bandpassworker.BandpassWorker):
                     # tool can't make a comparison 
                     old_solint = timedelta_solint
                     
-                newsolint = quanta.tos(quanta.mul(quanta.quantity(old_solint), quanta.quantity(factor)), 3)
+                newsolint = quanta.tos(quanta.mul(quanta.quantity(snr_result.exptimes[i]), quanta.quantity(factor)), 3)
                 LOG.warning('Rounding estimated phaseup solint for spw %s from %s to %s in MS %s' %
                             (snr_result.spwids[i], snr_result.phsolints[i], newsolint, inputs.ms.basename))
                 if quanta.gt(quanta.quantity(newsolint), quanta.quantity(max_solint)):
@@ -421,8 +421,8 @@ class ALMAPhcorBandpass(bandpassworker.BandpassWorker):
                     if snr_result.nbpsolutions[solindex] < inputs.bpnsols:
                         # Recompute the solution interval to force the minimum
                         # number of solution channels
-                        factor = float(max (1, snr_result.nbpsolutions[solindex])) / inputs.bpnsols
-                        newsolint = quanta.tos(quanta.mul(snr_result.bpsolints[solindex], factor))
+                        factor = 1.0 / inputs.bpnsols
+                        newsolint = quanta.tos(quanta.mul(snr_result.bandwidths[solindex], factor))
                         LOG.warning('Too few channels: Changing recommended bandpass solint from %s to %s for spw %s' %
                                     (snr_result.bpsolints[solindex], newsolint, spw.id))
                         inputs.solint = orig_solint + ',' + newsolint
