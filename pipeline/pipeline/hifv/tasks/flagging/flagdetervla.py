@@ -78,8 +78,6 @@ from pipeline.h.tasks.flagging import flagdeterbase
 from pipeline.infrastructure import casa_tasks
 from pipeline.infrastructure import task_registry
 
-# import pipeline.tasks.flagging.FlagDeterBase as gronk
-
 # ------------------------------------------------------------------------------
 
 # Initialize a logger
@@ -133,88 +131,85 @@ LOG = infrastructure.get_logger(__name__)
 
 class FlagDeterVLAInputs(flagdeterbase.FlagDeterBaseInputs):
 
-# ------------------------------------------------------------------------------
+    # FlagDeterVLAInputs::__init__
 
-# FlagDeterVLAInputs::__init__
+    # Description:
+    # ------------
+    # This public member function constructs an instance of the
+    # FlagDeterVLAInputs() class.
 
-# Description:
-# ------------
-# This public member function constructs an instance of the
-# FlagDeterVLAInputs() class.
+    # The primary purpose of this class is to initialize the public member
+    # variables.  The defaults for all parameters (except context) are None.
 
-# The primary purpose of this class is to initialize the public member
-# variables.  The defaults for all parameters (except context) are None.
+    # NB: This public member function is overloaded.
 
-# NB: This public member function is overloaded.
+    # Inherited classes:
+    # ------------------
+    # FlagDeterBaseInputs - This class manages the inputs for the
+    #                       FlagDeterBaseInputs() parent class.
 
-# Inherited classes:
-# ------------------
-# FlagDeterBaseInputs - This class manages the inputs for the
-#                       FlagDeterBaseInputs() parent class.
+    # Inputs to initialize the FlagDeterBaseInputs() class:
+    # -----------------------------------------------------
+    # context      - This python dictionary contains the pipeline context (state).
+    #                It has no default.
+    #
+    # vis          - This python string contains the MS name.
+    #
+    # output_dir   - This python string contains the output directory name.
+    #
+    # flagbackup   - This python boolean determines whether the existing flags are
+    #                backed up before the new flagging begins.
+    #
+    # autocorr     - This python boolean determines whether autocorrelations are
+    #                flagged or not.
+    #
+    # shadow       - This python boolean determines whether shadowed antennas are
+    #                flagged or not.
+    #
+    # scan         - This python boolean determines whether scan flagging is
+    #                performed.
+    # scannumber   - This python string contains the comma-delimited scan numbers.
+    #                In the task interface, it is a subparameter of the scan
+    #                parameter.  Standard data selection syntax is valid.
+    # intents      - This python string contains the comma-delimited intents.  In
+    #                the task interface, it is a subparameter of the scan parameter.
+    #                Wildcards (* character) are allowed.
+    #
+    # edgespw      - This python boolean determines whether edge channels are
+    #                flagged.
+    # fracspw      - This python float contains the fraction (between 0.0 and 1.0)
+    #                of channels removed from the edge for the ALMA baseline correlator.
+    #                In the task interface, it is a subparameter of the edgespw parameter.
+    #
+    # fracspwfps    - This python float contains the fraction (between 0.0 and 1.0)
+    #                of channels removed from the edge for the ACS correlator.  In the
+    #                task interface, it it is a subparameter of the edgespw parameter.
+    #
+    # online       - This python boolean determines whether the online flags are
+    #                applied.
+    # fileonline   - This python string contains the name of the ASCII file that
+    #                has the flagging commands.  It is a subparameter of the
+    #                online parameter.
+    #
+    # template     - This python boolean determines whether flagging templates are
+    #                applied.
+    # filetemplate - This python string contains the name of the ASCII file that
+    #                has the flagging template (for RFI, birdies, telluric lines,
+    #                etc.).  It is a subparameter of the template parameter.
 
-# Inputs to initialize the FlagDeterBaseInputs() class:
-# -----------------------------------------------------
-# context      - This python dictionary contains the pipeline context (state).
-#                It has no default.
-#
-# vis          - This python string contains the MS name.
-#
-# output_dir   - This python string contains the output directory name.
-#
-# flagbackup   - This python boolean determines whether the existing flags are
-#                backed up before the new flagging begins.
-#
-# autocorr     - This python boolean determines whether autocorrelations are
-#                flagged or not.
-#
-# shadow       - This python boolean determines whether shadowed antennas are
-#                flagged or not.
-#
-# scan         - This python boolean determines whether scan flagging is
-#                performed.
-# scannumber   - This python string contains the comma-delimited scan numbers.
-#                In the task interface, it is a subparameter of the scan
-#                parameter.  Standard data selection syntax is valid.
-# intents      - This python string contains the comma-delimited intents.  In
-#                the task interface, it is a subparameter of the scan parameter.
-#                Wildcards (* character) are allowed.
-#
-# edgespw      - This python boolean determines whether edge channels are
-#                flagged.
-# fracspw      - This python float contains the fraction (between 0.0 and 1.0)
-#                of channels removed from the edge for the ALMA baseline correlator.
-#                In the task interface, it is a subparameter of the edgespw parameter.
-#
-# fracspwfps    - This python float contains the fraction (between 0.0 and 1.0)
-#                of channels removed from the edge for the ACS correlator.  In the
-#                task interface, it it is a subparameter of the edgespw parameter.
-#
-# online       - This python boolean determines whether the online flags are
-#                applied.
-# fileonline   - This python string contains the name of the ASCII file that
-#                has the flagging commands.  It is a subparameter of the
-#                online parameter.
-#
-# template     - This python boolean determines whether flagging templates are
-#                applied.
-# filetemplate - This python string contains the name of the ASCII file that
-#                has the flagging template (for RFI, birdies, telluric lines,
-#                etc.).  It is a subparameter of the template parameter.
+    # Inputs:
+    # -------
+    # None.
 
-# Inputs:
-# -------
-# None.
+    # Outputs:
+    # --------
+    # None, returned via the function value.
 
-# Outputs:
-# --------
-# None, returned via the function value.
+    # Modification history:
+    # ---------------------
+    # 2012 May 10 - Nick Elias, NRAO
+    #               Initial version.
 
-# Modification history:
-# ---------------------
-# 2012 May 10 - Nick Elias, NRAO
-#               Initial version.
-
-# ------------------------------------------------------------------------------
     """
     FlagDeterVLAInputs defines the inputs for the FlagDeterVLA pipeline task.
     """
@@ -250,35 +245,33 @@ class FlagDeterVLAInputs(flagdeterbase.FlagDeterBaseInputs):
         self.clip = clip
         self.baseband = baseband
 
+    # ------------------------------------------------------------------------------
 
-# ------------------------------------------------------------------------------
+    # FlagDeterVLAInputs::to_casa_args
 
-# FlagDeterVLAInputs::to_casa_args
+    # Description:
+    # ------------
+    # This public member function translates the input parameters of this class to
+    # task parameters and file-based flag commands required by CASA task tflagdata.
 
-# Description:
-# ------------
-# This public member function translates the input parameters of this class to
-# task parameters and file-based flag commands required by CASA task tflagdata.
+    # NB: This public member function is overloaded.
 
-# NB: This public member function is overloaded.
+    # Inputs:
+    # -------
+    # None.
 
-# Inputs:
-# -------
-# None.
+    # Outputs:
+    # --------
+    # The python dictionary containing the arguments (and their values) for CASA
+    # task tflagdata, returned via the function value.
+    #     The the end 5 percent of each spw or minimum of 3 channelsmporary file that
+    # contains the flagging commands for the tflagdata task, located in the output
+    # directory.
 
-# Outputs:
-# --------
-# The python dictionary containing the arguments (and their values) for CASA
-# task tflagdata, returned via the function value.  The teend 5 percent of each spw or minimum of 3 channelsmporary file that
-# contains the flagging commands for the tflagdata task, located in the output
-# directory.
-
-# Modification history:
-# ---------------------
-# 2012 May 10 - Nick Elias, NRAO
-#               Initial version.
-
-# ------------------------------------------------------------------------------
+    # Modification history:
+    # ---------------------
+    # 2012 May 10 - Nick Elias, NRAO
+    #               Initial version.
 
     def to_casa_args(self):
 
@@ -384,7 +377,7 @@ class FlagDeterVLA(flagdeterbase.FlagDeterBase):
         agent_summaries = dict((v['name'], v) for v in summary_dict.values())
 
         ordered_agents = ['before', 'anos', 'online', 'shadow', 'intents', 'qa0',  'qa2', 'template', 'autocorr',
-                           'edgespw', 'clip', 'quack',
+                          'edgespw', 'clip', 'quack',
                           'baseband']
 
         summary_reps = [agent_summaries[agent]
@@ -397,7 +390,7 @@ class FlagDeterVLA(flagdeterbase.FlagDeterBase):
     def _get_flag_commands(self):
         """ Adding quack and clip
         """
-        #flag_cmds = super(FlagDeterVLA, self)._get_flag_commands()
+        # flag_cmds = super(FlagDeterVLA, self)._get_flag_commands()
         
         flag_cmds = []
 
@@ -410,7 +403,7 @@ class FlagDeterVLA(flagdeterbase.FlagDeterBase):
                             'flagging for %s disabled.' % (inputs.fileonline, 
                                                            inputs.ms.basename))
             else:
-                #ANTENNA_NOT_ON_SOURCE FLAG
+                # ANTENNA_NOT_ON_SOURCE FLAG
                 cmdlist = self._read_flagfile(inputs.fileonline)
                 flag_cmds.extend([cmd for cmd in cmdlist if ('ANTENNA_NOT_ON_SOURCE' in cmd)])
                 flag_cmds.append('mode=\'summary\' name=\'anos\'')
@@ -451,9 +444,9 @@ class FlagDeterVLA(flagdeterbase.FlagDeterBase):
                 flag_cmds.append('mode=\'summary\' name=\'template\'')
 
         # Flag autocorrelations?
-        #if inputs.autocorr:
-        #    #flag_cmds.append('mode=manual antenna=*&&&')
-        #    flag_cmds.append(self._get_autocorr_cmd())
+        # if inputs.autocorr:
+        #     flag_cmds.append('mode=manual antenna=*&&&')
+        #     flag_cmds.append(self._get_autocorr_cmd())
     
         # Flag autocorrelations?
         if inputs.autocorr:
@@ -473,8 +466,7 @@ class FlagDeterVLA(flagdeterbase.FlagDeterBase):
                 flag_cmds.append(spw_arg)
                 flag_cmds.append('mode=\'summary\' name=\'edgespw\'')
 
-        #############
-        #VLA specific commands
+        # VLA specific commands
 
         # Flag mode clip
         if inputs.clip:
@@ -504,95 +496,10 @@ class FlagDeterVLA(flagdeterbase.FlagDeterBase):
         
         return flag_cmds
 
-    def _get_autocorr_cmd (self):
-        #return 'mode=manual antenna=*&&&'
+    def _get_autocorr_cmd(self):
+        # return 'mode=manual antenna=*&&&'
         return 'mode=\'manual\' autocorr=True'
 
-    '''
-    def _get_edgespw_cmds(self):
-        """
-        Return a flagdata flagging command that will flag the edge channels
-        of spectral windows in this measurement set.
-        
-        The number of channels to flag is calculated using the 'fracspw' value
-        on this task's associated Inputs.
-        
-        :rtype: a string
-        """
-        inputs = self.inputs
-        
-        # to_flag is the list to which flagging commands will be appended
-        to_flag = []
-        
-        # loop over the spectral windows, generate a flagging command for each
-        # spw in the ms. Calling get_spectral_windows() with no arguments
-        # returns just the science windows, which is exactly what we want.
-        for spw in inputs.ms.get_spectral_windows():
-            
-            
-            # Get the data description for this spw
-            dd = inputs.ms.get_data_description(spw=spw)
-            if dd is None:
-                LOG.debug('Missing data description for spw %s ' % spw.id)
-                continue
-
-            # Determine the number of correlations
-            #   Check that they are between 1 and 4
-            ncorr = len (dd.corr_axis)
-            if ncorr not in set ([1, 2, 4]):
-                LOG.debug('Wrong number of correlations %s for spw %s ' % (ncorr, spw.id))
-                continue
-
-            # Skip if TDM mode where TDM modes are defined to
-            # be modes with <= 256 channels per correlation
-            if (ncorr * spw.num_channels > 256):
-                quanta = casatools.quanta
-                bw_quantity = quanta.convert(quanta.quantity('1875MHz'), 'Hz')   
-                bandwidth = measures.Frequency(quanta.getvalue(bw_quantity)[0],
-                                               measures.FrequencyUnits.HERTZ)
-                cen_freq = spw.centre_frequency
-                lo_freq = cen_freq - bandwidth / 2.0
-                hi_freq = cen_freq + bandwidth / 2.0
-                l_max, r_min = spw.channel_range(lo_freq, hi_freq)
-                r_max = spw.num_channels - 1
-                
-                if l_max <= 0 and r_min >= r_max:
-                    LOG.debug('Skipping edge flagging for FDM spw %s ' % spw.id)
-                    continue
-                cmd = '{0}:0~{1};{2}~{3}'.format(spw.id, l_max, r_min, r_max)
-                to_flag.append(cmd)
-
-            else:
-                
-                # If the twice the number of flagged channels is greater than the
-                # number of channels for a given spectral window, skip it.
-                if spw.num_channels in set([62, 124, 248]):
-                    frac_chan = int(round(inputs.fracspwfps * spw.num_channels))
-                else:
-                    frac_chan = int(round(inputs.fracspw * spw.num_channels))
-                    if 2*frac_chan >= spw.num_channels:
-                        LOG.debug('Too many flagged channels %s for spw %s '% (spw.num_channels, spw.id))
-                        continue
-
-                    # calculate the channel ranges to flag. No need to calculate the
-                    # left minimum as it is always channel 0.
-                    l_max = frac_chan - 1
-                    r_min = spw.num_channels - frac_chan
-                    r_max = spw.num_channels - 1
-                    
-                    # state the spw and channels to flag in flagdata format, adding
-                    # the statement to the list of flag commands
-                    cmd = '{0}:0~{1};{2}~{3}'.format(spw.id, l_max, r_min, r_max)
-                    to_flag.append(cmd)
-                    
-                    if len(to_flag) <= 0:
-                        return '# No valid edge spw flagging command'
-                    else:
-                        return 'mode=manual spw={0}'.format(','.join(to_flag))
-                    
-    
-    '''
-    
     def _get_edgespw_cmds(self):
         """
         Returns flag command to flag edge channels of SPWs.
@@ -601,30 +508,27 @@ class FlagDeterVLA(flagdeterbase.FlagDeterBase):
         """
 
         inputs = self.inputs
-        
-        context = inputs.context
-        
+
         m = self.inputs.context.observing_run.get_ms(self.inputs.vis)
-        # numSpws = context.evla['msinfo'][m.name].numSpws
-        # channels = context.evla['msinfo'][m.name].channels
         channels = m.get_vla_numchan()
         numSpws = len(channels)
         
-        SPWtoflag=''
+        SPWtoflag = ''
         
         for ispw in range(numSpws):
-            spwedge_nchan = int( inputs.fracspw * channels[ispw] )
+            spwedge_nchan = int(inputs.fracspw * channels[ispw])
             # Minimum number of channels flagged must be one on each end
-            if (spwedge_nchan < 1): spwedge_nchan = 1
+            if spwedge_nchan < 1:
+                spwedge_nchan = 1
             startch1 = 0
             startch2 = spwedge_nchan - 1
             endch1 = channels[ispw] - spwedge_nchan
             endch2 = channels[ispw] - 1
                         
-            if (ispw<max(range(numSpws))):
-                SPWtoflag=SPWtoflag+str(ispw)+':'+str(startch1)+'~'+str(startch2)+';'+str(endch1)+'~'+str(endch2)+','
+            if ispw < max(range(numSpws)):
+                SPWtoflag = SPWtoflag+str(ispw)+':'+str(startch1)+'~'+str(startch2)+';'+str(endch1)+'~'+str(endch2)+','
             else:
-                SPWtoflag=SPWtoflag+str(ispw)+':'+str(startch1)+'~'+str(startch2)+';'+str(endch1)+'~'+str(endch2)
+                SPWtoflag = SPWtoflag+str(ispw)+':'+str(startch1)+'~'+str(startch2)+';'+str(endch1)+'~'+str(endch2)
                 
         edgespw_cmd = ['mode=\'manual\' spw=\'%s\' reason=\'edgespw\' name=\'edgespw\'' % SPWtoflag]
         
@@ -640,14 +544,9 @@ class FlagDeterVLA(flagdeterbase.FlagDeterBase):
             :rtype: a string
             """
             inputs = self.inputs
-                        
-            # get heuristics from the context
-            context = inputs.context
-            
+
             m = self.inputs.context.observing_run.get_ms(self.inputs.vis)
-            # quack_scan_string = context.evla['msinfo'][m.name].quack_scan_string
             quack_scan_string = m.get_vla_quackingscans()
-            # int_time = context.evla['msinfo'][m.name].int_time
             int_time = m.get_vla_max_integration_time()
             
             quack_mode_cmd = 'mode=\'quack\' scan=\'%s\' quackinterval=%s quackmode=\'beg\' quackincrement=False reason=\'quack\' name=\'quack\'' % (quack_scan_string, str(1.5*int_time))
@@ -669,13 +568,13 @@ class FlagDeterVLA(flagdeterbase.FlagDeterBase):
         bottomSPW=''
         topSPW=''
 
-        #Determination of baseband taken from original EVLA scripted pipeline
-        #-----MS info script part
+        # Determination of baseband taken from original EVLA scripted pipeline
+        # -----MS info script part
         with casatools.TableReader(inputs.vis+'/SPECTRAL_WINDOW') as table:
-            reference_frequencies = table.getcol('REF_FREQUENCY') #spwobj.ref_frequency
-            spw_bandwidths = table.getcol('TOTAL_BANDWIDTH') #spwobj.bandwidth
-            originalBBClist = table.getcol('BBC_NO') #spwobj.baseband
-            channels = table.getcol('NUM_CHAN') #spwobj.num_channels
+            reference_frequencies = table.getcol('REF_FREQUENCY')  # spwobj.ref_frequency
+            spw_bandwidths = table.getcol('TOTAL_BANDWIDTH')  # spwobj.bandwidth
+            originalBBClist = table.getcol('BBC_NO')  # spwobj.baseband
+            channels = table.getcol('NUM_CHAN')  # spwobj.num_channels
             
         sorted_indices = reference_frequencies.argsort()
         sorted_frequencies = reference_frequencies[sorted_indices]
@@ -684,15 +583,15 @@ class FlagDeterVLA(flagdeterbase.FlagDeterBase):
         BBC_bandwidths = []
         ii = 0
         
-        while (ii < len(sorted_frequencies)):
+        while ii < len(sorted_frequencies):
             upper_frequency = sorted_frequencies[ii] + spw_bandwidths[sorted_indices[ii]]
             BBC_bandwidth = spw_bandwidths[sorted_indices[ii]]
             thisSpwList = [sorted_indices[ii]]
             jj = ii + 1
-            while (jj < len(sorted_frequencies)):
+            while jj < len(sorted_frequencies):
                 lower_frequency = sorted_frequencies[jj]
-                if ((math.fabs(lower_frequency - upper_frequency) < 1.0) and \
-                    (originalBBClist[sorted_indices[ii]] == originalBBClist[sorted_indices[jj]])):
+                if ((math.fabs(lower_frequency - upper_frequency) < 1.0) and
+                        (originalBBClist[sorted_indices[ii]] == originalBBClist[sorted_indices[jj]])):
                     thisSpwList.append(sorted_indices[jj])
                     upper_frequency += spw_bandwidths[sorted_indices[jj]]
                     BBC_bandwidth += spw_bandwidths[sorted_indices[jj]]
@@ -708,34 +607,29 @@ class FlagDeterVLA(flagdeterbase.FlagDeterBase):
         high_spws = []
 
         for ii in range(0,len(BBC_bandwidths)):
-            if (BBC_bandwidths[ii] > 1.0e9):
+            if BBC_bandwidths[ii] > 1.0e9:
                 low_spws.append(spwList[ii][0])
                 high_spws.append(spwList[ii][len(spwList[ii])-1])
 
-        #----------------
-
-        #low_spws = context.evla['msinfo'][m.name].low_spws 
-        #high_spws = context.evla['msinfo'][m.name].high_spws
-        #channels = context.evla['msinfo'][m.name].channels
         quanta = casatools.quanta
         bandedge_hz = quanta.getvalue(quanta.convert('20MHz', 'Hz'))
         topSPW_list = []
         bottomSPW_list = []
         LOG.info('Generating flag commands for 20MHz Band Edge flagging')
-        for ii in range(0,len(low_spws)):
+        for ii in range(0, len(low_spws)):
             # lower bandedge
             bspw=low_spws[ii]
             ave_chansep = (spw_bandwidths[bspw]/channels[bspw])
             startch2 = max(int(bandedge_hz/ave_chansep), 1) - 1
             bottomSPW_list.append('%d:0~%d' % (bspw, startch2))
-            LOG.debug('Lower band edge spw=%d, averge channel separation=%f Hz, edgeChannels = %d' % (bspw, ave_chansep, startch2+1))
+            LOG.debug('Lower band edge spw=%d, average channel separation=%f Hz, edgeChannels = %d' % (bspw, ave_chansep, startch2+1))
             # upper bandedge
-            tspw=high_spws[ii]
+            tspw = high_spws[ii]
             ave_chansep = (spw_bandwidths[tspw]/channels[tspw])
             endch1=channels[tspw] - max(int(bandedge_hz/ave_chansep), 1)
             endch2=channels[tspw]-1
             topSPW_list.append('%d:%d~%d' % (tspw, endch1, endch2))
-            LOG.debug('Upper band edge spw=%d, averge channel separation=%f Hz, edgeChannels = %d' % (tspw, ave_chansep, endch2-endch1+1))
+            LOG.debug('Upper band edge spw=%d, average channel separation=%f Hz, edgeChannels = %d' % (tspw, ave_chansep, endch2-endch1+1))
         bottomSPW = str(',').join(bottomSPW_list)
         topSPW = str(',').join(topSPW_list)
 
@@ -744,7 +638,7 @@ class FlagDeterVLA(flagdeterbase.FlagDeterBase):
         LOG.info('bottomSPW: {!s}'.format(bottomSPW))
         LOG.info('topSPW: {!s}'.format(topSPW))
         
-        if (bottomSPW != ''):
+        if bottomSPW != '':
             SPWtoflag = bottomSPW + ',' + topSPW
             baseband_cmd = 'mode=\'manual\' spw=\'%s\' reason=\'baseband\' name=\'baseband\'' % SPWtoflag
 
