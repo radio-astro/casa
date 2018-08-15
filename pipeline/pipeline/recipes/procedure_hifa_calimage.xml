@@ -241,6 +241,10 @@
     <ProcessingCommand>
         <Command xmlns="">hif_makeimlist</Command>
         <ParameterSet>
+            <Parameter>
+                <Keyword xmlns="">specmode</Keyword>
+                <Value xmlns="">cube</Value>
+            </Parameter>
         </ParameterSet>
     </ProcessingCommand>
 
