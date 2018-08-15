@@ -360,6 +360,11 @@ class FlagDeterVLA(flagdeterbase.FlagDeterBase):
         flag_cmds = self._get_flag_commands()
         flag_str = '\n'.join(flag_cmds)
 
+        if flag_cmds:
+            # Before summary command
+            job = casa_tasks.flagdata(vis=self.inputs.vis, mode='summary', name='before')
+            before_summary_dict = self._executor.execute(job)
+
         # write the flag commands to the file
         with open(inputs.inpfile, 'w') as stream:
             stream.writelines(flag_str)
@@ -372,7 +377,16 @@ class FlagDeterVLA(flagdeterbase.FlagDeterBase):
 
         # create and execute a flagdata job using these task arguments
         job = casa_tasks.flagdata(**task_args)
-        summary_dict = self._executor.execute(job)
+        summary_dict_cmds = self._executor.execute(job)
+
+        summary_dict = {}
+        if flag_cmds:
+            if 'name' in summary_dict_cmds:
+                summary_dict['report1'] = summary_dict_cmds
+                summary_dict['report0'] = before_summary_dict
+            else:
+                summary_dict = summary_dict_cmds
+                summary_dict['before'] = before_summary_dict
 
         agent_summaries = dict((v['name'], v) for v in summary_dict.values())
 
@@ -440,8 +454,10 @@ class FlagDeterVLA(flagdeterbase.FlagDeterBase):
                             'flagging for %s disabled.' % (inputs.filetemplate,
                                                            inputs.ms.basename))
             else:
-                flag_cmds.extend(self._read_flagfile(inputs.filetemplate))
-                flag_cmds.append('mode=\'summary\' name=\'template\'')
+                template_cmds = self._read_flagfile(inputs.filetemplate)
+                if template_cmds:
+                    flag_cmds.extend(template_cmds)
+                    flag_cmds.append('mode=\'summary\' name=\'template\'')
 
         # Flag autocorrelations?
         # if inputs.autocorr:
@@ -491,8 +507,8 @@ class FlagDeterVLA(flagdeterbase.FlagDeterBase):
 
         # summarise the state before flagging rather than assuming the initial
         # state is unflagged
-        if flag_cmds:
-            flag_cmds.insert(0, "mode='summary' name='before'")
+        # if flag_cmds:
+        #    flag_cmds.insert(0, "mode='summary' name='before'")
         
         return flag_cmds
 

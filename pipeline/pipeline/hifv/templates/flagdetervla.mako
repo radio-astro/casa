@@ -69,8 +69,10 @@ def total_for_mses(mses, row):
 		    total += flags[ms]['quack'][row].total
 		elif 'baseband' in flags[ms].keys():
 		    total += flags[ms]['baseband'][row].total
-		else:
+		elif 'before' in flags[ms].keys():
 		    total += flags[ms]['before'][row].total
+		else:
+		    total = 0
 		for agent in flags[ms].keys():
 			fs = flags[ms][agent][row]
 			if not (agent == 'before' or agent == 'anos' or agent == 'shadow' or agent == 'intents'):
@@ -90,8 +92,9 @@ def total_for_agent(agent, row, mses=flags.keys()):
 			flagged += fs.flagged
 			total += fs.total
 		else:
-			# agent was not activated for this MS. 
-			total += flags[ms]['before'][row].total
+			# agent was not activated for this MS.
+			if 'before' in flags[ms]:
+			    total += flags[ms]['before'][row].total
 	if total is 0:
 		return 'N/A'
 	else:
