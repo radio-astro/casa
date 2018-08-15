@@ -218,7 +218,7 @@ class GcorFluxscale(basetask.StandardTaskTemplate):
         append = os.path.exists(caltable)
         r = self._do_gaincal(caltable=caltable, field=inputs.transfer, intent=inputs.transintent,
                              gaintype=phase_gaintype, calmode='p', combine=phase_combine, solint=phaseup_solint,
-                             antenna=allantenna, uvrange='', minblperant=None, refant=refant,
+                             antenna=allantenna, uvrange='', minblperant=None, refant=filtered_refant,
                              phaseup_spwmap=phaseup_spwmap, phase_interp=phase_interp, append=append, merge=True)
 
         # Now do the amplitude-only gaincal. This will produce the caltable
@@ -226,7 +226,7 @@ class GcorFluxscale(basetask.StandardTaskTemplate):
         try:
             r = self._do_gaincal(field=inputs.transfer + ',' + inputs.reference,
                                  intent=inputs.transintent + ',' + inputs.refintent, gaintype='T', calmode='a',
-                                 combine='', solint=inputs.solint, antenna=allantenna, uvrange='', refant=refant,
+                                 combine='', solint=inputs.solint, antenna=allantenna, uvrange='', refant=filtered_refant,
                                  minblperant=minblperant, phaseup_spwmap=None, phase_interp=None, append=False,
                                  merge=True)
 
