@@ -348,11 +348,12 @@ FLAGGING_TEMPLATE_HEADER = '''#
 # Note: Do not put spaces inside the reason string !
 #
 # mode='manual' antenna='DV02;DV03&DA51' spw='22,24:150~175' reason='QA2:applycal_amplitude_frequency'
-#
+# 
 # mode='manual' spw='22' field='1' timerange='2018/02/10/00:01:01.0959~2018/02/10/00:01:01.0961' reason='QA2:timegaincal_phase_time'
-#
-#TP flagging: The 'other' option is intended for bad TP pointing
-#
+# 
+# TP flagging: The 'other' option is intended for bad TP pointing
 # mode='manual' antenna='PM01&&PM01' reason='QA2:other_bad_pointing' 
 #
+# Tsys flagging: 
+# mode='manual' antenna='DV02;DV03&DA51' spw='22,24' reason='QA2:tsysflag_tsys_frequency'
 '''
