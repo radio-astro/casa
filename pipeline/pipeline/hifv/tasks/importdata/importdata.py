@@ -68,7 +68,7 @@ class VLAImportDataResults(basetask.Results):
                 result.merge_with_context(context)
 
     def _do_msinfo_heuristics(self, ms, context):
-        """Gets heuristics for VLA via msinfo script
+        """Gets heuristics for VLA via original msinfo script
         """
 
         msinfo = VLAScanHeuristics(ms)
@@ -124,7 +124,10 @@ class VLAImportData(importdata.ImportData):
         for ms in myresults.mses:
             for key, value in ms.get_vla_spw2band().iteritems():
                 if 'P' in value:
-                    PbandWarning = 'P-band data detected in the raw data. VLA P-band pipeline calibration has not yet been commissioned and may even fail. Please inspect all P-band pipeline products carefully.'
+                    PbandWarning = 'P-band data detected in the raw data. ' \
+                                   'VLA P-band pipeline calibration has not yet been ' \
+                                   'commissioned and may even fail. Please inspect all P-band pipeline ' \
+                                   'products carefully.'
 
         if PbandWarning:
             LOG.warning(PbandWarning)
