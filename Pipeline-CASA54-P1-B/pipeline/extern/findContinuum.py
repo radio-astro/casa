@@ -70,7 +70,7 @@ def version(showfile=True):
     """
     Returns the CVS revision number.
     """
-    myversion = "$Id: findContinuumCycle6.py,v 2.43 2018/08/06 00:07:58 we Exp $" 
+    myversion = "$Id: findContinuumCycle6.py,v 2.47 2018/08/15 16:33:51 we Exp $" 
     if (showfile):
         print("Loaded from %s" % (__file__))
     return myversion
@@ -1368,6 +1368,8 @@ def runFindContinuum(img='', pbcube=None, psfcube=None, minbeamfrac=0.3, spw='',
         the MAD by this factor or more, then proceed with removing this quadratic (new Cycle 6 heuristic)
     minPixelsInJointMask: if fewer than these pixels are found, then use all pixels above pb=0.3
           (when meanSpectrumMethod = 'mom0mom8jointMask')
+    maxMadRatioForSFCAdjustment: madRatio must be below this value (among other things) in order
+           for automatic lowering of sigmaFindContinuum value to occur
 
     Parameters passed to findContinuumChannels (and only used in there):
     baselineModeB: 'min' or 'edge', method to define the baseline in findContinuumChannels()
@@ -1662,10 +1664,11 @@ def runFindContinuum(img='', pbcube=None, psfcube=None, minbeamfrac=0.3, spw='',
                 else:
                     sFC_factor = 5.0/7.0 # was previously 2.5/sigmaFindContinuum 
                 sigmaFindContinuum *= sFC_factor
-                casalogPost("%s Adjusting sigmaFindContinuum by %.2f to %f because groups=%d>=%d and not TDM and meanSpectrumMethod = %s and peakOverMad=%f>%g" % (projectCode, sFC_factor,sigmaFindContinuum, groups, minGroupsForSFCAdjustment, meanSpectrumMethod, peakOverMad, minPeakOverMadForSFCAdjustment), debug=True)
+                casalogPost("%s Adjusting sigmaFindContinuum by %.2f to %f because groups=%d>=%d and not TDM and meanSpectrumMethod = %s and peakOverMad=%f>%g and madRatio=%f<%f" % (projectCode, sFC_factor,sigmaFindContinuum, groups, minGroupsForSFCAdjustment, meanSpectrumMethod, peakOverMad, minPeakOverMadForSFCAdjustment,madRatio,maxMadRatioForSFCAdjustment), debug=True)
                 sFC_adjusted = True
             else:
-                casalogPost("%s Not adjusting sigmaFindContinuum because groups=%d < %d or peakOverMad<%.0f" % (projectCode, groups,minGroupsForSFCAdjustment,minPeakOverMadForSFCAdjustment), debug=True)
+                # madRatio could be 'None' so set to string
+                casalogPost("%s Not adjusting sigmaFindContinuum because groups=%d < %d or peakOverMad=%f<%.0f or madRatio=%s>=%f" % (projectCode, groups,minGroupsForSFCAdjustment,peakOverMad,minPeakOverMadForSFCAdjustment,str(madRatio),maxMadRatioForSFCAdjustment), debug=True)
                 
         if (newMaxTrim > 0 or 
             (groups>minGroupsForSFCAdjustment and not tdmSpectrum(channelWidth,nchan))): # added Aug 22, 2016
@@ -1689,7 +1692,7 @@ def runFindContinuum(img='', pbcube=None, psfcube=None, minbeamfrac=0.3, spw='',
 
     if meanSpectrumMethod == 'mom0mom8jointMask':
         casalogPost('No slope fit attempted because we are using mom0mom8jointMask.')
-        if ((sFC_adjusted or (peakOverMad>6 and not tdmSpectrum(channelWidth,nchan))) and 
+        if ((sFC_adjusted or ((peakOverMad>6 or len(continuumChannels) > 4*nchan/5) and not tdmSpectrum(channelWidth,nchan))) and 
              len(continuumChannels) > 0):
             # New heuristic for Cycle 6: remove any candidate continuum range
             # (horizontal cyan lines in the plot) that do not contain any 
@@ -1717,8 +1720,15 @@ def runFindContinuum(img='', pbcube=None, psfcube=None, minbeamfrac=0.3, spw='',
                     # 58 MHz 480 chan, 30 chan -> 3.6 km/s
                     # 58 MHz 960 chan, 60 chan -> 3.6 km/s
                     # 58 MHz 960 chan, 15 chan -> 3.6 km/s at 75 GHz
-                    gapMinThreshold = int(30*(firstFreq/300e9)*(spwBandwidth/58e6)*(nchan/480.)) # was 40
-                    gapMinThreshold = np.max([16,gapMinThreshold])
+                    gapMinThreshold = int(30*(firstFreq/300e9)*(spwBandwidth/58e6)*(nchan/480.)) # previously was 40
+                    casalogPost('initial gapMinThreshold=%d' % (gapMinThreshold))
+                    if peakOverMad <= 6: # we got into here only because more than 4/5 channels were picked
+                        if gapMinThreshold < 30:
+                            gapMinThreshold = 30  # 30 was set to avoid gaps with no lines
+                        elif gapMinThreshold > 50:
+                            gapMinThreshold = 50  # 50 was set by E2E6.1.00030.S spw16 CO galaxy w/no continuum
+                    else:
+                        gapMinThreshold = np.max([16,gapMinThreshold]) # original heuristic, Note: can be a large number, even > gapMaxThreshold!
                 else:
                     # Must be at least half the width of the group
                     gapMinThreshold = int(np.max([selectionWidth/2, pickNarrow(nchan)]))   # splitgaps.pdf
@@ -1778,7 +1788,7 @@ def runFindContinuum(img='', pbcube=None, psfcube=None, minbeamfrac=0.3, spw='',
                             newContinuumChannels += range(firstChan,gap[0])
                             casalogPost('  %s Defining range %s' % (projectCode,ccstring), debug=True)
                         else:
-                            casalogPost('  %s Skipping range %s because it is too narrow' % (projectCode,ccstring), debug=True)
+                            casalogPost('  %s Skipping range %s because it is too narrow (<%d)' % (projectCode,ccstring,pickNarrow(nchan)), debug=True)
                     # Process the final piece
                     ccstring = '%d~%d' % (gaps[len(gaps)-1][1]+1,stopChan)
                     if stopChan - gaps[len(gaps)-1][1] >= pickNarrow(nchan):
@@ -1787,7 +1797,7 @@ def runFindContinuum(img='', pbcube=None, psfcube=None, minbeamfrac=0.3, spw='',
                         newContinuumChannels += range(gaps[len(gaps)-1][1]+1, stopChan+1)
                         casalogPost('  %s Defining range %s' % (projectCode,ccstring), debug=True)
                     else:
-                        casalogPost('  %s Skipping range %s because it is too narrow' % (projectCode,ccstring), debug=True)
+                        casalogPost('  %s Skipping range %s because it is too narrow (<%d)' % (projectCode,ccstring,pickNarrow(nchan)), debug=True)
                         
             if newGroups > 0:
                 selection = separator.join(validSelections)
@@ -1795,6 +1805,8 @@ def runFindContinuum(img='', pbcube=None, psfcube=None, minbeamfrac=0.3, spw='',
                 continuumChannels = newContinuumChannels
             else:
                 casalogPost('%s Restoring dropped channels because no groups are left.' % (projectCode),debug=True)
+        else:
+            casalogPost("Not examining blue dots because: sFC_adjusted=%s is False or (peakOverMad=%.2f <= 6 and len(chans)=%d <= 4*nchan/5=%d) or it's TDM" % (sFC_adjusted,peakOverMad,len(continuumChannels), 4*nchan/5))
     else:
         # The following Cycle 4+5 logic (on checking for the presence of 
         # candidate continuum channels in various segments of the
