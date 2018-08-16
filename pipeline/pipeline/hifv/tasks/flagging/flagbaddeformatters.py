@@ -64,7 +64,7 @@ class FlagBadDeformatters(basetask.StandardTaskTemplate):
                        'nspwlimit': 4,      # Number of spw per baseband to trigger flagging entire baseband
                        'doflagundernspwlimit': self.inputs.doflagundernspwlimit,  # Flag individual spws when below nspwlimit
                        'doflagemptyspws': False,  # Flag data for spws with no unflagged channel solutions in any poln?
-                       'calBPtablename': self.inputs.context.results[-1].read()[0].bpcaltable,  # Define the table to run this on
+                       'calBPtablename': self.inputs.context.results[-1].read()[0].bpcaltable,  # Define the table
                        'flagreason': 'bad_deformatters_amp or RFI'}  # Define the REASON given for the flags
         
         (result_amp, amp_collection) = self._do_flag_baddeformatters(**method_args)
@@ -103,6 +103,7 @@ class FlagBadDeformatters(basetask.StandardTaskTemplate):
         # Print detailed flagging stats
         # doprintall = True
 
+        # From original script...
         # Limit for test (flag values under/over this limit)
         # testlimit = 0.15
         # testunder = True
@@ -112,11 +113,6 @@ class FlagBadDeformatters(basetask.StandardTaskTemplate):
         # doflagundernspwlimit = True
         # Flag data for spws with no unflagged channel solutions in any poln?
         # doflagemptyspws = False
-        
-        #with casatools.MSReader(self.inputs.vis) as ms:
-        #    ms_summary = ms.summary()
-
-        #startdate = ms_summary['BeginTime']
 
         m = self.inputs.context.observing_run.get_ms(self.inputs.vis)
         startdate = m.start_time['m0']['value']
@@ -306,16 +302,16 @@ class FlagBadDeformatters(basetask.StandardTaskTemplate):
             if doflagdata:
                 LOG.info("Flagging bad deformatters in the ms...")
                 
-                task_args = {'vis'        : self.inputs.vis,
-                             'mode'       : 'list',
-                             'action'     : 'apply',                     
-                             'inpfile'    : flaglist,
-                             'savepars'   : True,
-                             'flagbackup' : True}
+                task_args = {'vis': self.inputs.vis,
+                             'mode': 'list',
+                             'action': 'apply',
+                             'inpfile': flaglist,
+                             'savepars': True,
+                             'flagbackup': True}
                 
                 job = casa_tasks.flagdata(**task_args)
                 
-                flaggingresult = self._executor.execute(job)
+                self._executor.execute(job)
                 
                 return flaglist, weblogflagdict
                 
