@@ -57,31 +57,24 @@ class Statwt(basetask.StandardTaskTemplate):
         if fielddict != {}:
             LOG.info('cont.dat file present.  Using VLA Spectral Line Heuristics for task statwt.')
 
+        task_args = {'vis': self.inputs.vis,
+                     'fitspw': '',
+                     'fitcorr': '',
+                     'combine': '',
+                     'minsamp': 10,
+                     'field': '',
+                     'spw': '',
+                     'datacolumn': 'corrected'}
+
         if fielddict == {}:
-            task_args = {'vis'          : self.inputs.vis,
-                         'fitspw'       : '',
-                         'fitcorr'      : '',
-                         'combine'      : '',
-                         'minsamp'      : 10,
-                         'field'        : '',
-                         'spw'          : '',
-                         'datacolumn'   : 'corrected'}
-                     
             job = casa_tasks.statwt(**task_args)
-            
             return self._executor.execute(job)
 
+        # cont.dat file present and need to execute by field and fitspw
         if fielddict != {}:
             for field in fielddict.keys():
-                task_args = {'vis'          : self.inputs.vis,
-                         'fitspw'       : fielddict[field],
-                         'fitcorr'      : '',
-                         'combine'      : '',
-                         'minsamp'      : 10,
-                         'field'        : field,
-                         'spw'          : '',
-                         'datacolumn'   : 'corrected'}
-
+                task_args['fitspw'] = fielddict[field]
+                task_args['field'] = field
                 job = casa_tasks.statwt(**task_args)
 
                 statwt_result = self._executor.execute(job)
