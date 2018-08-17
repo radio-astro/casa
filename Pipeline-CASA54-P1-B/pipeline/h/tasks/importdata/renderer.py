@@ -130,7 +130,9 @@ def make_repsource_table(context, results):
 
             # If either the representative frequency or bandwidth is undefined then
             # the representatve target is undefined
-            if not ms.representative_target[1] or not ms.representative_target[2]:
+            representative_target = ms.representative_target
+            rep_target_defined = None in representative_target or 'None' in representative_target
+            if not rep_target_defined:
                 rows.append(RepsourceTR(vis, 'N/A', 'N/A', 'N/A', 'N/A', 'N/A'))
                 continue
 
