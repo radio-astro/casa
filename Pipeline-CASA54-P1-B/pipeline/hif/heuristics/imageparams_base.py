@@ -773,7 +773,7 @@ class ImageParamsHeuristics(object):
         repr_target = repr_ms.representative_target
 
         reprBW_mode = 'nbin'
-        if repr_target != (None, None, None) and repr_target[0] != 'none':
+        if repr_target != (None, None, None):
             real_repr_target = True
             repr_freq = repr_target[1]
             # Get representative source and spw
@@ -812,14 +812,7 @@ class ImageParamsHeuristics(object):
         else:
             real_repr_target = False
             # Pick arbitrary source for pre-Cycle 5 data
-            target_sources = [s.name for s in repr_ms.sources if 'TARGET' in s.intents]
-            if target_sources == []:
-                target_sources = [s.name for s in repr_ms.sources if 'BANDPASS' in s.intents]
-            if target_sources == []:
-                target_sources = [s.name for s in repr_ms.sources if 'PHASE' in s.intents]
-            if target_sources == []:
-                raise Exception, 'Cannot select any representative target from TARGET, BANDPASS or PHASE intents.'
-            repr_source = target_sources[0]
+            repr_source = [s.name for s in repr_ms.sources if 'TARGET' in s.intents][0]
             repr_spw_obj = repr_ms.get_spectral_windows()[0]
             repr_spw = repr_spw_obj.id
             repr_chan_obj = repr_spw_obj.channels[int(repr_spw_obj.num_channels / 2)]
