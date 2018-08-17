@@ -77,7 +77,7 @@ import pipeline.infrastructure.renderer.htmlrenderer as hr
                             </a>
                             <div class="caption">
                                 <h4>UV Coverage</h4>
-                                <p>UV coverage plot for TARGET field
+                                <p>UV coverage plot for ${plot_uv.parameters['intent']} field
                                     ${cgi.escape(plot_uv.parameters['field_name'], True)}
                                     (#${plot_uv.parameters['field']}), spw ${plot_uv.parameters['spw']}.</p>
                             </div>

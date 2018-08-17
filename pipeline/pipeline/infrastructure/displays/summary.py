@@ -799,6 +799,10 @@ class PlotAntsChart(object):
 
 
 class UVChart(object):
+    # CAS-11793: calsurveys do not have TARGET sources, so we must also
+    # search for sources with other intents
+    preferred_intent_order = ['TARGET', 'AMPLITUDE', 'BANDPASS', 'PHASE']
+
     def __init__(self, context, ms, customflagged=False, output_dir=None, title_prefix=None):
         self.context = context
         self.ms = ms
@@ -806,11 +810,11 @@ class UVChart(object):
         self.figfile = self._get_figfile(output_dir=output_dir)
 
         # Select which source to plot.
-        src, spw_id = self._get_source_and_spwid()
+        src_name, spw_id = self._get_source_and_spwid()
         self.spw_id = spw_id
 
         # Determine which field to plot.
-        self.field, self.field_name = self._get_field_for_source(src)
+        self.field, self.field_name, self.intent = self._get_field_for_source(src_name)
 
         # Determine number of channels in spw.
         self.nchan = self._get_nchan_for_spw(spw_id)
@@ -841,7 +845,7 @@ class UVChart(object):
             'antenna': '*&*',
             'spw': self.spw_id,
             'field': self.field,
-            'intent': utils.to_CASA_intent(self.ms, 'TARGET'),
+            'intent': utils.to_CASA_intent(self.ms, self.intent),
             'plotfile': self.figfile,
             'clearplots': True,
             'showgui': False,
@@ -874,6 +878,7 @@ class UVChart(object):
                            parameters={'vis': self.ms.basename,
                                        'field': self.field,
                                        'field_name': self.field_name,
+                                       'intent': self.intent,
                                        'spw': self.spw_id},
                            command=str(task))
 
@@ -898,7 +903,7 @@ class UVChart(object):
 
         # If no representative source was identified, then return first source
         # and first science spw.
-        src, spw = self._get_first_target_source_and_science_spw()
+        src, spw = self._get_preferred_source_and_science_spw()
 
         return src, spw
 
@@ -929,41 +934,42 @@ class UVChart(object):
             spw = None
         return spw
 
-    def _get_first_target_source_and_science_spw(self):
-        src = None
-        for ms_src in self.ms.sources:
-            if 'TARGET' in ms_src.intents:
-                src = ms_src.name
+    def _get_preferred_source_and_science_spw(self):
+        # take first TARGET sources, otherwise first AMPLITUDE sources, etc.
+        for intent in self.preferred_intent_order:
+            sources_with_intent = [s for s in self.ms.sources if intent in s.intents]
+            if sources_with_intent:
+                src = sources_with_intent[0]
                 break
+        else:
+            LOG.warning('No source found with an intent in {}. Using first source for UV chart.'
+                        ''.format(self.preferred_intent_order))
+            src = self.ms.sources[0]
 
         spw = self._get_first_science_spw()
 
-        return src, spw
+        return src.name, spw
 
-    def _get_field_for_source(self, source_name):
-        source = None
-        for ms_source in self.ms.sources:
-            if ms_source.name == source_name:
-                source = ms_source
-                break
-
-        if not source:
-            LOG.error("Source {} not found in MS.".format(source_name))
+    def _get_field_for_source(self, src_name):
+        sources_with_name = [s for s in self.ms.sources if s.name == src_name]
+        if not sources_with_name:
+            LOG.error("Source {} not found in MS.".format(src_name))
             return ''
+        if len(sources_with_name) > 1:
+            LOG.warning('More than one source called {} in {}. Taking first source'.format(src_name, self.ms.basename))
+        src = sources_with_name[0]
 
         # Identify fields covered by TARGET intent.
-        target_fields = [field for field in source.fields if 'TARGET' in field.intents]
-
-        nfields = len(target_fields)
-        if nfields == 0:
-            LOG.error("Source {} has no fields with TARGET intent.".format(source.name))
-            return '', ''
-        elif nfields == 1:
-            field = target_fields[0]
+        for intent in self.preferred_intent_order:
+            fields_with_intent = [f for f in src.fields if intent in f.intents]
+            if fields_with_intent:
+                centre_field = self._get_center_field(fields_with_intent)
+                break
         else:
-            field = self._get_center_field(target_fields)
+            LOG.error("Source {} has no field with an intent in {}".format(src_name, self.preferred_intent_order))
+            return '', '', ''
 
-        return str(field.id), field.name
+        return str(centre_field.id), centre_field.name, intent
 
     @staticmethod
     def _get_center_field(fields):
