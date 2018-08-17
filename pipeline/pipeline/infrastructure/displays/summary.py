@@ -514,23 +514,7 @@ class MosaicChart(object):
             return self._get_plot_object()
 
         try:
-            # based on the analysisUtils method
-            # analysisUtils.plotMosaic(self.ms.name,
-            #                          sourceid=self.source.id,
-            #                          coord='rel',
-            #                          figfile=self.figfile)
-            plotmosaic.plotMosaic(self.ms.name, 
-                                  sourceid=self.source.id,
-                                  coord='rel',
-                                  figfile=self.figfile)
-
-            # plotMosaic does not close the plot! work around that
-            # here rather than editing the code as we might lose the fix
-            try:
-                pylab.close()
-            except Exception:
-                pass
-
+            plotmosaic.plot_mosaic(self.ms, self.source, self.figfile)
         except:
             LOG.debug('Could not create mosaic plot')
             return None
