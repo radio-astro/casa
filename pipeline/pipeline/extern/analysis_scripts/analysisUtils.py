@@ -8594,7 +8594,9 @@ class Atmcal:
         if (showSummary): self.printCalScans(decimalDigits, includeDate)
         self.scienceSpws = getScienceSpws(self.vis, mymsmd=self.mymsmd)
         if len(self.scienceSpws) == 0:
-            self.scienceSpws = getScienceSpws(self.vis, mymsmd=self.mymsmd, intent='CALIBRATE_AMPLI#ON_SOURCE')
+            self.scienceSpws = getScienceSpws(self.vis, mymsmd=self.mymsmd, intent='CALIBRATE_FLUX#ON_SOURCE')
+            if len(self.scienceSpws) == 0:
+                self.scienceSpws = getScienceSpws(self.vis, mymsmd=self.mymsmd, intent='CALIBRATE_AMPLI#ON_SOURCE')
         self.hanningSmoothed = {}
         self.onlineChannelAveraging = {}
         scienceSpwsList = [int(i) for i in self.scienceSpws.split(',')]
