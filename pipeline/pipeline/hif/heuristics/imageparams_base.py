@@ -811,14 +811,20 @@ class ImageParamsHeuristics(object):
 
         else:
             real_repr_target = False
-            # Pick arbitrary source for pre-Cycle 5 data
+            # Fall back to existing source
             target_sources = [s.name for s in repr_ms.sources if 'TARGET' in s.intents]
             if target_sources == []:
-                target_sources = [s.name for s in repr_ms.sources if 'BANDPASS' in s.intents]
-            if target_sources == []:
-                target_sources = [s.name for s in repr_ms.sources if 'PHASE' in s.intents]
-            if target_sources == []:
-                raise Exception, 'Cannot select any representative target from TARGET, BANDPASS or PHASE intents.'
+                if repr_target[0] == 'none':
+                    LOG.warning('No TARGET intent found. Trying to select a representative source from calibration intents.')
+                    for repr_intent in ['PHASE', 'CHECK', 'AMPLITUDE', 'FLUX', 'BANDPASS']:
+                        target_sources = [s.name for s in repr_ms.sources if repr_intent in s.intents]
+                        if target_sources != []:
+                            break
+                    if target_sources == []:
+                        raise Exception, 'Cannot select any representative target from calibration intents.'
+                else:
+                    raise Exception, 'Cannot select any representative target from TARGET intent.'
+
             repr_source = target_sources[0]
             repr_spw_obj = repr_ms.get_spectral_windows()[0]
             repr_spw = repr_spw_obj.id
