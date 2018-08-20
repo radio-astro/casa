@@ -996,6 +996,10 @@ class StandardTaskTemplate(api.Task):
                 if isinstance(self.inputs, vdp.InputsContainer) or isinstance(self.inputs.vis, list):
                     return self._handle_multiple_vis(dry_run, **parameters)
 
+            if isinstance(self.inputs, vdp.InputsContainer):
+                container = self.inputs
+                LOG.info('Equivalent CASA call: %s', container._pipeline_casa_task)
+
             # We should not pass unused parameters to prepare(), so first
             # inspect the signature to find the names the arguments and then
             # create a dictionary containing only those parameters
