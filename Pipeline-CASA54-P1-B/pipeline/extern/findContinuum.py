@@ -70,7 +70,7 @@ def version(showfile=True):
     """
     Returns the CVS revision number.
     """
-    myversion = "$Id: findContinuumCycle6.py,v 2.47 2018/08/15 16:33:51 we Exp $" 
+    myversion = "$Id: findContinuumCycle6.py,v 2.48 2018/08/18 14:15:46 we Exp $" 
     if (showfile):
         print("Loaded from %s" % (__file__))
     return myversion
@@ -1664,7 +1664,8 @@ def runFindContinuum(img='', pbcube=None, psfcube=None, minbeamfrac=0.3, spw='',
                 else:
                     sFC_factor = 5.0/7.0 # was previously 2.5/sigmaFindContinuum 
                 sigmaFindContinuum *= sFC_factor
-                casalogPost("%s Adjusting sigmaFindContinuum by %.2f to %f because groups=%d>=%d and not TDM and meanSpectrumMethod = %s and peakOverMad=%f>%g and madRatio=%f<%f" % (projectCode, sFC_factor,sigmaFindContinuum, groups, minGroupsForSFCAdjustment, meanSpectrumMethod, peakOverMad, minPeakOverMadForSFCAdjustment,madRatio,maxMadRatioForSFCAdjustment), debug=True)
+                # madRatio could be 'None' so set to string
+                casalogPost("%s Adjusting sigmaFindContinuum by %.2f to %f because groups=%d>=%d and not TDM and meanSpectrumMethod = %s and peakOverMad=%f>%g and madRatio=%s<%f" % (projectCode, sFC_factor,sigmaFindContinuum, groups, minGroupsForSFCAdjustment, meanSpectrumMethod, peakOverMad, minPeakOverMadForSFCAdjustment,str(madRatio),maxMadRatioForSFCAdjustment), debug=True)
                 sFC_adjusted = True
             else:
                 # madRatio could be 'None' so set to string
@@ -3382,7 +3383,7 @@ def meanSpectrumFromMom0Mom8JointMask(cube, imageInfo, nchan, pbcube=None, psfcu
         else:
             print("Re-using existing moment8 image")
     if not os.path.exists(mom8):
-        casalogPost("Running immoments('%s', moments=[8], outfile='%s')" % (cube, mom0))
+        casalogPost("Running immoments('%s', moments=[8], outfile='%s')" % (cube, mom8))
         immoments(cube, moments=[8], outfile=mom8)
 
     pbBasedMask = False
@@ -3394,7 +3395,7 @@ def meanSpectrumFromMom0Mom8JointMask(cube, imageInfo, nchan, pbcube=None, psfcu
     jointMask2 = cube+'.joint.mask2'
     lowerAnnulusLevel = None
     higherAnnulusLevel = None
-    snrThreshold = 23 #  was 25 a few months ago
+    snrThreshold = 23 #  was 25 originally
 #    sevenMeter = False
 #    if sevenMeter:
 #        snrThreshold = 20
