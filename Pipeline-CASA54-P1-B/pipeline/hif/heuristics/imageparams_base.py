@@ -1262,13 +1262,13 @@ class ImageParamsHeuristics(object):
             else:
                 return i_high
 
-    def lsrk_freq_intersection(self, vis, field, spw):
+    def freq_intersection(self, vis, field, spw, frame='LSRK'):
         """
         Calculate LSRK frequency intersection of a list of MSs for a
         given field and spw. Exclude flagged channels.
         """
-        lsrk_freq_ranges = []
-        lsrk_channel_widths = []
+        freq_ranges = []
+        channel_widths = []
 
         for msname in vis:
             real_spw = str(self.observing_run.virtual2real_spw_id(spw, self.observing_run.get_ms(msname)))
@@ -1284,21 +1284,21 @@ class ImageParamsHeuristics(object):
                 # Just the edges. Skip one extra channel in final frequency range.
                 with casatools.SelectvisReader(msname, field=field,
                                                spw='%s:%d~%d' % (real_spw, nfi[0], nfi[-1])) as imager:
-                    result = imager.advisechansel(getfreqrange=True, freqframe='LSRK')
+                    result = imager.advisechansel(getfreqrange=True, freqframe=frame)
 
                 f0 = result['freqstart']
                 f1 = result['freqend']
 
-                lsrk_freq_ranges.append((f0, f1))
+                freq_ranges.append((f0, f1))
                 # The frequency range from advisechansel is from channel edge
                 # to channel edge. To get the width, one needs to divide by the
                 # number of channels in the selection.
-                lsrk_channel_widths.append((f1 - f0) / (nfi[-1] - nfi[0] + 1))
+                channel_widths.append((f1 - f0) / (nfi[-1] - nfi[0] + 1))
 
-        intersect_range = utils.intersect_ranges(lsrk_freq_ranges)
+        intersect_range = utils.intersect_ranges(freq_ranges)
         if intersect_range != ():
             if0, if1 = intersect_range
-            return if0, if1, max(lsrk_channel_widths)
+            return if0, if1, max(channel_widths)
         else:
             return -1, -1, 0
 

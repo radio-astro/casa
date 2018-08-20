@@ -279,12 +279,16 @@ class Tclean(cleanbase.CleanBase):
                 LOG.info('Heuristic imsize: %s', imsize)
 
         if inputs.specmode == 'cube':
-            # To avoid noisy edge channels, use only the LSRK frequency
+            # To avoid noisy edge channels, use only the frequency
             # intersection and skip one channel on either end.
-            if0, if1, channel_width = self.image_heuristics.lsrk_freq_intersection(inputs.vis, inputs.field, inputs.spw)
+            if self.image_heuristics.is_eph_obj(inputs.field):
+                frame = 'TOPO'
+            else:
+                frame = 'LSRK'
+            if0, if1, channel_width = self.image_heuristics.freq_intersection(inputs.vis, inputs.field, inputs.spw, frame)
 
             if (if0 == -1) or (if1 == -1):
-                LOG.error('No LSRK frequency intersect among selected MSs for Field %s SPW %s' % (inputs.field, inputs.spw))
+                LOG.error('No frequency intersect among selected MSs for Field %s SPW %s' % (inputs.field, inputs.spw))
                 error_result = TcleanResult(vis=inputs.vis,
                                             sourcename=inputs.field,
                                             intent=inputs.intent,
