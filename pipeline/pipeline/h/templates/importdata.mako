@@ -128,7 +128,7 @@ ${'is' if num_mses == 1 else 'are'} summarised below.</p>
     </tbody>
 </table>
 % elif repsource_name_is_none:
-<p>An incomplete representative target source is defined with target name "none". Will try to fall back to existing science target sources in the imaging tasks.</p>
+<p>An incomplete representative target source is defined with target name "none". Will try to fall back to existing science target sources or calibrators in the imaging tasks.</p>
 % else:
-<p>No representative target source is defined. Will try to fall back to existing science target sources or calibrators in the imaging tasks.</p>
+<p>No representative target source is defined. Will try to fall back to existing science target sources in the imaging tasks.</p>
 % endif
