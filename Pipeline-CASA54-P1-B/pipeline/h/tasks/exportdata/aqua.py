@@ -650,6 +650,14 @@ def xml_for_sensitivity(d):
         bandwidth_hz = 'N/A'
 
     try:
+        effective_bw = qa.quantity(d['effective_bw'])
+        effective_bw_hz = value(qa.convert(effective_bw, 'Hz'))
+        if effective_bw_hz == '0.0':
+            effective_bw_hz = 'N/A'
+    except:
+        effective_bw_hz = 'N/A'
+
+    try:
         major = qa.quantity(d['beam']['major'])
         major_arcsec = value(qa.convert(major, 'arcsec'))
         if major_arcsec == '0.0':
@@ -699,6 +707,7 @@ def xml_for_sensitivity(d):
     xml = ElementTree.Element('Sensitivity',
         Array=d['array'],
         BandwidthHz=bandwidth_hz,
+        EffectiveBandwidthHz=effective_bw_hz,
         BeamMajArcsec=major_arcsec,
         BeamMinArcsec=minor_arcsec,
         BeamPosAngDeg=positionangle_deg,

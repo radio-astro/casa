@@ -155,6 +155,9 @@ class MakeImages(basetask.StandardTaskTemplate):
         # Image beam
         with casatools.ImageReader(imname) as image:
             restoringbeam = image.restoringbeam()
+            csys = image.coordsys()
+            chanwidth_of_image = csys.increment(format='q', type='spectral')['quantity']['*1']
+            csys.done()
         # effectiveBW
         if result.specmode == 'cube': # use nbin for cube and repBW
             msobj = self.inputs.context.observing_run.get_ms(name=result.vis[0])
@@ -170,7 +173,8 @@ class MakeImages(basetask.StandardTaskTemplate):
         return Sensitivity(array=array,
                            field=target['field'],
                            spw=result.spw,
-                           bandwidth=effectiveBW_of_image,
+                           bandwidth=chanwidth_of_image,
+                           effective_bw=effectiveBW_of_image,
                            bwmode=result.orig_specmode,
                            beam=restoringbeam,
                            cell=cell,
