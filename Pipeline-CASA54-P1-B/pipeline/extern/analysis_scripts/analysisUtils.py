@@ -67,7 +67,7 @@ import pprint
 import time as timeUtilities
 import datetime
 import copy
-from . import tmUtils as tmu
+#from . import tmUtils as tmu
 # import compUtils  # used in class SQLD
 import pytz  # used in computeUTForElevation
 from scipy.special import erf, erfc  # used in class Atmcal
@@ -35709,7 +35709,7 @@ def plotmosaic(vis, sourceid='', figfile='', coord='relative', skipsource=-1,
                centerOnSourceDirection=False, firstAppearance=True,
                writeDS9regionFile=False, color='green',
                writeCRTF=False, markerType='symbol', symbolType='+',
-               linewidth=1, symsize=2):
+               linewidth=1, symsize=2, maxPointingsToLabel=500):
     """
     Produce a plot of the pointings with the primary beam FWHM and field names.
     For further help and examples, see http://casaguides.nrao.edu/index.php?title=Plotmosaic
@@ -35843,8 +35843,14 @@ def plotmosaic(vis, sourceid='', figfile='', coord='relative', skipsource=-1,
                     fields = mymsmd.fieldsforintent(intent)
                     print "Found %d fields with intent = %s" % (len(fields), intent)
                 if (len(fields) == 0):
-                    print "No fields have intent = %s. Using first field instead." % (intent)
-                    fields = [0]
+                    print "intent %s not found in dataset. Replacing '.ON_SOURCE' with '#UNSPECIFIED' ..." % (intent)
+                    intent = intent.replace('.ON_SOURCE', '#UNSPECIFIED')
+                    if (intent in mymsmd.intents()):
+                        fields = mymsmd.fieldsforintent(intent)
+                        print "Found %d fields with intent = %s" % (len(fields), intent)
+                    if (len(fields) == 0):
+                        print "No fields have intent = %s. Using first field instead." % (intent)
+                        fields = [0]
         sourcename = mymsmd.namesforfields(fields[0])[0]
         mymsmd.close()
         srcID = sourceID[list(name).index(sourcename)]
@@ -35884,7 +35890,11 @@ def plotmosaic(vis, sourceid='', figfile='', coord='relative', skipsource=-1,
                 # ICT-5291
                 bandNames.append(tokens[1])
             else:
-                bandNames.append('ALMA_RB_%02d' % (freqToBand(refFreqs[i])[0]))
+                myband = freqToBand(refFreqs[i])
+                if myband[0] is None:
+                    bandNames.append('unknown')
+                else:
+                    bandNames.append('ALMA_RB_%02d' % (myband[0]))
         bandNames = np.unique(bandNames)
         if (debug):
             print "bandNames = ", bandNames
@@ -35901,9 +35911,9 @@ def plotmosaic(vis, sourceid='', figfile='', coord='relative', skipsource=-1,
         if (casadef.casa_version >= casaVersionWithMSMD):
             mymsmd = createCasaTool(msmdtool)
             mymsmd.open(vis)
-            spws = mymsmd.spwsforintent('OBSERVE_TARGET#ON_SOURCE')
+            spws = mymsmd.spwsforintent(intent)
+            print "spws with intent = %s: " % (intent), spws
             wvrspws = mymsmd.almaspws(wvr=True, sqld=True)
-            print "spws with observe_target = ", spws
             spws = [x for x in spws if x not in wvrspws]
             print "non-WVR, non-SQLD = ", spws
             meanRefFreq = []
@@ -35911,28 +35921,30 @@ def plotmosaic(vis, sourceid='', figfile='', coord='relative', skipsource=-1,
                 meanRefFreq.append(mymsmd.meanfreq(spw))
             meanRefFreq = np.median(meanRefFreq)
             myband = freqToBand(meanRefFreq)[0]
-            print "Median frequency = %f GHz (band = %d)" % (meanRefFreq * 1e-9, myband)
-            for f in fields:
-                tsysOnly = True
-                scans = mymsmd.scansforfield(f)
-                spwsforfield = mymsmd.spwsforfield(f)
-                extraspws = 0
-                for sc in scans:
-                    scanIntents = mymsmd.intentsforscan(sc)
-                    scanSpws = mymsmd.spwsforscan(sc)
-                    scanFieldSpws = np.intersect1d(scanSpws, spwsforfield)
-                    fieldsforscan = mymsmd.fieldsforscan(sc)
-                    commonSpws = mymsmd.spwsforfield(fieldsforscan[0])
-                    for ffs in fieldsforscan[1:]:
-                        commonSpws = np.intersect1d(commonSpws, mymsmd.spwsforfield(ffs))
-                    extraspws += len(list(set(scanFieldSpws) - set(commonSpws)))
-                    if ('CALIBRATE_ATMOSPHERE#ON_SOURCE' not in scanIntents and 'CALIBRATE_ATMOSPHERE#HOT' not in scanIntents):
-                        tsysOnly = False
-                if (extraspws > 0):  # Needed for ICT-6896
+            print "Median frequency = %f GHz (band = %s)" % (meanRefFreq * 1e-9, str(myband))
+            if 'EVLA' not in mymsmd.observatorynames():
+                for i,f in enumerate(fields):
+                    if (i+1 % 100 == 0): print "Working field %d/%d" % (i+1, len(fields))
                     tsysOnly = True
-                if (tsysOnly):
-                    tsysOnlyFields.append(f)
-            print "fields with Tsys only = ", tsysOnlyFields
+                    scans = mymsmd.scansforfield(f)
+                    spwsforfield = mymsmd.spwsforfield(f)
+                    extraspws = 0
+                    for sc in scans:
+                        scanIntents = mymsmd.intentsforscan(sc)
+                        scanSpws = mymsmd.spwsforscan(sc)
+                        scanFieldSpws = np.intersect1d(scanSpws, spwsforfield)
+                        fieldsforscan = mymsmd.fieldsforscan(sc)
+                        commonSpws = mymsmd.spwsforfield(fieldsforscan[0])
+                        for ffs in fieldsforscan[1:]:
+                            commonSpws = np.intersect1d(commonSpws, mymsmd.spwsforfield(ffs))
+                        extraspws += len(list(set(scanFieldSpws) - set(commonSpws)))
+                        if ('CALIBRATE_ATMOSPHERE#ON_SOURCE' not in scanIntents and 'CALIBRATE_ATMOSPHERE#HOT' not in scanIntents):
+                            tsysOnly = False
+                    if (extraspws > 0):  # Needed for ICT-6896
+                        tsysOnly = True
+                    if (tsysOnly):
+                        tsysOnlyFields.append(f)
+                print "fields with Tsys only = ", tsysOnlyFields
             mymsmd.close()
         else:
             if (vm == ''):
@@ -35954,7 +35966,7 @@ def plotmosaic(vis, sourceid='', figfile='', coord='relative', skipsource=-1,
             print "non-WVR = ", matchedNames[matches]
             meanRefFreq = np.median(matchedRefFreqs[matches])
             myband = freqToBand(meanRefFreq)[0]
-            print "Median frequency = %f GHz (band = %d)" % (meanRefFreq * 1e-9, myband)
+            print "Median frequency = %f GHz (band = %s)" % (meanRefFreq * 1e-9, str(myband))
     else:
         # sciencespws == False
         if (3840 in num_chan):
@@ -35971,9 +35983,13 @@ def plotmosaic(vis, sourceid='', figfile='', coord='relative', skipsource=-1,
         if (debug):
             print "medianRefFreq = ", meanRefFreq
         myband = freqToBand(meanRefFreq)[0]
-        print "Median frequency = %f GHz (band = %d)" % (meanRefFreq * 1e-9, myband)
+        print "Median frequency = %f GHz (band = %s)" % (meanRefFreq * 1e-9, str(myband))
         # If median freq is not within one of the observed bands, then recalculate
-        if ('ALMA_RB_%02d'%(myband) not in bandNames and len(bandNames) > 1): # old data do not have band names in spw names
+        if myband is None:
+            mybandString = ''
+        else:
+            mybandString = 'ALMA_RB_%02d' % myband
+        if (mybandString not in bandNames and len(bandNames) > 1): # old data do not have band names in spw names
             print "Median frequency is not in any observed band. Recalculating over higher frequencies."
             newFreqs = refFreqs[matches]
             newmatches = np.where(newFreqs > meanRefFreq)[0]
@@ -36039,7 +36055,7 @@ def plotmosaic(vis, sourceid='', figfile='', coord='relative', skipsource=-1,
                                                          linestyle='dotted')
                         pb.gca().add_patch(cir)
         #                    cir = pb.Circle((ra[i], dec[i]), radius=radius, facecolor='none', edgecolor='b', linestyle='dotted')
-        titleString = vis.split('/')[-1]+', %s, average freq. = %.1f GHz, beam = %.1f"'%(sourcename,meanRefFreq*1e-9,2*arcsec)
+        titleString = vis.split('/')[-1]+', %s, average freq. = %.1f GHz, beam = %s"'%(sourcename,meanRefFreq*1e-9, roundFiguresToString(2*arcsec,3))
         resizeFonts(desc, 10)
         if (raunit.find('deg') >= 0):
             pb.xlabel('Right Ascension (deg)')
@@ -36055,9 +36071,10 @@ def plotmosaic(vis, sourceid='', figfile='', coord='relative', skipsource=-1,
         pb.xlim([x0, x1])
         pb.ylim([y0, y1])
         pb.title(titleString, size=10)
-        for i in range(len(ra)):
-            if (i in fields):
-                pb.text(ra[i] - 0.02 * raRange, dec[i] + 0.02 * decRange, str(i), fontsize=12, color='k')
+        if len(ra) < maxPointingsToLabel:
+            for i in range(len(ra)):
+                if (i in fields):
+                    pb.text(ra[i] - 0.02 * raRange, dec[i] + 0.02 * decRange, str(i), fontsize=12, color='k')
     elif (coord.find('rel') >= 0):
         if doplot:
             # SHOW RELATIVE COORDINATES in arcsec
@@ -36086,7 +36103,7 @@ def plotmosaic(vis, sourceid='', figfile='', coord='relative', skipsource=-1,
                                             linestyle='dotted')
                             pb.gca().add_patch(cir)
         if doplot:
-            titleString = vis.split('/')[-1]+', %s, average freq. = %.1f GHz, beam = %.1f"'%(sourcename,meanRefFreq*1e-9,2*arcsec)
+            titleString = vis.split('/')[-1]+', %s, average freq. = %.1f GHz, beam = %s"'%(sourcename,meanRefFreq*1e-9, roundFiguresToString(2*arcsec,3))
             resizeFonts(desc, 10)
             raString = qa.formxxx('%fdeg' % (raAverageDegrees), format='hms', prec=3)
             decString = qa.formxxx('%fdeg' % (decAverageDegrees), format='dms', prec=0).replace('.', ':', 2)
@@ -36095,22 +36112,23 @@ def plotmosaic(vis, sourceid='', figfile='', coord='relative', skipsource=-1,
                 decString += ' (SOURCE table)'
             pb.xlabel('Right ascension offset (arcsec) from %s' % (raString))
             pb.ylabel('Declination offset (arcsec) from %s' % (decString))
-            pb.title(titleString, size=11)
+            pb.title(titleString,size=10-int(len(titleString)/100))
             raRange = np.max(raRelativeArcsec[fields]) - np.min(raRelativeArcsec[fields])
             decRange = np.max(decRelativeArcsec[fields]) - np.min(decRelativeArcsec[fields])
             if (bw):
                 mystyle = 'bold'
             else:
                 mystyle = 'normal'
-            for i in range(len(ra)):
-                if (i in fields):
-                    if (i in tsysOnlyFields):
-                        pb.text(0.05, 0.93, 'Tsys-only fields: %s' % (str(tsysOnlyFields)), transform=desc.transAxes, color='r')
-                        mycolor = 'r'
-                    else:
-                        mycolor = 'k'
-                    pb.text(raRelativeArcsec[i] - 0.02 * raRange, decRelativeArcsec[i] + 0.02 * decRange,
-                            str(i), fontsize=12, color=mycolor, weight=mystyle)
+            if len(ra) < maxPointingsToLabel:
+                for i in range(len(ra)):
+                    if (i in fields):
+                        if (i in tsysOnlyFields):
+                            pb.text(0.05, 0.93, 'Tsys-only fields: %s' % (str(tsysOnlyFields)), transform=desc.transAxes, color='r')
+                            mycolor = 'r'
+                        else:
+                            mycolor = 'k'
+                        pb.text(raRelativeArcsec[i] - 0.02 * raRange, decRelativeArcsec[i] + 0.02 * decRange,
+                                str(i), fontsize=12, color=mycolor, weight=mystyle)
             setPlotRange = False
             if (type(plotrange) == list):
                 if (len(plotrange) == 4):
