@@ -40,7 +40,7 @@ class T2_4MDetailsImportDataRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
 
         flux_table_rows = make_flux_table(pipeline_context, setjy_results)
 
-        repsource_table_rows = make_repsource_table(pipeline_context, result)
+        repsource_table_rows, repsource_name_is_none = make_repsource_table(pipeline_context, result)
         repsource_defined = any('N/A' not in td for tr in repsource_table_rows for td in tr[1:])
 
         fluxcsv_files = {}
@@ -59,6 +59,7 @@ class T2_4MDetailsImportDataRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
             'flux_imported': True if measurements else False,
             'flux_table_rows': flux_table_rows,
             'repsource_defined': repsource_defined,
+            'repsource_name_is_none': repsource_name_is_none,
             'repsource_table_rows': repsource_table_rows,
             'num_mses': num_mses,
             'fluxcsv_files': fluxcsv_files,
@@ -117,6 +118,7 @@ def make_repsource_table(context, results):
 
     rows = []
 
+    repsource_name_is_none = False
     for r in results:
         for ms in r.mses:
 
@@ -131,7 +133,8 @@ def make_repsource_table(context, results):
             # If either the representative frequency or bandwidth is undefined then
             # the representatve target is undefined
             representative_target = ms.representative_target
-            rep_target_defined = None in representative_target or 'None' in representative_target
+            rep_target_defined = not(None in representative_target or 'None' in representative_target or 'none' in representative_target)
+            repsource_name_is_none = representative_target[0] == 'none'
             if not rep_target_defined:
                 rows.append(RepsourceTR(vis, 'N/A', 'N/A', 'N/A', 'N/A', 'N/A'))
                 continue
@@ -179,4 +182,4 @@ def make_repsource_table(context, results):
                              qa.tos(repsource_chanwidth, 5))
             rows.append(tr)
 
-    return utils.merge_td_columns(rows)
+    return utils.merge_td_columns(rows), repsource_name_is_none
