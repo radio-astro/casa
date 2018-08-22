@@ -690,11 +690,12 @@ def format_spwmap(spwmap, scispws):
             plotted in red.</p>
 	</%def>
 
-	<%def name="mouseover(plot)">Click to show UV coverage for ${plot.parameters['vis']}, TARGET field ${cgi.escape(plot.parameters['field_name'], True)} (#${plot.parameters['field']}), spw ${plot.parameters['spw']}</%def>
+	<%def name="mouseover(plot)">Click to show UV coverage for ${plot.parameters['vis']}, ${plot.parameters['intent']} field ${cgi.escape(plot.parameters['field_name'], True)} (#${plot.parameters['field']}), spw ${plot.parameters['spw']}</%def>
 
 	<%def name="fancybox_caption(plot)">
         Vis: ${plot.parameters['vis']}<br>
         Field: ${cgi.escape(plot.parameters['field_name'], True)} (#${plot.parameters['field']})<br>
+        Intent: ${plot.parameters['intent']}<br>
         Spw: ${cgi.escape(plot.parameters['spw'])}
 	</%def>
 
@@ -705,7 +706,7 @@ def format_spwmap(spwmap, scispws):
  	</%def>
 
 	<%def name="caption_text(plot, _)">
-		UV coverage plot for TARGET field ${cgi.escape(plot.parameters['field_name'], True)}
+		UV coverage plot for ${plot.parameters['intent']} field ${cgi.escape(plot.parameters['field_name'], True)}
         (#${plot.parameters['field']}), spw ${plot.parameters['spw']}
 	</%def>
 </%self:plot_group>
