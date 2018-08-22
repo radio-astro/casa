@@ -11,6 +11,9 @@ from matplotlib.ticker import FuncFormatter
 import pipeline.domain.unitformat as unitformat
 from pipeline.domain.measures import FrequencyUnits, DistanceUnits, Distance, ArcUnits, EquatorialArc
 from pipeline.infrastructure.casatools import quanta
+import pipeline.infrastructure
+
+LOG = pipeline.infrastructure.get_logger(__name__)
 
 # used when deciding primary beam colour
 SEVEN_M = Distance(7, DistanceUnits.METRE)
@@ -52,10 +55,18 @@ def plot_mosaic(ms, source, figfile):
     fig = matplotlib.pyplot.figure()
     ax = fig.add_subplot(1, 1, 1)
 
+    taper = antenna_taper_factor(ms.antenna_array.name)
+    # field labels overlap and become unintelligible if there are too many of
+    # them
+    draw_field_labels = True if len(fields) <= 500 else False
+    # for the same reason, just draw the field numbers if there's a risk of the
+    # plot labels becoming unintelligible
+    include_field_name_in_label = True if len(fields) <= 20 else False
+
     legend_labels = {}
     legend_colours = {}
     for diameter in dish_diameters:
-        primary_beam = primary_beam_fwhm(median_ref_wavelength, diameter)
+        primary_beam = primary_beam_fwhm(median_ref_wavelength, diameter, taper)
         radius_arcsecs = 0.5 * float(primary_beam.to_units(ArcUnits.ARC_SECOND))
 
         for field, rel_ra, rel_dec in zip(fields, relative_ra, relative_dec):
@@ -67,8 +78,12 @@ def plot_mosaic(ms, source, figfile):
                          alpha=0.6)
             ax.add_patch(cir)
 
-            ax.text(x + x_label_offset, y + y_label_offset, '{} (#{})'.format(field.name, field.id), fontsize=12,
-                    color=colour, weight='normal')
+            if draw_field_labels:
+                if include_field_name_in_label:
+                    label = '{} (#{})'.format(field.name, field.id)
+                else:
+                    label = '{}'.format(field.id)
+                ax.text(x + x_label_offset, y + y_label_offset, label, fontsize=12, color=colour, weight='normal')
 
             ax.plot(x, y, '{}+'.format(colour), markersize=4)
 
@@ -96,7 +111,7 @@ def plot_mosaic(ms, source, figfile):
     pb_formatter = get_arc_formatter(1)
     for d in dish_diameters:
         colour = get_dish_colour(d)
-        pb = primary_beam_fwhm(median_ref_wavelength, d)
+        pb = primary_beam_fwhm(median_ref_wavelength, d, taper)
         pb_degs = float(pb.to_units(ArcUnits.DEGREE))
         msg = '{} primary beam = {}'.format(d, pb_formatter.format(pb_degs))
         t = ax.text(0.02, y, msg, color=colour, transform=ax.transAxes, size=10)
@@ -156,7 +171,7 @@ def is_tsys_only(field):
     return 'TARGET' not in field.intents and 'ATMOSPHERE' in field.intents
 
 
-def primary_beam_fwhm(wavelength, diameter, taper=10.0):
+def primary_beam_fwhm(wavelength, diameter, taper):
     """
     Implements the Baars formula: b*lambda / D.
       if use2007formula==True, use the formula from Baars 2007 book
@@ -196,3 +211,17 @@ def baars_taper_factor(taper_dB):
     # use Equation 4.13 from Baars 2007 book
     tau = 10 ** (-0.05 * taper_dB)
     return 1.269 - 0.566 * tau + 0.534 * (tau ** 2) - 0.208 * (tau ** 3)
+
+
+def antenna_taper_factor(array_name):
+    # Primary beam taper in dB.
+    antenna_taper = {
+        'ALMA': 10.0,
+        'EVLA': 0.0,
+        'VLA': 0.0,
+    }
+    try:
+        return antenna_taper[array_name]
+    except KeyError:
+        LOG.warning('Unknown array name: {}. Using null antenna taper factor in mosaic plots'.format(array_name))
+        return 0.0
