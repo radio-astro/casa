@@ -113,7 +113,7 @@ refantignore -- string list to be ignored as reference antennas.
 leakage_poltype -- string of poltype to use for override in the first polcal execution
     default: ''   (blank means the task heuristics will decide what poltype to use)
 
-mbdkcross -- run gaincal KCROSS grouped by basenad
+mbdkcross -- run gaincal KCROSS grouped by baseband
     default: False
 
 clipminmax --  Range to use for clipping
