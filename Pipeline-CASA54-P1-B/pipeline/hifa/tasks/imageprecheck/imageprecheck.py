@@ -144,7 +144,7 @@ class ImagePreCheck(basetask.StandardTaskTemplate):
         repr_ms = self.inputs.ms[0]
         real_repr_spw = context.observing_run.virtual2real_spw_id(int(repr_spw), repr_ms)
         real_repr_spw_obj = repr_ms.get_spectral_window(real_repr_spw)
-        single_continuum = 'Single_Continuum' in real_repr_spw_obj.transitions
+        single_continuum = any(['Single_Continuum' in t for t in real_repr_spw_obj.transitions])
 
         # Get the array
         diameter = min([a.diameter for a in repr_ms.antennas])

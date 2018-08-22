@@ -237,7 +237,7 @@ class FindCont(basetask.StandardTaskTemplate):
                     ref_ms = context.observing_run.measurement_sets[0]
                     real_spwid = inputs.context.observing_run.virtual2real_spw_id(int(spwid), ref_ms)
                     spw_transitions = ref_ms.get_spectral_window(spwid).transitions
-                    single_continuum = 'Single_Continuum' in spw_transitions
+                    single_continuum = any(['Single_Continuum' in t for t in spw_transitions])
                     cont_range, png = findcont_heuristics.find_continuum(dirty_cube = '%s.residual' % findcont_basename,
                                                                          pb_cube = '%s.pb' % findcont_basename,
                                                                          psf_cube = '%s.psf' % findcont_basename,
