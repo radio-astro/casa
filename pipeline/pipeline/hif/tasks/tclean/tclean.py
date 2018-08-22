@@ -365,7 +365,14 @@ class Tclean(cleanbase.CleanBase):
                 inputs.start = '%sGHz' % ((if0 + 1.5 * channel_width) / 1e9)
 
             # Always adjust width to apply possible binning
-            inputs.width = '%sMHz' % (channel_width / 1e6)
+            if self.image_heuristics.is_eph_obj(inputs.field):
+                # For ephemeris objects the frequency overlap is done in TOPO since
+                # advisechansel does not support the SOURCE frame. The resulting
+                # widths are too narrow for objects that are moving away from earth.
+                # To compensate this, the width is increased slightly (CAS-11800).
+                inputs.width = '%sMHz' % (1.0002 * channel_width / 1e6)
+            else:
+                inputs.width = '%sMHz' % (channel_width / 1e6)
 
             # Skip edge channels if no nchan is supplied
             if inputs.nchan in (None, -1):
