@@ -1,0 +1,133 @@
+
+from hifa_antpos_cli import  hifa_antpos_cli as hifa_antpos
+task_location['hifa_antpos'] = ''
+
+mytasks['hifa_antpos'] = 'Derive an antenna position calibration table'
+taskcat['hifa_antpos'] = 'pipeline'
+taskvis['hifa_antpos'] = ''
+from hifa_bandpass_cli import  hifa_bandpass_cli as hifa_bandpass
+task_location['hifa_bandpass'] = ''
+
+mytasks['hifa_bandpass'] = 'Compute bandpass calibration solutions'
+taskcat['hifa_bandpass'] = 'pipeline'
+taskvis['hifa_bandpass'] = ''
+from hifa_bandpassflag_cli import  hifa_bandpassflag_cli as hifa_bandpassflag
+task_location['hifa_bandpassflag'] = ''
+
+mytasks['hifa_bandpassflag'] = 'Compute bandpass calibration with flagging'
+taskcat['hifa_bandpassflag'] = 'pipeline'
+taskvis['hifa_bandpassflag'] = ''
+from hifa_bpsolint_cli import  hifa_bpsolint_cli as hifa_bpsolint
+task_location['hifa_bpsolint'] = ''
+
+mytasks['hifa_bpsolint'] = 'Compute optimal bandpass calibration solution intervals'
+taskcat['hifa_bpsolint'] = 'pipeline'
+taskvis['hifa_bpsolint'] = ''
+from hifa_exportdata_cli import  hifa_exportdata_cli as hifa_exportdata
+task_location['hifa_exportdata'] = ''
+
+mytasks['hifa_exportdata'] = 'Prepare interferometry data for export'
+taskcat['hifa_exportdata'] = 'pipeline'
+taskvis['hifa_exportdata'] = ''
+from hifa_flagdata_cli import  hifa_flagdata_cli as hifa_flagdata
+task_location['hifa_flagdata'] = ''
+
+mytasks['hifa_flagdata'] = 'Do basic flagging'
+taskcat['hifa_flagdata'] = 'pipeline'
+taskvis['hifa_flagdata'] = ''
+from hifa_flagtargets_cli import  hifa_flagtargets_cli as hifa_flagtargets
+task_location['hifa_flagtargets'] = ''
+
+mytasks['hifa_flagtargets'] = 'Do science target flagging'
+taskcat['hifa_flagtargets'] = 'pipeline'
+taskvis['hifa_flagtargets'] = ''
+from hifa_fluxcalflag_cli import  hifa_fluxcalflag_cli as hifa_fluxcalflag
+task_location['hifa_fluxcalflag'] = ''
+
+mytasks['hifa_fluxcalflag'] = 'Locate and flag line regions in solar system flux calibrators'
+taskcat['hifa_fluxcalflag'] = 'pipeline'
+taskvis['hifa_fluxcalflag'] = ''
+from hifa_fluxdb_cli import  hifa_fluxdb_cli as hifa_fluxdb
+task_location['hifa_fluxdb'] = ''
+
+mytasks['hifa_fluxdb'] = 'Connect to flux calibrator database'
+taskcat['hifa_fluxdb'] = 'pipeline'
+taskvis['hifa_fluxdb'] = ''
+from hifa_gaincalsnr_cli import  hifa_gaincalsnr_cli as hifa_gaincalsnr
+task_location['hifa_gaincalsnr'] = ''
+
+mytasks['hifa_gaincalsnr'] = 'Compute gaincal signal to noise ratios per spw'
+taskcat['hifa_gaincalsnr'] = 'pipeline'
+taskvis['hifa_gaincalsnr'] = ''
+from hifa_gfluxscale_cli import  hifa_gfluxscale_cli as hifa_gfluxscale
+task_location['hifa_gfluxscale'] = ''
+
+mytasks['hifa_gfluxscale'] = 'Derive flux density scales from standard calibrators'
+taskcat['hifa_gfluxscale'] = 'pipeline'
+taskvis['hifa_gfluxscale'] = ''
+from hifa_gfluxscaleflag_cli import  hifa_gfluxscaleflag_cli as hifa_gfluxscaleflag
+task_location['hifa_gfluxscaleflag'] = ''
+
+mytasks['hifa_gfluxscaleflag'] = 'Derive the flux density scale with flagging'
+taskcat['hifa_gfluxscaleflag'] = 'pipeline'
+taskvis['hifa_gfluxscaleflag'] = ''
+from hifa_imageprecheck_cli import  hifa_imageprecheck_cli as hifa_imageprecheck
+task_location['hifa_imageprecheck'] = ''
+
+mytasks['hifa_imageprecheck'] = 'Base imageprecheck task'
+taskcat['hifa_imageprecheck'] = 'pipeline'
+taskvis['hifa_imageprecheck'] = ''
+from hifa_importdata_cli import  hifa_importdata_cli as hifa_importdata
+task_location['hifa_importdata'] = ''
+
+mytasks['hifa_importdata'] = 'Imports data into the interferometry pipeline'
+taskcat['hifa_importdata'] = 'pipeline'
+taskvis['hifa_importdata'] = ''
+from hifa_linpolcal_cli import  hifa_linpolcal_cli as hifa_linpolcal
+task_location['hifa_linpolcal'] = ''
+
+mytasks['hifa_linpolcal'] = 'Compute polarization calibration'
+taskcat['hifa_linpolcal'] = 'pipeline'
+taskvis['hifa_linpolcal'] = ''
+from hifa_restoredata_cli import  hifa_restoredata_cli as hifa_restoredata
+task_location['hifa_restoredata'] = ''
+
+mytasks['hifa_restoredata'] = 'Restore flagged and calibration interferometry data from a pipeline run'
+taskcat['hifa_restoredata'] = 'pipeline'
+taskvis['hifa_restoredata'] = ''
+from hifa_session_bandpass_cli import  hifa_session_bandpass_cli as hifa_session_bandpass
+task_location['hifa_session_bandpass'] = ''
+
+mytasks['hifa_session_bandpass'] = 'Compute bandpass calibration solutions'
+taskcat['hifa_session_bandpass'] = 'pipeline'
+taskvis['hifa_session_bandpass'] = ''
+from hifa_spwphaseup_cli import  hifa_spwphaseup_cli as hifa_spwphaseup
+task_location['hifa_spwphaseup'] = ''
+
+mytasks['hifa_spwphaseup'] = 'Compute phase calibration spw map and per spw phase offsets'
+taskcat['hifa_spwphaseup'] = 'pipeline'
+taskvis['hifa_spwphaseup'] = ''
+from hifa_timegaincal_cli import  hifa_timegaincal_cli as hifa_timegaincal
+task_location['hifa_timegaincal'] = ''
+
+mytasks['hifa_timegaincal'] = 'Determine temporal gains from calibrator observations'
+taskcat['hifa_timegaincal'] = 'pipeline'
+taskvis['hifa_timegaincal'] = ''
+from hifa_tsysflag_cli import  hifa_tsysflag_cli as hifa_tsysflag
+task_location['hifa_tsysflag'] = ''
+
+mytasks['hifa_tsysflag'] = 'Flag deviant system temperature measurements'
+taskcat['hifa_tsysflag'] = 'pipeline'
+taskvis['hifa_tsysflag'] = ''
+from hifa_wvrgcal_cli import  hifa_wvrgcal_cli as hifa_wvrgcal
+task_location['hifa_wvrgcal'] = ''
+
+mytasks['hifa_wvrgcal'] = ''
+taskcat['hifa_wvrgcal'] = 'pipeline'
+taskvis['hifa_wvrgcal'] = ''
+from hifa_wvrgcalflag_cli import  hifa_wvrgcalflag_cli as hifa_wvrgcalflag
+task_location['hifa_wvrgcalflag'] = ''
+
+mytasks['hifa_wvrgcalflag'] = ''
+taskcat['hifa_wvrgcalflag'] = 'pipeline'
+taskvis['hifa_wvrgcalflag'] = ''

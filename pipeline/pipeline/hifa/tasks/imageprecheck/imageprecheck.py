@@ -406,6 +406,7 @@ class ImagePreCheck(basetask.StandardTaskTemplate):
             sensitivities=sensitivities,
             sensitivity_bandwidth=sensitivity_bandwidth,
             score=hm_robust_score,
+            single_continuum=single_continuum,
             per_spw_cont_sensitivities_all_chan=known_per_spw_cont_sensitivities_all_chan,
             synthesized_beams=known_synthesized_beams
         )
