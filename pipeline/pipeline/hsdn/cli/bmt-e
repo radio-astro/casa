@@ -1,7 +1,0 @@
-
-from hsdn_importdata_cli import  hsdn_importdata_cli as hsdn_importdata
-task_location['hsdn_importdata'] = ''
-
-mytasks['hsdn_importdata'] = 'Imports Nobeyama data into the single dish pipeline'
-taskcat['hsdn_importdata'] = 'pipeline'
-taskvis['hsdn_importdata'] = ''
