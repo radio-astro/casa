@@ -25,7 +25,7 @@ class T2_4MDetailsRestoreDataRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
         weblog_dir = os.path.join(pipeline_context.report_dir, 'stage%s' % results.stage_number)
 
         # Extract information for representative sources table.
-        repsource_table_rows = make_repsource_table(pipeline_context, results)
+        repsource_table_rows, repsource_name_is_none = make_repsource_table(pipeline_context, results)
         # True if representative source is defined for any MS
         repsource_defined = any('N/A' not in td for tr in repsource_table_rows for td in tr[1:])
         repsource_table_rows = merge_td_columns(repsource_table_rows)
@@ -42,6 +42,7 @@ class T2_4MDetailsRestoreDataRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
             'pipeline_version': results[0].pipeline_version_orig,
             'execution_mode': execution_mode,
             'repsource_defined': repsource_defined,
+            'repsource_name_is_none': repsource_name_is_none,
             'repsource_table_rows': repsource_table_rows,
             'flags': flags,
             'flags_maxspw': flags_maxspw,
