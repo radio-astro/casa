@@ -165,9 +165,10 @@ class Tclean(cleanbase.CleanBase):
 
     is_multi_vis_task = True
 
-    def copy_products(self, old_pname, new_pname):
+    def copy_products(self, old_pname, new_pname, ignore=None):
         imlist = commands.getoutput('ls -d '+old_pname+'.*')
         imlist = imlist.split('\n')
+        imlist = [xx for xx in imlist if ignore is None or ignore not in xx]
         for image_name in imlist:
             newname = image_name.replace(old_pname, new_pname)
             if image_name == old_pname + '.workdirectory':
@@ -631,14 +632,19 @@ class Tclean(cleanbase.CleanBase):
                 self._executor.execute(rmtree_job)
 
             # Determine the cleaning threshold
-            threshold = seq_result.threshold
+            if 'VLASS-SE' in self.image_heuristics.imaging_mode and inputs.hm_masking == 'auto':
+                threshold = 0.0
+                nsigma = 3.0
+            else:
+                threshold = seq_result.threshold
+                nsigma = None
 
             LOG.info('Iteration %s: Clean control parameters' % iteration)
             LOG.info('    Mask %s', new_cleanmask)
-            LOG.info('    Threshold %s', seq_result.threshold)
+            LOG.info('    Threshold %s', threshold)
             LOG.info('    Niter %s', seq_result.niter)
 
-            result = self._do_clean(iternum=iteration, cleanmask=new_cleanmask, niter=seq_result.niter,
+            result = self._do_clean(iternum=iteration, cleanmask=new_cleanmask, niter=seq_result.niter, nsigma=nsigma,
                                     threshold=threshold, sensitivity=sequence_manager.sensitivity, result=result)
 
             # Give the result to the clean 'sequencer'
@@ -725,7 +731,7 @@ class Tclean(cleanbase.CleanBase):
             # Use previous iterations's products as starting point
             old_pname = '%s.iter%s' % (rootname, iteration-1)
             new_pname = '%s.iter%s' % (rootname, iteration)
-            self.copy_products(os.path.basename(old_pname), os.path.basename(new_pname))
+            self.copy_products(os.path.basename(old_pname), os.path.basename(new_pname), ignore='mask')
 
             rms_threshold = self.image_heuristics.rms_threshold(residual_robust_rms, inputs.nsigma)
             if rms_threshold:
@@ -747,8 +753,9 @@ class Tclean(cleanbase.CleanBase):
             sequence_manager.niter = new_niter
 
             LOG.info('Final VLASS single epoch tclean call with no mask')
-            result = self._do_clean(iternum=iteration, cleanmask='', niter=new_niter, threshold=threshold,
-                                    sensitivity=sequence_manager.sensitivity, result=result)
+            inputs.hm_masking = 'none'
+            result = self._do_clean(iternum=iteration, cleanmask='', niter=new_niter, threshold=0.0, nsigma=4.5,
+                                    sensitivity=sequence_manager.sensitivity, savemodel='modelcolumn', result=result)
 
         # If specmode is "cube", create from the non-pbcorrected cube
         # after continuum subtraction an image of the moment 0 / 8 integrated
@@ -758,7 +765,7 @@ class Tclean(cleanbase.CleanBase):
 
         return result
 
-    def _do_clean(self, iternum, cleanmask, niter, threshold, sensitivity, result):
+    def _do_clean(self, iternum, cleanmask, niter, threshold, sensitivity, result, nsigma=None, savemodel=None):
         """
         Do basic cleaning.
         """
@@ -801,6 +808,7 @@ class Tclean(cleanbase.CleanBase):
                                                   restoringbeam=inputs.restoringbeam,
                                                   iter=iternum,
                                                   mask=cleanmask,
+                                                  savemodel=savemodel,
                                                   hm_masking=inputs.hm_masking,
                                                   hm_sidelobethreshold=inputs.hm_sidelobethreshold,
                                                   hm_noisethreshold=inputs.hm_noisethreshold,
@@ -811,6 +819,7 @@ class Tclean(cleanbase.CleanBase):
                                                   hm_dogrowprune=inputs.hm_dogrowprune,
                                                   hm_minpercentchange=inputs.hm_minpercentchange,
                                                   niter=niter,
+                                                  nsigma=nsigma,
                                                   threshold=threshold,
                                                   sensitivity=sensitivity,
                                                   pblimit=inputs.pblimit,

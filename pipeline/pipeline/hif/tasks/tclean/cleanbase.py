@@ -44,6 +44,7 @@ class CleanBaseInputs(vdp.StandardInputs):
     hm_sidelobethreshold = vdp.VisDependentProperty(default=-999.0)
     nchan = vdp.VisDependentProperty(default=-1)
     niter = vdp.VisDependentProperty(default=5000)
+    nsigma = vdp.VisDependentProperty(default=None)
     nterms = vdp.VisDependentProperty(default=None)
     orig_specmode = vdp.VisDependentProperty(default='')
     outframe = vdp.VisDependentProperty(default='LSRK')
@@ -53,6 +54,7 @@ class CleanBaseInputs(vdp.StandardInputs):
     phasecenter = vdp.VisDependentProperty(default='')
     restoringbeam = vdp.VisDependentProperty(default='common')
     robust = vdp.VisDependentProperty(default=-999.0)
+    savemodel = vdp.VisDependentProperty(default='none')
     scales = vdp.VisDependentProperty(default=None)
     sensitivity = vdp.VisDependentProperty(default=None)
     start = vdp.VisDependentProperty(default='')
@@ -100,10 +102,10 @@ class CleanBaseInputs(vdp.StandardInputs):
                  spw=None, spwsel=None, uvrange=None, orig_specmode=None, specmode=None, gridder=None, deconvolver=None,
                  uvtaper=None, nterms=None, cycleniter=None, cyclefactor=None, scales=None, outframe=None, imsize=None,
                  cell=None, phasecenter=None, nchan=None, start=None, width=None, stokes=None, weighting=None,
-                 robust=None, restoringbeam=None, iter=None, mask=None, hm_masking=None,
+                 robust=None, restoringbeam=None, iter=None, mask=None, savemodel=None, hm_masking=None,
                  hm_sidelobethreshold=None, hm_noisethreshold=None, hm_lownoisethreshold=None,
                  hm_negativethreshold=None, hm_minbeamfrac=None, hm_growiterations=None, hm_dogrowprune=None,
-                 hm_minpercentchange=None, pblimit=None, niter=None,
+                 hm_minpercentchange=None, pblimit=None, niter=None, nsigma=None,
                  threshold=None, sensitivity=None, reffreq=None, conjbeams=None, is_per_eb=None, antenna=None,
                  result=None, parallel=None, heuristics=None):
         self.context = context
@@ -117,6 +119,7 @@ class CleanBaseInputs(vdp.StandardInputs):
         self.spw = spw
         self.spwsel = spwsel
         self.uvrange = uvrange
+        self.savemodel = savemodel
         self.orig_specmode = orig_specmode
         self.specmode = specmode
         self.gridder = gridder
@@ -153,6 +156,7 @@ class CleanBaseInputs(vdp.StandardInputs):
         self.pblimit = pblimit
         self.niter = niter
         self.threshold = threshold
+        self.nsigma = nsigma
         self.sensitivity = sensitivity
         self.reffreq = reffreq
         self.conjbeams = conjbeams
@@ -280,6 +284,7 @@ class CleanBase(basetask.StandardTaskTemplate):
             'pblimit':       inputs.pblimit,
             'niter':         inputs.niter,
             'threshold':     inputs.threshold,
+            'nsigma':        inputs.nsigma,
             'deconvolver':   inputs.deconvolver,
             'interactive':   0,
             'nchan':         inputs.nchan,
@@ -292,7 +297,7 @@ class CleanBase(basetask.StandardTaskTemplate):
             'robust':        inputs.robust,
             'restoringbeam': inputs.restoringbeam,
             'uvrange':       inputs.uvrange,
-            'savemodel':     'none',
+            'savemodel':     inputs.savemodel,
             'chanchunks':    chanchunks,
             'parallel':      parallel
             }
