@@ -2156,7 +2156,7 @@ def score_sd_skycal_elevation_difference(ms, resultdict, threshold=3.0):
 
 
 @log_qa
-def score_gfluxscale_k_spw(vis, field, spw_id, k_spw):
+def score_gfluxscale_k_spw(vis, field, spw_id, k_spw, ref_spw):
     """ Convert internal spw_id-spw_id consistency ratio to a QA score.
 
     k_spw is equal to the ratio of the derived flux:catalogue flux divided by
@@ -2186,8 +2186,8 @@ def score_gfluxscale_k_spw(vis, field, spw_id, k_spw):
         score = 0.2
 
     longmsg = ('Ratio of <i>S</i><sub>derived</sub>/<i>S</i><sub>catalogue</sub> for {} ({}) spw {} in {} differs by '
-               '{:.0%} from the ratio for the highest SNR spw'
-               ''.format(utils.dequote(field.name), ','.join(field.intents), spw_id, vis, q_spw))
+               '{:.0%} from the ratio for the highest SNR spw ({})'
+               ''.format(utils.dequote(field.name), ','.join(field.intents), spw_id, vis, q_spw, ref_spw))
     shortmsg = 'Internal spw-spw consistency'
 
     origin = pqa.QAOrigin(metric_name='score_gfluxscale_k_spw',

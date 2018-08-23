@@ -226,7 +226,7 @@ def score_kspw(context, result):
 
         # sort QA scores by spw
         k_spws.sort(key=operator.itemgetter(0))
-        field_qa_scores = [qacalc.score_gfluxscale_k_spw(ms.basename, field, spw_id, k_spw)
+        field_qa_scores = [qacalc.score_gfluxscale_k_spw(ms.basename, field, spw_id, k_spw, highest_SNR_spw.id)
                            for spw_id, k_spw in k_spws]
         all_scores.extend(field_qa_scores)
 
