@@ -1023,7 +1023,10 @@ class StandardTaskTemplate(api.Task):
             result.task = self.__class__
 
             # add the log records to the result
-            result.logrecords = handler.buffer[:]
+            if not hasattr(result, 'logrecords'):
+                result.logrecords = handler.buffer
+            else:
+                result.logrecords.extend(handler.buffer)
 
             return result
 
@@ -1048,7 +1051,10 @@ class StandardTaskTemplate(api.Task):
                 result = FailedTaskResults(self, ex, tb)
 
                 # add the log records to the result
-                result.logrecords = handler.buffer[:]
+                if not hasattr(result, 'logrecords'):
+                    result.logrecords = handler.buffer
+                else:
+                    result.logrecords.extend(handler.buffer)
 
                 return result
             else:

@@ -137,29 +137,29 @@ class QAHandler(object):
         # first
         if isinstance(result, collections.Iterable):
             for r in result:
-                handler = logging.CapturingHandler(logging.WARNING)
-                # register the capturing log handler, buffering all messages so that
-                # we can add them to the result - and subsequently, the weblog
-                logging.add_handler(handler)
+                self.do_qa(context, r)
 
-                try:
-                    self.do_qa(context, r)
-                finally:
-                    if hasattr(r, 'logrecords'):
-                        r.logrecords.extend(handler.buffer)
+        # register the capturing log handler, buffering all messages so that
+        # we can add them to the result - and subsequently, the weblog
+        logging_handler = logging.CapturingHandler(logging.WARNING)
+        logging.add_handler(logging_handler)
 
-                    # now that the messages from the QA stage have been attached to
-                    # the result, remove the capturing logging handler from all loggers
-                    if handler:
-                        logging.remove_handler(handler)
+        try:
+            # with the leaf results processed, the containing handler can now
+            # collate the lower-level scores or process as a group
+            for handler in self.__handlers:
+                if handler.is_handler_for(result):
+                    LOG.debug('%s handling QA analysis for %s' % (handler.__class__.__name__,
+                                                                  result.__class__.__name__))
+                    handler.handle(context, result)
 
-        # so that the upper-level handler can collate the lower-level scores
-        # or process as a group
-        for handler in self.__handlers:
-            if handler.is_handler_for(result):
-                LOG.debug('%s handling QA analysis for %s' % (handler.__class__.__name__,
-                                                              result.__class__.__name__))
-                handler.handle(context, result)
+            if hasattr(result, 'logrecords'):
+                result.logrecords.extend(logging_handler.buffer)
+
+        finally:
+            # now that the messages from the QA stage have been attached to
+            # the result, remove the capturing logging handler from all loggers
+            logging.remove_handler(logging_handler)
 
 
 qa_registry = QAHandler()

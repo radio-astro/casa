@@ -16,6 +16,7 @@ class MakeImagesResult(basetask.Results):
         self.plot_path = None
         self.mitigation_error = False
         self.sensitivities_for_aqua = []
+        self.logrecords = []
 
     def add_result(self, result, target, outcome):
         target['outcome'] = outcome
@@ -23,6 +24,10 @@ class MakeImagesResult(basetask.Results):
         del target['heuristics']
         self.targets.append(target)
         self.results.append(result)
+
+        # pull the log records from the worker results, potentially executing
+        # on MPI servers, into this object
+        self.logrecords.extend(getattr(result, 'logrecords', []))
 
     def set_info(self, info):
         self.clean_list_info = info
