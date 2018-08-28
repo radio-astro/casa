@@ -238,7 +238,7 @@ class TsysflagInputs(vdp.StandardInputs):
     flag_fieldshape = vdp.VisDependentProperty(default=True)
     flag_nmedian = vdp.VisDependentProperty(default=True)
     flag_toomany = vdp.VisDependentProperty(default=True)
-    fnm_byfield = vdp.VisDependentProperty(default=False)
+    fnm_byfield = vdp.VisDependentProperty(default=True)
     fnm_limit = vdp.VisDependentProperty(default=2.0)
     metric_order = vdp.VisDependentProperty(default='nmedian, derivative, edgechans, fieldshape, birdies, toomany')
     normalize_tsys = vdp.VisDependentProperty(default=False)

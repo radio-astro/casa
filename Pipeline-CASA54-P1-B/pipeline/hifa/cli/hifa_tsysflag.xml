@@ -37,7 +37,7 @@ sequence of flagging subtasks, each looking for a different type of possible err
  
     <param type="bool" name="fnm_byfield" subparam="true">
         <description>Evaluate the nmedian metric separately for each field.</description>
-        <value>False</value>
+        <value>True</value>
     </param>
 
     <param type="bool" name="flag_derivative">
@@ -151,7 +151,7 @@ sequence of flagging subtasks, each looking for a different type of possible err
         <when param="flag_nmedian">
             <equals type="bool" value="True">
                 <default param="fnm_limit"><value>2.0</value></default>
-                <default param="fnm_byfield"><value>False</value></default>
+                <default param="fnm_byfield"><value>True</value></default>
             </equals>
             <equals type="bool" value="False">
             </equals>
@@ -262,7 +262,7 @@ fnm_limit -- Flag spectra with median value higher than fnm_limit * median
     default: 2.0
 
 fnm_byfield -- Evaluate the nmedian metric separately for each field.
-    default: False
+    default: True
  
 flag_derivative -- True to flag Tsys spectra with high median derivative.
     default: True

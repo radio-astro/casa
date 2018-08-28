@@ -5,7 +5,6 @@ import os
 import pipeline.h.tasks.tsysflag.tsysflag as tsysflag
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
-import pipeline.infrastructure.vdp as vdp
 import pipeline.infrastructure.sessionutils as sessionutils
 from pipeline.infrastructure import task_registry
 
@@ -21,8 +20,6 @@ class TsysflagInputs(tsysflag.TsysflagInputs):
     """
     TsysflagInputs defines the inputs for the Tsysflag pipeline task.
     """
-    fnm_byfield = vdp.VisDependentProperty(default=True)
-
     def __init__(self, context, output_dir=None, vis=None, caltable=None,
                  flag_nmedian=None, fnm_limit=None, fnm_byfield=None,
                  flag_derivative=None, fd_max_limit=None,
