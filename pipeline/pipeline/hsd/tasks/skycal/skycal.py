@@ -112,6 +112,10 @@ class SerialSDSkyCal(basetask.StandardTaskTemplate):
         if args['calmode'] is None or args['calmode'].lower() == 'auto':
             args['calmode'] = calibration_strategy['calmode']
             
+        # workaround for CAS-11784
+        if args['calmode'] in ('otf', 'otfraster'):
+            args['intent'] = 'OBSERVE_TARGET#ON_SOURCE'
+            
         # spw selection ---> task.prepare
         if args['spw'] is None or len(args['spw']) == 0:
             spw_list = ms.get_spectral_windows(science_windows_only=True)
@@ -162,7 +166,12 @@ class SerialSDSkyCal(basetask.StandardTaskTemplate):
             job = casa_tasks.sdcal(**myargs)
     
             # execute job
-            self._executor.execute(job)
+            tb = casatools.table
+            LOG.info('Table cache before sdcal: {}'.format(tb.showcache()))
+            try:
+                self._executor.execute(job)
+            finally:
+                LOG.info('Table cache after sdcal: {}'.format(tb.showcache()))
     
             # make a note of the current inputs state before we start fiddling
             # with it. This origin will be attached to the final CalApplication.
