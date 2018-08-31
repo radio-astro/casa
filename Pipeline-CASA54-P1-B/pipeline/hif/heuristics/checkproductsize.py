@@ -275,13 +275,14 @@ class CheckProductSizeHeuristics(object):
         # 0.5 * maxcubelimit. Remove all but one of these spws and make sure
         # the representative spw is still included. Add spws with smaller
         # cubes up until total_productsize reaches the limit.
-        if self.inputs.maxcubelimit != -1 and self.inputs.maxproductsize != -1.0:
+        if (self.inputs.maxcubelimit != -1) or (self.inputs.maxproductsize != -1.0):
             spw_oversizes = dict([(i, 0) for i in spws])
             for i, target in enumerate(imlist):
-                if cubesizes[i] > 0.5 * self.inputs.maxcubelimit:
+                if (cubesizes[i] > 0.5 * self.inputs.maxcubelimit) and (self.inputs.maxcubelimit != -1):
                     spw_oversizes[target['spw']] += 1
 
-            if [n != 0 for n in spw_oversizes.itervalues()].count(True) > 1 or total_productsize > self.inputs.maxproductsize:
+            if ([n != 0 for n in spw_oversizes.itervalues()].count(True) > 1) or \
+               ((total_productsize > self.inputs.maxproductsize) and (self.inputs.maxproductsize != -1)):
                 oversize_spws = [spw for spw, n in spw_oversizes.iteritems() if n>0]
                 if oversize_spws != []:
                     if str(repr_spw) in oversize_spws:
@@ -301,12 +302,12 @@ class CheckProductSizeHeuristics(object):
                 # Sort spw list by size and frequency
                 small_cube_info = sorted(small_cube_info, key=operator.itemgetter(2,1))
                 for small_cube_spw, small_cube_frequency, small_cube_productsize in small_cube_info:
-                    if mitigated_productsize + small_cube_productsize <= self.inputs.maxproductsize:
+                    if (mitigated_productsize + small_cube_productsize <= self.inputs.maxproductsize) or (self.inputs.maxproductsize == -1):
                         mitigated_spws.append(small_cube_spw)
                         mitigated_productsize += small_cube_productsize
                     else:
                         break
-                size_mitigation_parameters['spw'] = ','.join(map(str, mitigated_spws))
+                size_mitigation_parameters['spw'] = ','.join(map(str, sorted(mitigated_spws)))
 
                 LOG.info('Size mitigation: Setting (cube) spw to %s' % (size_mitigation_parameters['spw']))
 
