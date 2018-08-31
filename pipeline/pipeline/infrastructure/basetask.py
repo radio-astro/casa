@@ -704,8 +704,7 @@ class Results(api.Results):
 
             utils.mkdir_p(os.path.dirname(path))
             with open(path, 'wb') as outfile:
-                pickle.dump(result, outfile, -1)
-
+                pickle.dump(context, outfile, -1)
 
     def _check_for_remerge(self, context):
         """
