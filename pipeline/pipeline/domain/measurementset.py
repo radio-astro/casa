@@ -174,7 +174,7 @@ class MeasurementSet(object):
                 LOG.info('Undefined representative target source, defaulting to source %s for data set %s' % \
                     (target_source.name, self.basename))
             else:
-                LOG.error('No target sources observed for data set %s' % (self.basename))
+                LOG.warning('No target sources observed for data set %s' % (self.basename))
                 target_source = None
 
         # Target source not found
@@ -198,7 +198,7 @@ class MeasurementSet(object):
                     (str(source_spwid), self.basename))
                 return (target_source_name, source_spwid)
             else:
-                LOG.error('No target source data for representative spw %s in data set %s' % \
+                LOG.warning('No target source data for representative spw %s in data set %s' % \
                     (str(source_spwid), self.basename))
                 return (target_source_name, None)
 
@@ -209,7 +209,7 @@ class MeasurementSet(object):
                 qa.quantity(qa.getvalue(self.representative_target[2]),
                 qa.getunit(self.representative_target[2])))
         else:
-            LOG.error('Undefined representative bandwidth for data set %s' % (self.basename))
+            LOG.warning('Undefined representative bandwidth for data set %s' % (self.basename))
             return (target_source_name, None)
 
         # Get the representative frequency
@@ -219,7 +219,7 @@ class MeasurementSet(object):
                 qa.quantity(qa.getvalue(self.representative_target[1]),
                 qa.getunit(self.representative_target[1])))
         else:
-            LOG.error('Undefined representative frequency for data set %s' % (self.basename))
+            LOG.warning('Undefined representative frequency for data set %s' % (self.basename))
             return (target_source_name, None)
 
         # Convert BARY frequency to TOPO
