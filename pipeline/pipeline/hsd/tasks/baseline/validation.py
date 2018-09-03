@@ -412,7 +412,7 @@ class ValidateLineRaster(basetask.StandardTaskTemplate):
 
         # Bestlines: [[center, width, T/F],[],,,[]]
         clustering_algorithm = self.inputs.clusteringalgorithm
-        LOG.debug('clustering algorithm is \'{}\'', clustering_algorithm)
+        LOG.info('clustering algorithm is \'{}\'', clustering_algorithm)
         if clustering_algorithm == 'kmean':
             (Ncluster, Bestlines, BestCategory, Region) = self.clustering_kmean(Region, Region2)
         else:
