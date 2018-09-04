@@ -181,6 +181,33 @@ parameter, which specifies pre-defined line window.
 Fitting order is automatically determined by default. It can be
 disabled by specifying fitorder as non-negative value. In this case,
 the value specified by fitorder will be used.
+
+***WARNING***
+Currently, hsd_baseline overwrites the result obtained by the previous
+run. Due to this behavior, users need to be careful about an order 
+of the task execution when they run hsd_baseline multiple times with 
+different data selection. Suppose there are two spectral windows 
+(0 and 1) and hsd_baseline is executed separately for each spw as 
+below, 
+
+hsd_baseline(pipelinemode="interactive", spw="0")
+hsd_baseline(pipelinemode="interactive", spw="1")
+hsd_blflag(pipelinemode="automatic")
+hsd_imaging(pipelinemode="automatic")
+
+Since the second run of hsd_baseline overwrites the result for spw 0 
+with the data before baseline subtraction, this  will not produce 
+correct result for spw 0. Proper sequence for this usecase is to 
+process each spw to the imaging stage separately, which looks like 
+as follows:
+
+hsd_baseline(pipelinemode="interactive", spw="0")
+hsd_blflag(pipelinemode="interactive", spw="0")
+hsd_imaging(pipelinemode="interactive", spw="0"))
+hsd_baseline(pipelinemode="interactive", spw="1")
+hsd_blflag(pipelinemode="interactive", spw="1")
+hsd_imaging(pipelinemode="interactive", spw="1")
+
   
 Keyword arguments:
 
