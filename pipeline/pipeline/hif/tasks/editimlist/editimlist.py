@@ -52,6 +52,40 @@ LOG = infrastructure.get_logger(__name__)
 
 
 class EditimlistInputs(vdp.StandardInputs):
+    search_radius_arcsec = vdp.VisDependentProperty(default=None)
+    cell = vdp.VisDependentProperty(default=None)
+    conjbeams = vdp.VisDependentProperty(default=None)
+    cyclefactor = vdp.VisDependentProperty(default=None)
+    cycleniter = vdp.VisDependentProperty(default=None)
+    deconvolver = vdp.VisDependentProperty(default=None)
+    editmode = vdp.VisDependentProperty(default=None)
+    field = vdp.VisDependentProperty(default=None)
+    imaging_mode = vdp.VisDependentProperty(default=None)
+    imagename = vdp.VisDependentProperty(default=None)
+    imsize = vdp.VisDependentProperty(default=None)
+    intent = vdp.VisDependentProperty(default=None)
+    gridder = vdp.VisDependentProperty(default=None)
+    mask = vdp.VisDependentProperty(default=None)
+    nbin = vdp.VisDependentProperty(default=None)
+    nchan = vdp.VisDependentProperty(default=None)
+    niter = vdp.VisDependentProperty(default=None)
+    nterms = vdp.VisDependentProperty(default=None)
+    parameter_file = vdp.VisDependentProperty(default=None)
+    phasecenter = vdp.VisDependentProperty(default=None)
+    reffreq = vdp.VisDependentProperty(default=None)
+    robust = vdp.VisDependentProperty(default=None)
+    scales = vdp.VisDependentProperty(default=None)
+    specmode = vdp.VisDependentProperty(default=None)
+    spw = vdp.VisDependentProperty(default=None)
+    start = vdp.VisDependentProperty(default=None)
+    stokes = vdp.VisDependentProperty(default=None)
+    threshold = vdp.VisDependentProperty(default=None)
+    threshold_nsigma = vdp.VisDependentProperty(default=None)
+    uvtaper = vdp.VisDependentProperty(default=None)
+    uvrange = vdp.VisDependentProperty(default=None)
+    width = vdp.VisDependentProperty(default=None)
+    sensitivity = vdp.VisDependentProperty(default=None)
+
     def __init__(self, context, output_dir=None, vis=None,
                  search_radius_arcsec=None, cell=None, conjbeams=None,
                  cyclefactor=None, cycleniter=None, deconvolver=None,
@@ -110,9 +144,10 @@ class EditimlistInputs(vdp.StandardInputs):
                             'editmode', 'threshold_nsigma', 'sensitivity', 'conjbeams')
 
         self.keys_to_change = []
+        keydict = self.as_dict()
         for key in keys_to_consider:
             # print key, eval(key)
-            if self.__dict__[key] is not None:
+            if keydict[key] is not None:
                 self.keys_to_change.append(key)
 
 
@@ -135,8 +170,8 @@ class Editimlist(basetask.StandardTaskTemplate):
         inp = self.inputs
 
         # get the class inputs as a dictionary
-        inpdict = inp._initargs
-        LOG.debug(inp._initargs)
+        inpdict = inp.as_dict()
+        LOG.debug(inp.as_dict())
 
         # if a file is given, read whatever parameters are defined in the file
         if inp.parameter_file:
@@ -172,6 +207,7 @@ class Editimlist(basetask.StandardTaskTemplate):
         # TODO think about how to handle multiple MSs
         ms = inp.context.observing_run.get_ms(inp.vis[0])
         fieldnames = []
+
         if not isinstance(inpdict['field'], type(None)):
             # assume field entries are either all integers or all strings, but not a mix
             if isinstance(inpdict['field'][0], int):
@@ -249,7 +285,7 @@ class Editimlist(basetask.StandardTaskTemplate):
         imlist_entry['uvtaper'] = th.uvtaper(None) if not inpdict['uvtaper'] else inpdict['uvtaper']
         imlist_entry['uvrange'] = th.uvrange() if not inpdict['uvrange'] else inpdict['uvrange']
         imlist_entry['deconvolver'] = th.deconvolver(None, None) if not inpdict['deconvolver'] else inpdict['deconvolver']
-        imlist_entry['robust'] = th.robust(None) if not inpdict['robust'] else inpdict['robust']
+        imlist_entry['robust'] = th.robust() if not inpdict['robust'] else inpdict['robust']
         imlist_entry['mask'] = th.mask() if not inpdict['mask'] else inpdict['mask']
         imlist_entry['specmode'] = th.specmode() if not inpdict['specmode'] else inpdict['specmode']
         imlist_entry['gridder'] = th.gridder(None, None) if not inpdict['gridder'] else inpdict['gridder']

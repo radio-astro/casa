@@ -47,7 +47,7 @@ import pipeline.infrastructure.renderer.htmlrenderer as hr
             <td>${len(target['field'].split(','))}</td>
         </tr>
         %for key in target.keys():
-            %if key in target.keys() and key not in ('imagename', 'phasecenter', 'cell', 'imsize', 'field', 'heuristics'):
+            %if key in target.keys() and key not in ('imagename', 'phasecenter', 'cell', 'imsize', 'field', 'heuristics', 'vis', 'is_per_eb', 'antenna'):
                 <tr>
                     <td><strong>${key}</strong></td>
                     %if key == 'stokes' and result[0].img_mode == 'VLASS-SE-CUBE':
