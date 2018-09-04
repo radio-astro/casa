@@ -603,7 +603,7 @@ def set_miscinfo(name, spw=None, field=None, type=None, iter=None, multiterm=Non
     """
     if name != '':
         if multiterm:
-            if name.find('.image.pbcor') != -1:
+            if name.find('.image.pbcor') != -1 and type == 'pbcorimage':
                 imagename = name.replace('.image.pbcor', '.image.tt0.pbcor')
             else:
                 imagename = '%s.tt0' % name
