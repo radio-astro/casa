@@ -301,3 +301,10 @@ class ImageParamsHeuristicsALMA(ImageParamsHeuristics):
     def nterms(self):
 
         return 2
+
+    def mosweight(self, intent, field):
+
+        if self.gridder(intent, field) == 'mosaic':
+            return True
+        else:
+            return False

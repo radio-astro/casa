@@ -24,15 +24,19 @@ class FindContInputs(vdp.StandardInputs):
 
     @vdp.VisDependentProperty(null_input=['', None, {}])
     def target_list(self):
+        # Note that the deepcopy is necessary to avoid changing the
+        # context's clean_list inadvertently when removing the heuristics
+        # objects from the inputs' clean_list.
         return copy.deepcopy(self.context.clean_list_pending)
 
-    def __init__(self, context, output_dir=None, vis=None, target_list=None, parallel=None):
+    def __init__(self, context, output_dir=None, vis=None, target_list=None, mosweight=None, parallel=None):
         super(FindContInputs, self).__init__()
         self.context = context
         self.output_dir = output_dir
         self.vis = vis
 
         self.target_list = target_list
+        self.mosweight = mosweight
         self.parallel = parallel
 
 
@@ -108,6 +112,12 @@ class FindCont(basetask.StandardTaskTemplate):
                     # Determine the gridder mode
                     image_heuristics = target['heuristics']
                     gridder = image_heuristics.gridder(target['intent'], target['field'])
+                    if inputs.mosweight not in (None,):
+                        mosweight = inputs.mosweight
+                    elif target['mosweight'] not in (None,):
+                        mosweight = target['mosweight']
+                    else:
+                        mosweight = image_heuristics.mosweight(target['intent'], target['field'])
 
                     # Remove MSs that do not contain data for the given field(s)
                     scanidlist, visindexlist = image_heuristics.get_scanidlist(inputs.vis, target['field'],
@@ -220,16 +230,22 @@ class FindCont(basetask.StandardTaskTemplate):
                     else:
                         antenna = None
 
+                    if target['usepointing'] not in (None,):
+                        usepointing = target['usepointing']
+                    else:
+                        usepointing = None
+
                     job = casa_tasks.tclean(vis=vislist, imagename=findcont_basename, datacolumn=datacolumn,
                                             antenna=antenna, spw=real_spwsel,
                                             intent=utils.to_CASA_intent(inputs.ms[0], target['intent']),
                                             field=target['field'], start=start, width=width, nchan=nchan,
                                             outframe='LSRK', scan=scanidlist, specmode='cube', gridder=gridder,
+                                            mosweight=mosweight,
                                             pblimit=0.2, niter=0, threshold='0mJy', deconvolver='hogbom',
                                             interactive=False, imsize=target['imsize'], cell=target['cell'],
                                             phasecenter=phasecenter, stokes='I', weighting='briggs',
                                             robust=robust, uvtaper=uvtaper, npixels=0, restoration=False,
-                                            restoringbeam=[], pbcor=False,
+                                            restoringbeam=[], pbcor=False, usepointing=usepointing,
                                             savemodel='none', chanchunks=chanchunks, parallel=parallel)
                     self._executor.execute(job)
 

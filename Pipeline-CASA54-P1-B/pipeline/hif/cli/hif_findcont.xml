@@ -22,6 +22,11 @@ Find continuum frequency ranges for a list of specified targets.
     <value>{}</value>
   </param>
 
+  <param type="bool" name="mosweight">
+    <description>Mosaic weighting</description>
+    <value>None</value>
+  </param>
+
   <param type="string" name="parallel">
     <description>Compute dirty images using MPI cluster</description>
     <value>automatic</value>
@@ -108,6 +113,12 @@ vis -- The list of input MeasurementSets. Defaults to the list of MeasurementSet
     example: vis='ngc5921.ms'
              vis=['ngc5921a.ms', ngc5921b.ms', 'ngc5921c.ms']
     default: use all MeasurementSets in the context 
+
+target_list -- Dictionary specifying targets to be imaged; blank will read list from context
+
+mosweight -- Mosaic weighting
+             default=None
+             Optiones: False, True
 
 parallel -- use multiple CPU nodes to compute dirty images
     default: \'automatic\'

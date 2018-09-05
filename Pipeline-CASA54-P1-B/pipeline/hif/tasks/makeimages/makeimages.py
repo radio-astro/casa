@@ -48,7 +48,8 @@ class MakeImagesInputs(vdp.StandardInputs):
                  hm_lownoisethreshold=None, hm_negativethreshold=None, hm_minbeamfrac=None, hm_growiterations=None,
                  hm_dogrowprune=None, hm_minpercentchange=None,
                  hm_cleaning=None, tlimit=None, masklimit=None, maxncleans=None,
-                 calcsb=None, cleancontranges=None, parallel=None,
+                 cleancontranges=None, calcsb=None, mosweight=None,
+                 parallel=None,
                  # Extra parameters
                  weighting=None):
         self.context = context
@@ -72,6 +73,7 @@ class MakeImagesInputs(vdp.StandardInputs):
         self.maxncleans = maxncleans
         self.cleancontranges = cleancontranges
         self.calcsb = calcsb
+        self.mosweight = mosweight
         self.parallel = parallel
 
 
@@ -320,6 +322,11 @@ class CleanTaskFactory(object):
 
         if target['is_per_eb']:
             task_args['is_per_eb'] = target['is_per_eb']
+
+        if inputs.mosweight is None:
+            task_args['mosweight'] = target['mosweight']
+        else:
+            task_args['mosweight'] = inputs.mosweight
 
         return task_args
 

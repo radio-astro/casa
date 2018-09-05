@@ -38,5 +38,7 @@ class CleanTarget(dict):
          # imaging per EB for ALMA
          self['vis'] = None             # list of strings
          self['is_per_eb'] = None       # boolean
+         self['usepointing'] = None     # boolean
+         self['mosweight'] = None       # boolean
 
          dict.__init__(self, *args, **kwargs)

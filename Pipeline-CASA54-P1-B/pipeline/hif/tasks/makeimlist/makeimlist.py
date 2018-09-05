@@ -558,6 +558,8 @@ class MakeImList(basetask.StandardTaskTemplate):
                     else:
                         imagenames[(field_intent,spwspec)] = inputs.imagename
 
+            usepointing = self.heuristics.usepointing()
+
             # now construct the list of imaging command parameter lists that must
             # be run to obtain the required images
 
@@ -565,6 +567,7 @@ class MakeImList(basetask.StandardTaskTemplate):
             have_targets[','.join(vislist)] = len(field_intent_list) > 0
 
             for field_intent in field_intent_list:
+                mosweight = self.heuristics.mosweight(field_intent[1], field_intent[0])
                 for spwspec in spwlist:
                     spwspec_ok = True
                     new_spwspec = []
@@ -654,7 +657,9 @@ class MakeImList(basetask.StandardTaskTemplate):
                             stokes='I',
                             heuristics=target_heuristics,
                             vis=filtered_vislist if inputs.per_eb or any_non_imaging_ms else None,
-                            is_per_eb=inputs.per_eb if inputs.per_eb else None
+                            is_per_eb=inputs.per_eb if inputs.per_eb else None,
+                            usepointing=usepointing,
+                            mosweight=mosweight
                         )
 
                         result.add_target(target)

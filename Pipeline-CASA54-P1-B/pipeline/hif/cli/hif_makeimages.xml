@@ -113,6 +113,11 @@ Compute clean results from a list of specified targets.
     <value>False</value>
   </param>
 
+  <param type="bool" name="mosweight">
+    <description>Mosaic weighting</description>
+    <value>None</value>
+  </param>
+
   <param type="string" name="parallel">
     <description>Clean images using MPI cluster</description>
     <value>automatic</value>
@@ -265,8 +270,12 @@ cleancontranges -- Clean continuum frequency ranges in cubes
                    Options: False, True
 
 calcsb -- Force (re-)calculation of sensitivities and beams
-            default=False
-            Options: False, True
+          default=False
+          Options: False, True
+
+mosweight -- Mosaic weighting
+             default=None
+             Optiones: False, True
 
 parallel -- use multiple CPU nodes to clean images
     default: \'automatic\'

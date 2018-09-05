@@ -42,6 +42,7 @@ class CleanBaseInputs(vdp.StandardInputs):
     hm_negativethreshold = vdp.VisDependentProperty(default=-999.0)
     hm_noisethreshold = vdp.VisDependentProperty(default=-999.0)
     hm_sidelobethreshold = vdp.VisDependentProperty(default=-999.0)
+    mosweight = vdp.VisDependentProperty(default=None)
     nchan = vdp.VisDependentProperty(default=-1)
     niter = vdp.VisDependentProperty(default=5000)
     nterms = vdp.VisDependentProperty(default=None)
@@ -58,6 +59,7 @@ class CleanBaseInputs(vdp.StandardInputs):
     start = vdp.VisDependentProperty(default='')
     stokes = vdp.VisDependentProperty(default='I')
     threshold = vdp.VisDependentProperty(default=None)
+    usepointing = vdp.VisDependentProperty(default=None)
     uvrange = vdp.VisDependentProperty(default='')
     uvtaper = vdp.VisDependentProperty(default=None)
     weighting = vdp.VisDependentProperty(default='briggs')
@@ -105,6 +107,7 @@ class CleanBaseInputs(vdp.StandardInputs):
                  hm_negativethreshold=None, hm_minbeamfrac=None, hm_growiterations=None, hm_dogrowprune=None,
                  hm_minpercentchange=None, pblimit=None, niter=None,
                  threshold=None, sensitivity=None, reffreq=None, conjbeams=None, is_per_eb=None, antenna=None,
+                 usepointing=None, mosweight=None,
                  result=None, parallel=None, heuristics=None):
         self.context = context
         self.output_dir = output_dir
@@ -160,6 +163,8 @@ class CleanBaseInputs(vdp.StandardInputs):
         self.parallel = parallel
         self.is_per_eb = is_per_eb
         self.antenna = antenna
+        self.usepointing = usepointing
+        self.mosweight = mosweight
         self.heuristics = heuristics
 
 
@@ -439,6 +444,20 @@ class CleanBase(basetask.StandardTaskTemplate):
             conjbeams = inputs.heuristics.conjbeams()
             if conjbeams is not None:
                 tclean_job_parameters['conjbeams'] = conjbeams
+
+        if inputs.usepointing is not None:
+            tclean_job_parameters['usepointing'] = inputs.usepointing
+        else:
+            usepointing = inputs.heuristics.usepointing()
+            if usepointing is not None:
+                tclean_job_parameters['usepointing'] = usepointing
+
+        if inputs.mosweight is not None:
+            tclean_job_parameters['mosweight'] = inputs.mosweight
+        else:
+            mosweight = inputs.heuristics.mosweight(inputs.intent, inputs.field)
+            if mosweight is not None:
+                tclean_job_parameters['mosweight'] = mosweight
 
         # Up until CASA 5.2 it is necessary to run tclean calls with
         # restoringbeam == 'common' in two steps in HPC mode (CAS-10849).
