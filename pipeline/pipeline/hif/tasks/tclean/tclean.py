@@ -31,9 +31,11 @@ class TcleanInputs(cleanbase.CleanBaseInputs):
     cleancontranges = vdp.VisDependentProperty(default=False)
     hm_cleaning = vdp.VisDependentProperty(default='rms')
     masklimit = vdp.VisDependentProperty(default=4.0)
+    mosweight = vdp.VisDependentProperty(default=None)
     nsigma = vdp.VisDependentProperty(default=None)
     reffreq = vdp.VisDependentProperty(default=None)
     tlimit = vdp.VisDependentProperty(default=2.0)
+    usepointing = vdp.VisDependentProperty(default=None)
     weighting = vdp.VisDependentProperty(default='briggs')
 
     # override CleanBaseInputs default value of 'auto'
@@ -112,7 +114,8 @@ class TcleanInputs(cleanbase.CleanBaseInputs):
                  calcsb=None, cleancontranges=None, parallel=None,
                  # Extra parameters not in the CLI task interface
                  weighting=None, robust=None, uvtaper=None, scales=None, nsigma=None, cycleniter=None, cyclefactor=None,
-                 sensitivity=None, reffreq=None, conjbeams=None, is_per_eb=None, antenna=None,
+                 sensitivity=None, reffreq=None, conjbeams=None, is_per_eb=None, antenna=None, usepointing=None,
+                 mosweight=None,
                  # End of extra parameters
                  heuristics=None):
         super(TcleanInputs, self).__init__(context, output_dir=output_dir, vis=vis, imagename=imagename, antenna=antenna,
@@ -130,6 +133,7 @@ class TcleanInputs(cleanbase.CleanBaseInputs):
                                            hm_growiterations=hm_growiterations, hm_dogrowprune=hm_dogrowprune,
                                            hm_minpercentchange=hm_minpercentchange, niter=niter, threshold=threshold,
                                            sensitivity=sensitivity, conjbeams=conjbeams, is_per_eb=is_per_eb,
+                                           usepointing=usepointing, mosweight=mosweight,
                                            parallel=parallel, heuristics=heuristics)
 
         self.calcsb = calcsb
@@ -151,6 +155,8 @@ class TcleanInputs(cleanbase.CleanBaseInputs):
 
         self.is_per_eb = is_per_eb
         self.antenna = antenna
+        self.usepointing = usepointing
+        self.mosweight = mosweight
 
 
 # tell the infrastructure to give us mstransformed data when possible by

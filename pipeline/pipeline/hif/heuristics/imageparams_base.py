@@ -423,6 +423,7 @@ class ImageParamsHeuristics(object):
                         antenna_ids = self.antenna_ids(intent, valid_vis_list)
                         antenna = [','.join(map(str, antenna_ids.get(os.path.basename(v), ''))) for v in valid_vis_list]
                         gridder = self.gridder(intent, field)
+                        mosweight = self.mosweight(intent, field)
                         paramList = ImagerParameters(msname=valid_vis_list,
                                                      antenna=antenna,
                                                      spw=map(str, valid_real_spwid_list),
@@ -431,6 +432,7 @@ class ImageParamsHeuristics(object):
                                                      imsize=cleanhelper.cleanhelper.getOptimumSize(int(2.0*largest_primary_beam_size/cellv)),
                                                      cell='%.2g%s' % (cellv, cellu),
                                                      gridder=gridder,
+                                                     mosweight=mosweight,
                                                      weighting='briggs',
                                                      robust=robust,
                                                      uvtaper=uvtaper,
@@ -1687,3 +1689,17 @@ class ImageParamsHeuristics(object):
             except:
                 pass
 
+    def usepointing(self):
+
+        '''tclean flag to use pointing table.'''
+
+        # Currently ALMA and VLA do not want to use the table (CAS-11840).
+        return False
+
+    def mosweight(self, intent, field):
+
+        '''tclean flag to use mosaic weighting.'''
+
+        # Currently only ALMA has decided to use this flag (CAS-11840). So
+        # the default is set to False here.
+        return False
