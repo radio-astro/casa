@@ -136,12 +136,12 @@ def get_arc_formatter(precision):
     Presents a value of equatorial arc in user-friendly units.
     """
     s = '{0:.' + str(precision) + 'f}'
-    f = unitformat.UnitFormat()
-    f.addUnitOfMagnitude(1., s + '$\degree$')
-    f.addUnitOfMagnitude(1. / 60, s + '$^\prime$')
-    f.addUnitOfMagnitude(1. / 3600, s + '$^{{\prime\prime}}$')
-    f.addUnitOfMagnitude(1. / 3600000, s + ' mas')
-    f.addUnitOfMagnitude(1. / 3600000000, s + ' $\mu$as')
+    f = unitformat.UnitFormat(prefer_integers=True)
+    f.addUnitOfMagnitude(1. / 10000006, s + ' $\mu$as')
+    f.addUnitOfMagnitude(1. / 1000, s + ' mas')
+    f.addUnitOfMagnitude(1., s + '$^{{\prime\prime}}$')
+    f.addUnitOfMagnitude(60., s + '$^\prime$')
+    f.addUnitOfMagnitude(3600., s + '$\degree$')
     return f
 
 
@@ -152,7 +152,7 @@ AXES_FORMATTER = get_arc_formatter(0)
 def label_format(x, _):
     """Labels plot axes for plots specified in units of arcseconds"""
     # x is given in arcsecs, _ is tick position
-    return AXES_FORMATTER.format(float(x) / 3600)
+    return AXES_FORMATTER.format(x)
 
 
 def get_dish_colour(dish_diameter, field=None):

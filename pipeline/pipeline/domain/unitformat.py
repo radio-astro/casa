@@ -32,15 +32,16 @@ class UnitOfMagnitude(object):
 
 
 class UnitFormat(object):
-    def __init__(self):
+    def __init__(self, prefer_integers=False):
         self.units = list()
+        self.prefer_integers = prefer_integers
 
     def addUnitOfMagnitude(self, magnitude, format, html=None):
-        '''
+        """
         Adds a unit to this format. For example, to add support for centimetres
         to a UnitFormat of metric length, use magnitude of 0.01d (ie 1/100th of
         a metre) and number format '###0.# cm'.
-        '''
+        """
         if html is None:
             html = format
         bisect.insort(self.units, UnitOfMagnitude(magnitude, format, html))
@@ -63,19 +64,47 @@ class UnitFormat(object):
         # negative
         as_decimal = abs(decimal.Decimal(str(number)))
 
+        # assume all unit types have one unit with a magnitude of 1, which
+        # is the case so far.
+        default_units = [u for u in self.units if u.magnitude == 1][0]
+
         # a value of 0 has no best unit. So, return the default unit instead.
         if as_decimal == 0:
-            # assume all unit types have one unit with a magnitude of 1, which 
-            # is the case so far. 
-            return [u for u in self.units if u.magnitude == 1][0]
-        
+            return default_units
+
         # find the largest unit not bigger than this value
+        best_unit = default_units
         for unit in self.units:
             if as_decimal >= unit.magnitude:
                 best_unit = unit
             else:
                 break
-        return best_unit
+        else:
+            # no better units found. return the default units.
+            return default_units
+
+        if not self.prefer_integers:
+            return best_unit
+
+        # it's preferable to print 100" rather than 1.67'. The next bit of
+        # code tests whether the number is an integer when expressed in the
+        # next lowest unit. If the number is a fraction in the best units
+        # but an integer in the next best units, return the next best units
+        # instead.
+        try:
+            next_best_unit = self.units[self.units.index(best_unit) - 1]
+        except IndexError:
+            return best_unit
+
+        adjusted_best = best_unit.adjust(number)
+        adjusted_next = next_best_unit.adjust(number)
+        no_fraction_best = (adjusted_best % 1) == 0
+        no_fraction_next = (adjusted_next % 1) == 0
+
+        if not no_fraction_best and no_fraction_next:
+            return next_best_unit
+        else:
+            return best_unit
 
 
 file_size = UnitFormat()
