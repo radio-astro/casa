@@ -168,7 +168,7 @@ class syspowerPerAntennaChart(object):
             plotrange = []
 
             if self.yaxis == 'spgain':
-                plotrange = [0, 0, 0, 1.0]
+                plotrange = [0, 0, 0, 0.1]
             if self.yaxis == 'tsys':
                 plotrange = [0, 0, 0, 100]
                 spws = m.get_all_spectral_windows()
