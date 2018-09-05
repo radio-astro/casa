@@ -149,9 +149,10 @@ class T2_4MDetailspriorcalsRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
             # stage directory
             if result.tecmaps_result:
                 original_tec_plotfile = result.tecmaps_result.tec_plotfile
-                tec_plotfile = os.path.join(context.report_dir,
-                                            'stage%s' % result.stage_number, original_tec_plotfile)
-                os.rename(original_tec_plotfile, tec_plotfile)
+                move_tec_plotfile = os.path.join(context.report_dir,
+                                                 'stage%s' % result.stage_number, original_tec_plotfile)
+                tec_plotfile = os.path.join('stage%s' % result.stage_number, original_tec_plotfile)
+                os.rename(original_tec_plotfile, move_tec_plotfile)
 
         ctx.update({'opacity_plots': opacity_plots,
                     'spw': spw,
