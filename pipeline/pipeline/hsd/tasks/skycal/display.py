@@ -173,8 +173,8 @@ class SingleDishPlotmsLeaf(object):
         prefix = '{caltable}-{y}_vs_{x}-{field}-{ant}-spw{spw}'.format(
             caltable=os.path.basename(self.caltable), y=self.yaxis, x=self.xaxis, field=self.field_name, ant=self.antenna_selection, spw=self.spw)
 
-        title = '{caltable} \nField "{field}" Antenna {ant} Spw {spw}'.format(
-            caltable=os.path.basename(self.caltable), field=self.field_name, ant=self.antenna_selection, spw=self.spw)
+        title = '{caltable} \nField "{field}" Antenna {ant} Spw {spw} \ncoloraxis={caxis}'.format(
+            caltable=os.path.basename(self.caltable), field=self.field_name, ant=self.antenna_selection, spw=self.spw, caxis=self.coloraxis)
 
         figfile = os.path.join(self._figroot, '{prefix}.png'.format(prefix=prefix))
 
