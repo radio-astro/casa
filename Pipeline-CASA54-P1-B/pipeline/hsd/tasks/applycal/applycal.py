@@ -7,7 +7,7 @@ from pipeline.domain.datatable import DataTableImpl as DataTable
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.vdp as vdp
 import pipeline.infrastructure.sessionutils as sessionutils
-from pipeline.h.tasks.applycal.applycal import Applycal, ApplycalInputs
+from pipeline.h.tasks.applycal.applycal import Applycal, ApplycalInputs, ApplycalResults
 from pipeline.infrastructure import task_registry
 
 LOG = infrastructure.get_logger(__name__)
@@ -26,6 +26,10 @@ class SDApplycalInputs(ApplycalInputs):
                                                antenna=antenna, intent=intent, parang=parang, applymode=applymode,
                                                flagbackup=flagbackup, flagsum=flagsum, flagdetailedsum=flagdetailedsum)
 
+
+class SDApplycalResults(ApplycalResults):
+    def __init__(self, applied=None):
+        super(SDApplycalResults, self).__init__(applied)
 
 #@task_registry.set_equivalent_casa_task('hsd_applycal')
 #@task_registry.set_casa_commands_comment('Calibrations are applied to the data. Final flagging summaries are computed')
@@ -83,8 +87,13 @@ class SDApplycal(Applycal):
 
         # here, full export is necessary
         datatable.exportdata(minimal=False)
+        
+        sdresults = SDApplycalResults(applied=results.applied)
+        sdresults.summaries = results.summaries
+        if hasattr(results, 'flagsummary'):
+            sdresults.flagsummary = results.flagsummary
 
-        return results
+        return sdresults
     
 
 ### Tier-0 parallelization
