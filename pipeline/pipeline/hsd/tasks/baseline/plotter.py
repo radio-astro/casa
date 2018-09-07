@@ -751,8 +751,10 @@ def get_lines2(infile, datatable, num_ra, rowlist, polids, rowmap=None):
             for dt_id in ids:
                 row = rowmap[datatable.getcell('ROW', dt_id)]
                 flag = tb.getcell('FLAG', row)
-                ra = datatable.getcell('RA', dt_id)
-                dec = datatable.getcell('DEC', dt_id)
+#                ra = datatable.getcell('RA', dt_id)
+#                dec = datatable.getcell('DEC', dt_id)
+                ra = datatable.getcell('SHIFT_RA', dt_id)
+                dec = datatable.getcell('SHIFT_DEC', dt_id)
                 sqdist = (ra - ref_ra) * (ra - ref_ra) + (dec - ref_dec) * (dec - ref_dec)
                 for ipol in xrange(num_pol):
                     if numpy.all(flag[ipol] == True):

@@ -368,8 +368,10 @@ class ValidateLineRaster(basetask.StandardTaskTemplate):
                 vis, j = indexer.serial2perms(i)
                 datatable = datatable_dict[vis]
                 yield datatable.getcell(colname, j)
-        ras = numpy.fromiter(_g('RA'), dtype=numpy.float64)
-        decs = numpy.fromiter(_g('DEC'), dtype=numpy.float64)
+#        ras = numpy.fromiter(_g('RA'), dtype=numpy.float64)
+#        decs = numpy.fromiter(_g('DEC'), dtype=numpy.float64)
+        ras = numpy.fromiter(_g('SHIFT_RA'), dtype=numpy.float64)
+        decs = numpy.fromiter(_g('SHIFT_DEC'), dtype=numpy.float64)
         PosList = numpy.asarray([ras, decs])
 #         PosList = numpy.array([numpy.take(datatable.getcol('RA'),index_list),
 #                                numpy.take(datatable.getcol('DEC'),index_list)])

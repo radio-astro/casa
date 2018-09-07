@@ -115,8 +115,10 @@ class SDSimpleGridding(basetask.StandardTaskTemplate):
                 vis, j = indexer.serial2perms(i)
                 datatable = datatable_dict[vis]
                 yield datatable.getcell(colname, j)
-        ras = numpy.fromiter(_g('RA'), dtype=numpy.float64)
-        decs = numpy.fromiter(_g('DEC'), dtype=numpy.float64)
+#        ras = numpy.fromiter(_g('RA'), dtype=numpy.float64)
+#        decs = numpy.fromiter(_g('DEC'), dtype=numpy.float64)
+        ras = numpy.fromiter(_g('SHIFT_RA'), dtype=numpy.float64)
+        decs = numpy.fromiter(_g('SHIFT_DEC'), dtype=numpy.float64)
         
         # Curvature has not been taken account
         dec_corr = 1.0 / cos(decs[0] / 180.0 * 3.141592653)

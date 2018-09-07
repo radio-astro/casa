@@ -78,16 +78,20 @@ def ALMAImageCoordinateUtil(context, ms_names, ant_list, spw_list, fieldid_list)
         datatable_name = os.path.join(context.observing_run.ms_datatable_name, os.path.basename(vis))
         datatable = DataTable(name=datatable_name, readonly=True)
         
-        if (datatable.getcolkeyword('RA', 'UNIT') != 'deg') or \
-            (datatable.getcolkeyword('DEC', 'UNIT') != 'deg'):
+#        if (datatable.getcolkeyword('RA', 'UNIT') != 'deg') or \
+#            (datatable.getcolkeyword('DEC', 'UNIT') != 'deg'):
+        if (datatable.getcolkeyword('SHIFT_RA', 'UNIT') != 'deg') or \
+            (datatable.getcolkeyword('SHIFT_DEC', 'UNIT') != 'deg'):
             raise RuntimeError, "Found unexpected unit of RA/DEC in DataTable. It should be in 'deg'"
         
         index_list = common.get_index_list_for_ms(datatable, [vis], [ant_id], [field_id], [spw_id])
         
         index_list.sort()
         
-        _ra = datatable.getcol('RA').take(index_list)
-        _dec = datatable.getcol('DEC').take(index_list)
+#        _ra = datatable.getcol('RA').take(index_list)
+#        _dec = datatable.getcol('DEC').take(index_list)
+        _ra = datatable.getcol('SHIFT_RA').take(index_list)
+        _dec = datatable.getcol('SHIFT_DEC').take(index_list)
         
         ra.extend(_ra)
         dec.extend(_dec)
