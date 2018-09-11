@@ -200,7 +200,7 @@
 
 
 <example>
-The hifv_flagdata data performs basic flagging operations on a list of
+The hifv_flagdata task performs basic flagging operations on a list of
 MeasurementSets.
 
 
@@ -263,7 +263,7 @@ fileonline -- File containing the online flags. These are computed by the
 template -- Apply flagging templates
     default: False
 
-filetemplate -- The name of an text file that contains the flagging template
+filetemplate -- The name of a text file that contains the flagging template
     for RFI, birdies, telluric lines, etc.  If the template flags files
     is undefined a name of the form 'msname.flagtemplate.txt' is assumed.
     default: ''
@@ -297,7 +297,7 @@ results -- If pipeline mode is 'getinputs' then None is returned. Otherwise
 
 Description
 
-The hif_flagdata data performs basic flagging operations on a list of measurements including:
+The hifv_flagdata task performs basic flagging operations on a list of measurements including:
 
 o autocorrelation data flagging
 o shadowed antenna data flagging

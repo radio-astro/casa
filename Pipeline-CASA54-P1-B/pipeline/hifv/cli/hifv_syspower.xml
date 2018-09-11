@@ -75,12 +75,6 @@ Keyword arguments:
 
 ---- pipeline parameter arguments which can be set in any pipeline mode
 
-vis -- List of visisbility  data files. These may be ASDMs, tar files of ASDMs,
-   MSs, or tar files of MSs, If ASDM files are specified, they will be
-   converted  to MS format.
-   default: []
-   example: vis=['X227.ms', 'asdms.tar.gz']
-
 clip_sp_template -- clipping range
     default: [0.7, 1.2]
 
@@ -95,6 +89,11 @@ pipelinemode -- The pipeline operating mode. In 'automatic' mode the pipeline
 ---- pipeline context defined parameter argument which can be set only in
 'interactive mode'
 
+vis -- List of visibility  data files. These may be ASDMs, tar files of ASDMs,
+   MSs, or tar files of MSs, If ASDM files are specified, they will be
+   converted  to MS format.
+   default: []
+   example: vis=['X227.ms', 'asdms.tar.gz']
 
 --- pipeline task execution modes
 

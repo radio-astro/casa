@@ -5,7 +5,7 @@
 	xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <task type="function" name="hifv_semiFinalBPdcals" category="pipeline">
-<shortdescription>Runs a second quick calibration to set up for heuristic flagging flagging</shortdescription>
+<shortdescription>Runs a second quick calibration to set up for heuristic flagging</shortdescription>
 <description>
 </description>
 <input>
@@ -82,16 +82,12 @@ Keyword arguments:
 
 ---- pipeline parameter arguments which can be set in any pipeline mode
 
-vis -- List of visibility data files. These may be ASDMs, tar files of ASDMs,
-   MSs, or tar files of MSs, If ASDM files are specified, they will be
-   converted  to MS format.
-   default: []
-   example: vis=['X227.ms', 'asdms.tar.gz']
-
 refantignore -- string list to be ignored as reference antennas.
     default: ''
     Example:  refantignore='ea02,ea03'
 
+weakbp -- Activate the weak bandpass calibrator heuristics
+   default: True
 
 pipelinemode -- The pipeline operating mode. In 'automatic' mode the pipeline
    determines the values of all context defined pipeline inputs
@@ -104,6 +100,11 @@ pipelinemode -- The pipeline operating mode. In 'automatic' mode the pipeline
 ---- pipeline context defined parameter argument which can be set only in
 'interactive mode'
 
+vis -- List of visibility data files. These may be ASDMs, tar files of ASDMs,
+   MSs, or tar files of MSs, If ASDM files are specified, they will be
+   converted  to MS format.
+   default: []
+   example: vis=['X227.ms', 'asdms.tar.gz']
 
 --- pipeline task execution modes
 
@@ -113,9 +114,6 @@ dryrun -- Run the commands (True) or generate the commands to be run but
 
 acceptresults -- Add the results of the task to the pipeline context (True) or
    reject them (False).
-   default: True
-
-weakbp -- Activate the weak bandpass calibrator heuristics
    default: True
 
 Output:
