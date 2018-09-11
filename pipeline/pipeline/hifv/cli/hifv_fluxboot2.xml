@@ -78,7 +78,7 @@
 
 
 <example>
-The hifv_fluxboot task performs the flux density bootstrapping stage of the VLA pipeline.
+The hifv_fluxboot2 task performs the flux density bootstrapping stage of the VLA pipeline.
 
 Keyword arguments:
 

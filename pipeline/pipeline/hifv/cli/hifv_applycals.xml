@@ -180,7 +180,7 @@ field -- A string containing the list of field names or field ids to which
     default: ''
     example: '3C279', '3C279, M82'
 
-intent -- A string containing a the list of intents against which the
+intent -- A string containing the list of intents against which the
     selected fields will be matched. Defaults to all supported intents
     in the pipeline context.
     default: ''
@@ -212,7 +212,7 @@ results -- If pipeline mode is 'getinputs' then None is returned. Otherwise
 
 Description
 
-hivf_applycals applies the precomputed calibration tables stored in the pipeline
+hifv_applycals applies the precomputed calibration tables stored in the pipeline
 context to the set of visibility files using predetermined field and
 spectral window maps and default values for the interpolation schemes.
 

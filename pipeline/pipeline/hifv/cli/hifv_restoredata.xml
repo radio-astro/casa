@@ -137,6 +137,9 @@ products_dir -- Name of the data products directory. Currently not
    default: '../products'
    example: products_dir='myproductspath'
 
+copytoraw -- Copy calibration and flagging tables to rawdata directory
+   default: True
+
 rawdata_dir -- Name of the rawdata subdirectory.
    default: '../rawdata'
    example: rawdata_dir='myrawdatapath'
@@ -152,6 +155,10 @@ bdfflags -- Set the BDF flags
 ocorr_mode -- Set ocorr_mode
    default: 'ca'
    example: ocorr_mode='ca'
+
+gainmap -- If True, map gainfields to a particular list of scans when
+   applying calibration tables
+   default: False
 
 asis -- Set list of tables to import as is
    default: ''
@@ -179,7 +186,7 @@ The hifv_restoredata restores flagged and calibrated data from archived
 ASDMs and pipeline flagging and calibration data products. Pending archive
 retrieval support hifv_restoredata assumes that the required products
 are available in the rawdata_dir in the format produced by the
-h_exportdata task.
+hifv_exportdata task.
 
 hifv_restoredata assumes that the following entities are available in the raw
 data directory
@@ -193,7 +200,7 @@ o for each ASDM in the input list
    o a compressed tar file containing the caltables for the parent session,
      e.g. uid___A001_X74_X29.session_3.caltables.tar.gz
 
-h_restore data performs the following operations
+hifv_restoredata performs the following operations
 
 o imports the ASDM(s))
 o removes the default MS.flagversions directory created by the filler

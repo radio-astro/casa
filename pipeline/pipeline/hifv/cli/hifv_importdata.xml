@@ -45,7 +45,7 @@
     </param>
 
     <param type="string" name="createmms">
-        <description>Create a MMS</description>
+        <description>Create an MMS</description>
     <value>automatic</value>
         <allowed kind="enum">
             <value>automatic</value>
@@ -110,7 +110,7 @@ Keyword arguments:
 ---- pipeline parameter arguments which can be set in any pipeline mode
 
 vis -- List of visibility data files. These may be ASDMs, tar files of ASDMs,
-   MSs, or tar files of MSs, If ASDM files are specified, they will be
+   MSes, or tar files of MSs, If ASDM files are specified, they will be
    converted  to MS format.
    default: []
    example: vis=['X227.ms', 'asdms.tar.gz']
@@ -129,13 +129,27 @@ pipelinemode -- The pipeline operating mode. In 'automatic' mode the pipeline
    the task.
    default: 'automatic'.
 
-ocorr_mode -- Default set to CROSS_ONLY (co)
+createmms -- Create a multi-MeasurementSet ('true') ready for parallel
+   processing, or a standard MeasurementSet ('false'). The default setting
+   ('automatic') creates an MMS if running in a cluster environment.
+   default: automatic
 
----- pipeline context defined parameter argument which can be set only in
+ocorr_mode -- Read in cross- and auto-correlation data(ca), cross-
+   correlation data only (co), or autocorrelation data only (ao).
+   default: co
+ 
+---- pipeline context defined parameter argument which can be set only in 
 'interactive mode'
 
-overwrite -- Overwrite existing MSs on output.
-   default: True
+asis -- SDM tables to convert as is
+   default: 'Receiver CalAtmosphere'
+   example: 'Receiver', ''
+
+overwrite -- Overwrite existing MSes on output.
+   default: False
+
+nocopy -- When importing an MS, disable copying of the MS to the working directory
+   default: False
 
 --- pipeline task execution modes
 
