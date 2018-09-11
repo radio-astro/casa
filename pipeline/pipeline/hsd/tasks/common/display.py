@@ -129,6 +129,14 @@ class SingleDishDisplayInputs(object):
     def __init__(self, context, result):
         self.context = context
         self.result = result
+        
+    @property
+    def isnro(self):
+        arrays = set([ms.antenna_array.name for ms in self.context.observing_run.measurement_sets])
+        if len(arrays) != 1:
+            raise RuntimeError('array name is not unique: {}'.format(list(arrays)))
+        
+        return 'NRO' in arrays
 
 
 class SpectralImage(object):

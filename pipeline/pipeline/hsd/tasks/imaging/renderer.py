@@ -71,7 +71,15 @@ class T2_4MDetailsSingleDishImagingRenderer(basetemplates.T2_4MDetailsDefaultRen
 
         for (key, value) in map_types.iteritems():
             plot_list = self._plots_per_field_with_type(plots, value['type'])
-            LOG.debug('plot_list=%s'%((plot_list)));
+            LOG.debug('plot_list=%s'%((plot_list)))
+            
+            # plot_list can be empty
+            # typical case is spectral map for NRO
+            if len(plot_list) == 0:
+                ctx.update({'%s_subpage' % key: None,
+                            '%s_plots' % key: None})
+                continue
+            
             flattened = []
             for inner in plot_list.values():
                 for plot in inner:

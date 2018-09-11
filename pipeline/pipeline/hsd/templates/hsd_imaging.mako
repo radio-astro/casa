@@ -179,10 +179,11 @@ It generates an image combined spectral data from whole antenna as well as image
 	                        window ${plot.parameters['spw']}.
 	                    </p>
 	                    
-	                    <h4>Detailed profile map</h4>
-	                    <table border width="100%">
-		                    <tr><th>ANTENNA</th><th colspan="${len(profilemap_entries[field].values()[0])}">POL</th></tr>
-		                    % for (ant, pols) in profilemap_entries[field].iteritems():
+	                    % if profilemap_subpage is not None:
+	                      <h4>Detailed profile map</h4>
+	                      <table border width="100%">
+		                      <tr><th>ANTENNA</th><th colspan="${len(profilemap_entries[field].values()[0])}">POL</th></tr>
+		                      % for (ant, pols) in profilemap_entries[field].iteritems():
 		                        <tr><td>${ant}</td>
 		                        <td align="center">
 		                        % for pol in pols:
@@ -197,8 +198,9 @@ It generates an image combined spectral data from whole antenna as well as image
 		                        % endfor
 		                        </td>
 		                        </tr>
-		                    % endfor
-	                    </table>
+		                      % endfor
+	                      </table>
+	                    % endif
 	                </div>
 	            </div>
 	        </div>
@@ -209,7 +211,7 @@ It generates an image combined spectral data from whole antenna as well as image
 %endif
 
 % for plots in plots_list:
-    % if plots['subpage'] == {}:
+    % if plots['subpage'] == {} or plots['subpage'] is None:
         <% continue %>
     % endif
     <h3 id="${plots['title'].replace(" ", "")}" class="jumptarget">${plots['title']}</h3>

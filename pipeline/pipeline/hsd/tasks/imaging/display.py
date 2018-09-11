@@ -1359,8 +1359,10 @@ class SDSpectralImageDisplay(SDImageDisplay):
         worker = SDChannelMapDisplay(self.inputs)
         plot_list.extend(worker.plot())
         t2 = time.time()
-        worker = SDSpectralMapDisplay(self.inputs)
-        plot_list.extend(worker.plot())
+        # skip spectral map (detailed profile map) if the data is NRO
+        if not self.inputs.isnro:
+            worker = SDSpectralMapDisplay(self.inputs)
+            plot_list.extend(worker.plot())
         t3 = time.time()
         worker = SDRmsMapDisplay(self.inputs)
         plot_list.extend(worker.plot())
