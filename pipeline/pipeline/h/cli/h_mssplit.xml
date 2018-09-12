@@ -69,7 +69,7 @@
   </param>
 
   <param type="bool" name="replace">
-    <description>Remove the parent ms and replace with the split ms</description>
+    <description>Remove the parent MS and replace with the split MS</description>
     <value type="bool">True</value>
   </param>
 
@@ -213,16 +213,16 @@ results -- If pipeline mode is 'getinputs' then None is returned. Otherwise
 Description
 
 Create new MeasurementSets for imaging from the corrected column of the input
-MeasurementSet. By default all science target data is copied to the new ms. The new
-MeasurementSet is not re-indexed to the selected data in the new ms will have the
-same source, field, and spw names and ids as it does in the parent ms. 
+MeasurementSet. By default all science target data is copied to the new MS. The new
+MeasurementSet is not re-indexed to the selected data in the new MS will have the
+same source, field, and spw names and ids as it does in the parent MS. 
 
 Issues
 
 TBD
 Examples
 
-1. Create a 4X channel smoothed output ms from the input ms 
+1. Create a 4X channel smoothed output MS from the input MS 
 
    h_mssplit(chanbin=4)
 
