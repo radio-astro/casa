@@ -5,12 +5,12 @@
 	xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <task type="function" name="hsd_exportdata" category="pipeline">
-<shortdescription>Prepare singledish data for export</shortdescription>
+<shortdescription>Prepare single dish data for export</shortdescription>
 <description>
 </description>
 <input>
     <param type="string" name="pprfile" subparam="true">
-    <description>The pipeline processing request(PPR) file to be exported</description>
+    <description>The pipeline processing request (PPR) file to be exported</description>
     <value></value>
     </param>
     
@@ -137,12 +137,12 @@ o a tar file per ASDM containing the final flags version and blparam
 o a tar file containing the file web log
 
 TBD
-o a file containing the line feature table(frequency,width,spatial distribution)
+o a file containing the line feature table(frequency, width, spatial distribution)
 o a file containing the list of identified transitions from line catalogs
 
 Examples
 
-1. Export the pipeline results for a single sessions to the data products
+1. Export the pipeline results for a single session to the data products
 directory
 
     !mkdir ../products

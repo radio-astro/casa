@@ -35,7 +35,7 @@
     </param>
 
     <param type="stringArray" name="infiles" subparam="true">
-        <description>List of input files to be calibrated (default all)</description>
+        <description>List of input files (default all)</description>
         <value></value>
     </param>
 
@@ -129,7 +129,7 @@ field -- Data selection by field names or ids.
    default: '' (all fields)
    example: '*Sgr*,M100'
    
-spw -- Data selection by spw IDs.
+spw -- Data selection by spw ids.
    default: '' (all spws)
    example: '3,4' (generate images for spw 3 and 4)
 

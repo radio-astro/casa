@@ -65,7 +65,7 @@
     </param>
 
     <param type="string" name="createmms">
-        <description>Create a MMS</description>
+        <description>Create an MMS</description>
     <value>false</value>
         <allowed kind="enum">
             <value>automatic</value>
@@ -128,8 +128,8 @@ Keyword arguments:
 ---- pipeline parameter arguments which can be set in any pipeline mode
 
 vis -- List of visibility data files. These may be ASDMs, tar files of ASDMs,
-   MSs, or tar files of MSs, If ASDM files are specified, they will be
-   converted  to MS format.
+   MSes, or tar files of MSes, If ASDM files are specified, they will be
+   converted to MS format.
    default: []
    example: vis=['X227.ms', 'asdms.tar.gz']
 
@@ -158,7 +158,7 @@ process_caldevice -- Ingest the ASDM caldevice table
    default: False
    example: True
 
-overwrite -- Overwrite existing MSs on output.
+overwrite -- Overwrite existing MSes on output.
    default: False
 
 bdfflags -- Apply BDF flags on line
@@ -196,7 +196,7 @@ Examples
 
 2. Load an MS in the current directory into the context.
 
-   hsd_importdata (vis=[uid___A002_X30a93d_X43e.ms])
+   hsd_importdata (vis=['uid___A002_X30a93d_X43e.ms'])
 
 3. Load a tarred ASDM in ../rawdata into the context.
 
@@ -214,7 +214,7 @@ Examples
        acceptresults=False)
    results.accept()
 
-6. Run in  dryrun mode before running for real
+6. Run in dryrun mode before running for real
    results = hsd_importdata (vis=['uid___A002_X30a93d_X43e.ms'], dryrun=True)
    results = hsd_importdata (vis=['uid___A002_X30a93d_X43e.ms'])
 
