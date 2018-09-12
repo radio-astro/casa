@@ -41,14 +41,12 @@ class testBPdcalsQAHandler(pqa.QAPlugin):
 
     @staticmethod
     def _checkKandBsolution(table):
-        for antenna in table.keys():
-            for spw in antenna.keys():
-                for pol in spw.keys():
+        for antenna in table['antspw'].keys():
+            for spw in table['antspw'][antenna].keys():
+                for pol in table['antspw'][antenna][spw].keys():
                     frac = table['antspw'][antenna][spw][pol]['fraction']
                     if frac == 1.0:
-                        LOG.warn(
-                            'Antenna {!s}, spw {!s}, pol {!s} has a fraction of flagged solutions of: !{s}').format(
-                            antenna, spw, pol, frac)
+                        LOG.warn('Antenna {!s}, spw {!s}, pol {!s} has a fraction of flagged solutions of: {!s}'.format(antenna, spw, pol, frac))
 
         return
 
