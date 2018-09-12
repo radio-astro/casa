@@ -17,7 +17,7 @@ Fit the continuum in the UV plane using polynomials.
 	</param>
 
         <param type="stringArray" name="caltable" subparam="true">
-                <description>Name of output mueller matrix calibration table</description>
+                <description>Name of output Mueller matrix calibration table</description>
                 <value></value>
         </param>
 
@@ -176,7 +176,7 @@ field -- The list of field names or field ids for which UV continuum fits are
     example: '3C279', '3C279, M82'
 
 intent -- A string containing a comma delimited list of intents against
-    which the the selected fields are matched.
+    which the selected fields are matched.
     default: '', Defaults to all data with TARGET intent.
     example: 'PHASE'
 

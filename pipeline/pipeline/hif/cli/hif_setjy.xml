@@ -212,7 +212,7 @@ field -- The list of field names or field ids for which the models are
     example: '3C279', '3C279, M82'
 
 intent -- A string containing a comma delimited list of intents against
-    which the the selected fields are matched.  Defaults to all data
+    which the selected fields are matched.  Defaults to all data
     with amplitude intent.
     default: ''
     example: '*AMPLITUDE*'
@@ -248,7 +248,7 @@ Fills the model column with the model visibilities.
 
 Issues
 
-Support for the setjy spix parameter needs to be added.`
+Support for the setjy spix parameter needs to be added.
 
 Examples
 

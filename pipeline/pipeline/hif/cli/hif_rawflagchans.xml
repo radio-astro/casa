@@ -140,7 +140,7 @@ Bad baseline/channels are flagged for all intents, not just the
 one that is the basis of the flagging views.
 
 For each spectral window the flagging view is a 2d image with axes 
-'channel' and 'baseline'. The pixel for each channel,baseline is the 
+'channel' and 'baseline'. The pixel for each channel, baseline is the
 time average of the underlying unflagged raw data.
 
 The baseline axis is labeled by numbers of form id1.id2 where id1 and id2
@@ -195,7 +195,7 @@ flag_bad_quadrant -- True to search for and flag bad antenna quadrants
     default: True
 
 fbq_hilo_limit -- If flag_bad_quadrant is True then channel/baselines
-                  further from the the view median than fbq_hilo_limit
+                  further from the view median than fbq_hilo_limit
                   * MAD will be noted as 'suspect'. If there are 
                   enough of them to indicate that an antenna or baseline
                   quadrant is bad then all channel/baselines in that
