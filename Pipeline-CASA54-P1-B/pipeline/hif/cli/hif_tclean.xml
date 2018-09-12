@@ -458,7 +458,7 @@ imagename -- Prefix of output images. Defaults to one of the following options
    example: 'test1'
   
 intent -- An intent against which the selected fields are matched. Default
-    means select all data from fields specified by 'field' paramete
+    means select all data from fields specified by 'field' parameter.
     default: ''
     example: '', 'TARGET'
 

@@ -30,7 +30,7 @@
             </param>
 
             <param type="string" name="hm_refant">
-                <description>The referance antenna heuristics mode</description>
+                <description>The reference antenna heuristics mode</description>
                 <value>automatic</value>
                 <allowed kind="enum">
                     <value>automatic</value>
@@ -210,7 +210,7 @@ default: '' (Default to fields with the specified intents)
 example: '3C279', '3C279,M82'
 
 intent -- A string containing a comma delimited list of intents against
-which the the selected fields are matched. Defaults to all supported
+which the selected fields are matched. Defaults to all supported
 intents.
 default: 'AMPLI,BANDPASS,PHASE'
 example: 'BANDPASS'

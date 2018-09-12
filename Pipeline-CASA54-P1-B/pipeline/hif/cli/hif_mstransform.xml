@@ -127,7 +127,7 @@ outputvis -- The list of output transformed MeasurementSets to be used for imagi
 
 field -- Select fields name(s) or id(s) to transform. Only fields with data matching
     the intent will be selected. 
-    default: '', Fields matching matching intent.
+    default: '', Fields matching intent.
     example: '3C279', 'Centaurus*', '3C279,J1427-421'
 
 intent -- Select intents for which associated fields will be imaged.
@@ -155,21 +155,21 @@ results -- If pipeline mode is 'getinputs' then None is returned. Otherwise
 Description
 
 Create new MeasurementSets for imaging from the corrected column of the input
-MeasurementSet. By default all science target data is copied to the new ms. The new
-MeasurementSet is not re-indexed to the selected data in the new ms will have the
-same source, field, and spw names and ids as it does in the parent ms. 
+MeasurementSet. By default all science target data is copied to the new MS. The new
+MeasurementSet is not re-indexed to the selected data and the new MS will have the
+same source, field, and spw names and ids as it does in the parent MS.
 
 Issues
 
 TBD
 Examples
 
-1. Create a science target ms from the corrected column in the input ms. 
+1. Create a science target MS from the corrected column in the input MS.
 
     hif_mstransform()
 
-2. Make a phase and bandpass calibrator targets ms from the corrected
-column in the input ms.
+2. Make a phase and bandpass calibrator targets MS from the corrected
+column in the input MS.
 
     hif_mstransform(intent='PHASE,BANDPASS')
 

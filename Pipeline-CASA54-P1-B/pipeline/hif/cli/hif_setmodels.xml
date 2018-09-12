@@ -186,7 +186,7 @@ values. By default the reference sources are the flux calibrators and the transf
 sources are the bandpass, phase, and check source calibrators. Reference sources
 which are also in the transfer source list are removed from the transfer source list.
 
-Builtin lookup tables are sued to compute models for solar system object calibrators.
+Built-in lookup tables are used to compute models for solar system object calibrators.
 Point source models for other calibrators are provided in the reference file.
 Normalize fluxes are computed for transfer sources if the normfluxes parameter is
 set to True.
