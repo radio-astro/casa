@@ -57,7 +57,7 @@ class testBPdcalsResults(basetask.Results):
         self.ktypecaltable = ktypecaltable
         self.bpcaltable = bpcaltable
         self.flaggedSolnApplycalbandpass = flaggedSolnApplycalbandpass
-        self.flaggedSolnApplycaldelay = self.flaggedSolnApplycaldelay
+        self.flaggedSolnApplycaldelay = flaggedSolnApplycaldelay
 
 
     def merge_with_context(self, context):
