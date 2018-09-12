@@ -5,10 +5,12 @@
 	xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <task type="function" name="hifa_gfluxscale" category="pipeline">
+
 <shortdescription>Derive flux density scales from standard calibrators</shortdescription>
 <description>
 Derive the flux density scale from standard calibrators.
 </description>
+
 <input>
     <param type="string" name="vis" subparam="true">
         <description>List of input MeasurementSets</description>
@@ -157,32 +159,37 @@ Derive the flux density scale from standard calibrators.
 </output>
 <returns type="void"/>
 
-
 <example>
-
 Derive flux densities for point source transfer calibrators using flux models
 for reference calibrators.
+
+
+Keyword arguments
 
 ---- pipeline parameter arguments which can be set in any pipeline mode
 
 pipelinemode -- The pipeline operating mode. In 'automatic' mode the pipeline
     determines the values of all context defined pipeline inputs automatically.
     In interactive mode the user can set the pipeline context defined
-    parameters manually.  In 'getinputs' mode the users can check the settings
+    parameters manually. In 'getinputs' mode the users can check the settings
     of all pipeline parameters without running the task.
+
     default: 'automatic'.
 
 phaseupsolint --  Time solution intervals in CASA syntax for the phase solution.
+
     default: 'int'
-    example: 'inf', 'int', '100sec'
+    example: phaseupsolint='inf', phaseupsolint='int', phaseupsolint='100sec'
 
 solint --  Time solution intervals in CASA syntax for the amplitude solution.
+
     default: 'inf'
-    example: 'inf', 'int', '100sec'
+    example: solint='inf', solint='int', solint='100sec'
 
 minsnr -- Minimum signal to noise ratio for gain calibration solutions.
+
     default: 2.0
-    example: 1.5, 0.0
+    example: minsnr=1.5, minsnr=0.0
 
 hm_resolvedcals - Heuristics method for handling resolved calibrators. The
     options are 'automatic' and 'manual'. In automatic mode antennas closer
@@ -192,77 +199,88 @@ hm_resolvedcals - Heuristics method for handling resolved calibrators. The
 
 antenna -- A comma delimited string specifying the antenna names or ids to be
     used for the fluxscale determination. Used in hm_resolvedcals='manual' mode. 
-    default: ''.
-    example: 'DV16,DV07,DA12,DA08'  
+
+    default: ''
+    example: antenna='DV16,DV07,DA12,DA08'
 
 peak_fraction -- The limiting UV distance from the reference antenna for antennas
     to be included in the flux calibration. Defined as the point where the 
     calibrator visibilities have fallen to 'peak_fraction' of the peak value. 
-
 
 ---- pipeline context defined parameter arguments which can be set only in
 'interactive mode'
 
 vis -- The list of input MeasurementSets. Defaults to the list of MeasurementSets
     specified in the pipeline context
+
     default: ''
     example: ['M32A.ms', 'M32B.ms']
 
-reference -- A string containing a comma delimited list of  field names
+reference -- A string containing a comma delimited list of field names
     defining the reference calibrators. Defaults to field names with
     intent '*AMP*'.
-    default: ''
-    example: 'M82,3C273'
 
-transfer -- A string containing a comma delimited list of  field names
+    default: ''
+    example: reference='M82,3C273'
+
+transfer -- A string containing a comma delimited list of field names
     defining the transfer calibrators. Defaults to field names with
     intent '*PHASE*'.
+
     default: ''
-    example: 'J1328+041,J1206+30'
+    example: transfer='J1328+041,J1206+30'
 
 refintent -- A string containing a comma delimited list of intents 
     used to select the reference calibrators. Defaults to *AMP*.
+
     default: ''
-    example: '', '*AMP*'
+    example: refintent='', refintent='*AMP*'
 
 refspwmap -- Vector of spectral window ids enabling scaling across
-    spectral windows. Defaults to no scaling
+    spectral windows. Defaults to no scaling.
+
     default: []
-    example: [1,1,3,3] (4 spws, reference fields in 1 and 3, transfer
+    example: refspwmap=[1,1,3,3] - (4 spws, reference fields in 1 and 3, transfer
              fields in 0,1,2,3
 
 reffile -- Path to a file containing flux densities for calibrators unknown to
-    CASA. Values given in this file take precedence over the CASA-derived values
-    for all calibrators except solar system calibrators. By default the path is
-    set to the CSV file created by hifa_importdata, consisting of catalogue fluxes
-    extracted from the ASDM and / or edited by the user.
-    default: ''
-    example: '', 'working/flux.csv'
+    CASA. Values given in this file take precedence over the CASA-derived
+    values for all calibrators except solar system calibrators. By default the
+    path is set to the CSV file created by hifa_importdata, consisting of
+    catalogue fluxes extracted from the ASDM and / or edited by the user.
 
+    default: ''
+    example: reffile='', reffile='working/flux.csv'
 
 transintent -- A string containing a comma delimited list of intents 
     defining the transfer calibrators. Defaults to *PHASE*.
-    default: ''
-    example: '', '*PHASE*'
 
-refant -- A string specifying the reference antenna(s). By default
-    this is read from the context.
     default: ''
-    example: 'DV05'
+    example: transintent='', transintent='*PHASE*'
+
+refant -- A string specifying the reference antenna(s). By default this is read
+    from the context.
+
+    default: ''
+    example: refant='DV05'
 
 --- pipeline task execution modes
-dryrun -- Run the commands (True) or generate the commands to be run but
-   do not execute (False).
-   default: False
+
+dryrun -- Run the commands (True) or generate the commands to be run but do not
+    execute (False).
+
+    default: False
 
 acceptresults -- Add the results of the task to the pipeline context (True) or
-   reject them (False).
-   default: True
+    reject them (False).
 
-Output:
+    default: True
+
+
+Output
 
 results -- If pipeline mode is 'getinputs' then None is returned. Otherwise
-    the results object for the pipeline task is returned
+    the results object for the pipeline task is returned.
 
 
 Description
@@ -289,7 +307,6 @@ o transferring the flux scale from the reference calibrators to the transfer
 o extracted the computed flux values from the CASA logs and inserting
   them into the MODEL_DATA column.
 
-
 Resolved calibrators are handled via antenna selection either automatically,
 hm_resolvedcals='automatic' or manually, hm_resolvedcals='manual'. In
 the former case antennas closer to the reference antenna than the uv
@@ -311,11 +328,9 @@ with code which uses the values returned from the CASA fluxscale task.
 Examples
 
 1. Compute flux flux values for the phase calibrator using model data from
-   the amplitude calibrator.
+the amplitude calibrator:
 
-   hifa_gfluxscale ()
-
+    hifa_gfluxscale()
 </example>
-
 </task>
 </casaxml>

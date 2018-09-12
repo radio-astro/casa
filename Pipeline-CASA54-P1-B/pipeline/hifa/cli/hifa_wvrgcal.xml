@@ -5,12 +5,11 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
 file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
-
 <task type="function" name="hifa_wvrgcal" category="pipeline">
 
 <shortdescription></shortdescription>
 <description>
-Generate a gain table based on Water Vapour Radiometer data, and calculate 
+Generate a gain table based on Water Vapor Radiometer data, and calculate
 a QA score based on its effect on the interferometric data.
 </description>
     
@@ -167,7 +166,6 @@ a QA score based on its effect on the interferometric data.
        <value>True</value>
     </param>
 
-    
     <constraints>
 
         <when param="pipelinemode">
@@ -236,60 +234,70 @@ a QA score based on its effect on the interferometric data.
 <returns type="void"/>
 
 <example>
-
-Generate a gain table based on the Water Vapour Radiometer data in each vis
+Generate a gain table based on the Water Vapor Radiometer data in each vis
 file. By applying the wvr calibration to the data specified by 'qa_intent' and
 'qa_spw', calculate a QA score to indicate its effect on interferometric data;
 a score &gt; 1 implies that the phase noise is improved, a score &lt; 1 implies
 that it is made worse. If the score is less than 'accept_threshold' then the 
 wvr gain table is not accepted into the context for subsequent use.
-  
-vis -- List of input visibility files
+
+
+Keyword arguments
+
+vis -- List of input visibility files.
+
     default: none, in which case the vis files to be used will be read
              from the context. 
     example: vis=['ngc5921.ms']
 
-caltable -- List of output gain calibration tables
-    default: none, in which case the names of the caltables will be 
+caltable -- List of output gain calibration tables.
+
+    default: none, in which case the names of the caltables will be
              generated automatically.
     example: caltable='ngc5921.wvr'
 
 offsetstable -- List of input temperature offsets table files to subtract from
-                WVR measurements before calculating phase corrections.
+    WVR measurements before calculating phase corrections.
+
     default: none, in which case no offsets are applied.
     example: offsetstable=['ngc5921.cloud_offsets']
 
 hm_toffset -- If 'manual', set the 'toffset' parameter to the user-specified value.
-          If 'automatic', set the 'toffset' parameter according to the 
-          date of the MeasurementSet; toffset=-1 if before 2013-01-21T00:00:00
-          toffset=0 otherwise.
+    If 'automatic', set the 'toffset' parameter according to the
+    date of the MeasurementSet; toffset=-1 if before 2013-01-21T00:00:00
+    toffset=0 otherwise.
+
     default: 'automatic'
 
-toffset -- Time offset (sec) between interferometric and WVR data
+toffset -- Time offset (sec) between interferometric and WVR data.
+
     default: 0
 
-segsource -- If True calculate new atmospheric phase correction 
-             coefficients for each source, subject to the constraints of 
-             the 'tie' parameter. 'segsource' is forced to be True if 
-             the 'tie' parameter is set to a non-empty value by the 
-             user or by the automatic heuristic.
+segsource -- If True calculate new atmospheric phase correction coefficients
+    for each source, subject to the constraints of the 'tie' parameter.
+    'segsource' is forced to be True if the 'tie' parameter is set to a
+    non-empty value by the user or by the automatic heuristic.
+
     default: True
 
 hm_tie -- If 'manual', set the 'tie' parameter to the user-specified value.
-          If 'automatic', set the 'tie' parameter to include with the
-          target all calibrators that are within 15 degrees of it: 
-          if no calibrators are that close then 'tie' is left empty.
+    If 'automatic', set the 'tie' parameter to include with the
+    target all calibrators that are within 15 degrees of it:
+    if no calibrators are that close then 'tie' is left empty.
+
     default: 'automatic'
 
 tie -- Use the same atmospheric phase correction coefficients when 
-       calculating the wvr correction for all sources in the 'tie'. If 'tie' 
-       is not empty then 'segsource' is forced to be True. Ignored unless
-       hm_tie='manual'.
+    calculating the wvr correction for all sources in the 'tie'. If 'tie'
+    is not empty then 'segsource' is forced to be True. Ignored unless
+    hm_tie='manual'.
+
     default: []
     example: ['3C273,NGC253', 'IC433,3C279']
 
 sourceflag -- Flag the WVR data for these source(s) as bad and do not produce
     corrections for it. Requires segsource=True.
+
     default: []
     example: ['3C273']
 
@@ -298,14 +306,17 @@ nsol -- Number of solutions for phase correction coefficients during this
     is used only if segsource=False because if segsource=True then the
     coefficients are recomputed whenever the telescope moves to a new source
     (within the limits imposed by 'tie').
+
     default: 1
 
-disperse -- Apply correction for dispersion
+disperse -- Apply correction for dispersion.
+
     default: False
 
 wvrflag -- Flag the WVR data for the listed antennas as bad and replace 
     their data with values interpolated from the 3 nearest antennas with
     unflagged data.
+
     default: []
     example: ['DV03','DA05','PM02']           
 
@@ -316,9 +327,11 @@ hm_smooth -- If 'manual' set the 'smooth' parameter to the user-specified value.
 
 smooth -- Smooth WVR data on this timescale before calculating the correction.
     Ignored unless hm_smooth='manual'.
+
     default: ''
 
 scale -- Scale the entire phase correction by this factor.
+
     default: 1
 
 maxdistm -- Maximum distance in meters of an antenna used for interpolation
@@ -326,20 +339,22 @@ maxdistm -- Maximum distance in meters of an antenna used for interpolation
 
     default: -1  (automatically set to 100m if >50% of antennas are 7m
         antennas without WVR and otherwise set to 500m)
-
-    example: 550
+    example: maxdistm=550
 
 minnumants -- Minimum number of nearby antennas (up to 3) used for
     interpolation from a flagged antenna.
-    default: 2
-    example: 3
 
-mingoodfrac -- Minimum fraction of good data per  antenna
+    default: 2
+    example: minnumants=3
+
+mingoodfrac -- Minimum fraction of good data per antenna.
+
     default: 0.8
 
 refant -- Ranked comma delimited list of reference antennas.
+
     default: ''
-    example 'DV01,DV02'
+    example: refant='DV01,DV02'
 
 qa_intent -- The list of data intents on which the wvr correction is to be 
     tried as a means of estimating its effectiveness.
@@ -364,19 +379,18 @@ qa_intent -- The list of data intents on which the wvr correction is to be
     If you do not want any QA calculations then set qa_intent=''.
 
     default: ''
-    example: 'PHASE'
+    example: qa_intent='PHASE'
 
-qa_bandpass_intent -- The data intent to use for the bandpass calibration
-    in the qa calculation. The default is blank to allow the 
-    underlying bandpass task to select a sensible intent if the dataset
-    lacks BANDPASS data.
+qa_bandpass_intent -- The data intent to use for the bandpass calibration in
+    the qa calculation. The default is blank to allow the underlying bandpass
+    task to select a sensible intent if the dataset lacks BANDPASS data.
 
     default: ''
 
-qa_spw -- The SpW(s) to use for the qa calculation, in the order
-    that they should be tried. Input as a comma-separated list.
-    The default is blank, in which case the task will try SpWs
-    in order of decreasing median sky opacity.
+qa_spw -- The SpW(s) to use for the qa calculation, in the order that they
+    should be tried. Input as a comma-separated list. The default is blank, in
+    which case the task will try SpWs in order of decreasing median sky
+    opacity.
 
     default: ''
 
@@ -389,11 +403,9 @@ accept_threshold -- The phase-rms improvement ratio
 
 Example
 
-1. Compute the WVR calibration for all the MeasurementSets.
+1. Compute the WVR calibration for all the MeasurementSets:
 
-    hifa_wvrgcal (hm_tie='automatic')
-
+    hifa_wvrgcal(hm_tie='automatic')
 </example>
-
 </task>
 </casaxml>

@@ -5,12 +5,12 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
 file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
-
 <task type="function" name="hifa_wvrgcalflag" category="pipeline">
 
 <shortdescription></shortdescription>
 <description>
-Generate a gain table based on Water Vapour Radiometer data, interpolating over antennas with bad radiometers.
+Generate a gain table based on Water Vapor Radiometer data, interpolating over
+antennas with bad radiometers.
 </description>
     
 <input>
@@ -127,12 +127,12 @@ Generate a gain table based on Water Vapour Radiometer data, interpolating over 
     </param>
 
     <param type="string" name="flag_intent">
-        <description>Data intents to use in detecting and flagging bad wvr antennas</description>
+        <description>Data intents to use in detecting and flagging bad WVR antennas</description>
         <value></value>
     </param>
 
     <param type="string" name="qa_intent">
-        <description>Data intents to use in estimating the effectiveness of the wvr correction</description>
+        <description>Data intents to use in estimating the effectiveness of the WVR correction</description>
         <value>BANDPASS,PHASE</value>
     </param>
 
@@ -142,7 +142,7 @@ Generate a gain table based on Water Vapour Radiometer data, interpolating over 
     </param>
 
     <param type="double" name="accept_threshold">
-        <description>Improvement ratio (phase-rms without wvr / phase-rms with wvr) above which wvrg calibration file will be accepted</description>
+        <description>Improvement ratio (phase-rms without WVR / phase-rms with WVR) above which wvrg calibration file will be accepted</description>
         <value>1.0</value>
     </param>
 
@@ -186,7 +186,6 @@ Generate a gain table based on Water Vapour Radiometer data, interpolating over 
        <value>True</value>
     </param>
 
-    
     <constraints>
 
         <when param="pipelinemode">
@@ -264,9 +263,8 @@ Generate a gain table based on Water Vapour Radiometer data, interpolating over 
 <returns type="void"/>
 
 <example>
-
 This task will first identify for each vis whether it includes at least 3
-antennas with Water Vapour Radiometer (WVR) data, and that the fraction of
+antennas with Water Vapor Radiometer (WVR) data, and that the fraction of
 WVR antennas / all antennas exceeds the minimum threshold
 (ants_with_wvr_thresh).
 
@@ -275,17 +273,17 @@ caltable is created and no WVR calibration will be applied to the corresponding
 vis. If there are enough WVR antennas, then the task proceeds as follows for
 each valid vis:
 
-First, generate a gain table based on the Water Vapour Radiometer data for
+First, generate a gain table based on the Water Vapor Radiometer data for
 each vis.
 
-Second, apply the wvr calibration to the data specified by 'flag_intent',
+Second, apply the WVR calibration to the data specified by 'flag_intent',
 calculate flagging 'views' showing the ratio 
-phase-rms with wvr / phase-rms without wvr for each scan. A ratio &lt; 1 
+'phase-rms with WVR / phase-rms without WVR' for each scan. A ratio &lt; 1
 implies that the phase noise is improved, a score &gt; 1 implies that it 
 is made worse. 
 
 Third, search the flagging views for antennas with anomalous high values. 
-If any are found then recalculate the wvr calibration with the 'wvrflag' 
+If any are found then recalculate the WVR calibration with the 'wvrflag'
 parameter set to ignore their data and interpolate results from other 
 antennas according to 'maxdistm' and 'minnumants'.
 
@@ -295,31 +293,34 @@ threshold (ants_with_wvr_thresh), then the WVR calibration file is rejected
 and will not be merged into the context, i.e. not be used in subsequent
 calibration.
 
-Fifth, if the overall QA score for the final wvr correction of a vis file
+Fifth, if the overall QA score for the final WVR correction of a vis file
 is greater than the value in 'accept_threshold' then make available the
 wvr calibration file for merging into the context and use in the 
 subsequent reduction.
-      
+
+
+Keyword arguments
+
 vis -- List of input visibility files.
 
     default: none, in which case the vis files to be used will be read
-             from the context.
+             from the context
     example: vis=['ngc5921.ms']
 
 caltable -- List of output gain calibration tables.
 
     default: none, in which case the names of the caltables will be
-             generated automatically.
+             generated automatically
     example: caltable='ngc5921.wvr'
 
 offsetstable -- List of input temperature offsets table files to subtract from
     WVR measurements before calculating phase corrections.
 
-    default: none, in which case no offsets are applied.
+    default: none, in which case no offsets are applied
     example: offsetstable=['ngc5921.cloud_offsets']
 
-hm_toffset -- If 'manual', set the 'toffset' parameter to the user-specified value.
-    If 'automatic', set the 'toffset' parameter according to the
+hm_toffset -- If 'manual', set the 'toffset' parameter to the user-specified
+    value. If 'automatic', set the 'toffset' parameter according to the
     date of the MeasurementSet; toffset=-1 if before 2013-01-21T00:00:00
     toffset=0 otherwise.
 
@@ -345,18 +346,18 @@ hm_tie -- If 'manual', set the 'tie' parameter to the user-specified value.
     default: 'automatic'
 
 tie -- Use the same atmospheric phase correction coefficients when
-    calculating the wvr correction for all sources in the 'tie'. If 'tie'
+    calculating the WVR correction for all sources in the 'tie'. If 'tie'
     is not empty then 'segsource' is forced to be True. Ignored unless
     hm_tie='manual'.
 
     default: []
-    example: ['3C273,NGC253', 'IC433,3C279']
+    example: tie=['3C273,NGC253', 'IC433,3C279']
 
 sourceflag -- Flag the WVR data for these source(s) as bad and do not produce
     corrections for it. Requires segsource=True.
 
     default: []
-    example: ['3C273']
+    example: sourceflag=['3C273']
 
 nsol -- Number of solutions for phase correction coefficients during this
     observation, evenly distributed in time throughout the observation. It
@@ -374,11 +375,11 @@ wvrflag -- Flag the WVR data for these antenna(s) as bad and replace its data
     with interpolated values.
 
     default: []
-    example: ['DV03','DA05','PM02']           
+    example: wvrflag=['DV03','DA05','PM02']
 
 hm_smooth -- If 'manual' set the 'smooth' parameter to the user-specified value.
     If 'automatic', run the wvrgcal task with the range of 'smooth' parameters
-    required to match the integration time of the wvr data to that of the
+    required to match the integration time of the WVR data to that of the
     interferometric data in each spectral window.
 
 smooth -- Smooth WVR data on this timescale before calculating the correction.
@@ -394,33 +395,33 @@ maxdistm -- Maximum distance in meters of an antenna used for interpolation
     from a flagged antenna.
 
     default: -1  (automatically set to 100m if >50% of antennas are 7m
-        antennas without WVR and otherwise set to 500m)
-    example: 550
+             antennas without WVR and otherwise set to 500m)
+    example: maxdistm=550
 
 minnumants -- Minimum number of nearby antennas (up to 3) used for
     interpolation from a flagged antenna.
 
     default: 2
-    example: 3
+    example: minnumants=3
 
 mingoodfrac -- Minimum fraction of good data per antenna.
 
     default: 0.8
-    example: 0.7
+    example: mingoodfrac=0.7
 
 refant -- Ranked comma delimited list of reference antennas.
 
     default: ''
-    example: 'DV02,DV06'
+    example: refant='DV02,DV06'
 
-flag_intent -- The data intent(s) on whose wvr correction results the search
-    for bad wvr antennas is to be based.
+flag_intent -- The data intent(s) on whose WVR correction results the search
+    for bad WVR antennas is to be based.
 
     A 'flagging view' will be calculated for each specified intent, in each
     spectral window in each vis file.
 
     Each 'flagging view' will consist of a 2-d image with dimensions
-    ['ANTENNA', 'TIME'], showing the phase noise after the wvr
+    ['ANTENNA', 'TIME'], showing the phase noise after the WVR
     correction has been applied.
 
     If flag_intent is left blank, the default, the flagging views will be
@@ -430,7 +431,7 @@ flag_intent -- The data intent(s) on whose wvr correction results the search
 
     default: ''
 
-qa_intent -- The list of data intents on which the wvr correction is to be
+qa_intent -- The list of data intents on which the WVR correction is to be
     tried as a means of estimating its effectiveness.
 
     A QA 'view' will be calculated for each specified intent, in each spectral
@@ -438,7 +439,7 @@ qa_intent -- The list of data intents on which the wvr correction is to be
 
     Each QA 'view' will consist of a pair of 2-d images with dimensions
     ['ANTENNA', 'TIME'], one showing the data phase-noise before the
-    wvr application, the second showing the phase noise after (both 'before'
+    WVR application, the second showing the phase noise after (both 'before'
     and 'after' images have a bandpass calibration applied as well).
 
     An overall QA score is calculated for each vis file, by dividing the
@@ -447,7 +448,7 @@ qa_intent -- The list of data intents on which the wvr correction is to be
     a score &gt; 1 implies an improvement.
 
     If the overall score for a vis file is less than the value in
-    'accept_threshold' then the wvr calibration file is not made available for
+    'accept_threshold' then the WVR calibration file is not made available for
     merging into the context for use in the subsequent reduction.
 
     default: 'BANDPASS,PHASE'
@@ -459,7 +460,7 @@ qa_bandpass_intent -- The data intent to use for the bandpass calibration in
     default: ''
 
 accept_threshold -- The phase-rms improvement ratio 
-    (rms without wvr / rms with wvr) above which the wrvg file will be 
+    (rms without WVR / rms with WVR) above which the wrvg file will be
     accepted into the context for subsequent application.
 
     default: 1.0
@@ -476,11 +477,9 @@ ants_with_wvr_thresh -- this threshold sets the minimum fraction of antennas
 
 Example
 
-1. Compute the WVR calibration for all the MeasurementSets.
+1. Compute the WVR calibration for all the MeasurementSets:
 
     hifa_wvrgcalflag(hm_tie='automatic')
-
 </example>
-
 </task>
 </casaxml>

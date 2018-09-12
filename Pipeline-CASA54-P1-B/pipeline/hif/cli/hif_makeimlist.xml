@@ -353,7 +353,8 @@ start -- First channel for frequency mode images.
     example: '22.3GHz'
 
 clearlist -- Clear previous image target list.
-    default True
+
+    default: True
     example: False
 
 per_eb -- Make an image target per EB.

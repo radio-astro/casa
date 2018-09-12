@@ -6,16 +6,17 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
 file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <task type="function" name="hif_gaincal" category="pipeline">
+
 <shortdescription>Determine temporal gains from calibrator observations</shortdescription>
 <description>
-The time depednend complex gains for each antenna/spwid are determined
-from the raw data (DATA column) divided by the model (MODEL column), for the
-specified fields.  The gains are computed independently for each specified
-spectral window.
+The time-dependent complex gains for each antenna/spwid are determined from the
+raw data (DATA column) divided by the model (MODEL column), for the specified
+fields. The gains are computed independently for each specified spectral
+window.
 
 Previous calibrations are applied on the fly.
-
 </description>
+
 <input>
     <param type="stringArray" name="vis" subparam="true">
         <description>List of input MeasurementSets</description>
@@ -192,120 +193,142 @@ Previous calibrations are applied on the fly.
 <returns type="void"/>
 
 <example>
-
 Compute the gain solutions.
+
+
+Keyword arguments
 
 ---- pipeline parameter arguments which can be set in any pipeline mode
 
 pipelinemode -- The pipeline operating mode. In 'automatic' mode the pipeline
-       determines the values of all context defined pipeline inputs
-       automatically.  In interactive mode the user can set the pipeline
-       context defined parameters manually.  In 'getinputs' mode the user
-       can check the settings of all pipeline parameters without running
-       the task.
-       default: 'automatic'.
+    determines the values of all context defined pipeline inputs
+    automatically. In interactive mode the user can set the pipeline context
+    defined parameters manually. In 'getinputs' mode the user can check the
+    settings of all pipeline parameters without running the task.
+
+    default: 'automatic'
 
 hm_gtype -- The type of gain calibration. The options are 'gtype' and
     'gspline' for CASA gain types = 'G' and 'GSPLINE' respectively.
 
-calmode -- Type of solution.  The options are 'ap' (amp and phase), 'p'
-    (phase only) and 'a' (amp only)
+calmode -- Type of solution. The options are 'ap' (amp and phase), 'p'
+    (phase only) and 'a' (amp only).
+
     default: 'ap'
-    options: 'p','a','ap'
+    example: calmode='p', calmode='a', calmode='ap'
 
 solint --  Time solution intervals in CASA syntax. Works for hm_gtype='gtype'
     only.
-    default: 'inf'
-    example: 'inf', 'int', '100sec'
 
-combine -- Data axes to combine for solving. Options are  '','scan', 'spw', 'field'
-    or any comma-separated combination. Works for hm_gtype='gtype' only.
-    default; ''
+    default: 'inf'
+    example: solint='inf', solint='int', solint='100sec'
+
+combine -- Data axes to combine for solving. Options are  '','scan', 'spw',
+    'field' or any comma-separated combination. Works for hm_gtype='gtype'
+    only.
+
+    default: ''
     example: combine=''
 
-minblperant -- Minimum number of baselines required per antenna for each solve
+minblperant -- Minimum number of baselines required per antenna for each solve.
     Antennas with fewer baselines are excluded from solutions. Works for
     hm_gtype='gtype' only.
+
     default: 4
     example: minblperant=2
 
 minsnr -- Solutions below this SNR are rejected. Works for hm_gtype=
-    'channel' only
+    'channel' only.
+
     default: 3.0
 
-splinetime -- Spline timescale (sec). Used for hm_gtype='gspline'.  Typical
+splinetime -- Spline timescale (sec). Used for hm_gtype='gspline'. Typical
     splinetime should cover about 3 to 5 calibrator scans.
+
     default: 3600 (1 hour)
     example: splinetime=1000
 
-npointaver -- Tune phase-unwrapping algorithm. Used for hm_gtype='gspline'
+npointaver -- Tune phase-unwrapping algorithm. Used for hm_gtype='gspline'.
+
     default: 3 (Keep at this value)
 
-phasewrap -- Wrap the phase for changes larger than this amount (degrees)
+phasewrap -- Wrap the phase for changes larger than this amount (degrees).
     Used for hm_gtype='gspline'.
-    default: 180 (Keep at this value)
 
+    default: 180 (Keep at this value)
 
 ---- pipeline context defined parameter arguments which can be set only in
 'interactive mode'
 
-vis -- The list of input MeasurementSets. Defaults to the list of MeasurementSets
-    specified in the pipeline context
+vis -- The list of input MeasurementSets. Defaults to the list of
+    MeasurementSets specified in the pipeline context.
+
     default: ''
-    example: ['M82A.ms', 'M82B.ms'] 
+    example: vis=['M82A.ms', 'M82B.ms']
 
 caltable -- The list of output calibration tables. Defaults to the standard
     pipeline naming convention.
+
     default: ''
-    example: ['M82.gcal', 'M82B.gcal']
+    example: caltable=['M82.gcal', 'M82B.gcal']
 
 field -- The list of field names or field ids for which gain solutions are
     to be computed. Defaults to all fields with the standard intent.
-    default: '' 
-    example: '3C279', '3C279, M82'
+
+    default: ''
+    example: field='3C279', field='3C279, M82'
 
 intent -- A string containing a comma delimited list of intents against
     which the selected fields are matched. Defaults to *PHASE*.
-    default: '' 
-    example: '', '*AMP*,*PHASE*'
+
+    default: ''
+    example: intent='', intent='*AMP*,*PHASE*'
 
 spw -- The list of spectral windows and channels for which gain solutions are
     computed. Defaults to all science spectral windows.
-    default: '' 
-    example: '3C279', '3C279, M82'
+
+    default: ''
+    example: spw='3C279', spw='3C279, M82'
 
 smodel -- Point source Stokes parameters for source model (experimental)
     Defaults to using standard MODEL_DATA column data.
-    default: [] 
-    example: [1,0,0,0] (I=1, unpolarized)
+
+    default: []
+    example: smodel=[1,0,0,0]  - (I=1, unpolarized)
 
 refant -- Reference antenna name(s) in priority order. Defaults to most recent
-    values set in the pipeline context.  If no reference antenna is defined in
+    values set in the pipeline context. If no reference antenna is defined in
     the pipeline context use the CASA defaults.
-    default: '' 
+
+    default: ''
     example: refant='DV01', refant='DV05,DV07'
 
-solnorm -- Normalise the gain solutions
+solnorm -- Normalise the gain solutions.
+
     default: False
 
 --- pipeline task execution modes
 dryrun -- Run the commands (True) or generate the commands to be run but
-   do not execute (False).
-   default: False
+    do not execute (False).
+
+    default: False
 
 acceptresults -- Add the results of the task to the pipeline context (True) or
-   reject them (False).
-   default: True
+    reject them (False).
 
-Output:
+    default: True
+
+
+Output
 
 results -- If pipeline mode is 'getinputs' then None is returned. Otherwise
-    the results object for the pipeline task is returned
+    the results object for the pipeline task is returned.
+
 
 Description
 
-The complex gains  are derived from the data column (raw data) divided
-by the model column (usually set with hif_setjy). The gains are obtained for a
+The complex gains are derived from the data column (raw data) divided by the
+model column (usually set with hif_setjy). The gains are obtained for a
 specified solution interval, spw combination and field combination.
 
 Good candidate reference antennas can be determined using the hif_refant
@@ -315,19 +338,19 @@ Previous calibrations that have been stored in the pipeline context are
 applied on the fly. Users can interact with these calibrations via the
 hif_export_calstate and hif_import_calstate tasks.
 
+
 Issues
 
 The 'gspline' (smooth) option is still under development in CASA.
 
+
 Examples
 
 1. Compute standard per scan gain solutions that will be used to calibrate
-the target.
+the target:
 
     hif_gaincal()
 
-
-</example> 
-
+</example>
 </task>
 </casaxml>

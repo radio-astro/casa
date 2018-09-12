@@ -7,7 +7,10 @@
 <task type="function" name="hifa_flagtargets" category="pipeline">
 
 <shortdescription>Do science target flagging</shortdescription>
-<description>Do meta data based science target flagging of a list of MeasurementSets</description>
+<description>
+    Do meta data based science target flagging of a list of
+    MeasurementSets.
+</description>
 
 <input>
 	<param type="stringArray" name="vis" subparam="true">
@@ -92,47 +95,54 @@ The hifa_flagtargets task performs basic flagging operations on a list of
 science target MeasurementSets.
 
 
-Keyword arguments:
+Keyword arguments
 
 pipelinemode -- The pipeline operating mode. In 'automatic' mode the pipeline
-   determines the values of all context defined pipeline inputs automatically.
-   In interactive mode the user can set the pipeline context defined parameters
-   manually.  In 'getinputs' mode the user can check the settings of all
-   pipeline parameters without running the task.
-   default: 'automatic'.
+    determines the values of all context defined pipeline inputs automatically.
+    In interactive mode the user can set the pipeline context defined
+    parameters manually. In 'getinputs' mode the user can check the settings of
+    all pipeline parameters without running the task.
 
+    default: 'automatic'.
 
 ---- pipeline parameter arguments which can be set in any pipeline mode
 
-template -- Apply flagging templates
+template -- Apply flagging templates.
+
     default: True
 
-filetemplate -- The name of an text file that contains the flagging template
-    for issues with the science target data  etc.  If the template flags files
+filetemplate -- The name of a text file that contains the flagging template
+    for issues with the science target data etc. If the template flags files
     is undefined a name of the form 'msname_flagtargetstemplate.txt' is assumed.
+
     default: ''
 
 ---- pipeline context defined parameter arguments which can be set only in
 'interactive mode'
 
-vis -- The list of input MeasurementSets. Defaults to the list of MeasurementSets
-    defined in the pipeline context.
-    example:
+vis -- The list of input MeasurementSets. Defaults to the list of
+	MeasurementSets defined in the pipeline context.
+
     default: ''
 
 flagbackup -- Back up any pre-existing flags.
-       default: False
+
+    default: False
 
 --- pipeline task execution modes
-dryrun -- Run the commands (True) or generate the commands to be run but
-       do not execute (False).
-       default: True
+
+dryrun -- Run the commands (True) or generate the commands to be run but do not
+	execute (False).
+
+    default: True
 
 acceptresults -- Add the results of the task to the pipeline context (True) or
-       reject them (False).
-       default: True
+    reject them (False).
 
-Output:
+    default: True
+
+
+Output
 
 results -- If pipeline mode is 'getinputs' then None is returned. Otherwise
     the results object for the pipeline task is returned.
@@ -140,21 +150,20 @@ results -- If pipeline mode is 'getinputs' then None is returned. Otherwise
 
 Description
 
-The hifa_flagdata data performs basic flagging operations on a list of measurements including:
+The hifa_flagdata data performs basic flagging operations on a list of
+measurements including:
 
-o apply a flagging template
+  o apply a flagging template
+
 
 Issues
 
 
 Examples
 
-1. Do basic flagging on a science target MeasurementSet
+1. Do basic flagging on a science target MeasurementSet:
     
     hifa_flagtargets()
-
 </example>
-
-
 </task>
 </casaxml>

@@ -5,10 +5,12 @@
 		 xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <task type="function" name="hifa_linpolcal" category="pipeline">
+
 <shortdescription>Compute polarization calibration</shortdescription>
 <description>
 Compute polarization calibration.
 </description>
+
 <input>
 
   <param type="stringArray" name="vis" subparam="true">
@@ -81,7 +83,6 @@ Compute polarization calibration.
    <value>True</value>
   </param>
 
-
   <constraints>
 
     <when param="pipelinemode">
@@ -123,50 +124,50 @@ Compute polarization calibration.
 </output>
 <returns type="void"/>
 
-
 <example>
 Compute a polarization calibration.
 
-Keyword arguments:
+
+Keyword arguments
 
 --- pipeline parameter arguments which can be set in any pipeline mode
 
 pipelinemode -- The pipeline operating mode. In 'automatic' mode the pipeline
-       determines the values of all context defined pipeline inputs
-       automatically.  In interactive mode the user can set the pipeline
-       context defined parameters manually.  In 'getinputs' mode the user
-       can check the settings of all pipeline parameters without running
-       the task.
-       default: 'automatic'.
+    determines the values of all context defined pipeline inputs automatically.
+    In interactive mode the user can set the pipeline context defined
+    parameters manually. In 'getinputs' mode the user can check the settings of
+    all pipeline parameters without running the task.
 
+    default: 'automatic'.
 
 ---- pipeline context defined parameter arguments which can be set only in
 'interactive mode'
 
-vis -- The list of input MeasurementSets. Defaults to the list of MeasurementSets 
-    in the context. CURRENTLY THE LIST MUST CONTAIN 1 MEASUREMENT SET.
+vis -- The list of input MeasurementSets. Defaults to the list of
+    MeasurementSets in the context.
+
+    CURRENTLY THE LIST MUST CONTAIN 1 MEASUREMENT SET.
+
     default: ''
     example: vis=['ngc5921a.ms', ngc5921b.ms', 'ngc5921c.ms']
 
 --- pipeline task execution modes
+
 dryrun -- Run the commands (True) or generate the commands to be run but
-   do not execute (False).
-   default: False
+    do not execute (False).
+
+    default: False
 
 acceptresults -- Add the results of the task to the pipeline context (True) or
-   reject them (False).
-   default: True
+    reject them (False).
 
-Output:
+    default: True
+
+
+Output
 
 results -- If pipeline mode is 'getinputs' then None is returned. Otherwise
     the results object for the pipeline task is returned.
-
-
-Examples:
-TBD
 </example>
-
 </task>
 </casaxml>
-

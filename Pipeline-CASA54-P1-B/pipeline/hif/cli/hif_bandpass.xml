@@ -158,106 +158,125 @@ window in each MeasurementSet.
 </output>
 <returns type="void"/>
 
-
 <example>
-
-Compute  amplitude and phase as a function of frequency for each spectral
+Compute amplitude and phase as a function of frequency for each spectral
 window in each MeasurementSet.  
 
 Previous calibration can be applied on the fly.
 
-Keyword arguments:
+
+Keyword arguments
 
 --- pipeline parameter arguments which can be set in any pipeline mode
 
 pipelinemode -- The pipeline operating mode. In 'automatic' mode the pipeline
-   determines the values of all context defined pipeline inputs automatically.
-   In interactive mode the user can set the pipeline context defined parameters
-   manually.  In 'getinputs' mode the user can check the settings of all
-   pipeline parameters without running the task.
-   default: 'automatic'.
+    determines the values of all context defined pipeline inputs automatically.
+    In interactive mode the user can set the pipeline context defined
+    parameters manually. In 'getinputs' mode the user can check the settings of
+    all pipeline parameters without running the task.
 
-phaseup -- Do a phaseup on the data before computing the bandpass solution
+    default: 'automatic'
+
+phaseup -- Do a phaseup on the data before computing the bandpass solution.
+
     default: True
 
 phaseupsolint -- The phase correction solution interval in CASA syntax. 
     Used when phaseup is True.
+
     default: 'int'
-    example: 300
+    example: phaseupsolint=300
 
 phaseupbw -- Bandwidth to be used for phaseup. Defaults to 500MHz.
     Used when phaseup is True.
+
     default: ''
-    example: '' default to entire bandpass, '500MHz' use central 500MHz
+    example: phaseupbw='' to use entire bandpass
+             phaseupbw='500MHz' to use central 500MHz
 
 solint --  Time and channel solution intervals in CASA syntax.
-    default: 'inf,7.8125MHz'
-    example: 'inf,10ch', 'inf'
 
-combine -- Data axes to combine for solving. Axes are '', 'scan', 'spw', 'field'
-    or any comma-separated combination.
-    default; 'scan'
+    default: 'inf,7.8125MHz'
+    example: solint='inf,10ch', 'inf'
+
+combine -- Data axes to combine for solving. Axes are '', 'scan', 'spw',
+    'field' or any comma-separated combination.
+
+    default: 'scan'
     example: combine='scan,field' 
 
-minblperant -- Minimum number of baselines required per antenna for each solve
+minblperant -- Minimum number of baselines required per antenna for each solve.
     Antennas with fewer baselines are excluded from solutions.
+
     default: 4
 
 minsnr -- Solutions below this SNR are rejected.
-    default: 3.0 
 
+    default: 3.0
 
 ---- pipeline context defined parameter arguments which can be set only in
 'interactive mode'
 
-vis -- The list of input MeasurementSets. Defaults to the list of MeasurementSet
-    specified in the pipeline context.
+vis -- The list of input MeasurementSets. Defaults to the list of
+    MeasurementSets specified in the pipeline context.
+
     default: ''
-    example: ['M51.ms']
+    example: vis=['M51.ms']
 
 caltable -- The list of output calibration tables. Defaults to the standard
     pipeline naming convention.
+
     default: ''
-    example: ['M51.bcal']
+    example: caltable=['M51.bcal']
 
 field -- The list of field names or field ids for which bandpasses are
     computed. Defaults to all fields.
-    default: '' 
-    example: '3C279', '3C279, M82'
+
+    default: ''
+    example: field='3C279', field='3C279, M82'
 
 intent -- A string containing a comma delimited list of intents against
     which the selected fields are matched.  Defaults to all data
     with bandpass intent.
-    default: '' 
-    example: '*PHASE*'
+
+    default: ''
+    example: intent='*PHASE*'
 
 spw -- The list of spectral windows and channels for which bandpasses are
     computed. Defaults to all science spectral windows.
-    default: '' 
-    example: '11,13,15,17'
+
+    default: ''
+    example: spw='11,13,15,17'
 
 refant -- Reference antenna names. Defaults to the value(s) stored in the
     pipeline context. If undefined in the pipeline context defaults to
     the CASA reference antenna naming scheme.
+
     default: ''
     example: refant='DV01', refant='DV06,DV07'
 
 solnorm -- Normalise the bandpass solutions
+
     default: False
 
 --- pipeline task execution modes
+
 dryrun -- Run the commands (True) or generate the commands to be run but
-   do not execute (False).
-   default: False
+    do not execute (False).
+
+    default: False
 
 acceptresults -- Add the results of the task to the pipeline context (True) or
-   reject them (False).
-   default: True
+    reject them (False).
 
-Output:
+    default: True
+
+
+Output
 
 results -- If pipeline mode is 'getinputs' then None is returned. Otherwise
     the results object for the pipeline task is returned.
+
 
 Description
 
@@ -267,6 +286,7 @@ and applied on the fly to the data, before the bandpass is computed.
 
 The hif_refant task may be used to precompute a prioritized list of
 reference antennas.
+
 
 Issues
 
@@ -279,20 +299,18 @@ The specified minsnr parameter is currently applied to the bandpass
 solution computation but not the 'phaseup' computation. Some noisy
 solutions in the phaseup may not be properly rejected.
 
+
 Examples
 
 1. Compute a channel bandpass for all visibility files in the pipeline
-context using the CASA reference antenna determination scheme.
+context using the CASA reference antenna determination scheme:
 
     hif_bandpass()
 
-2. Same as the above but precompute a prioritized reference antenna list
+2. Same as the above but precompute a prioritized reference antenna list:
 
     hif_refant()
     hif_bandpass()
-
 </example>
-
 </task>
 </casaxml>
-
