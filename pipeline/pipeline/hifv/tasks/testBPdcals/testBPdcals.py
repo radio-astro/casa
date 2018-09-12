@@ -10,6 +10,7 @@ import pipeline.infrastructure.vdp as vdp
 from pipeline.hifv.heuristics import getCalFlaggedSoln
 from pipeline.hifv.heuristics import weakbp, do_bandpass
 from pipeline.infrastructure import casa_tasks
+import pipeline.infrastructure.casatools as casatools
 from pipeline.infrastructure import task_registry
 
 LOG = infrastructure.get_logger(__name__)
@@ -32,7 +33,8 @@ class testBPdcalsInputs(vdp.StandardInputs):
 class testBPdcalsResults(basetask.Results):
     def __init__(self, final=None, pool=None, preceding=None, gain_solint1=None,
                  shortsol1=None, vis=None, bpdgain_touse=None, gtypecaltable=None,
-                 ktypecaltable=None, bpcaltable=None):
+                 ktypecaltable=None, bpcaltable=None, flaggedSolnApplycalbandpass=None,
+                 flaggedSolnApplycaldelay=None):
 
         if final is None:
             final = []
@@ -54,6 +56,9 @@ class testBPdcalsResults(basetask.Results):
         self.gtypecaltable = gtypecaltable
         self.ktypecaltable = ktypecaltable
         self.bpcaltable = bpcaltable
+        self.flaggedSolnApplycalbandpass = flaggedSolnApplycalbandpass
+        self.flaggedSolnApplycaldelay = self.flaggedSolnApplycaldelay
+
 
     def merge_with_context(self, context):
         m = context.observing_run.get_ms(self.vis)
@@ -246,9 +251,14 @@ class testBPdcals(basetask.StandardTaskTemplate):
         applycal_result = self._do_applycal(context=context, ktypecaltable=ktypecaltable, bpdgain_touse=bpdgain_touse,
                                             bpcaltable=bpcaltable, interp=interp)
 
+        flaggedSolnApplycalbandpass = getCalFlaggedSoln(bpdgain_touse)
+        flaggedSolnApplycaldelay = getCalFlaggedSoln(ktypecaltable)
+
         return testBPdcalsResults(gain_solint1=gain_solint1, shortsol1=shortsol1, vis=self.inputs.vis,
                                   bpdgain_touse=bpdgain_touse, gtypecaltable=gtypecaltable,
-                                  ktypecaltable=ktypecaltable, bpcaltable=bpcaltable)
+                                  ktypecaltable=ktypecaltable, bpcaltable=bpcaltable,
+                                  flaggedSolnApplycalbandpass=flaggedSolnApplycalbandpass,
+                                  flaggedSolnApplycaldelay=flaggedSolnApplycaldelay)
 
     def analyse(self, results):
         return results

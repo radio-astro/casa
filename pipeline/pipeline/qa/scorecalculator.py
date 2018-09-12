@@ -54,6 +54,8 @@ __all__ = ['score_polintents',                                # ALMA specific
            'score_vla_agents',
            'score_total_data_flagged',
            'score_total_data_flagged_vla',
+           'score_total_data_flagged_vla_bandpass',
+           'score_total_data_vla_delay',
            'score_ms_model_data_column_present',
            'score_ms_history_entries_present',
            'score_contiguous_session',
@@ -293,6 +295,7 @@ def score_vla_science_data_flagged_by_agents(ms, summaries, min_frac, max_frac, 
     return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg, vis=ms.basename, origin=origin)
 
 # - exported scoring functions -----------------------------------------------------------------------------------------
+
 
 def score_ms_model_data_column_present(all_mses, mses_with_column):
     """
@@ -751,6 +754,67 @@ def score_total_data_flagged_vla(filename, summaries):
     origin = pqa.QAOrigin(metric_name='score_total_data_flagged_vla',
                           metric_score=frac_flagged,
                           metric_units='Total fraction of VLA data that is flagged')
+
+    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg, vis=os.path.basename(filename), origin=origin)
+
+
+@log_qa
+def score_total_data_flagged_vla_bandpass(filename, frac_flagged):
+    """
+    Calculate a score for the flagging task based on the data flagged in the bandpass table.
+
+    0%-5% flagged   -> 1
+    5%-60% flagged  -> 1 to 0
+    60-100% flagged -> 0
+    """
+
+    # Convert fraction of flagged data into a score.
+    if frac_flagged > 0.6:
+        score = 0
+    else:
+        score = linear_score(frac_flagged, 0.05, 0.6, 1.0, 0.0)
+
+    # Set score messages and origin.
+    percent = 100.0 * frac_flagged
+    longmsg = '%0.2f%% of data in %s was flagged' % (percent, filename)
+    shortmsg = '%0.2f%% data flagged' % percent
+
+    origin = pqa.QAOrigin(metric_name='score_total_data_flagged_vla_bandpass',
+                          metric_score=frac_flagged,
+                          metric_units='Total fraction of VLA data that is flagged in the caltable')
+
+    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg, vis=os.path.basename(filename), origin=origin)
+
+
+@log_qa
+def score_total_data_vla_delay(filename):
+    """
+    Use a filename of a delay (K-type) calibration table
+    Calculate a score for antennas with a delay > 200 ns
+    For each antenna with delays > 200 ns, reduce score by 0.1
+    """
+
+    with casatools.TableReader(filename) as tb:
+        fpar = tb.getcol('FPARAM')
+        delays = np.abs(fpar)  # Units of nanoseconds
+        maxdelay = np.max(delays)
+
+    if maxdelay < 200.0:
+        score = 1.0
+    else:
+        # For each occurrence with a delay > 200.0 ns, deduct 0.1 from the score
+        count = (delays > 200.0).sum()
+        score = 1.0 - (0.1 * count)
+    if score < 0.0:
+        score = 0.0
+
+    # Set score message and origin
+    longmsg = 'Max delay is {!s} ns'.format(str(maxdelay))
+    shortmsg = longmsg
+
+    origin = pqa.QAOrigin(metric_name='score_total_data_vla_delay',
+                          metric_score=score,
+                          metric_units='Delays that exceed 200 ns')
 
     return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg, vis=os.path.basename(filename), origin=origin)
 
@@ -2112,8 +2176,8 @@ def score_sd_skycal_elevation_difference(ms, resultdict, threshold=3.0):
             for spw_id, eld in eldiff.items():
                 preceding = eld.eldiff0
                 subsequent = eld.eldiff1
-                #LOG.info('field {} antenna {} spw {} preceding={}'.format(field_id, antenna_id, spw_id, preceding))
-                #LOG.info('field {} antenna {} spw {} subsequent={}'.format(field_id, antenna_id, spw_id, subsequent))
+                # LOG.info('field {} antenna {} spw {} preceding={}'.format(field_id, antenna_id, spw_id, preceding))
+                # LOG.info('field {} antenna {} spw {} subsequent={}'.format(field_id, antenna_id, spw_id, subsequent))
                 max_pred = None
                 max_subq = None
                 if len(preceding) > 0:
@@ -2138,10 +2202,10 @@ def score_sd_skycal_elevation_difference(ms, resultdict, threshold=3.0):
             longmsg = 'Elevation difference between ON and OFF is below threshold ({}deg)'.format(el_threshold)
         
     # CAS-11054 it is decided that we do not calculate QA score based on elevation difference for Cycle 6
-    #if np.max(metric_score) >= el_threshold:
-    #    score = 0.0
-    #else:
-    #    score = 1.0
+    # if np.max(metric_score) >= el_threshold:
+    #     score = 0.0
+    # else:
+    #     score = 1.0
     score = 1.0
     origin = pqa.QAOrigin(metric_name='OnOffElevationDifference',
                           metric_score=np.max(metric_score),
