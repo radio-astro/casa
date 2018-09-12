@@ -141,7 +141,7 @@ def hifv (vislist, importonly=False, pipelinemode='automatic', interactive=True)
         hifv_plotsummary (pipelinemode=pipelinemode)
         
         # Make a list of expected point source calibrators to be cleaned
-        hif_makeimlist (intent='PHASE,BANDPASS', pipelinemode=pipelinemode)
+        hif_makeimlist (intent='PHASE,BANDPASS', specmode='cont', pipelinemode=pipelinemode)
     
         # Make clean images for the selected calibrators
         hif_makeimages (hm_masking='none')
@@ -149,7 +149,7 @@ def hifv (vislist, importonly=False, pipelinemode='automatic', interactive=True)
         # Export the data
         # hifv_exportdata(pipelinemode=pipelinemode)
     
-    except Exception, e:
+    except Exception as e:
         if str(e) == IMPORT_ONLY:
             casatools.post_to_log ("Exiting after import step ...", echo_to_screen=echo_to_screen)
         else:
