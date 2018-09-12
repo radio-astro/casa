@@ -8,7 +8,7 @@
 <shortdescription>Import a calibration state from disk</shortdescription>
 
 <description>
-h_import calstate clears and then recreates the pipeline calibration state
+h_import_calstate clears and then recreates the pipeline calibration state
 based on the set of applycal calls given in the named file.
 </description>		
 
@@ -28,7 +28,7 @@ filename -- Name of the saved calibration state.
 
 Description
 
-h_import calstate clears and then recreates the pipeline calibration state
+h_import_calstate clears and then recreates the pipeline calibration state
 based on the set of applycal calls given in the named file. The applycal
 statements are interpreted in additive fashion; for identically specified
 data selection targets, caltables specified in later statements will be added

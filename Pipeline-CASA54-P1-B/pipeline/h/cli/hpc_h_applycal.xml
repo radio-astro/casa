@@ -258,7 +258,7 @@ Issues
 There is some discussion about the appropriate values of calwt. Given
 properly scaled data, the correct value should be the CASA default of True.
 However at the current time ALMA is suggesting that calwt be set to True for
-applying observatory calibrations, e.g. antenna postions, WVR, and system
+applying observatory calibrations, e.g. antenna positions, WVR, and system
 temperature corrections, and to False for applying instrument calibrations,
 e.g. bandpass, gain, and flux.
 

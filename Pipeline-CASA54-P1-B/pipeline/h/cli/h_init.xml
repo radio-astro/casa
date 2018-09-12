@@ -5,10 +5,10 @@
 	xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <task type="function" name="h_init" category="pipeline">
-<shortdescription>Initialise the interferometry pipeline</shortdescription>
+<shortdescription>Initialize the interferometry pipeline</shortdescription>
 
 <description>
-The h_init task initialises the interferometry pipeline and optionally 
+The h_init task initializes the interferometry pipeline and optionally 
 imports data.
 </description>
 <input>
@@ -107,7 +107,7 @@ imports data.
 
 <example>
 
-The h_init task initialises the interferometry pipeline.
+The h_init task initializes the interferometry pipeline.
 
 
 Keyword arguments:
@@ -159,10 +159,10 @@ results -- If pipeline mode is 'getinputs' then None is returned. Otherwise
 Description
 
 h_init  must be called before any other interferometry pipeline task. The
-pipeline can be initialised in one of two ways: by creating a new pipeline 
+pipeline can be initialized in one of two ways: by creating a new pipeline 
 state (h_init) or be loading a saved pipeline state (h_resume).
 
-h_init creates an empty pipeline context but does not load visiblity data
+h_init creates an empty pipeline context but does not load visibility data
 into the context. hif_importdata or hsd_importdata can be used to load data.
 
 Issues
