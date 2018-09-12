@@ -275,7 +275,7 @@ calcsb -- Force (re-)calculation of sensitivities and beams
 
 mosweight -- Mosaic weighting
              default=None
-             Optiones: False, True
+             Options: False, True
 
 parallel -- use multiple CPU nodes to clean images
     default: \'automatic\'

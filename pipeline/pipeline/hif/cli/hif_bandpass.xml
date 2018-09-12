@@ -194,7 +194,7 @@ solint --  Time and channel solution intervals in CASA syntax.
     default: 'inf,7.8125MHz'
     example: 'inf,10ch', 'inf'
 
-combine -- Data axes to combine for solving. Axes are '', 'scan','spw','field'
+combine -- Data axes to combine for solving. Axes are '', 'scan', 'spw', 'field'
     or any comma-separated combination.
     default; 'scan'
     example: combine='scan,field' 
@@ -226,7 +226,7 @@ field -- The list of field names or field ids for which bandpasses are
     example: '3C279', '3C279, M82'
 
 intent -- A string containing a comma delimited list of intents against
-    which the the selected fields are matched.  Defaults to all data
+    which the selected fields are matched.  Defaults to all data
     with bandpass intent.
     default: '' 
     example: '*PHASE*'
@@ -263,7 +263,7 @@ Description
 
 hif_bandpass computes a bandpass solution for every specified science
 spectral window. By default a 'phaseup' pre-calibration is performed
-and applied on the fly to to the data, before the bandpass is computed.
+and applied on the fly to the data, before the bandpass is computed.
 
 The hif_refant task may be used to precompute a prioritized list of
 reference antennas.

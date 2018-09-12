@@ -118,7 +118,7 @@ target_list -- Dictionary specifying targets to be imaged; blank will read list 
 
 mosweight -- Mosaic weighting
              default=None
-             Optiones: False, True
+             Options: False, True
 
 parallel -- use multiple CPU nodes to compute dirty images
     default: \'automatic\'

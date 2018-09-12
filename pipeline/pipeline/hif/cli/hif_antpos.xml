@@ -174,7 +174,7 @@ observation was taken.
 Corrections can be input by hand, read from a file on disk, or in future
 by querying an ALMA database service.
 
-The antenna positions file is in 'csv' format containing 6 comma delimited
+The antenna positions file is in 'csv' format containing 6 commas delimited
 columns as shown below. The default name of this file is 'antennapos.csv'
 
 List if sample antennapos.csv file
