@@ -180,7 +180,7 @@ field -- A string containing the list of field names or field ids to which
     default: '' 
     example: '3C279', '3C279, M82'
 
-intent -- A string containing a the list of intents against which the 
+intent -- A string containing the list of intents against which the 
     selected fields will be matched. Defaults to all supported intents
     in the pipeline context.
     default: ''

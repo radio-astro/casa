@@ -208,7 +208,7 @@ pipelinemode -- The pipeline operating mode. In 'automatic' mode the pipeline
 hm_gtype -- The type of gain calibration. The options are 'gtype' and
     'gspline' for CASA gain types = 'G' and 'GSPLINE' respectively.
 
-calmode -- Type of solution, The options are 'ap' (amp and phase), 'p'
+calmode -- Type of solution.  The options are 'ap' (amp and phase), 'p'
     (phase only) and 'a' (amp only)
     default: 'ap'
     options: 'p','a','ap'
@@ -218,7 +218,7 @@ solint --  Time solution intervals in CASA syntax. Works for hm_gtype='gtype'
     default: 'inf'
     example: 'inf', 'int', '100sec'
 
-combine -- Data axes to combine for solving. Options are  '','scan','spw',field'
+combine -- Data axes to combine for solving. Options are  '','scan', 'spw', 'field'
     or any comma-separated combination. Works for hm_gtype='gtype' only.
     default; ''
     example: combine=''
@@ -265,7 +265,7 @@ field -- The list of field names or field ids for which gain solutions are
     example: '3C279', '3C279, M82'
 
 intent -- A string containing a comma delimited list of intents against
-    which the the selected fields are matched. Defaults to *PHASE*.
+    which the selected fields are matched. Defaults to *PHASE*.
     default: '' 
     example: '', '*AMP*,*PHASE*'
 

@@ -318,7 +318,7 @@ field -- Select fields to image. Use field name(s) NOT id(s). Mosaics
     are assumed to have common source / field names.  If intent is specified
     only fields with data matching the intent will be selected. The fields
     will be selected from MeasurementSets in 'vis'.
-    default: '' Fields matching matching intent, one image per target source.
+    default: '' Fields matching intent, one image per target source.
     example: '3C279', 'Centaurus*', '3C279,J1427-421'
 
 spw -- Select spectral window/channels to image.
@@ -334,7 +334,7 @@ linesfile -- Name of file with line frequency ranges to exclude for continuum im
     default: 'lines.dat'
     example: 'mylines.dat'
 
-uvrange -- Select a set of uv ranges ro image.
+uvrange -- Select a set of uv ranges to image.
     default: '' All uv data is included
     example: '0~1000klambda', ['0~100klambda', 100~1000klambda]
 
@@ -352,7 +352,7 @@ start -- First channel for frequency mode images.
     default '' Starts at first input channel of the spw.
     example: '22.3GHz'
 
-clearlist -- Clear previous iamge target list.
+clearlist -- Clear previous image target list.
     default True
     example: False
 
@@ -384,7 +384,7 @@ Generate a list of images to be cleaned. By default the list will include
 one image per science target per spw. Calibrator targets can be selected
 by setting appropriate values for intent.
 
-By default the output image cellsize is set to the minimum cell size
+By default the output image cell size is set to the minimum cell size
 consistent with the UV coverage.
 
 By default the image size in pixels is set to values determined by the
