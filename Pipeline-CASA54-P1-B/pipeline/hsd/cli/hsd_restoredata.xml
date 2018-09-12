@@ -5,7 +5,7 @@
 	xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <task type="function" name="hsd_restoredata" category="pipeline">
-<shortdescription>Restore flagged and calibration single-dish data from a pipeline run</shortdescription>
+<shortdescription>Restore flagged and calibration single dish data from a pipeline run</shortdescription>
 <description>
 </description>
 <input>
@@ -30,7 +30,7 @@
     </param>
 
     <param type="string" name="rawdata_dir">
-	<description>The rawdata directory</description>
+	<description>The raw data directory</description>
 	<value>../rawdata</value>
     </param>
 
@@ -131,8 +131,12 @@ products_dir -- Name of the data products directory. Currently not
    used.
    default: '../products'
    example: products_dir='myproductspath'
+   
+copytoraw -- Copy calibration and flagging tables to raw data directory.
+   default: True
+   example: copytoraw=False
 
-rawdata_dir -- Name of the rawdata subdirectory. 
+rawdata_dir -- Name of the raw data directory. 
    default: '../rawdata'
    example: rawdata_dir='myrawdatapath'
 
@@ -170,7 +174,7 @@ results -- If pipeline mode is 'getinputs' then None is returned. Otherwise
 
 Description
 
-The hsd_restoredata restores flagged and calibrated data from archived
+The hsd_restoredata task restores flagged and calibrated data from archived
 ASDMs and pipeline flagging and calibration data products. Pending archive
 retrieval support hsd_restoredata assumes that the required products
 are available in the rawdata_dir in the format produced by the
@@ -188,7 +192,7 @@ o for each ASDM in the input list
    o a compressed tar file containing the caltables for the parent session,
      e.g. uid___A001_X74_X29.session_3.caltables.tar.gz
 
-hsd_restore data performs the following operations
+hsd_restoredata performs the following operations
 
 o imports the ASDM(s))
 o removes the default MS.flagversions directory created by the filler

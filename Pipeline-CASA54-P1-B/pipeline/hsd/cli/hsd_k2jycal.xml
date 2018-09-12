@@ -140,7 +140,7 @@ reffile -- Path to a file containing Jy/K factors for science data, which
 ---- pipeline context defined parameter arguments which can be set only in
 'interactive mode'
 
-infiles -- List of input visibility files
+infiles -- List of input MeasurementSets
     default: none; example: vis='ngc5921.ms'
 
 caltable -- Name of output gain calibration tables

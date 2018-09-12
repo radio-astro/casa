@@ -98,7 +98,7 @@
 	</param>
 
     <param type="any" name="spw" subparam="true">
-            <description>select data by IF IDs (spectral windows), e.g. \'3,5,7\' (\'\'=all)</description>
+            <description>select data by spw ids, e.g. \'3,5,7\' (\'\'=all)</description>
             <any type="variant" limittypes="string stringArray"/>
             <value type="string"></value>
     </param>
@@ -196,8 +196,8 @@ hsd_blflag(pipelinemode="automatic")
 hsd_imaging(pipelinemode="automatic")
 
 Since the second run of hsd_baseline overwrites the result for spw 0 
-with the data before baseline subtraction, this  will not produce 
-correct result for spw 0. Proper sequence for this usecase is to 
+with the data before baseline subtraction, this will not produce 
+correct result for spw 0. Proper sequence for this use case is to 
 process each spw to the imaging stage separately, which looks like 
 as follows:
 
@@ -245,10 +245,10 @@ linewindow -- Pre-defined line window. If this is set, specified line
       [[min_freq0, max_freq0], [min_freq1, max_freq1], ...]
       
    Note that the specified frequencies are assumed to be the value in 
-   LSRK frame. Note also that there is a limitation when multiple MSs are 
+   LSRK frame. Note also that there is a limitation when multiple MSes are 
    processed. If native frequency frame of the data is not LSRK (e.g. TOPO), 
    frequencies need to be converted to that frame. As a result, corresponding 
-   chnnnel range may vary between MSs. However, current implementation is 
+   channel range may vary between MSes. However, current implementation is 
    not able to handle such case. Frequencies are converted to desired frame 
    using representative MS (time, position, direction). 
       
@@ -322,7 +322,7 @@ pipelinemode -- The pipeline operating mode. In 'automatic' mode the
 ---- pipeline context defined parameter argument which can be set only in
 'interactive mode'
 
-infiles -- List of data files. These must be a name of Scantables that 
+infiles -- List of data files. These must be a name of MeasurementSets that 
    are registered to context via hsd_importdata task.
    default: []
    example: vis=['X227.ms', 'X228.ms']
@@ -342,7 +342,7 @@ spw -- Data selection by spw.
    example: '3,4' (generate caltable for spw 3 and 4)
             ['0','2'] (spw 0 for first data, 2 for second)
 
-pol -- Data selection by pol.
+pol -- Data selection by polarizations.
    default: '' (all polarizations)
    example: '0' (generate caltable for pol 0)
             ['0~1','0'] (pol 0 and 1 for first data, only 0 for second)

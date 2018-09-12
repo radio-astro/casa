@@ -5,7 +5,7 @@
         xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <task type="function" name="hsd_blflag" category="pipeline">
-<shortdescription>Flag spectra based on predefined criteria of single-dish pipeline</shortdescription>
+<shortdescription>Flag spectra based on predefined criteria of single dish pipeline</shortdescription>
 
 <description>
 </description>
@@ -92,7 +92,7 @@
     </param>
 
     <param type="int" name="prfrm_nmean" subparam="true">
-        <description>Number of channel for running mean of pre-fit spectra flag</description>
+        <description>Number of channels for running mean of pre-fit spectra flag</description>
         <value>5</value>
     </param>
 
@@ -107,7 +107,7 @@
     </param>
 
     <param type="int" name="pofrm_nmean" subparam="true">
-        <description>Number of channel for running mean of post-fit spectra flag</description>
+        <description>Number of channels for running mean of post-fit spectra flag</description>
         <value>5</value>
     </param>
 
@@ -291,7 +291,7 @@ iteration -- Number of iterations to perform sigma clipping to calculate
 
 edge -- Number of channels to be dropped from the edge.
        The value must be a list of integer with length of one or two.
-                       If list length is one, same number will be applied both side of 
+       If list length is one, same number will be applied both side of 
        the band.
        default: [0,0]
        example: [10,20], [10]
@@ -303,7 +303,7 @@ tsys_thresh -- Threshold value for Tsys flag.
        default: 3.0
 
 flag_weath -- Activate (True) or deactivate (False) weather flag. 
-       Since weather flagging is not implemented yet. Setting True 
+       Since weather flagging is not implemented yet, setting True 
        has no effect at the moment.
        default: False
 
@@ -314,7 +314,7 @@ flag_prfre -- Activate (True) or deactivate (False) flag by expected rms
        of pre-fit spectra.
        default: True
 
-                prfre_thresh -- Threshold value for flag by expected rms of pre-fit 
+prfre_thresh -- Threshold value for flag by expected rms of pre-fit 
        spectra. 
        default: 3.0 
 
@@ -337,7 +337,7 @@ flag_pofr -- Activate (True) or deactivate (False) flag by rms of post-fit
        spectra.
        default: True
 
-                pofr_thresh -- Threshold value for flag by rms of post-fit spectra. 
+pofr_thresh -- Threshold value for flag by rms of post-fit spectra. 
        default: 4.0
 
 flag_prfrm -- Activate (True) or deactivate (False) flag by running mean 
@@ -363,7 +363,7 @@ pofrm_nmean -- Number of channels for running mean of post-fit spectra.
                        default: 5
 
 flag_user -- Activate (True) or deactivate (False) user-defined flag. 
-       Since user flagging is not implemented yet. Setting True 
+       Since user flagging is not implemented yet, setting True 
        has no effect at the moment.
        default: False
 
@@ -397,11 +397,11 @@ field -- Data selection by field names or ids.
    default: '' (all fields)
    example: '*Sgr*,M100'
    
-spw -- Data selection by spw IDs.
+spw -- Data selection by spw ids.
    default: '' (all spws)
    example: '3,4' (spw 3 and 4)
 
-pol -- Data selection by pol.
+pol -- Data selection by polarizations.
    default: '' (all polarizations)
    example: 'XX,YY' (correlation XX and YY)
 

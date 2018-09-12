@@ -10,7 +10,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 <shortdescription>Flag deviant system temperature measurements</shortdescription>
 
 <description>
-Flag deviant system temperatures for single-dish measurements. This is done by running a
+Flag deviant system temperatures for single dish measurements. This is done by running a
 sequence of flagging subtasks, each looking for a different type of possible error.
 </description>
 
@@ -212,7 +212,7 @@ sequence of flagging subtasks, each looking for a different type of possible err
 
 <example>
 
-Flag deviant system temperatures for single-dish measurements.
+Flag deviant system temperatures for single dish measurements.
 
 Flag all deviant system temperature measurements in the system temperature
 calibration table by running a sequence of flagging tests, each designed
