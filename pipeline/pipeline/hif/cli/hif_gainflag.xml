@@ -6,10 +6,12 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
 file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <task type="function" name="hif_gainflag" category="pipeline">
+
 <shortdescription>Flag antennas with deviant gain</shortdescription>
 <description>
-Flag antennas with deviant gain
+Flag antennas with deviant gain.
 </description>
+
 <input>
     <param type="stringArray" name="vis" subparam="true">
         <description>List of input MeasurementSets</description>
@@ -77,7 +79,7 @@ Flag antennas with deviant gain
     </param>
 
     <param type="bool" name="dryrun" subparam="true">
-        <description>Run the task (False) or list commands(True)</description>
+        <description>Run the task (False) or list commands (True)</description>
        <value>False</value>
     </param>
 
@@ -141,20 +143,20 @@ Flag antennas with deviant gain
 </output>
 <returns type="void"/>
 
-
 <example>
-
-hif_gainflag flags data for antennas with deviant median gains and/or high 
+hif_gainflag flags data for antennas with deviant median gains and/or high
 gain rms.
 
-Keyword arguments:
+
+Keyword arguments
 
 pipelinemode -- The pipeline operating mode. In 'automatic' mode the pipeline
-   determines the values of all context defined pipeline inputs automatically.
-   In interactive mode the user can set the pipeline context defined parameters
-   manually.  In 'getinputs' mode the user can check the settings of all
-   pipeline parameters without running the task.
-   default: 'automatic'.
+    determines the values of all context defined pipeline inputs automatically.
+    In interactive mode the user can set the pipeline context defined
+    parameters manually. In 'getinputs' mode the user can check the settings of
+    all pipeline parameters without running the task.
+
+    default: 'automatic'.
 
 ---- pipeline parameter arguments which can be set in any pipeline mode
 
@@ -164,10 +166,11 @@ flag_mediandeviant -- True to flag antennas with deviant median gain,
     abs( median(antenna) - median(all antennas) ) / MAD(all antennas) 
       > fmeddev_limit
     
-    default False
+    default: False
 
 fmeddev_limit -- Flag antennas with \'mediandeviant\' metric larger than 
     fmeddev_limit.
+
     default: 3.0
 
 flag_rmsdeviant -- True to flag antennas with deviant gain rms, calculated as:
@@ -178,6 +181,7 @@ flag_rmsdeviant -- True to flag antennas with deviant gain rms, calculated as:
 
 frmsdev_limit -- Flag antennas with 'rmsdeviant' metric larger than 
     frmsdev_limit.
+
     default: 8.0
 
 flag_nrmsdeviant -- True to flag antennas with deviant normalised gain rms, 
@@ -194,54 +198,65 @@ flag_nrmsdeviant -- True to flag antennas with deviant normalised gain rms,
 
 fnrmsdev_limit -- Flag antennas with 'nrmsdeviant' metric larger than 
     fnrmsdev_limit.
+
     default: 6.0
 
 metric_order -- Order in which the flagging metrics are evaluated.
+
     default: 'mediandeviant, rmsdeviant, nrmsdeviant'
 
 ---- pipeline context defined parameter arguments which can be set only in
 'interactive mode'
 
 vis -- List of input MeasurementSets.
+
     default: [] - Use the MeasurementSets currently known to the pipeline
     context. 
 
 intent -- A string containing the list of intents to be checked for antennas
     with deviant gains. The default is blank, which causes the task to select
     the 'BANDPASS' intent.
+
     default: ''
-    example: '*BANDPASS*'
+    example: intent='*BANDPASS*'
 
 spw -- The list of spectral windows and channels to which the calibration
     will be applied. Defaults to all science windows in the pipeline
     context.
-    default: '' 
-    example: '17', '11, 15'
+
+    default: ''
+    example: spw='17', spw='11, 15'
 
 refant -- A string containing a prioritized list of reference antenna name(s)
     to be used to produce the gain table. Defaults to the value(s) stored in 
     the pipeline context. If undefined in the pipeline context defaults to the
     CASA reference antenna naming scheme.
+
     default: ''
     example: refant='DV01', refant='DV06,DV07'
 
 -- Pipeline task execution modes
 
 dryrun -- Run the commands (True) or generate the commands to be run but
-   do not execute (False).
-   default: True
+    do not execute (False).
+
+    default: True
 
 acceptresults -- Add the results of the task to the pipeline context (True) or
-   reject them (False).
-   default: True
+    reject them (False).
 
-Output:
+    default: True
+
+
+Output
 
 results -- If pipeline mode is 'getinputs' then None is returned. Otherwise
     the results object for the pipeline task is returned.
 
+
 Description
-Deviant antennas are detected by analysis of a view showing their calibration 
+
+Deviant antennas are detected by analysis of a view showing their calibration
 gains. Three flagging metrics are available (mediandeviant, rmsdeviant, 
 nrmsdeviant) and a flagging view is created for each metric that has been 
 enabled. Each view is a list of 2D images with axes 'Time' and 'Antenna'; 
@@ -268,9 +283,6 @@ The following heuristics are used for the flagging metrics:
      med_sm_allant = median( {sm(ant_1), sm(ant_2), ..., sm(ant_nants)} )
      
    where MAD is the median absolute deviation from the median.
-
 </example> 
-
 </task>
 </casaxml>
-

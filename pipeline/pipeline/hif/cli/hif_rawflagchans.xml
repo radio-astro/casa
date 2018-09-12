@@ -6,10 +6,12 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
 file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <task type="function" name="hif_rawflagchans" category="pipeline">
+
 <shortdescription>Flag deviant baseline/channels in raw data</shortdescription>
 <description>
 Flag deviant baseline/channels in raw data.
 </description>
+
 <input>
     <param type="stringArray" name="vis" subparam="true">
         <description>List of input MeasurementSets</description>
@@ -72,7 +74,7 @@ Flag deviant baseline/channels in raw data.
     </param>
 
     <param type="bool" name="dryrun" subparam="true">
-        <description>Run the task (False) or list commands(True)</description>
+        <description>Run the task (False) or list commands (True)</description>
        <value>False</value>
     </param>
 
@@ -130,8 +132,7 @@ Flag deviant baseline/channels in raw data.
 <returns type="void"/>
 
 <example>
-
-hif_rawflagchans flags deviant baseline/channels in the raw data. 
+hif_rawflagchans flags deviant baseline/channels in the raw data.
 
 The flagging views used are derived from the raw data for the specified 
 intent - default is BANDPASS. 
@@ -166,102 +167,112 @@ fraction of suspect points exceeds fbq_baseline_frac_limit.
 Suspect points are not flagged unless as part of a bad antenna or 
 baseline quadrant. 
 
-Keyword arguments:
+
+Keyword arguments
 
 pipelinemode -- The pipeline operating mode. In 'automatic' mode the pipeline
-   determines the values of all context defined pipeline inputs automatically.
-   In interactive mode the user can set the pipeline context defined parameters
-   manually.  In 'getinputs' mode the user can check the settings of all
-   pipeline parameters without running the task.
-   default: 'automatic'.
+    determines the values of all context defined pipeline inputs automatically.
+    In interactive mode the user can set the pipeline context defined
+    parameters manually. In 'getinputs' mode the user can check the settings of
+    all pipeline parameters without running the task.
+
+    default: 'automatic'.
 
 ---- pipeline parameter arguments which can be set in any pipeline mode
 
 flag_hilo -- True to flag channel/baseline data further from the view
-             median than fhl_limit * MAD.
+    median than fhl_limit * MAD.
+
     default: True
 
 fhl_limit -- If flag_hilo is True then flag channel/baseline data
-             further from the view median than fhl_limit * MAD.
+    further from the view median than fhl_limit * MAD.
+
     default: 20
 
 fhl_minsample -- Do no flagging if the view median and MAD are derived
-                 from fewer than fhl_minsample view pixels.
+    from fewer than fhl_minsample view pixels.
+
     default: 5
 
 flag_bad_quadrant -- True to search for and flag bad antenna quadrants
-                     and baseline quadrants. Here a /'quadrant/' is one 
-                     quarter of the channel axis.
+    and baseline quadrants. Here a /'quadrant/' is one
+    quarter of the channel axis.
+
     default: True
 
-fbq_hilo_limit -- If flag_bad_quadrant is True then channel/baselines
-                  further from the view median than fbq_hilo_limit
-                  * MAD will be noted as 'suspect'. If there are 
-                  enough of them to indicate that an antenna or baseline
-                  quadrant is bad then all channel/baselines in that
-                  quadrant will be flagged.
+fbq_hilo_limit -- If flag_bad_quadrant is True then channel/baselines further
+    from the view median than fbq_hilo_limit * MAD will be noted as
+    'suspect'. If there are enough of them to indicate that an antenna or
+    baseline quadrant is bad then all channel/baselines in that quadrant will
+    be flagged.
+
     default: 8.0
 
-fbq_antenna_frac_limit -- If flag_bad_quadrant is True and the fraction
-                          of suspect channel/baselines in a particular
-                          antenna/quadrant exceeds fbq_antenna_frac_limit
-                          then all data for that antenna/quadrant will
-                          be flagged.
+fbq_antenna_frac_limit -- If flag_bad_quadrant is True and the fraction of
+    suspect channel/baselines in a particular antenna/quadrant exceeds
+    fbq_antenna_frac_limit then all data for that antenna/quadrant will
+    be flagged.
+
     default: 0.2
 
-fbq_baseline_frac_limit -- If flag_bad_quadrant is True and the fraction
-                           of suspect channel/baselines in a particular
-                           baseline/quadrant exceeds fbq_baseline_frac_limit
-                           then all data for that baseline/quadrant will
-                           be flagged.
+fbq_baseline_frac_limit -- If flag_bad_quadrant is True and the fraction of
+    suspect channel/baselines in a particular baseline/quadrant exceeds
+    fbq_baseline_frac_limit then all data for that baseline/quadrant will
+    be flagged.
+
     default: 1.0 (i.e. no flagging)
 
 ---- pipeline context defined parameter arguments which can be set only in
 'interactive mode'
 
 vis -- List of input MeasurementSets.
+
     default: [] - Use the MeasurementSets currently known to the pipeline
     context. 
 
 intent -- A string containing the list of intents to be checked for antennas
     with deviant gains. The default is blank, which causes the task to select
     the 'BANDPASS' intent.
+
     default: ''
-    example: '*BANDPASS*'
+    example: intent='*BANDPASS*'
 
 spw -- The list of spectral windows and channels to which the calibration
     will be applied. Defaults to all science windows in the pipeline
     context.
-    default: '' 
-    example: '17', '11, 15'
+
+    default: ''
+    example: spw='17', spw='11, 15'
 
 -- Pipeline task execution modes
 
 dryrun -- Run the commands (True) or generate the commands to be run but
-          do not execute (False).
+    do not execute (False).
+
     default: True
 
 acceptresults -- This parameter has no effect. The Tsyscal file is already
-                 in the pipeline context and is flagged in situ.
+    in the pipeline context and is flagged in situ.
 
-Output:
+
+Output
 
 results -- If pipeline mode is 'getinputs' then None is returned. Otherwise
     the results object for the pipeline task is returned.
 
 
-Examples:
+Examples
 
-1. Flag bad quadrants and wild outliers, default method.
+1. Flag bad quadrants and wild outliers, default method:
 
-   hif_rawflagchans()
-       equivalent to:
-   hif_rawflagchans(flag_hilo=True, fhl_limit=20,
-     flag_bad_quadrant=True, fbq_hilo_limit=8, 
-     fbq_antenna_frac_limit=0.2, fbq_baseline_frac_limit=1.0)
+    hif_rawflagchans()
 
-</example> 
+equivalent to:
 
+    hif_rawflagchans(flag_hilo=True, fhl_limit=20,
+                     flag_bad_quadrant=True, fbq_hilo_limit=8,
+                     fbq_antenna_frac_limit=0.2, fbq_baseline_frac_limit=1.0)
+</example>
 </task>
 </casaxml>
-

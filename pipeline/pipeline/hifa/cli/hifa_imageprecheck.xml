@@ -5,9 +5,11 @@
 	xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <task type="function" name="hifa_imageprecheck" category="pipeline">
+
 <shortdescription>Base imageprecheck task</shortdescription>
 <description>
 </description>
+
 <input>
     <param type="stringArray" name="vis" subparam="true">
 	<description>List of input visibility data</description>
@@ -66,57 +68,60 @@
 </output>
 <returns type="void"/>
 
-
 <example>
-The hifa_imageprecheck task
+The hifa_imageprecheck task.
 
-Keyword arguments:
+
+Keyword arguments
 
 ---- pipeline parameter arguments which can be set in any pipeline mode
 
 vis -- List of visibility data files. These may be ASDMs, tar files of ASDMs,
-   MSs, or tar files of MSs, If ASDM files are specified, they will be
-   converted  to MS format.
-   default: []
-   example: vis=['X227.ms', 'asdms.tar.gz']
+    MSs, or tar files of MSs. If ASDM files are specified, they will be
+    converted to MS format.
 
-calcsb -- Force (re-)calculation of sensitivities and beams
-          default=False
-          Options: False, True
+    default: []
+    example: vis=['X227.ms', 'asdms.tar.gz']
+
+calcsb -- Force (re-)calculation of sensitivities and beams.
+
+    default: False
 
 pipelinemode -- The pipeline operating mode. In 'automatic' mode the pipeline
-   determines the values of all context defined pipeline inputs
-   automatically.  In 'interactive' mode the user can set the pipeline
-   context defined parameters manually.  In 'getinputs' mode the user
-   can check the settings of all pipeline parameters without running
-   the task.
-   default: 'automatic'.
+    determines the values of all context defined pipeline inputs automatically.
+    In 'interactive' mode the user can set the pipeline context defined
+    parameters manually. In 'getinputs' mode the user can check the settings of
+    all pipeline parameters without running the task.
+
+    default: 'automatic'.
 
 ---- pipeline context defined parameter argument which can be set only in
 'interactive mode'
 
-
 --- pipeline task execution modes
 
 dryrun -- Run the commands (True) or generate the commands to be run but
-   do not execute (False).
-   default: True
+    do not execute (False).
+
+    default: True
 
 acceptresults -- Add the results of the task to the pipeline context (True) or
-   reject them (False).
-   default: True
+    reject them (False).
 
-Output:
+    default: True
+
+
+Output
 
 results -- If pipeline mode is 'getinputs' then None is returned. Otherwise
-   the results object for the pipeline task is returned.
+    the results object for the pipeline task is returned.
 
 
 Examples
 
-1. Basic imageprecheck task
+1. Basic imageprecheck task:
 
-   hifa_imageprecheck()
+    hifa_imageprecheck()
 </example>
 </task>
 </casaxml>

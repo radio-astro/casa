@@ -6,10 +6,12 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
 file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <task type="function" name="hsd_k2jycal" category="pipeline">
+
 <shortdescription>Derive Kelvin to Jy calibration tables</shortdescription>
 <description>
-Derive the Kelvin to Jy calibration for list of MeasurementSets
+Derive the Kelvin to Jy calibration for list of MeasurementSets.
 </description>
+
 <input>
     <param type="string" name="reffile" mustexist="true">
         <description>File of Jy/K conversion factor</description>
@@ -37,8 +39,8 @@ Derive the Kelvin to Jy calibration for list of MeasurementSets
     </param>
 
     <param type="bool" name="dryrun" subparam="true">
-        <description>Run the task (False) or list commands(True)</description>
-       <value>False</value>
+        <description>Run the task (False) or list commands (True)</description>
+        <value>False</value>
     </param>
 
     <param type="bool" name="acceptresults" subparam="true">
@@ -72,28 +74,27 @@ Derive the Kelvin to Jy calibration for list of MeasurementSets
 </output>
 <returns type="void"/>
 
-
 <example>
+Derive the Kelvin to Jy calibration for list of MeasurementSets.
 
-Derive the Kelvin to Jy calibration for list of MeasurementSets
 
-Keyword arguments:
+Keyword arguments
 
 pipelinemode -- The pipeline operating mode. In 'automatic' mode the pipeline
-   determines the values of all context defined pipeline inputs
-   automatically.  In interactive mode the user can set the pipeline
-   context defined parameters manually.  In 'getinputs' mode the user
-   can check the settings of all pipeline parameters without running
-   the task.
-   default: 'automatic'.
+    determines the values of all context defined pipeline inputs automatically.
+    In interactive mode the user can set the pipeline context defined
+    parameters manually. In 'getinputs' mode the user can check the settings of
+    all pipeline parameters without running the task.
+
+    default: 'automatic'.
 
 reffile -- Path to a file containing Jy/K factors for science data, which 
-    must be provided by associating calibrator reduction or the observatory 
+    must be provided by associating calibrator reduction or the observatory
     measurements. Jy/K factor must take into account all efficiencies, i.e.,
-    it must be a direct conversion factor from Ta* to Jy. The file must be 
-    in either MS-based or session-based format. The MS-based format must 
-    be in an CSV format with five fields: MS name, antenna name, spectral 
-    window id, polarization string, and Jy/K conversion factor. Example for 
+    it must be a direct conversion factor from Ta* to Jy. The file must be
+    in either MS-based or session-based format. The MS-based format must
+    be in an CSV format with five fields: MS name, antenna name, spectral
+    window id, polarization string, and Jy/K conversion factor. Example for
     the file is as follows:
     
         MS,Antenna,Spwid,Polarization,Factor
@@ -102,7 +103,7 @@ reffile -- Path to a file containing Jy/K factors for science data, which
         uid___A002_X316307_X6f.ms,PM04,5,XX,2.0
         uid___A002_X316307_X6f.ms,PM04,5,YY,5.0
         
-    The first line in the above example is a header which may or may not 
+    The first line in the above example is a header which may or may not
     exist. Example for the session-based format is as follows:
     
         #OUSID=XXXXXX
@@ -131,51 +132,58 @@ reffile -- Path to a file containing Jy/K factors for science data, which
     factor for ANONYMOUS antenna will be applied since there is no measurement for 
     PM04 in session 1.
     If no file name is specified or specified file doesn't exist, all Jy/K factors 
-    are set to 1.0. 
+    are set to 1.0.
+
     default: 'jyperk.csv'
-    example: '', 'working/jyperk.csv'
+    example: reffile='', reffile='working/jyperk.csv'
 
 ---- pipeline parameter arguments which can be set in any pipeline mode
 
 ---- pipeline context defined parameter arguments which can be set only in
 'interactive mode'
 
-infiles -- List of input MeasurementSets
-    default: none; example: vis='ngc5921.ms'
+infiles -- List of input MeasurementSets.
 
-caltable -- Name of output gain calibration tables
-    default: none; example: caltable='ngc5921.gcal'
+    default: none
+    example: vis='ngc5921.ms'
+
+caltable -- Name of output gain calibration tables.
+
+    default: none
+    example: caltable='ngc5921.gcal'
 
 -- Pipeline task execution modes
 
 dryrun -- Run the commands (True) or generate the commands to be run but
    do not execute (False).
+
    default: True
 
 acceptresults -- Add the results of the task to the pipeline context (True) or
    reject them (False).
+
    default: True
 
-Output:
+
+Output
 
 results -- If pipeline mode is 'getinputs' then None is returned. Otherwise
     the results object for the pipeline task is returned.
 
+
 Description
 
-Derive the Kelvin to Jy calibration for list of MeasurementSets
+Derive the Kelvin to Jy calibration for list of MeasurementSets.
+
 
 Issues
 
+
 Example
 
-1. Compute the Kevin to Jy calibration tables for a list of MeasurementSets
+1. Compute the Kevin to Jy calibration tables for a list of MeasurementSets:
 
     hsd_k2jycal()
-
-
-</example> 
-
+</example>
 </task>
 </casaxml>
-

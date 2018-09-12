@@ -6,10 +6,12 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
 file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <task type="function" name="hifa_fluxdb" category="pipeline">
+
 <shortdescription>Connect to flux calibrator database</shortdescription>
 <description>
-Connect to flux calibrator database
+Connect to flux calibrator database.
 </description>
+
 <input>
     <param type="stringArray" name="vis" subparam="true">
         <description>List of input MeasurementSets</description>
@@ -27,8 +29,8 @@ Connect to flux calibrator database
     </param>
 
     <param type="bool" name="dryrun" subparam="true">
-        <description>Run the task (False) or list commands(True)</description>
-       <value>False</value>
+        <description>Run the task (False) or list commands (True)</description>
+        <value>False</value>
     </param>
 
     <param type="bool" name="acceptresults" subparam="true">
@@ -60,59 +62,57 @@ Connect to flux calibrator database
 </output>
 <returns type="void"/>
 
-
 <example>
+Connect to the ALMA flux calibrator database.
 
-Connect to the ALMA flux calibrator database
 
-
-Keyword arguments:
+Keyword arguments
 
 pipelinemode -- The pipeline operating mode. In 'automatic' mode the pipeline
-   determines the values of all context defined pipeline inputs
-   automatically.  In interactive mode the user can set the pipeline
-   context defined parameters manually.  In 'getinputs' mode the user
-   can check the settings of all pipeline parameters without running
-   the task.
-   default: 'automatic'.
+    determines the values of all context defined pipeline inputs automatically.
+    In interactive mode the user can set the pipeline context defined
+    parameters manually. In 'getinputs' mode the user can check the settings of
+    all pipeline parameters without running the task.
 
+    default: 'automatic'.
 
+vis -- List of input visibility files.
 
-vis -- List of input visibility files
-    default: none; example: vis='ngc5921.ms'
-
-
+    default: none
+    example: vis=['ngc5921.ms']
 
 -- Pipeline task execution modes
 
 dryrun -- Run the commands (True) or generate the commands to be run but
-   do not execute (False).
-   default: True
+    do not execute (False).
+
+    default: True
 
 acceptresults -- Add the results of the task to the pipeline context (True) or
-   reject them (False).
-   default: True
+    reject them (False).
 
-Output:
+    default: True
+
+
+Output
 
 results -- If pipeline mode is 'getinputs' then None is returned. Otherwise
     the results object for the pipeline task is returned.
+
 
 Description
 
 Connect to the ALMA flux calibrator database
 
+
 Issues
+
 
 Example
 
-1. Connect to the ALMA flux calibrator database
+1. Connect to the ALMA flux calibrator database:
 
     hifa_fluxdb()
-
-
-</example> 
-
+</example>
 </task>
 </casaxml>
-
