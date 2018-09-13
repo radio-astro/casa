@@ -97,7 +97,7 @@ def fluxservice(service_url, obs_time, frequency, sourcename):
     ssl_context = ssl._create_unverified_context()
     try:
         response = urllib2.urlopen(url, context=ssl_context, timeout=10.0)
-    except urllib2.URLError:
+    except IOError:
         LOG.warn('Error contacting ALMA Source Catalogue Database')
         raise
 
