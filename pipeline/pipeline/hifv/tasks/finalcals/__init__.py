@@ -5,6 +5,7 @@ import pipeline.infrastructure.renderer.weblog as weblog
 # import pipeline.hif.tasks.applycal.renderer as applycal_renderer
 
 from .finalcals import Finalcals
+from .finalcals import FinalcalsResults
 from .applycals import Applycals
 
 from . import finalcals
@@ -12,9 +13,7 @@ from . import renderer
 
 from . import qa
 
-#pipelineqa.registry.add_handler(qa.FinalcalsQAHandler())
-#pipelineqa.registry.add_handler(qa.FinalcalsListQAHandler())
-#qaadapter.registry.register_to_dataset_topic(finalcals.FinalcalsResults)
+qaadapter.registry.register_to_dataset_topic(finalcals.FinalcalsResults)
 
 
 weblog.add_renderer(Finalcals, renderer.T2_4MDetailsfinalcalsRenderer(), group_by=weblog.UNGROUPED)

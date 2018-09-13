@@ -1,16 +1,17 @@
 from __future__ import absolute_import
 
 import collections
-import os
 
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.pipelineqa as pqa
 import pipeline.infrastructure.utils as utils
 import pipeline.qa.scorecalculator as qacalc
-from .semiFinalBPdcals import semiFinalBPdcals
-from .semiFinalBPdcals import semiFinalBPdcalsResults
+from . import semiFinalBPdcals
+from . import semiFinalBPdcalsResults
+
 
 LOG = logging.get_logger(__name__)
+
 
 class semiFinalBPdcalsQAHandler(pqa.QAPlugin):
     result_cls = semiFinalBPdcalsResults
@@ -18,18 +19,37 @@ class semiFinalBPdcalsQAHandler(pqa.QAPlugin):
     generating_task = semiFinalBPdcals
 
     def handle(self, context, result):
+        # get a QA score for fraction of failed (flagged) bandpass solutions in the bandpass table
+        # < 5%   of data flagged  --> 1
+        # 5%-60% of data flagged  --> 1 to 0
+        # > 60%  of data flagged  --> 0
 
-        # Check for existence of the the target MS.
-        score1 = self._ms_exists(os.path.dirname(result.inputs['vis']), os.path.basename(result.inputs['vis']))
-        scores = [score1]
+        if result.flaggedSolnApplycalbandpass and result.flaggedSolnApplycaldelay:
+            self._checkKandBsolution(result.flaggedSolnApplycaldelay)
+            self._checkKandBsolution(result.flaggedSolnApplycalbandpass)
+
+            score1 = qacalc.score_total_data_flagged_vla_bandpass(result.bpdgain_touse,
+                                                                  result.flaggedSolnApplycalbandpass['antmedian']['fraction'])
+            score2 = qacalc.score_total_data_vla_delay(result.ktypecaltable)
+            scores = [score1, score2]
+        else:
+            LOG.error('Error with bandpass and/or delay table.')
+            scores = [pqa.QAScore(0.0, longmsg='No flagging stats about the bandpass table or info in delay table.',
+                                  shortmsg='Bandpass or delay table problem.')]
 
         result.qa.pool.extend(scores)
 
-    def _ms_exists(self, output_dir, ms):
-        '''
-        Check for the existence of the target MS
-        '''
-        return qacalc.score_path_exists(output_dir, ms, 'semiFinalBPdcals')
+    @staticmethod
+    def _checkKandBsolution(table):
+        for antenna in table['antspw'].keys():
+            for spw in table['antspw'][antenna].keys():
+                for pol in table['antspw'][antenna][spw].keys():
+                    frac = table['antspw'][antenna][spw][pol]['fraction']
+                    if frac == 1.0:
+                        LOG.warn('Antenna {!s}, spw {!s}, pol {!s} has a fraction of flagged solutions of: {!s}'.format(antenna, spw, pol, frac))
+
+        return
+
 
 class semiFinalBPdcalsListQAHandler(pqa.QAPlugin):
     """
@@ -37,13 +57,9 @@ class semiFinalBPdcalsListQAHandler(pqa.QAPlugin):
     """
     result_cls = collections.Iterable
     child_cls = semiFinalBPdcalsResults
-    generating_task = semiFinalBPdcals
 
     def handle(self, context, result):
         # collate the QAScores from each child result, pulling them into our
         # own QAscore list
         collated = utils.flatten([r.qa.pool for r in result])
-        result.qa.pool[:] = collated
-        mses = [r.inputs['vis'] for r in result]
-        longmsg = 'No missing target MS(s) for %s' % utils.commafy(mses, quotes=False, conjunction='or')
-        result.qa.all_unity_longmsg = longmsg
+        result.qa.pool.extend(collated)

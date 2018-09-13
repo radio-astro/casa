@@ -13,6 +13,7 @@ import pipeline.infrastructure.callibrary as callibrary
 import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.utils as utils
 import pipeline.infrastructure.vdp as vdp
+from pipeline.hifv.heuristics import getCalFlaggedSoln
 from pipeline.hifv.heuristics import find_EVLA_band
 from pipeline.hifv.heuristics import standard as standard
 from pipeline.hifv.heuristics import weakbp, do_bandpass
@@ -39,7 +40,8 @@ class FinalcalsResults(basetask.Results):
     def __init__(self, final=None, pool=None, preceding=None, vis=None, bpdgain_touse=None,
                  gtypecaltable=None, ktypecaltable=None, bpcaltable=None,
                  phaseshortgaincaltable=None, finalampgaincaltable=None,
-                 finalphasegaincaltable=None):
+                 finalphasegaincaltable=None, flaggedSolnApplycalbandpass=None,
+                 flaggedSolnApplycaldelay=None):
 
         if final is None:
             final = []
@@ -61,6 +63,8 @@ class FinalcalsResults(basetask.Results):
         self.phaseshortgaincaltable = phaseshortgaincaltable
         self.finalampgaincaltable = finalampgaincaltable
         self.finalphasegaincaltable = finalphasegaincaltable
+        self.flaggedSolnApplycalbandpass = flaggedSolnApplycalbandpass
+        self.flaggedSolnApplycaldelay = flaggedSolnApplycaldelay
 
     def merge_with_context(self, context):
         if not self.final:
@@ -216,12 +220,17 @@ class Finalcals(basetask.StandardTaskTemplate):
             calapp = callibrary.CalApplication(calto, calfrom)
             callist.append(calapp)
 
+        flaggedSolnApplycalbandpass = getCalFlaggedSoln(bpdgain_touse)
+        flaggedSolnApplycaldelay = getCalFlaggedSoln(ktypecaltable)
+
         return FinalcalsResults(vis=self.inputs.vis, pool=callist, final=callist,
                                 bpdgain_touse=bpdgain_touse, gtypecaltable=gtypecaltable,
                                 ktypecaltable=ktypecaltable, bpcaltable=bpcaltable,
                                 phaseshortgaincaltable=phaseshortgaincaltable,
                                 finalampgaincaltable=finalampgaincaltable,
-                                finalphasegaincaltable=finalphasegaincaltable)
+                                finalphasegaincaltable=finalphasegaincaltable,
+                                flaggedSolnApplycalbandpass=flaggedSolnApplycalbandpass,
+                                flaggedSolnApplycaldelay=flaggedSolnApplycaldelay)
 
     def analyse(self, results):
         return results

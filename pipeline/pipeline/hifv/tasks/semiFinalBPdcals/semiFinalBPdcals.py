@@ -29,7 +29,8 @@ class semiFinalBPdcalsInputs(vdp.StandardInputs):
 
 class semiFinalBPdcalsResults(basetask.Results):
     def __init__(self, final=None, pool=None, preceding=None, bpdgain_touse=None,
-                 gtypecaltable=None, ktypecaltable=None, bpcaltable=None):
+                 gtypecaltable=None, ktypecaltable=None, bpcaltable=None, flaggedSolnApplycalbandpass=None,
+                 flaggedSolnApplycaldelay=None):
 
         if final is None:
             final = []
@@ -49,6 +50,8 @@ class semiFinalBPdcalsResults(basetask.Results):
         self.gtypecaltable = gtypecaltable
         self.ktypecaltable = ktypecaltable
         self.bpcaltable = bpcaltable
+        self.flaggedSolnApplycalbandpass = flaggedSolnApplycalbandpass
+        self.flaggedSolnApplycaldelay = flaggedSolnApplycaldelay
 
 
 @task_registry.set_equivalent_casa_task('hifv_semiFinalBPdcals')
@@ -142,8 +145,13 @@ class semiFinalBPdcals(basetask.StandardTaskTemplate):
         applycal_result = self._do_applycal(context=context, ktypecaltable=ktypecaltable, bpdgain_touse=bpdgain_touse,
                                             bpcaltable=bpcaltable, interp=interp)
 
+        flaggedSolnApplycalbandpass = getCalFlaggedSoln(bpdgain_touse)
+        flaggedSolnApplycaldelay = getCalFlaggedSoln(ktypecaltable)
+
         return semiFinalBPdcalsResults(bpdgain_touse=bpdgain_touse, gtypecaltable=gtypecaltable,
-                                       ktypecaltable=ktypecaltable, bpcaltable=bpcaltable)
+                                       ktypecaltable=ktypecaltable, bpcaltable=bpcaltable,
+                                       flaggedSolnApplycalbandpass=flaggedSolnApplycalbandpass,
+                                       flaggedSolnApplycaldelay=flaggedSolnApplycaldelay)
 
     def analyse(self, results):
         return results
