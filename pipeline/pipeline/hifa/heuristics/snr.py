@@ -1093,6 +1093,8 @@ def compute_bpsolint(ms, spwlist, spw_dict, reqPhaseupSnr, minBpNintervals, reqB
         bpsensitivity = ALMA_SENSITIVITIES[bandidx] * bpfactor
         snrPerChannel = spw_dict[spwid]['flux'] * 1000.0 / bpsensitivity
         requiredChannels = (reqBpSnr / snrPerChannel) ** 2
+        LOG.info("spw=%d, band=%d, alma_sensitivity=%s, bpfactor=%f" % (spwid, bandidx, ALMA_SENSITIVITIES[bandidx], bpfactor))
+        LOG.info("requiredChannels=%f, repBpSnr=%f, snrPerChannel=%f, spw flux=%f, bpsensitivity=%f" % (requiredChannels, reqBpSnr, snrPerChannel, spw_dict[spwid]['flux'], bpsensitivity))
         evenChannels = nextHighestDivisibleInt(spw_dict[spwid]['nchan'], int(np.ceil(requiredChannels)))
 
         # Fill in the dictionary

@@ -317,10 +317,10 @@ Description
 The hifa_flagdata data performs basic flagging operations on a list of measurements including:
 
 o applying online flags
-o apply a flagging template
+o applying a flagging template
 o autocorrelation data flagging
 o shadowed antenna data flagging
-o scan based flagging by intent or scan number
+o scan-based flagging by intent or scan number
 o edge channel flagging
 
 

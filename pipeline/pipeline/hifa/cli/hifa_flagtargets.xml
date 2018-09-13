@@ -153,7 +153,7 @@ Description
 The hifa_flagdata data performs basic flagging operations on a list of
 measurements including:
 
-  o apply a flagging template
+  o applying a flagging template
 
 
 Issues

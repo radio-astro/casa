@@ -25,15 +25,15 @@ h_save saves the current pipeline state to disk under a unique name.
 Keyword arguments:
 
 filename -- Name of the saved pipeline state. If filename is '' then
-    a unique name will be generated computed from the root 'context', the
-    current stage number, and the timestamp.
+    a unique name will be generated computed from the root, 'context', the
+    current stage number, and the time stamp.
     default: ''
 
 Description
 
 h_save saves the current pipeline state to disk under a unique name.
 If no name is supplied one is generated automatically from a combination
-of the rootname 'context', the current stage number, and a timestamp.
+of the root name, 'context', the current stage number, and a time stamp.
 
 Issues
 

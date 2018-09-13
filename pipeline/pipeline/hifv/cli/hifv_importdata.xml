@@ -110,7 +110,7 @@ Keyword arguments:
 ---- pipeline parameter arguments which can be set in any pipeline mode
 
 vis -- List of visibility data files. These may be ASDMs, tar files of ASDMs,
-   MSes, or tar files of MSs, If ASDM files are specified, they will be
+   MSes, or tar files of MSes, If ASDM files are specified, they will be
    converted  to MS format.
    default: []
    example: vis=['X227.ms', 'asdms.tar.gz']

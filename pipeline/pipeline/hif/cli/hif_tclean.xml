@@ -444,7 +444,7 @@ imagename -- Prefix of output images. Defaults to one of the following options
    '{ousstatus uid}.{field}.[{intent}.]s{stage number}.spw{spw}'
    'multivis.{field}.[{intent}.]s{stage number}.spw{spw}'
 
-   cleanboxes and thresholds to use as it goes. For each iteration the
+   clean boxes and thresholds to use as it goes. For each iteration the
    output images are:
       {prename}.iter{n}.image; cleaned and restored image
       {prename}.iter{n}.psf; point spread function (dirty beam)
@@ -485,9 +485,9 @@ specmode -- Frequency imaging mode, 'mfs', 'cont', 'cube'. \'\' defaults to
 
 gridder -- Gridding options, 'standard', 'mosaic'.
    Derived as follows:
-      1. The 'field' parameter is converted into a list of field_ids for
+      1. The 'field' parameter is converted into a list of field ids for
          each MeasurementSet in 'vis'.
-      2. If there is more than 1 field_id in the list for any MeasurementSet
+      2. If there is more than 1 field id in the list for any MeasurementSet
          then gridder is set to 'mosaic', otherwise it will be set
          to 'standard'. 
     default: ''
@@ -504,8 +504,8 @@ outframe -- The reference frame of the output image. The only supported option
 imsize -- X and Y image size in pixels).  Must be even and contain factors
     2,3,5,7 only.
     Default derived as follows:
-      1. Determine 'phasecenter' value and spread of field centres around it. 
-      2. Set size of image to cover spread of field centres plus a border of
+      1. Determine 'phasecenter' value and spread of field centers around it. 
+      2. Set size of image to cover spread of field centers plus a border of
          width 0.75 * beam radius (to first null).
       3. Divide x and y extents by 'cell' values to arrive at the numbers of
          pixels required. 

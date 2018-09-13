@@ -300,9 +300,9 @@ The hsd_flagdata task performs basic flagging operations on a list of
 MeasurementSets including:
 
 o applying online flags
-o apply a flagging template
+o applying a flagging template
 o shadowed antenna data flagging
-o scan based flagging by intent or scan number
+o scan-based flagging by intent or scan number
 o edge channel flagging
 
 Issues
