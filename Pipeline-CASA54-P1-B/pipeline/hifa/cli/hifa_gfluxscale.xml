@@ -327,7 +327,7 @@ with code which uses the values returned from the CASA fluxscale task.
 
 Examples
 
-1. Compute flux flux values for the phase calibrator using model data from
+1. Compute flux values for the phase calibrator using model data from
 the amplitude calibrator:
 
     hifa_gfluxscale()

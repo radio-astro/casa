@@ -152,28 +152,28 @@ calmode -- Calibration mode. Available options are 'auto' (default),
    default: 'auto'
    options: 'auto', 'ps', 'otf', 'otfraster'
 
-fraction -- Subparameter for calmode. Edge marking parameter for
+fraction -- Sub-parameter for calmode. Edge marking parameter for
    'otf' and 'otfraster' mode. It specifies a number of OFF scans
    as a fraction of total number of data points.
    default: '10%'
    options: String style like '20%', or float value less than 1.0.
             For 'otfraster' mode, you can also specify 'auto'.
             
-noff -- Subparameter for calmode. Edge marking parameter for 'otfraster'
+noff -- Sub-parameter for calmode. Edge marking parameter for 'otfraster'
    mode. It is used to specify a number of OFF scans near edge directly
    instead to specify it by fractional number by 'fraction'. If it is
    set, the value will come before setting by 'fraction'.
    default: -1 (use setting by 'fraction')
    options: any positive integer value
 
-width -- Subparameter for calmode. Edge marking parameter for 'otf'
+width -- Sub-parameter for calmode. Edge marking parameter for 'otf'
    mode. It specifies pixel width with respect to a median spatial
    separation between neighboring two data in time. Default will
    be fine in most cases.
    default: 0.5
    options: any float value
 
-elongated -- Subparameter for calmode. Edge marking parameter for
+elongated -- Sub-parameter for calmode. Edge marking parameter for
    'otf' mode. Please set True only if observed area is elongated
    in one direction.
    default: False
