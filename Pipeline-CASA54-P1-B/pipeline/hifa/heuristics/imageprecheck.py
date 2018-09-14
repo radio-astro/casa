@@ -12,7 +12,7 @@ class ImagePreCheckHeuristics(object):
         self.inputs = inputs
         self.context = inputs.context
 
-    def compare_beams(self, beam_m0p5, beam_0p0, beam_0p5, beam_1p0, beam_2p0, minAR, maxAR):
+    def compare_beams(self, beam_m0p5, beam_0p0, beam_0p5, beam_1p0, beam_2p0, minAR, maxAR, mosaic=False):
 
         cqa = casatools.quanta
 
@@ -50,10 +50,12 @@ class ImagePreCheckHeuristics(object):
             # Informational message for the weblog. Must currently be a warning to get there.
             LOG.warn('Predicted non-default robust=1.0 beam is within the PI requested range')
         # both axes in range of robust=-0.5
+        # except for C6 mosaics (CAS-11840)
         elif cqa.le(minAR, beams[-0.5]['major']) and \
              cqa.le(beams[-0.5]['major'], maxAR) and \
              cqa.le(minAR, beams[-0.5]['minor']) and \
-             cqa.le(beams[-0.5]['minor'], maxAR):
+             cqa.le(beams[-0.5]['minor'], maxAR) and \
+             not mosaic:
             hm_robust = -0.5
             hm_robust_score = (0.75, 'Predicted non-default robust=-0.5 beam is within the PI requested range', 'Beam within range using non-default robust')
             # Informational message for the weblog. Must currently be a warning to get there.
@@ -69,6 +71,13 @@ class ImagePreCheckHeuristics(object):
             LOG.warn('Predicted non-default robust=+2.0 beam is within the PI requested range')
         # If no robust got within range calculate the meanAR, to choose robust. The order of these definitions must match the robusts list.
         else:
+            # Patch in "else" part to get a warning for the possibly avoided robust=-0.5 case in the axis comparison
+            if cqa.le(minAR, beams[-0.5]['major']) and \
+               cqa.le(beams[-0.5]['major'], maxAR) and \
+               cqa.le(minAR, beams[-0.5]['minor']) and \
+               cqa.le(beams[-0.5]['minor'], maxAR) and \
+               mosaic:
+                LOG.warn('Avoiding robust=-0.5 (and more uniform values of robust) in the beam axis comparison since they are not recommended for mosaics')
             beamArea_m0p5 = cqa.mul(beams[-0.5]['minor'], beams[-0.5]['major'])
             beamArea_0p0 =  cqa.mul(beams[0.0]['minor'], beams[0.0]['major'])
             beamArea_0p5 =  cqa.mul(beams[0.5]['minor'], beams[0.5]['major'])
@@ -84,6 +93,10 @@ class ImagePreCheckHeuristics(object):
             absdeltas = [cqa.getvalue(cqa.abs(delta)) for delta in deltas]
             predictBeamAreas = [beamArea_m0p5, beamArea_0p0, beamArea_0p5, beamArea_1p0, beamArea_2p0]
             index = np.argmin(absdeltas)
+            # avoid robust=-0.5 for mosaics (CAS-11840)
+            if mosaic and index == 0:
+                index = 1
+                LOG.warn('Avoiding robust=-0.5 (and more uniform values of robust) in the beam area comparison since they are not recommended for mosaics')
             hm_robust = robusts[index]
             DiffmeanAR = 100 * (cqa.getvalue(deltas[index]) / cqa.getvalue(cqa.convert(meanARBeamArea, 'arcsec.arcsec')))
             maxARBeamArea = cqa.mul(maxAR, maxAR)

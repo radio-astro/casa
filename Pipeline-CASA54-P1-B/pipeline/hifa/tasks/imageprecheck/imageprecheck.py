@@ -277,7 +277,7 @@ class ImagePreCheck(basetask.StandardTaskTemplate):
             if sensitivity_bandwidth is None:
                 sensitivity_bandwidth = cqa.quantity(_bandwidth, 'Hz')
 
-        # Apply robust heuristic based on beam sizes for robust=(-0.5, 0.5, 2.0)
+        # Apply robust heuristic based on beam sizes for robust=(-0.5, 0.0, 0.5, 1.0, 2.0)
         if reprBW_mode in ['nbin', 'repr_spw']:
             hm_robust, hm_robust_score = imageprecheck_heuristics.compare_beams( \
                 beams[(-0.5, str(default_uvtaper), 'repBW')], \
@@ -286,7 +286,8 @@ class ImagePreCheck(basetask.StandardTaskTemplate):
                 beams[(1.0, str(default_uvtaper), 'repBW')], \
                 beams[(2.0, str(default_uvtaper), 'repBW')], \
                 minAcceptableAngResolution, \
-                maxAcceptableAngResolution)
+                maxAcceptableAngResolution, \
+                gridder == 'mosaic')
         else:
             hm_robust, hm_robust_score = imageprecheck_heuristics.compare_beams( \
                 beams[(-0.5, str(default_uvtaper), 'aggBW')], \
@@ -295,7 +296,8 @@ class ImagePreCheck(basetask.StandardTaskTemplate):
                 beams[(1.0, str(default_uvtaper), 'aggBW')], \
                 beams[(2.0, str(default_uvtaper), 'aggBW')], \
                 minAcceptableAngResolution, \
-                maxAcceptableAngResolution)
+                maxAcceptableAngResolution, \
+                gridder == 'mosaic')
 
         if real_repr_target:
             # Determine heuristic UV taper value
