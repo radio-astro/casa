@@ -24,17 +24,14 @@ class SDBLFlagSummary(object):
     This class defines per spwid flagging operation.
     """
 
-    def __init__(self, context, ms_list, antid_list, fieldid_list,
+    def __init__(self, context, ms, antid_list, fieldid_list,
                  spwid_list, pols_list, thresholds, flagRule, userFlag=[]):
         """
         Constructor of worker class
         """
         self.context = context
-        self.ms_list = ms_list
-        # top-level task (SDBLFlag) is per-MS task
-        # so that given ms domain objects are identical
-        assert numpy.all([self.ms_list[0] == m for m in self.ms_list])
-        datatable_name = os.path.join(self.context.observing_run.ms_datatable_name, self.ms_list[0].basename)
+        self.ms = ms
+        datatable_name = os.path.join(self.context.observing_run.ms_datatable_name, self.ms.basename)
         self.datatable = DataTable(name=datatable_name, readonly=True)
         self.antid_list = antid_list
         self.fieldid_list = fieldid_list
@@ -52,7 +49,7 @@ class SDBLFlagSummary(object):
         start_time = time.time()
 
         datatable = self.datatable
-        ms_list = self.ms_list
+        ms = self.ms
         antid_list = self.antid_list
         fieldid_list = self.fieldid_list
         spwid_list = self.spwid_list
@@ -62,8 +59,8 @@ class SDBLFlagSummary(object):
         #userFlag = self.userFlag
 
         LOG.debug('Members to be processed in worker class:')
-        for (m,a,f,s,p) in itertools.izip(ms_list, antid_list, fieldid_list, spwid_list, pols_list):
-            LOG.debug('\t%s: Antenna %s Field %d Spw %d Pol %s'%(m.basename,a,f,s,p))
+        for (a,f,s,p) in itertools.izip(antid_list, fieldid_list, spwid_list, pols_list):
+            LOG.debug('\t%s: Antenna %s Field %d Spw %d Pol %s'%(ms.basename,a,f,s,p))
         
         # output directory
         stage_number = self.context.task_counter
@@ -75,14 +72,14 @@ class SDBLFlagSummary(object):
 
         flagSummary = []
         # loop over members (practically, per antenna loop in an MS)
-        for (msobj,antid,fieldid,spwid,pollist) in itertools.izip(ms_list, antid_list, fieldid_list, spwid_list, pols_list):
-            LOG.debug('Performing flagging for %s Antenna %d Field %d Spw %d'%(msobj.basename,antid,fieldid,spwid))
-            filename_in = msobj.name
-            ant_name = msobj.get_antenna(antid)[0].name
-            asdm = common.asdm_name_from_ms(msobj)
-            field_name = msobj.get_fields(field_id=fieldid)[0].name
+        for (antid,fieldid,spwid,pollist) in itertools.izip(antid_list, fieldid_list, spwid_list, pols_list):
+            LOG.debug('Performing flagging for %s Antenna %d Field %d Spw %d'%(ms.basename,antid,fieldid,spwid))
+            filename_in = ms.name
+            ant_name = ms.get_antenna(antid)[0].name
+            asdm = common.asdm_name_from_ms(ms)
+            field_name = ms.get_fields(field_id=fieldid)[0].name
             LOG.info("*** Summarizing table: %s ***" % (os.path.basename(filename_in)))
-            time_table = datatable.get_timetable(antid, spwid, None, msobj.basename, fieldid)
+            time_table = datatable.get_timetable(antid, spwid, None, ms.basename, fieldid)
             # Select time gap list: 'subscan': large gap; 'raster': small gap
             if flagRule['Flagging']['ApplicableDuration'] == "subscan":
                 TimeTable = time_table[1]
@@ -91,19 +88,19 @@ class SDBLFlagSummary(object):
             flatiter = utils.flatten([chunks[1] for chunks in TimeTable])
             dt_idx = [chunk for chunk in flatiter]
             iteration = _get_iteration(self.context.observing_run.ms_reduction_group,
-                                       msobj, antid, fieldid, spwid)
+                                       ms, antid, fieldid, spwid)
             for pol in pollist:
-                ddobj = msobj.get_data_description(spw=spwid)
+                ddobj = ms.get_data_description(spw=spwid)
                 polid = ddobj.get_polarization_id(pol)
                 # generate summary plot
                 FigFileRoot = ("FlagStat_%s_ant%d_field%d_spw%d_pol%d_iter%d" %
                                (asdm, antid, fieldid, spwid, polid, iteration))
                 time_gap = datatable.get_timegap(antid, spwid, None,
-                                                 ms=msobj, field_id=fieldid)
+                                                 ms=ms, field_id=fieldid)
                 # time_gap[0]: PosGap, time_gap[1]: TimeGap
                 for i in range(len(thresholds)):
                     thres = thresholds[i]
-                    if (thres['msname'] == msobj.basename and thres['antenna'] == antid and
+                    if (thres['msname'] == ms.basename and thres['antenna'] == antid and
                             thres['field'] == fieldid and thres['spw'] == spwid and
                             thres['pol'] == pol):
                         final_thres = thres['result_threshold']
@@ -337,10 +334,7 @@ class SDBLFlagSummary(object):
                 os.remove(Filename)
             # Assuming single MS, antenna, field, spw, and polid
             ID0 = ids[0]
-            # top-level task (SDBLFlag) is per-MS task
-            # so that given ms domain objects are identical
-            assert numpy.all([m == self.ms_list[0] for m in self.ms_list])
-            msobj = self.ms_list[0]
+            msobj = self.ms
             antid = DataTable.getcell('ANTENNA', ID0)
             fieldid = DataTable.getcell('FIELD_ID', ID0)
             spwid = DataTable.getcell('IF', ID0)

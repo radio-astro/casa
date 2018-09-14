@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 
 import os
+import collections
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
@@ -262,13 +263,6 @@ class SerialSDBLFlag(basetask.StandardTaskTemplate):
 
         LOG.debug("Flag Rule for %s: %s" % (cal_name, flag_rule))
 
-
-        rowmap = None
-        if os.path.abspath(cal_name)==os.path.abspath(bl_name):
-            LOG.warn("%s is not yet baselined. Skipping flag by post-fit statistics for the data. MASKLIST will also be cleared up. You may go on flagging but the statistics will contain line emission." % self.inputs.ms.basename)
-        else:
-            # row map generation is very expensive. Do as few time as possible
-            rowmap = sdutils.make_row_map_for_baselined_ms(self.inputs.ms)
         # sumarize flag before execution
         full_intent = utils.to_CASA_intent(self.inputs.ms, self.inputs.intent)
         flagdata_summary_job = casa_tasks.flagdata(vis=bl_name, mode='summary',
@@ -277,6 +271,9 @@ class SerialSDBLFlag(basetask.StandardTaskTemplate):
                                                    spwcorr=True, fieldcnt=True,
                                                    name='before')
         stats_before = self._executor.execute(flagdata_summary_job)
+        
+        # collection of field, antenna, and spw ids in reduction group per MS
+        registry = collections.defaultdict(sdutils.RGAccumulator)
         
         # loop over reduction group (spw and source combination)
         flagResult = []
@@ -313,19 +310,47 @@ class SerialSDBLFlag(basetask.StandardTaskTemplate):
                          for ddobj in temp_dd_list]
             del temp_dd_list
              
+            for i in xrange(len(member_list)):
+                member = group_desc[member_list[i]]
+                registry[member.ms].append(field_id=member.field_id,
+                                           antenna_id=member.antenna_id,
+                                           spw_id=member.spw_id,
+                                           pol_ids=pols_list[i])
+                
+
+        # per-MS loop
+        for msobj, accumulator in registry.items():
+            rowmap = None
+            if os.path.abspath(cal_name)==os.path.abspath(bl_name):
+                LOG.warn("%s is not yet baselined. Skipping flag by post-fit statistics for the data. MASKLIST will also be cleared up. You may go on flagging but the statistics will contain line emission." % self.inputs.ms.basename)
+            else:
+                # row map generation is very expensive. Do as few time as possible
+                _ms = context.observing_run.get_ms(msobj.name)
+                rowmap = sdutils.make_row_map_for_baselined_ms(_ms)
+                
+            antenna_list = accumulator.get_antenna_id_list()
+            fieldid_list = accumulator.get_field_id_list()
+            spwid_list = accumulator.get_spw_id_list()
+            pols_list = accumulator.get_pol_ids_list()
+
             LOG.info("*"*60)
             LOG.info('Members to be processed:')
-            for i in xrange(len(member_list)):
-                LOG.info("\t%s: Antenna %d (%s) Spw %d Field %d (%s) Pol '%s'" % \
-                          (os.path.basename(ms_list[i].name),
-                           antenna_list[i], group_desc[member_list[i]].antenna_name,
-                           spwid_list[i], fieldid_list[i],
-                           group_desc[member_list[i]].field_name,
-                           ','.join(pols_list[i])))
+            for antenna_id, field_id, spw_id, pol_ids in zip(antenna_list, fieldid_list, spwid_list, pols_list):
+                LOG.info("\t{}:: Antenna {} ({}) Spw {} Field {} ({}) Pol '{}'".format(
+                    msobj.basename,
+                    antenna_id,
+                    msobj.antennas[antenna_id].name,
+                    spw_id,
+                    field_id,
+                    msobj.fields[field_id].name,
+                    ','.join(pol_ids)))
+                
             LOG.info("*"*60)
+
+            nchan = 0
             # Calculate flag and update DataTable
             flagging_inputs = worker.SDBLFlagWorkerInputs(context, clip_niteration,
-                                            ms_list, antenna_list, fieldid_list,
+                                            msobj.name, antenna_list, fieldid_list,
                                             spwid_list, pols_list, nchan, flag_rule,
                                             rowmap=rowmap)
             flagging_task = worker.SDBLFlagWorker(flagging_inputs)
@@ -334,7 +359,7 @@ class SerialSDBLFlag(basetask.StandardTaskTemplate):
             thresholds = flagging_results.outcome
             # Summary
             if not basetask.DISABLE_WEBLOG:
-                renderer = SDBLFlagSummary(context, ms_list,
+                renderer = SDBLFlagSummary(context, msobj,
                                            antenna_list, fieldid_list, spwid_list,
                                            pols_list, thresholds, flag_rule)
                 result = self._executor.execute(renderer, merge=False)

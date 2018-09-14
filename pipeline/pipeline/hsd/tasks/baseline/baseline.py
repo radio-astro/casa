@@ -174,7 +174,7 @@ class SDBaseline(basetask.StandardTaskTemplate):
         deviation_mask = collections.defaultdict(dict)
         
         # collection of field, antenna, and spw ids in reduction group per MS
-        registry = collections.defaultdict(worker.RGAccumulator)
+        registry = collections.defaultdict(utils.RGAccumulator)
         
         # outcome for baseline subtraction
         baselined = []
@@ -280,7 +280,7 @@ class SDBaseline(basetask.StandardTaskTemplate):
             for i in member_list:
                 member = group_desc[i]
                 registry[member.ms].append(member.field_id, member.antenna_id, member.spw_id, 
-                                           compressed_table, channelmap_range)
+                                           grid_table=compressed_table, channelmap_range=channelmap_range)
              
             # add entry to outcome
             baselined.append({'group_id': group_id, 'iteration': iteration,

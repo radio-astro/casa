@@ -14,6 +14,7 @@ import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.casatools as casatools
 from pipeline.domain.datatable import OnlineFlagIndex, DataTableIndexer
+from . import compress
 
 _LOG = infrastructure.get_logger(__name__)
 
@@ -869,3 +870,83 @@ def get_restfrequency(vis, spwid, source_id):
                     return None
         finally:
             tsel.close()
+            
+class RGAccumulator(object):
+    def __init__(self):
+        self.field = []
+        self.antenna = []
+        self.spw = []
+        self.pols = []
+        self.grid_table = []
+        self.channelmap_range = []
+        
+    def append(self, field_id, antenna_id, spw_id, pol_ids=None, grid_table=None, channelmap_range=None):
+        self.field.append(field_id)
+        self.antenna.append(antenna_id)
+        self.spw.append(spw_id)
+        self.pols.append(pol_ids)
+        if isinstance(grid_table, compress.CompressedObj) or grid_table is None:
+            self.grid_table.append(grid_table)
+        else:
+            self.grid_table.append(compress.CompressedObj(grid_table))
+        self.channelmap_range.append(channelmap_range)
+        
+#         def extend(self, field_id_list, antenna_id_list, spw_id_list):
+#             self.field.extend(field_id_list)
+#             self.antenna.extend(antenna_id_list)
+#             self.spw.extend(spw_id_list)
+#             
+    def get_field_id_list(self):
+        return self.field
+    
+    def get_antenna_id_list(self):
+        return self.antenna
+    
+    def get_spw_id_list(self):
+        return self.spw
+
+    def get_pol_ids_list(self):
+        return self.pols
+    
+    def get_grid_table_list(self):
+        return self.grid_table
+    
+    def get_channelmap_range_list(self):
+        return self.channelmap_range
+    
+    def iterate_id(self):
+        assert len(self.field) == len(self.antenna)
+        assert len(self.field) == len(self.spw)
+        assert len(self.field) == len(self.pols)
+        for v in itertools.izip(self.field, self.antenna, self.spw):
+            yield v
+            
+    def iterate_all(self):
+        assert len(self.field) == len(self.antenna)
+        assert len(self.field) == len(self.spw)
+        assert len(self.field) == len(self.pols)
+        assert len(self.field) == len(self.grid_table)
+        assert len(self.field) == len(self.channelmap_range)
+        for f, a, s, g, c in itertools.izip(self.field, self.antenna, self.spw, 
+                                            self.grid_table, self.channelmap_range):
+            _g = g.decompress()
+            yield f, a, s, _g, c
+            del _g
+        
+    
+    def get_process_list(self, withpol=False):
+        field_id_list = self.get_field_id_list()
+        antenna_id_list = self.get_antenna_id_list()
+        spw_id_list = self.get_spw_id_list()
+        
+        assert len(field_id_list) == len(antenna_id_list)
+        assert len(field_id_list) == len(spw_id_list)
+        
+        if withpol == True:
+            pol_ids_list = self.get_pol_ids_list()
+            assert len(field_id_list) == len(pol_ids_list)
+            return field_id_list, antenna_id_list, spw_id_list, pol_ids_list
+        else:
+            return field_id_list, antenna_id_list, spw_id_list
+
+

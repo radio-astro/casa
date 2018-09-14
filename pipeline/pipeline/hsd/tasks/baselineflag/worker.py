@@ -35,18 +35,19 @@ class SDBLFlagWorkerInputs(vdp.StandardInputs):
     userFlag = vdp.VisDependentProperty(default=[])
     edge = vdp.VisDependentProperty(default=(0,0))
 
-    def __init__(self, context, clip_niteration, ms_list, antenna_list, fieldid_list, spwid_list, pols_list, nchan,
+    def __init__(self, context, clip_niteration, vis, antenna_list, fieldid_list, spwid_list, pols_list, nchan,
                  flagRule, userFlag=None, edge=None, rowmap=None):
         super(SDBLFlagWorkerInputs, self).__init__()
 
         self.context = context
         self.clip_niteration = clip_niteration
-        self.ms_list = ms_list
+        self.vis = vis
         self.antenna_list = antenna_list
         self.fieldid_list = fieldid_list
         self.spwid_list = spwid_list
         self.pols_list = pols_list
         self.flagRule = flagRule
+        # not used
         self.nchan = nchan
         self.userFlag = userFlag
         self.edge = edge
@@ -158,25 +159,22 @@ class SDBLFlagWorker(basetask.StandardTaskTemplate):
 
         context = self.inputs.context
         clip_niteration = self.inputs.clip_niteration
-        ms_list = self.inputs.ms_list
-        # top-level task (SDBLFlag) is per-MS task
-        # so that given ms domain objects are identical
-        assert numpy.all([m == ms_list[0] for m in ms_list])
+        #vis = self.inputs.vis
+        ms = self.inputs.ms
         antid_list = self.inputs.antenna_list
         fieldid_list = self.inputs.fieldid_list
         spwid_list = self.inputs.spwid_list
         pols_list = self.inputs.pols_list
-        nchan = self.inputs.nchan
         flagRule = self.inputs.flagRule
         userFlag = self.inputs.userFlag
         edge = self.inputs.edge
-        datatable_name = os.path.join(context.observing_run.ms_datatable_name, ms_list[0].basename)
+        datatable_name = os.path.join(context.observing_run.ms_datatable_name, ms.basename)
         datatable = DataTable(name=datatable_name, readonly=False)
         rowmap = self.inputs.rowmap
         
         LOG.debug('Members to be processed in worker class:')
-        for (m, a, f, s, p) in itertools.izip(ms_list, antid_list, fieldid_list, spwid_list, pols_list):
-            LOG.debug('\t%s: Antenna %s Field %d Spw %d Pol %s' % (m.basename, a, f, s, p))
+        for (a, f, s, p) in itertools.izip(antid_list, fieldid_list, spwid_list, pols_list):
+            LOG.debug('\t%s: Antenna %s Field %d Spw %d Pol %s' % (ms.basename, a, f, s, p))
 
         # TODO: make sure baseline subtraction is already done
         # filename for before/after baseline
@@ -195,27 +193,29 @@ class SDBLFlagWorker(basetask.StandardTaskTemplate):
 #         namer.spectral_window(spwid)
 
         flagSummary = []
-        dirty_rows = []
+        inpfiles = []
         with_masklist = False
         # loop over members (practically, per antenna loop in an MS)
-        for (msobj, antid, fieldid, spwid, pollist) in itertools.izip(ms_list, antid_list, fieldid_list, spwid_list,
-                                                                      pols_list):
-            LOG.debug('Performing flag for %s Antenna %d Field %d Spw %d' % (msobj.basename, antid, fieldid, spwid))
+        for (antid, fieldid, spwid, pollist) in itertools.izip(antid_list, fieldid_list, spwid_list,
+                                                               pols_list):
+            LOG.debug('Performing flag for %s Antenna %d Field %d Spw %d' % (ms.basename, antid, fieldid, spwid))
 
-            filename_in = msobj.name
-            filename_out = msobj.work_data
+            filename_in = ms.name
+            filename_out = ms.work_data
+            nchan = ms.spectral_windows[spwid].num_channels
             
-            LOG.info("*** Processing: %s ***" % (os.path.basename(msobj.name)))
-            LOG.info("\tpre-fit table: %s (Ant %d)" % (os.path.basename(filename_in), antid))
-            LOG.info("\tpost-fit table: %s (Ant %d)" % (os.path.basename(filename_out), antid))
+            LOG.info("*** Processing: {} ***" .format(os.path.basename(ms.name)))
+            LOG.info('\tField {} Antenna {} Spw {} Pol {}'.format(fieldid, antid, spwid, ','.join(pollist)))
+            LOG.info("\tpre-fit table: {}".format(os.path.basename(filename_in)))
+            LOG.info("\tpost-fit table: {}".format(os.path.basename(filename_out)))
             
             # deviation mask
-            deviation_mask = msobj.deviation_mask[(fieldid, antid, spwid)] \
-                if (hasattr(msobj, 'deviation_mask') and (fieldid, antid, spwid) in msobj.deviation_mask) else None
+            deviation_mask = ms.deviation_mask[(fieldid, antid, spwid)] \
+                if (hasattr(ms, 'deviation_mask') and (fieldid, antid, spwid) in ms.deviation_mask) else None
             LOG.debug('deviation mask for %s antenna %d field %d spw %d is %s' %
-                      (msobj.basename, antid, fieldid, spwid, deviation_mask))
+                      (ms.basename, antid, fieldid, spwid, deviation_mask))
             
-            time_table = datatable.get_timetable(antid, spwid, None, msobj.basename, fieldid)
+            time_table = datatable.get_timetable(antid, spwid, None, ms.basename, fieldid)
             # Select time gap list: 'subscan': large gap; 'raster': small gap
             if flagRule['Flagging']['ApplicableDuration'] == "subscan":
                 TimeTable = time_table[1]
@@ -225,14 +225,14 @@ class SDBLFlagWorker(basetask.StandardTaskTemplate):
                      flagRule['Flagging']['ApplicableDuration'])
             flagRule_local = copy.deepcopy(flagRule)
             # Set is_baselined flag when processing not yet baselined data.
-            is_baselined = (_get_iteration(context.observing_run.ms_reduction_group, msobj, antid, fieldid, spwid) > 0)
+            is_baselined = (_get_iteration(context.observing_run.ms_reduction_group, ms, antid, fieldid, spwid) > 0)
 
             # open table via container
             container.is_baselined = is_baselined
-            container.open(msobj)
+            container.open(ms)
 
             if not is_baselined:
-                LOG.warn("No baseline subtraction operated to {} Field {} Antenna {} Spw {}. Skipping flag by post fit spectra.".format(msobj.basename, fieldid, antid, spwid))
+                LOG.warn("No baseline subtraction operated to {} Field {} Antenna {} Spw {}. Skipping flag by post fit spectra.".format(ms.basename, fieldid, antid, spwid))
                 # Reset MASKLIST for the non-baselined DataTable
                 self.ResetDataTableMaskList(datatable,TimeTable)
                 # force disable post fit flagging (not really effective except for flagSummary)
@@ -242,12 +242,12 @@ class SDBLFlagWorker(basetask.StandardTaskTemplate):
                 # include MASKLIST to cache
                 with_masklist = True
             elif rowmap is None:
-                rowmap = sdutils.make_row_map_for_baselined_ms(msobj, container)
+                rowmap = sdutils.make_row_map_for_baselined_ms(ms, container)
             LOG.debug("FLAGRULE = %s" % str(flagRule_local))
             
             for pol in pollist:
                 LOG.info("[ POL=%s ]" % (pol))
-                ddobj = msobj.get_data_description(spw=spwid)
+                ddobj = ms.get_data_description(spw=spwid)
                 polid = ddobj.get_polarization_id(pol)
                 # Calculate Standard Deviation and Diff from running mean
                 t0 = time.time()
@@ -268,7 +268,7 @@ class SDBLFlagWorker(basetask.StandardTaskTemplate):
                 self._apply_stat_flag(datatable, dt_idx, polid, stat_flag)
 
                 # flag by Expected RMS
-                self.flagExpectedRMS(datatable, dt_idx, msobj.name, spwid, polid,
+                self.flagExpectedRMS(datatable, dt_idx, ms.name, spwid, polid,
                                      FlagRule=flagRule_local, is_baselined=is_baselined)
   
                 # flag by scantable row ID defined by user
@@ -280,36 +280,36 @@ class SDBLFlagWorker(basetask.StandardTaskTemplate):
                 
 #                 # store statistics and flag information to bl.tbl
 #                 self.save_outtable(datatable, dt_idx, out_table_name)
-                flagSummary.append({'msname': msobj.basename, 'antenna': antid,
+                flagSummary.append({'msname': ms.basename, 'antenna': antid,
                                     'field': fieldid, 'spw': spwid, 'pol': pol,
                                     'result_threshold': final_thres,
                                     'baselined': is_baselined})
                 
-                # update a list of updated DataTable rows ("dirty" rows)
-                dirty_rows.extend(dt_idx)
             # Generate flag command file
             filename = ("%s_ant%d_field%d_spw%d_blflag.txt" %
-                        (os.path.basename(msobj.work_data), antid, fieldid, spwid))
-            do_flag = self.generateFlagCommandFile(datatable, msobj, antid, fieldid, spwid, pollist, filename)
+                        (os.path.basename(ms.work_data), antid, fieldid, spwid))
+            do_flag = self.generateFlagCommandFile(datatable, ms, antid, fieldid, spwid, pollist, filename)
             if not os.path.exists(filename):
                 raise RuntimeError, 'Failed to create flag command file %s' % filename
             if do_flag:
-                flagdata_apply_job = casa_tasks.flagdata(vis=filename_out, mode='list',
-                                                         inpfile=filename, action='apply')
-                self._executor.execute(flagdata_apply_job)
+                inpfiles.append(filename)
             else:
                 LOG.info("No flag command in %s. Skip flagging." % filename)
 
+        if len(inpfiles) > 0:
+            flagdata_apply_job = casa_tasks.flagdata(vis=filename_out, mode='list',
+                                                     inpfile=inpfiles, action='apply')
+            self._executor.execute(flagdata_apply_job)
+        else:
+            LOG.info("No flag command for {}. Skip flagging.".format(ms.basename))
+
         end_time = time.time()
         LOG.info('PROFILE execute: elapsed time is %s sec'%(end_time-start_time))
-        # Need to flush changes to disk
-        #datatable.exportdata(minimal=True)
-        dirty_rows = numpy.asarray(dirty_rows)
-        dirty_rows.sort()
         cols = ['STATISTICS', 'NMASK', 'FLAG', 'FLAG_PERMANENT', 'FLAG_SUMMARY']
         if with_masklist is True:
             cols.append('MASKLIST')
-        datatable.export_rwtable_exclusive(dirty_rows, cols)
+        # Need to flush changes to disk
+        datatable.exportdata(minimal=False)
 
         result = SDBLFlagWorkerResults(task=self.__class__,
                                        success=True,
