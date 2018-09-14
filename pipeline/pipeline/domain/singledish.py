@@ -91,18 +91,18 @@ class MSReductionGroupDesc(list):
             self.append(new_member)
 
     def get_iteration(self, ms, antenna_id, spw_id, field_id=None):
-        member = self[self.__search_member(ms, antenna_id, spw_id, field_id)]
+        member = self[self._search_member(ms, antenna_id, spw_id, field_id)]
         return member.iteration
             
     def iter_countup(self, ms, antenna_id, spw_id, field_id=None):
-        member = self[self.__search_member(ms, antenna_id, spw_id, field_id)]
+        member = self[self._search_member(ms, antenna_id, spw_id, field_id)]
         member.iter_countup()
 
     def add_linelist(self, linelist, ms, antenna_id, spw_id, field_id=None, channelmap_range=None):
-        member = self[self.__search_member(ms, antenna_id, spw_id, field_id)]
+        member = self[self._search_member(ms, antenna_id, spw_id, field_id)]
         member.add_linelist(linelist, channelmap_range=channelmap_range)
 
-    def __search_member(self, ms, antenna_id, spw_id, field_id=None):
+    def _search_member(self, ms, antenna_id, spw_id, field_id=None):
         for indx in xrange(len(self)):
             member = self[indx]
             if member.ms.name == ms.name and member.antenna_id == antenna_id and member.spw_id == spw_id and member.field_id == field_id:

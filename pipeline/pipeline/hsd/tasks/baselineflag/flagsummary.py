@@ -446,12 +446,16 @@ def _format_table_row_html(label, isactive, threshold, nflag, ntotal):
     html_str = '<tr align="center" class="stp"><th>%s</th><th>%s</th><th>%s</th><th>%s</th><th>'+typestr+'</th></tr>'
     return html_str % (label, isactive, threshold, (nflag if valid_flag else "N/A"), (nflag*100.0/ntotal if valid_flag else "N/A"))
 
-
+# validity check in _get_iteration is not necessary since group_member 
+# has already been validated at upper level (baselineflag.py)
 def _get_iteration(reduction_group, msobj, antid, fieldid, spwid):
     members = []
     for group_desc in reduction_group.values():
-        memids = common.get_valid_ms_members(group_desc, [msobj.name], antid, fieldid, spwid)
-        members.extend([group_desc[i] for i in memids])
+        #memids = common.get_valid_ms_members(group_desc, [msobj.name], antid, fieldid, spwid)
+        #members.extend([group_desc[i] for i in memids])
+        member_id = group_desc._search_member(msobj, antid, spwid, fieldid)
+        if member_id is not None:
+            members.append(group_desc[member_id])
     if len(members) == 1:
         return members[0].iteration
     elif len(members) == 0:
