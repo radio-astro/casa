@@ -95,8 +95,9 @@ difference between the predicted beam area and the beam area of the
 geometric mean (mean AR) of the PI requested range. When the
 "Min / Max Acceptable Resolution" is not available (or = 0.0 / 0.0),
 robust=+0.5 is used. The chosen robust value is highlighted in green
-and used for all science target imaging. In addition to an estimate for
-the repBW, an estimate for the aggregate continuum bandwidth (aggBW)
+and used for all science target imaging. For 12m-array mosaics, 0.0 is
+the most uniform robust value that can be chosen. In addition to an estimate
+for the repBW, an estimate for the aggregate continuum bandwidth (aggBW)
 is also given assuming NO line contamination but accounting for spw
 frequency overlap. If the Bandwidth for Sensitivity (repBW) is &gt; the
 bandwidth of the spw containing the representative frequency (repSPW),

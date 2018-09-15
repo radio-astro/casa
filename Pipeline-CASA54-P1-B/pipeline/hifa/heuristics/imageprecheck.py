@@ -96,7 +96,7 @@ class ImagePreCheckHeuristics(object):
             # avoid robust=-0.5 for mosaics (CAS-11840)
             if mosaic and index == 0:
                 index = 1
-                LOG.warn('Avoiding robust=-0.5 (and more uniform values of robust) in the beam area comparison since they are not recommended for mosaics')
+                LOG.warn('Avoiding robust=-0.5 (and more uniform values of robust) in the beam area comparison since they are not recommended for mosaics.')
             hm_robust = robusts[index]
             DiffmeanAR = 100 * (cqa.getvalue(deltas[index]) / cqa.getvalue(cqa.convert(meanARBeamArea, 'arcsec.arcsec')))
             maxARBeamArea = cqa.mul(maxAR, maxAR)
