@@ -245,25 +245,27 @@ class SDBLFlagWorker(basetask.StandardTaskTemplate):
                 rowmap = sdutils.make_row_map_for_baselined_ms(ms, container)
             LOG.debug("FLAGRULE = %s" % str(flagRule_local))
             
-            for pol in pollist:
+            # Calculate Standard Deviation and Diff from running mean
+            t0 = time.time()
+            ddobj = ms.get_data_description(spw=spwid)
+            polids = [ddobj.get_polarization_id(pol) for pol in pollist]
+            dt_idx, tmpdict, _ = self.calcStatistics(datatable, container, nchan, nmean,
+                                                     TimeTable, polids, edge,
+                                                     is_baselined, rowmap, deviation_mask)
+            t1 = time.time()
+            LOG.info('Standard Deviation and diff calculation End: Elapse time = %.1f sec' % (t1 - t0))
+
+            for pol, polid in zip(pollist, polids):
                 LOG.info("[ POL=%s ]" % (pol))
-                ddobj = ms.get_data_description(spw=spwid)
-                polid = ddobj.get_polarization_id(pol)
-                # Calculate Standard Deviation and Diff from running mean
-                t0 = time.time()
-                dt_idx, tmpdata, _ = self.calcStatistics(datatable, container, nchan, nmean,
-                                                         TimeTable, polid, edge,
-                                                         is_baselined, rowmap, deviation_mask)
-                t1 = time.time()
-                LOG.info('Standard Deviation and diff calculation End: Elapse time = %.1f sec' % (t1 - t0))
                 
+                tmpdata = tmpdict[polid]
                 t0 = time.time()
                 LOG.debug('tmpdata.shape=%s, len(Threshold)=%s' % (str(tmpdata.shape), len(Threshold)))
                 LOG.info('Calculating the thresholds by Standard Deviation and Diff from running mean of Pre/Post fit. (Iterate %d times)' % (clip_niteration))
                 stat_flag, final_thres = self._get_flag_from_stats(tmpdata, Threshold, clip_niteration, is_baselined)
                 LOG.debug('final threshold shape = %d' % len(final_thres))
                 LOG.info('Final thresholds: StdDev (pre-/post-fit) = %.2f / %.2f , Diff StdDev (pre-/post-fit) = %.2f / %.2f , Tsys=%.2f' % tuple([final_thres[i][1] for i in (1,0,3,2,4)]))
-                del tmpdata, _
+                #del tmpdata, _
                 
                 self._apply_stat_flag(datatable, dt_idx, polid, stat_flag)
 
@@ -320,7 +322,7 @@ class SDBLFlagWorker(basetask.StandardTaskTemplate):
     def analyse(self, result):
         return result
 
-    def calcStatistics(self, DataTable, container, NCHAN, Nmean, TimeTable, polid, edge, is_baselined, rowmap,
+    def calcStatistics(self, DataTable, container, NCHAN, Nmean, TimeTable, polids, edge, is_baselined, rowmap,
                        deviation_mask=None):
         DataIn = container.calvis
         DataOut = container.blvis
@@ -355,12 +357,15 @@ class SDBLFlagWorker(basetask.StandardTaskTemplate):
         # Create progress timer
         #Timer = ProgressTimer(80, NROW, LogLevel)
         
+        # number of polarizations
+        npol = len(polids)
+        
         # A priori evaluation of output array size
         output_array_size = sum((len(c[0]) for c in TimeTable))
         output_array_index = 0
         datatable_index = numpy.zeros(output_array_size, dtype=int)
-        statistics_array = numpy.zeros((5,output_array_size), dtype=numpy.float)
-        num_masked_array = numpy.zeros(output_array_size, dtype=int)
+        statistics_array = dict((p, numpy.zeros((5,output_array_size), dtype=numpy.float)) for p in polids)
+        num_masked_array = dict((p, numpy.zeros(output_array_size, dtype=int)) for p in polids)
         for chunks in TimeTable:
             # chunks[0]: row, chunks[1]: index
             chunk = chunks[0]
@@ -369,190 +374,208 @@ class SDBLFlagWorker(basetask.StandardTaskTemplate):
             nrow = len(chunks[0])
             START = 0
             ### 2011/05/26 shrink the size of data on memory
-            SpIn = numpy.zeros((nrow, NCHAN), dtype=numpy.float32)
-            SpOut = numpy.zeros((nrow, NCHAN), dtype=numpy.float32)
-            FlIn = numpy.zeros((nrow, NCHAN), dtype=numpy.int16)
-            FlOut = numpy.zeros((nrow, NCHAN), dtype=numpy.int16)
+            SpIn = numpy.zeros((npol, nrow, NCHAN), dtype=numpy.float32)
+            SpOut = numpy.zeros((npol, nrow, NCHAN), dtype=numpy.float32)
+            FlIn = numpy.zeros((npol, nrow, NCHAN), dtype=numpy.int16)
+            FlOut = numpy.zeros((npol, nrow, NCHAN), dtype=numpy.int16)
             for index in range(len(chunks[0])):
                 data_row_in = chunks[0][index]
-                SpIn[index] = tbIn.getcell(datacolIn, data_row_in)[polid]
-                FlIn[index] = tbIn.getcell('FLAG', data_row_in)[polid]
+                tmpd = tbIn.getcell(datacolIn, data_row_in)
+                tmpf = tbIn.getcell('FLAG', data_row_in)
+                for ip, polid in enumerate(polids):
+                    SpIn[ip, index] = tmpd[polid]
+                    FlIn[ip, index] = tmpf[polid]
                 if is_baselined: 
                     data_row_out = rowmap[data_row_in]
-                    SpOut[index] = tbOut.getcell(datacolOut, data_row_out)[polid]
-                    FlOut[index] = tbOut.getcell('FLAG', data_row_out)[polid]
-                SpIn[index][:edgeL] = 0
-                SpOut[index][:edgeL] = 0
-                FlIn[index][:edgeL] = 128
-                FlOut[index][:edgeL] = 128
+                    tmpd = tbOut.getcell(datacolOut, data_row_out)
+                    tmpf = tbOut.getcell('FLAG', data_row_out)
+                    for ip, polid in enumerate(polids):
+                        SpOut[ip, index] = tmpd[polid]
+                        FlOut[ip, index] = tmpf[polid]
+                SpIn[:, index, :edgeL] = 0
+                SpOut[:, index, :edgeL] = 0
+                FlIn[:, index, :edgeL] = 128
+                FlOut[:, index, :edgeL] = 128
                 if edgeR > 0:
-                    SpIn[index][-edgeR:] = 0
-                    SpOut[index][-edgeR:] = 0
-                    FlIn[index][-edgeR:] = 128
-                    FlOut[index][-edgeR:] = 128
+                    SpIn[:, index, -edgeR:] = 0
+                    SpOut[:, index, -edgeR:] = 0
+                    FlIn[:, index, -edgeR:] = 128
+                    FlOut[:, index, -edgeR:] = 128
             ### loading of the data for one chunk is done
 
-            # list of valid rows in this chunk
-            valid_indices = numpy.where(numpy.any(FlIn == 0, axis=1))[0]
-            valid_nrow = len(valid_indices)
-            
             datatable_index[output_array_index:output_array_index+nrow] = chunks[1]
-            for index in xrange(len(chunks[0])):
-                row = chunks[0][index]
-                idx = chunks[1][index]
+            
+            # loop over polarizations
+            for ip, polid in enumerate(polids):
                 
-                # check if current row is valid or not
-                isvalid = index in valid_indices
-                
-                # Countup progress timer
-                #Timer.count()
+                START = 0
 
-                # Mask out line and edge channels
-                masklist = DataTable.getcell('MASKLIST', idx)
-                tStats = DataTable.getcell('STATISTICS', idx)
-                stats = tStats[polid]
-                # Calculate Standard Deviation (NOT RMS)
-                ### 2011/05/26 shrink the size of data on memory
-                mask_in = self._get_mask_array(masklist, (edgeL, edgeR), FlIn[index], deviation_mask=deviation_mask)
-                mask_out = numpy.zeros(NCHAN, dtype=numpy.int64)
-                if isvalid:
-                    #mask_in = self._get_mask_array(masklist, (edgeL, edgeR), FlIn[index])
-                    OldRMS, Nmask = self._calculate_masked_stddev(SpIn[index], mask_in)
-                    #stats[2] = OldRMS
-                    del Nmask
+                # list of valid rows in this chunk
+                valid_indices = numpy.where(numpy.any(FlIn[ip] == 0, axis=1))[0]
+                valid_nrow = len(valid_indices)
+            
+                for index in xrange(len(chunks[0])):
+                    row = chunks[0][index]
+                    idx = chunks[1][index]
+                
+                    # check if current row is valid or not
+                    isvalid = index in valid_indices
+                
+                    # Countup progress timer
+                    #Timer.count()
     
-                    NewRMS = -1
-                    if is_baselined:
-                        mask_out = self._get_mask_array(masklist, (edgeL, edgeR), FlOut[index],
-                                                        deviation_mask=deviation_mask)
-                        NewRMS, Nmask = self._calculate_masked_stddev(SpOut[index], mask_out)
-                        del Nmask
-                    #stats[1] = NewRMS
-                else:
-                    OldRMS = INVALID_STAT
-                    NewRMS = INVALID_STAT
-                stats[2] = OldRMS
-                stats[1] = NewRMS
-
-                # Calculate Diff from the running mean
-                ### 2011/05/26 shrink the size of data on memory
-                ### modified to calculate Old and New statistics in a single cycle
-                if isvalid:
-                    START += 1
-
-                if nrow == 1:
-                    OldRMSdiff = 0.0
-                    stats[4] = OldRMSdiff
-                    NewRMSdiff = 0.0
-                    stats[3] = NewRMSdiff
-                    Nmask = NCHAN - numpy.sum(mask_out)
-                elif isvalid:
-                    # Mean spectra of row = row+1 ~ row+Nmean
-                    if START == 1:
-                        RmaskOld = numpy.zeros(NCHAN, numpy.int)
-                        RdataOld0 = numpy.zeros(NCHAN, numpy.float64)
-                        RmaskNew = numpy.zeros(NCHAN, numpy.int)
-                        RdataNew0 = numpy.zeros(NCHAN, numpy.float64)
-                        NR = 0
-                        for _x in range(1, min(Nmean + 1, valid_nrow)):
-                            x = valid_indices[_x]
-                            NR += 1
-                            RdataOld0 += SpIn[x]
-                            masklist = DataTable.getcell('MASKLIST', chunks[1][x])
-                            mask0 = self._get_mask_array(masklist, (edgeL, edgeR), FlIn[x],
-                                                         deviation_mask=deviation_mask)
-                            RmaskOld += mask0
-                            RdataNew0 += SpOut[x]
-                            mask0 = self._get_mask_array(masklist, (edgeL, edgeR), FlOut[x], deviation_mask=deviation_mask) if is_baselined else numpy.zeros(NCHAN, dtype=numpy.int64)
-                            RmaskNew += mask0
-                    elif START > (valid_nrow - Nmean):
-                        NR -= 1
-                        RdataOld0 -= SpIn[index]
-                        RmaskOld -= mask_in
-                        RdataNew0 -= SpOut[index]
-                        RmaskNew -= mask_out
-                    else:
-                        box_edge = valid_indices[START + Nmean - 1]
-                        masklist = DataTable.getcell('MASKLIST', chunks[1][box_edge])
-                        RdataOld0 -= (SpIn[index] - SpIn[box_edge])
-                        mask0 = self._get_mask_array(masklist, (edgeL, edgeR), FlIn[box_edge],
-                                                     deviation_mask=deviation_mask)
-                        RmaskOld += (mask0 - mask_in)
-                        RdataNew0 -= (SpOut[index] - SpOut[box_edge])
-                        mask0 = self._get_mask_array(masklist, (edgeL, edgeR), FlOut[box_edge], deviation_mask=deviation_mask) if is_baselined else numpy.zeros(NCHAN, dtype=numpy.int64)
-                        RmaskNew += (mask0 - mask_out)
-                    # Mean spectra of row = row-Nmean ~ row-1
-                    if START == 1:
-                        LmaskOld = numpy.zeros(NCHAN, numpy.int)
-                        LdataOld0 = numpy.zeros(NCHAN, numpy.float64)
-                        LmaskNew = numpy.zeros(NCHAN, numpy.int)
-                        LdataNew0 = numpy.zeros(NCHAN, numpy.float64)
-                        NL = 0
-                    elif START <= (Nmean + 1):
-                        NL += 1
-                        box_edge = valid_indices[START - 2]
-                        masklist = DataTable.getcell('MASKLIST', chunks[1][box_edge])
-                        LdataOld0 += SpIn[box_edge]
-                        mask0 = self._get_mask_array(masklist, (edgeL, edgeR), FlIn[box_edge],
-                                                     deviation_mask=deviation_mask)
-                        LmaskOld += mask0
-                        LdataNew0 += SpOut[box_edge]
-                        mask0 = self._get_mask_array(masklist, (edgeL, edgeR), FlOut[box_edge], deviation_mask=deviation_mask) if is_baselined else numpy.zeros(NCHAN, dtype=numpy.int64)
-                        LmaskNew += mask0
-                    else:
-                        box_edge_right = valid_indices[START - 2]
-                        box_edge_left = valid_indices[START - 2 - Nmean]
-                        masklist = DataTable.getcell('MASKLIST', chunks[1][box_edge_right])
-                        LdataOld0 += (SpIn[box_edge_right] - SpIn[box_edge_left])
-                        mask0 = self._get_mask_array(masklist, (edgeL, edgeR), FlIn[box_edge_right],
-                                                     deviation_mask=deviation_mask)
-                        LmaskOld += mask0
-                        LdataNew0 += (SpOut[box_edge_right] - SpOut[box_edge_left])
-                        mask0 = self._get_mask_array(masklist, (edgeL, edgeR), FlOut[box_edge_right], deviation_mask=deviation_mask) if is_baselined else numpy.zeros(NCHAN, dtype=numpy.int64)
-                        LmaskNew += mask0
-                        masklist = DataTable.getcell('MASKLIST', chunks[1][box_edge_left])
-                        mask0 = self._get_mask_array(masklist, (edgeL, edgeR), FlIn[box_edge_left],
-                                                     deviation_mask=deviation_mask)
-                        LmaskOld -= mask0
-                        mask0 = self._get_mask_array(masklist, (edgeL, edgeR), FlOut[box_edge_left], deviation_mask=deviation_mask) if is_baselined else numpy.zeros(NCHAN, dtype=numpy.int64)
-                        LmaskNew -= mask0
-
-                    diffOld0 = (LdataOld0 + RdataOld0) / float(NL + NR) - SpIn[index]
-                    diffNew0 = (LdataNew0 + RdataNew0) / float(NL + NR) - SpOut[index]
-
+                    # Mask out line and edge channels
+                    masklist = DataTable.getcell('MASKLIST', idx)
+                    tStats = DataTable.getcell('STATISTICS', idx)
+                    stats = tStats[polid]
+                    
                     # Calculate Standard Deviation (NOT RMS)
-                    mask0 = (RmaskOld + LmaskOld + mask_in) / (NL + NR + 1)
-                    OldRMSdiff, Nmask = self._calculate_masked_stddev(diffOld0, mask0)
-                    stats[4] = OldRMSdiff
+                    ### 2011/05/26 shrink the size of data on memory
+                    mask_in = self._get_mask_array(masklist, (edgeL, edgeR), FlIn[ip, index], deviation_mask=deviation_mask)
+                    mask_out = numpy.zeros(NCHAN, dtype=numpy.int64)
+                    if isvalid:
+                        #mask_in = self._get_mask_array(masklist, (edgeL, edgeR), FlIn[index])
+                        OldRMS, Nmask = self._calculate_masked_stddev(SpIn[ip, index], mask_in)
+                        #stats[2] = OldRMS
+                        del Nmask
+        
+                        NewRMS = -1
+                        if is_baselined:
+                            mask_out = self._get_mask_array(masklist, (edgeL, edgeR), FlOut[ip, index],
+                                                            deviation_mask=deviation_mask)
+                            NewRMS, Nmask = self._calculate_masked_stddev(SpOut[ip, index], mask_out)
+                            del Nmask
+                        #stats[1] = NewRMS
+                    else:
+                        OldRMS = INVALID_STAT
+                        NewRMS = INVALID_STAT
+                    stats[2] = OldRMS
+                    stats[1] = NewRMS
 
-                    NewRMSdiff = -1
-                    if is_baselined: 
-                        mask0 = (RmaskNew + LmaskNew + mask_out) / (NL + NR + 1)
-                        NewRMSdiff, Nmask = self._calculate_masked_stddev(diffNew0, mask0)
-                    stats[3] = NewRMSdiff
-                else:
-                    # invalid data
-                    OldRMSdiff = INVALID_STAT
-                    NewRMSdiff = INVALID_STAT
-                    stats[3] = NewRMSdiff
-                    stats[4] = OldRMSdiff
-                    Nmask = NCHAN
+                    # Calculate Diff from the running mean
+                    ### 2011/05/26 shrink the size of data on memory
+                    ### modified to calculate Old and New statistics in a single cycle
+                    if isvalid:
+                        START += 1
+    
+                    if nrow == 1:
+                        OldRMSdiff = 0.0
+                        stats[4] = OldRMSdiff
+                        NewRMSdiff = 0.0
+                        stats[3] = NewRMSdiff
+                        Nmask = NCHAN - numpy.sum(mask_out)
+                    elif isvalid:
+                        # Mean spectra of row = row+1 ~ row+Nmean
+                        if START == 1:
+                            RmaskOld = numpy.zeros(NCHAN, numpy.int)
+                            RdataOld0 = numpy.zeros(NCHAN, numpy.float64)
+                            RmaskNew = numpy.zeros(NCHAN, numpy.int)
+                            RdataNew0 = numpy.zeros(NCHAN, numpy.float64)
+                            NR = 0
+                            for _x in range(1, min(Nmean + 1, valid_nrow)):
+                                x = valid_indices[_x]
+                                NR += 1
+                                RdataOld0 += SpIn[ip, x]
+                                masklist = DataTable.getcell('MASKLIST', chunks[1][x])
+                                mask0 = self._get_mask_array(masklist, (edgeL, edgeR), FlIn[ip, x],
+                                                             deviation_mask=deviation_mask)
+                                RmaskOld += mask0
+                                RdataNew0 += SpOut[ip, x]
+                                mask0 = self._get_mask_array(masklist, (edgeL, edgeR), FlOut[ip, x], 
+                                                             deviation_mask=deviation_mask) if is_baselined else numpy.zeros(NCHAN, dtype=numpy.int64)
+                                RmaskNew += mask0
+                        elif START > (valid_nrow - Nmean):
+                            NR -= 1
+                            RdataOld0 -= SpIn[ip, index]
+                            RmaskOld -= mask_in
+                            RdataNew0 -= SpOut[ip, index]
+                            RmaskNew -= mask_out
+                        else:
+                            box_edge = valid_indices[START + Nmean - 1]
+                            masklist = DataTable.getcell('MASKLIST', chunks[1][box_edge])
+                            RdataOld0 -= (SpIn[ip, index] - SpIn[ip, box_edge])
+                            mask0 = self._get_mask_array(masklist, (edgeL, edgeR), FlIn[ip, box_edge],
+                                                         deviation_mask=deviation_mask)
+                            RmaskOld += (mask0 - mask_in)
+                            RdataNew0 -= (SpOut[ip, index] - SpOut[ip, box_edge])
+                            mask0 = self._get_mask_array(masklist, (edgeL, edgeR), FlOut[ip, box_edge], 
+                                                         deviation_mask=deviation_mask) if is_baselined else numpy.zeros(NCHAN, dtype=numpy.int64)
+                            RmaskNew += (mask0 - mask_out)
+                        # Mean spectra of row = row-Nmean ~ row-1
+                        if START == 1:
+                            LmaskOld = numpy.zeros(NCHAN, numpy.int)
+                            LdataOld0 = numpy.zeros(NCHAN, numpy.float64)
+                            LmaskNew = numpy.zeros(NCHAN, numpy.int)
+                            LdataNew0 = numpy.zeros(NCHAN, numpy.float64)
+                            NL = 0
+                        elif START <= (Nmean + 1):
+                            NL += 1
+                            box_edge = valid_indices[START - 2]
+                            masklist = DataTable.getcell('MASKLIST', chunks[1][box_edge])
+                            LdataOld0 += SpIn[ip, box_edge]
+                            mask0 = self._get_mask_array(masklist, (edgeL, edgeR), FlIn[ip, box_edge],
+                                                         deviation_mask=deviation_mask)
+                            LmaskOld += mask0
+                            LdataNew0 += SpOut[ip, box_edge]
+                            mask0 = self._get_mask_array(masklist, (edgeL, edgeR), FlOut[ip, box_edge], 
+                                                         deviation_mask=deviation_mask) if is_baselined else numpy.zeros(NCHAN, dtype=numpy.int64)
+                            LmaskNew += mask0
+                        else:
+                            box_edge_right = valid_indices[START - 2]
+                            box_edge_left = valid_indices[START - 2 - Nmean]
+                            masklist = DataTable.getcell('MASKLIST', chunks[1][box_edge_right])
+                            LdataOld0 += (SpIn[ip, box_edge_right] - SpIn[ip, box_edge_left])
+                            mask0 = self._get_mask_array(masklist, (edgeL, edgeR), FlIn[ip, box_edge_right],
+                                                         deviation_mask=deviation_mask)
+                            LmaskOld += mask0
+                            LdataNew0 += (SpOut[ip, box_edge_right] - SpOut[ip, box_edge_left])
+                            mask0 = self._get_mask_array(masklist, (edgeL, edgeR), FlOut[ip, box_edge_right], 
+                                                         deviation_mask=deviation_mask) if is_baselined else numpy.zeros(NCHAN, dtype=numpy.int64)
+                            LmaskNew += mask0
+                            masklist = DataTable.getcell('MASKLIST', chunks[1][box_edge_left])
+                            mask0 = self._get_mask_array(masklist, (edgeL, edgeR), FlIn[ip, box_edge_left],
+                                                         deviation_mask=deviation_mask)
+                            LmaskOld -= mask0
+                            mask0 = self._get_mask_array(masklist, (edgeL, edgeR), FlOut[ip, box_edge_left], 
+                                                         deviation_mask=deviation_mask) if is_baselined else numpy.zeros(NCHAN, dtype=numpy.int64)
+                            LmaskNew -= mask0
+    
+                        diffOld0 = (LdataOld0 + RdataOld0) / float(NL + NR) - SpIn[ip, index]
+                        diffNew0 = (LdataNew0 + RdataNew0) / float(NL + NR) - SpOut[ip, index]
+    
+                        # Calculate Standard Deviation (NOT RMS)
+                        mask0 = (RmaskOld + LmaskOld + mask_in) / (NL + NR + 1)
+                        OldRMSdiff, Nmask = self._calculate_masked_stddev(diffOld0, mask0)
+                        stats[4] = OldRMSdiff
+    
+                        NewRMSdiff = -1
+                        if is_baselined: 
+                            mask0 = (RmaskNew + LmaskNew + mask_out) / (NL + NR + 1)
+                            NewRMSdiff, Nmask = self._calculate_masked_stddev(diffNew0, mask0)
+                        stats[3] = NewRMSdiff
+                    else:
+                        # invalid data
+                        OldRMSdiff = INVALID_STAT
+                        NewRMSdiff = INVALID_STAT
+                        stats[3] = NewRMSdiff
+                        stats[4] = OldRMSdiff
+                        Nmask = NCHAN
 
-                # Fit STATISTICS and NMASK columns in DataTable (post-Fit statistics will be -1 when is_baselined=F)
-                tStats[polid] = stats
-                DataTable.putcell('STATISTICS', idx, tStats)
-                DataTable.putcell('NMASK', idx, Nmask)
-                LOG.debug('Row=%d, pre-fit StdDev= %.2f pre-fit diff StdDev= %.2f' % (row, OldRMS, OldRMSdiff))
-                if is_baselined:
-                    LOG.debug('Row=%d, post-fit StdDev= %.2f post-fit diff StdDev= %.2f' % (row, NewRMS, NewRMSdiff))
-                output_serial_index = output_array_index + index
-                statistics_array[0, output_serial_index] = NewRMS
-                statistics_array[1, output_serial_index] = OldRMS
-                statistics_array[2, output_serial_index] = NewRMSdiff
-                statistics_array[3, output_serial_index] = OldRMSdiff
-                statistics_array[4, output_serial_index] = DataTable.getcell('TSYS', idx)[polid]
-                num_masked_array[output_serial_index] = Nmask
-            del SpIn, SpOut
+                    # Fit STATISTICS and NMASK columns in DataTable (post-Fit statistics will be -1 when is_baselined=F)
+                    tStats[polid] = stats
+                    DataTable.putcell('STATISTICS', idx, tStats)
+                    DataTable.putcell('NMASK', idx, Nmask)
+                    LOG.debug('Row=%d, Pol %d: pre-fit StdDev= %.2f pre-fit diff StdDev= %.2f' % (row, polid, OldRMS, OldRMSdiff))
+                    if is_baselined:
+                        LOG.debug('Row=%d, Pol %d: post-fit StdDev= %.2f post-fit diff StdDev= %.2f' % (row, polid, NewRMS, NewRMSdiff))
+                    output_serial_index = output_array_index + index
+                    statistics_array[polid][0, output_serial_index] = NewRMS
+                    statistics_array[polid][1, output_serial_index] = OldRMS
+                    statistics_array[polid][2, output_serial_index] = NewRMSdiff
+                    statistics_array[polid][3, output_serial_index] = OldRMSdiff
+                    statistics_array[polid][4, output_serial_index] = DataTable.getcell('TSYS', idx)[polid]
+                    num_masked_array[polid][output_serial_index] = Nmask
+            del SpIn, SpOut, FlIn, FlOut
             output_array_index += nrow
         #tbIn.close()
         #tbOut.close()
