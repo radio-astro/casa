@@ -75,7 +75,7 @@ def format_options(options):
     # convert all options to sortable strings
     as_strings = [str(o) for o in no_dups]
     # sort options
-    sorted_options = utils.numericSort(as_strings)
+    sorted_options = utils.numeric_sort(as_strings)
     # return HTML element for each option
     return ['%s' % option for option in sorted_options]
 

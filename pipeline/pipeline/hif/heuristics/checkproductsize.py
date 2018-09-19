@@ -1,12 +1,10 @@
-import pipeline.infrastructure as infrastructure
-import pipeline.infrastructure.casatools as casatools
-import pipeline.infrastructure.utils as utils
-import pipeline.domain.measures as measures
-
-from pipeline.hif.tasks.makeimlist import makeimlist
-
 import math
 import operator
+
+import pipeline.domain.measures as measures
+import pipeline.infrastructure as infrastructure
+import pipeline.infrastructure.utils as utils
+from pipeline.hif.tasks.makeimlist import makeimlist
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -104,7 +102,7 @@ class CheckProductSizeHeuristics(object):
         if (self.inputs.maxcubesize != -1.0) and (maxcubesize > self.inputs.maxcubesize):
             nbins = []
             for spw, nchan in nchans.iteritems():
-                if (nchan == 3840) or (nchan in (1920, 960, 480) and utils.approx_equal(ch_width_ratios[spw], 2.667, 4)):
+                if (nchan == 3840) or (nchan in (1920, 960, 480) and utils.equal_to_n_digits(ch_width_ratios[spw], 2.667, 4)):
                     LOG.info('Size mitigation: Setting nbin for SPW %s to 2.' % (spw))
                     nbins.append('%s:2' % (spw))
                 else:
@@ -215,7 +213,7 @@ class CheckProductSizeHeuristics(object):
 
                 nbins = []
                 for spw, nchan in nchans.iteritems():
-                    if (nchan == 3840) or (nchan in (1920, 960, 480) and utils.approx_equal(ch_width_ratios[spw], 2.667, 4)):
+                    if (nchan == 3840) or (nchan in (1920, 960, 480) and utils.equal_to_n_digits(ch_width_ratios[spw], 2.667, 4)):
                         LOG.info('Size mitigation: Setting nbin for SPW %s to 2.' % (spw))
                         nbins.append('%s:2' % (spw))
                     else:

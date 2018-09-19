@@ -199,7 +199,7 @@ def sort_spws(unsorted):
     if type(unsorted) != str or ',' not in unsorted:
         return unsorted
     vals = unsorted.split(',')
-    return ','.join(utils.numericSort(vals))
+    return ','.join(utils.numeric_sort(vals))
 
 
 class NamingTemplate(object):

@@ -1,9 +1,28 @@
-from __future__ import absolute_import
 import abc
+import re
 
 import pipeline.infrastructure.api as api
 import pipeline.infrastructure.filenamer as filenamer
-import pipeline.infrastructure.utils as utils
+
+
+def _truncate_floats(s, precision=3):
+    """
+    Return a copy of the input string with all floating point numbers
+    truncated to the given precision.
+
+    Example:
+    truncate_float('a,2,123.456789', 3) => 'a,2,123.456'
+
+    :param s: the string to modify
+    :param precision: the maximum floating point precision
+    :return: a string
+    """
+    # we need fixed-width terms to so a positive look-behind search,
+    # so instead of finding the offending digits and removing them,
+    # we have to capture the good digits and cut off the remainder
+    # during replacement.
+    pattern = '(\d+\.\d{%s})\d+' % precision
+    return re.sub(pattern, '\\1', s)
 
 
 class CaltableNamer(api.Heuristic):
@@ -66,7 +85,7 @@ class UVcontCaltable(CaltableNamer):
     def get_namer(self):
         return filenamer.UVcontCalibrationTable()
 
-    def customise (self, namer, task_args):
+    def customise(self, namer, task_args):
         namer.source(task_args.get('source', None))
 
 
@@ -77,7 +96,7 @@ class BandpassCaltable(CaltableNamer):
     def customise(self, namer, task_args):
         namer.spectral_window(task_args.get('spw', None))
         solint = task_args.get('solint', None)
-        namer.solint(utils.truncate_floats(solint, 3))
+        namer.solint(_truncate_floats(solint, 3))
 
         if 'bandtype' in task_args:
             if task_args['bandtype'] == 'B':
@@ -113,7 +132,7 @@ class GaincalCaltable(CaltableNamer):
         if 'solint' in task_args:
             # convert integer solints to str for truncation
             solint = str(task_args['solint'])
-            namer.solint(utils.truncate_floats(solint, 3))
+            namer.solint(_truncate_floats(solint, 3))
 
         if 'gaintype' in task_args:
             if task_args['gaintype'] == 'GSPLINE':
@@ -152,6 +171,7 @@ class SwpowCaltable(CaltableNamer):
 class TecMapstable(CaltableNamer):
     def get_namer(self):
         return filenamer.TecMapsCalibrationTable()
+
 
 class TsysCaltable(CaltableNamer):
     def get_namer(self):

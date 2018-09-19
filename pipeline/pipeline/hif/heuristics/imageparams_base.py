@@ -1323,15 +1323,15 @@ class ImageParamsHeuristics(object):
 
         if (BW_ratio <= 1.0):
             N_smooth = 0
-        elif (utils.approx_equal(BW_ratio, 2.667, 4)):
+        elif (utils.equal_to_n_digits(BW_ratio, 2.667, 4)):
             N_smooth = 1
-        elif (utils.approx_equal(BW_ratio, 1.600, 4)):
+        elif (utils.equal_to_n_digits(BW_ratio, 1.600, 4)):
             N_smooth = 2
-        elif (utils.approx_equal(BW_ratio, 1.231, 4)):
+        elif (utils.equal_to_n_digits(BW_ratio, 1.231, 4)):
             N_smooth = 4
-        elif (utils.approx_equal(BW_ratio, 1.104, 4)):
+        elif (utils.equal_to_n_digits(BW_ratio, 1.104, 4)):
             N_smooth = 8
-        elif (utils.approx_equal(BW_ratio, 1.049, 4)):
+        elif (utils.equal_to_n_digits(BW_ratio, 1.049, 4)):
             N_smooth = 16
         else:
             LOG.warning('Could not evaluate channel bandwidths ratio. Physical: %s Effective: %s Ratio: %s' % (physicalBW_of_1chan, effectiveBW_of_1chan, BW_ratio))
