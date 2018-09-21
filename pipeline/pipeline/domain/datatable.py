@@ -810,6 +810,8 @@ class DataTableImpl(object):
                 cal_idxs = numpy.where(numpy.logical_and(spws == spw_from, antids == ant_to))[0]
                 if len(cal_idxs) == 0:
                     continue
+                tsys_mean = numpy.asarray([tsys_masked[i][:, start_atmchan:end_atmchan+1].mean(axis=1).data
+                                           for i in cal_idxs])
                 dtrows = numpy.where(numpy.logical_and(dt_antenna == ant_to, dt_spw == spw_to))[0]
                 time_sel = times.take(cal_idxs)  # in sec
                 field_sel = fieldids.take(cal_idxs)
@@ -817,16 +819,17 @@ class DataTableImpl(object):
                     tref = self.getcell('TIME', dt_id) * 86400  # day->sec
                     if gainfield == '':
                         cal_field_idxs = cal_idxs
+                        tsys_mean_index = range(len(cal_idxs))
                     else:
                         if gainfield.upper() == 'NEAREST':
                             from_fields = field_sel.take([numpy.argmin(numpy.abs(time_sel - tref))])
                         # select caltable row id by SPW, ANT, and gain field
-                        cal_field_idxs = cal_idxs.take(numpy.where([fid in from_fields for fid in field_sel])[0])
+                        tsys_mean_index = numpy.where([fid in from_fields for fid in field_sel])[0]
+                        cal_field_idxs = cal_idxs[tsys_mean_index]
                     if len(cal_field_idxs) == 0:
                         continue
                     # the array, atsys, is in shape of len(cal_field_idxs) x npol unlike the other arrays.
-                    atsys = numpy.array(
-                        [tsys_masked[i][:, start_atmchan:end_atmchan + 1].mean(axis=1).data for i in cal_field_idxs])
+                    atsys = tsys_mean.take(tsys_mean_index, axis=0)
                     # LOG.trace("cal_field_ids=%s" % cal_field_idxs)
                     # LOG.trace('atsys = %s' % str(atsys))
                     if atsys.shape[0] == 1:  # only one Tsys measurement selected
