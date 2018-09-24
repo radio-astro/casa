@@ -10,6 +10,7 @@ import pipeline.qa.scorecalculator as qacalc
 from . import checkflag
 from . import targetflag
 from . import flagdetervla
+from . import flagbaddeformatters
 
 LOG = logging.get_logger(__name__)
 
@@ -110,6 +111,43 @@ class CheckflagListQAHandler(pqa.QAPlugin):
     result_cls = collections.Iterable
     child_cls = checkflag.CheckflagResults
     generating_task = checkflag.Checkflag
+
+    def handle(self, context, result):
+        # collate the QAScores from each child result, pulling them into our
+        # own QAscore list
+        collated = utils.flatten([r.qa.pool[:] for r in result])
+        result.qa.pool[:] = collated
+
+
+class FlagBadDeformattersQAHandler(pqa.QAPlugin):
+    result_cls = flagbaddeformatters.FlagBadDeformattersResults
+    child_cls = None
+    generating_task = flagbaddeformatters.FlagBadDeformatters
+
+    def handle(self, context, result):
+        # get a QA score for flagging
+        # 0%   of data flagged  --> 1
+        # 0%-30% of data flagged  --> 1 to 0
+        # > 30%  of data flagged  --> 0
+
+        if result.frac_flagged is not None:
+            score1 = qacalc.score_total_data_flagged_vla_baddef(result.calBPtablename, result.frac_flagged)
+            scores = [score1]
+        else:
+            LOG.error('Error with bandpass table.')
+            scores = [pqa.QAScore(0.0, longmsg='No flagging stats about the bandpass table.',
+                                  shortmsg='Bandpass table problem.')]
+
+        result.qa.pool[:] = scores
+
+
+class FlagBadDeformattersListQAHandler(pqa.QAPlugin):
+    """
+    QA handler for a list containing FlagBadDeformattersResults.
+    """
+    result_cls = collections.Iterable
+    child_cls = flagbaddeformatters.FlagBadDeformattersResults
+    generating_task = flagbaddeformatters.FlagBadDeformatters
 
     def handle(self, context, result):
         # collate the QAScores from each child result, pulling them into our

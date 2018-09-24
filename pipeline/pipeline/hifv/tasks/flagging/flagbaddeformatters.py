@@ -6,6 +6,7 @@ import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.vdp as vdp
 from pipeline.hifv.heuristics import getBCalStatistics
+from pipeline.hifv.heuristics import getCalFlaggedSoln
 from pipeline.infrastructure import casa_tasks
 from pipeline.infrastructure import task_registry
 
@@ -24,8 +25,13 @@ class FlagBadDeformattersInputs(vdp.StandardInputs):
 
 class FlagBadDeformattersResults(basetask.Results):
     def __init__(self, jobs=None, result_amp=None, result_phase=None,
-                 amp_collection=collections.defaultdict(list), phase_collection=collections.defaultdict(list)):
+                 amp_collection=None, phase_collection=None,
+                 frac_flagged=None, calBPtablename=None):
 
+        if amp_collection is None:
+            amp_collection = collections.defaultdict(list)
+        if phase_collection is None:
+            phase_collection = collections.defaultdict(list)
         if jobs is None:
             jobs = []
         if result_amp is None:
@@ -40,6 +46,8 @@ class FlagBadDeformattersResults(basetask.Results):
         self.result_phase = result_phase
         self.amp_collection = amp_collection
         self.phase_collection = phase_collection
+        self.frac_flagged = frac_flagged
+        self.calBPtablename = calBPtablename
         
     def __repr__(self):
         s = 'Bad deformatter results:\n'
@@ -67,7 +75,7 @@ class FlagBadDeformatters(basetask.StandardTaskTemplate):
                        'calBPtablename': self.inputs.context.results[-1].read()[0].bpcaltable,  # Define the table
                        'flagreason': 'bad_deformatters_amp or RFI'}  # Define the REASON given for the flags
         
-        (result_amp, amp_collection) = self._do_flag_baddeformatters(**method_args)
+        (result_amp, amp_collection, frac_flagged, calBPtablename) = self._do_flag_baddeformatters(**method_args)
         
         method_args = {'testq': 'phase',
                        'tstat': 'diff',
@@ -80,10 +88,11 @@ class FlagBadDeformatters(basetask.StandardTaskTemplate):
                        'calBPtablename': self.inputs.context.results[-1].read()[0].bpcaltable,
                        'flagreason': 'bad_deformatters_phase or RFI'}
         
-        (result_phase, phase_collection) = self._do_flag_baddeformatters(**method_args)
+        (result_phase, phase_collection, frac_flagged, calBPtablename) = self._do_flag_baddeformatters(**method_args)
         
         return FlagBadDeformattersResults(result_amp=result_amp, result_phase=result_phase, 
-                                          amp_collection=amp_collection, phase_collection=phase_collection)
+                                          amp_collection=amp_collection, phase_collection=phase_collection,
+                                          frac_flagged=frac_flagged, calBPtablename=calBPtablename)
         
     def _do_flag_baddeformatters(self, testq=None, tstat=None, doprintall=True,
                                  testlimit=None, testunder=True, nspwlimit=4,
@@ -312,11 +321,22 @@ class FlagBadDeformatters(basetask.StandardTaskTemplate):
                 job = casa_tasks.flagdata(**task_args)
                 
                 self._executor.execute(job)
-                
-                return flaglist, weblogflagdict
-                
+
+                # get the total fraction of data flagged for all antennas
+                flagging_stats = getCalFlaggedSoln(calBPtablename)
+                total = 0
+                flagged = 0
+                for antenna in flagging_stats['ant']:
+                    for pol in flagging_stats['ant'][antenna]:
+                        flagged += flagging_stats['ant'][antenna][pol]['flagged']
+                        total += flagging_stats['ant'][antenna][pol]['total']
+                fraction_flagged = flagged / total
+
+                LOG.info('Flagged ({}) Total ({}) Fraction ({})'.format(flagged, total, fraction_flagged))
+                return flaglist, weblogflagdict, fraction_flagged, calBPtablename
+
         # If the flag commands are not executed.
-        return [], collections.defaultdict(list)
+        return [], collections.defaultdict(list), 0, None
 
     def analyse(self, results):
         return results

@@ -17,42 +17,19 @@ from .checkflag import Checkflag
 from .targetflag import Targetflag
 from .flagcal import Flagcal
 
-# pipelineqa.registry.add_handler(qa.FlagBadDeformattersQAHandler())
-# pipelineqa.registry.add_handler(qa.FlagBadDeformattersListQAHandler())
-# qaadapter.registry.register_to_dataset_topic(flagbaddeformatters.FlagBadDeformattersResults)
-
-# pipelineqa.qa_registry.add_handler(qa.CheckflagQAHandler())
-# pipelineqa.qa_registry.add_handler(qa.CheckflagListQAHandler())
 qaadapter.registry.register_to_dataset_topic(checkflag.CheckflagResults)
-
-# pipelineqa.qa_registry.add_handler(qa.TargetflagQAHandler())
-# pipelineqa.qa_registry.add_handler(qa.TargetflagListQAHandler())
 qaadapter.registry.register_to_dataset_topic(targetflag.TargetflagResults)
-
-# pipelineqa.qa_registry.add_handler(qa.FlagdataQAHandler())
-# pipelineqa.qa_registry.add_handler(qa.FlagdataListQAHandler())
 qaadapter.registry.register_to_dataset_topic(flagdetervla.FlagDeterVLAResults)
+qaadapter.registry.register_to_dataset_topic(flagbaddeformatters.FlagBadDeformattersResults)
 
 # Use locally defined renderer for VLA deterministic flagging.
 weblog.add_renderer(FlagDeterVLA, renderer.T2_4MDetailsFlagDeterVLARenderer(), group_by=weblog.UNGROUPED)
-
 weblog.add_renderer(FlagBadDeformatters,
-                    basetemplates.T2_4MDetailsDefaultRenderer(uri='flagbaddef.mako',
-                                                              description='Flag bad deformatters'),
+                    basetemplates.T2_4MDetailsDefaultRenderer(uri='flagbaddef.mako', description='Flag bad deformatters'),
                     group_by=weblog.UNGROUPED)
-
-#weblog.add_renderer(Checkflag,
-#                    basetemplates.T2_4MDetailsDefaultRenderer(uri='checkflag.mako',
-#                                                             description='Flag possible RFI using rflag and tfcrop'),
-#                    group_by=weblog.UNGROUPED)
-
-weblog.add_renderer(Checkflag,
-                    renderer.T2_4MDetailscheckflagRenderer(),
+weblog.add_renderer(Checkflag, renderer.T2_4MDetailscheckflagRenderer(), group_by=weblog.UNGROUPED)
+weblog.add_renderer(Targetflag,
+                    basetemplates.T2_4MDetailsDefaultRenderer(uri='targetflag.mako', description='Targetflag'),
                     group_by=weblog.UNGROUPED)
-
-weblog.add_renderer(Targetflag, basetemplates.T2_4MDetailsDefaultRenderer(uri='targetflag.mako',
-                                                                          description='Targetflag'),
+weblog.add_renderer(Flagcal, basetemplates.T2_4MDetailsDefaultRenderer(uri='flagcal.mako', description='Flagcal'),
                     group_by=weblog.UNGROUPED)
-
-weblog.add_renderer(Flagcal, basetemplates.T2_4MDetailsDefaultRenderer(uri='flagcal.mako',
-                         description='Flagcal'), group_by=weblog.UNGROUPED)

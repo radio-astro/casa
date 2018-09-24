@@ -55,6 +55,7 @@ __all__ = ['score_polintents',                                # ALMA specific
            'score_total_data_flagged',
            'score_total_data_flagged_vla',
            'score_total_data_flagged_vla_bandpass',
+           'score_total_data_flagged_vla_baddef',
            'score_total_data_vla_delay',
            'score_ms_model_data_column_present',
            'score_ms_history_entries_present',
@@ -784,6 +785,39 @@ def score_total_data_flagged_vla_bandpass(filename, frac_flagged):
                           metric_units='Total fraction of VLA data that is flagged in the caltable')
 
     return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg, vis=os.path.basename(filename), origin=origin)
+
+
+@log_qa
+def score_total_data_flagged_vla_baddef(filename, frac_flagged):
+    """
+    Calculate a score for the flagging task based on the data flagged in the bandpass table.
+
+    0% flagged   -> 1
+    0%-30% flagged  -> 1 to 0
+    30%-100% flagged -> 0
+
+    frac_flagged -- fraction of data flagged
+    """
+
+    origin = pqa.QAOrigin(metric_name='score_total_data_flagged_vla_baddef',
+                          metric_score=frac_flagged,
+                          metric_units='Total fraction of VLA data that is flagged in the caltable')
+
+    if 0 == frac_flagged and filename is None:
+        return pqa.QAScore(1, longmsg='No data flagged', shortmsg='No data flagged', origin=origin)
+    else:
+        # Convert fraction of flagged data into a score.
+        if frac_flagged > 0.3:
+            score = 0
+        else:
+            score = linear_score(frac_flagged, 0.0, 0.3, 1.0, 0.0)
+
+        # Set score messages and origin.
+        percent = 100.0 * frac_flagged
+        longmsg = "{:0.2f}% of data in '{}' was flagged".format(percent, filename)
+        shortmsg = "{:0.2f}% data flagged".format(percent)
+
+        return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg, vis=os.path.basename(filename), origin=origin)
 
 
 @log_qa
