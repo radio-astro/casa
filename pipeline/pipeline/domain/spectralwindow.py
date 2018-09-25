@@ -89,9 +89,12 @@ class ChannelList(object):
                                      self.chan_effbws[index])
 
     def __create_channel(self, centre, width, effective_bw):
-        dec_centre = decimal.Decimal(str(centre))
-        dec_width = decimal.Decimal(str(width))
-        delta = dec_width / decimal.Decimal('2')
+        dec_centre = decimal.Decimal(centre)
+        dec_width = decimal.Decimal(width)
+        # The abs() call is not strictly necessary as Channel extends
+        # FrequencyRange, whose .set() method swaps low and high when
+        # low > high.
+        delta = abs(dec_width) / decimal.Decimal(2)
 
         f_lo = measures.Frequency(dec_centre - delta,
                                   measures.FrequencyUnits.HERTZ)

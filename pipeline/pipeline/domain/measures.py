@@ -132,6 +132,8 @@ class ComparableUnit(object):
         return self.__class__(other.to_units(self.units) + self.value, self.units)
 
     def __div__(self, other):
+        if isinstance(other, self.__class__):
+            return self.to_units() / other.to_units()
         if not isinstance(other, (int, float, long, decimal.Decimal)):
             raise TypeError, "unsupported operand type(s) for /: '%s' and '%s'" % (self.__class__.__name__, other.__class__.__name__)
         return self.__class__(self.value / decimal.Decimal(str(other)), self.units)
