@@ -254,7 +254,6 @@ def _createLists(xmlObject, mapNameSpaces, nameSpaceMapping, skipChars):
             if eval('len(xmlObject.%s)' % item) == 1:
                 exec('tmpItem = xmlObject.%s[0]' % item)
                 delattr(xmlObject, item)
-                # FIXME: tmpItem is undefined
                 setattr(xmlObject, item, tmpItem)
 
 
