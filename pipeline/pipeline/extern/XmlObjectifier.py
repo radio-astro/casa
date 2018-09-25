@@ -225,7 +225,7 @@ def _createLists(xmlObject, mapNameSpaces, nameSpaceMapping, skipChars):
                     nameSpace = elementName[:sptr]
                     nameSpaceKey = nameSpace + ':'
 		    # Keep new name spaces for later use
-                    if (not (nameSpaceMapping.has_key(nameSpaceKey))):
+                    if (not (nameSpaceKey in nameSpaceMapping)):
                         if (mapNameSpaces):
                             path = element.getAttribute('xmlns:' + nameSpace)
                             # Skip leading strings if desired
