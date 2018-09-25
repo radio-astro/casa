@@ -76,7 +76,7 @@ class SDApplycal(Applycal):
         datatable._update_flag(msobj.name)
         for calapp in results.applied:
             filename = os.path.join(context.output_dir, calapp.vis)
-            fieldids = [fieldobj.id for fieldobj in msobj.get_fields(name=calapp.field)]
+            fieldids = [fieldobj.id for fieldobj in msobj.get_fields(calapp.field)]
             for _calfrom in calapp.calfrom:
                 if _calfrom.caltype == 'tsys':
                     LOG.info('Updating Tsys for {0}'.format(os.path.join(calapp.vis)))
