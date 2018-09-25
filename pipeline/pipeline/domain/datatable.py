@@ -867,8 +867,8 @@ class DataTableImpl(object):
                 time_sel = times.take(cal_idxs)  # in sec
                 for dt_id in dtrows:
                     #LOG.info('ant {} spw {} field {}'.format(self.getcell('ANTENNA', dt_id), 
-                                                             self.getcell('IF', dt_id),
-                                                             self.getcell('FIELD_ID', dt_id)))
+                    #                                         self.getcell('IF', dt_id),
+                    #                                         self.getcell('FIELD_ID', dt_id)))
                     tref = self.getcell('TIME', dt_id) * 86400  # day->sec
                     # LOG.trace("cal_field_ids=%s" % cal_field_idxs)
                     # LOG.trace('atsys = %s' % str(atsys))
