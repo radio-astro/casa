@@ -3,7 +3,6 @@ from __future__ import absolute_import
 import os
 import xml.dom.minidom as minidom
 
-import numpy
 import numpy as np
 
 import pipeline.infrastructure.casatools as casatools
@@ -36,118 +35,117 @@ def getMedianPWV(vis='.', myTimes=[0,999999999999], asdm='', verbose=False):
 
     pwvmean = 0
     success = False
-    if (verbose):
+    if verbose:
         print("in getMedianPWV with myTimes = {}".format(myTimes))
     try:
-      if (os.path.exists("%s/ASDM_CALWVR"%vis)):
-          tb.open("%s/ASDM_CALWVR" % vis)
-          pwvtime = tb.getcol('startValidTime')  # mjdsec
-          antenna = tb.getcol('antennaName')
-          pwv = tb.getcol('water')
-          tb.close()
-          success = True
-          if (len(pwv) < 1):
-              if (os.path.exists("%s/ASDM_CALATMOSPHERE" % vis)):
-                  pwvtime, antenna, pwv = readPWVFromASDM_CALATMOSPHERE(vis)
-                  success = True
-                  if (len(pwv) < 1):
-                      print("Found no data in ASDM_CALWVR nor ASDM_CALATMOSPHERE table")
-                      return(0,-1)
-              else:
-                  if (verbose):
-                      print("Did not find ASDM_CALATMOSPHERE in the ms")
-                  return(0,-1)
-          if (verbose):
-              print("Opened ASDM_CALWVR table, len(pwvtime)={}".format(len(pwvtime)))
-      else:
-          if (verbose):
-              print("Did not find ASDM_CALWVR table in the ms. Will look for ASDM_CALATMOSPHERE next.")
-          if (os.path.exists("%s/ASDM_CALATMOSPHERE" % vis)):
-              pwvtime, antenna, pwv = readPWVFromASDM_CALATMOSPHERE(vis)
-              success = True
-              if (len(pwv) < 1):
-                  print("Found no data in ASDM_CALATMOSPHERE table")
-                  return(0,-1)
-          else:
-              if (verbose):
-                  print("Did not find ASDM_CALATMOSPHERE in the ms")
+        if os.path.exists("%s/ASDM_CALWVR" % vis):
+            tb.open("%s/ASDM_CALWVR" % vis)
+            pwvtime = tb.getcol('startValidTime')  # mjdsec
+            antenna = tb.getcol('antennaName')
+            pwv = tb.getcol('water')
+            tb.close()
+            success = True
+            if len(pwv) < 1:
+                if os.path.exists("%s/ASDM_CALATMOSPHERE" % vis):
+                    pwvtime, antenna, pwv = readPWVFromASDM_CALATMOSPHERE(vis)
+                    success = True
+                    if len(pwv) < 1:
+                        print("Found no data in ASDM_CALWVR nor ASDM_CALATMOSPHERE table")
+                        return 0, -1
+                else:
+                    if verbose:
+                        print("Did not find ASDM_CALATMOSPHERE in the ms")
+                    return 0, -1
+            if verbose:
+                print("Opened ASDM_CALWVR table, len(pwvtime)={}".format(len(pwvtime)))
+        else:
+            if verbose:
+                print("Did not find ASDM_CALWVR table in the ms. Will look for ASDM_CALATMOSPHERE next.")
+            if os.path.exists("%s/ASDM_CALATMOSPHERE" % vis):
+                pwvtime, antenna, pwv = readPWVFromASDM_CALATMOSPHERE(vis)
+                success = True
+                if len(pwv) < 1:
+                    print("Found no data in ASDM_CALATMOSPHERE table")
+                    return 0, -1
+            else:
+                if verbose:
+                    print("Did not find ASDM_CALATMOSPHERE in the ms")
     except:
-        if (verbose):
+        if verbose:
             print("Could not open ASDM_CALWVR table in the ms")
     finally:
-    # try to find the ASDM table
-     if (success == False):
-       if (len(asdm) > 0):
-           if (os.path.exists(asdm) == False):
-               print("Could not open ASDM = {}".format(asdm))
-               return(0,-1)
-           try:
-               [pwvtime,pwv,antenna] = readpwv(asdm)
-           except:
-               if (verbose):
-                   print("Could not open ASDM = {}".format(asdm))
-               return(pwvmean,-1)
-       else:
-           try:
-               tryasdm = vis.split('.ms')[0]
-               if (verbose):
-                   print("No ASDM name provided, so I will try this name = {}".format(tryasdm))
-               [pwvtime,pwv,antenna] = readpwv(tryasdm)
-           except:
-               try:
-                   if (verbose):
-                       print("Still did not find it.  Will look for CalWVR.xml in current directory.")
-                   [pwvtime, pwv, antenna] = readpwv('.')
-               except:
-                   try:
-                       if (verbose):
-                           print("Still did not find it.  Will look for CalWVR.xml in the .ms directory.")
-                       [pwvtime, pwv, antenna] = readpwv('%s/'%vis)
-                   except:
-                       if (verbose):
-                           print("No CalWVR.xml file found, so no PWV retrieved. Copy it to this directory and try"
-                                 " again.")
-                       return(pwvmean,-1)
+        # try to find the ASDM table
+        if not success:
+            if len(asdm) > 0:
+                if not os.path.exists(asdm):
+                    print("Could not open ASDM = {}".format(asdm))
+                    return 0, -1
+                try:
+                    [pwvtime, pwv, antenna] = readpwv(asdm)
+                except:
+                    if verbose:
+                        print("Could not open ASDM = {}".format(asdm))
+                    return pwvmean, -1
+            else:
+                try:
+                    tryasdm = vis.split('.ms')[0]
+                    if verbose:
+                        print("No ASDM name provided, so I will try this name = {}".format(tryasdm))
+                    [pwvtime, pwv, antenna] = readpwv(tryasdm)
+                except:
+                    try:
+                        if verbose:
+                            print("Still did not find it.  Will look for CalWVR.xml in current directory.")
+                        [pwvtime, pwv, antenna] = readpwv('.')
+                    except:
+                        try:
+                            if verbose:
+                                print("Still did not find it.  Will look for CalWVR.xml in the .ms directory.")
+                            [pwvtime, pwv, antenna] = readpwv('%s/' % vis)
+                        except:
+                            if verbose:
+                                print("No CalWVR.xml file found, so no PWV retrieved. Copy it to this directory and try"
+                                      " again.")
+                            return pwvmean, -1
     try:
-        matches = np.where(np.array(pwvtime)>myTimes[0])[0]
+        matches = np.where(np.array(pwvtime) > myTimes[0])[0]
     except:
         print("Found no times > {:d}".format(myTimes[0]))
-        return(0,-1)
-    if (len(pwv) < 1):
+        return 0, -1
+    if len(pwv) < 1:
         print("Found no PWV data")
-        return(0,-1)
-    if (verbose):
+        return 0, -1
+    if verbose:
         print("{:d} matches = {}".format(len(matches), matches))
         print("{:d} pwv = {}".format(len(pwv), pwv))
     ptime = np.array(pwvtime)[matches]
     matchedpwv = np.array(pwv)[matches]
-    matches2 = np.where(ptime<=myTimes[-1])[0]
-    if (verbose):
+    matches2 = np.where(ptime <= myTimes[-1])[0]
+    if verbose:
         print("matchedpwv = {}".format(matchedpwv))
         print("pwv = {}".format(pwv))
-    if (len(matches2) < 1):
+    if len(matches2) < 1:
         # look for the value with the closest start time
         mindiff = 1e12
         for i in range(len(pwvtime)):
-            if (abs(myTimes[0]-pwvtime[i]) < mindiff):
-                mindiff = abs(myTimes[0]-pwvtime[i])
-#                pwvmean = pwv[i]*1000
+            if abs(myTimes[0] - pwvtime[i]) < mindiff:
+                mindiff = abs(myTimes[0] - pwvtime[i])
         matchedpwv = []
         for i in range(len(pwvtime)):
-            if (abs(abs(myTimes[0]-pwvtime[i]) - mindiff) < 1.0):
+            if abs(abs(myTimes[0]-pwvtime[i]) - mindiff) < 1.0:
                 matchedpwv.append(pwv[i])
-        pwvmean = 1000*np.median(matchedpwv)
-        if (verbose):
+        pwvmean = 1000 * np.median(matchedpwv)
+        if verbose:
             print("Taking the median of {:d} pwv measurements from all antennas = {:.3f} mm".format(len(matchedpwv),
                                                                                                     pwvmean))
-        pwvstd = 1000*MAD(matchedpwv)
+        pwvstd = 1000 * MAD(matchedpwv)
     else:
-        pwvmean = 1000*np.median(matchedpwv[matches2])
-        pwvstd = 1000*MAD(matchedpwv[matches2])
-        if (verbose):
+        pwvmean = 1000 * np.median(matchedpwv[matches2])
+        pwvstd = 1000 * MAD(matchedpwv[matches2])
+        if verbose:
             print("Taking the median of {:d} pwv measurements from all antennas = {:.3f} mm".format(len(matches2),
                                                                                                     pwvmean))
-    return(pwvmean,pwvstd)
+    return pwvmean, pwvstd
 
 
 def readPWVFromASDM_CALATMOSPHERE(vis):
@@ -155,13 +153,13 @@ def readPWVFromASDM_CALATMOSPHERE(vis):
     Reads the PWV via the water column of the ASDM_CALATMOSPHERE table.
     - Todd Hunter
     """
-    if (not os.path.exists(vis + '/ASDM_CALATMOSPHERE')):
-        if (vis.find('.ms') < 0):
+    if not os.path.exists(vis + '/ASDM_CALATMOSPHERE'):
+        if vis.find('.ms') < 0:
             vis += '.ms'
-            if (not os.path.exists(vis)):
+            if not os.path.exists(vis):
                 print("Could not find measurement set = {}".format(vis))
                 return
-            elif (not os.path.exists(vis + '/ASDM_CALATMOSPHERE')):
+            elif not os.path.exists(vis + '/ASDM_CALATMOSPHERE'):
                 print("Could not find ASDM_CALATMOSPHERE in the measurement set")
                 return
         else:
@@ -173,7 +171,7 @@ def readPWVFromASDM_CALATMOSPHERE(vis):
     antenna = mytb.getcol('antennaName')
     pwv = mytb.getcol('water')[0]  # There seem to be 2 identical entries per row, so take first one.
     mytb.close()
-    return (pwvtime, antenna, pwv)
+    return pwvtime, antenna, pwv
 
 
 def readpwv(asdm):
@@ -183,19 +181,19 @@ def readpwv(asdm):
     Units are in meters.
     -- Todd Hunter
     """
-    dict = readwvr(asdm)
+    wvrdict = readwvr(asdm)
     bigantlist = []
-    for entry in dict:
-        bigantlist.append(dict[entry]['antenna'])
+    for entry in wvrdict:
+        bigantlist.append(wvrdict[entry]['antenna'])
     watertime = []
     water = []
     antenna = []
-    for entry in dict:
+    for entry in wvrdict:
         measurements = 1
         for i in range(measurements):
-            watertime.append(dict[entry]['startmjdsec'] + (i * 1.0 / measurements) * dict[entry]['duration'])
-            water.append(dict[entry]['water'])
-            antenna.append(dict[entry]['antenna'])
+            watertime.append(wvrdict[entry]['startmjdsec'] + (i * 1.0 / measurements) * wvrdict[entry]['duration'])
+            water.append(wvrdict[entry]['water'])
+            antenna.append(wvrdict[entry]['antenna'])
     return [watertime, water, antenna]
 
 
@@ -208,7 +206,7 @@ def readwvr(sdmfile, verbose=False):
     'water' is the zenith PWV in meters.
     This function is called by readpwv(). -- Todd Hunter
     """
-    if (os.path.exists(sdmfile) == False):
+    if not os.path.exists(sdmfile):
         print("readwvr(): Could not find file = {}".format(sdmfile))
         return
     xmlscans = minidom.parse(sdmfile + '/CalWVR.xml')
@@ -249,7 +247,8 @@ def readwvr(sdmfile, verbose=False):
         scandict[fid]['duration'] = (endmjd - startmjd) * 86400
         fid += 1
 
-    if verbose: print('  Found {} rows in CalWVR.xml'.format(rowlist.length))
+    if verbose:
+        print('  Found {} rows in CalWVR.xml'.format(rowlist.length))
 
     # return the dictionary for later use
     return scandict
@@ -261,13 +260,11 @@ def call_qa_time(arg, form='', prec=0, showform=False):
     of strings instead of just a scalar string.
     - Todd Hunter
     """
-    if type(arg) is dict:
-        if type(arg['value']) in (list, np.ndarray):
-            if len(arg['value']) > 1:
-                LOG.warning('qa_time() received a dictionary containing a list'
-                            'of length=%d rather than a scalar. Using first '
-                            'value.', len(arg['value']))
-                arg['value'] = arg['value'][0]
+    if type(arg) is dict and type(arg['value']) in (list, np.ndarray) and len(arg['value']) > 1:
+        LOG.warning('qa_time() received a dictionary containing a list'
+                    'of length=%d rather than a scalar. Using first '
+                    'value.', len(arg['value']))
+        arg['value'] = arg['value'][0]
     result = qa.time(arg, form=form, prec=prec, showform=showform)
     if type(result) in (list, np.ndarray):
         return result[0]
@@ -283,20 +280,18 @@ def MAD(a, c=0.6745, axis=0):
 
     c = 0.6745 is the constant to convert from MAD to std; it is used by
     default
-
     """
     a = np.array(a)
-    good = (a==a)
+    good = (a == a)
     a = np.asarray(a, np.float64)
     if a.ndim == 1:
         d = np.median(a[good])
         m = np.median(np.fabs(a[good] - d) / c)
-#        print  "mad = %f" % (m)
     else:
         d = np.median(a[good], axis=axis)
         # I don't want the array to change so I have to copy it?
         if axis > 0:
-            aswp = numpy.swapaxes(a[good],0,axis)
+            aswp = np.swapaxes(a[good], 0, axis)
         else:
             aswp = a[good]
         m = np.median(np.fabs(aswp - d) / c, axis=0)
@@ -310,8 +305,6 @@ def getMJD():
     -Todd
     """
     myme = casatools.measures
-    mjd = myme.epoch('utc','today')['m0']['value']
+    mjd = myme.epoch('utc', 'today')['m0']['value']
     myme.done()
     return mjd
-
-
