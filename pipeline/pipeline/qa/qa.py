@@ -123,7 +123,7 @@ def qa( in_dirs, out_dir, logobj='PYTHON' ):
 
 	try:
 		status = qa_flag( in_dirs, out_dir, logobj=logger )
-	except Exception, err:
+	except Exception as err:
 		origin = root
 		logger.error( err.args[0], origin=origin )
 		raise Exception( err.args[0] )
@@ -133,7 +133,7 @@ def qa( in_dirs, out_dir, logobj='PYTHON' ):
 
 	try:
 		status = qa_gcal( in_dirs, out_dir, logobj=logger )
-	except Exception, err:
+	except Exception as err:
 		origin = root
 		logger.error( err.args[0], origin=origin )
 		raise Exception( err.args[0] )
@@ -143,7 +143,7 @@ def qa( in_dirs, out_dir, logobj='PYTHON' ):
 
 	try:
 		status = qa_bpcal( in_dirs, out_dir, logobj=logger )
-	except Exception, err:
+	except Exception as err:
 		origin = root
 		logger.error( err.args[0], origin=origin )
 		raise Exception( err.args[0] )
@@ -153,7 +153,7 @@ def qa( in_dirs, out_dir, logobj='PYTHON' ):
 
 	try:
 		status = qa_polcal( in_dirs, out_dir, logobj=logger )
-	except Exception, err:
+	except Exception as err:
 		origin = root
 		logger.error( err.args[0], origin=origin )
 		raise Exception( err.args[0] )
@@ -163,7 +163,7 @@ def qa( in_dirs, out_dir, logobj='PYTHON' ):
 
 	try:
 		status = qa_image( in_dirs, out_dir, logobj=logger )
-	except Exception, err:
+	except Exception as err:
 		origin = root
 		logger.error( err.args[0], origin=origin )
 		raise Exception( err.args[0] )
@@ -173,7 +173,7 @@ def qa( in_dirs, out_dir, logobj='PYTHON' ):
 
 	try:
 		status = qa_psf( in_dirs, out_dir, logobj=logger )
-	except Exception, err:
+	except Exception as err:
 		origin = root
 		logger.error( err.args[0], origin=origin )
 		raise Exception( err.args[0] )
@@ -183,7 +183,7 @@ def qa( in_dirs, out_dir, logobj='PYTHON' ):
 
 	try:
 		status = qa_vis( in_dirs, out_dir, logobj=logger )
-	except Exception, err:
+	except Exception as err:
 		origin = root
 		logger.error( err.args[0], origin=origin )
 		raise Exception( err.args[0] )
@@ -261,7 +261,7 @@ def qa_flag( in_dirs, out_dir, logobj='PYTHON' ):
 	for ms in mses:
 		try:
 			status = flag.flag( ms, out_dir, logobj=logger )
-		except Exception, err:
+		except Exception as err:
 			origin = root
 			logger.error( err.args[0], origin=origin )
 			raise Exception( err.args[0] )
@@ -343,7 +343,7 @@ def qa_gcal( in_dirs, out_dir, logobj='PYTHON' ):
 	for table in tables:
 		try:
 			status = gcal.gcal( table, out_dir )
-		except Exception, err:
+		except Exception as err:
 			origin = root
 			logger.error( err.args[0], origin=origin )
 			raise Exception( err.args[0] )
@@ -425,7 +425,7 @@ def qa_bpcal( in_dirs, out_dir, logobj='PYTHON' ):
 	for table in tables:
 		try:
 			status = bpcal.bpcal( table, out_dir )
-		except Exception, err:
+		except Exception as err:
 			origin = root
 			logger.error( err.args[0], origin=origin )
 			raise Exception( err.args[0] )
@@ -503,7 +503,7 @@ def qa_polcal( in_dirs, out_dir, logobj='PYTHON' ):
 	for table in tables:
 		try:
 			status = polcal.polcal( table, out_dir )
-		except Exception, err:
+		except Exception as err:
 			origin = root
 			logger.error( err.args[0], origin=origin )
 			raise Exception( err.args[0] )
@@ -584,7 +584,7 @@ def qa_image( in_dirs, out_dir, logobj='PYTHON' ):
 	for im in ims:
 		try:
 			status = image.image( im, out_dir, logobj=logger )
-		except Exception, err:
+		except Exception as err:
 			origin = root
 			logger.error( err.args[0], origin=origin )
 			raise Exception( err.args[0] )
@@ -665,7 +665,7 @@ def qa_psf( in_dirs, out_dir, logobj='PYTHON' ):
 		try:
 			status = psf.psf( p, out_dir, fit_factor=2.0,
                             stats_thresh=0.3, logobj=logger )
-		except Exception, err:
+		except Exception as err:
 			origin = root
 			logger.error( err.args[0], origin=origin )
 			raise Exception( err.args[0] )

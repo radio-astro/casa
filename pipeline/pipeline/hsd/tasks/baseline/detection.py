@@ -512,7 +512,7 @@ class LineWindowParser(object):
             try:
                 ms.msselect({'spw': window})
                 idx = ms.msselectedindices()
-            except RuntimeError, e:
+            except RuntimeError as e:
                 msg = e.message
                 LOG.warn(msg)
                 if msg.startswith('No valid SPW'):

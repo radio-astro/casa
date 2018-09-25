@@ -92,7 +92,7 @@ class CalApplication(object):
         try:            
             if type(d['spwmap'][0]) is not types.ListType:
                 d['spwmap'] = [d['spwmap']]
-        except IndexError, _:
+        except IndexError:
             d['spwmap'] = [d['spwmap']]
 
         zipped = zip(d['gaintable'], d['gainfield'], d['interp'], d['spwmap'],
@@ -869,7 +869,7 @@ class DictCalLibrary(object):
                             for c in calfrom:
                                 try:
                                     current.remove(c)
-                                except ValueError, _:
+                                except ValueError:
                                     LOG.debug('%s not found in calstate', c)
 
 

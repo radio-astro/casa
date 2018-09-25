@@ -517,21 +517,19 @@ class Finalcals(basetask.StandardTaskTemplate):
                             job = self._do_setjy(calMs, str(myfield), str(myspw), model_image, -1)
                             jobs.append(job)
                             # result.measurements.update(setjy_result.measurements)
-                        except Exception, e:
+                        except Exception:
                             # something has gone wrong, return an empty result
                             LOG.warn(
                                 "SetJy issue with field id=" + str(job.kw['field']) + " and spw=" + str(job.kw['spw']))
-                            # LOG.exception(e)
 
                     LOG.info("Merging flux scaling operation for setjy jobs for " + self.inputs.vis)
                     jobs_and_components = utils.merge_jobs(jobs, casa_tasks.setjy, merge=('spw',))
                     for job, _ in jobs_and_components:
                         try:
                             self._executor.execute(job)
-                        except Exception, e:
+                        except Exception:
                             LOG.warn(
                                 "SetJy issue with field id=" + str(job.kw['field']) + " and spw=" + str(job.kw['spw']))
-                            # LOG.exception(e)
 
         return True
 
@@ -552,7 +550,7 @@ class Finalcals(basetask.StandardTaskTemplate):
             job = casa_tasks.setjy(**task_args)
 
             return job
-        except Exception, e:
+        except Exception as e:
             LOG.info(str(e))
             return None
 
@@ -741,7 +739,7 @@ class Finalcals(basetask.StandardTaskTemplate):
                     jobs_calMs.append(casa_tasks.setjy(**task_args))
 
                     # self._executor.execute(job)
-                except Exception, e:
+                except Exception as e:
                     LOG.info(e)
 
             # merge identical jobs into one job with a multi-spw argument
@@ -788,7 +786,7 @@ class Finalcals(basetask.StandardTaskTemplate):
                 # job = casa_tasks.setjy(**task_args)
                 jobs_calMs.append(casa_tasks.setjy(**task_args))
 
-            except Exception, e:
+            except Exception as e:
                 LOG.info(e)
 
             # merge identical jobs into one job with a multi-spw argument

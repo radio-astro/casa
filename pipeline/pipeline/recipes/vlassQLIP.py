@@ -71,7 +71,7 @@ def vlassQLIP(vislist, editimlist_infile, importonly=False, pipelinemode='automa
         # Export FITS images of primary beam corrected tt0 and RMS cutout images
         hifv_exportvlassdata(pipelinemode=pipelinemode)
 
-    except Exception, e:
+    except Exception as e:
         if str(e) == IMPORT_ONLY:
             casatools.post_to_log("Exiting after import step ...", echo_to_screen=echo_to_screen)
         else:

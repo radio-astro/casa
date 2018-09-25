@@ -345,7 +345,7 @@ def get_valid_ms_members(group_desc, msname_filter, ant_selection, field_selecti
             try:
                 mssel = casatools.ms.msseltoindex(vis=msobj.name, spw=spw_selection,
                                                   field=field_selection, baseline=ant_selection)
-            except RuntimeError, e:
+            except RuntimeError as e:
                 LOG.trace('RuntimeError: {0}'.format(str(e)))
                 LOG.trace('vis="{0}" field_selection: "{1}"'.format(msobj.name, field_selection))
                 continue
@@ -369,7 +369,7 @@ def get_valid_ms_members2(group_desc, ms_filter, ant_selection, field_selection,
             try:
                 mssel = casatools.ms.msseltoindex(vis=msobj.name, spw=spw_selection,
                                                   field=field_selection, baseline=ant_selection)
-            except RuntimeError, e:
+            except RuntimeError as e:
                 LOG.trace('RuntimeError: {0}'.format(str(e)))
                 LOG.trace('vis="{0}" field_selection: "{1}"'.format(msobj.name, field_selection))
                 continue

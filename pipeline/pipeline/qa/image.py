@@ -148,7 +148,7 @@ def image( in_image, out_dir, logobj='PYTHON' ):
 
 	try:
 		image_stats = image_calc( in_image, logger=logger )
-	except Exception, err:
+	except Exception as err:
 		origin = root
 		logger.error( err.args[0], origin=origin )
 		raise Exception( err.args[0] )
@@ -346,7 +346,7 @@ def image_calc( in_image, logger='' ):
 
 	try:
 		image_stats = cube.cube_fix( in_image, image_stats, logger )
-	except Exception, err:
+	except Exception as err:
 		origin = 'image.image_calc'
 		if logger != '': logger.error( err.args[0], origin=origin )
 		raise Exception( err.args[0] )

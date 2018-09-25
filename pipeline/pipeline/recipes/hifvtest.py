@@ -148,7 +148,7 @@ def hifvtest(vislist, importonly=False, pipelinemode='automatic', interactive=Tr
         # Export the data
         # hifv_exportdata(pipelinemode=pipelinemode)
 
-    except Exception, e:
+    except Exception as e:
         if str(e) == IMPORT_ONLY:
             casatools.post_to_log("Exiting after import step ...", echo_to_screen=echo_to_screen)
         else:

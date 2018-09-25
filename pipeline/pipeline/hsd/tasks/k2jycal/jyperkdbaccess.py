@@ -72,12 +72,12 @@ class JyPerKDatabaseAccessProto(object):
         try:
             # try opening url
             response = urllib2.urlopen('?'.join([url, encoded]))
-        except urllib2.HTTPError, e:
+        except urllib2.HTTPError as e:
             msg = 'Failed to load URL: {0}\n'.format(url) \
                 + 'Error Message: HTTPError(code={0}, Reason="{1}")\n'.format(e.code, e.reason)
             LOG.error(msg)
             raise e
-        except urllib2.URLError, e:
+        except urllib2.URLError as e:
             msg = 'Failed to load URL: {0}\n'.format(url) \
                 + 'Error Message: URLError(Reason="{0}")\n'.format(e.reason)
             LOG.error(msg)
@@ -97,6 +97,3 @@ class JyPerKDatabaseAccessProto(object):
         data = jyperk['data']
         factors = [map(str, template.safe_substitute(vis=basename, **d).split()) for d in data]
         return factors
-        
-        
-        

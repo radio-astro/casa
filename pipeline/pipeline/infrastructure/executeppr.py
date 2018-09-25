@@ -24,7 +24,7 @@ from pipeline.infrastructure import exceptions
 # Make sure CASA exceptions are rethrown
 try:
     default__rethrow_casa_exceptions = __rethrow_casa_exceptions=True
-except Exception, e:
+except Exception as e:
     default__rethrow_casa_exceptions = False
 __rethrow_casa_exceptions=True
 
@@ -76,7 +76,7 @@ def executeppr(pprXmlFile, importonly=True, breakpoint='breakpoint',
             casatools.post_to_log("    Creating new pipeline context",
                                   echo_to_screen=echo_to_screen)
 
-    except Exception, e:
+    except Exception:
         casatools.post_to_log("Beginning pipeline run ...",
                               echo_to_screen=echo_to_screen)
         casatools.post_to_log("For processing request: " + pprXmlFile,
@@ -259,7 +259,7 @@ def executeppr(pprXmlFile, importonly=True, breakpoint='breakpoint',
 
             try:
                 results.accept(context)
-            except Exception, e:
+            except Exception:
                 casatools.post_to_log(
                     "Error: Failed to update context for " + pipeline_task_name,
                     echo_to_screen=echo_to_screen)
@@ -295,7 +295,7 @@ def executeppr(pprXmlFile, importonly=True, breakpoint='breakpoint',
                                       echo_to_screen=echo_to_screen)
                 break
 
-        except Exception, e:
+        except Exception:
             # Log message if an exception occurred that was not handled by
             # standardtask template (not turned into failed task result).
             casatools.post_to_log("Unhandled error in executeppr while running pipeline task {}"
@@ -424,7 +424,7 @@ def _getProjectStructure(pprObject):
     ppr_project = pprObject.SciPipeRequest.ProjectStructure
     try:
         entityid = ppr_project.OUSStatusRef.getAttribute('entityId')
-    except Exception, e:
+    except Exception:
         ppr_project = ppr_project.AlmaStructure
 
     structureList = []
@@ -464,7 +464,7 @@ def _getNumRequests(pprObject):
         relative_path = ppr_prequests.ProcessingRequest.DataSet.SchedBlockSet.SchedBlockIdentifier.RelativePath.getValue()
         numRequests = 1
         return numRequests
-    except Exception, e:
+    except Exception:
         pass
 
     # Try single element / multiple scheduling block next.
@@ -472,7 +472,7 @@ def _getNumRequests(pprObject):
         relative_path = ppr_prequests.ProcessingRequest.DataSet.SchedBlockSet.SchedBlockIdentifier[0].RelativePath.getValue()
         numRequests = 1
         return numRequests
-    except Exception, e:
+    except Exception:
         pass
 
     # Next try multiple elements  / single scheduling block
@@ -481,7 +481,7 @@ def _getNumRequests(pprObject):
         try:
             relative_path = ppr_prequests.ProcessingRequest[numRequests].DataSet.SchedBlockSet.SchedBlockIdentifier.RelativePath.getValue()
             numRequests = numRequests + 1
-        except Exception, e:
+        except Exception:
             search = 0
             if numRequests > 0:
                 return numRequests
@@ -494,7 +494,7 @@ def _getNumRequests(pprObject):
         try:
             relative_path = ppr_prequests.ProcessingRequest[numRequests].DataSet.SchedBlockSet.SchedBlockIdentifier[0].RelativePath.getValue()
             numRequests = numRequests + 1
-        except Exception, e:
+        except Exception:
             search = 0
             if numRequests > 0:
                 return numRequests
@@ -533,22 +533,22 @@ def _getIntents(pprObject, requestId, numRequests):
         intentName = ppr_intents.Intents.Keyword.getValue()
         try:
             intentValue = ppr_intents.Intents.Value.getValue()
-        except Exception, e:
+        except Exception:
             intentValue = ""
         numIntents = 1
         intentsDict[intentName] = intentValue
-    except Exception, e:
+    except Exception:
         search = 1
         while search:
             try:
                 intentName = ppr_intents.Intents[numIntents].Keyword.getValue()
                 try:
                     intentValue = ppr_intents.Intents[numIntents].Value.getValue()
-                except Exception, e:
+                except Exception:
                     intentValue = ""
                 numIntents = numIntents + 1
                 intentsDict[intentName] = intentValue
-            except Exception, e:
+            except Exception:
                 search = 0
 
     return numIntents, intentsDict
@@ -617,7 +617,7 @@ def _getCommands(pprObject, requestId, numRequests):
 
     try:
         procedureName = ppr_cmds.ProcedureTitle.getValue()
-    except Exception, e:
+    except Exception:
         procedureName = "Undefined"
     commandsList = []
     numCommands = 0
@@ -628,7 +628,7 @@ def _getCommands(pprObject, requestId, numRequests):
         numParams, paramsDict = _getParameters(ppr_params)
         numCommands = 1
         commandsList.append((cmdName, paramsDict))
-    except Exception, e:
+    except Exception:
         search = 1
         while search:
             try:
@@ -637,7 +637,7 @@ def _getCommands(pprObject, requestId, numRequests):
                 numParams, paramsDict = _getParameters(ppr_params)
                 numCommands = numCommands + 1
                 commandsList.append((cmdName, paramsDict))
-            except Exception, e:
+            except Exception:
                 search = 0
 
     return procedureName, numCommands, commandsList
@@ -657,13 +657,13 @@ def _getNumSchedBlockSets(pprObject, requestId, numRequests):
     try:
         path = ppr_dset.SchedBlockSet.SchedBlockIdentifier.RelativePath.getValue()
         numSchedBlockSets = 1
-    except Exception, e:
+    except Exception:
         search = 1
         while search:
             try:
                 path = ppr_dset.SchedBlockSet[numSchedBlocks].SchedBlockIdentifier.RelativePath.getValue()
                 numSchedBlockSets = numSchedBlockSets + 1
-            except Exception, e:
+            except Exception:
                 search = 0
 
     return numSchedBlockSets
@@ -699,7 +699,7 @@ def _getAsdmList(pprObject, sbsetId, numSbSets, requestId, numRequests):
         asdmUid = ppr_dset.AsdmIdentifier.AsdmRef.ExecBlockId.getValue()
         asdmList.append((relativePath, asdmName, asdmUid))
         numAsdms = 1
-    except Exception, e:
+    except Exception:
         search = 1
         while (search):
             try:
@@ -711,7 +711,7 @@ def _getAsdmList(pprObject, sbsetId, numSbSets, requestId, numRequests):
                 asdmUid = ppr_dset.AsdmIdentifier[numAsdms].AsdmRef.ExecBlockId.getValue()
                 numAsdms = numAsdms + 1
                 asdmList.append((relativePath, asdmName, asdmUid))
-            except Exception, e:
+            except Exception:
                 search = 0
 
     return relativePath, numAsdms, asdmList
@@ -728,22 +728,22 @@ def _getParameters(ppsetObject):
         paramName = ppsetObject.Parameter.Keyword.getValue()
         try:
             paramValue = ppsetObject.Parameter.Value.getValue()
-        except Exception, e:
+        except Exception:
             paramValue = ""
         numParams = 1
         paramsDict[paramName] = paramValue
-    except Exception, e:
+    except Exception:
         search = 1
         while search:
             try:
                 paramName = ppsetObject.Parameter[numParams].Keyword.getValue()
                 try:
                     paramValue = ppsetObject.Parameter[numParams].Value.getValue()
-                except Exception, e:
+                except Exception:
                     paramValue = ""
                 numParams = numParams + 1
                 paramsDict[paramName] = paramValue
-            except Exception, e:
+            except Exception:
                 search = 0
 
     return numParams, paramsDict

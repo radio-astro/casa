@@ -97,7 +97,7 @@ def hifatargets (vislist, importonly=False, pipelinemode='automatic', interactiv
         # Make clean continuum subtracted PI cube
         hif_makeimages (pipelinemode=pipelinemode)
 
-    except Exception, e:
+    except Exception as e:
         if str(e) == IMPORT_ONLY:
             casatools.post_to_log ("Exiting after import step ...",
                 echo_to_screen=echo_to_screen)

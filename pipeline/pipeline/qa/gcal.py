@@ -138,7 +138,7 @@ def gcal( in_table, out_dir, logobj='PYTHON' ):
 
 	try:
 		gcal_stats = gcal_calc( in_table, logger=logger )
-	except Exception, err:
+	except Exception as err:
 		origin = root
 		logger.error( err.args[0], origin=origin )
 		raise Exception( err.args[0] )
@@ -323,7 +323,7 @@ def gcal_calc( in_table, logger='' ):
 			f['spw'] = int( spwList[s] )
 			gcal_stats['amplitude_fit'][str(s)] = f
 
-	except Exception, err:
+	except Exception as err:
 		origin = 'gcal.gcal_calc'
 		if logger != '': logger.error( err.args[0], origin=origin )
 		raise Exception( err.args[0] )
@@ -343,7 +343,7 @@ def gcal_calc( in_table, logger='' ):
 			f['spw'] = int( spwList[s] )
 			gcal_stats['phase_fit'][str(s)] = f
 
-	except Exception, err:
+	except Exception as err:
 		origin = 'gcal.gcal_calc'
 		if logger != '': logger.error( err.args[0], origin=origin )
 		raise Exception( err.args[0] )

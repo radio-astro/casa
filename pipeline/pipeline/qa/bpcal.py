@@ -189,7 +189,7 @@ def bpcal( in_table, out_dir, logobj='PYTHON', create_plots=False ):
 
 	try:
 		bpcal_stats = bpcal_calc( in_table, logger=logger )
-	except Exception, err:
+	except Exception as err:
 		origin = root
 		logger.error( err.args[0], origin=origin )
 		raise Exception( err.args[0] )
@@ -434,7 +434,7 @@ def bpcal_calc( in_table, logger='' ):
 			f['chanRange'] = chanRange
 			bpcal_stats['AMPLITUDE_FIT'][spwList[s]] = f
 
-	except Exception, err:
+	except Exception as err:
 		origin = 'bpcal.bpcal_calc'
 		if logger != '': logger.error( err.args[0], origin=origin )
 		raise Exception( err.args[0] )
@@ -459,7 +459,7 @@ def bpcal_calc( in_table, logger='' ):
 			f['chanRange'] = chanRange
 			bpcal_stats['PHASE_FIT'][spwList[s]] = f
 
-	except Exception, err:
+	except Exception as err:
 		origin = 'bpcal.bpcal_calc'
 		if logger != '': logger.error( err.args[0], origin=origin )
 		raise Exception( err.args[0] )
@@ -500,7 +500,7 @@ def bpcal_calc( in_table, logger='' ):
                 for pol in bp_data.iterkeys():
                     phase_values = numpy.ma.array(bp_data[pol]['value'], mask=bp_data[pol]['flag'])
                     bpcal_stats['PHASE'][spwList[s]][pol] = phase_values
-	except Exception, err:
+	except Exception as err:
 		origin = 'bpcal.bpcal_calc'
 		if logger != '': logger.error( err.args[0], origin=origin )
 		raise Exception( err.args[0] )

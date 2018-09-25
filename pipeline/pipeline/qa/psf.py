@@ -174,7 +174,7 @@ def psf( in_psf, out_dir, fit_factor=2.0, stats_thresh=0.3, logobj='PYTHON' ):
 	try:
 		psf_info = psf_calc( in_psf, stats_thresh=stats_thresh,
                                      logger=logger )
-	except Exception, err:
+	except Exception as err:
 		origin = root
 		logger.error( err.args[0], origin=origin )
 		raise Exception( err.args[0] )
@@ -283,7 +283,7 @@ def psf_calc( in_psf, fit_factor=2.0, stats_thresh=0.3, logger='' ):
 		psf_info['all_stats'] = psf_all_stats( in_psf, logger,
                     stats_thresh=stats_thresh )
 
-	except Exception, err:
+	except Exception as err:
 
 		origin = 'psf.psf_calc'
 		if logger != '': logger.error( err.args[0], origin=origin )
@@ -1330,7 +1330,7 @@ def psf_all_stats( in_psf, logger, stats_thresh=0.3 ):
 		all_stats = cube.cube_fix( in_psf, all_stats, logger )
 		del all_stats['Stokes']
 		del all_stats['frequency']
-	except Exception, err:
+	except Exception as err:
 		origin = 'psf.psf_all_stats'
 		if logger != '': logger.error( err.args[0], origin=origin )
 		raise Exception( err.args[0] )

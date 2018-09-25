@@ -22,7 +22,7 @@ from pipeline.infrastructure import exceptions
 # Make sure CASA exceptions are rethrown
 try:
     default__rethrow_casa_exceptions = __rethrow_casa_exceptions=True
-except Exception, e:
+except Exception as e:
     default__rethrow_casa_exceptions = False
 __rethrow_casa_exceptions=True
 
@@ -54,7 +54,7 @@ def executeppr (pprXmlFile, importonly=True, dry_run=False, loglevel='info',
         context = pipeline.Pipeline(loglevel=loglevel, plotlevel=plotlevel,
             output_dir=workingDir).context
 
-    except Exception, e:
+    except Exception:
         casatools.post_to_log ("Beginning pipeline run ...", 
             echo_to_screen=echo_to_screen)
         casatools.post_to_log ("For processing request: " + \
@@ -193,7 +193,7 @@ def executeppr (pprXmlFile, importonly=True, dry_run=False, loglevel='info',
                 casatools.post_to_log('Results ' + str(results), echo_to_screen=echo_to_screen)
                 try:
                     results.accept(context)
-                except Exception, e:
+                except Exception:
                     casatools.post_to_log("Error: Failed to update context for " + pipeline_task_name, echo_to_screen=echo_to_screen)
                     raise
 
@@ -209,7 +209,7 @@ def executeppr (pprXmlFile, importonly=True, dry_run=False, loglevel='info',
                 casatools.post_to_log("Terminating execution after running " + pipeline_task_name, echo_to_screen=echo_to_screen)
                 break
 
-        except Exception, e:
+        except Exception:
             # Log message if an exception occurred that was not handled by
             # standardtask template (not turned into failed task result).
             casatools.post_to_log("Unhandled error in executevlappr while running pipeline task {}"
@@ -367,7 +367,7 @@ def _getNumRequests(pprObject):
         relative_path = ppr_prequests.ProcessingRequest.DataSet.RelativePath.getValue()
         numRequests = 1
         return numRequests
-    except Exception, e:
+    except Exception:
         pass
 
 
@@ -377,7 +377,7 @@ def _getNumRequests(pprObject):
         try:
             relative_path = ppr_prequests.ProcessingRequest[numRequests].DataSet.RelativePath.getValue()
             numRequests = numRequests + 1
-        except Exception, e:
+        except Exception:
             search = 0
             if numRequests > 0:
                 return numRequests
@@ -403,22 +403,22 @@ def _getIntents (pprObject, requestId, numRequests):
         intentName = ppr_intents.Intents.Keyword.getValue()
         try:
             intentValue = ppr_intents.Intents.Value.getValue()
-        except Exception, e:
+        except Exception:
             intentValue = ""
         numIntents = 1
         intentsDict[intentName] = intentValue
-    except Exception, e:
+    except Exception:
         search = 1
         while (search):
             try:
                 intentName = ppr_intents.Intents[numIntents].Keyword.getValue()
                 try:
                     intentValue = ppr_intents.Intents[numIntents].Value.getValue()
-                except Exception, e:
+                except Exception:
                     intentValue = ""
                 numIntents = numIntents + 1
                 intentsDict[intentName] = intentValue
-            except Exception, e:
+            except Exception:
                 search = 0
 
     return numIntents, intentsDict
@@ -466,7 +466,7 @@ def _getCommands (pprObject, requestId, numRequests):
 
     try:
         procedureName = ppr_cmds.ProcedureTitle.getValue() 
-    except Exception, e:
+    except Exception:
         procedureName = "Undefined"
     commandsList = []
     numCommands = 0
@@ -477,7 +477,7 @@ def _getCommands (pprObject, requestId, numRequests):
         numParams, paramsDict = _getParameters (ppr_params)
         numCommands = 1
         commandsList.append((cmdName, paramsDict))
-    except Exception, e:
+    except Exception:
         search = 1
         while (search):
             try:
@@ -486,7 +486,7 @@ def _getCommands (pprObject, requestId, numRequests):
                 numParams, paramsDict = _getParameters (ppr_params)
                 numCommands = numCommands + 1
                 commandsList.append((cmdName, paramsDict))
-            except Exception, e:
+            except Exception:
                 search = 0
 
     return procedureName, numCommands, commandsList
@@ -506,7 +506,7 @@ def _getNumSchedBlockSets (pprObject, requestId, numRequests):
     try:
         path = ppr_dset.RelativePath.getValue()
         numSchedBlockSets = 1
-    except Exception, e:
+    except Exception:
         numSchedBlockSets = 0
 
     return numSchedBlockSets
@@ -534,7 +534,7 @@ def _getAsdmList (pprObject, sbsetId, numSbSets, requestId, numRequests):
         asdmUid = asdmName
         asdmList.append ((relativePath, asdmName, asdmUid))
         numAsdms = 1
-    except Exception, e:
+    except Exception:
         numAsdms = 0
 
     return relativePath, numAsdms, asdmList
@@ -551,22 +551,22 @@ def _getParameters (ppsetObject):
         paramName = ppsetObject.Parameter.Keyword.getValue()
         try:
             paramValue = ppsetObject.Parameter.Value.getValue()
-        except Exception, e:
+        except Exception:
             paramValue = ""
         numParams = 1
         paramsDict[paramName] = paramValue
-    except Exception, e:
+    except Exception:
         search = 1
         while (search):
             try:
                 paramName = ppsetObject.Parameter[numParams].Keyword.getValue()
                 try:
                     paramValue = ppsetObject.Parameter[numParams].Value.getValue()
-                except Exception, e:
+                except Exception:
                     paramValue = ""
                 numParams = numParams + 1
                 paramsDict[paramName] = paramValue
-            except Exception, e:
+            except Exception:
                 search = 0
 
     return numParams, paramsDict

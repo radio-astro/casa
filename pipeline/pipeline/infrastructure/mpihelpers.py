@@ -92,7 +92,7 @@ class SyncTask(object):
                 return self.__executor.execute(self.__task)
             else:
                 return self.__task.execute(dry_run=False)
-        except Exception, e:
+        except Exception as e:
             import traceback
             err_msg = "Failure executing job by an exception {} " \
                       "with the following traceback\n {}".format(e.__class__.__name__, traceback.format_exc())

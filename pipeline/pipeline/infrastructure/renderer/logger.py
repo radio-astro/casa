@@ -381,7 +381,7 @@ class Plot(object):
                 LOG.warning('Error creating thumbnail for %s' % 
                             os.path.basename(self.abspath))
                 return self.basename   
-        except OSError, e:
+        except OSError as e:
             # command not available. Return the full-sized image filename
             LOG.warning('Error creating thumbnail for %s: %s' % 
                         (os.path.basename(self.abspath), e))

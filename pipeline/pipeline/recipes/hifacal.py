@@ -141,7 +141,7 @@ def hifacal(vislist, importonly=True, pipelinemode='automatic',
         # Export the data
         hifa_exportdata(pipelinemode=pipelinemode)
     
-    except Exception, e:
+    except Exception as e:
         if str(e) == IMPORT_ONLY:
             casatools.post_to_log("Exiting after import step ...",
                                   echo_to_screen=echo_to_screen)

@@ -163,7 +163,7 @@ class Fluxboot2(basetask.StandardTaskTemplate):
                                 jobs.append(job)
 
                                 # result.measurements.update(setjy_result.measurements)
-                            except Exception, e:
+                            except Exception as e:
                                 # something has gone wrong, return an empty result
                                 LOG.error('Unable merge setjy jobs for flux scaling operation for field ' + str(
                                     myfield) + ', spw ' + str(myspw))
@@ -174,10 +174,9 @@ class Fluxboot2(basetask.StandardTaskTemplate):
                         for job, _ in jobs_and_components:
                             try:
                                 self._executor.execute(job)
-                            except Exception, e:
+                            except Exception:
                                 LOG.warn("SetJy issue with field id=" + str(job.kw['field']) + " and spw=" + str(
                                     job.kw['spw']))
-                                # LOG.exception(e)
 
             LOG.info("Making gain tables for flux density bootstrapping")
             LOG.info("Short solint = " + new_gain_solint1)
@@ -651,7 +650,7 @@ class Fluxboot2(basetask.StandardTaskTemplate):
             job = casa_tasks.setjy(**task_args)
 
             return job
-        except Exception, e:
+        except Exception as e:
             LOG.info(e)
             return None
 

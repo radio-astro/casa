@@ -63,7 +63,7 @@ def uvcontfit (vis=None, caltable=None, field=None, intent=None, spw=None,
 
         mycb.close()
 
-    except Exception, instance:
+    except Exception as instance:
         casalog.post('Error in uvcontfit: ' + str(instance), 'SEVERE')
         mycb.close()                        # Harmless if cb is closed.
         raise Exception, 'Error in uvcontfit: ' + str(instance)

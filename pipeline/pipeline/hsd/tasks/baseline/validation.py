@@ -1425,7 +1425,7 @@ class ValidateLineRaster(basetask.StandardTaskTemplate):
                                 del MM0, MM1, B0, B1, M0, M1
                                 break
 
-                        except Exception, e:
+                        except Exception as e:
                             LOG.trace('------04------ in exception loop SingularMatrix={}', SingularMatrix)
                             import traceback
                             LOG.trace(traceback.format_exc(e))

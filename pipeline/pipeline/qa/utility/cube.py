@@ -83,7 +83,7 @@ def cube_fix( in_cube, cube_stats, logger ):
 
 	try:
 		Stokes, frequency = cube_record( in_cube, logger )
-	except Exception, err:
+	except Exception as err:
 		origin = 'cube.cube_fix'
 		if logger != '': logger.error( err.args[0], origin=origin )
 		raise Exception( err.args[0] )
