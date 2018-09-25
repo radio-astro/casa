@@ -114,7 +114,7 @@ def correct_ant_posns (vis_name, print_offsets=False):
     # first, see if the internet connection is possible
     try:
         response = urllib2.urlopen(URL_BASE + '2010')
-    except URLError, err:
+    except urllib2.URLError as err:
         if (print_offsets):
             LOG.warn('No internet connection to antenna position correction URL {}'.format(err.reason))
         return [2, '', []]
