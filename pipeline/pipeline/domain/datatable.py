@@ -30,6 +30,7 @@ import time
 
 # import memory_profiler
 import numpy
+import bisect
 
 from taskinit import gentools
 
@@ -763,22 +764,61 @@ class DataTableImpl(object):
             to_fieldid: FIELD_ID of data table to which Tsys is transferred
             gainfield: how to find FIELD form which Tsys is extracted in cal table.
         """
-        with casatools.TableReader(tsystable) as tb:
-            spws = tb.getcol('SPECTRAL_WINDOW_ID')
-            times = tb.getcol('TIME')
-            fieldids = tb.getcol('FIELD_ID')
-            antids = tb.getcol('ANTENNA1')
-            tsys_masked = {}
-            for i in xrange(tb.nrows()):
-                tsys = tb.getcell('FPARAM', i)
-                flag = tb.getcell('FLAG', i)
-                tsys_masked[i] = numpy.ma.masked_array(tsys, mask=(flag == True))
+        start_time = time.time()
 
         msobj = context.observing_run.get_ms(infile)
         to_antids = [a.id for a in msobj.antennas]
         from_fields = []
-        if gainfield.upper() != 'NEAREST':
+        if gainfield.upper() == 'NEAREST':
+            LOG.info('to_fieldid={}'.format(to_fieldid))
+            to_field = msobj.get_fields(field_id=to_fieldid)[0]
+            if 'ATMOSPHERE' in to_field.intents:
+                # if target field has ATMOSPHERE intent, use it
+                from_fields = [to_fieldid]
+            else:
+                atm_fields = msobj.get_fields(intent='ATMOSPHERE')
+                # absolute OFF
+                test_prefix = '{}_OFF_'.format(to_field.clean_name)
+                #LOG.info('test_prefix {}, atm_fields {}'.format(test_prefix, [a.clean_name for a in atm_fields]))
+                nearest_id = numpy.where([a.clean_name.startswith(test_prefix) for a in atm_fields])[0]
+                #LOG.info('nearest_id = {}'.format(nearest_id))
+                if len(nearest_id) > 0:
+                    from_fields = [atm_fields[i].id for i in nearest_id]
+                else:
+                    # more generic case that requires to search nearest field by separation
+                    rmin = casatools.quanta.quantity(180.0, 'deg')
+                    origin = to_field.mdirection
+                    nearest_id = -1
+                    for f in atm_fields:
+                        r = casatools.measures.separation(origin, f.mdirection)
+                        #LOG.info('before test: rmin {} r {} nearest_id {}'.format(rmin['value'], r['value'], nearest_id))
+                        # quanta.le is equivalent to <= 
+                        if casatools.quanta.le(r, rmin):
+                            rmin = r
+                            nearest_id = f.id
+                        #LOG.info('after test: rmin {} r {} nearest_id {}'.format(rmin['value'], r['value'], nearest_id))
+                    if nearest_id != -1:
+                        from_fields = [nearest_id]
+                    else:
+                        raise RuntimeError('No nearest field for Tsys update.')                    
+        else:
             from_fields = [fld.id for fld in msobj.get_fields(gainfield)]
+        LOG.info('from_fields = {}'.format(from_fields))
+
+        with casatools.TableReader(tsystable) as tb:
+            tsel = tb.query('FIELD_ID IN {}'.format(list(from_fields)))
+            spws = tsel.getcol('SPECTRAL_WINDOW_ID')
+            times = tsel.getcol('TIME')
+            #fieldids = tsel.getcol('FIELD_ID')
+            antids = tsel.getcol('ANTENNA1')
+            tsys_masked = {}
+            for i in xrange(tsel.nrows()):
+                tsys = tsel.getcell('FPARAM', i)
+                flag = tsel.getcell('FLAG', i)
+                tsys_masked[i] = numpy.ma.masked_array(tsys, mask=(flag == True))
+            tsel.close()
+            
+        #LOG.info('tsys={}'.format(tsys_masked))
 
         def map_spwchans(atm_spw, science_spw):
             """
@@ -798,47 +838,47 @@ class DataTableImpl(object):
                 end_atmchan = start_atmchan + 1
             return start_atmchan, end_atmchan
 
-        dt_antenna = self.getcol('ANTENNA')
-        dt_spw = self.getcol('IF')
+        _dt_antenna = self.getcol('ANTENNA')
+        _dt_spw = self.getcol('IF')
+        dt_field = self.getcol('FIELD_ID')
+        field_sel = numpy.where(dt_field == to_fieldid)[0]
+        dt_antenna = _dt_antenna[field_sel]
+        dt_spw = _dt_spw[field_sel]
+        atm_spws = set(spws)
         for spw_to, spw_from in enumerate(spwmap):
+            # only process atm spws
+            if spw_from not in atm_spws:
+                continue
+            
             atm_spw = msobj.get_spectral_window(spw_from)
             science_spw = msobj.get_spectral_window(spw_to)
             start_atmchan, end_atmchan = map_spwchans(atm_spw, science_spw)
-            # LOG.trace("Transfer Tsys from spw %d (chans: %d~%d) to %d" % (spw_from, start_atmchan, end_atmchan, spw_to))
+            LOG.info('Transfer Tsys from spw {} (chans: {}~{}) to {}'.format(spw_from, start_atmchan, end_atmchan, spw_to))
             for ant_to in to_antids:
                 # select caltable row id by SPW and ANT
                 cal_idxs = numpy.where(numpy.logical_and(spws == spw_from, antids == ant_to))[0]
                 if len(cal_idxs) == 0:
                     continue
-                tsys_mean = numpy.asarray([tsys_masked[i][:, start_atmchan:end_atmchan+1].mean(axis=1).data
+                # atsys.shape = (nrow, npol)
+                atsys = numpy.asarray([tsys_masked[i][:, start_atmchan:end_atmchan+1].mean(axis=1).data
                                            for i in cal_idxs])
-                dtrows = numpy.where(numpy.logical_and(dt_antenna == ant_to, dt_spw == spw_to))[0]
+                dtrows = field_sel[numpy.where(numpy.logical_and(dt_antenna == ant_to, dt_spw == spw_to))[0]]
+                #LOG.info('ant {} spw {} dtrows {}'.format(ant_to, spw_to, len(dtrows)))
                 time_sel = times.take(cal_idxs)  # in sec
-                field_sel = fieldids.take(cal_idxs)
                 for dt_id in dtrows:
+                    #LOG.info('ant {} spw {} field {}'.format(self.getcell('ANTENNA', dt_id), 
+                                                             self.getcell('IF', dt_id),
+                                                             self.getcell('FIELD_ID', dt_id)))
                     tref = self.getcell('TIME', dt_id) * 86400  # day->sec
-                    if gainfield == '':
-                        cal_field_idxs = cal_idxs
-                        tsys_mean_index = range(len(cal_idxs))
-                    else:
-                        if gainfield.upper() == 'NEAREST':
-                            from_fields = field_sel.take([numpy.argmin(numpy.abs(time_sel - tref))])
-                        # select caltable row id by SPW, ANT, and gain field
-                        tsys_mean_index = numpy.where([fid in from_fields for fid in field_sel])[0]
-                        cal_field_idxs = cal_idxs[tsys_mean_index]
-                    if len(cal_field_idxs) == 0:
-                        continue
-                    # the array, atsys, is in shape of len(cal_field_idxs) x npol unlike the other arrays.
-                    atsys = tsys_mean.take(tsys_mean_index, axis=0)
                     # LOG.trace("cal_field_ids=%s" % cal_field_idxs)
                     # LOG.trace('atsys = %s' % str(atsys))
                     if atsys.shape[0] == 1:  # only one Tsys measurement selected
                         self.putcell('TSYS', dt_id, atsys[0, :])
                     else:
-                        tsys_time = times.take(cal_field_idxs)  # in sec
-                        itsys = [_interpolate(atsys[:, ipol], tsys_time, tref) \
-                                 for ipol in range(atsys.shape[-1])]
+                        itsys = _interpolate(atsys, time_sel, tref)
                         self.putcell('TSYS', dt_id, itsys)
+        end_time = time.time()
+        LOG.info('_update_tsys: elapsed {} sec'.format(end_time - start_time))
 
     # @memory_profiler.profile
     def _update_flag(self, infile):
@@ -999,20 +1039,20 @@ class DataTableColumnMaskList(RWDataTableColumn):
 
 
 def _interpolate(v, t, tref):
-    n = len(t)
-    idx = -1
-    for i in xrange(n):
-        if t[i] >= tref:
-            break
-        idx += 1
-    if idx < 0:
+    # bisect.bisect_left(a, x)
+    # bisect_left returns an insertion point of x in a.
+    # if x matches any value in a, bisect_left returns its index.
+    # (bisect_right and bisect returns index next to the matched value) 
+    idx = bisect.bisect_left(t, tref)
+    #LOG.info('len(t) = {}, idx = {}'.format(len(t), idx))
+    if idx == 0:
         return v[0]
-    elif idx >= n - 1:
+    elif idx == len(t):
         return v[-1]
     else:
-        t1 = t[idx + 1] - tref
-        t0 = tref - t[idx]
-        return (v[idx + 1] * t0 + v[idx] * t1) / (t[idx + 1] - t[idx])
+        t1 = t[idx] - tref
+        t0 = tref - t[idx - 1]
+        return (v[idx] * t0 + v[idx-1] * t1) / (t[idx] - t[idx-1])
 
 
 def construct_timegroup(rows, group_id_list, group_association_list):
