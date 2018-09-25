@@ -193,7 +193,7 @@ def onlineChannelAveraging(vis, spw, mymsmd=''):
     -Todd Hunter
     """
     if (not os.path.exists(vis)):
-        print "Could not find measurement set."
+        print("Could not find measurement set.")
         return
     effBW = windowFunction('hanning', returnValue='dictionary')['EffectiveBW']
     closeTool = False
