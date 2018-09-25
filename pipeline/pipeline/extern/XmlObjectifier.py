@@ -362,7 +362,7 @@ class XmlObjectifierError(Exception):
         self.msg = msg
         
     def __str__(self):
-        return `self.msg`
+        return repr(self.msg)
 
 
 # APEX specific main to load the MBFITS XML definition.
