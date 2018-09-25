@@ -15,29 +15,44 @@ Below is a summary of which rules have been applied, and which still need to be 
 Rules that have been applied (guard against regression):
 
 ```
-has_key, print
+except, has_key, print, repr
 ```
 
-Rules that didn't require any changes (guard against regression):
+Rules that do not require changes in PL code nor in external modules (guard
+against regression):
 
 ```
 apply, asserts, exitfunc, getcwdu, imports2, input, intern, itertools_imports,
-nonzero, operator, paren, renames, sys_exc, standarderror , throw, xreadlines
+nonzero, operator, paren, renames, sys_exc, throw, xreadlines
 ```
 
-Rules still to be applied:
+Rules that do not require changes in PL code, but that do require external
+modules to be updated to a Python 3 version:
 
 ```
-basestring, dict, except, execfile, filter, funcattrs, future, idioms, import,
-imports, isinstance, itertools, long, map, metaclass, methodattrs, ne, next,
+standarderror
+```
+
+Rules still to be investigated:
+
+```
+basestring, dict, execfile, filter, funcattrs, future, idioms, import,
+imports, itertools, long, map, metaclass, methodattrs, ne, next,
 numliterals, raise, reduce, set_literal, tuple_params, types, unicode, urllib,
 ws_comma, xrange, zip
+```
+
+Rules that should be applied "last":
+
+```
+isinstance: removes duplicates, e.g. isinstance(x, (int, int)) that may appear
+            after evaluating 'long' rule
 ```
 
 Rules still to be applied, affecting external dependencies only:
 
 ```
-buffer, exec, raw_input, repr
+buffer, exec, raw_input
 ```
 
 
