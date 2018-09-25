@@ -142,17 +142,15 @@ focusResult.writexml(f, '')
 f.close()
 """
 
-
 import xml.dom.minidom as minidom
-from traceback import print_exc
+
 
 class _XmlObject:
-    '''
+    """
     This class definition is used for the additional "elementName_obj"
     objects in the hierarchy that allow to access child nodes via the __call__
     method.
-    '''
-
+    """
     def __init__(self, elementsList):
         self.elementsList = elementsList
         
@@ -160,12 +158,10 @@ class _XmlObject:
         if keywords == {} and text is None:
             if len(self.elementsList) > 1:
                 if number is None:
-                    msg = 'More than one XmlElement of type ' + \
-                        str(self.elementsList[0]._0elementName)+'. '
-                    msg = msg + 'Select one py passing a number (0 - ' + \
-                        str(len(self.elementsList)-1) + ')'
+                    msg = 'More than one XmlElement of type {}. Select one by passing a number (0 - {})' \
+                          ''.format(str(self.elementsList[0]._0elementName), str(len(self.elementsList)-1))
                     raise XmlObjectifierError(msg)
-                elif number in range(0,len(self.elementsList)):
+                elif number in range(0, len(self.elementsList)):
                     result = self.elementsList[number]
                 else:
                     msg = 'KeyNumber out of range'
@@ -175,7 +171,7 @@ class _XmlObject:
                 return self.elementsList[0]
         else:
             matches = 0
-            matchList = []
+            match_list = []
             for element in self.elementsList:
                 if text is not None:
                     for item in element.childNodes:
@@ -195,77 +191,74 @@ class _XmlObject:
                         matches = 0
                         break
                 if matches == 1:
-                    matchList.append(element)
-            if len(matchList) > 1:
+                    match_list.append(element)
+            if len(match_list) > 1:
                 raise KeyError, 'More than one result found'
-            elif len(matchList) < 1:
+            elif len(match_list) < 1:
                 return None
             else:
-                return matchList[0]
+                return match_list[0]
 
 
 def _createLists(xmlObject, mapNameSpaces, nameSpaceMapping, skipChars):
-
-    '''
+    """
     Generate lists of elements if one kind of element exists several times on the
     same level. Otherwise map it into a scalar.
-    '''
-
+    """
     if xmlObject.hasChildNodes():
         items = []
         for element in xmlObject.childNodes:
             if element.nodeType == 1:
-                elementName = str(element.nodeName)
-		# '-' is not allowed in Python names
-                elementName = elementName.replace('-','_')
+                element_name = str(element.nodeName)
 
-		# Handle name spaces
-                sptr = elementName.find(':')
-                if (sptr != -1):
-                    nameSpace = elementName[:sptr]
-                    nameSpaceKey = nameSpace + ':'
-		    # Keep new name spaces for later use
-                    if (not (nameSpaceKey in nameSpaceMapping)):
-                        if (mapNameSpaces):
-                            path = element.getAttribute('xmlns:' + nameSpace)
+                # '-' is not allowed in Python names
+                element_name = element_name.replace('-', '_')
+
+                # Handle name spaces
+                sptr = element_name.find(':')
+                if sptr != -1:
+                    name_space = element_name[:sptr]
+                    name_space_key = name_space + ':'
+                    # Keep new name spaces for later use
+                    if name_space_key not in nameSpaceMapping:
+                        if mapNameSpaces:
+                            path = element.getAttribute('xmlns:' + name_space)
                             # Skip leading strings if desired
-                            if (skipChars):
+                            if skipChars:
                                 path = path.replace(skipChars, '')
-			    # Skip initial URL characters if any
-			    if path.startswith('http://'):
+                            # Skip initial URL characters if any
+                            if path.startswith('http://'):
                                 path = path[len('http://'):]
-			    # Python names must not contain the '.' character
+                            # Python names must not contain the '.' character
                             path = path.replace('.','_')
-			    # Python names must not contain the '/' character
+                            # Python names must not contain the '/' character
                             path = path.replace('/','_') + '_'
-                            nameSpaceMapping[nameSpaceKey] = path
-			else:
-                            nameSpaceMapping[nameSpaceKey] = ''
+                            nameSpaceMapping[name_space_key] = path
+                        else:
+                            nameSpaceMapping[name_space_key] = ''
 
-                    elementName = elementName.replace(nameSpaceKey, \
-                        nameSpaceMapping[nameSpaceKey])
+                    element_name = element_name.replace(name_space_key, nameSpaceMapping[name_space_key])
 
-                if not hasattr(xmlObject,elementName):
-                    list = []
-                    setattr(xmlObject,elementName,list)
-                    items.append(elementName)
-                    setattr(xmlObject,elementName+'_obj', \
-                        _XmlObject(getattr(xmlObject,elementName)))
+                if not hasattr(xmlObject, element_name):
+                    xml_elements_list = []
+                    setattr(xmlObject, element_name, xml_elements_list)
+                    items.append(element_name)
+                    setattr(xmlObject, element_name+'_obj', _XmlObject(getattr(xmlObject, element_name)))
                 else:
-                    list = getattr(xmlObject,elementName)
-                myXmlElement = XmlElement(element, mapNameSpaces, nameSpaceMapping, skipChars)
-                list.append(myXmlElement)
+                    xml_elements_list = getattr(xmlObject, element_name)
+                my_xml_element = XmlElement(element, mapNameSpaces, nameSpaceMapping, skipChars)
+                xml_elements_list.append(my_xml_element)
 
         # Convert 1-item element lists to scalar elements
         for item in items:
-            if (eval('len(xmlObject.%s)' % (item)) == 1):
-                exec('tmpItem = xmlObject.%s[0]' % (item))
+            if eval('len(xmlObject.%s)' % item) == 1:
+                exec('tmpItem = xmlObject.%s[0]' % item)
                 delattr(xmlObject, item)
+                # FIXME: tmpItem is undefined
                 setattr(xmlObject, item, tmpItem)
 
 
 def castType(value):
-
     try:
         value = int(value)
     except ValueError:
@@ -281,8 +274,7 @@ def castType(value):
 
 
 class XmlObject(minidom.Document):
-
-    '''
+    """
     Creates an object representing the XML document wich is to be objectified.
     The XML string passed to the constructor is preferred over any specified 
     XML file.
@@ -291,59 +283,46 @@ class XmlObject(minidom.Document):
 
     Leading characters in the name space definitions can be skipped in the mapping
     by passing the optional "skipChars" argument.
-    '''
-
-    def __init__(self, xmlString = None, fileName = None, skipChars = '',
-        mapNameSpaces = 0):
-
+    """
+    def __init__(self, xmlString=None, fileName=None, skipChars='', mapNameSpaces=0):
         # The name space mapping needs to be known on all levels of the object
-	# hierarchy.
+        # hierarchy.
         nameSpaceMapping = {}
 
         minidom.Document.__init__(self)
-	if (xmlString):
+        if xmlString:
             dom = minidom.parseString(xmlString)
-	elif (fileName):
+        elif fileName:
             dom = minidom.parse(fileName)
-	else:
-	    raise XmlObjectifierError('No XML string or filename specified')
+        else:
+            raise XmlObjectifierError('No XML string or filename specified')
         dom.documentElement.normalize()
         for attr in dir(dom):
             if attr != '__init__':
-                setattr(self,attr,getattr(dom,attr))
+                setattr(self, attr, getattr(dom, attr))
         _createLists(self, mapNameSpaces, nameSpaceMapping, skipChars)
-
 
 
 class XmlElement(minidom.Element):
-
-    '''Creates an object representing an XML tag/element with all of its content.'''
-
+    """Creates an object representing an XML tag/element with all of its content."""
 
     def __init__(self, element, mapNameSpaces, nameSpaceMapping, skipChars):
-
-        minidom.Element.__init__(self,str(element.nodeName))
+        minidom.Element.__init__(self, str(element.nodeName))
         for attr in dir(element):
             if attr != '__init__' and attr != 'getAttribute':
-                setattr(self,attr,getattr(element,attr))
+                setattr(self, attr, getattr(element, attr))
         _createLists(self, mapNameSpaces, nameSpaceMapping, skipChars)
         self._0elementName = str(self.nodeName)
 
-
-    def getAttribute(self,name):
-
-        '''Overwrites the inherited method and returns a value of the right type.'''
-        
-        result = minidom.Element.getAttribute(self,name)
+    def getAttribute(self, name):
+        """Overwrites the inherited method and returns a value of the right type."""
+        result = minidom.Element.getAttribute(self, name)
         result = str(result)
         result = castType(result)
         return result
 
-    
     def getValue(self):
-
-        '''Returns the included TEXT, if present.'''
-
+        """Returns the included TEXT, if present."""
         if len(self.childNodes) > 1:
             msg = "Xml Element does not seem to be an end point"
             raise XmlObjectifierError(msg)
@@ -360,9 +339,7 @@ class XmlElement(minidom.Element):
             raise XmlObjectifierError(msg)
 
     def setValue(self, value):
-
-        '''Sets the included TEXT.'''
-
+        """Sets the included TEXT."""
         if len(self.childNodes) > 1:
             msg = "Xml Element does not seem to be an end point"
             raise XmlObjectifierError(msg)
@@ -391,6 +368,5 @@ class XmlObjectifierError(Exception):
 # APEX specific main to load the MBFITS XML definition.
 if __name__ == '__main__':
     import interactive
-    myXmlObject = XmlObject(fileName = '../../idl/MBFits.xml')
+    myXmlObject = XmlObject(fileName='../../idl/MBFits.xml')
     scanStructure = myXmlObject.Scan()
-
