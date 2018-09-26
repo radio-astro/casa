@@ -1,7 +1,6 @@
 from __future__ import absolute_import
 
 import collections
-import os
 
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.pipelineqa as pqa
@@ -17,18 +16,20 @@ class StatwtQAHandler(pqa.QAPlugin):
     generating_task = statwt.Statwt
 
     def handle(self, context, result):
+        vis = result.inputs['vis']
+        ms = context.observing_run.get_ms(vis)
 
-        # Check for existence of the the target MS.
-        score1 = self._ms_exists(os.path.dirname(result.inputs['vis']), os.path.basename(result.inputs['vis']))
-        scores = [score1]
+        # Score based on incremental flag fraction
+        score0 = qacalc.score_data_flagged_by_agents(ms, result.summaries,
+                                                     0.05, 0.6, agents=[ 'statwt' ])
+        new_origin = pqa.QAOrigin(metric_name='%StatwtFlagging',
+                                  metric_score=score0.origin.metric_score,
+                                  metric_units=score0.origin.metric_units)
+        score0.origin = new_origin
+        
+        scores = [ score0 ]
 
         result.qa.pool.extend(scores)
-
-    def _ms_exists(self, output_dir, ms):
-        '''
-        Check for the existence of the target MS
-        '''
-        return qacalc.score_path_exists(output_dir, ms, 'Statwt')
 
 class StatwtListQAHandler(pqa.QAPlugin):
     """
@@ -43,6 +44,3 @@ class StatwtListQAHandler(pqa.QAPlugin):
         # own QAscore list
         collated = utils.flatten([r.qa.pool for r in result])
         result.qa.pool[:] = collated
-        mses = [r.inputs['vis'] for r in result]
-        longmsg = 'No missing target MS(s) for %s' % utils.commafy(mses, quotes=False, conjunction='or')
-        result.qa.all_unity_longmsg = longmsg

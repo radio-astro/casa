@@ -21,14 +21,14 @@ class StatwtInputs(vdp.StandardInputs):
 
 
 class StatwtResults(basetask.Results):
-    def __init__(self, jobs=None):
+    def __init__(self, jobs=None, flag_summaries=[]):
 
         if jobs is None:
             jobs = []
 
         super(StatwtResults, self).__init__()
-
         self.jobs = jobs
+        self.summaries = flag_summaries
         
     def __repr__(self):
         s = 'Statwt results:\n'
@@ -43,9 +43,15 @@ class Statwt(basetask.StandardTaskTemplate):
     
     def prepare(self):
 
+        flag_summaries = []
+        # flag statistics before task
+        flag_summaries.append(self._do_flagsummary('before'))
+        # actual statwt operation
         statwt_result = self._do_statwt()
+        # flag statistics after task
+        flag_summaries.append(self._do_flagsummary('statwt'))
         
-        return StatwtResults([statwt_result])
+        return StatwtResults(jobs=[statwt_result], flag_summaries=flag_summaries)
     
     def analyse(self, results):
         return results
@@ -80,3 +86,7 @@ class Statwt(basetask.StandardTaskTemplate):
                 statwt_result = self._executor.execute(job)
 
             return statwt_result
+
+    def _do_flagsummary(self, name):
+        job = casa_tasks.flagdata(name=name, vis = self.inputs.vis, mode='summary')
+        return self._executor.execute(job)
