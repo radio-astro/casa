@@ -9,9 +9,9 @@ from matplotlib.patches import Circle
 from matplotlib.ticker import FuncFormatter
 
 import pipeline.domain.unitformat as unitformat
+import pipeline.infrastructure
 from pipeline.domain.measures import FrequencyUnits, DistanceUnits, Distance, ArcUnits, EquatorialArc
 from pipeline.infrastructure.casatools import quanta
-import pipeline.infrastructure
 
 LOG = pipeline.infrastructure.get_logger(__name__)
 
@@ -112,8 +112,8 @@ def plot_mosaic(ms, source, figfile):
     for d in dish_diameters:
         colour = get_dish_colour(d)
         pb = primary_beam_fwhm(median_ref_wavelength, d, taper)
-        pb_degs = float(pb.to_units(ArcUnits.DEGREE))
-        msg = '{} primary beam = {}'.format(d, pb_formatter.format(pb_degs))
+        pb_arcsecs = float(pb.to_units(ArcUnits.ARC_SECOND))
+        msg = '{} primary beam = {}'.format(d, pb_formatter.format(pb_arcsecs))
         t = ax.text(0.02, y, msg, color=colour, transform=ax.transAxes, size=10)
         t.set_bbox(dict(facecolor='white', edgecolor='none', alpha=0.75))
         y += 0.05
@@ -137,7 +137,7 @@ def get_arc_formatter(precision):
     """
     s = '{0:.' + str(precision) + 'f}'
     f = unitformat.UnitFormat(prefer_integers=True)
-    f.addUnitOfMagnitude(1. / 10000006, s + ' $\mu$as')
+    f.addUnitOfMagnitude(1. / 1000000, s + ' $\mu$as')
     f.addUnitOfMagnitude(1. / 1000, s + ' mas')
     f.addUnitOfMagnitude(1., s + '$^{{\prime\prime}}$')
     f.addUnitOfMagnitude(60., s + '$^\prime$')
@@ -146,7 +146,7 @@ def get_arc_formatter(precision):
 
 
 # Used to label x and y plot axes
-AXES_FORMATTER = get_arc_formatter(0)
+AXES_FORMATTER = get_arc_formatter(1)
 
 
 def label_format(x, _):

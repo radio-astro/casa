@@ -77,11 +77,6 @@ class UnitFormat(object):
         for unit in self.units:
             if as_decimal >= unit.magnitude:
                 best_unit = unit
-            else:
-                break
-        else:
-            # no better units found. return the default units.
-            return default_units
 
         if not self.prefer_integers:
             return best_unit
