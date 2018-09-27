@@ -6,9 +6,9 @@ import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.pipelineqa as pqa
 import pipeline.infrastructure.utils as utils
 import pipeline.qa.scorecalculator as qacalc
-# from pipeline.hif.tasks.common import commonfluxresults
 from pipeline.h.tasks.common import commonfluxresults
 from . import vlasetjy
+
 
 LOG = logging.get_logger(__name__)
 
@@ -19,22 +19,35 @@ class VLASetjyQAHandler(pqa.QAPlugin):
     generating_task = vlasetjy.VLASetjy
     
     def handle(self, context, result):
+        standard_source_names, standard_source_fields = vlasetjy.standard_sources(result.inputs['vis'])
 
-	vis= result.inputs['vis']
-	ms = context.observing_run.get_ms(vis)
-	if 'spw' in result.inputs:
-	    spw = result.inputs['spw']
-	else:
-	    spw = ''
+        if sum(standard_source_fields, []):
+            score = pqa.QAScore(1.0, longmsg='Standard calibrator present.',
+                                shortmsg='Standard calibrator present.')
+        else:
+            score = pqa.QAScore(0.5, longmsg='Warning - no standard calibrator present.',
+                                shortmsg='No standard calibrator present.')
 
-	# Check for the existence of the expected flux measurements
-	# and assign a score based on the fraction of actual to 
-	# expected ones.
-	scores = [qacalc.score_setjy_measurements(ms, result.inputs['field'],
-	    result.inputs['intent'], spw, result.measurements)]
-	result.qa.pool[:] = scores
-	result.qa.all_unity_longmsg = 'No missing flux measurements in %s' % ms.basename 
+        scores = [score]
 
+        result.qa.pool.extend(scores)
+
+        """
+        vis = result.inputs['vis']
+        ms = context.observing_run.get_ms(vis)
+        if 'spw' in result.inputs:
+            spw = result.inputs['spw']
+        else:
+            spw = ''
+
+        # Check for the existence of the expected flux measurements
+        # and assign a score based on the fraction of actual to
+        # expected ones.
+        scores = [qacalc.score_setjy_measurements(ms, result.inputs['field'],
+                  result.inputs['intent'], spw, result.measurements)]
+        result.qa.pool[:] = scores
+        result.qa.all_unity_longmsg = 'No missing flux measurements in %s' % ms.basename
+        """
 
 class VLASetjyListQAHandler(pqa.QAPlugin):
     """
@@ -50,8 +63,6 @@ class VLASetjyListQAHandler(pqa.QAPlugin):
         result.qa.pool[:] = collated
 
         mses = [r.inputs['vis'] for r in result]
-        longmsg = 'No missing flux measurements in %s' % utils.commafy(mses,
-                                                                    quotes=False,
-                                                                    conjunction='or')
+        longmsg = 'No missing flux measurements in %s' % utils.commafy(mses, quotes=False, conjunction='or')
         result.qa.all_unity_longmsg = longmsg
 

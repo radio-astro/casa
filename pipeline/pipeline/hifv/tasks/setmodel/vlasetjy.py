@@ -233,6 +233,7 @@ class VLASetjyInputs(vdp.StandardInputs):
     fluxdensity = vdp.VisDependentProperty(default=-1)
     spix = vdp.VisDependentProperty(default=0.0)
     scalebychan = vdp.VisDependentProperty(default=True)
+    model = vdp.VisDependentProperty(default='')
 
     @vdp.VisDependentProperty
     def standard(self):
@@ -378,6 +379,10 @@ class VLASetjy(basetask.StandardTaskTemplate):
 
                         LOG.info("Setting model for field " + str(m.get_fields()[myfield].id)
                                  + " spw "+str(spw.id) + " using " + model_image)
+
+                        if self.inputs.model:
+                            LOG.warn("Model override input.  Using {!s}".format(self.inputs.model))
+                            model_image = self.inputs.model
 
                         task_args = {'vis'            : inputs.vis,
                                      'field'          : str(myfield),
