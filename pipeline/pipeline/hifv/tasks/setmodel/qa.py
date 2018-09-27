@@ -27,6 +27,7 @@ class VLASetjyQAHandler(pqa.QAPlugin):
         else:
             score = pqa.QAScore(0.5, longmsg='Warning - no standard calibrator present.',
                                 shortmsg='No standard calibrator present.')
+            LOG.warn('No standard calibrator present.')
 
         scores = [score]
 
