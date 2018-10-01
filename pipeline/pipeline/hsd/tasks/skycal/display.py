@@ -324,12 +324,14 @@ def plot_elevation_difference(context, result, eldiff, threshold=3.0, perantenna
                 ix0 = numpy.where(numpy.abs(eldiff0) >= threshold)[0]
                 io1 = numpy.where(numpy.abs(eldiff1) < threshold)[0]
                 ix1 = numpy.where(numpy.abs(eldiff1) >= threshold)[0]
-                x = time0[io0]
-                y = numpy.abs(eldiff0[io0])
-                pl.plot(sd_display.mjd_to_plotval(x), y, 'g.', mew=0)
-                x = time1[io1]
-                y = numpy.abs(eldiff1[io1])
-                pl.plot(sd_display.mjd_to_plotval(x), y, 'g.', mew=0)
+                if len(io0) > 0:
+                    x = time0[io0]
+                    y = numpy.abs(eldiff0[io0])
+                    pl.plot(sd_display.mjd_to_plotval(x), y, 'g.', mew=0)
+                if len(io1) > 0:
+                    x = time1[io1]
+                    y = numpy.abs(eldiff1[io1])
+                    pl.plot(sd_display.mjd_to_plotval(x), y, 'g.', mew=0)
                 #ymax = set()
                 if len(ix0) > 0:
                     x = time0[ix0]
