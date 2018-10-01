@@ -282,15 +282,13 @@ class ValidateLineRaster(basetask.StandardTaskTemplate):
 
         iteration = self.inputs.iteration
         
-        reference_member = self.inputs.reference_member
-        reference_ms = reference_member.ms
-
         grid_ra = self.inputs.grid_ra
         grid_dec = self.inputs.grid_dec
         broad_component = self.inputs.broad_component
         xorder = self.inputs.xorder
         yorder = self.inputs.yorder
-        self.nchan = datatable_dict[reference_ms.basename].getcell('NCHAN', index_list[0])
+        _vis, _row = indexer.serial2perms(index_list[0])
+        self.nchan = datatable_dict[_vis].getcell('NCHAN', _row)
         self.nsigma = self.inputs.nsigma
 
         ProcStartTime = time.time()
