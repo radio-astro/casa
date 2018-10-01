@@ -315,7 +315,7 @@ class Priorcals(basetask.StandardTaskTemplate):
 
         m = self.inputs.context.observing_run.get_ms(self.inputs.vis)
 
-        fracantcorrect = len(antcorrect) / len(m.antennas)
+        fracantcorrect = float(len(antcorrect)) / float(len(m.antennas))
         if fracantcorrect > 0.5:
             LOG.warn("{:5.2f} percent of antennas needed position corrections.".format(100.0 * fracantcorrect))
 
