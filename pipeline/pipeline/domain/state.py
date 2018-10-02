@@ -151,7 +151,7 @@ class StateALMA(State):
 
 class StateALMACycle0(StateALMA):
     # Check whether these states co-exist with PHASE
-    _PHASE_BYPASS_INTENTS = frozenset(('BANDPASS','AMPLITUDE'))
+    _PHASE_BYPASS_INTENTS = frozenset(('BANDPASS', 'AMPLITUDE'))
 
     def __init__(self, state_id, obs_mode):
         super(StateALMACycle0, self).__init__(state_id, obs_mode)
@@ -172,7 +172,7 @@ class StateALMACycle0(StateALMA):
             
             # .. find the obs_mode(s) responsible for the addition of the
             # phase intent..
-            phase_obs_modes = [k for k,v in self.obs_mode_mapping.items()
+            phase_obs_modes = [k for k, v in self.obs_mode_mapping.items()
                                if v == 'PHASE']
             # and remove them from the obsmodes we should register
             dephased_obs_modes = [m for m in obs_mode.split(',')
@@ -204,9 +204,9 @@ class StateVLA(State):
         'CALIBRATE_BANDPASS#ON_SOURCE'       : 'BANDPASS',
         'CALIBRATE_BANDPASS.ON_SOURCE'       : 'BANDPASS',
         'CALIBRATE_BANDPASS_ON_SOURCE'       : 'BANDPASS',
-        'CALIBRATE_AMPLI#ON_SOURCE'          : 'PHASE',  #Was amplitude
-        'CALIBRATE_AMPLI.ON_SOURCE'          : 'PHASE',  #Was amplitude
-        'CALIBRATE_AMPLI_ON_SOURCE'          : 'PHASE',  #Was amplitude
+        'CALIBRATE_AMPLI#ON_SOURCE'          : 'PHASE',  # Was amplitude
+        'CALIBRATE_AMPLI.ON_SOURCE'          : 'PHASE',  # Was amplitude
+        'CALIBRATE_AMPLI_ON_SOURCE'          : 'PHASE',  # Was amplitude
         'CALIBRATE_FLUX#ON_SOURCE'           : 'AMPLITUDE',
         'CALIBRATE_FLUX.ON_SOURCE'           : 'AMPLITUDE',
         'CALIBRATE_FLUX_ON_SOURCE'           : 'AMPLITUDE',
@@ -241,7 +241,7 @@ class StateVLA(State):
         'CALIBRATE_BANDPASS#UNSPECIFIED'     : 'BANDPASS',    
         'CALIBRATE_FLUX#UNSPECIFIED'         : 'AMPLITUDE',
         'CALIBRATE_PHASE#UNSPECIFIED'        : 'PHASE',
-        'CALIBRATE_AMPLI#UNSPECIFIED'        : 'PHASE',  #Was amplitude
+        'CALIBRATE_AMPLI#UNSPECIFIED'        : 'PHASE',  # Was amplitude
         'UNSPECIFIED#UNSPECIFIED'            : 'UNSPECIFIED#UNSPECIFIED',
         'SYSTEM_CONFIGURATION'               : 'SYSTEM_CONFIGURATION',
         'SYSTEM_CONFIGURATION#UNSPECIFIED'   : 'SYSTEM_CONFIGURATION'
@@ -249,6 +249,7 @@ class StateVLA(State):
     
     def __init__(self, state_id, obs_mode):
         super(StateVLA, self).__init__(state_id, obs_mode)
+
 
 class StateAPEX(State):
     # dictionary to map from STATE table obs_mode to pipeline intent
@@ -259,6 +260,7 @@ class StateAPEX(State):
     def __init__(self, state_id, obs_mode):
         super(StateAPEX, self).__init__(state_id, obs_mode)
 
+
 class StateSMT(State):
     # dictionary to map from STATE table obs_mode to pipeline intent
     obs_mode_mapping = {
@@ -267,6 +269,7 @@ class StateSMT(State):
     
     def __init__(self, state_id, obs_mode):
         super(StateSMT, self).__init__(state_id, obs_mode)
+
 
 class StateNAOJ(State):
     # dictionary to map from STATE table obs_mode to pipeline intent
@@ -281,24 +284,24 @@ class StateNAOJ(State):
     def __init__(self, state_id, obs_mode):
         super(StateNAOJ, self).__init__(state_id, obs_mode)
 
+
 class StateFactory(object):
     def __init__(self, observatory, start=None):
         if observatory == 'ALMA':
-            if start and start < datetime.datetime(2013,01,21):
+            if start and start < datetime.datetime(2013, 1, 21):
                 self._constructor = StateALMACycle0
             else:
                 self._constructor = StateALMA
-        elif (observatory == 'VLA' or observatory =='EVLA'):
+        elif observatory == 'VLA' or observatory == 'EVLA':
             self._constructor = StateVLA
-        elif (observatory == 'APEX'):
+        elif observatory == 'APEX':
             self._constructor = StateAPEX
-        elif (observatory == 'SMT'):
+        elif observatory == 'SMT':
             self._constructor = StateSMT
-        elif (observatory == 'NRO' or observatory == 'ASTE'):
+        elif observatory == 'NRO' or observatory == 'ASTE':
             self._constructor = StateNAOJ
         else:
             raise KeyError('%s has no matching State class' % observatory)
 
     def create_state(self, state_id, obs_mode):
         return self._constructor(state_id, obs_mode)
-    
