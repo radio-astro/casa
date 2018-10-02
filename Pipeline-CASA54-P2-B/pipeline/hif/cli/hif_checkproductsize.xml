@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+		 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		 xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+<task type="function" name="hif_checkproductsize" category="pipeline">
+<shortdescription>Check imaging product size</shortdescription>
+<description>
+Check interferometry imaging product size and try to mitigate to maximum allowed values.
+</description>
+<input>
+
+  <param type="stringArray" name="vis" subparam="true">
+    <description>List of input MeasurementSets</description>
+    <value></value>
+  </param>
+
+  <param type="double" name="maxcubesize" subparam="true">
+     <description>Maximum cube size (mitigation goal)</description>
+     <value>-1.0</value>
+  </param>
+
+  <param type="double" name="maxcubelimit" subparam="true">
+     <description>Maximum cube limit (mitigation failure limit)</description>
+     <value>-1.0</value>
+  </param>
+
+  <param type="double" name="maxproductsize" subparam="true">
+     <description>Maximum product size (mitigation goal and failure limit)</description>
+     <value>-1.0</value>
+  </param>
+
+  <param type="bool" name="calcsb">
+    <description>Force (re-)calculation of sensitivities and beams</description>
+    <value>False</value>
+  </param>
+
+  <param type="string" name="parallel">
+    <description>Compute dirty images using MPI cluster</description>
+    <value>automatic</value>
+    <allowed kind="enum">
+      <value>automatic</value>
+      <value>true</value>
+      <value>false</value>
+    </allowed>
+  </param>
+
+  <param type="string" name="pipelinemode">
+    <description>The pipeline operating mode</description>
+    <value>automatic</value>
+    <allowed kind="enum">
+      <value>automatic</value>
+      <value>interactive</value>
+      <value>getinputs</value>
+    </allowed>
+  </param>
+
+  <param type="bool" name="dryrun" subparam="true">
+    <description>Run the task (False) or display the command(True)</description>
+    <value>False</value>
+  </param>
+
+  <param type="bool" name="acceptresults" subparam="true">
+    <description>Add the results to the pipeline context</description>
+   <value>True</value>
+  </param>
+
+
+  <constraints>
+
+    <when param="pipelinemode">
+      <equals type="string" value="automatic"/>
+      <equals type="string" value="interactive">
+        <default param="vis"><value type="stringArray"></value></default>
+        <default param="maxcubesize"><value>-1.0</value></default>
+        <default param="maxcubelimit"><value>-1.0</value></default>
+        <default param="maxproductsize"><value>-1.0</value></default>
+        <default param="dryrun"><value type="bool">False</value></default>
+        <default param="acceptresults"><value type="bool">True</value></default>
+      </equals>
+      <equals type="string" value="getinputs">
+        <default param="vis"><value type="stringArray"></value></default>
+        <default param="target_list"><value>{}</value></default>
+      </equals>
+    </when>
+
+  </constraints>
+
+</input>
+
+<output>
+    <param type="any" name="results">
+        <description>The output results object</description>
+        <any type="variant"/>
+        <value></value>
+    </param>
+</output>
+<returns type="void"/>
+
+
+<example>
+
+Check interferometry imaging product size and try to mitigate to maximum
+allowed values. The task implements a mitigation cascade computing the largest
+cube size and trying to reduce it below a given limit by adjusting the nbins,
+hm_imsize and hm_cell parameters. If this step succeeds, it also checks the
+overall imaging product size and if necessary reduces the number of fields to
+be imaged.
+
+Keyword arguments:
+
+--- pipeline parameter arguments which can be set in any pipeline mode
+
+pipelinemode -- The pipeline operating mode. In 'automatic' mode the pipeline
+       determines the values of all context defined pipeline inputs
+       automatically.  In interactive mode the user can set the pipeline
+       context defined parameters manually.  In 'getinputs' mode the user
+       can check the settings of all pipeline parameters without running
+       the task.
+       default: 'automatic'.
+
+
+---- pipeline context defined parameter arguments which can be set only in
+'interactive mode'
+
+vis -- The list of input MeasurementSets. Defaults to the list of MeasurementSets
+    specified in the h_init or hif_importdata sets.
+    example: vis='ngc5921.ms'
+             vis=['ngc5921a.ms', ngc5921b.ms', 'ngc5921c.ms']
+    default: use all MeasurementSets in the context 
+
+maxcubesize -- Maximum allowed cube size mitigation goal in GB.
+    default: -1 (automatic from performance parameters)
+    example: 30.0
+
+maxcubelimit -- Maximum allowed cube size mitigation failure limit in GB.
+    default: -1 (automatic from performance parameters)
+    example: 30.0
+
+maxproductsize -- Maximum allowed product size mitigation goal
+                  and failure limit in GB.
+    default: -1 (automatic from performance parameters)
+    example: 200.0
+
+calcsb -- Force (re-)calculation of sensitivities and beams
+            default=False
+            Options: False, True
+
+parallel -- use multiple CPU nodes to compute dirty images
+    default: \'automatic\'
+
+--- pipeline task execution modes
+dryrun -- Run the commands (True) or generate the commands to be run but
+   do not execute (False).
+   default: False
+
+acceptresults -- Add the results of the task to the pipeline context (True) or
+   reject them (False).
+   default: True
+
+Output:
+
+results -- If pipeline mode is 'getinputs' then None is returned. Otherwise
+    the results object for the pipeline task is returned.
+
+
+Examples:
+
+</example>
+
+</task>
+</casaxml>

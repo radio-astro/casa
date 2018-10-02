@@ -1,0 +1,35 @@
+from __future__ import absolute_import
+import pipeline.infrastructure.renderer.weblog as weblog
+import pipeline.infrastructure.pipelineqa as pipelineqa
+import pipeline.infrastructure.renderer.qaadapter as qaadapter
+import pipeline.infrastructure.renderer.basetemplates as basetemplates
+
+from . import flagbaddeformatters
+from . import checkflag
+from . import targetflag
+from . import renderer
+
+from . import qa
+
+from .flagdetervla import FlagDeterVLA
+from .flagbaddeformatters import FlagBadDeformatters
+from .checkflag import Checkflag
+from .targetflag import Targetflag
+from .flagcal import Flagcal
+
+qaadapter.registry.register_to_dataset_topic(checkflag.CheckflagResults)
+qaadapter.registry.register_to_dataset_topic(targetflag.TargetflagResults)
+qaadapter.registry.register_to_dataset_topic(flagdetervla.FlagDeterVLAResults)
+qaadapter.registry.register_to_dataset_topic(flagbaddeformatters.FlagBadDeformattersResults)
+
+# Use locally defined renderer for VLA deterministic flagging.
+weblog.add_renderer(FlagDeterVLA, renderer.T2_4MDetailsFlagDeterVLARenderer(), group_by=weblog.UNGROUPED)
+weblog.add_renderer(FlagBadDeformatters,
+                    basetemplates.T2_4MDetailsDefaultRenderer(uri='flagbaddef.mako', description='Flag bad deformatters'),
+                    group_by=weblog.UNGROUPED)
+weblog.add_renderer(Checkflag, renderer.T2_4MDetailscheckflagRenderer(), group_by=weblog.UNGROUPED)
+weblog.add_renderer(Targetflag,
+                    basetemplates.T2_4MDetailsDefaultRenderer(uri='targetflag.mako', description='Targetflag'),
+                    group_by=weblog.UNGROUPED)
+weblog.add_renderer(Flagcal, basetemplates.T2_4MDetailsDefaultRenderer(uri='flagcal.mako', description='Flagcal'),
+                    group_by=weblog.UNGROUPED)

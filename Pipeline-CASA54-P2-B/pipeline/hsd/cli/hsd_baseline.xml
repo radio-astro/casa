@@ -1,0 +1,371 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+<task type="function" name="hsd_baseline" category="pipeline">
+<shortdescription>Detect and validate spectral lines, subtract baseline by masking detected lines</shortdescription>
+<description>
+</description>
+<input>
+    <param type="string" name="fitfunc">
+        <description>Fitting function for baseline subtraction</description>
+	<value>cspline</value>
+	<allowed kind="enum">
+	    <value>cspline</value>
+	    <value>spline</value>
+<!--
+	    <value>polynomial</value>
+	    <value>poly</value>
+-->
+	    <value>CSPLINE</value>
+	    <value>SPLINE</value>
+<!--
+	    <value>POLYNOMIAL</value>
+	    <value>POLY</value>
+-->
+	</allowed>
+    </param>
+
+    <param type="int" name="fitorder">
+        <description>Fitting order for baseline subtraction</description>
+	<value>-1</value>
+    </param>
+    
+    <param type="any" name="linewindow">
+        <description>Pre-defined line window</description>
+        <any type="variant"/>
+	    <value type="string"></value>
+    </param>
+    
+    <param type="string" name="linewindowmode" subparam="true">
+        <description>Merge or replace given manual line window with line detection/validation result</description>
+        <value>replace</value>
+        <allowed kind="enum">
+            <value>replace</value>
+            <value>merge</value>
+        </allowed>
+    </param>
+
+    <param type="intArray" name="edge">
+        <description>Edge channels to be dropped</description>
+	<value></value>
+    </param>
+
+    <param type="bool" name="broadline">
+        <description>Try to detect broad component of the line</description>
+	<value>True</value>
+    </param>
+
+    <param type="string" name="clusteringalgorithm">
+	<description>Algorithm for line validation clustering algorithm</description>
+	<value>kmean</value>
+	<allowed kind="enum">
+	    <value>kmean</value>
+	    <value>hierarchy</value>
+	</allowed>
+    </param>
+
+    <param type="bool" name="deviationmask">
+        <description>Apply deviation mask in addition to detected line masks</description>
+	<value>True</value>
+    </param>
+
+    <param type="string" name="pipelinemode">
+	<description>The pipeline operating mode</description>
+	<value>automatic</value>
+	<allowed kind="enum">
+	    <value>automatic</value>
+	    <value>interactive</value>
+	    <value>getinputs</value>
+	</allowed>
+    </param>
+
+    <param type="stringArray" name="infiles" subparam="true">
+        <description>List of input files to be calibrated (default all)</description>
+        <value></value>
+    </param>
+
+	<param type="string" name="field" subparam="true">
+		<description>select data by field</description>
+		<value></value>
+	</param>
+
+	<param type="string" name="antenna" subparam="true">
+		<description>select data by antenna</description>
+		<value></value>
+	</param>
+
+    <param type="any" name="spw" subparam="true">
+            <description>select data by spw ids, e.g. \'3,5,7\' (\'\'=all)</description>
+            <any type="variant" limittypes="string stringArray"/>
+            <value type="string"></value>
+    </param>
+
+    <param type="any" name="pol" subparam="true">
+            <description>select data by polarizations, e.g. \'0~1\' (\'\'=all)</description>
+            <any type="variant" limittypes="string stringArray"/>
+            <value type="string"></value>
+    </param>
+
+    <param type="bool" name="dryrun" subparam="true">
+	<description>Run the task (False) or display task command (True)</description>
+	<value>False</value>
+    </param>
+
+    <param type="bool" name="acceptresults" subparam="true">
+	<description>Add the results into the pipeline context</description>
+	<value>True</value>
+    </param>
+
+    <param type="string" name="parallel" subparam="true">
+        <description>Execute using CASA HPC functionality, if available.</description>
+            <value>automatic</value>
+            <allowed kind="enum">
+                <value>automatic</value>
+                <value>true</value>
+                <value>false</value>
+            </allowed>
+    </param>
+
+    <constraints>
+    <when param="linewindow">
+        <notequals type="string" value="">
+            <default param="linewindowmode"><value type="string">replace</value></default>
+        </notequals>
+    </when>
+	<when param="pipelinemode">
+	    <equals type="string" value="automatic">
+	    </equals>
+	    <equals type="string" value="interactive">
+                <default param="infiles"><value type="stringArray"></value></default>
+                <default param="field"><value type="string"></value></default>
+                <default param="antenna"><value type="string"></value></default>
+                <default param="spw"><value type="string"></value></default>
+                <default param="pol"><value type="string"></value></default>
+                <default param="parallel"><value type="string">automatic</value></default>
+		<default param="dryrun"><value type="bool">False</value></default>
+		<default param="acceptresults"><value type="bool">True</value></default>
+	    </equals>
+	    <equals type="string" value="getinputs">
+                <default param="infiles"><value type="stringArray"></value></default>
+                <default param="field"><value type="string"></value></default>
+                <default param="antenna"><value type="string"></value></default>
+                <default param="spw"><value type="string"></value></default>
+                <default param="pol"><value type="string"></value></default>
+	    </equals>
+	</when>
+    </constraints>
+
+</input>
+
+<output>
+    <param type="any" name="results">
+        <description>The output results object</description>
+        <any type="variant"/>
+        <value></value>
+    </param>
+</output>
+<returns type="void"/>
+
+
+<example>
+The hsd_baseline task subtracts baseline from calibrated spectra.
+By default, the task tries to find spectral line feature using
+line detection and validation algorithms. Then, the task puts a
+mask on detected lines and perform baseline subtraction. The user
+is able to turn off automatic line masking by setting linewindow
+parameter, which specifies pre-defined line window. 
+
+Fitting order is automatically determined by default. It can be
+disabled by specifying fitorder as non-negative value. In this case,
+the value specified by fitorder will be used.
+
+***WARNING***
+Currently, hsd_baseline overwrites the result obtained by the previous
+run. Due to this behavior, users need to be careful about an order 
+of the task execution when they run hsd_baseline multiple times with 
+different data selection. Suppose there are two spectral windows 
+(0 and 1) and hsd_baseline is executed separately for each spw as 
+below, 
+
+hsd_baseline(pipelinemode="interactive", spw="0")
+hsd_baseline(pipelinemode="interactive", spw="1")
+hsd_blflag(pipelinemode="automatic")
+hsd_imaging(pipelinemode="automatic")
+
+Since the second run of hsd_baseline overwrites the result for spw 0 
+with the data before baseline subtraction, this will not produce 
+correct result for spw 0. Proper sequence for this use case is to 
+process each spw to the imaging stage separately, which looks like 
+as follows:
+
+hsd_baseline(pipelinemode="interactive", spw="0")
+hsd_blflag(pipelinemode="interactive", spw="0")
+hsd_imaging(pipelinemode="interactive", spw="0"))
+hsd_baseline(pipelinemode="interactive", spw="1")
+hsd_blflag(pipelinemode="interactive", spw="1")
+hsd_imaging(pipelinemode="interactive", spw="1")
+
+  
+Keyword arguments:
+
+---- pipeline parameter arguments which can be set in any pipeline mode
+fitfunc -- fitting function for baseline subtraction. You can only choose
+   cubic spline ('spline' or 'cspline')
+   default: 'cspline'.
+
+fitorder -- Fitting order for polynomial. For cubic spline, it is used
+   to determine how much the spectrum is segmented into. Default (-1) is
+   to determine the order automatically.
+   default: -1 (auto determination)
+
+linewindow -- Pre-defined line window. If this is set, specified line 
+   windows are used as a line mask for baseline subtraction instead to 
+   determine masks based on line detection and validation stage. Several  
+   types of format are acceptable. One is channel-based window, 
+   
+      [min_chan, max_chan] 
+      
+   where min_chan and max_chan should be an integer. For multiple 
+   windows, nested list is also acceptable, 
+   
+      [[min_chan0, max_chan0], [min_chan1, max_chan1], ...]
+      
+   Another way is frequency-based window, 
+   
+      [min_freq, max_freq]
+      
+   where min_freq and max_freq should be either a float or a string. 
+   If float value is given, it is interpreted as a frequency in Hz. 
+   String should be a quantity consisting of "value" and "unit", e.g., 
+   '100GHz'. Multiple windows are also supported.
+   
+      [[min_freq0, max_freq0], [min_freq1, max_freq1], ...]
+      
+   Note that the specified frequencies are assumed to be the value in 
+   LSRK frame. Note also that there is a limitation when multiple MSes are 
+   processed. If native frequency frame of the data is not LSRK (e.g. TOPO), 
+   frequencies need to be converted to that frame. As a result, corresponding 
+   channel range may vary between MSes. However, current implementation is 
+   not able to handle such case. Frequencies are converted to desired frame 
+   using representative MS (time, position, direction). 
+      
+   In the above cases, specified line windows are applied to all science 
+   spws. In case when line windows vary with spw, line windows can be 
+   specified by a dictionary whose key is spw id while value is line window.
+   For example, the following dictionary gives different line windows 
+   to spws 17 and 19. Other spws, if available, will have an empty line 
+   window.
+   
+      {17: [[100, 200], [1200, 1400]], 19: ['112115MHz', '112116MHz']}
+      
+   Furthermore, linewindow accepts MS selection string. The following 
+   string gives [[100,200],[1200,1400]] for spw 17 while [1000,1500] 
+   for spw 21.
+   
+      "17:100~200;1200~1400,21:1000~1500"
+      
+   The string also accepts frequency with units. Note, however, that 
+   frequency reference frame in this case is not fixed to LSRK. 
+   Instead, the frame will be taken from the MS (typically TOPO for ALMA). 
+   Thus, the following two frequency-based line windows result different 
+   channel selections.
+   
+      {19: ['112115MHz', '112116MHz']} # frequency frame is LSRK
+      "19:11215MHz~11216MHz" # frequency frame is taken from the data
+                             # (TOPO for ALMA)
+   
+   default: [] (do line detection and validation)
+   example: [100,200] (channel), [115e9, 115.1e9] (frequency in Hz)
+            ['115GHz', '115.1GHz'], see above for more examples
+
+linewindowmode -- Merge or replace given manual line window with line 
+   detection/validation result. If 'replace' is given, line detection 
+   and validation will not be performed. On the other hand, when 
+   'merge' is specified, line detection/validation will be performed 
+   and manually specified line windows are added to the result. 
+   Note that this has no effect when linewindow for target spw is 
+   empty. In that case, line detection/validation will be performed 
+   regardless of the value of linewindowmode.
+   default: 'replace'
+   options: 'replace', 'merge'
+
+edge -- number of edge channels to be dropped from baseline subtraction.
+   the value must be a list with length of 2, whose values specifies
+   left and right edge channels respectively.
+   default: [] ([0,0])
+   example: [10,10]
+
+broadline -- Try to detect broad component of spectral line if True.
+   default: True
+
+clusteringalgorithm -- selection of the algorithm used in the clustering
+   analysis to check the validity of detected line features. 'kmean'
+   algorithm and hierarchical clustering algorithm 'hierarchy' are so
+   far implemented.
+   default: 'kmean'.
+   
+deviationmask -- Apply deviation mask in addition to masks determined by 
+   the automatic line detection.
+   default: True
+
+pipelinemode -- The pipeline operating mode. In 'automatic' mode the 
+   pipeline determines the values of all context defined pipeline inputs
+   automatically.  In 'interactive' mode the user can set the pipeline
+   context defined parameters manually.  In 'getinputs' mode the user
+   can check the settings of all pipeline parameters without running
+   the task.
+   default: 'automatic'.
+
+---- pipeline context defined parameter argument which can be set only in
+'interactive mode'
+
+infiles -- List of data files. These must be a name of MeasurementSets that 
+   are registered to context via hsd_importdata task.
+   default: []
+   example: vis=['X227.ms', 'X228.ms']
+   
+field -- Data selection by field.
+   default: '' (all fields)
+   example: '1' (select by FIELD_ID)
+            'M100*' (select by field name)
+
+antenna -- Data selection by antenna.
+   default: '' (all antennas)
+   example: '1' (select by ANTENNA_ID)
+            'PM03' (select by antenna name)
+
+spw -- Data selection by spw.
+   default: '' (all spws)
+   example: '3,4' (generate caltable for spw 3 and 4)
+            ['0','2'] (spw 0 for first data, 2 for second)
+
+pol -- Data selection by polarizations.
+   default: '' (all polarizations)
+   example: '0' (generate caltable for pol 0)
+            ['0~1','0'] (pol 0 and 1 for first data, only 0 for second)
+
+--- pipeline task execution modes
+
+dryrun -- Run the commands (True) or generate the commands to be run but
+   do not execute (False).
+   default: True
+
+acceptresults -- Add the results of the task to the pipeline context (True) or
+   reject them (False).
+   default: True
+
+Output:
+
+results -- If pipeline mode is 'getinputs' then None is returned. Otherwise
+   the results object for the pipeline task is returned.
+
+
+Examples
+
+
+</example>
+</task>
+</casaxml>

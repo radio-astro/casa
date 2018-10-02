@@ -1,0 +1,512 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+<task type="function" name="hifa_bandpassflag" category="pipeline">
+
+<shortdescription>Compute bandpass calibration with flagging</shortdescription>
+
+<description>
+    This task performs a preliminary bandpass solution and applies it, then
+    computes the flagging heuristics by calling hif_correctedampflag which
+    looks for outlier visibility points by statistically examining the scalar
+    difference of the corrected amplitudes minus model amplitudes, flags those
+    outliers, then derives a final bandpass solution (if any flags were
+    generated). The philosophy is that only outlier data points that have
+    remained outliers after calibration will be flagged. Note that the phase of
+    the data is not assessed.
+
+    In further detail, the workflow is as follows: an a priori calibration is
+    applied using pre-existing caltables in the calibration state, a
+    preliminary bandpass solution and amplitude gaincal solution is solved and
+    applied, the flagging heuristics are run and any outliers are flagged, a
+    final bandpass solution is solved (if necessary) and the name "final" is
+    appended to this caltable. Plots are generated at two points in this
+    workflow: after bandpass calibration but before flagging heuristics are
+    run, and after flagging heuristics have been run and applied. If no points
+    were flagged, the "after" plots are not generated or displayed. The score
+    for this stage is a simple combination (multiplication) of the standard
+    data flagging score (depending on the fraction of data flagged) and the
+    score for the bandpass solution.
+</description>
+
+<input>
+    <param type="stringArray" name="vis" subparam="true">
+        <description>List of input MeasurementSets</description>
+        <value></value>
+    </param>
+
+    <param type="stringArray" name="caltable" subparam="true">
+        <description>List of output caltables</description>
+        <value></value>
+    </param>
+
+    <param type="string" name="intent" subparam="true">
+        <description>Set of data selection intents</description>
+        <value></value>
+    </param>
+
+    <param type="string" name="field" subparam="true">
+        <description>Field ids to use in data selection</description>
+        <value></value>
+    </param>
+
+    <param type="string" name="spw" subparam="true">
+        <description>Spectral windows to use in data selection, \'\' for all</description>
+        <value></value>
+    </param>
+
+    <param type="string" name="antenna" subparam="true">
+        <description>Set of data selection antenna IDs</description>
+        <value></value>
+    </param>
+
+    <param type="string" name="hm_phaseup">
+        <description>Phaseup before computing the bandpass</description>
+        <value>snr</value>
+        <allowed kind="enum">
+            <value>snr</value>
+            <value>manual</value>
+            <value></value>
+        </allowed>
+    </param>
+
+    <param type="any" name="phaseupsolint" subparam="true">
+        <description>Phaseup correction solution interval</description>
+        <any type="variant"/>
+        <value type="string">int</value>
+    </param>
+
+    <param type="string" name="phaseupbw" subparam="true">
+        <description>Bandwidth to use for phaseup</description>
+        <value></value>
+    </param>
+
+    <param type="double" name="phaseupsnr" subparam="true">
+        <description>SNR for phaseup solution</description>
+        <value>20.0</value>
+    </param>
+
+    <param type="int" name="phaseupnsols" subparam="true">
+        <description>Minimum number of phaseup gain solutions</description>
+        <value>2</value>
+    </param>
+
+    <param type="string" name="hm_bandpass">
+        <description>Bandpass solution heuristics</description>
+        <value>snr</value>
+        <allowed kind="enum">
+            <value>snr</value>
+            <value>smoothed</value>
+            <value>fixed</value>
+        </allowed>
+    </param>
+
+    <param type="any" name="solint" subparam="true">
+        <description>Solution intervals</description>
+        <any type="variant"/>
+        <value type="string">inf</value>
+    </param>
+
+    <param type="int" name="maxchannels" subparam="true">
+        <description>The smoothing factor in channels</description>
+        <value>240</value>
+    </param>
+
+    <param type="bool" name="evenbpints" subparam="true">
+        <description>Force frequency solint to even bandpass intervals</description>
+        <value>True</value>
+    </param>
+
+    <param type="double" name="bpsnr" subparam="true">
+        <description>SNR for bandpass solution</description>
+        <value>50.0</value>
+    </param>
+
+    <param type="int" name="bpnsols" subparam="true">
+        <description>Minimum number of bandpass solutions</description>
+        <value>8</value>
+    </param>
+
+    <param type="string" name="combine">
+        <description>Data axes which to combine for solve (scan, spw, and/or field)</description>
+        <value>scan</value>
+    </param>
+
+    <param type="string" name="refant" subparam="true">
+        <description>Reference antenna names</description>
+        <value></value>
+    </param>
+
+    <param type="int" name="minblperant">
+        <description>Minimum baselines per antenna required for solve</description>
+        <value>4</value>
+    </param>
+
+    <param type="double" name="minsnr">
+        <description>Reject solutions below this SNR</description>
+        <value>3.0</value>
+    </param>
+
+    <param type="bool" name="solnorm" subparam="true">
+        <description>Normalise the bandpass solution</description>
+        <value type="bool">True</value>
+    </param>
+
+    <param type="double" name="antnegsig" subparam="true">
+        <description>Lower sigma threshold for identifying outliers as a result of bad antennas within individual timestamps</description>
+        <value>4.0</value>
+    </param>
+
+    <param type="double" name="antpossig" subparam="true">
+        <description>Upper sigma threshold for identifying outliers as a result of bad antennas within individual timestamps</description>
+        <value>4.6</value>
+    </param>
+
+    <param type="double" name="tmantint" subparam="true">
+        <description>Threshold for maximum fraction of timestamps that are allowed to contain outliers</description>
+        <value>0.063</value>
+    </param>
+
+    <param type="double" name="tmint" subparam="true">
+        <description>Initial threshold for maximum fraction of "outlier timestamps" over "total timestamps" that a baseline may be a part of</description>
+        <value>0.085</value>
+    </param>
+
+    <param type="double" name="tmbl" subparam="true">
+        <description>Initial threshold for maximum fraction of "bad baselines" over "all baselines" that an antenna may be a part of</description>
+        <value>0.175</value>
+    </param>
+
+    <param type="double" name="antblnegsig" subparam="true">
+        <description>Lower sigma threshold for identifying outliers as a result of "bad baselines" and/or "bad antennas" within baselines (across all timestamps)</description>
+        <value>3.4</value>
+    </param>
+
+    <param type="double" name="antblpossig" subparam="true">
+        <description>Upper sigma threshold for identifying outliers as a result of "bad baselines" and/or "bad antennas" within baselines (across all timestamps)</description>
+        <value>3.2</value>
+    </param>
+
+    <param type="double" name="relaxed_factor" subparam="true">
+        <description>Relaxed value to set the threshold scaling factor to under certain conditions (see task description)</description>
+        <value>2.0</value>
+    </param>
+
+    <param type="int" name="niter" subparam="true">
+        <description>Maximum number of times to iterate on evaluation of flagging heuristics.</description>
+        <value>2</value>
+    </param>
+
+    <param type="string" name="pipelinemode">
+        <description>The pipeline operations mode</description>
+        <value>automatic</value>
+        <allowed kind="enum">
+            <value>automatic</value>
+            <value>interactive</value>
+            <value>getinputs</value>
+        </allowed>
+    </param>
+
+    <param type="bool" name="dryrun" subparam="true">
+        <description>Run the task (False) or list commands (True)</description>
+        <value>False</value>
+    </param>
+
+    <param type="bool" name="acceptresults" subparam="true">
+        <description>Automatically apply results to context</description>
+        <value>True</value>
+    </param>
+
+    <constraints>
+
+        <when param="hm_phaseup">
+            <equals type="string" value="snr">
+                <default param="phaseupsolint"><value type="string">int</value></default>
+                <default param="phaseupsnr"><value type="double">20.0</value></default>
+                <default param="phaseupnsols"><value type="int">2</value></default>
+            </equals>
+            <equals type="string" value="manual">
+                <default param="phaseupsolint"><value type="string">int</value></default>
+                <default param="phaseupbw"><value type="string"></value></default>
+            </equals>
+            <equals type="string" value="">
+            </equals>
+        </when>
+
+        <when param="hm_bandpass">
+            <equals type="string" value="snr">
+                <default param="solint"><value type="string">inf</value></default>
+                <default param="evenbpints"><value type="bool">True</value></default>
+                <default param="bpsnr"><value type="double">50.0</value></default>
+                <default param="bpnsols"><value type="int">8</value></default>
+            </equals>
+            <equals type="string" value="smoothed">
+                <default param="solint"><value type="string">inf</value></default>
+                <default param="maxchannels"><value type="int">240</value></default>
+            </equals>
+            <equals type="string" value="fixed">
+                <default param="solint"><value type="string">inf,7.8125MHz</value></default>
+            </equals>
+        </when>
+
+        <when param="pipelinemode">
+            <equals type="string" value="automatic" />
+            <equals type="string" value="interactive">
+                <default param="vis"><value type="stringArray"></value></default>
+                <default param="caltable"><value type="stringArray"></value></default>
+                <default param="field"><value type="string"></value></default>
+                <default param="intent"><value type="string"></value></default>
+                <default param="spw"><value type="string"></value></default>
+                <default param="antenna"><value type="string"></value></default>
+                <default param="combine"><value type="string"></value>scan</default>
+                <default param="refant"><value type="string"></value></default>
+                <default param="solnorm"><value type="bool">True</value></default>
+                <default param="antnegsig"><value type="double">4.0</value></default>
+                <default param="antpossig"><value type="double">4.6</value></default>
+                <default param="tmantint"><value type="double">0.063</value></default>
+                <default param="tmint"><value type="double">0.085</value></default>
+                <default param="tmbl"><value type="double">0.175</value></default>
+                <default param="antblnegsig"><value type="double">3.4</value></default>
+                <default param="antblpossig"><value type="double">3.2</value></default>
+                <default param="relaxed_factor"><value type="double">2.0</value></default>
+                <default param="niter"><value type="int">2</value></default>
+                <default param="dryrun"><value type="bool">False</value></default>
+                <default param="acceptresults"><value type="bool">True</value></default>
+            </equals>
+            <equals type="string" value="getinputs">
+                <default param="vis"><value type="stringArray"></value></default>
+            </equals>
+        </when>
+    </constraints>
+</input>
+
+<output>
+    <param type="any" name="results">
+        <description>The output results object</description>
+        <any type="variant"/>
+        <value></value>
+    </param>
+</output>
+
+<example>
+Keyword arguments
+
+--- pipeline parameter arguments which can be set in any pipeline mode
+
+pipelinemode -- The pipeline operating mode. In 'automatic' mode the pipeline
+    determines the values of all context defined pipeline inputs automatically.
+    In interactive mode the user can set the pipeline context defined
+    parameters manually. In 'getinputs' mode the user can check the settings of
+    all pipeline parameters without running the task.
+
+    default: 'automatic'
+
+hm_phaseup -- The pre-bandpass solution phaseup gain heuristics. The options
+    are 'snr' (compute solution required to achieve the specified SNR),
+    'manual' (use manual solution parameters), and '' (none).
+
+    default: 'snr'
+    example: hm_phaseup='manual'
+
+phaseupsolint -- The phase correction solution interval in CASA syntax.
+    Used when hm_phaseup='manual' or as a default if the hm_phaseup='snr'
+    heuristic computation fails.
+
+    default: 'int'
+    example: phaseupsolint='300s'
+
+phaseupbw -- Bandwidth to be used for phaseup. Defaults to 500MHz.
+    Used when hm_phaseup='manual'.
+
+    default: ''
+    example: phaseupbw='' to use entire bandpass
+             phaseupbw='500MHz' to use central 500MHz
+
+phaseupsnr -- The required SNR for the phaseup solution. Used only if
+    hm_phaseup='snr'.
+
+    default: 20.0
+    example: phaseupsnr=10.0
+
+phaseupnsols -- The minimum number of phaseup gain solutions. Used only if
+    hm_phaseup='snr'.
+
+    default: 2
+    example: phaseupnsols=4
+
+hm_bandpass -- The bandpass solution heuristics. The options are 'snr'
+    (compute the solution required to achieve the specified SNR),
+    'smoothed' (simple smoothing heuristics), and 'fixed' (use
+    the user defined parameters for all spws).
+
+solint --  Time and channel solution intervals in CASA syntax.
+
+    default: 'inf,7.8125MHz' for hm_bandpass='fixed'
+             'inf' for hm_bandpass='snr' or 'smoothed'
+    example: solint='inf,10ch', solint='inf'
+
+maxchannels -- The bandpass solution smoothing factor in channels. The
+    solution interval is bandwidth / 240. Set to 0 for no smoothing.
+    Used if hm_bandpass='smoothed".
+
+    default: 240
+    example: maxchannels=0
+
+evenbpints -- Force the per spw frequency solint to be evenly divisible
+    into the spw bandpass if hm_bandpass='snr'.
+
+    default: True
+    example: evenbpints=False
+
+bpsnr -- The required SNR for the bandpass solution. Used only if
+    hm_bandpass='snr'.
+
+    default: 50.0
+    example: bpsnr=20.0
+
+bpnsols -- The minimum number of bandpass solutions. Used only if
+    hm_bandpass='snr'.
+
+    default: 8
+
+combine -- Data axes to combine for solving. Axes are '', 'scan', 'spw',
+    'field' or any comma-separated combination.
+
+    default: 'scan'
+    example: combine='scan,field'
+
+minblperant -- Minimum number of baselines required per antenna for each solve
+    Antennas with fewer baselines are excluded from solutions.
+
+    default: 4
+
+minsnr -- Solutions below this SNR are rejected.
+
+    default: 3.0
+
+---- pipeline context defined parameter arguments which can be set only in
+'interactive mode'
+
+vis -- The list of input MeasurementSets. Defaults to the list of
+    MeasurementSets specified in the pipeline context.
+
+    default: ''
+    example: vis=['M51.ms']
+
+caltable -- The list of output calibration tables. Defaults to the standard
+    pipeline naming convention.
+
+    default: ''
+    example: caltable=['M51.bcal']
+
+field -- The list of field names or field ids for which bandpasses are
+    computed. If undefined (default), it will select all fields.
+
+    default: ''
+    example: field='3C279', field='3C279, M82'
+
+intent -- A string containing a comma delimited list of intents against
+    which the selected fields are matched. If undefined (default), it
+    will select all data with the BANDPASS intent.
+
+    default: ''
+    example: intent='*PHASE*'
+
+spw -- The list of spectral windows and channels for which bandpasses are
+    computed. If undefined (default), it will select all science spectral
+    windows.
+
+    default: ''
+    example: spw='11,13,15,17'
+
+refant -- Reference antenna names. Defaults to the value(s) stored in the
+    pipeline context. If undefined in the pipeline context defaults to
+    the CASA reference antenna naming scheme.
+
+    default: ''
+    example: refant='DV01', refant='DV06,DV07'
+
+solnorm -- Normalise the bandpass solutions.
+
+    default: False
+
+antnegsig -- Lower sigma threshold for identifying outliers as a result of bad
+    antennas within individual timestamps.
+
+    default: 4.0
+
+antpossig -- Upper sigma threshold for identifying outliers as a result of bad
+    antennas within individual timestamps.
+
+    default: 4.6
+
+tmantint -- Threshold for maximum fraction of timestamps that are allowed to
+    contain outliers.
+
+    default: 0.063
+
+tmint -- Initial threshold for maximum fraction of "outlier timestamps" over
+    "total timestamps" that a baseline may be a part of.
+
+    default: 0.085
+
+tmbl -- Initial threshold for maximum fraction of "bad baselines" over "all
+    baselines" that an antenna may be a part of.
+
+    default: 0.175
+
+antblnegsig -- Lower sigma threshold for identifying outliers as a result of
+    "bad baselines" and/or "bad antennas" within baselines, across all
+    timestamps.
+
+    default: 3.4
+
+antblpossig -- Upper sigma threshold for identifying outliers as a result of
+    "bad baselines" and/or "bad antennas" within baselines, across all
+    timestamps.
+
+    default: 3.2
+
+relaxed_factor -- Relaxed value to set the threshold scaling factor to under
+    certain conditions (see task description).
+
+    default: 2.0
+
+niter -- Maximum number of times to iterate on evaluation of flagging
+    heuristics. If an iteration results in no new flags, then subsequent
+    iterations are skipped.
+
+    default: 2
+
+--- pipeline task execution modes
+
+dryrun -- Run the commands (True) or generate the commands to be run but
+    do not execute (False).
+
+    default: False
+
+acceptresults -- Add the results of the task to the pipeline context (True) or
+    reject them (False).
+
+    default: True
+
+
+Output
+
+results -- If pipeline mode is 'getinputs' then None is returned. Otherwise
+    the results object for the pipeline task is returned.
+
+
+Examples
+
+1. run with recommended settings to create bandpass solution with flagging
+using recommended thresholds:
+
+    hifa_bandpassflag()
+</example>
+</task>
+</casaxml>
