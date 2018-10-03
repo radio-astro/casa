@@ -1,18 +1,17 @@
 from __future__ import absolute_import
 
 import os
-import re
-import types
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.domain.datatable as datatable
-from . import utils
 
 LOG = infrastructure.get_logger(__name__)
 
+
 def absolute_path(name):
     return os.path.abspath(os.path.expanduser(os.path.expandvars(name)))
+
 
 class SingleDishResults(basetask.Results):
     def __init__(self, task=None, success=None, outcome=None):
@@ -30,15 +29,16 @@ class SingleDishResults(basetask.Results):
         return absolute_path(self.outcome)
 
     def _get_outcome(self, key):
-        if type(self.outcome) is types.DictType:
+        if isinstance(self.outcome, dict):
             return self.outcome.get(key, None)
         else:
             return None
         
     def __repr__(self):
-        #taskname = self.task if hasattr(self,'task') else 'none'
-        s = '%s:\n\toutcome is %s'%(self.__class__.__name__,self._outcome_name())
+        # taskname = self.task if hasattr(self,'task') else 'none'
+        s = '%s:\n\toutcome is %s' % (self.__class__.__name__, self._outcome_name())
         return s
+
 
 class SingleDishTask(basetask.StandardTaskTemplate):
     def __init__(self, inputs):

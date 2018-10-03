@@ -2,7 +2,6 @@ from __future__ import absolute_import
 
 import collections
 import os.path
-import types
 
 import numpy as np
 
@@ -42,7 +41,7 @@ def consolidate_flagcmd_channels(flagcmds, antenna_id_to_name=None):
             for k, name in enumerate(flagcmd.axisnames):
                 if name.upper() == 'CHANNELS':
                     flagchannels = flagcmd.flagcoords[k]
-                    if type(flagchannels) is not types.ListType:
+                    if not isinstance(flagchannels, list):
                         flagchannels = [flagchannels]
                     # need remaining flagcoords in dict key
                     truncated_flagcoords = list(flagcmd.flagcoords)
@@ -164,7 +163,7 @@ class FlagCmd(object):
             for k, name in enumerate(axisnames):
                 if name.upper() == 'CHANNELS':
                     flagchannels = flagcoords[k]
-                    if not isinstance(flagchannels, types.ListType):
+                    if not isinstance(flagchannels, list):
                         flagchannels = [flagchannels]
 
                     ranges = channel_ranges(flagchannels)
@@ -183,8 +182,7 @@ class FlagCmd(object):
                             axrange = [
                               channel_axis.data[trange[0]]-channel_width/2,
                               channel_axis.data[trange[1]]+channel_width/2]
-                            rangestrs.append('%s~%s%s' % (axrange[0],
-                              axrange[1], channel_axis.units))
+                            rangestrs.append('%s~%s%s' % (axrange[0], axrange[1], channel_axis.units))
 
                     flagcmd = flagcmd[:-1] + ":%s'" % ';'.join(rangestrs)
 
@@ -291,7 +289,7 @@ class FlagCmd(object):
             for k, name in enumerate(self.axisnames):
                 if name.upper() == 'CHANNELS':
                     flagchannels = self.flagcoords[k]
-                    if not isinstance(flagchannels, types.ListType):
+                    if not isinstance(flagchannels, list):
                         flagchannels = [flagchannels]
                     result = np.array(flagchannels)
                     break
@@ -355,8 +353,8 @@ class FlagCmd(object):
             if image.ant is not None:
                 match = match and (self.antenna == image.ant[0])
             else:
-                match = match and (('ANTENNA' in str(self.axisnames).upper()) or 
-                  ('BASELINE' in str(self.axisnames).upper()))
+                match = match and (('ANTENNA' in str(self.axisnames).upper()) or
+                                   ('BASELINE' in str(self.axisnames).upper()))
 
 #        if self.flag_time is not None:
 #            match = match and ('TIME' in self.axisnames)

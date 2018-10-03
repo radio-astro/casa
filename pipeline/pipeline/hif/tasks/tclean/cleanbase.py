@@ -1,7 +1,7 @@
 from __future__ import absolute_import
 
 import os
-import types
+
 import numpy as np
 
 import pipeline.infrastructure as infrastructure
@@ -183,7 +183,7 @@ class CleanBase(basetask.StandardTaskTemplate):
 
         # Make sure inputs.vis is a list, even it is one that contains a
         # single measurement set
-        if type(inputs.vis) is not types.ListType:
+        if not isinstance(inputs.vis, list):
             inputs.vis = [inputs.vis]
 
         # Set the data column
@@ -523,7 +523,8 @@ class CleanBase(basetask.StandardTaskTemplate):
 
             if tclean_stopcode in [5, 6]:
                 result.error = CleanBaseError('tclean stopped to prevent divergence (stop code %d). Field: %s SPW: %s' %
-                                              (tclean_stopcode, inputs.field, inputs.spw), 'tclean stopped to prevent divergence.')
+                                              (tclean_stopcode, inputs.field, inputs.spw),
+                                              'tclean stopped to prevent divergence.')
                 LOG.warning('tclean stopped to prevent divergence (stop code %d). Field: %s SPW: %s' % (tclean_stopcode, inputs.field, inputs.spw))
 
         if iter > 0:
@@ -554,7 +555,7 @@ class CleanBase(basetask.StandardTaskTemplate):
                 result.set_image(iter=iter, image=image_name)
 
         # Check for bad PSF fit
-        if iter==0 and inputs.specmode == 'cube':
+        if iter == 0 and inputs.specmode == 'cube':
             inputs.heuristics.check_psf(psf_name, inputs.field, inputs.spw)
 
         # Store the residual.
@@ -637,8 +638,11 @@ def set_miscinfo(name, spw=None, field=None, type=None, iter=None, multiterm=Non
                     info['filnam%02d' % (i+1)] = filename_components[i]
             if spw:
                 if observing_run is not None:
-                    spw_names = [observing_run.virtual_science_spw_shortnames.get(observing_run.virtual_science_spw_ids.get(int(spw_id), 'N/A'), 'N/A')
-                                 for spw_id in spw.split(',')]
+                    spw_names = [
+                        observing_run.virtual_science_spw_shortnames.get(
+                            observing_run.virtual_science_spw_ids.get(int(spw_id), 'N/A'), 'N/A')
+                        for spw_id in spw.split(',')
+                    ]
                 else:
                     spw_names = ['N/A']
                 info['spw'] = spw
@@ -671,4 +675,4 @@ class CleanBaseError(object):
 
     def __init__(self, longmsg='', shortmsg=''):
         self.longmsg = longmsg
-        self.shortmsg= shortmsg
+        self.shortmsg = shortmsg

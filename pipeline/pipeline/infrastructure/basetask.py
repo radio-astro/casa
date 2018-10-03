@@ -9,7 +9,6 @@ import pprint
 import re
 import textwrap
 import traceback
-import types
 import uuid
 
 from mpi4casa.MPIEnvironment import MPIEnvironment
@@ -148,7 +147,7 @@ class MandatoryInputsMixin(object):
         
         :rtype: :class:`~pipeline.domain.MeasurementSet`
         """
-        if type(self.vis) is types.ListType:
+        if isinstance(self.vis, list):
             return self._handle_multiple_vis('ms')
         try:
             return self.context.observing_run.get_ms(name=self.vis)
@@ -178,7 +177,7 @@ class MandatoryInputsMixin(object):
             vislist = [ms.name for ms in
                        self.context.observing_run.get_measurement_sets(imaging_preferred=imaging_preferred)]
         else:
-            vislist = value if type(value) is types.ListType else [value, ]
+            vislist = value if isinstance(value, list) else [value, ]
 
             # check that the context holds each vis specified by the user
             for vis in vislist:
@@ -1109,7 +1108,7 @@ class StandardTaskTemplate(api.Task):
 
             refant_tail = None
             if hasattr(self.inputs, 'refant'):
-                if type(self.inputs.refant) is types.ListType and self.inputs.refant:
+                if isinstance(self.inputs.refant, list) and self.inputs.refant:
                     refant_head = self.inputs.refant[0]
                     refant_tail = self.inputs.refant[1:]
                     self.inputs.refant = refant_head

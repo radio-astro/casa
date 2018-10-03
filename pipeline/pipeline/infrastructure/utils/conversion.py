@@ -8,7 +8,6 @@ import datetime
 import decimal
 import math
 import string
-import types
 
 import cachetools
 import pyparsing
@@ -37,7 +36,7 @@ def commafy(l, quotes=True, multi_prefix='', separator=', ', conjunction='and'):
     :param conjunction:
     :return:
     """
-    if type(l) is not types.ListType and isinstance(l, collections.Iterable):
+    if not isinstance(l, list) and isinstance(l, collections.Iterable):
         l = [i for i in l]
 
     # turn 's' into 's '

@@ -6,7 +6,6 @@ import operator
 import os.path
 import re
 import shutil
-import types
 import uuid
 
 import cleanhelper
@@ -26,10 +25,11 @@ LOG = infrastructure.get_logger(__name__)
 
 
 class ImageParamsHeuristics(object):
-
-    '''Image parameters heuristics base class. One instance is made per make/editimlist
-       call. There are subclasses for different imaging modes such as ALMA
-       or VLASS.'''
+    """
+    Image parameters heuristics base class. One instance is made per make/editimlist
+    call. There are subclasses for different imaging modes such as ALMA
+    or VLASS.
+    """
 
     def __deepcopy__(self, memodict=None):
         # Save memory by using a shallow copy of the ObservingRun
@@ -44,7 +44,8 @@ class ImageParamsHeuristics(object):
             copy.deepcopy(self.imaging_params)
         )
 
-    def __init__(self, vislist, spw, observing_run, imagename_prefix='', proj_params=None, contfile=None, linesfile=None, imaging_params={}):
+    def __init__(self, vislist, spw, observing_run, imagename_prefix='', proj_params=None, contfile=None,
+                 linesfile=None, imaging_params={}):
         """
         :param vislist: the list of MS names
         :type vislist: list of strings
@@ -57,7 +58,7 @@ class ImageParamsHeuristics(object):
         self.imagename_prefix = imagename_prefix
         self.proj_params = proj_params
 
-        if type(vislist) is types.ListType:
+        if isinstance(vislist, list):
             self.vislist = vislist
         else:
             self.vislist = [vislist]
@@ -121,8 +122,7 @@ class ImageParamsHeuristics(object):
         return primary_beam_size
 
     def cont_ranges_spwsel(self):
-
-        '''Determine spw selection parameters to exclude lines for mfs and cont images.'''
+        """Determine spw selection parameters to exclude lines for mfs and cont images."""
 
         # initialize lookup dictionary for all possible source names
         cont_ranges_spwsel = {}
@@ -295,9 +295,9 @@ class ImageParamsHeuristics(object):
 
         return largest_primary_beam_size
 
-    def synthesized_beam(self, field_intent_list, spwspec, robust=0.5, uvtaper=[], pixperbeam=5.0, known_beams={}, force_calc=False):
-
-        '''Calculate synthesized beam for a given field / spw selection.'''
+    def synthesized_beam(self, field_intent_list, spwspec, robust=0.5, uvtaper=[], pixperbeam=5.0, known_beams={},
+                         force_calc=False):
+        """Calculate synthesized beam for a given field / spw selection."""
 
         qaTool = casatools.quanta
 
@@ -696,7 +696,7 @@ class ImageParamsHeuristics(object):
             field_list = []
             if field is not None:
                 # field set explicitly
-                if type(field) is not types.ListType:
+                if not isinstance(field, list):
                     field_names = [field]
                 else:
                     field_names = field
@@ -1526,7 +1526,7 @@ class ImageParamsHeuristics(object):
                         imTool.filter(type='gaussian', bmaj=bmaj, bmin=bmin, bpa=bpa)
                     result = imTool.apparentsens()
 
-                if (result[1] == 0.0):
+                if result[1] == 0.0:
                     raise Exception('Empty selection')
 
                 apparentsens_value = result[1]
@@ -1644,7 +1644,9 @@ class ImageParamsHeuristics(object):
 
         majority_antenna_ids = {}
         for vis in local_vislist:
-            majority_antenna_ids[os.path.basename(vis)] = [antenna.id for antenna in self.observing_run.get_ms(vis).antennas if antenna.diameter == majority_diameter]
+            majority_antenna_ids[os.path.basename(vis)] = [antenna.id
+                                                           for antenna in self.observing_run.get_ms(vis).antennas
+                                                           if antenna.diameter == majority_diameter]
 
         return majority_antenna_ids
 
@@ -1685,7 +1687,8 @@ class ImageParamsHeuristics(object):
                 cond1 = np.logical_and(0.0 < bmaj, bmaj < 0.5 * bmaj_median)
                 cond2 = bmaj > 2.0 * bmaj_median
                 if np.logical_or(cond1, cond2).any():
-                    LOG.warn('The PSF fit for one or more channels for field %s SPW %s failed, please check the results for this cube carefully, there are likely data issues.' % (field, spw))
+                    LOG.warn('The PSF fit for one or more channels for field %s SPW %s failed, please check the'
+                             ' results for this cube carefully, there are likely data issues.' % (field, spw))
             except:
                 pass
 

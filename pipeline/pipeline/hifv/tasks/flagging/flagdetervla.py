@@ -67,7 +67,6 @@ from __future__ import absolute_import
 import math
 import os
 import string
-import types
 
 import flaghelper
 
@@ -622,7 +621,7 @@ class FlagDeterVLA(flagdeterbase.FlagDeterBase):
         low_spws = []
         high_spws = []
 
-        for ii in range(0,len(BBC_bandwidths)):
+        for ii in range(0, len(BBC_bandwidths)):
             if BBC_bandwidths[ii] > 1.0e9:
                 low_spws.append(spwList[ii][0])
                 high_spws.append(spwList[ii][len(spwList[ii])-1])
@@ -634,7 +633,7 @@ class FlagDeterVLA(flagdeterbase.FlagDeterBase):
         LOG.info('Generating flag commands for 20MHz Band Edge flagging')
         for ii in range(0, len(low_spws)):
             # lower bandedge
-            bspw=low_spws[ii]
+            bspw = low_spws[ii]
             ave_chansep = (spw_bandwidths[bspw]/channels[bspw])
             startch2 = max(int(bandedge_hz/ave_chansep), 1) - 1
             bottomSPW_list.append('%d:0~%d' % (bspw, startch2))
@@ -679,7 +678,7 @@ class FlagDeterVLA(flagdeterbase.FlagDeterBase):
         # If the input is a list of flagging command file names, call this
         # function recursively.  Otherwise, read in the file and return its
         # contents
-        if type(filename) is types.ListType:
+        if isinstance(filename, list):
             return ''.join([self._add_file(f) for f in filename])
         else:
             with open(filename) as stream:

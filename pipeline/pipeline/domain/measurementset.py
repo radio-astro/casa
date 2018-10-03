@@ -118,7 +118,7 @@ class MeasurementSet(object):
             if isinstance(spw, spectralwindow.SpectralWindow):
                 match = [dd for dd in self.data_descriptions
                          if dd.spw is spw]
-            elif type(spw) is types.IntType:
+            elif isinstance(spw, int):
                 match = [dd for dd in self.data_descriptions
                          if dd.spw.id is spw]        
         if id is not None:
@@ -326,7 +326,7 @@ class MeasurementSet(object):
                 bestspw = spw
         target_spwid = bestspw.id
 
-        return (target_source_name, target_spwid)
+        return target_source_name, target_spwid
 
     def get_fields(self, task_arg=None, field_id=None, name=None, intent=None):
         """
@@ -787,8 +787,7 @@ class MeasurementSet(object):
             else:
                 tst_delay_spw = tst_delay_spw+str(ispw)+':'+str(endch1)+'~'+str(endch2)
                 # all_spw=all_spw+str(ispw)
-       
-        
+
         return tst_delay_spw
     
     def get_vla_quackingscans(self):

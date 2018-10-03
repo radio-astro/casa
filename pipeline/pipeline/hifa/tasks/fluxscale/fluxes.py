@@ -2,7 +2,6 @@ from __future__ import absolute_import
 
 import csv
 import os
-import types
 
 import pipeline.infrastructure as infrastructure
 from ..importdata.dbfluxes import ORIGIN_DB
@@ -19,7 +18,7 @@ def export_flux_from_fit_result(results, context, filename, fieldids_with_spix=N
     if fieldids_with_spix is None:
         fieldids_with_spix = []
 
-    if type(results) is not types.ListType:
+    if not isinstance(results, list):
         results = [results, ]
 
     abspath = os.path.join(context.output_dir, filename)
@@ -47,7 +46,8 @@ def export_flux_from_fit_result(results, context, filename, fieldids_with_spix=N
                         if catalogue_measurements:
                             assert(len(catalogue_measurements) == 1)
                             spix = catalogue_measurements[0].spix
-                            LOG.info('Assuming spix {:.3f} for field {} ({}) spw {}'.format(spix, field.name, field.id, m.spw_id))
+                            LOG.info('Assuming spix {:.3f} for field {} ({}) spw {}'.format(spix, field.name, field.id,
+                                                                                            m.spw_id))
                             m.spix = spix
                     (I, Q, U, V) = m.casa_flux_density
                     ms = context.observing_run.get_ms(ms.basename)

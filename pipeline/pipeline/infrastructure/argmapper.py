@@ -94,7 +94,7 @@ def _convert_null(val):
         return None if val in ['', 'context'] else val
 
     # convert empty lists and ['', ''] etc to None
-    if type(val) is types.ListType:
+    if isinstance(val, list):
         no_nulls = [_convert_null(v) for v in val]
         nones = [t == None for t in no_nulls]
         if all(nones):

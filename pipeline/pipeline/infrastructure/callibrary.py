@@ -84,13 +84,13 @@ class CalApplication(object):
             if type(d[key]) is types.StringType:
                 d[key] = [d[key]]
         for key in ('calwt',):
-            if type(d[key]) is types.BooleanType:
+            if isinstance(d[key], bool):
                 d[key] = [d[key]]
 
         # do the same for spwmap. A bit more complicated, as a single valued
         # spwmap is a list of integers, or may not have any values at all.                
         try:            
-            if type(d['spwmap'][0]) is not types.ListType:
+            if not isinstance(d['spwmap'][0], list):
                 d['spwmap'] = [d['spwmap']]
         except IndexError:
             d['spwmap'] = [d['spwmap']]
@@ -451,7 +451,7 @@ class CalFrom(object):
         if type(interp) is not types.StringType:
             raise ValueError, 'interp must be a string. Got %s' % str(interp)
 
-        if type(spwmap) is types.TupleType:
+        if isinstance(spwmap, tuple):
             spwmap = [spw for spw in spwmap]
 
         if not isinstance(spwmap, list):
@@ -811,7 +811,7 @@ class DictCalLibrary(object):
         self._applied = DictCalState()
 
     def _add(self, calto, calfroms, calstate):
-        if type(calfroms) is not types.ListType:
+        if not isinstance(calfroms, list):
             calfroms = [calfroms]
 
         calto = CalToIdAdapter(self._context, calto)
@@ -855,7 +855,7 @@ class DictCalLibrary(object):
         # dimensions and remove it from the data selection specified by the
         # CalTo
         else:
-            if type(calfrom) is not types.ListType:
+            if not isinstance(calfrom, list):
                 calfrom = [calfrom]
 
             calto = CalToIdAdapter(self._context, calto)
@@ -1705,7 +1705,7 @@ class IntervalCalState(object):
 
     @staticmethod
     def from_calapplication(context, calto, calfroms):
-        if type(calfroms) is not types.ListType:
+        if not isinstance(calfroms, list):
             calfroms = [calfroms]
 
         adapted = CalToIntervalAdapter(context, calto)

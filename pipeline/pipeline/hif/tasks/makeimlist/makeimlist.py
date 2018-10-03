@@ -1,9 +1,9 @@
 from __future__ import absolute_import
 
 import ast
+import copy
 import os
 import types
-import copy
 
 import pipeline.domain.measures as measures
 import pipeline.infrastructure as infrastructure
@@ -199,7 +199,7 @@ class MakeImList(basetask.StandardTaskTemplate):
 
         # make sure inputs.vis is a list, even it is one that contains a
         # single measurement set
-        if type(inputs.vis) is not types.ListType:
+        if not isinstance(inputs.vis, list):
             inputs.vis = [inputs.vis]
 
         image_heuristics_factory = imageparams_factory.ImageParamsHeuristicsFactory()
@@ -677,7 +677,7 @@ class MakeImList(basetask.StandardTaskTemplate):
 
                             result.add_target(target)
 
-        if (inputs.intent == 'CHECK'):
+        if inputs.intent == 'CHECK':
             if not any(have_targets.values()):
                 info_msg = 'No check source found.'
                 LOG.info(info_msg)

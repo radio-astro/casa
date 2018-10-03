@@ -1,7 +1,5 @@
 from __future__ import absolute_import
 
-import types
-
 import pipeline.hif.tasks.gaincal as gaincal
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
@@ -28,9 +26,9 @@ class LinpolcalInputs(commoncalinputs.VdpCommonCalibrationInputs):
         if self._delaytable is None:
             caltable = hcaltable.DelayCaltable()
             self._delaytable = caltable(output_dir=self.output_dir,
-              stage=self.context.stage, vis=self.vis,
-              field=self.field, intent=self.intent,
-              solint='inf')
+                                        stage=self.context.stage, vis=self.vis,
+                                        field=self.field, intent=self.intent,
+                                        solint='inf')
 
         return self._delaytable
 
@@ -46,9 +44,9 @@ class LinpolcalInputs(commoncalinputs.VdpCommonCalibrationInputs):
         if self._df0table is None:
             caltable = hcaltable.PolCaltable()
             self._df0table = caltable(output_dir=self.output_dir,
-              stage=self.context.stage, vis=self.vis, 
-              field=self.field, intent=self.intent,
-              solint='inf')
+                                      stage=self.context.stage, vis=self.vis,
+                                      field=self.field, intent=self.intent,
+                                      solint='inf')
 
         return self._df0table
 
@@ -64,12 +62,11 @@ class LinpolcalInputs(commoncalinputs.VdpCommonCalibrationInputs):
         if self._g0table is None:
             caltable = hcaltable.GaincalCaltable()
             g0table = caltable(output_dir=self.output_dir,
-              stage=self.context.stage, vis=self.vis, 
-              field=self.field, intent=self.intent,
-              solint=self.gaincalsolint)
+                               stage=self.context.stage, vis=self.vis,
+                               field=self.field, intent=self.intent,
+                               solint=self.gaincalsolint)
 
-            self._g0table = os.path.join(os.path.dirname(g0table),
-              'g0.%s' % os.path.basename(g0table))
+            self._g0table = os.path.join(os.path.dirname(g0table), 'g0.%s' % os.path.basename(g0table))
 
         return self._g0table
 
@@ -85,12 +82,11 @@ class LinpolcalInputs(commoncalinputs.VdpCommonCalibrationInputs):
         if self._g1table is None:
             caltable = hcaltable.GaincalCaltable()
             g1table = caltable(output_dir=self.output_dir,
-              stage=self.context.stage, vis=self.vis, 
-              field=self.field, intent=self.intent,
-              solint=self.gaincalsolint)
+                               stage=self.context.stage, vis=self.vis,
+                               field=self.field, intent=self.intent,
+                               solint=self.gaincalsolint)
 
-            self._g1table = os.path.join(os.path.dirname(g1table),
-             'g1.%s' % os.path.basename(g1table))
+            self._g1table = os.path.join(os.path.dirname(g1table), 'g1.%s' % os.path.basename(g1table))
 
         return self._g1table
 
@@ -116,9 +112,9 @@ class LinpolcalInputs(commoncalinputs.VdpCommonCalibrationInputs):
         if self._xyf0table is None:
             caltable = hcaltable.XYf0Caltable()
             self._xyf0table = caltable(output_dir=self.output_dir,
-              stage=self.context.stage, vis=self.vis, 
-              field=self.field, intent=self.intent,
-              solint='inf')
+                                       stage=self.context.stage, vis=self.vis,
+                                       field=self.field, intent=self.intent,
+                                       solint='inf')
 
         return self._xyf0table
 
@@ -164,7 +160,7 @@ class Linpolcal(basetask.StandardTaskTemplate):
         # Create a results object.
         result = LinpolcalResult() 
 
-        if type(inputs.vis) == types.ListType:
+        if isinstance(inputs.vis, list):
             raise Exception,\
               'hif_linpolcal can only handle single measurement sets'
 
@@ -187,9 +183,8 @@ class Linpolcal(basetask.StandardTaskTemplate):
         # best_scan dict is indexed by field id
         ms = inputs.context.observing_run.get_ms(inputs.vis)
         fields = ms.get_fields()
-        field_id = [field.id for field in fields if field.name==inputs.field]
-        kcrs_result = self._do_delaycal(caltable=inputs.delaytable,
-          scan=best_scan[field_id[0]])
+        field_id = [field.id for field in fields if field.name == inputs.field]
+        kcrs_result = self._do_delaycal(caltable=inputs.delaytable, scan=best_scan[field_id[0]])
 
         # need to reorder cal application from ..., B, G, K to ..., B, K, G.
         calto = callibrary.get_calto_from_inputs(inputs)
@@ -207,15 +202,14 @@ class Linpolcal(basetask.StandardTaskTemplate):
 
         # Estimate the residual X-Y phase spectrum and source Q,U
         ambxyf0table = os.path.join(os.path.dirname(inputs.xyf0table),
-          'amb.%s' % os.path.basename(inputs.xyf0table))
+                                    'amb.%s' % os.path.basename(inputs.xyf0table))
         xyf0ambcal_result = self._do_xyf0cal(caltable=ambxyf0table)
 
         # resolve the ambiguity in X-Y phase - do nothing with the returned
         # table at present as we only seem to be interested in the Stokes
         # vector
         # qu dict is indexed by field id
-        result.stokes = xyamb(xytab=ambxyf0table, qu=gqu[field_id[0]],
-          xyout=inputs.xyf0table)
+        result.stokes = xyamb(xytab=ambxyf0table, qu=gqu[field_id[0]], xyout=inputs.xyf0table)
 
         # revise the gain calibration now that we know the source polarization.
         # Again we need to modify the calstate, removing the last 2 cals: K, G.
@@ -228,8 +222,7 @@ class Linpolcal(basetask.StandardTaskTemplate):
         inputs.context.callibrary.clear()
         inputs.context.callibrary.add(calto, calfroms)
 
-        g1_result = self._do_gaincal(caltable=inputs.g1table,
-          smodel=result.stokes, parang=True)
+        g1_result = self._do_gaincal(caltable=inputs.g1table, smodel=result.stokes, parang=True)
 
         # estimate source polarization Q,U from gains
         gqu = qufromgain(caltable=inputs.g1table)
@@ -248,11 +241,9 @@ class Linpolcal(basetask.StandardTaskTemplate):
         inputs.context.callibrary.add(calto, calfrom_xyf0)
 
         # calculate instrument pol
-        interim_df0table = \
-          os.path.join(os.path.dirname(inputs.df0table),
-          'interim.%s' % os.path.basename(inputs.df0table))
-        polcal_result = self._do_df0cal(caltable=interim_df0table,
-          smodel=result.stokes)
+        interim_df0table = os.path.join(os.path.dirname(inputs.df0table),
+                                        'interim.%s' % os.path.basename(inputs.df0table))
+        polcal_result = self._do_df0cal(caltable=interim_df0table, smodel=result.stokes)
 
         # make D-table general so that it corrects parallel hands also
         Dgen(dtab=interim_df0table, dout=inputs.df0table)
@@ -264,8 +255,7 @@ class Linpolcal(basetask.StandardTaskTemplate):
                                         caltype='unknown',
                                         gainfield='',
                                         interp='nearest')
-        kcrscalapp = callibrary.CalApplication(calapp.calto, 
-          newcalfrom)
+        kcrscalapp = callibrary.CalApplication(calapp.calto, newcalfrom)
         # XYf0
         calto = callibrary.CalTo(vis=inputs.vis,
                                  spw=inputs.spw)
@@ -284,8 +274,7 @@ class Linpolcal(basetask.StandardTaskTemplate):
         df0calapp = callibrary.CalApplication(calto, calfrom) 
 
         # construct result.final to hold the CalApplications to be applied
-        result.pool = [kcrscalapp,
-          g1_result.final[0], xyf0calapp, df0calapp]
+        result.pool = [kcrscalapp, g1_result.final[0], xyf0calapp, df0calapp]
 
         return result
 
@@ -309,18 +298,19 @@ class Linpolcal(basetask.StandardTaskTemplate):
     def _do_delaycal(self, caltable, scan):
         inputs = self.inputs
 
-        task_inputs = gaincal.GTypeGaincal.Inputs(inputs.context,
-          output_dir=inputs.output_dir,
-          vis=inputs.vis,
-          caltable=caltable,
-          field=inputs.field,
-          intent=inputs.intent,
-          scan=str(scan),
-          spw=inputs.spw,
-          solint='inf',
-          gaintype='KCROSS',
-          refant=inputs.refant,
-          smodel=[1,0,1,0])
+        task_inputs = gaincal.GTypeGaincal.Inputs(
+            inputs.context,
+            output_dir=inputs.output_dir,
+            vis=inputs.vis,
+            caltable=caltable,
+            field=inputs.field,
+            intent=inputs.intent,
+            scan=str(scan),
+            spw=inputs.spw,
+            solint='inf',
+            gaintype='KCROSS',
+            refant=inputs.refant,
+            smodel=[1, 0, 1, 0])
 
         gaincal_task = gaincal.GTypeGaincal(task_inputs)
         result = self._executor.execute(gaincal_task, merge=True)
@@ -363,23 +353,24 @@ class Linpolcal(basetask.StandardTaskTemplate):
     def _do_gaincal(self, caltable,smodel=[1,0,0,0], parang=False):
         inputs = self.inputs
 
-        task_inputs = gaincal.GTypeGaincal.Inputs(inputs.context,
-          output_dir=inputs.output_dir,
-          caltable=caltable,
-          vis=inputs.vis,
-          field=inputs.field,
-          intent=inputs.intent,
-          spw=inputs.spw,
-          solint='int',
-          gaintype='G',
-          calmode='ap',
-          minsnr=0.0,
-          combine='',
-          refant=inputs.refant,
-          minblperant=4,
-          solnorm=False,
-          smodel=smodel,
-          parang=parang)
+        task_inputs = gaincal.GTypeGaincal.Inputs(
+            inputs.context,
+            output_dir=inputs.output_dir,
+            caltable=caltable,
+            vis=inputs.vis,
+            field=inputs.field,
+            intent=inputs.intent,
+            spw=inputs.spw,
+            solint='int',
+            gaintype='G',
+            calmode='ap',
+            minsnr=0.0,
+            combine='',
+            refant=inputs.refant,
+            minblperant=4,
+            solnorm=False,
+            smodel=smodel,
+            parang=parang)
 
         gaincal_task = gaincal.GTypeGaincal(task_inputs)
         result = self._executor.execute(gaincal_task, merge=True)
@@ -389,19 +380,20 @@ class Linpolcal(basetask.StandardTaskTemplate):
     def _do_xyf0cal(self, caltable):
         inputs = self.inputs
 
-        task_inputs = gaincal.GTypeGaincal.Inputs(inputs.context,
-          output_dir=inputs.output_dir,
-          vis=inputs.vis,
-          caltable=caltable,
-          field=inputs.field,
-          intent=inputs.intent,
-          spw=inputs.spw,
-          solint='inf',
-          gaintype='XYf+QU',
-          preavg=300,
-          combine='obs,scan',
-          refant=inputs.refant,
-          smodel=[1,0,1,0])
+        task_inputs = gaincal.GTypeGaincal.Inputs(
+            inputs.context,
+            output_dir=inputs.output_dir,
+            vis=inputs.vis,
+            caltable=caltable,
+            field=inputs.field,
+            intent=inputs.intent,
+            spw=inputs.spw,
+            solint='inf',
+            gaintype='XYf+QU',
+            preavg=300,
+            combine='obs,scan',
+            refant=inputs.refant,
+            smodel=[1, 0, 1, 0])
 
         gaincal_task = gaincal.GTypeGaincal(task_inputs)
         result = self._executor.execute(gaincal_task, merge=True)

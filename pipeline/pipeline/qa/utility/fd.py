@@ -33,7 +33,6 @@
 
 import glob
 import os
-import types
 
 # ------------------------------------------------------------------------------
 
@@ -153,7 +152,7 @@ def get_fd_rstrip( fds ):
 
 	# Fix the inputs
 
-	if not isinstance( fds, types.ListType ): fds = [ fds ]
+	if not isinstance(fds, list): fds = [ fds ]
 
 
 	# Strip white space and '/' from the right of the files and/or

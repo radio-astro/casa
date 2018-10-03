@@ -8,7 +8,6 @@ import operator
 import os
 import re
 import string
-import types
 import xml.etree.ElementTree as ElementTree
 from datetime import datetime
 from functools import reduce
@@ -243,7 +242,7 @@ def CYCLE7_export_flux_from_result(results, context, filename='flux.csv'):
     for analysisUtils to match the new format. It should be committed during
     C7 development.
     """
-    if type(results) is not types.ListType:
+    if not isinstance(results, list):
         results = [results, ]
     abspath = os.path.join(context.output_dir, filename)
 
@@ -297,7 +296,7 @@ def export_flux_from_result(results, context, filename='flux.csv'):
     """
     Export flux densities from a set of results to a CSV file.
     """
-    if type(results) is not types.ListType:
+    if not isinstance(results, list):
         results = [results, ]
     abspath = os.path.join(context.output_dir, filename)
 

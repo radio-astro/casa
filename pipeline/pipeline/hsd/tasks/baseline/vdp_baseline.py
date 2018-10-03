@@ -4,7 +4,6 @@ import collections
 import itertools
 # import memory_profiler
 import os
-import types
 
 import numpy
 
@@ -114,7 +113,7 @@ class SDBaselineInputs(vdp.StandardInputs):
             
     def to_casa_args(self):
         vis = self.vis
-        if type(self.vis) is types.ListType:
+        if isinstance(self.vis, list):
             self.vis = vis[0]
         args = super(SDBaselineInputs, self).to_casa_args()
         self.vis = vis

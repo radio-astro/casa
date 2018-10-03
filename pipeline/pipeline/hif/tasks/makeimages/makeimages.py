@@ -2,7 +2,6 @@ from __future__ import absolute_import
 
 import os
 import tempfile
-import types
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.api as api
@@ -105,7 +104,7 @@ class MakeImages(basetask.StandardTaskTemplate):
 
         # make sure inputs.vis is a list, even it is one that contains a
         # single measurement set
-        if type(inputs.vis) is not types.ListType:
+        if not isinstance(inputs.vis, list):
             inputs.vis = [inputs.vis]
 
         with CleanTaskFactory(inputs, self._executor) as factory:
@@ -183,6 +182,7 @@ class MakeImages(basetask.StandardTaskTemplate):
                            robust=target['robust'],
                            uvtaper=target['uvtaper'],
                            sensitivity=cqa.quantity(result.image_rms, 'Jy/beam'))
+
 
 class CleanTaskFactory(object):
     def __init__(self, inputs, executor):

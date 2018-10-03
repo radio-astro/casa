@@ -3,7 +3,6 @@ from __future__ import absolute_import
 import collections
 import itertools
 import os
-import types
 
 import numpy
 
@@ -24,6 +23,7 @@ from ..common import utils
 # import memory_profiler
 _LOG = infrastructure.get_logger(__name__)
 LOG = utils.OnDemandStringParseLogger(_LOG)
+
 
 class SDBaselineInputs(vdp.StandardInputs):
     """
@@ -70,11 +70,10 @@ class SDBaselineInputs(vdp.StandardInputs):
         self.clusteringalgorithm = clusteringalgorithm
         self.deviationmask = deviationmask
         self.parallel = parallel
-        
-            
+
     def to_casa_args(self):
         infiles = self.infiles
-        if type(self.infiles) is types.ListType:
+        if isinstance(self.infiles, list):
             self.infiles = infiles[0]
         args = super(SDBaselineInputs, self).to_casa_args()
         self.infiles = infiles
@@ -83,7 +82,6 @@ class SDBaselineInputs(vdp.StandardInputs):
             args['antenna'] = ''
         return args
 
-            
 
 class SDBaselineResults(common.SingleDishResults):
     def __init__(self, task=None, success=None, outcome=None):
@@ -129,7 +127,7 @@ class SDBaselineResults(common.SingleDishResults):
 
     def _outcome_name(self):
         return '\n'.join(['Reduction Group {0}: member {1}'.format(b['group_id'], b['members'])
-                for b in self.outcome['baselined']])
+                          for b in self.outcome['baselined']])
         
 
 @task_registry.set_equivalent_casa_task('hsd_baseline')
@@ -382,7 +380,8 @@ class HeuristicsTask(object):
     
     def get_executable(self):
         return lambda: self.execute(dry_run=False)
-    
+
+
 class DeviationMaskHeuristicsTask(HeuristicsTask):
     def __init__(self, heuristics_cls, vis, field_list, antenna_list, spw_list, consider_flag=False):
         super(DeviationMaskHeuristicsTask, self).__init__(heuristics_cls, vis=vis, consider_flag=consider_flag)
@@ -401,6 +400,7 @@ class DeviationMaskHeuristicsTask(HeuristicsTask):
             mask_list = super(DeviationMaskHeuristicsTask, self).execute(dry_run)
             result.append(mask_list)
         return result
+
 
 def deviation_mask_heuristic(vis, field_list, antenna_list, spw_list, consider_flag=False, parallel=None):
     #parallel_wanted = mpihelpers.parse_mpi_input_parameter(parallel)
@@ -445,7 +445,3 @@ def test_deviation_mask_heuristic(spw=None):
                             print('     serial mask: {0}'.format(smask))
                             print('   parallel mask: {0}'.format(pmask))
                             print('   {0}'.format(smask == pmask))
-    
-    
-    
-    
