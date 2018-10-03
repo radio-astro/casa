@@ -101,7 +101,7 @@ def cube_fix( in_cube, cube_stats, logger ):
 	# is one, convert the one-dimensional arrays in the cube statistics
 	# dictionary to two-dimensional arrays
 
-	if nS == 1 and nf <> 1:
+	if nS == 1 and nf != 1:
 
 		z = numpy.zeros( [nS,nf], dtype='float' )
 
@@ -110,7 +110,7 @@ def cube_fix( in_cube, cube_stats, logger ):
 			cube_stats[k] = numpy.copy( z )
 			for f in rf: cube_stats[k][0][f] = numpy.copy(temp[f])
 
-	elif nS <> 1 and nf == 1:
+	elif nS != 1 and nf == 1:
 
 		z = numpy.zeros( [nS,nf], dtype='float' )
 

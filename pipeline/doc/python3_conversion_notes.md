@@ -23,13 +23,13 @@ nonzero, operator, paren, renames, sys_exc, throw, xreadlines
 Rules that have been applied (guard against regression):
 
 ```
-except, has_key, print, reduce, repr
+except, has_key, ne, print, reduce, repr
 ```
 
 Rules that can be updated on trunk during C7 dev:
 
 ```
-basestring, execfile, idioms, import, isinstance, map, metaclass, ne,
+basestring, execfile, idioms, import, isinstance, map,
 raise, set_literal (optional), tuple_params, types (after idioms),
 ws_comma (optional), zip
 ```
@@ -38,7 +38,7 @@ Rules that require updates on a Py3-only branch during C8 dev:
 
 Low risk:
 ```
-funcattrs, itertools, methodattrs, next, numliterals, xrange
+funcattrs, itertools, metaclass, methodattrs, next, numliterals, xrange
 ```
 
 Low risk, but review for efficiency:
@@ -159,4 +159,14 @@ After:
 ```
 import functools
 num_mses = functools.reduce(operator.add, [len(r.mses) for r in result])
+```
+
+### <> is deprecated, use !=
+Before:
+```
+if a <> 1:
+```
+After:
+```
+if a != 1:
 ```
