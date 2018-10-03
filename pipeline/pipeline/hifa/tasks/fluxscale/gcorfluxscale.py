@@ -4,6 +4,7 @@ import collections
 import operator
 import os
 import uuid
+from functools import reduce
 
 import scipy.stats as stats
 

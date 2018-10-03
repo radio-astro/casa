@@ -11,6 +11,7 @@ import string
 import types
 import xml.etree.ElementTree as ElementTree
 from datetime import datetime
+from functools import reduce
 
 import pipeline.domain as domain
 import pipeline.domain.measures as measures

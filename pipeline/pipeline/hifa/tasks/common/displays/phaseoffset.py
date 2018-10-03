@@ -1,5 +1,7 @@
 from __future__ import absolute_import
+
 import os
+from functools import reduce
 
 import matplotlib
 import matplotlib.pyplot as pyplot
@@ -15,24 +17,25 @@ LOG = infrastructure.get_logger(__name__)
 
 
 class PhaseOffsetPlotHelper(object):
-    colour_map = {'BEFORE' : {'L' : ('-', 'orange', 0.6),
-                              'R' : ('--', 'sandybrown', 0.6),
-                              'X' : ('-', 'lightslategray', 0.6),
-                              'Y' : ('--', 'lightslategray', 0.6),
-                              'XX' : ('-', 'lightslategray', 0.6),
-                              'YY' : ('--', 'lightslategray', 0.6)},
-                  'AFTER' : {'L' : ('-', 'green', 0.6),
-                             'R' : ('-', 'red', 0.6),
-                             'X' : ('-', 'green', 0.6),
-                             'Y' : ('-', 'red', 0.6),
-                             'XX' : ('-', 'green', 0.6),
-                             'YY' : ('-', 'red', 0.6)}}
+    colour_map = {'BEFORE': {'L': ('-', 'orange', 0.6),
+                             'R': ('--', 'sandybrown', 0.6),
+                             'X': ('-', 'lightslategray', 0.6),
+                             'Y': ('--', 'lightslategray', 0.6),
+                             'XX': ('-', 'lightslategray', 0.6),
+                             'YY': ('--', 'lightslategray', 0.6)},
+                  'AFTER': {'L': ('-', 'green', 0.6),
+                            'R': ('-', 'red', 0.6),
+                            'X': ('-', 'green', 0.6),
+                            'Y': ('-', 'red', 0.6),
+                            'XX': ('-', 'green', 0.6),
+                            'YY': ('-', 'red', 0.6)}}
 
     """
     caltable_map should be a dictionary mapping the state to caltable
     """
     def __init__(self, rootdir, prefix, caltable_map=None, plot_per_antenna=True):
-        assert set(PhaseOffsetPlotHelper.colour_map.keys()).issuperset(set(caltable_map.keys())), 'caltables argument defines states not in colour_map'
+        assert set(PhaseOffsetPlotHelper.colour_map.keys()).issuperset(set(caltable_map.keys())),\
+            'caltables argument defines states not in colour_map'
         self._rootdir = rootdir
         self._prefix = prefix
         self.caltable_map = caltable_map
@@ -64,7 +67,6 @@ class PhaseOffsetPlotHelper(object):
         pyplot.text(0.5, 0.911, '%s' % text, color='k', 
                     transform=fig.transFigure, ha='center', size=10)
             
-
 
 class PhaseOffsetPlot(object):
     def __init__(self, context, ms, plothelper, scan_intent=None, scan_id=None, score_retriever=None):

@@ -1,4 +1,5 @@
 from __future__ import absolute_import
+
 import datetime
 import itertools
 import operator
@@ -7,6 +8,7 @@ import re
 import string
 import glob
 from bisect import bisect_left
+from functools import reduce
 
 import cachetools
 import numpy
@@ -16,7 +18,6 @@ from . import logging
 import pipeline.domain as domain
 import pipeline.domain.measures as measures
 # import pipeline.extern.profilehooks as profilehooks
-
 
 LOG = logging.get_logger(__name__)
 
@@ -33,6 +34,7 @@ def find_EVLA_band(frequency, bandlimits=None, BBAND='?4PLSCXUKAQ?'):
 
 def _get_ms_name(ms):
     return ms.name if isinstance(ms, domain.MeasurementSet) else ms
+
 
 def _get_science_goal_value(science_goals, goal_keyword):
     value = None
@@ -160,7 +162,7 @@ class MeasurementSetReader(object):
             spw.band = BandDescriber.get_description(spw.ref_frequency, 
                     observatory=ms.antenna_array.name)
             
-            #Used EVLA band name from spw instead of frequency range
+            # Used EVLA band name from spw instead of frequency range
             observatory = string.upper(ms.antenna_array.name)
             if observatory in ('VLA', 'EVLA'):
                 spw2band = ms.get_vla_spw2band()
@@ -268,7 +270,6 @@ class MeasurementSetReader(object):
             except:
                 LOG.debug("Field "+str(field.id) + " not in spwsforfields dictionary.")
 
-    
     @staticmethod
     def get_measurement_set(ms_file):
         LOG.info('Analysing {0}'.format(ms_file))
@@ -582,8 +583,9 @@ class SBSummaryTable(object):
         return observing_modes
 
     @staticmethod
-    def _create_sbsummary_info(repSource, repFrequency, repBandwidth, minAngResolution, maxAngResolution, sensitivity, dynamicRange):
-       return (repSource, repFrequency, repBandwidth, minAngResolution, maxAngResolution, sensitivity, dynamicRange) 
+    def _create_sbsummary_info(repSource, repFrequency, repBandwidth, minAngResolution, maxAngResolution, sensitivity,
+                               dynamicRange):
+        return repSource, repFrequency, repBandwidth, minAngResolution, maxAngResolution, sensitivity, dynamicRange
 
     @staticmethod
     def _read_table(ms):
@@ -661,6 +663,7 @@ class SBSummaryTable(object):
 
         rows = zip(repSources, repFrequencies, repBandWidths, minAngResolutions, maxAngResolutions, sensitivities, dynamicRanges)
         return rows
+
 
 class ExecblockTable(object):
     @staticmethod
@@ -788,6 +791,7 @@ class SourceTable(object):
                 eph_sourcenames.append(keywords['NAME'])
 
         return eph_sourcenames
+
 
 class StateTable(object):
     @staticmethod

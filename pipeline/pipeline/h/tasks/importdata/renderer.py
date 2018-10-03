@@ -7,6 +7,7 @@ import collections
 import operator
 import os
 import shutil
+from functools import reduce
 
 import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.logging as logging

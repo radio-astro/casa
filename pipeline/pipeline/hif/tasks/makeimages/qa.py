@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 
 import collections
+from functools import reduce
 
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.pipelineqa as pqa
@@ -17,15 +18,21 @@ class MakeImagesQAHandler(pqa.QAPlugin):
     def handle(self, context, result):
         # calculate QA score as minimum of all sub-scores
         if result.mitigation_error:
-            result.qa.pool[:] = [pqa.QAScore(0.0, longmsg = 'Size mitigation error. No targets were processed.', shortmsg = 'Size mitigation error')]
+            result.qa.pool[:] = [pqa.QAScore(0.0, longmsg='Size mitigation error. No targets were processed.',
+                                             shortmsg='Size mitigation error')]
         elif len(result.results) > 0:
             score_objects = reduce(lambda x,y: x+y, [item.qa.pool for item in result.results])
             result.qa.pool[:] = score_objects
         else:
             if len(result.targets) == 0:
-                result.qa.pool[:] = [pqa.QAScore(1.0, longmsg='No imaging targets were defined', shortmsg='Nothing to image')]
+                result.qa.pool[:] = [pqa.QAScore(1.0, longmsg='No imaging targets were defined',
+                                                 shortmsg='Nothing to image')]
             else:
-                result.qa.pool[:] = [pqa.QAScore(0.0, longmsg='No imaging results found. Expected %d.' % (len(result.targets)), shortmsg='No imaging results')]
+                result.qa.pool[:] = [
+                    pqa.QAScore(0.0,
+                                longmsg='No imaging results found. Expected %d.' % (len(result.targets)),
+                                shortmsg='No imaging results')
+                ]
 
 
 class MakeImagesListQAHandler(pqa.QAPlugin):

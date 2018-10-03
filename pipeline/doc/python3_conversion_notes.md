@@ -135,3 +135,17 @@ After:
 ```
 “bit of {}”.format(“text”)
 ```
+
+### "reduce" builtin is deprecated
+The built-in "reduce" is going away, but is available as part of the
+functools in standard library in both Python 2 and 3.
+
+Before:
+```
+num_mses = reduce(operator.add, [len(r.mses) for r in result])
+```
+After:
+```
+import functools
+num_mses = functools.reduce(operator.add, [len(r.mses) for r in result])
+```

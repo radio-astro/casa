@@ -5,10 +5,10 @@ Created on 9 Jan 2014
 """
 import collections
 import datetime
+import functools
 import math
 import operator
 import os
-import functools
 
 import numpy as np
 
@@ -146,8 +146,8 @@ def calc_frac_total_flagged(summaries, agents=None, scanids=None):
     agent_stats = calc_flags_per_agent(summaries, scanids=scanids)
 
     # sum the number of flagged rows for the selected agents
-    frac_flagged = reduce(operator.add,
-                          [float(s.flagged)/s.total for s in agent_stats if not agents or s.name in agents], 0)
+    frac_flagged = functools.reduce(
+        operator.add, [float(s.flagged)/s.total for s in agent_stats if not agents or s.name in agents], 0)
 
     return frac_flagged
 
@@ -193,8 +193,8 @@ def calc_frac_newly_flagged(summaries, agents=None, scanids=None):
     agent_stats = calc_flags_per_agent(summaries, scanids=scanids)
 
     # sum the number of flagged rows for the selected agents
-    frac_flagged = reduce(operator.add,
-                          [float(s.flagged)/s.total for s in agent_stats[1:] if not agents or s.name in agents], 0)
+    frac_flagged = functools.reduce(
+        operator.add, [float(s.flagged)/s.total for s in agent_stats[1:] if not agents or s.name in agents], 0)
 
     return frac_flagged
 
@@ -939,8 +939,8 @@ def linear_score_fraction_unflagged_newly_flagged_for_intent(ms, summaries, inte
     # If the "before" summary had unflagged data, then proceed to compute
     # the fraction fo unflagged data that got newly flagged.
     if unflaggedcount > 0:
-        frac_flagged = reduce(operator.add,
-                              [float(s.flagged)/unflaggedcount for s in agent_stats[1:]], 0)
+        frac_flagged = functools.reduce(operator.add,
+                                        [float(s.flagged)/unflaggedcount for s in agent_stats[1:]], 0)
 
         score = 1.0 - frac_flagged
         percent = 100.0 * frac_flagged
@@ -2189,7 +2189,7 @@ def score_checksources(mses, fieldname, spwid, imagename, rms, gfluxscale, gflux
 
 @log_qa
 def score_multiply(scores_list):
-    score = reduce(operator.mul, scores_list, 1.0)
+    score = functools.reduce(operator.mul, scores_list, 1.0)
     longmsg = 'Multiplication of scores.'
     shortmsg = 'Multiplication of scores.'
     origin = pqa.QAOrigin(metric_name='score_multiply',

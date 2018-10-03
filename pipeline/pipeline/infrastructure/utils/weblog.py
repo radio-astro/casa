@@ -6,6 +6,7 @@ import datetime
 import itertools
 import operator
 import os
+from functools import reduce
 
 import numpy
 
