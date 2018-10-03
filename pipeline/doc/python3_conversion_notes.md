@@ -12,12 +12,6 @@ Python 3 conversion is tracked in
 The '2to3' tool has a series of rules to evaluate and convert code to Python 3. 
 Below is a summary of which rules have been applied, and which still need to be done.
 
-Rules that have been applied (guard against regression):
-
-```
-except, has_key, print, repr
-```
-
 Rules that do not require changes in PL code nor in external modules (guard
 against regression):
 
@@ -26,33 +20,50 @@ apply, asserts, exitfunc, getcwdu, imports2, input, intern, itertools_imports,
 nonzero, operator, paren, renames, sys_exc, throw, xreadlines
 ```
 
-Rules that do not require changes in PL code, but that do require external
-modules to be updated to a Python 3 version:
+Rules that have been applied (guard against regression):
 
 ```
-standarderror
+except, has_key, print, reduce, repr
 ```
 
-Rules still to be investigated:
+Rules that can be updated on trunk during C7 dev:
 
 ```
-basestring, dict, execfile, filter, funcattrs, future, idioms, import,
-imports, itertools, long, map, metaclass, methodattrs, ne, next,
-numliterals, raise, reduce, set_literal, tuple_params, types, unicode, urllib,
-ws_comma, xrange, zip
+basestring, execfile, idioms, import, isinstance, map, metaclass, ne,
+raise, set_literal (optional), tuple_params, types (after idioms),
+ws_comma (optional), zip
 ```
 
-Rules that should be applied "last":
+Rules that require updates on a Py3-only branch during C8 dev:
+
+Low risk:
+```
+funcattrs, itertools, methodattrs, next, numliterals, xrange
+```
+
+Low risk, but review for efficiency:
+```
+dict
+```
+
+Medium risk, have to review/test
+
+```
+imports, long, unicode, urllib
+```
+
+Low risk, but ran last:
 
 ```
 isinstance: removes duplicates, e.g. isinstance(x, (int, int)) that may appear
             after evaluating 'long' rule
+future: removes imports from __future__
 ```
 
-Rules still to be applied, affecting external dependencies only:
+Rules that require updates to external modules (under /extern/)
 
 ```
-buffer, exec, raw_input
+buffer, exec, raw_input, standarderror
 ```
 
 
