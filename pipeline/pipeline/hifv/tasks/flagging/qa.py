@@ -130,13 +130,9 @@ class FlagBadDeformattersQAHandler(pqa.QAPlugin):
         # 0%-30% of data flagged  --> 1 to 0
         # > 30%  of data flagged  --> 0
 
-        if result.frac_flagged is not None:
-            score1 = qacalc.score_total_data_flagged_vla_baddef(result.calBPtablename, result.frac_flagged)
-            scores = [score1]
-        else:
-            LOG.error('Error with bandpass table.')
-            scores = [pqa.QAScore(0.0, longmsg='No flagging stats about the bandpass table.',
-                                  shortmsg='Bandpass table problem.')]
+        score1 = qacalc.score_flagged_vla_baddef(result.amp_collection, result.phase_collection,
+                                                 result.num_antennas)
+        scores = [score1]
 
         result.qa.pool[:] = scores
 
