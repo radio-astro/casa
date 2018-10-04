@@ -55,7 +55,7 @@ __all__ = ['score_polintents',                                # ALMA specific
            'score_total_data_flagged',
            'score_total_data_flagged_vla',
            'score_total_data_flagged_vla_bandpass',
-           'score_total_data_flagged_vla_baddef',
+           'score_flagged_vla_baddef',
            'score_total_data_vla_delay',
            'score_ms_model_data_column_present',
            'score_ms_history_entries_present',
@@ -795,36 +795,35 @@ def score_total_data_flagged_vla_bandpass(filename, frac_flagged):
 
 
 @log_qa
-def score_total_data_flagged_vla_baddef(filename, frac_flagged):
+def score_flagged_vla_baddef(amp_collection, phase_collection, num_antennas):
     """
-    Calculate a score for the flagging task based on the data flagged in the bandpass table.
+    Calculate a score for the flagging task based on the number of antennas flagged.
 
     0% flagged   -> 1
     0%-30% flagged  -> 1 to 0
     30%-100% flagged -> 0
 
-    frac_flagged -- fraction of data flagged
+    frac_flagged -- fraction of antennas flagged
     """
 
-    origin = pqa.QAOrigin(metric_name='score_total_data_flagged_vla_baddef',
+    amp_antennas = set(amp_collection.keys())
+    phase_antennas = set(phase_collection.keys())
+    affected_antennas = amp_antennas.union(phase_antennas)
+    num_affected_antennas = len(affected_antennas)
+    frac_flagged = num_affected_antennas / float(num_antennas)
+    origin = pqa.QAOrigin(metric_name='score_flagged_vla_baddef',
                           metric_score=frac_flagged,
-                          metric_units='Total fraction of VLA data that is flagged in the caltable')
-
-    if 0 == frac_flagged and filename is None:
-        return pqa.QAScore(1, longmsg='No data flagged', shortmsg='No data flagged', origin=origin)
+                          metric_units='Fraction of VLA antennas flagged by hifv_flagbaddef')
+    if 0 == frac_flagged:
+        return pqa.QAScore(1, longmsg='No antennas flagged', shortmsg='No antennas flagged', origin=origin)
     else:
         # Convert fraction of flagged data into a score.
-        if frac_flagged > 0.3:
-            score = 0
-        else:
-            score = linear_score(frac_flagged, 0.0, 0.3, 1.0, 0.0)
-
+        score = linear_score(frac_flagged, 0.0, 0.3, 1.0, 0.0)
         # Set score messages and origin.
         percent = 100.0 * frac_flagged
-        longmsg = "{:0.2f}% of data in '{}' was flagged".format(percent, filename)
+        longmsg = "{:d} of {:d} antennas flagged ({:0.2f}%)".format(num_affected_antennas, num_antennas, percent)
         shortmsg = "{:0.2f}% data flagged".format(percent)
-
-        return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg, vis=os.path.basename(filename), origin=origin)
+        return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg, origin=origin)
 
 
 @log_qa
