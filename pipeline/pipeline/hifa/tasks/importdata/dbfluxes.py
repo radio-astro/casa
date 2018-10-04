@@ -158,7 +158,7 @@ def query_online_catalogue(ms, spw, source):
     utcnow = datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC")
     try:
         fluxdict = fluxservice(SERVICE_URL, obs_time, freq_hz, source_name)
-    except urllib2.URLError:
+    except IOError:
         # error contacting service
         return None
     except ExpatError:
