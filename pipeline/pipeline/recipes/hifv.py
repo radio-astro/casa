@@ -11,7 +11,7 @@ try:
 except:
     def_rethrow = False
 
-__rethrow_casa_exceptions = True
+__rethrow_casa_exceptions = False
 
 
 
@@ -64,7 +64,7 @@ def hifv (vislist, importonly=False, pipelinemode='automatic', interactive=True)
 
     try:
         # Initialize the pipeline
-        h_init(plotlevel='summary', loglevel='debug')
+        h_init(plotlevel='summary')
         # h_init(loglevel='trace', plotlevel='summary')
 
         # Load the data
@@ -88,9 +88,7 @@ def hifv (vislist, importonly=False, pipelinemode='automatic', interactive=True)
 
         # Initial test calibrations using bandpass and delay calibrators
         hifv_testBPdcals (pipelinemode=pipelinemode)
-
-        h_save('testbpdcals.state')
-
+    
         # Identify and flag basebands with bad deformatters or rfi based on
         # bp table amps and phases
         hifv_flagbaddef (pipelinemode=pipelinemode)
@@ -144,7 +142,7 @@ def hifv (vislist, importonly=False, pipelinemode='automatic', interactive=True)
         
         # Make a list of expected point source calibrators to be cleaned
         hif_makeimlist (intent='PHASE,BANDPASS', specmode='cont', pipelinemode=pipelinemode)
-        h_save('makeimlist.state')
+    
         # Make clean images for the selected calibrators
         hif_makeimages (hm_masking='none')
 
@@ -153,19 +151,19 @@ def hifv (vislist, importonly=False, pipelinemode='automatic', interactive=True)
     
     except Exception as e:
         if str(e) == IMPORT_ONLY:
-            casatools.post_to_log("Exiting after import step ...", echo_to_screen=echo_to_screen)
+            casatools.post_to_log ("Exiting after import step ...", echo_to_screen=echo_to_screen)
         else:
-            casatools.post_to_log("Error in procedure execution ...", echo_to_screen=echo_to_screen)
+            casatools.post_to_log ("Error in procedure execution ...", echo_to_screen=echo_to_screen)
             errstr = traceback.format_exc()
-            casatools.post_to_log(errstr, echo_to_screen=echo_to_screen)
+            casatools.post_to_log (errstr, echo_to_screen=echo_to_screen)
 
     finally:
 
         # Save the results to the context
         h_save()
 
-        casatools.post_to_log("VLA CASA Pipeline finished.  Terminating procedure execution ...",
-                              echo_to_screen=echo_to_screen)
+        casatools.post_to_log ("VLA CASA Pipeline finished.  Terminating procedure execution ...",
+            echo_to_screen=echo_to_screen)
 
         # Restore previous state
         __rethrow_casa_exceptions = def_rethrow

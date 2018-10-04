@@ -96,7 +96,7 @@
 	        <default param="field"><value type="string"></value></default>
 	        <default param="intent"><value type="string"></value></default>
 	        <default param="spw"><value type="string"></value></default>
-            <default param="antenna"><value type="string"></value></default>
+		<default param="antenna"><value type="string"></value></default>
 	        <default param="flagbackup"><value type="bool">True</value></default>
 	        <default param="dryrun"><value type="bool">False</value></default>
 	        <default param="acceptresults"><value type="bool">True</value></default>
@@ -106,7 +106,7 @@
 	        <default param="field"><value type="string"></value></default>
 	        <default param="intent"><value type="string"></value></default>
 	        <default param="spw"><value type="string"></value></default>
-            <default param="antenna"><value type="string"></value></default>
+		<default param="antenna"><value type="string"></value></default>
 	        <default param="flagbackup"><value type="bool">True</value></default>
 	    </equals>
         </when>
@@ -195,8 +195,6 @@ spw -- The list of spectral windows and channels to which the calibration
 antenna -- The list of antennas to which the calibration will be applied.
     Defaults to all antennas. Not currently supported.
 
-flagbackup -- Backup the flags before the apply
-    default: True
 
 --- pipeline task execution modes
 dryrun -- Run the commands (True) or generate the commands to be run but

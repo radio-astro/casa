@@ -50,9 +50,6 @@ def show_weblog(context):
 #    execfile(hsdnpath, myglobals)
 #    # exec('import pipeline.infrastructure.executeppr', myglobals)
 
-# print('*** PYCHARM DEBUGGING ***')
-# import pydevd
-# pydevd.settrace('lambda.cv.nrao.edu', port=21000, stdoutToServer=True, stderrToServer=True)
 
 def initcli():
     LOG.info('Initializing cli...')
