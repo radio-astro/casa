@@ -97,7 +97,7 @@ def fluxservice(service_url, obs_time, frequency, sourcename):
     ssl_context = ssl._create_unverified_context()
     try:
         response = urllib2.urlopen(url, context=ssl_context, timeout=10.0)
-    except urllib2.URLError:
+    except IOError:
         LOG.warn('Error contacting ALMA Source Catalogue Database')
         raise
 
@@ -158,7 +158,7 @@ def query_online_catalogue(ms, spw, source):
     utcnow = datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC")
     try:
         fluxdict = fluxservice(SERVICE_URL, obs_time, freq_hz, source_name)
-    except urllib2.URLError:
+    except IOError:
         # error contacting service
         return None
     except ExpatError:
