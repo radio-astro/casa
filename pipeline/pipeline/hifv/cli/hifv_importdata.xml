@@ -54,7 +54,7 @@
         </allowed>
     </param>
 
-    <param type="string" name="ocorr_mode">
+    <param type="string" name="ocorr_mode" subparam="true">
 	<description>Default set to CROSS_ONLY (co)</description>
 	<value>co</value>
     </param>

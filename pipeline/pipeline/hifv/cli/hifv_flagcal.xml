@@ -14,12 +14,12 @@
 	<value></value>
     </param>
 
-    <param type="string" name="caltable" subparam="true">
+    <param type="string" name="caltable">
         <description>String name of the caltable</description>
         <value></value>
     </param>
 
-    <param type="any" name="clipminmax" subparam="true">
+    <param type="any" name="clipminmax">
         <description>Range to use for clipping</description>
         <any type="variant" limittypes="doubleArray doubleArrayArray" />
         <value type="doubleArray"></value>
@@ -52,15 +52,11 @@
 	    </equals>
 	    <equals type="string" value="interactive">
                 <default param="vis"><value type="stringArray"></value></default>
-                <default param="clipminmax"><value type="doubleArray"></value></default>
-
 		<default param="dryrun"><value type="bool">False</value></default>
 		<default param="acceptresults"><value type="bool">True</value></default>
 	    </equals>
 	    <equals type="string" value="getinputs">
                 <default param="vis"><value type="stringArray"></value></default>
-                <default param="clipminmax"><value type="doubleArray"></value></default>
-
 	    </equals>
 	</when>
     </constraints>

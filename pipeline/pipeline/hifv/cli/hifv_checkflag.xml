@@ -14,7 +14,7 @@
 	<value></value>
     </param>
 
-    <param type="string" name="checkflagmode" subparam="true">
+    <param type="string" name="checkflagmode">
         <description>String name of the mode to run checkflag</description>
         <value></value>
             </param>
@@ -45,13 +45,11 @@
 	    </equals>
 	    <equals type="string" value="interactive">
                 <default param="vis"><value type="stringArray"></value></default>
-                <default param="checkflagmode"><value type="string"></value></default>
 		<default param="dryrun"><value type="bool">False</value></default>
 		<default param="acceptresults"><value type="bool">True</value></default>
 	    </equals>
 	    <equals type="string" value="getinputs">
                 <default param="vis"><value type="stringArray"></value></default>
-                <default param="checkflagmode"><value type="string"></value></default>
 	    </equals>
 	</when>
     </constraints>

@@ -39,7 +39,7 @@
 	<value>True</value>
     </param>
 
-    <param type="string" name="refantignore" subparam="true">
+    <param type="string" name="refantignore">
 	<description>String list of antennas to ignore</description>
 	<value></value>
     </param>
@@ -52,7 +52,6 @@
         <default param="vis"><value type="stringArray"></value></default>
 		<default param="dryrun"><value type="bool">False</value></default>
 		<default param="acceptresults"><value type="bool">True</value></default>
-        <default param="refantignore"><value type="string"></value></default>
 	    </equals>
 	    <equals type="string" value="getinputs">
                 <default param="vis"><value type="stringArray"></value></default>
